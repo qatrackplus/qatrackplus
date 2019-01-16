@@ -1,13 +1,16 @@
-{% extends "site_base.html" %}
+{% extends "registration/base.html" %}
 
 {% load qa_tags %}
 {% load i18n %}
 {% load static %}
 
-{% block head_title %}{% trans "Manage Groups & Permissions" %}{% endblock %}
+{% block head_title %}
+  {% trans "Manage Groups & Permissions" %}
+{% endblock %}
+
 
 {% block extra_css %}
-<link href="{% static "accounts/css/groups.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "accounts/css/groups.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
@@ -18,79 +21,65 @@
 
 {% block body_class %}layout-top-nav{% endblock body_class %}
 
-{% block body %}
-<div class="row">
-  <div class="col-md-12">
-    <div class="box">
+{% block account_box %}
+<div class="box">
 
-      <div class="box-header">
-        <h3 class="box-title">
-          <i class="fa fa-globe" aria-hidden="true"></i>
-          {% trans "Groups & Permissions" %}
-        </h3>
+  <div class="box-header">
+    <h3 class="box-title">
+      <span class="fa fa-stack fa-fw">
+        <i class="fa fa-users fa-stack-custom-main"></i>
+        <i class="fa fa-lock fa-stack-custom-sub primary"></i>
+      </span>
+      {% trans "Group Membership & Permissions" %}
+    </h3>
+  </div>
+
+  <div id="app" class="box-body">
+
+    <div class="row">
+      <div class="col-xs-12">
+        {% blocktrans %}
+          Use the controls below to set group permissions and control group
+          membership.
+        {% endblocktrans %}
+        <hr/>
       </div>
+    </div>
 
-      <div class="box-body">
-        <div class="row">
-          <div class="col-xs-12">
-            {% blocktrans %}
-              Use the controls below to set group permissions and control group
-              membership.
-            {% endblocktrans %}
-            <hr/>
+    <div class="row">
+      <div class="col-xs-12">
+
+        <form action="">
+
+          <div class="form-group">
+            <label class="" for="groups">{% trans "Group" %}</label>
+            <select class="form-control" id="groups" v-model="selected">
+              <option v-for="group in groups" :value="group.name" v-text="group.name"></option>
+            </select>
           </div>
-        </div>
-        <div id="app" class="row">
-          <div class="col-xs-2">
-            <h3>{% trans "Select a Group" %}</h3>
-            <div class="list-group">
 
-              <template v-for="group in groups">
-                <input type="radio" name="group" class="list-group-item"
-                  :id="'group-' + group.name"
-                  :value="group.name"
-                  v-model="selected"
-                  title="'Set permissions for ' + group.name"
-                />
-                <label class="list-group-item"
-                  :for="'group-' + group.name"
-                  :title="group.description"
-                >
-                  ${ group.name }
-                </label>
-              </template>
+          <p>{% trans "Click on the icons below to toggle the permission" %}</p>
 
-            </ul>
-          </div>
-        </div>
-        <div class="col-sm-2">
-          <h3 v-html="'Selected Group: ' + selectedGroup"></h3>
-          <div class="list-group">
-            <template v-for="perms in allPermissions">
+          <template v-for="perms in allPermissions">
 
-              <h5 v-text="perms[0]"></h5>
+            <div class="form-group">
+              <label class="" for="groups" v-text="selectedGroup + ' ' + perms[0] + ' Permissions'"></label>
+              <ul class="list-unstyled">
+                <li class="indent" v-for="perm in perms[1]">
 
-              <template v-for="perm in perms[1]">
-                <input type="checkbox" name="permissions"
-                  :id="perm[0]"
-                  :value="perm[0]"
-                  :checked="hasPerm(perm[0])"
-                />
-                <label class="list-group-item"
-                  :for="perm[0]"
-                  :title="perm[2]"
-                  v-text="perm[1]"
-                ></label>
-              </template>
-            </template>
-          </div>
-        </div>
-        <div class="col-sm-2">
-        </div>
+                  <i :class="hasPerm(perm[0]) ? 'fa fa-check-circle fa-lg success' : 'fa fa-times-circle fa-lg danger'" aria-hidden="true"></i>
+                  <strong v-text="perm[1]"></strong>
+                  <em v-text="perm[0]"></em>
+                </li>
+              </ul>
+            </div>
+
+          </template>
+        </form>
+
       </div>
-
     </div>
   </div>
 </div>
 
-{% endblock %}
+{% endblock account_box %}

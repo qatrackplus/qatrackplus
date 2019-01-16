@@ -8,12 +8,13 @@ require(['jquery', 'lodash', 'vue', 'jquery-ui'], function ($, _, Vue) {
         data: {
             allPermissions: window.allPermissions,
             groups: [],
-            selected: null,
+            selected: '',
             groupModel: {permissions: []}
         },
         methods: {
             hasPerm: function(perm){
-                return !_.isNull(this.groupModel) && this.groupModel.permissions.indexOf(perm) >= 0;
+                var res = !_.isNull(this.groupModel) && this.groupModel.permissions.indexOf(perm) >= 0
+                return res;
             }
         },
         computed: {
@@ -27,10 +28,11 @@ require(['jquery', 'lodash', 'vue', 'jquery-ui'], function ($, _, Vue) {
             selectedGroup: function() {
                 /* when selected is changed, fetch data */
 
-                var group = this.groupDict[this.selected];
-                var self = this;
-
                 if (this.selected){
+
+                    var group = this.groupDict[this.selected];
+                    var self = this;
+
                     $.ajax({
                         url: group.url,
                         method: 'GET',
@@ -43,7 +45,7 @@ require(['jquery', 'lodash', 'vue', 'jquery-ui'], function ($, _, Vue) {
                     });
                     return group.name;
                 }
-                return "<em>None</em>";
+                return "";
             }
         },
         mounted: function () {
@@ -55,6 +57,9 @@ require(['jquery', 'lodash', 'vue', 'jquery-ui'], function ($, _, Vue) {
                 method: 'GET',
                 success: function (data) {
                     self.groups = data.results;
+                    if (self.groups.length > 0){
+                        self.selected = self.groups[0].name;
+                    }
                 },
                 error: function (error) {
                     console.log(error);
