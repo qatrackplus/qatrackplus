@@ -57,12 +57,16 @@ require.config({
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
         select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
+        vue: siteConfig.STATIC_URL + 'vue/js/vue',
 
         // Site wide:
         sidebar: siteConfig.STATIC_URL + 'qatrack_core/js/sidebar',
         site_base: siteConfig.STATIC_URL + 'qatrack_core/js/base',
         comments: siteConfig.STATIC_URL + 'qatrack_core/js/comments',
         listablestatic: siteConfig.STATIC_URL + 'qatrack_core/js/listableStatic',
+
+        // accounts module:
+        groups: siteConfig.STATIC_URL + 'accounts/js/groups',
 
         // qa module:
         qa: siteConfig.STATIC_URL + 'qa/js/qa',
@@ -192,6 +196,12 @@ require.config({
         listablestatic: {
             deps: ['jquery', 'datatables', 'datatables.columnFilter', 'datatables.searchPlugins', 'datatables.sort', 'datatables.bootstrap', 'multiselect', 'datepicker', 'daterangepicker']
         },
+
+        // accounts module:
+        groups: {
+            deps: ['vue']
+        },
+
         // qa module:
         qa: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils']

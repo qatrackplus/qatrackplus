@@ -166,49 +166,40 @@ PERMISSIONS = (
         ),
     ),
     (
-        'Reviewing',
-        (
-            (
-                'qa.can_view_completed',
-                'Can view previously completed instances',
-                'Allow a user to view previous test list results',
-            ),
-            (
-                'qa.can_view_overview',
-                'Can view program overview',
-                'Allows a user to view the overall program status',
-            ),
-            (
-                'qa.can_review',
-                'Can review tests',
-                'Allows a user to perform review & approval functions',
-            ),
-            (
-                'qa.can_view_charts',
-                'Can chart test history',
-                'Gives user the ability to view and create charts of historical test results',
-            ),
-            (
-                'qa.can_run_sql_reports',
-                'Can Run SQL Reports',
-                'Gives user the ability to run SQL queries that others have created',
-            ),
-            (
-                'qa.can_create_sql_reports',
-                'Can Create SQL Reports',
-                'Gives user the ability to create and run raw SQL queries on your data',
-            ),
-            (
-                'qa.can_review_own_tests',
-                'Can review self-performed tests',
-                'Allows a user to perform review & approval functions on self-performed tests',
-            ),
-            (
-                'qa.can_review_non_visible_tli',
-                'Can review non visible test list instances',
-                'Allows a user to review test list instances that are not visible to any of their groups',
-            )
-        ),
+        'Review & Analysis',
+        ((
+            'qa.can_view_completed',
+            'Can view previously completed instances',
+            'Allow a user to view previous test list results',
+        ), (
+            'qa.can_view_overview',
+            'Can view program overview',
+            'Allows a user to view the overall program status',
+        ), (
+            'qa.can_review',
+            'Can review tests',
+            'Allows a user to perform review & approval functions',
+        ), (
+            'qa.can_view_charts',
+            'Can chart test history',
+            'Gives user the ability to view and create charts of historical test results',
+        ), (
+            'qa.can_run_sql_reports',
+            'Can Run SQL Reports',
+            'Gives user the ability to run SQL queries that others have created',
+        ), (
+            'qa.can_create_sql_reports',
+            'Can Create SQL Reports',
+            'Gives user the ability to create and run raw SQL queries on your data',
+        ), (
+            'qa.can_review_own_tests',
+            'Can review self-performed tests',
+            'Allows a user to perform review & approval functions on self-performed tests',
+        ), (
+            'qa.can_review_non_visible_tli',
+            'Can review non visible test list instances',
+            'Allows a user to review test list instances that are not visible to any of their groups',
+        )),
     ),
 )
 

@@ -1,11 +1,13 @@
+import json
 
+from django.contrib.auth.models import Group
 from django.views.generic.base import TemplateView
 
 from qatrack.qa.models import PERMISSIONS
 
 
 class AccountDetails(TemplateView):
-    template_name = "registration/account.html"
+    template_name = "accounts/account.html"
 
     def get_context_data(self, **kwargs):
 
@@ -20,5 +22,19 @@ class AccountDetails(TemplateView):
             permissions.append((category, category_perms))
 
         context["permissions"] = permissions
+
+        return context
+
+
+class GroupsApp(TemplateView):
+
+    template_name = "accounts/groups.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super(GroupsApp, self).get_context_data(**kwargs)
+
+        context["all_perms"] = json.dumps(PERMISSIONS)
+        context["groups"] = Group.objects.all()
 
         return context

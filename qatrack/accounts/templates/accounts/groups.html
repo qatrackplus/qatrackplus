@@ -1,0 +1,96 @@
+{% extends "site_base.html" %}
+
+{% load qa_tags %}
+{% load i18n %}
+{% load static %}
+
+{% block head_title %}{% trans "Manage Groups & Permissions" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static "accounts/css/groups.css" %}?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block require_javascript %}
+    window.groupsUrl = "{% url "group-list" %}";
+    window.allPermissions = {{ all_perms|safe }};
+    require(['groups']);
+{% endblock require_javascript %}
+
+{% block body_class %}layout-top-nav{% endblock body_class %}
+
+{% block body %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="box">
+
+      <div class="box-header">
+        <h3 class="box-title">
+          <i class="fa fa-globe" aria-hidden="true"></i>
+          {% trans "Groups & Permissions" %}
+        </h3>
+      </div>
+
+      <div class="box-body">
+        <div class="row">
+          <div class="col-xs-12">
+            {% blocktrans %}
+              Use the controls below to set group permissions and control group
+              membership.
+            {% endblocktrans %}
+            <hr/>
+          </div>
+        </div>
+        <div id="app" class="row">
+          <div class="col-xs-2">
+            <h3>{% trans "Select a Group" %}</h3>
+            <div class="list-group">
+
+              <template v-for="group in groups">
+                <input type="radio" name="group" class="list-group-item"
+                  :id="'group-' + group.name"
+                  :value="group.name"
+                  v-model="selected"
+                  title="'Set permissions for ' + group.name"
+                />
+                <label class="list-group-item"
+                  :for="'group-' + group.name"
+                  :title="group.description"
+                >
+                  ${ group.name }
+                </label>
+              </template>
+
+            </ul>
+          </div>
+        </div>
+        <div class="col-sm-2">
+          <h3 v-html="'Selected Group: ' + selectedGroup"></h3>
+          <div class="list-group">
+            <template v-for="perms in allPermissions">
+
+              <h5 v-text="perms[0]"></h5>
+
+              <template v-for="perm in perms[1]">
+                <input type="checkbox" name="permissions"
+                  :id="perm[0]"
+                  :value="perm[0]"
+                  :checked="hasPerm(perm[0])"
+                />
+                <label class="list-group-item"
+                  :for="perm[0]"
+                  :title="perm[2]"
+                  v-text="perm[1]"
+                ></label>
+              </template>
+            </template>
+          </div>
+        </div>
+        <div class="col-sm-2">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
