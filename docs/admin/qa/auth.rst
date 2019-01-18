@@ -54,10 +54,11 @@ are finished.
 
    Creating a new user
 
-On the next page you can fill out more details about the users including
-proper names, which groups the user belongs to and any permissions
-specific to that person (i.e. that are not already covered by the groups
-they are members of).
+On the next page you can fill out more details about the users including proper
+names and which groups the user belongs to. You may also add permissions
+specific to that person (i.e. that are not already covered by the groups they
+are members of) although it is highly recommended that you stick to using
+groups for managing all permissions.
 
 .. figure:: images/create_user_2nd.png
    :alt: Creating a new user - selecting permissions
@@ -89,6 +90,8 @@ started.
 The most important permissions are described here and typical permission
 sets for groups are given below:.
 
+-  **auth \| group \| Can change group** *Allows a user to
+   change group membership and permissions.*
 -  **qa \| test instance \| Can view test history** *Allows a user to
    view historical data alongside a test when performing a test list.*
 -  **qa \| test instance \| Can view charts of test history** *Allows a

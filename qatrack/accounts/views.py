@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.views.generic.base import TemplateView
 
@@ -26,15 +27,13 @@ class AccountDetails(TemplateView):
         return context
 
 
-class GroupsApp(TemplateView):
+class GroupsApp(PermissionRequiredMixin, TemplateView):
 
     template_name = "accounts/groups.html"
+    permission_required = "auth.change_group"
 
     def get_context_data(self, **kwargs):
-
         context = super(GroupsApp, self).get_context_data(**kwargs)
-
         context["all_perms"] = json.dumps(PERMISSIONS)
         context["groups"] = Group.objects.all()
-
         return context

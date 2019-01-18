@@ -1,54 +1,23 @@
-.list-group-item {
-  text-align: center;
-}
-.list-group-item {
-  user-select: none;
-}
-
-.list-group input[type="checkbox"] {
-  display: none;
-}
-
-.list-group input[type="checkbox"] + .list-group-item {
+.toggle {
   cursor: pointer;
 }
 
-.list-group input[type="checkbox"] + .list-group-item:before {
-  content: "\2713";
-  color: transparent;
-  font-weight: bold;
-  margin-right: 1em;
+table.fixed tbody {
+    display:block;
+    max-height:300px;
+    overflow:auto;
 }
 
-.list-group input[type="checkbox"]:checked + .list-group-item {
-  background-color: #0275D8;
-  color: #FFF;
+table.fixed thead, table.fixed tbody tr {
+    display:table;
+    width:100%;
+    table-layout:fixed;/* even columns width , fix width of table too*/
 }
 
-.list-group input[type="checkbox"]:checked + .list-group-item:before {
-  color: inherit;
+table.fixed thead {
+    width: calc( 100% - 1em )/* scrollbar is average 1em/16px width, remove it from thead width */
 }
 
-.list-group input[type="radio"] {
-  display: none;
-}
-
-.list-group input[type="radio"] + .list-group-item {
-  cursor: pointer;
-}
-
-.list-group input[type="radio"] + .list-group-item:before {
-  content: "";
-  color: transparent;
-  font-weight: bold;
-  margin-right: 1em;
-}
-
-.list-group input[type="radio"]:checked + .list-group-item {
-  background-color: #0275D8;
-  color: #FFF;
-}
-
-.list-group input[type="radio"]:checked + .list-group-item:before {
-  color: inherit;
+table.fixed {
+    width: 100%;
 }

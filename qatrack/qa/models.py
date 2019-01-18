@@ -116,6 +116,16 @@ validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 #  A collection of the permissions most relevant to QATrack+
 PERMISSIONS = (
     (
+        'Admin',
+        (
+            (
+                'auth.change_group',
+                'Can change groups',
+                'Allow user to change group permissions',
+            ),
+        ),
+    ),
+    (
         'Performing',
         (
             (

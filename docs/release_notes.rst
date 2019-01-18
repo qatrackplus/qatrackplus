@@ -30,6 +30,8 @@ Details of the v0.3.1 release
     - first_name, last_name, date_joined, permissions in the User List view
     - Fields other than name, number, or site in the Unit list
 
+* First Name & Last Name have been added to the user-list api view
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------
