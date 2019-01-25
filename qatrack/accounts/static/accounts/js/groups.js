@@ -83,7 +83,6 @@ require(['jquery', 'lodash', 'vue', 'datatables', 'jquery-ui'], function ($, _, 
             groups: [],
             selected: '',
             users: [],
-            selectedUsers: [],
             newGroupName: '',
             editGroupName: '',
             groupData: {permissions: []},
@@ -127,26 +126,18 @@ require(['jquery', 'lodash', 'vue', 'datatables', 'jquery-ui'], function ($, _, 
                     this.newGroupName = this.selectedGroup;
                     this.groupModalTitle = "Edit Group";
                     this.groupModalButton = "Save Group";
-                    self.selectedUsers = self.groupData.user_set;
+                    _.each(this.users, function(user){
+                        if (self.groupData.user_set.indexOf(user.url) >= 0){
+                            user.selected = true;
+                        }
+                    });
                 }else{
                     this.newGroupName = '';
                     this.groupModalTitle = "Add New Group";
                     this.groupModalButton = "Add Group";
-                    self.selectedUsers = [];
+                    _.each(this.users, function(user){user.selected = false;})
                 }
 
-                if (self.users.length === 0){
-                    $.ajax({
-                        url: window.usersUrl,
-                        method: 'GET',
-                        error: function(e){
-                            console.log(e);
-                        },
-                        success: function(data){
-                            self.users = data.results;
-                        }
-                    });
-                }
 
                 $("#new-group-modal").modal('show');
 
@@ -154,19 +145,16 @@ require(['jquery', 'lodash', 'vue', 'datatables', 'jquery-ui'], function ($, _, 
 
             clearGroupStatusMessage: function(){
                 // clear group edit modal status message
-                //
                 $("#group-add-msg").removeClass("text-success").removeClass("text-danger").text("");
             },
 
             groupModalClose: function(){
                 // close dialog and clear selected users
-
-                this.selectedusers = [];
                 $("#new-group-modal").modal('hide');
             },
             updateGroup: function(){
                 // save new group or update existing group
-                //
+
                 var self = this;
 
                 this.clearGroupStatusMessage();
@@ -176,7 +164,7 @@ require(['jquery', 'lodash', 'vue', 'datatables', 'jquery-ui'], function ($, _, 
                 var method;
                 var data = {
                     name: this.newGroupName,
-                    user_set: this.selectedUsers
+                    user_set: _.map(this.selectedUsers, "url")
                 };
 
                 if (this.groupMode === 'edit'){
@@ -223,28 +211,16 @@ require(['jquery', 'lodash', 'vue', 'datatables', 'jquery-ui'], function ($, _, 
             },
 
             userToggle: function(user, idx){
-                /* when a group membership row is clicked, toggle the user in the selectedUsers list */
-                debugger;
-                if (this.selectedUsers.indexOf(user) >= 0){
-                    _.pull(this.selectedUsers, user);
-                }else{
-                    this.selectedUsers.push(user);
-                }
-            },
-
-            isSelectedClass: function(user){
-                // determines class of group users table row
-                console.log(user);
-                return this.selectedUsers.indexOf(user) >= 0 ? 'info' : '';
+                user.selected = !user.selected;
             },
 
             userSelectAll: function(){
                 // select all uers in group membership table
-                this.selectedUsers = this.users;
+                _.each(this.users, function(u){u.selected = true;});
             },
             userSelectNone: function(){
                 // clear selection for group membership table
-                this.selectedUsers = [];
+                _.each(this.users, function(u){u.selected = false;});
             },
 
             initGroups: function(selectAfter){
@@ -266,6 +242,20 @@ require(['jquery', 'lodash', 'vue', 'datatables', 'jquery-ui'], function ($, _, 
                     },
                     error: function (error) {
                         console.log(error);
+                    }
+                });
+
+                $.ajax({
+                    url: window.usersUrl,
+                    method: 'GET',
+                    error: function(e){
+                        console.log(e);
+                    },
+                    success: function(data){
+                        self.users = _.map(data.results, function(user){
+                            user.selected = false;
+                            return user;
+                        });
                     }
                 });
 
@@ -313,6 +303,9 @@ require(['jquery', 'lodash', 'vue', 'datatables', 'jquery-ui'], function ($, _, 
                 }
 
                 return "";
+            },
+            selectedUsers: function(){
+                return _.filter(this.users, function(user){return user.selected;});
             }
         },
 

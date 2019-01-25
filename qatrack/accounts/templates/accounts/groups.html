@@ -62,27 +62,25 @@
     </div>
 
     <div class="row">
-      <div class="col-sm-6">
-        <label for="groups">{% trans "Group" %}</label>
-        <div class="input-group">
-          <select class="form-control" id="groups" v-model="selected">
-            <option v-for="group in groups" :value="group.name" v-text="group.name"></option>
-          </select>
-          <div class="input-group-btn">
-            <button @click="addGroupDialog('add')" class="btn btn-default btn-sm" type="button" title="{% trans "Add New Group" %}">
-              <span class="fa fa-stack fa-fw">
-                <i class="fa fa-users fa-stack-custom-main"></i>
-                <i class="fa fa-plus fa-stack-custom-sub primary"></i>
-              </span>
-            </button>
-            <button @click="addGroupDialog('edit')" class="btn btn-default btn-sm" type="button" title="{% trans "Edit Group" %}">
-              <span class="fa fa-stack fa-fw">
-                <i class="fa fa-users fa-stack-custom-main"></i>
-                <i class="fa fa-edit fa-stack-custom-sub primary"></i>
-              </span>
-            </button>
+      <div class="col-sm-12">
+        <form class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-2" for="groups">{% trans "Group" %}</label>
+            <div class="col-sm-6">
+              <select class="form-control" id="groups" v-model="selected">
+                <option v-for="group in groups" :value="group.name" v-text="group.name"></option>
+              </select>
+            </div>
+            <div class="col-sm-4">
+              <a @click="addGroupDialog('add')" class="btn btn-default btn-sm" type="button" title="{% trans "Add New Group" %}">
+                <i class="fa fa-plus"></i> {% trans "Add Group" %}
+              </a>
+              <a @click="addGroupDialog('edit')" class="btn btn-default btn-sm" type="button" title="{% trans "Edit Group" %}">
+                <i class="fa fa-edit"></i> {% trans "Edit Group" %}
+              </a>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
     <div class="row">
@@ -137,10 +135,11 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr class="toggle"
+                        <tr
+                          class="toggle"
                           v-for="(user, idx) in users"
-                          :class="'toggle '+ isSelectedClass(user.url)"
-                          @click="userToggle(user.url, idx)">
+                          :class="user.selected ? 'info' : ''"
+                          @click="userToggle(user, idx)">
                           <td>${ user.username}</td>
                           <td>${ user.first_name }</td>
                           <td>${ user.last_name}</td>
