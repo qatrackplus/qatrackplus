@@ -72,10 +72,16 @@
               </select>
             </div>
             <div class="col-sm-4">
-              <a @click="addGroupDialog('add')" class="btn btn-default btn-sm" type="button" title="{% trans "Add New Group" %}">
+              <a @click="addGroupDialog('add')"
+                class="btn btn-default btn-sm"
+                type="button" title="{% trans "Add New Group" %}"
+              >
                 <i class="fa fa-plus"></i> {% trans "Add Group" %}
               </a>
-              <a @click="addGroupDialog('edit')" class="btn btn-default btn-sm" type="button" title="{% trans "Edit Group" %}">
+              <a @click="addGroupDialog('edit')"
+                class="btn btn-default btn-sm"
+                type="button" title="{% trans "Edit Group Name & Members" %}"
+              >
                 <i class="fa fa-edit"></i> {% trans "Edit Group" %}
               </a>
             </div>
