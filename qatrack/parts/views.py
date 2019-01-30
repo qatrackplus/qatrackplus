@@ -3,7 +3,7 @@ import csv
 
 from braces.views import LoginRequiredMixin
 from decimal import Decimal
-from django.core.urlresolvers import reverse, resolve
+from django.urls import reverse, resolve
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib import messages
 from django.db.models import F, Q, Sum

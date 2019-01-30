@@ -21,4 +21,4 @@ class ContentTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ContentType.objects.all()
     serializer_class = ContentTypeSerializer
     filter_class = ContentTypeFilter
-    filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)

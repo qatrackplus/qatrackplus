@@ -9,12 +9,17 @@ from django.db import migrations
 
 def add_in_progress_perm(apps, schema_editor):
 
-    for app_config in apps.get_app_configs():
+    return
+    try:
+        permission = Permission.objects.get(codename="can_save_in_progress")
+    except Permission.DoesNotExist:
+        app_config = apps.get_app_config("qa")
         app_config.models_module = True
-        create_permissions(app_config, apps=apps, verbosity=0)
+        create_permissions(app_config, verbosity=0)
         app_config.models_module = None
 
-    permission = Permission.objects.get(codename="can_save_in_progress")
+        permission = Permission.objects.get(codename="can_save_in_progress")
+
     for group in Group.objects.all():
         group.permissions.add(permission)
 

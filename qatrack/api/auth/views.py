@@ -25,7 +25,7 @@ class UserViewSet(MultiSerializerMixin, viewsets.ReadOnlyModelViewSet):
         'list': UserListSerializer,
     }
     filter_class = filters.UserFilter
-    filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
     ordering_fields = ("username", "first_name", "last_name", "email", "is_staff", "is_active", "is_superuser",)
     ordering = ("username",)
 
@@ -40,7 +40,7 @@ class GroupViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         'list': GroupListSerializer,
     }
     filter_class = filters.GroupFilter
-    filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
     def update(self, request, *args, **kwargs):
 
@@ -78,6 +78,6 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PermissionSerializer
     filter_class = filters.PermissionFilter
     filter_backends = (
-        backends.DjangoFilterBackend,
+        backends.RestFrameworkFilterBackend,
         OrderingFilter,
     )

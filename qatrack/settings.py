@@ -247,7 +247,7 @@ REST_FRAMEWORK = {
     'DATETIME_INPUT_FORMATS': ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"],
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_filters.backends.DjangoFilterBackend',
+        'rest_framework_filters.backends.RestFrameworkFilterBackend',
     ),
 }
 

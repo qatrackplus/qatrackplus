@@ -8,7 +8,7 @@ from django.contrib import admin, messages
 from django.contrib.admin import options, widgets
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import HttpResponseRedirect, redirect, render

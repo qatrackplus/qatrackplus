@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 from qatrack.service_log import models
 from qatrack.qa.tests import utils as qa_utils

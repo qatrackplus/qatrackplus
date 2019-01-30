@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 import django.forms
 from django.test import TestCase
 from django.test.client import RequestFactory
@@ -124,6 +124,8 @@ class TestControlImage(TestCase):
         self.url = reverse("control_chart")
 
     def tearDown(self):
+        models.TestListInstance.objects.all().delete()
+        models.UnitTestInfo.objects.all().delete()
         models.Test.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Unit.objects.all().delete()
@@ -617,6 +619,7 @@ class TestComposite(TestCase):
 
     def test_invalid_composite(self):
 
+        self.tc.unittestinfo_set.all().delete()
         self.tc.delete()
         data = {
             'tests': {
@@ -638,6 +641,7 @@ class TestComposite(TestCase):
 
     def test_no_composite(self):
 
+        self.tc.unittestinfo_set.all().delete()
         self.tc.delete()
         data = {
             'tests': {

@@ -1,6 +1,6 @@
 from braces.views import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse, resolve
+from django.urls import reverse, resolve
 from django.forms.utils import timezone
 from django.http import HttpResponseRedirect
 from django.template.loader import get_template

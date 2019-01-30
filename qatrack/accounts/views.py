@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth import logout
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.views.generic.base import TemplateView
@@ -37,3 +38,7 @@ class GroupsApp(PermissionRequiredMixin, TemplateView):
         context["all_perms"] = json.dumps(PERMISSIONS)
         context["groups"] = Group.objects.all()
         return context
+
+
+def logout_view(request):
+    logout(request)

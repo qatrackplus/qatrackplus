@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import resolve, reverse
+from django.urls import resolve, reverse
 from django.db.models import Sum
 from django.forms.utils import timezone
 from django.http import (

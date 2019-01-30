@@ -5,7 +5,7 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.utils import timezone

@@ -83,15 +83,15 @@ class Attachment(models.Model):
     label = models.CharField(verbose_name=_("Label"), max_length=255, blank=True)
     comment = models.TextField(verbose_name=_("Comment"), blank=True)
 
-    test = models.ForeignKey(qam.Test, null=True, blank=True)
-    testlist = models.ForeignKey(qam.TestList, null=True, blank=True)
-    testlistcycle = models.ForeignKey(qam.TestListCycle, null=True, blank=True)
-    testinstance = models.ForeignKey(qam.TestInstance, null=True, blank=True)
-    testlistinstance = models.ForeignKey(qam.TestListInstance, null=True, blank=True)
-    serviceevent = models.ForeignKey(slm.ServiceEvent, null=True, blank=True)
+    test = models.ForeignKey(qam.Test, on_delete=models.CASCADE, null=True, blank=True)
+    testlist = models.ForeignKey(qam.TestList, on_delete=models.CASCADE, null=True, blank=True)
+    testlistcycle = models.ForeignKey(qam.TestListCycle, on_delete=models.CASCADE, null=True, blank=True)
+    testinstance = models.ForeignKey(qam.TestInstance, on_delete=models.CASCADE, null=True, blank=True)
+    testlistinstance = models.ForeignKey(qam.TestListInstance, on_delete=models.CASCADE, null=True, blank=True)
+    serviceevent = models.ForeignKey(slm.ServiceEvent, on_delete=models.CASCADE, null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False)
 
     OWNER_MODELS = [
         "test",

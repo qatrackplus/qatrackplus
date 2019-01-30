@@ -1,8 +1,8 @@
 -e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
--e git+https://github.com/randlet/django-listable.git@efff32a4ceaa795d5b1a32dc75decacef3de90e8#egg=django_listable
+-e git+https://github.com/randlet/django-listable.git@django_21#egg=django_listable
 -e git+https://github.com/randlet/django-sql-explorer.git@815032b721907fca15fbe34aec69cc0bb5238e79#egg=django-sql-explorer
-Django==1.11.15
+Django==2.1.5
 PyVirtualDisplay==0.2
 beautifulsoup4==4.6.0
 coreapi==2.3.3
@@ -14,13 +14,13 @@ django-coverage==1.2.4
 django-crispy-forms==1.6.0
 django-debug-toolbar==1.8
 django-dynamic-raw-id==2.4
-django-extensions==1.7.4
-django-filter==1.1.0
+django-extensions==2.1.4
+django-filter==2.1.0
 django-form-utils==1.0.3
 django-recurrence==1.8.0
-django-registration==2.1.2
-djangorestframework==3.7.7
-djangorestframework-filters==0.10.2post0
+django-registration==2.5.2
+djangorestframework==3.9.1
+djangorestframework-filters==1.0.0_dev0
 django-widget-tweaks==1.4.1
 freezegun==0.3.9
 html5lib==1.0.1
@@ -34,9 +34,9 @@ pylinac==2.1.0.1; python_version < '3.6'
 pylinac==2.2.0; python_version >= '3.6'
 pynliner==0.8.0
 pytest-cov==2.5.1
-pytest-django==3.1.2
+pytest-django==3.4.5
 pytest-sugar==0.9.1
-pytest==3.5.0
+pytest==4.1.1
 python-dateutil==2.6.1
 pytz==2018.4
 reportlab==3.5.8

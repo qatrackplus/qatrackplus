@@ -8,6 +8,7 @@ from django.db import migrations
 
 def add_attach_perms(apps, schema):
 
+    return
 
     Permission = apps.get_model("auth", "Permission")
     Group = apps.get_model("auth", "Group")
@@ -16,10 +17,10 @@ def add_attach_perms(apps, schema):
         perm = Permission.objects.get(name="Can add attachment")
     except:
         # during initial database creation the permission might not exist
-        for app_config in apps.get_app_configs():
-            app_config.models_module = True
-            create_permissions(app_config, verbosity=0)
-            app_config.models_module = None
+        app_config = apps.get_app_config("attachments")
+        app_config.models_module = True
+        create_permissions(app_config, verbosity=0)
+        app_config.models_module = None
 
         perm = Permission.objects.get(name="Can add attachment")
 

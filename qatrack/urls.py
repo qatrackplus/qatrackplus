@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.templatetags.staticfiles import \
     static as static_url
 from django.views.generic.base import RedirectView
+from django.urls import path
 
 from qatrack.qatrack_core.views import homepage
 
@@ -33,7 +34,7 @@ urlpatterns = [
     url(r'^core/', include('qatrack.qatrack_core.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
+    path(r'admin/', admin.site.urls),
     url(r'^favicon\.ico$', favicon_view),
     url(r'^apple-touch-icon\.png$', touch_view),
 

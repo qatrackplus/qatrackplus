@@ -211,8 +211,9 @@ class ServiceEvent(models.Model):
 
         permissions = (
             ('review_serviceevent', 'Can review service event'),
-            ('view_serviceevent', 'Can view service event'),
+            ('view_serviceevent', 'Can review service event'),
         )
+        default_permissions = ('add', 'change', 'delete',)
 
         ordering = ["-datetime_service"]
 
@@ -326,9 +327,10 @@ class ReturnToServiceQA(models.Model):
     class Meta:
         permissions = (
             ('view_returntoserviceqa', 'Can view return to service qa'),
-            ('perform_returntoserviceqa', 'Can perform return to service qa')
+            ('perform_returntoserviceqa', 'Can perform return to service qa'),
         )
         ordering = ['-datetime_assigned']
+        default_permissions = ('add', 'change', 'delete',)
 
 
 class GroupLinker(models.Model):

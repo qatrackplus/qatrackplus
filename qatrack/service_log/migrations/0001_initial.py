@@ -33,7 +33,10 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('datetime_assigned', models.DateTimeField()),
             ],
-            options={'permissions': (('view_qafollowup', 'Can view return vo service qa'), ('perform_qafollowup', 'Can perform return to service qa'))},
+            options={
+                'permissions': (('view_qafollowup', 'Can view return vo service qa'), ('perform_qafollowup', 'Can perform return to service qa')),
+                'default_permissions': ('add', 'change', 'delete'),
+            },
         ),
         migrations.CreateModel(
             name='ServiceArea',
@@ -59,7 +62,11 @@ class Migration(migrations.Migration):
                 ('service_event_related', models.ManyToManyField(blank=True, help_text='Was there a previous service event that might be related to this event?', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Service events related')),
                 ('is_review_required', models.BooleanField(default=False, help_text='Does this service event require review?')),
             ],
-            options={'get_latest_by': 'datetime_service', 'permissions': (('review_serviceevent', 'Can Review Service Event'), ('view_serviceevent', 'Can View Service Event'))},
+            options={
+                'get_latest_by': 'datetime_service',
+                'permissions': (('review_serviceevent', 'Can Review Service Event'), ('view_serviceevent', 'Can View Service Event')),
+                'default_permissions': ('add', 'change', 'delete'),
+            },
         ),
         migrations.CreateModel(
             name='ServiceEventStatus',

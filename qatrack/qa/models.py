@@ -8,9 +8,8 @@ from django.contrib.contenttypes.fields import (
     GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
-from django.core import urlresolvers
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Count, Q
@@ -420,6 +419,7 @@ class AutoReviewRule(models.Model):
     )
     status = models.ForeignKey(
         TestInstanceStatus,
+        on_delete=models.CASCADE,
         help_text="Status to assign test instance based on its pass/fail state",
     )
 
@@ -436,11 +436,11 @@ class Reference(models.Model):
 
     # who created this reference
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False, related_name="reference_creators")
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="reference_creators")
 
     # who last modified this reference
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, editable=False, related_name="reference_modifiers")
+    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="reference_modifiers")
 
     class Meta:
         default_permissions = ()
@@ -531,11 +531,11 @@ class Tolerance(models.Model):
 
     # who created this tolerance
     created_date = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False, related_name="tolerance_creators")
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="tolerance_creators")
 
     # who last modified this tolerance
     modified_date = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, editable=False, related_name="tolerance_modifiers")
+    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="tolerance_modifiers")
 
     objects = ToleranceManager()
 
@@ -717,7 +717,7 @@ class Test(models.Model, TestPackMixin):
         blank=True,
         null=True,
     )
-    category = models.ForeignKey(Category, help_text=_("Choose a category for this test"))
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, help_text=_("Choose a category for this test"))
     chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
     auto_review = models.BooleanField(_("Allow auto review of this test?"), default=AUTO_REVIEW_DEFAULT)
 
@@ -751,9 +751,9 @@ class Test(models.Model, TestPackMixin):
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False, related_name="test_creator")
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_creator")
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, editable=False, related_name="test_modifier")
+    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_modifier")
 
     objects = TestManager()
 
@@ -994,8 +994,8 @@ class UnitTestInfoManager(models.Manager):
 
 class UnitTestInfo(models.Model):
 
-    unit = models.ForeignKey(Unit)
-    test = models.ForeignKey(Test)
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
+    test = models.ForeignKey(Test, on_delete=models.PROTECT)
 
     reference = models.ForeignKey(
         Reference,
@@ -1056,7 +1056,7 @@ class UnitTestInfo(models.Model):
 
 class UnitTestInfoChange(models.Model):
 
-    unit_test_info = models.ForeignKey(UnitTestInfo)
+    unit_test_info = models.ForeignKey(UnitTestInfo, on_delete=models.PROTECT)
     reference = models.ForeignKey(
         Reference,
         verbose_name=_("Old Reference"),
@@ -1075,7 +1075,7 @@ class UnitTestInfoChange(models.Model):
     tolerance_changed = models.BooleanField()
     comment = models.TextField(help_text=_("Reason for the change"))
     changed = models.DateTimeField(auto_now_add=True)
-    changed_by = models.ForeignKey(User, editable=False)
+    changed_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False)
 
 
 class TestListMembershipManager(models.Manager):
@@ -1089,8 +1089,8 @@ class TestListMembership(models.Model):
 
     NK_FIELDS = ['test_list', 'test']
 
-    test_list = models.ForeignKey("TestList")
-    test = models.ForeignKey(Test)
+    test_list = models.ForeignKey("TestList", on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
     order = models.IntegerField(db_index=True)
 
     objects = TestListMembershipManager()
@@ -1142,9 +1142,9 @@ class TestCollectionInterface(models.Model):
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_created", editable=False)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="%(app_label)s_%(class)s_created", editable=False)
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_modified", editable=False)
+    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="%(app_label)s_%(class)s_modified", editable=False)
 
     class Meta:
         abstract = True
@@ -1325,8 +1325,8 @@ class Sublist(models.Model):
 
     NK_FIELDS = ['parent', 'child']
 
-    parent = models.ForeignKey(TestList, related_name="children")
-    child = models.ForeignKey(TestList)
+    parent = models.ForeignKey(TestList, on_delete=models.CASCADE, related_name="children")
+    child = models.ForeignKey(TestList, on_delete=models.CASCADE)
     outline = models.BooleanField(
         default=False,
         help_text=(
@@ -1375,10 +1375,11 @@ class UnitTestListManager(models.Manager):
 class UnitTestCollection(models.Model):
     """keeps track of which units should perform which test lists at a given frequency"""
 
-    unit = models.ForeignKey(Unit)
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
     frequency = models.ForeignKey(
         Frequency,
+        on_delete=models.SET_NULL,
         help_text=_("Frequency with which this test list is to be performed"),
         null=True,
         blank=True,
@@ -1392,6 +1393,7 @@ class UnitTestCollection(models.Model):
 
     assigned_to = models.ForeignKey(
         Group,
+        on_delete=models.SET_NULL,
         help_text=_("QC group that this test list should nominally be performed by"),
         null=True,
     )
@@ -1406,6 +1408,7 @@ class UnitTestCollection(models.Model):
     limit = Q(app_label='qa', model='testlist') | Q(app_label='qa', model='testlistcycle')
     content_type = models.ForeignKey(
         ContentType,
+        on_delete=models.PROTECT,
         limit_choices_to=limit,
         verbose_name="Test List or Test List Cycle",
         help_text="Choose whether to use a Test List or Test List Cycle",
@@ -1559,7 +1562,7 @@ class UnitTestCollection(models.Model):
         return self.tests_object.get_list(day)
 
     def get_absolute_url(self):
-        return urlresolvers.reverse("perform_qa", kwargs={"pk": self.pk})
+        return reverse("perform_qa", kwargs={"pk": self.pk})
 
     def copy_references(self, dest_unit):
 
@@ -1608,9 +1611,9 @@ class TestInstance(models.Model):
     """
 
     # review status
-    status = models.ForeignKey(TestInstanceStatus)
+    status = models.ForeignKey(TestInstanceStatus, on_delete=models.PROTECT)
     review_date = models.DateTimeField(null=True, blank=True, editable=False)
-    reviewed_by = models.ForeignKey(User, null=True, blank=True, editable=False)
+    reviewed_by = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
 
     # did test pass or fail (or was skipped etc)
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES, editable=False, db_index=True)
@@ -1629,10 +1632,10 @@ class TestInstance(models.Model):
     reference = models.ForeignKey(Reference, null=True, blank=True, editable=False, on_delete=models.SET_NULL)
     tolerance = models.ForeignKey(Tolerance, null=True, blank=True, editable=False, on_delete=models.SET_NULL)
 
-    unit_test_info = models.ForeignKey(UnitTestInfo, editable=False)
+    unit_test_info = models.ForeignKey(UnitTestInfo, on_delete=models.PROTECT, editable=False)
 
     # keep track if this test was performed as part of a test list
-    test_list_instance = models.ForeignKey("TestListInstance", editable=False)
+    test_list_instance = models.ForeignKey("TestListInstance", on_delete=models.CASCADE, editable=False)
 
     work_started = models.DateTimeField(editable=False, db_index=True)
 
@@ -1641,9 +1644,9 @@ class TestInstance(models.Model):
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, editable=False, related_name="test_instance_creator")
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_instance_creator")
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, editable=False, related_name="test_instance_modifier")
+    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_instance_modifier")
 
     objects = TestInstanceManager()
 
@@ -1861,8 +1864,8 @@ class TestListInstance(models.Model):
 
     """
 
-    unit_test_collection = models.ForeignKey(UnitTestCollection, editable=False)
-    test_list = models.ForeignKey(TestList, editable=False)
+    unit_test_collection = models.ForeignKey(UnitTestCollection, on_delete=models.PROTECT, editable=False)
+    test_list = models.ForeignKey(TestList, on_delete=models.PROTECT, editable=False)
 
     work_started = models.DateTimeField(db_index=True)
     work_completed = models.DateTimeField(default=timezone.now, db_index=True, null=True)
@@ -1887,6 +1890,7 @@ class TestListInstance(models.Model):
     reviewed = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(
         User,
+        on_delete=models.PROTECT,
         editable=False,
         null=True,
         blank=True,
@@ -1899,9 +1903,9 @@ class TestListInstance(models.Model):
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_creator")
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_list_instance_creator")
     modified = models.DateTimeField()
-    modified_by = models.ForeignKey(User, editable=False, related_name="test_list_instance_modifier")
+    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_list_instance_modifier")
 
     objects = TestListInstanceManager()
 
@@ -2210,8 +2214,8 @@ class TestListCycleMembership(models.Model):
 
     NK_FIELDS = ['cycle', 'test_list']
 
-    test_list = models.ForeignKey(TestList)
-    cycle = models.ForeignKey(TestListCycle)
+    test_list = models.ForeignKey(TestList, on_delete=models.CASCADE)
+    cycle = models.ForeignKey(TestListCycle, on_delete=models.CASCADE)
     order = models.IntegerField()
 
     objects = TestListCycleMembershipManager()

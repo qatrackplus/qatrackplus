@@ -4,7 +4,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import constants, get_messages
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Count, Q
 from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict

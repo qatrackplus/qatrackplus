@@ -3,8 +3,8 @@ from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
-from django.db.models import Field, ObjectDoesNotExist, Q, QuerySet
+from django.urls import reverse
+from django.db.models import ObjectDoesNotExist, Q, QuerySet
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
