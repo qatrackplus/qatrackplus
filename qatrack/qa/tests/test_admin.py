@@ -10,6 +10,7 @@ from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, TransactionTestCase
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import admin as qa_admin
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
@@ -21,7 +22,7 @@ class TestSetReferencesAndTolerancesForm(TransactionTestCase):
 
     def setUp(self):
 
-        qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.url = reverse('qa_copy_refs_and_tols')
@@ -97,7 +98,7 @@ class TestTestlistjson(TestCase):
 
     def setUp(self):
 
-        qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.u = qa_utils.create_unit()
@@ -168,7 +169,7 @@ class TestToleranceAdmin(TestCase):
 
     def setUp(self):
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.t = qa_utils.create_tolerance()
@@ -211,7 +212,7 @@ class TestToleranceAdmin(TestCase):
 class TestTestInstanceAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
         qa_utils.create_test_instance()
         self.url = reverse(
@@ -226,7 +227,7 @@ class TestTestListInstanceAdmin(TestCase):
 
     def setUp(self):
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.tli = qa_utils.create_test_list_instance()
@@ -264,7 +265,7 @@ class TestTestListInstanceAdmin(TestCase):
 class TestUnitTestCollectionAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.u_1 = qa_utils.create_unit()
@@ -278,8 +279,8 @@ class TestUnitTestCollectionAdmin(TestCase):
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_1)
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2)
 
-        self.g_1 = qa_utils.create_group()
-        self.g_2 = qa_utils.create_group()
+        self.g_1 = create_group()
+        self.g_2 = create_group()
 
         self.tl_ct = ContentType.objects.get(model='testlist')
         self.tlc_ct = ContentType.objects.get(model='testlistcycle')
@@ -385,7 +386,7 @@ class TestUnitTestCollectionAdmin(TestCase):
 class TestTestAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.c_1 = qa_utils.create_category()
@@ -491,7 +492,7 @@ class TestTestAdmin(TestCase):
 class TestTestListAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.t_1 = qa_utils.create_test()
@@ -691,7 +692,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         get_internal_user()

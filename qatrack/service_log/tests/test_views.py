@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.test import RequestFactory, TestCase
 from django.utils import timezone
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
@@ -18,8 +19,8 @@ from qatrack.service_log.tests import utils as sl_utils
 class TestURLS(TestCase):
 
     def setUp(self):
-        u = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
-        g = qa_utils.create_group()
+        u = create_user(is_superuser=True, uname='user', pwd='pwd')
+        g = create_group()
         u.groups.add(g)
         u.save()
         self.client.login(username='user', password='pwd')
@@ -29,8 +30,8 @@ class TestURLS(TestCase):
 
     def test_qa_urls(self):
 
-        ses = sl_utils.create_service_event_status(is_default=True)
-        tis = qa_utils.create_status(is_default=True)
+        sl_utils.create_service_event_status(is_default=True)
+        qa_utils.create_status(is_default=True)
         se = sl_utils.create_service_event()
         u = qa_utils.create_unit()
         utc = qa_utils.create_unit_test_collection(unit=u)
@@ -57,7 +58,8 @@ class TestURLS(TestCase):
         )
 
         url_names_404 = (
-            # Test urls that expect kwargs when not given any (reverse should render url for use in templates, but return 404)
+            # Test urls that expect kwargs when not given any
+            # (reverse should render url for use in templates, but return 404)
             ('sl_details', {}, ''),
             ('tli_select', {}, ''),
             ('se_searcher', {}, ''),
@@ -79,12 +81,12 @@ class TestDashboard(TestCase):
         se_requires_review = sl_utils.create_service_event(is_review_required=True)
         ses_default = sl_utils.create_service_event_status(is_default=True)
         se_default_status = sl_utils.create_service_event(service_status=ses_default)
-        rtsqa_0001 = sl_utils.create_return_to_service_qa(add_test_list_instance=True)  # qa_not_reviewed +1
-        rtsqa_0002 = sl_utils.create_return_to_service_qa()  # qa_not_complete +1
-        rtsqa_0003 = sl_utils.create_return_to_service_qa(service_event=se_requires_review)  # se_needing_review +1, qa_not_complete +1
-        rtsqa_0004 = sl_utils.create_return_to_service_qa(service_event=se_default_status)  # se_default +1, qa_not_complete +1
+        sl_utils.create_return_to_service_qa(add_test_list_instance=True)  # qa_not_reviewed +1
+        sl_utils.create_return_to_service_qa()  # qa_not_complete +1
+        sl_utils.create_return_to_service_qa(service_event=se_requires_review)  # se_needing_review +1, qa_not_complete +1
+        sl_utils.create_return_to_service_qa(service_event=se_default_status)  # se_default +1, qa_not_complete +1
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='person')
+        self.user = create_user(is_superuser=True, uname='person')
 
     def delete_objects(self):
 
@@ -174,22 +176,22 @@ class TestCreateServiceEvent(TestCase):
 
         self.url = reverse('sl_new')
         self.url_delete = reverse('se_delete')
-        self.user = qa_utils.create_user(is_superuser=True)
+        self.user = create_user(is_superuser=True)
 
         self.client.login(username='user', password='password')
 
         perm = Permission.objects.get(codename='can_have_hours')
         user_can_hours = User.objects.get(username='user')
         user_can_hours.user_permissions.add(perm)
-        user_group_has_hours = qa_utils.create_user(uname='in_group_with_hours')
-        group_has_hours = qa_utils.create_group(name='can_have_hours')
+        user_group_has_hours = create_user(uname='in_group_with_hours')
+        group_has_hours = create_group(name='can_have_hours')
         group_has_hours.permissions.add(perm)
         user_group_has_hours.groups.add(group_has_hours)
 
         sl_utils.create_third_party()
 
-        group_linked = qa_utils.create_group(name='linked')
-        user_group_linked = qa_utils.create_user(uname='user_in_group_linked')
+        group_linked = create_group(name='linked')
+        user_group_linked = create_user(uname='user_in_group_linked')
         user_group_linked.groups.add(group_linked)
         self.gl_1 = sl_utils.create_group_linker(group=group_linked)
         self.part = sl_utils.create_part(add_storage=True)
@@ -244,8 +246,8 @@ class TestCreateServiceEvent(TestCase):
         unit = qa_models.Unit.objects.all().first()
         response = self.client.get(self.url + '?u=%d' % unit.pk)
 
-
-        service_areas = models.UnitServiceArea.objects.filter(unit_id=unit.pk).values_list('service_area_id', 'service_area__name')
+        service_areas = models.UnitServiceArea.objects.filter(unit_id=unit.pk
+                                                              ).values_list('service_area_id', 'service_area__name')
         self.assertEqual(
             list(service_areas),
             list(response.context_data['form'].fields['service_area_field'].queryset.values_list('id', 'name'))
@@ -533,22 +535,22 @@ class TestEditServiceEvent(TestCase):
         self.se_2 = sl_utils.create_service_event(unit_service_area=self.usa_2)
 
         self.url = reverse('sl_new')
-        self.user = qa_utils.create_user(is_superuser=True)
+        self.user = create_user(is_superuser=True)
 
         self.client.login(username='user', password='password')
 
         perm = Permission.objects.get(codename='can_have_hours')
         user_can_hours = User.objects.get(username='user')
         user_can_hours.user_permissions.add(perm)
-        user_group_has_hours = qa_utils.create_user(uname='in_group_with_hours')
-        group_has_hours = qa_utils.create_group(name='can_have_hours')
+        user_group_has_hours = create_user(uname='in_group_with_hours')
+        group_has_hours = create_group(name='can_have_hours')
         group_has_hours.permissions.add(perm)
         user_group_has_hours.groups.add(group_has_hours)
 
         sl_utils.create_third_party()
 
-        group_linked = qa_utils.create_group(name='linked')
-        user_group_linked = qa_utils.create_user(uname='user_in_group_linked')
+        group_linked = create_group(name='linked')
+        user_group_linked = create_user(uname='user_in_group_linked')
         user_group_linked.groups.add(group_linked)
         self.gl_1 = sl_utils.create_group_linker(group=group_linked)
         self.part = sl_utils.create_part(add_storage=True)
@@ -653,7 +655,7 @@ class TestServiceLogViews(TestCase):
 
         self.factory = RequestFactory()
 
-        self.user = qa_utils.create_user(is_superuser=True)
+        self.user = create_user(is_superuser=True)
         self.client.login(username='user', password='password')
 
         self.u1 = qa_utils.create_unit()
@@ -726,15 +728,17 @@ class TestServiceLogViews(TestCase):
         qa_utils.create_test_instance(test_list_instance=tli)
 
         expected = json.loads(
-            json.dumps({
-                'pass_fail': tli.pass_fail_summary(),
-                'review': tli.review_summary(),
-                'datetime': timezone.localtime(tli.created).replace(microsecond=0),
-                'all_reviewed': int(tli.all_reviewed),
-                'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
-                'in_progress': tli.in_progress,
-            },
-                       cls=DjangoJSONEncoder)
+            json.dumps(
+                {
+                    'pass_fail': tli.pass_fail_summary(),
+                    'review': tli.review_summary(),
+                    'datetime': timezone.localtime(tli.created).replace(microsecond=0),
+                    'all_reviewed': int(tli.all_reviewed),
+                    'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
+                    'in_progress': tli.in_progress,
+                },
+                cls=DjangoJSONEncoder,
+            )
         )
 
         data = {'tli_id': tli.id}

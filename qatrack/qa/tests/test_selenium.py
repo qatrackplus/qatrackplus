@@ -20,10 +20,10 @@ from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
+from qatrack.qa.tests import utils
 from qatrack.service_log.tests import utils as sl_utils
-
-from . import utils
 
 objects = {
     'Group': {
@@ -184,16 +184,16 @@ def WebElement_click(self):
     """
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
     return self._execute(Command.CLICK_ELEMENT)
-WebElement.click = WebElement_click
+WebElement.click = WebElement_click  # noqa: E305
 
 
 orig_send_keys = WebElement.send_keys
-@retry_if_exception(WebDriverException, 5, sleep_time=1)
+@retry_if_exception(WebDriverException, 5, sleep_time=1)  # noqa: E302
 def WebElement_send_keys(self, keys):
     """Monky patch send_keys to ensure element is in view"""
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
     return orig_send_keys(self, keys)
-WebElement.send_keys = WebElement_send_keys
+WebElement.send_keys = WebElement_send_keys  # noqa: E305
 
 
 # Following two classes are trying to work around this issue:
@@ -301,7 +301,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def setUp(self):
 
         self.password = 'password'
-        self.user = utils.create_user(pwd=self.password)
+        self.user = create_user(pwd=self.password)
 
     def wait_for_success(self):
         self.wait.until(
@@ -465,7 +465,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def test_admin_unittestcollection(self):
 
         if not utils.exists('auth', 'Group', 'name', objects['Group']['name']):
-            utils.create_group(name=objects['Group']['name'])
+            create_group(name=objects['Group']['name'])
 
         if not utils.exists('units', 'Unit', 'name', objects['Modality']['name']):
             utils.create_unit(name=objects['Modality']['name'], number=objects['Unit']['number'])

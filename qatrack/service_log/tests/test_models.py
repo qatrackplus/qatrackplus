@@ -1,12 +1,12 @@
 from django.conf import settings
-from django.db.utils import IntegrityError
 from django.db.models import ProtectedError
+from django.db.utils import IntegrityError
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 
-from qatrack.service_log import models as sl_models
-
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa.tests import utils as qa_utils
+from qatrack.service_log import models as sl_models
 from qatrack.service_log.tests import utils as sl_utils
 
 
@@ -101,9 +101,11 @@ class TestServiceEventAndRelated(TransactionTestCase):
         h_01 = sl_utils.create_hours(service_event=se, third_party=tp, user=None)
 
         with self.assertRaises(IntegrityError):
-            sl_models.Hours.objects.create(service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1))
+            sl_models.Hours.objects.create(
+                service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1)
+            )
 
-        u_02 = qa_utils.create_user(is_superuser=False, uname='user_02')
+        u_02 = create_user(is_superuser=False, uname='user_02')
         h_02 = sl_utils.create_hours(service_event=se, user=u_02)
 
         # Test user_or_third_party
@@ -113,8 +115,8 @@ class TestServiceEventAndRelated(TransactionTestCase):
     def test_group_linkers(self):
 
         se = sl_models.ServiceEvent.objects.first()
-        g_01 = qa_utils.create_group()
-        g_02 = qa_utils.create_group()
+        g_01 = create_group()
+        g_02 = create_group()
 
         gl_01 = sl_utils.create_group_linker(group=g_01)
         gl_01_name = gl_01.name
@@ -123,12 +125,12 @@ class TestServiceEventAndRelated(TransactionTestCase):
             sl_models.GroupLinker.objects.create(name=gl_01_name, group=g_01)
 
         gl_02 = sl_utils.create_group_linker(group=g_02)
-        gli_01 = sl_utils.create_group_linker_instance(group_linker=gl_01, service_event=se)
+        sl_utils.create_group_linker_instance(group_linker=gl_01, service_event=se)
 
         with self.assertRaises(IntegrityError):
             sl_models.GroupLinkerInstance.objects.create(group_linker=gl_01, service_event=se)
 
-        gli_02 = sl_utils.create_group_linker_instance(group_linker=gl_02, service_event=se)
+        sl_utils.create_group_linker_instance(group_linker=gl_02, service_event=se)
 
         self.assertEqual(2, len(se.grouplinkerinstance_set.all()))
 
@@ -220,7 +222,7 @@ class TestDeletions(TransactionTestCase):
         se.delete()
         self.assertFalse(sl_models.Hours.objects.filter(id=h_id).exists())
 
-        u = qa_utils.create_user()
+        u = create_user()
         h = sl_utils.create_hours(user=u)
 
         with self.assertRaises(ProtectedError):
@@ -249,8 +251,8 @@ class TestDeletions(TransactionTestCase):
         sl_utils.create_service_event_status(is_default=True)
         ses = sl_utils.create_service_event_status()
         se = sl_utils.create_service_event(add_test_list_instance_initiated_by=True, service_status=ses)
-        se.user_status_changed_by = qa_utils.create_user()
-        se.user_modified_by = qa_utils.create_user()
+        se.user_status_changed_by = create_user()
+        se.user_modified_by = create_user()
         se.save()
         se_id = se.id
 
