@@ -17,7 +17,7 @@ django-dynamic-raw-id==2.4
 django-extensions==2.1.4
 django-filter==2.1.0
 django-form-utils==1.0.3
-django-recurrence==1.8.0
+django-recurrence==1.8.2
 django-registration==2.5.2
 djangorestframework==3.9.1
 djangorestframework-filters==1.0.0_dev0
@@ -33,7 +33,7 @@ pydicom==1.1.0
 pylinac==2.1.0.1; python_version < '3.6'
 pylinac==2.2.0; python_version >= '3.6'
 pynliner==0.8.0
-pytest-cov==2.5.1
+pytest-cov==2.6.1
 pytest-django==3.4.5
 pytest-sugar==0.9.1
 pytest==4.1.1
