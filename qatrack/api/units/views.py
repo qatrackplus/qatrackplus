@@ -13,54 +13,54 @@ class UnitViewSet(MultiSerializerMixin, viewsets.ReadOnlyModelViewSet):
     action_serializers = {
         'list': serializers.UnitListSerializer,
     }
-    filter_class = filters.UnitFilter
+    filterset_class = filters.UnitFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class VendorViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Vendor.objects.all().order_by('name')
     serializer_class = serializers.VendorSerializer
-    filter_class = filters.VendorFilter
+    filterset_class = filters.VendorFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class UnitClassViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitClass.objects.all().order_by('name')
     serializer_class = serializers.UnitClassSerializer
-    filter_class = filters.UnitClassFilter
+    filterset_class = filters.UnitClassFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class UnitTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitType.objects.all().order_by('name')
     serializer_class = serializers.UnitClassSerializer
-    filter_class = filters.UnitFilter
+    filterset_class = filters.UnitFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class ModalityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Modality.objects.all().order_by('name')
     serializer_class = serializers.ModalitySerializer
-    filter_class = filters.ModalityFilter
+    filterset_class = filters.ModalityFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class SiteViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Site.objects.all().order_by('name')
     serializer_class = serializers.SiteSerializer
-    filter_class = filters.SiteFilter
+    filterset_class = filters.SiteFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class UnitAvailableTimeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitAvailableTime.objects.all().order_by('unit__number', "-date_changed")
     serializer_class = serializers.UnitAvailableTimeSerializer
-    filter_class = filters.UnitAvailableTimeFilter
+    filterset_class = filters.UnitAvailableTimeFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class UnitAvailableTimeEditViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitAvailableTimeEdit.objects.all().order_by('unit__number', "-date")
     serializer_class = serializers.UnitAvailableTimeEditSerializer
-    filter_class = filters.UnitAvailableTimeEditFilter
+    filterset_class = filters.UnitAvailableTimeEditFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)

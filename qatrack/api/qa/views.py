@@ -23,98 +23,98 @@ class Upload(perform.CompositeCalculation, views.APIView):
 class FrequencyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Frequency.objects.all()
     serializer_class = serializers.FrequencySerializer
-    filter_class = filters.FrequencyFilter
+    filterset_class = filters.FrequencyFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestInstanceStatusViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestInstanceStatus.objects.all()
     serializer_class = serializers.TestInstanceStatusSerializer
-    filter_class = filters.TestInstanceStatusFilter
+    filterset_class = filters.TestInstanceStatusFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class AutoReviewRuleViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.AutoReviewRule.objects.all()
     serializer_class = serializers.AutoReviewRuleSerializer
-    filter_class = filters.AutoReviewRuleFilter
+    filterset_class = filters.AutoReviewRuleFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class ReferenceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Reference.objects.all()
     serializer_class = serializers.ReferenceSerializer
-    filter_class = filters.ReferenceFilter
+    filterset_class = filters.ReferenceFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class ToleranceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Tolerance.objects.all()
     serializer_class = serializers.ToleranceSerializer
-    filter_class = filters.ToleranceFilter
+    filterset_class = filters.ToleranceFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
-    filter_class = filters.CategoryFilter
+    filterset_class = filters.CategoryFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Test.objects.all()
     serializer_class = serializers.TestSerializer
-    filter_class = filters.TestFilter
+    filterset_class = filters.TestFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestListViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestList.objects.all()
     serializer_class = serializers.TestListSerializer
-    filter_class = filters.TestListFilter
+    filterset_class = filters.TestListFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class UnitTestInfoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitTestInfo.objects.all()
     serializer_class = serializers.UnitTestInfoSerializer
-    filter_class = filters.UnitTestInfoFilter
+    filterset_class = filters.UnitTestInfoFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestListMembershipViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestListMembership.objects.all()
     serializer_class = serializers.TestListMembershipSerializer
-    filter_class = filters.TestListMembershipFilter
+    filterset_class = filters.TestListMembershipFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class SublistViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Sublist.objects.all()
     serializer_class = serializers.SublistSerializer
-    filter_class = filters.SublistFilter
+    filterset_class = filters.SublistFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitTestCollection.objects.all()
     serializer_class = serializers.UnitTestCollectionSerializer
-    filter_class = filters.UnitTestCollectionFilter
+    filterset_class = filters.UnitTestCollectionFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestInstance.objects.all()
     serializer_class = serializers.TestInstanceSerializer
-    filter_class = filters.TestInstanceFilter
+    filterset_class = filters.TestInstanceFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
     queryset = models.TestListInstance.objects.prefetch_related("attachment_set").all()
     serializer_class = serializers.TestListInstanceSerializer
-    filter_class = filters.TestListInstanceFilter
+    filterset_class = filters.TestListInstanceFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
     action_serializers = {
         'create': serializers.TestListInstanceCreator,
@@ -167,14 +167,14 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
 class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestListCycle.objects.all()
     serializer_class = serializers.TestListCycleSerializer
-    filter_class = filters.TestListCycleFilter
+    filterset_class = filters.TestListCycleFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestListCycleMembershipViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestListCycleMembership.objects.all()
     serializer_class = serializers.TestListCycleMembershipSerializer
-    filter_class = filters.TestListCycleMembershipFilter
+    filterset_class = filters.TestListCycleMembershipFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 

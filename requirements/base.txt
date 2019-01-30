@@ -1,7 +1,6 @@
--e git+https://github.com/django/django-formtools.git@bb97a8abd374c50991c0a9ce144f17e7322a0c48#egg=django-formtools
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@django_21#egg=django_listable
--e git+https://github.com/randlet/django-sql-explorer.git@815032b721907fca15fbe34aec69cc0bb5238e79#egg=django-sql-explorer
+-e git+https://github.com/randlet/django-sql-explorer.git@53428a2d0167497f89e8b4a4f48f96ab6d9c24f6#egg=django-sql-explorer
 Django==2.1.5
 PyVirtualDisplay==0.2
 beautifulsoup4==4.6.0
@@ -17,6 +16,7 @@ django-dynamic-raw-id==2.4
 django-extensions==2.1.4
 django-filter==2.1.0
 django-form-utils==1.0.3
+django-formtools==2.1
 django-recurrence==1.8.2
 django-registration==2.5.2
 djangorestframework==3.9.1
