@@ -48,6 +48,7 @@ Admin Guide Contents
    :maxdepth: 2
 
    qa/change_site_name
+   qa/auth
    units/guide
    qa/guide
    service_log/guide

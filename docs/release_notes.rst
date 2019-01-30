@@ -22,6 +22,16 @@ Details of the v0.3.1 release
   annoyance since I first made the labeling error in the original version of
   QATrack+.
 
+* A bug in the API which was causing extra information to be returned for
+  list views has been fixed.  This may require you to adjust scripts if you
+  were relying on:
+
+    - permissions or user_set data present in the Groups list view
+    - first_name, last_name, date_joined, permissions in the User List view
+    - Fields other than name, number, or site in the Unit list
+
+* First Name & Last Name have been added to the user-list api view
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------

@@ -4,14 +4,12 @@ import time
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase
+from django.test.testcases import LiveServerThread, QuietWSGIRequestHandler
+from django.core.servers.basehttp import WSGIServer
 from django.utils import timezone
 import pytest
 from selenium import webdriver
-from selenium.common.exceptions import (
-    NoSuchElementException,
-    WebDriverException,
-)
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
@@ -198,8 +196,24 @@ def WebElement_send_keys(self, keys):
 WebElement.send_keys = WebElement_send_keys
 
 
+# Following two classes are trying to work around this issue:
+# https://code.djangoproject.com/ticket/29062#no2
+class LiveServerSingleThread(LiveServerThread):
+    """Runs a single threaded server rather than multi threaded. Reverts https://github.com/django/django/pull/7832"""
+
+    def __create_server(self):
+        return WSGIServer((self.host, self.port), QuietWSGIRequestHandler, allow_reuse_address=False)
+
+
+from django.contrib.staticfiles.handlers import StaticFilesHandler
+class StaticLiveServerSingleThreadedTestCase(StaticLiveServerTestCase):
+    "A thin sub-class which only sets the single-threaded server as a class"
+    server_thread_class = LiveServerSingleThread
+
+    static_handler = StaticFilesHandler
+
 @pytest.mark.selenium
-class SeleniumTests(TestCase, StaticLiveServerTestCase):
+class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @classmethod
     def setUpClass(cls):

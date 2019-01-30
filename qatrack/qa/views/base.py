@@ -4,7 +4,7 @@ import logging
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
-from django.core.urlresolvers import resolve, reverse
+from django.urls import resolve, reverse
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _

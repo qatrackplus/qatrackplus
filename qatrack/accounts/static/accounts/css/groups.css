@@ -1,0 +1,23 @@
+.toggle {
+  cursor: pointer;
+}
+
+table.fixed tbody {
+    display:block;
+    max-height:300px;
+    overflow:auto;
+}
+
+table.fixed thead, table.fixed tbody tr {
+    display:table;
+    width:100%;
+    table-layout:fixed;/* even columns width , fix width of table too*/
+}
+
+table.fixed thead {
+    width: calc( 100% - 1em )/* scrollbar is average 1em/16px width, remove it from thead width */
+}
+
+table.fixed {
+    width: 100%;
+}

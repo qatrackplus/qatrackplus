@@ -54,7 +54,20 @@
                                     </span>
                                     {% trans "Reset Password" %}
                                 </a></li>
+
+                                {% if perms.auth.change_group %}
+                                  <li role="separator" class="divider"></li>
+                                  <li class="{% block groups_active %}{% endblock groups_active %}"><a href="{% url "groups-app" %}">
+                                      <span class="fa fa-stack fa-fw" aria-hidden="true">
+                                          <i class="fa fa-users fa-stack-custom-main"></i>
+                                          <i class="fa fa-lock fa-stack-custom-sub primary"></i>
+                                      </span>
+                                      {% trans "Group Permissions" %}
+                                  </a></li>
+                                {% endif %}
+
                                 {% if user.is_authenticated %}
+                                    <li role="separator" class="divider"></li>
                                     <li><a href="{% url "auth_logout" %}">
                                         <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
                                         {% trans "Log Out" %}

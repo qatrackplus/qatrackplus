@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.templatetags.staticfiles import \
     static as static_url
 from django.views.generic.base import RedirectView
+from django.urls import path
 
 from qatrack.qatrack_core.views import homepage
 
@@ -31,9 +32,13 @@ urlpatterns = [
     url(r'^qc/', include('qatrack.qa.urls')),
     url(r'^units/', include('qatrack.units.urls')),
     url(r'^core/', include('qatrack.qatrack_core.urls')),
+    url(r'^servicelog/', include('qatrack.service_log.urls')),
+    url(r'^parts/', include('qatrack.parts.urls')),
+    url(r'^issues/', include('qatrack.issue_tracker.urls')),
+    url(r'^reports/', include('explorer.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
+    path(r'admin/', admin.site.urls),
     url(r'^favicon\.ico$', favicon_view),
     url(r'^apple-touch-icon\.png$', touch_view),
 
@@ -45,18 +50,6 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-if settings.USE_SERVICE_LOG:
-    urlpatterns += [url(r'^servicelog/', include('qatrack.service_log.urls'))]
-
-if settings.USE_PARTS:
-    urlpatterns += [url(r'^parts/', include('qatrack.parts.urls'))]
-
-if settings.USE_ISSUES:
-    urlpatterns += [url(r'^issues/', include('qatrack.issue_tracker.urls'))]
-
-if settings.USE_SQL_REPORTS:
-    urlpatterns += [url(r'^reports/', include('explorer.urls'))]
 
 if settings.DEBUG:
     import debug_toolbar

@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load l10n %}
 {% load qatrack_tags %}
-{% load staticfiles %}
+{% load static %}
 <!DOCTYPE html> <!-- html5 -->
 <html lang="{{ LANGUAGE_CODE }}" xmlns="http://www.w3.org/1999/html">
   <head>
@@ -667,6 +667,17 @@
                   {% trans "Account Details" %}
                 </a>
               </li>
+              {% if perms.auth.change_group %}
+                <li>
+                  <a href="{% url 'groups-app' %}" class="margin-left-10 control-sidebar-subheading">
+                    <span class="fa fa-stack fa-fw">
+                      <i class="fa fa-users fa-stack-custom-main"></i>
+                      <i class="fa fa-lock fa-stack-custom-sub primary"></i>
+                    </span>
+                    {% trans "Groups & Permissions" %}
+                  </a>
+                </li>
+              {% endif %}
               <li>
                 <a href="{% url 'auth_logout' %}" class="margin-left-10 control-sidebar-subheading">
                   <i class="fa fa-sign-out fa-fw"></i>

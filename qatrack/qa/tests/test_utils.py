@@ -80,10 +80,10 @@ class TestImportExport(TestCase):
             cycles=self.tlcqs,
             extra_tests=self.extra,
         ))
-        models.Category.objects.all().delete()
         models.TestListCycle.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
+        models.Category.objects.all().delete()
         testpack.add_testpack(pack)
 
         assert models.Test.objects.count() == 4

@@ -1166,20 +1166,6 @@ class TestUnitTestCollection(TestCase):
         self.assertEqual(utc.name, str(utc))
         self.assertEqual(tl.name, utc.name)
 
-    def test_delete_utc(self):
-
-        utc = utils.create_unit_test_collection()
-
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-        tl = utc.tests_object
-        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(utc.last_instance, tli)
-        utc.delete()
-
-        self.assertRaises(models.UnitTestCollection.DoesNotExist, models.UnitTestCollection.objects.get, pk=utc.pk)
-
-        self.assertRaises(models.TestListInstance.DoesNotExist, models.TestListInstance.objects.get, pk=tl.pk)
-
 
 class TestSignals(TestCase):
 

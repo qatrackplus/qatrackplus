@@ -1,11 +1,15 @@
+import json
 
+from django.contrib.auth import logout
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.models import Group
 from django.views.generic.base import TemplateView
 
 from qatrack.qa.models import PERMISSIONS
 
 
 class AccountDetails(TemplateView):
-    template_name = "registration/account.html"
+    template_name = "accounts/account.html"
 
     def get_context_data(self, **kwargs):
 
@@ -22,3 +26,19 @@ class AccountDetails(TemplateView):
         context["permissions"] = permissions
 
         return context
+
+
+class GroupsApp(PermissionRequiredMixin, TemplateView):
+
+    template_name = "accounts/groups.html"
+    permission_required = "auth.change_group"
+
+    def get_context_data(self, **kwargs):
+        context = super(GroupsApp, self).get_context_data(**kwargs)
+        context["all_perms"] = json.dumps(PERMISSIONS)
+        context["groups"] = Group.objects.all()
+        return context
+
+
+def logout_view(request):
+    logout(request)

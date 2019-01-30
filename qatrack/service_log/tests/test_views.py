@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q
 from django.test import RequestFactory, TestCase
 from django.utils import timezone
@@ -109,7 +109,7 @@ class TestDashboard(TestCase):
         self.assertEqual(counts['se_needing_review'], 1)
         self.assertEqual(counts['se_default']['count'], 1)
 
-        self.delete_objects()
+#        self.delete_objects()
 
     def test_get_timeline(self):
 
@@ -124,7 +124,7 @@ class TestDashboard(TestCase):
         for o in objs:
             self.assertTrue(isinstance(o, models.ServiceLog))
 
-        self.delete_objects()
+#        self.delete_objects()
 
 
 class TestCreateServiceEvent(TestCase):

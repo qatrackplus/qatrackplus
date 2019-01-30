@@ -30,7 +30,7 @@ class RoomManager(models.Manager):
 
 class Room(models.Model):
 
-    site = models.ForeignKey(u_models.Site, blank=True, null=True, help_text=_('Site this storage room is located'))
+    site = models.ForeignKey(u_models.Site, on_delete=models.CASCADE, blank=True, null=True, help_text=_('Site this storage room is located'))
     name = models.CharField(max_length=32, help_text=_('Name of room or room number'))
 
     objects = RoomManager()
@@ -100,7 +100,7 @@ class PartCategory(models.Model):
 class Part(models.Model):
 
     name = models.CharField(help_text=_('Brief name describing this part'), max_length=255)
-    part_category = models.ForeignKey(PartCategory, blank=True, null=True)
+    part_category = models.ForeignKey(PartCategory, on_delete=models.SET_NULL, blank=True, null=True)
     suppliers = models.ManyToManyField(
         Supplier, blank=True, help_text=_('Suppliers of this part'), related_name='parts',
         through='PartSupplierCollection'
@@ -125,7 +125,6 @@ class Part(models.Model):
     is_obsolete = models.BooleanField(default=False, help_text=_('Is this part now obsolete?'))
 
     class Meta:
-        permissions = (('view_part', 'Can View Part'),)
         ordering = ['part_number']
 
     def __str__(self):
@@ -155,8 +154,8 @@ class PartStorageCollectionManager(models.Manager):
 
 class PartStorageCollection(models.Model):
 
-    part = models.ForeignKey(Part)
-    storage = models.ForeignKey(Storage)
+    part = models.ForeignKey(Part, on_delete=models.CASCADE)
+    storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
 
     quantity = models.IntegerField()
 

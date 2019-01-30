@@ -51,6 +51,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unit',
             name='type',
-            field=models.ForeignKey(to='units.UnitType'),
+            field=models.ForeignKey(to='units.UnitType', on_delete=models.PROTECT),
         ),
     ]
