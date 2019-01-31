@@ -48,4 +48,7 @@ run:
 	python ./manage.py runserver
 
 
-.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf schema run
+__cleardb__:
+	python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"
+
+.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf schema run __cleardb__
