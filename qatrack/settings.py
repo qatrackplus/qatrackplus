@@ -633,3 +633,6 @@ if USE_SQL_REPORTS:
             "Missing 'readonly' connection information. Either set "
             "USE_SQL_REPORTS = False or set up readonly database connection"
         )
+
+
+LOGOUT_REDIRECT_URL = LOGIN_URL
