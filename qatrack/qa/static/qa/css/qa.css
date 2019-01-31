@@ -98,13 +98,13 @@ input[readonly].qa-input {
 .qa-status{
     /*width: 90px;*/
     overflow-x:hidden;
-    border: none !important;
     min-width: 70px;
     text-align: center;
     vertical-align: middle !important;
 }
 td.qa-status {
     font-size: smaller;
+    border: none !important;
 }
 .qa-status > i {
     margin-top:3px;
@@ -268,16 +268,22 @@ div.sublist-description {
     transition: border-left 0.5s;
 }
 
-#perform-qa-table > thead > tr > th.qa-category {
-    width: 120px;
+#perform-qa-table > thead > tr > th {
     vertical-align: middle !important;
 }
+
+#perform-qa-table > thead > tr > th.qa-category {
+    width: 120px;
+    padding-left: 15px;
+}
+
 #perform-qa-table > tbody > tr > td.qa-category {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 0;
 }
+
 #perform-qa-table > tbody > tr > td.qa-category div {
     white-space: nowrap;
     overflow: hidden;
@@ -294,6 +300,13 @@ div.sublist-description {
     height: calc(100% + 2px);
     top:0;
 }
+
+#perform-qa-table > tbody > tr > td.qa-category .comment-bar {
+  padding-bottom: 3px;
+  padding-top: 3px;
+  padding-right: 5px;
+}
+
 #perform-qa-table, #review-table {
     border-collapse: collapse;
     border-spacing: 0;
