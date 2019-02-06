@@ -201,12 +201,13 @@ def get_bool_tols(user_klass=None, tol_klass=None):
 def get_internal_user(user_klass=None):
 
     from qatrack.qa import models
+    from django.contrib.auth.hashers import make_password
     user_klass = user_klass or models.User
 
     try:
         u = user_klass.objects.get(username="QATrack+ Internal")
     except user_klass.DoesNotExist:
-        pwd = user_klass.objects.make_random_password()
+        pwd = make_password(user_klass.objects.make_random_password())
         u = user_klass.objects.create(username="QATrack+ Internal", password=pwd)
         u.is_active = False
         u.save()
