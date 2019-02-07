@@ -915,7 +915,7 @@ class UnitTestCollectionForm(forms.ModelForm):
         def site_unit_name(u):
             return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
 
-        units = Unit.objects.order_by("site__name", "type__name", "name")
+        units = Unit.objects.select_related("site", "type").order_by("site__name", "type__name", "name")
         choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
         choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
         choices = [("", "---------")] + choices
