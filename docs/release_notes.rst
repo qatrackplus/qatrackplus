@@ -32,6 +32,9 @@ Details of the v0.3.1 release
 
 * First Name & Last Name have been added to the user-list api view
 
+* Improved the ordering and organization of unit, frequency, and test lists fields
+  when assigning a test list to a unit.
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------
