@@ -130,7 +130,7 @@ class CompositeUtils:
         except models.TestListInstance.DoesNotExist:
             return None
 
-    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False):
+    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False, exclude_skipped=True):
         try:
             slug = test.slug
         except AttributeError:
@@ -146,6 +146,8 @@ class CompositeUtils:
             qs = qs.filter(test_list_instance__test_list=self.test_list)
         if not include_in_progress:
             qs = qs.exclude(test_list_instance__in_progress=True)
+        if exclude_skipped:
+            qs = qs.exclude(skipped=True)
 
         try:
             return qs.latest("work_completed")
