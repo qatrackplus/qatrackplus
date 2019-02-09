@@ -1,3 +1,4 @@
+from itertools import groupby
 import re
 
 from admin_views.admin import AdminViews
@@ -16,7 +17,7 @@ from django.template import loader
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext as _, ugettext_lazy as _l
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
 
@@ -902,8 +903,32 @@ class ActiveFilter(admin.SimpleListFilter):
 
 class UnitTestCollectionForm(forms.ModelForm):
 
+    unit = forms.ChoiceField(label=_l("Unit"))
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        def site_unit_type(u):
+            return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
+
+        def site_unit_name(u):
+            return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
+
+        units = Unit.objects.select_related("site", "type").order_by("site__name", "type__name", "name")
+        choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
+        choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
+        choices = [("", "---------")] + choices
+
+        self.fields['unit'].choices = choices
+
+        freq = self.fields['frequency']
+        freq.queryset = freq.queryset.order_by("name")
+
     def _clean_readonly(self, f):
         data = self.cleaned_data.get(f, None)
+        if f == "unit" and data:
+            data = Unit.objects.get(pk=data)
 
         if self.instance.pk and f in self.changed_data:
             if f == "object_id":
@@ -925,7 +950,12 @@ class UnitTestCollectionForm(forms.ModelForm):
         return self._clean_readonly("object_id")
 
     def clean_unit(self):
-        return self._clean_readonly("unit")
+        if self.instance.pk:
+            return self._clean_readonly("unit")
+
+        unit = self.cleaned_data.get('unit')
+        if unit:
+            return Unit.objects.get(pk=unit)
 
 
 class UnitTestCollectionAdmin(admin.ModelAdmin):
