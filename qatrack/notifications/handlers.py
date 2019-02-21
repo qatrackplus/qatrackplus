@@ -33,6 +33,8 @@ def email_on_testlist_save(*args, **kwargs):
         recipients |= act_recipients
 
     recipient_emails = recipients.distinct().values_list("email", flat=True)
+    if len(recipient_emails) == 0:
+        return
 
     from_address = getattr(settings, "EMAIL_NOTIFICATION_SENDER", "QATrack+")
     subject = getattr(settings, "EMAIL_NOTIFICATION_SUBJECT", "QATrack+ Notification")
