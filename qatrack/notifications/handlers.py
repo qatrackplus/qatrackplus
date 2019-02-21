@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
@@ -8,6 +10,8 @@ from django.utils.html import strip_tags
 import pynliner
 
 from qatrack.qa.signals import testlist_complete
+
+logger = logging.getLogger('qatrack')
 
 
 @receiver(testlist_complete)
@@ -53,16 +57,21 @@ def email_on_testlist_save(*args, **kwargs):
     html_body = pynliner.fromString(render_to_string(template, context))
     text_body = strip_tags(html_body)
 
-    send_mail(
-        subject,
-        text_body,
-        from_address,
-        recipient_emails,
-        html_message=html_body,
-        auth_user=user,
-        auth_password=pwd,
-        fail_silently=fail_silently,
-    )
+    try:
+        send_mail(
+            subject,
+            text_body,
+            from_address,
+            recipient_emails,
+            html_message=html_body,
+            auth_user=user,
+            auth_password=pwd,
+            fail_silently=False,
+        )
+    except:
+        logger.exception("Error sending email.")
+        if not fail_silently:
+            raise
 
 
 def failing_tests_to_report(test_list_instance):

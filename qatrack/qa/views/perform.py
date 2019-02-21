@@ -12,12 +12,12 @@ from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.files.base import ContentFile
-from django.urls import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
@@ -987,12 +987,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
-            try:
-                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
-            except:
-                messages.add_message(
-                    request=self.request, message='Error sending notification email.', level=messages.ERROR
-                )
+            signals.testlist_complete.send(sender=self, instance=self.object, created=False)
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
