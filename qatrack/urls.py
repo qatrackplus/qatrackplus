@@ -3,10 +3,10 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.templatetags.static import static as static_url
-from django.views.generic.base import RedirectView
 from django.urls import path
+from django.views.generic.base import RedirectView
 
-from qatrack.qatrack_core.views import homepage
+from qatrack.qatrack_core import views
 
 admin.autodiscover()
 
@@ -25,7 +25,11 @@ class QAToQC(RedirectView):
 
 
 urlpatterns = [
-    url(r'^$', homepage, name="home"),
+    url(r'^$', views.homepage, name="home"),
+    url(r'^400/$', views.handle_400, name="400"),
+    url(r'^403/$', views.handle_403, name="403"),
+    url(r'^404/$', views.handle_404, name="404"),
+    url(r'^500/$', views.handle_500, name="500"),
     url(r'^accounts/', include('qatrack.accounts.urls')),
     url(r'^qa/(?P<terms>.*)$', QAToQC.as_view()),
     url(r'^qc/', include('qatrack.qa.urls')),
@@ -49,6 +53,12 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# error handling views
+handler400 = 'qatrack.qatrack_core.views.handle_400'
+handler403 = 'qatrack.qatrack_core.views.handle_403'
+handler404 = 'qatrack.qatrack_core.views.handle_404'
+handler500 = 'qatrack.qatrack_core.views.handle_500'
 
 if settings.DEBUG:
     import debug_toolbar

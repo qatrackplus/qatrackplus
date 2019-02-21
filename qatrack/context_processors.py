@@ -120,7 +120,7 @@ def site(request):
         cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
 
     unreviewed_user_counts = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER)
-    if unreviewed_user_counts is None:
+    if unreviewed_user_counts is None and hasattr(request, "user"):
         your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
         unreviewed_user_counts = {request.user.pk: your_unreviewed}
         cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
@@ -131,6 +131,8 @@ def site(request):
             your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
             unreviewed_user_counts[request.user.pk] = your_unreviewed
             cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
+        except Exception:
+            your_unreviewed = 0
 
     default_se_status = cache.get(settings.CACHE_DEFAULT_SE_STATUS)
     if default_se_status is None:
