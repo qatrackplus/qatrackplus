@@ -157,7 +157,7 @@ def handle_error(request, code, type_, message, exception=None):
         'type': type_,
         'message': message,
     }
-    return render(request, 'site_error.html', context)
+    return render(request, 'site_error.html', context, status=code)
 
 
 def handle_400(request, exception=None):
