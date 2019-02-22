@@ -14,7 +14,7 @@ from qatrack.units.models import Unit, Vendor
 
 class ServiceAreaFilter(filters.FilterSet):
 
-    units = filters.RelatedFilter(UnitFilter, name='units', queryset=Unit.objects.all())
+    units = filters.RelatedFilter(UnitFilter, field_name='units', queryset=Unit.objects.all())
 
     class Meta:
         model = models.ServiceArea
@@ -25,10 +25,10 @@ class ServiceAreaFilter(filters.FilterSet):
 
 class UnitServiceAreaFilter(filters.FilterSet):
 
-    unit = filters.RelatedFilter(UnitFilter, name='unit', queryset=Unit.objects.all())
+    unit = filters.RelatedFilter(UnitFilter, field_name='unit', queryset=Unit.objects.all())
     service_area = filters.RelatedFilter(
         ServiceAreaFilter,
-        name='service_area',
+        field_name='service_area',
         queryset=models.ServiceArea.objects.all(),
     )
 
@@ -69,32 +69,32 @@ class ServiceEventFilter(filters.FilterSet):
 
     unit_service_area = filters.RelatedFilter(
         UnitServiceAreaFilter,
-        name='unit_service_area',
+        field_name='unit_service_area',
         queryset=models.UnitServiceArea.objects.all(),
     )
     service_type = filters.RelatedFilter(
         ServiceTypeFilter,
-        name='service_type',
+        field_name='service_type',
         queryset=models.ServiceType.objects.all(),
     )
     service_event_related = filters.RelatedFilter(
-        'self', name='service_event_related', queryset=models.ServiceEvent.objects.all()
+        'ServiceEventFilter', field_name='service_event_related', queryset=models.ServiceEvent.objects.all()
     )
     service_status = filters.RelatedFilter(
         ServiceEventStatusFilter,
-        name='service_status',
+        field_name='service_status',
         queryset=models.ServiceEventStatus.objects.all(),
     )
     user_status_changed_by = filters.RelatedFilter(
         UserFilter,
-        name='user_status_changed_by',
+        field_name='user_status_changed_by',
         queryset=User.objects.all(),
     )
-    user_created_by = filters.RelatedFilter(UserFilter, name='user_created_by', queryset=User.objects.all())
-    user_modified_by = filters.RelatedFilter(UserFilter, name='user_modified_by', queryset=User.objects.all())
+    user_created_by = filters.RelatedFilter(UserFilter, field_name='user_created_by', queryset=User.objects.all())
+    user_modified_by = filters.RelatedFilter(UserFilter, field_name='user_modified_by', queryset=User.objects.all())
     test_list_instance_initiated_by = filters.RelatedFilter(
         TestListInstanceFilter,
-        name='test_list_instance_initiated_by',
+        field_name='test_list_instance_initiated_by',
         queryset=TestListInstance.objects.all(),
     )
 
@@ -115,7 +115,7 @@ class ServiceEventFilter(filters.FilterSet):
 
 class ThirdPartyFilter(filters.FilterSet):
 
-    vendor = filters.RelatedFilter(VendorFilter, name='vendor', queryset=Vendor.objects.all())
+    vendor = filters.RelatedFilter(VendorFilter, field_name='vendor', queryset=Vendor.objects.all())
 
     class Meta:
         model = models.ThirdParty
@@ -128,9 +128,9 @@ class ThirdPartyFilter(filters.FilterSet):
 class HoursFilter(filters.FilterSet):
 
     service_event = filters.RelatedFilter(
-        ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
+        ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
-    third_party = filters.RelatedFilter(ThirdPartyFilter, name='third_party', queryset=models.ThirdParty.objects.all())
+    third_party = filters.RelatedFilter(ThirdPartyFilter, field_name='third_party', queryset=models.ThirdParty.objects.all())
 
     class Meta:
         model = models.Hours
@@ -142,14 +142,14 @@ class HoursFilter(filters.FilterSet):
 class ReturnToServiceQAFilter(filters.FilterSet):
 
     unit_test_collection = filters.RelatedFilter(
-        UnitTestCollectionFilter, name='unit_test_collection', queryset=UnitTestCollection.objects.all()
+        UnitTestCollectionFilter, field_name='unit_test_collection', queryset=UnitTestCollection.objects.all()
     )
     test_list_instance = filters.RelatedFilter(
-        TestListInstanceFilter, name='test_list_instance', queryset=TestListInstance.objects.all()
+        TestListInstanceFilter, field_name='test_list_instance', queryset=TestListInstance.objects.all()
     )
-    user_assigned_by = filters.RelatedFilter(UserFilter, name='user_assigned_by', queryset=User.objects.all())
+    user_assigned_by = filters.RelatedFilter(UserFilter, field_name='user_assigned_by', queryset=User.objects.all())
     service_event = filters.RelatedFilter(
-        ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
+        ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
     class Meta:
@@ -161,7 +161,7 @@ class ReturnToServiceQAFilter(filters.FilterSet):
 
 class GroupLinkerFilter(filters.FilterSet):
 
-    group = filters.RelatedFilter(GroupFilter, name='group', queryset=Group.objects.all())
+    group = filters.RelatedFilter(GroupFilter, field_name='group', queryset=Group.objects.all())
 
     class Meta:
         model = models.GroupLinker
@@ -175,11 +175,11 @@ class GroupLinkerFilter(filters.FilterSet):
 class GroupLinkerInstanceFilter(filters.FilterSet):
 
     group_linker = filters.RelatedFilter(
-        GroupLinkerFilter, name='group_linker', queryset=models.GroupLinker.objects.all()
+        GroupLinkerFilter, field_name='group_linker', queryset=models.GroupLinker.objects.all()
     )
-    user = filters.RelatedFilter(UserFilter, name='user', queryset=User.objects.all())
+    user = filters.RelatedFilter(UserFilter, field_name='user', queryset=User.objects.all())
     service_event = filters.RelatedFilter(
-        ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
+        ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
     class Meta:

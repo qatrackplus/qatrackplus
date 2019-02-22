@@ -34,7 +34,7 @@ class UnitClassViewSet(viewsets.ReadOnlyModelViewSet):
 class UnitTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitType.objects.all().order_by('name')
     serializer_class = serializers.UnitClassSerializer
-    filterset_class = filters.UnitFilter
+    filterset_class = filters.UnitTypeFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 

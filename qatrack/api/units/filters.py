@@ -6,7 +6,7 @@ from qatrack.units import models
 class VendorFilter(filters.FilterSet):
 
     class Meta:
-        model = models.UnitType
+        model = models.Vendor
         fields = {
             "name": "__all__",
         }
@@ -32,8 +32,8 @@ class SiteFilter(filters.FilterSet):
 
 class UnitTypeFilter(filters.FilterSet):
 
-    vendor = filters.RelatedFilter(VendorFilter, name='vendor', queryset=models.Vendor.objects.all())
-    unit_class = filters.RelatedFilter(UnitClassFilter, name='unit_class', queryset=models.UnitClass.objects.all())
+    vendor = filters.RelatedFilter(VendorFilter, field_name='vendor', queryset=models.Vendor.objects.all())
+    unit_class = filters.RelatedFilter(UnitClassFilter, field_name='unit_class', queryset=models.UnitClass.objects.all())
 
     class Meta:
         model = models.UnitType
@@ -54,8 +54,8 @@ class ModalityFilter(filters.FilterSet):
 
 class UnitFilter(filters.FilterSet):
 
-    type = filters.RelatedFilter(UnitTypeFilter, name='type', queryset=models.UnitType.objects.all())
-    site = filters.RelatedFilter(SiteFilter, name='site', queryset=models.Site.objects.all())
+    type = filters.RelatedFilter(UnitTypeFilter, field_name='type', queryset=models.UnitType.objects.all())
+    site = filters.RelatedFilter(SiteFilter, field_name='site', queryset=models.Site.objects.all())
 
     class Meta:
         model = models.Unit
@@ -70,9 +70,9 @@ class UnitFilter(filters.FilterSet):
         }
 
 
-class UnitAvailableTimeFilter(filters.FilterSet):
+class UnitAvailableTimeEditFilter(filters.FilterSet):
 
-    unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=models.Unit.objects.all())
+    unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=models.Unit.objects.all())
 
     class Meta:
         model = models.UnitAvailableTimeEdit
@@ -83,9 +83,9 @@ class UnitAvailableTimeFilter(filters.FilterSet):
         }
 
 
-class UnitAvailableTimeEditFilter(filters.FilterSet):
+class UnitAvailableTimeFilter(filters.FilterSet):
 
-    unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=models.Unit.objects.all())
+    unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=models.Unit.objects.all())
 
     class Meta:
         model = models.UnitAvailableTime

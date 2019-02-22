@@ -9,10 +9,10 @@ from django.contrib.contenttypes.fields import (
 )
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Count, Q
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_comments.models import Comment
@@ -1406,6 +1406,7 @@ class UnitTestCollection(models.Model):
     active = models.BooleanField(help_text=_("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
     limit = Q(app_label='qa', model='testlist') | Q(app_label='qa', model='testlistcycle')
+    limit = {'app_label': 'qa', 'model__in': ['testlist', 'testlistcycle']}
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.PROTECT,

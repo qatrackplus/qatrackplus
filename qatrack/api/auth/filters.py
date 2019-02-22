@@ -21,7 +21,7 @@ class UserFilter(filters.FilterSet):
 
 class PermissionFilter(filters.FilterSet):
 
-    content_type = filters.RelatedFilter(ContentTypeFilter, name="content_type", queryset=ContentType.objects.all())
+    content_type = filters.RelatedFilter(ContentTypeFilter, field_name="content_type", queryset=ContentType.objects.all())
 
     class Meta:
         model = Permission
@@ -33,7 +33,7 @@ class PermissionFilter(filters.FilterSet):
 
 class GroupFilter(filters.FilterSet):
 
-    permissions = filters.RelatedFilter(PermissionFilter, name="permissions", queryset=Permission.objects.all())
+    permissions = filters.RelatedFilter(PermissionFilter, field_name="permissions", queryset=Permission.objects.all())
 
     class Meta:
         model = Group

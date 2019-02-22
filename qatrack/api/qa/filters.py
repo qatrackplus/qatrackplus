@@ -38,7 +38,7 @@ class AutoReviewRuleFilter(filters.FilterSet):
 
     status = filters.RelatedFilter(
         TestInstanceStatusFilter,
-        name="status",
+        field_name="status",
         queryset=models.TestInstanceStatus.objects.all(),
     )
 
@@ -51,8 +51,8 @@ class AutoReviewRuleFilter(filters.FilterSet):
 
 class ReferenceFilter(filters.FilterSet):
 
-    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
-    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
+    created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
     class Meta:
         model = models.Reference
@@ -94,9 +94,9 @@ class CategoryFilter(filters.FilterSet):
 
 class TestFilter(filters.FilterSet):
 
-    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
-    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
-    category = filters.RelatedFilter(CategoryFilter, name="category", queryset=models.Category.objects.all())
+    created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
+    category = filters.RelatedFilter(CategoryFilter, field_name="category", queryset=models.Category.objects.all())
 
     class Meta:
         model = models.Test
@@ -120,12 +120,12 @@ class TestFilter(filters.FilterSet):
 
 class TestListFilter(filters.FilterSet):
 
-    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
-    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
-    tests = filters.RelatedFilter(TestFilter, name="tests", queryset=models.Test.objects.all())
+    created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
+    tests = filters.RelatedFilter(TestFilter, field_name="tests", queryset=models.Test.objects.all())
     utcs = filters.RelatedFilter(
         "qatrack.api.qa.filters.UnitTestCollectionFilter",
-        name="utcs",
+        field_name="utcs",
         queryset=models.UnitTestCollection.objects.all(),
     )
 
@@ -143,12 +143,12 @@ class TestListFilter(filters.FilterSet):
 
 class TestListCycleFilter(filters.FilterSet):
 
-    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
-    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
-    test_lists = filters.RelatedFilter(TestListFilter, name="test_lists", queryset=models.TestList.objects.all())
+    created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
+    test_lists = filters.RelatedFilter(TestListFilter, field_name="test_lists", queryset=models.TestList.objects.all())
     utcs = filters.RelatedFilter(
-        "api.qa.filters.UnitTestCollectionFilter",
-        name="utcs",
+        "qatrack.api.qa.filters.UnitTestCollectionFilter",
+        field_name="utcs",
         queryset=models.UnitTestCollection.objects.all(),
     )
 
@@ -167,16 +167,18 @@ class TestListCycleFilter(filters.FilterSet):
 
 class UnitTestCollectionFilter(filters.FilterSet):
 
-    unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=Unit.objects.all())
-    frequency = filters.RelatedFilter(FrequencyFilter, name="frequency", queryset=models.Frequency.objects.all())
-    assigned_to = filters.RelatedFilter(GroupFilter, name="assigned_to", queryset=Group.objects.all())
-    visible_to = filters.RelatedFilter(GroupFilter, name="visible_to", queryset=Group.objects.all())
+    unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=Unit.objects.all())
+    frequency = filters.RelatedFilter(FrequencyFilter, field_name="frequency", queryset=models.Frequency.objects.all())
+    assigned_to = filters.RelatedFilter(GroupFilter, field_name="assigned_to", queryset=Group.objects.all())
+    visible_to = filters.RelatedFilter(GroupFilter, field_name="visible_to", queryset=Group.objects.all())
     last_instance = filters.RelatedFilter(
-        "TestListInstanceFilter", name="last_instance", queryset=models.TestListInstance.objects.all()
+        "TestListInstanceFilter", field_name="last_instance", queryset=models.TestListInstance.objects.all()
     )
 
-    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list")
-    test_list_cycle = filters.RelatedFilter(TestListCycleFilter, field_name="test_list_cycle")
+    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
+    test_list_cycle = filters.RelatedFilter(
+        TestListCycleFilter, field_name="test_list_cycle", queryset=models.TestListCycle.objects.all()
+    )
 
     class Meta:
         model = models.UnitTestCollection
@@ -193,14 +195,14 @@ class TestListInstanceFilter(filters.FilterSet):
 
     unit_test_collection = filters.RelatedFilter(
         UnitTestCollectionFilter,
-        name="unit_test_collection",
-        queryset=models.UnitTestInfo.objects.all(),
+        field_name="unit_test_collection",
+        queryset=models.UnitTestCollection.objects.all(),
     )
-    test_list = filters.RelatedFilter(TestListFilter, name="test_list", queryset=models.TestList.objects.all())
+    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
 
-    reviewed_by = filters.RelatedFilter(UserFilter, name="reviewed_by", queryset=User.objects.all())
-    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
-    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
+    reviewed_by = filters.RelatedFilter(UserFilter, field_name="reviewed_by", queryset=User.objects.all())
+    created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
     class Meta:
         model = models.TestListInstance
@@ -219,10 +221,10 @@ class TestListInstanceFilter(filters.FilterSet):
 
 class UnitTestInfoFilter(filters.FilterSet):
 
-    unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=Unit.objects.all())
-    test = filters.RelatedFilter(TestFilter, name="test", queryset=models.Test.objects.all())
-    reference = filters.RelatedFilter(ReferenceFilter, name="reference", queryset=models.Reference.objects.all())
-    tolerance = filters.RelatedFilter(ToleranceFilter, name="tolerance", queryset=models.Tolerance.objects.all())
+    unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=Unit.objects.all())
+    test = filters.RelatedFilter(TestFilter, field_name="test", queryset=models.Test.objects.all())
+    reference = filters.RelatedFilter(ReferenceFilter, field_name="reference", queryset=models.Reference.objects.all())
+    tolerance = filters.RelatedFilter(ToleranceFilter, field_name="tolerance", queryset=models.Tolerance.objects.all())
 
     class Meta:
         model = models.UnitTestInfo
@@ -233,8 +235,8 @@ class UnitTestInfoFilter(filters.FilterSet):
 
 class TestListMembershipFilter(filters.FilterSet):
 
-    test_list = filters.RelatedFilter(TestListFilter, name="test_list", queryset=models.TestList.objects.all())
-    test = filters.RelatedFilter(TestFilter, name="test", queryset=models.Test.objects.all())
+    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
+    test = filters.RelatedFilter(TestFilter, field_name="test", queryset=models.Test.objects.all())
 
     class Meta:
         model = models.TestListMembership
@@ -245,8 +247,8 @@ class TestListMembershipFilter(filters.FilterSet):
 
 class SublistFilter(filters.FilterSet):
 
-    parent = filters.RelatedFilter(TestListFilter, name="parent", queryset=models.TestList.objects.all())
-    child = filters.RelatedFilter(TestListFilter, name="child", queryset=models.TestList.objects.all())
+    parent = filters.RelatedFilter(TestListFilter, field_name="parent", queryset=models.TestList.objects.all())
+    child = filters.RelatedFilter(TestListFilter, field_name="child", queryset=models.TestList.objects.all())
 
     class Meta:
         model = models.Sublist
@@ -260,24 +262,24 @@ class TestInstanceFilter(filters.FilterSet):
 
     status = filters.RelatedFilter(
         TestInstanceStatusFilter,
-        name="status",
+        field_name="status",
         queryset=models.TestInstanceStatus.objects.all(),
     )
-    reviewed_by = filters.RelatedFilter(UserFilter, name="reviewed_by", queryset=User.objects.all())
-    reference = filters.RelatedFilter(ReferenceFilter, name="reference", queryset=models.Reference.objects.all())
-    tolerance = filters.RelatedFilter(ToleranceFilter, name="tolerance", queryset=models.Tolerance.objects.all())
+    reviewed_by = filters.RelatedFilter(UserFilter, field_name="reviewed_by", queryset=User.objects.all())
+    reference = filters.RelatedFilter(ReferenceFilter, field_name="reference", queryset=models.Reference.objects.all())
+    tolerance = filters.RelatedFilter(ToleranceFilter, field_name="tolerance", queryset=models.Tolerance.objects.all())
     unit_test_info = filters.RelatedFilter(
         UnitTestInfoFilter,
-        name="unit_test_info",
+        field_name="unit_test_info",
         queryset=models.UnitTestInfo.objects.all(),
     )
     test_list_instance = filters.RelatedFilter(
         TestListInstanceFilter,
-        name="test_list_instance",
+        field_name="test_list_instance",
         queryset=models.TestListInstance.objects.all(),
     )
-    created_by = filters.RelatedFilter(UserFilter, name="created_by", queryset=User.objects.all())
-    modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
+    created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
     class Meta:
         model = models.TestInstance
@@ -297,8 +299,8 @@ class TestInstanceFilter(filters.FilterSet):
 
 class TestListCycleMembershipFilter(filters.FilterSet):
 
-    test_list = filters.RelatedFilter(TestListFilter, name="test_list", queryset=models.TestList.objects.all())
-    cycle = filters.RelatedFilter(TestListCycleFilter, name="cycle", queryset=models.TestListCycle.objects.all())
+    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
+    cycle = filters.RelatedFilter(TestListCycleFilter, field_name="cycle", queryset=models.TestListCycle.objects.all())
 
     class Meta:
         model = models.TestListCycleMembership

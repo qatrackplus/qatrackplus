@@ -213,6 +213,7 @@ INSTALLED_APPS = [
     'formtools',
     'django_filters',
     'rest_framework',
+    'rest_framework_filters',
     'rest_framework.authtoken',
     'listable',
     'genericdropdown',
