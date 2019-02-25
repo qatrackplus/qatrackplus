@@ -9,15 +9,17 @@ from django.contrib import admin, messages
 from django.contrib.admin import options, widgets
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import HttpResponseRedirect, redirect, render
 from django.template import loader
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import escape
+from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
-from django.utils.translation import ugettext as _, ugettext_lazy as _l
+from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _l
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
 
@@ -396,6 +398,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
             return True
         return super(UnitTestInfoAdmin, self).lookup_allowed(lookup, value)
 
+    @mark_safe
     def history(self, obj):
         hist = list(obj.unittestinfochange_set.select_related(
             "reference",
@@ -404,7 +407,6 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         ).order_by("-changed"))
         old_news = zip([obj] + hist[1:], hist)
         return loader.render_to_string('admin/unittestinfo_history.html', {'history': old_news})
-    history.allow_tags = True
 
 
 class TestListAdminForm(forms.ModelForm):
@@ -802,18 +804,18 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
         super(TestAdmin, self).save_model(request, obj, form, change)
 
+    @mark_safe
     def obj_created(self, obj):
         fmt = '<abbr title="Created by %s">%s</abbr>'
         return fmt % (obj.created_by, obj.created.strftime(settings.INPUT_DATE_FORMATS[0]))
     obj_created.admin_order_field = "created"
-    obj_created.allow_tags = True
     obj_created.short_description = "Created"
 
+    @mark_safe
     def obj_modified(self, obj):
         fmt = '<abbr title="Modified by %s">%s</abbr>'
         return fmt % (obj.modified_by, obj.modified.strftime(settings.INPUT_DATE_FORMATS[0]))
     obj_modified.admin_order_field = "modified"
-    obj_modified.allow_tags = True
     obj_modified.short_description = "Modified"
 
 
@@ -1056,6 +1058,7 @@ class FrequencyAdmin(admin.ModelAdmin):
             obj.recurrences.dtstart = from_
         super().save_model(request, obj, form, change)
 
+    @mark_safe
     def get_recurrences(self, obj):
         rules = str(obj.recurrences).replace("RRULE:", "").split("\n")[1:]
         processed = []
@@ -1070,7 +1073,6 @@ class FrequencyAdmin(admin.ModelAdmin):
 
         return "<br/>".join(processed)
     get_recurrences.short_description = "Recurrences"
-    get_recurrences.allow_tags = True
 
 
 class StatusAdmin(admin.ModelAdmin):
@@ -1100,10 +1102,10 @@ class StatusAdmin(admin.ModelAdmin):
             ),
         }
 
+    @mark_safe
     def get_colour(self, obj):
         return '<div style="display: inline-block; width: 20px; height:20px; background-color: %s;"></div>' % obj.colour
     get_colour.short_description = "Color"
-    get_colour.allow_tags = True
 
 
 def utc_unit_name(obj):
