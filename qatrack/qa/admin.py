@@ -905,7 +905,7 @@ class ActiveFilter(admin.SimpleListFilter):
 
 class UnitTestCollectionForm(forms.ModelForm):
 
-    unit = forms.ChoiceField(label=_l("Unit"))
+    unit = forms.TypedChoiceField(label=_l("Unit"), coerce=int)
 
     def __init__(self, *args, **kwargs):
 
