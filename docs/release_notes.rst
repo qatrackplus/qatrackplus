@@ -35,6 +35,10 @@ Details of the v0.3.1 release
 * Improved the ordering and organization of unit, frequency, and test lists fields
   when assigning a test list to a unit. Also improve UnitType dropdown for Unit Admin.
 
+* New management commands `review_all_unreviewed` and `clear_in_progress` have
+  been added. `review_all_unreviewed` updates the status of all unreviewed test list instances, while
+  `clear_in_progress` will delete all in progress test lists.
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------
