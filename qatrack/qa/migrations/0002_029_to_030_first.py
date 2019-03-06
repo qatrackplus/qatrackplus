@@ -6,6 +6,7 @@ import re
 
 from django.core.validators import RegexValidator
 from django.db import migrations, models
+from django.conf import settings
 import django.utils.timezone
 
 script_regex = re.compile(r'(<script[\sa-zA-Z0-9"\';-_=/]*>([\s\S]+?)</script>)')
@@ -50,7 +51,7 @@ def migrate_test_list_instance_comments(apps, schema):
             object_pk=tli.id,
             comment=tli.comment,
             submit_date=tli.created,
-            site_id=1
+            site_id=getattr(settings, "SITE_ID", 1),
         )
         comment.save()
 
