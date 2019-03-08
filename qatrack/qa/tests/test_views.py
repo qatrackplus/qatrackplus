@@ -937,6 +937,24 @@ class TestPerformQA(TestCase):
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
 
+    def test_work_started_work_completed_same(self):
+        data = {
+            "work_started": "11-07-2012 00:09",
+            "work_completed": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
+
+        self.client.post(self.url, data=data)
+
+        tli = models.TestListInstance.objects.first()
+        ws, wc = tli.work_started, tli.work_completed
+        assert (wc - ws).total_seconds() == 60
+
     def test_perform_valid_invalid_status(self):
         data = {
             "work_started": "11-07-2012 00:09",
