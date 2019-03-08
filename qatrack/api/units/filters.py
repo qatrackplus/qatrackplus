@@ -6,7 +6,7 @@ from qatrack.units import models
 class VendorFilter(filters.FilterSet):
 
     class Meta:
-        model = models.UnitType
+        model = models.Vendor
         fields = {
             "name": "__all__",
         }
@@ -70,7 +70,7 @@ class UnitFilter(filters.FilterSet):
         }
 
 
-class UnitAvailableTimeFilter(filters.FilterSet):
+class UnitAvailableTimeEditFilter(filters.FilterSet):
 
     unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=models.Unit.objects.all())
 
@@ -83,7 +83,7 @@ class UnitAvailableTimeFilter(filters.FilterSet):
         }
 
 
-class UnitAvailableTimeEditFilter(filters.FilterSet):
+class UnitAvailableTimeFilter(filters.FilterSet):
 
     unit = filters.RelatedFilter(UnitFilter, name="unit", queryset=models.Unit.objects.all())
 

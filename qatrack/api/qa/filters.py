@@ -147,7 +147,7 @@ class TestListCycleFilter(filters.FilterSet):
     modified_by = filters.RelatedFilter(UserFilter, name="modified_by", queryset=User.objects.all())
     test_lists = filters.RelatedFilter(TestListFilter, name="test_lists", queryset=models.TestList.objects.all())
     utcs = filters.RelatedFilter(
-        "api.qa.filters.UnitTestCollectionFilter",
+        "qatrack.api.qa.filters.UnitTestCollectionFilter",
         name="utcs",
         queryset=models.UnitTestCollection.objects.all(),
     )
@@ -175,8 +175,8 @@ class UnitTestCollectionFilter(filters.FilterSet):
         "TestListInstanceFilter", name="last_instance", queryset=models.TestListInstance.objects.all()
     )
 
-    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list")
-    test_list_cycle = filters.RelatedFilter(TestListCycleFilter, field_name="test_list_cycle")
+    test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all(),)
+    test_list_cycle = filters.RelatedFilter(TestListCycleFilter, field_name="test_list_cycle", queryset=models.TestListCycle.objects.all(),)
 
     class Meta:
         model = models.UnitTestCollection
