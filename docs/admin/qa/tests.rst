@@ -272,7 +272,7 @@ When your script (calculation procedure) is executed, it has access to
             'mc_pass_choices': passing_vals,
             'mc_tol_choices': tolerance_vals,
             'type': tolerance_type
-        }`
+        }
 
     e.g.
 
