@@ -16,11 +16,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_comments.models import Comment
-from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
 from qatrack.units.models import Unit
+from recurrence.fields import RecurrenceField
 
 # All available test types
 BOOLEAN = "boolean"
@@ -109,7 +109,7 @@ NEWLIST = NOT_DONE
 EPSILON = 1E-10
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
-color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
+color_re = re.compile(r'^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + r',(0(\.[0-9][0-9]?)?|1)\)$')
 validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 
 #  A collection of the permissions most relevant to QATrack+
@@ -695,7 +695,7 @@ class Test(models.Model, TestPackMixin):
     NK_FIELDS = ['name']
 
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
-    RESULT_RE = re.compile("^\s*result\s*=.*$", re.MULTILINE)
+    RESULT_RE = re.compile(r"^\s*result\s*=.*$", re.MULTILINE)
 
     name = models.CharField(max_length=255, help_text=_("Name for this test"), db_index=True, unique=True)
     slug = models.SlugField(
@@ -745,9 +745,11 @@ class Test(models.Model, TestPackMixin):
     )
     constant_value = models.FloatField(help_text=_("Only required for constant value types"), null=True, blank=True)
 
-    calculation_procedure = models.TextField(null=True, blank=True, help_text=_(
-        "For Composite Tests Only: Enter a Python snippet for evaluation of this test."
-    ))
+    calculation_procedure = models.TextField(
+        null=True,
+        blank=True,
+        help_text=_("For Composite Tests Only: Enter a Python snippet for evaluation of this test.")
+    )
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -810,7 +812,7 @@ class Test(models.Model, TestPackMixin):
         errors = self.check_test_type(self.calculation_procedure, CALCULATED_TYPES, "Calculation Procedure")
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
-        macro_var_set = re.findall("^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
+        macro_var_set = re.findall(r"^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
         if not (result_line or macro_var_set):
             if not self.calculation_procedure and self.is_upload():
@@ -1142,9 +1144,19 @@ class TestCollectionInterface(models.Model):
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="%(app_label)s_%(class)s_created", editable=False)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="%(app_label)s_%(class)s_created",
+        editable=False,
+    )
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="%(app_label)s_%(class)s_modified", editable=False)
+    modified_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="%(app_label)s_%(class)s_modified",
+        editable=False,
+    )
 
     class Meta:
         abstract = True
@@ -1645,9 +1657,19 @@ class TestInstance(models.Model):
 
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_instance_creator")
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        related_name="test_instance_creator",
+    )
     modified = models.DateTimeField(auto_now=True)
-    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_instance_modifier")
+    modified_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        related_name="test_instance_modifier",
+    )
 
     objects = TestInstanceManager()
 
@@ -1904,9 +1926,19 @@ class TestListInstance(models.Model):
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_list_instance_creator")
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        related_name="test_list_instance_creator",
+    )
     modified = models.DateTimeField()
-    modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_list_instance_modifier")
+    modified_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        related_name="test_list_instance_modifier",
+    )
 
     objects = TestListInstanceManager()
 
