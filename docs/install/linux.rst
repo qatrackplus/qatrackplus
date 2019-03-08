@@ -492,7 +492,7 @@ First we must check out the code for version 0.3.1:
 .. code-block:: console
 
     git fetch origin
-    git checkout v0.3.1
+    git checkout v0.3.0.10
 
 
 Activate your new virtual environment

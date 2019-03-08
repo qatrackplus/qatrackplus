@@ -1,18 +1,18 @@
 from django import forms
-from django.core.validators import MaxLengthValidator
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator
 from django.forms.models import inlineformset_factory
-from django.forms.widgets import RadioSelect, Select, HiddenInput, NumberInput
+from django.forms.widgets import HiddenInput, NumberInput, RadioSelect, Select
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.contrib.contenttypes.models import ContentType
 
-from django.conf import settings
-
-from .. import models
+from qatrack.qa import utils
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
-from qatrack.qa import utils
+
+from .. import models
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
 
@@ -323,7 +323,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         if work_started and work_completed:
             if work_completed == work_started:
-                cleaned_data["work_completed"] = timezone.now().astimezone(timezone.get_current_timezone())
+                cleaned_data["work_completed"] = work_started + timezone.timedelta(seconds=60)
             elif work_completed < work_started:
                 self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
                 del cleaned_data["work_started"]

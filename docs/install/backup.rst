@@ -78,7 +78,7 @@ On the `Triggers` tab click `New` and select `Daily` and choose the `Start`
 date and `Time` (e.g. 3am) and `Recur every` to `1` then click OK.
 
 Now go to the `Actions` tab and click `New` then enter `PowerShell.exe` in the
-`Program/Script` field and `C:\\deploy\\qatrackplus -ExecutionPolicy Bypass
+`Program/Script` field and `-ExecutionPolicy Bypass
 C:\\deploy\\qatrackplus\\backup.ps1` in the `Add Arguments` field.
 
 Now save your scheduled task and run it and manually to confirm it worked

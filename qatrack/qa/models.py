@@ -2060,6 +2060,11 @@ class TestListInstance(models.Model):
             ' - All reviewed' if self.all_reviewed else ''
         )
 
+    def save(self, *args, **kwargs):
+        if self.work_completed and self.work_completed == self.work_started:
+            self.work_completed += timezone.timedelta(seconds=60)
+        super().save(*args, **kwargs)
+
 
 class TestListCycleManager(models.Manager):
 
