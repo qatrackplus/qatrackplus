@@ -1,4 +1,10 @@
-# Django settings for qatrack project.
+""" settings.py
+
+    Default settings for QATrack+
+
+    isort:skip_file
+"""
+
 import datetime
 import os
 import sys
@@ -549,7 +555,7 @@ EXPLORER_DEFAULT_CONNECTION = 'readonly'
 EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = ['auth_', 'qa', 'service_log', 'units', 'parts']
 EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken', 'sessions_']
 EXPLORER_ENABLE_TASKS = False
-EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE', 'SCHEMA', 'GRANT', 'OWNER TO']
+EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE', 'SCHEMA', 'GRANT', 'OWNER TO']  # noqa: E501
 
 
 def EXPLORER_PERMISSION_CHANGE(user):
@@ -567,10 +573,8 @@ if os.path.exists('/root/.is_inside_docker'):
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-try:
-    from .local_settings import *  # NOQA
-except ImportError:
-    pass
+from .local_settings import *  # noqa: F403, F401
+
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 

@@ -9,23 +9,34 @@ function toggle_test_type(){
     if (val == "constant"){
         $(".field-constant_value, .field-hidden").show();
         $(".field-calculation_procedure, .field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
-
+        $(".field-chart_visibility").prop("checked", true).show();
     }else if (val == "composite" || val === "scomposite" ){
         $(".field-calculation_procedure, .field-hidden, .field-display_image").show();
         $(".field-constant_value, .field-choices, .field-skip_without_comment").not(".errors").hide();
-
+        if (val === "scomposite"){
+            $(".field-chart_visibility").prop("checked", false).hide();
+        }else{
+            $(".field-chart_visibility").prop("checked", true).show();
+        }
+    }else if (val == "string"){
+        $(".field-skip_without_comment").show();
+        $(".field-constant_value, .field-hidden").hide();
+        $(".field-calculation_procedure, .field-choices, .field-display_image").not(".errors").hide();
+        $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
+        $(".field-chart_visibility").prop("checked", false).hide();
     }else if (val === "upload"){
         $(".field-calculation_procedure, .field-display_image, .field-skip_without_comment").show();
         $(".field-constant_value, .field-choices, .field-hidden").not(".errors").hide();
-
+        $(".field-chart_visibility").prop("checked", false).hide();
     }else if (val == "multchoice"){
         $(".field-choices, .field-skip_without_comment").show();
         $(".field-constant_value, .field-calculation_procedure, .field-display_image, .field-hidden").not(".errors").hide();
-
+        $(".field-chart_visibility").prop("checked", false).hide();
     }else{
         $(".field-skip_without_comment").show();
         $(".field-calculation_procedure").not(".errors").hide();
         $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
+        $(".field-chart_visibility").prop("checked", true).show();
     }
 }
 
@@ -47,8 +58,8 @@ $(document).ready(function() {
 
         calcProcedureEditor.setValue(calcProcedure.val());
         session.setMode( "ace/mode/python");
-        session.setTabSize(4)
-        session.setUseSoftTabs(true)
+        session.setTabSize(4);
+        session.setUseSoftTabs(true);
         calcProcedureEditor.on('blur', function(){
             calcProcedure.val(calcProcedureEditor.getValue());
         });
