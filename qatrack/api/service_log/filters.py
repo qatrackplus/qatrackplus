@@ -2,6 +2,7 @@ from django.contrib.auth.models import Group, User
 import rest_framework_filters as filters
 
 from qatrack.api.auth.filters import GroupFilter, UserFilter
+from qatrack.api.filters import MaxDateFilter, MinDateFilter
 from qatrack.api.qa.filters import (
     TestListInstanceFilter,
     UnitTestCollectionFilter,
@@ -19,7 +20,7 @@ class ServiceAreaFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceArea
         fields = {
-            "name": "__all__",
+            "name": ['icontains', 'in'],
         }
 
 
@@ -35,7 +36,7 @@ class UnitServiceAreaFilter(filters.FilterSet):
     class Meta:
         model = models.UnitServiceArea
         fields = {
-            "notes": "__all__",
+            "notes": ['icontains'],
         }
 
 
@@ -44,10 +45,10 @@ class ServiceTypeFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceType
         fields = {
-            "name": "__all__",
-            "is_review_required": "__all__",
-            "is_active": "__all__",
-            "description": "__all__",
+            "name": ['icontains', 'in'],
+            "is_review_required": ['exact'],
+            "is_active": ['exact'],
+            "description": ['icontains'],
         }
 
 
@@ -56,12 +57,12 @@ class ServiceEventStatusFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceEventStatus
         fields = {
-            "name": "__all__",
-            "is_review_required": "__all__",
-            "is_default": "__all__",
-            "rts_qa_must_be_reviewed": "__all__",
-            "description": "__all__",
-            "colour": "__all__",
+            "name": ['icontains', 'in'],
+            "is_review_required": ['exact'],
+            "is_default": ['exact'],
+            "rts_qa_must_be_reviewed": ['exact'],
+            "description": ['icontains'],
+            "colour": ['icontains', 'in'],
         }
 
 
@@ -98,18 +99,27 @@ class ServiceEventFilter(filters.FilterSet):
         queryset=TestListInstance.objects.all(),
     )
 
+    datetime_status_changed_min = MinDateFilter(name="datetime_status_changed")
+    datetime_status_changed_max = MaxDateFilter(name="datetime_status_changed")
+    datetime_service_min = MinDateFilter(name="datetime_service")
+    datetime_service_max = MaxDateFilter(name="datetime_service")
+    datetime_created_min = MinDateFilter(name="datetime_created")
+    datetime_created_max = MaxDateFilter(name="datetime_created")
+    datetime_modified_min = MinDateFilter(name="datetime_modified")
+    datetime_modified_max = MaxDateFilter(name="datetime_modified")
+
     class Meta:
         model = models.ServiceEvent
         fields = {
-            'datetime_status_changed': '__all__',
-            'datetime_created': '__all__',
-            'datetime_service': '__all__',
-            'datetime_modified': '__all__',
-            'safety_precautions': '__all__',
-            'problem_description': '__all__',
-            'duration_service_time': '__all__',
-            'duration_lost_time': '__all__',
-            'is_review_required': '__all__',
+            'datetime_status_changed': ['exact'],
+            'datetime_created': ['exact'],
+            'datetime_service': ['exact'],
+            'datetime_modified': ['exact'],
+            'safety_precautions': ['icontains'],
+            'problem_description': ['icontains'],
+            'duration_service_time': ['lte', 'gte'],
+            'duration_lost_time': ['lte', 'gte'],
+            'is_review_required': ['exact'],
         }
 
 
@@ -120,8 +130,8 @@ class ThirdPartyFilter(filters.FilterSet):
     class Meta:
         model = models.ThirdParty
         fields = {
-            'first_name': "__all__",
-            'last_name': "__all__",
+            'first_name': ['icontains', 'in'],
+            'last_name': ['icontains', 'in'],
         }
 
 
@@ -135,7 +145,7 @@ class HoursFilter(filters.FilterSet):
     class Meta:
         model = models.Hours
         fields = {
-            'time': '__all__',
+            'time': ['lte', 'gte'],
         }
 
 
@@ -152,10 +162,13 @@ class ReturnToServiceQAFilter(filters.FilterSet):
         ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
+    datetime_assigned_min = MinDateFilter(name="datetime_assigned")
+    datetime_assigned_max = MaxDateFilter(name="datetime_assigned")
+
     class Meta:
         model = models.ReturnToServiceQA
         fields = {
-            'datetime_assigned': '__all__',
+            'datetime_assigned': ['exact'],
         }
 
 
@@ -166,9 +179,9 @@ class GroupLinkerFilter(filters.FilterSet):
     class Meta:
         model = models.GroupLinker
         fields = {
-            'name': "__all__",
-            'description': "__all__",
-            'help_text': "__all__",
+            "name": ['icontains', 'in'],
+            "description": ['icontains'],
+            "help_text": ['icontains'],
         }
 
 
@@ -182,8 +195,11 @@ class GroupLinkerInstanceFilter(filters.FilterSet):
         ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
+    datetime_linked_min = MinDateFilter(name="datetime_linked")
+    datetime_linked_max = MaxDateFilter(name="datetime_linked")
+
     class Meta:
         model = models.GroupLinkerInstance
         fields = {
-            'datetime_linked': '__all__',
+            'datetime_linked': ['exact'],
         }

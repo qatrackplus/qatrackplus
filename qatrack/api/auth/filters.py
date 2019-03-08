@@ -2,20 +2,24 @@ from django.contrib.auth.models import Group, Permission, User
 import rest_framework_filters as filters
 
 from qatrack.api.contenttypes.views import ContentType, ContentTypeFilter
+from qatrack.api.filters import MaxDateFilter, MinDateFilter
 
 
 class UserFilter(filters.FilterSet):
 
+    date_joined_min = MinDateFilter(name="date_joined")
+    date_joined_max = MaxDateFilter(name="date_joined")
+
     class Meta:
         model = User
         fields = {
-            "username": "__all__",
-            "first_name": "__all__",
-            "last_name": "__all__",
-            "email": "__all__",
-            "is_staff": "__all__",
-            "is_active": "__all__",
-            "date_joined": "__all__",
+            "username": ["icontains", "in"],
+            "first_name": ["icontains", "in"],
+            "last_name": ["icontains", "in"],
+            "email": ["icontains", "in"],
+            "is_staff": ["exact"],
+            "is_active": ["exact"],
+            "date_joined": ["exact"],
         }
 
 
@@ -26,8 +30,8 @@ class PermissionFilter(filters.FilterSet):
     class Meta:
         model = Permission
         fields = {
-            "name": "__all__",
-            "codename": "__all__",
+            "name": ["icontains", "in"],
+            "codename": ["icontains", "in"],
         }
 
 
@@ -38,5 +42,5 @@ class GroupFilter(filters.FilterSet):
     class Meta:
         model = Group
         fields = {
-            "name": "__all__",
+            "name": ["icontains", "in"],
         }
