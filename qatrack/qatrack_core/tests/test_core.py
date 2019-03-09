@@ -17,7 +17,7 @@ class TestLoginViews(TestCase):
         self.client.post(reverse("password_reset"), {'email': u.email})
         assert "Password reset" in mail.outbox[0].subject
 
-        url = re.search("(?P<url>https?://[^\s]+)", mail.outbox[0].body).group("url")
+        url = re.search(r"(?P<url>https?://[^\s]+)", mail.outbox[0].body).group("url")
         resp = self.client.get(url)
         resp = self.client.post(resp.url, {
             'new_password1': 'newpassword',
