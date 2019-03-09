@@ -1,7 +1,7 @@
 -e git+https://github.com/randlet/django-genericdropdown.git@473ff52610af659f7d2a3616a6e3322e21673b4d#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@django_21#egg=django_listable
--e git+https://github.com/randlet/django-sql-explorer.git@f7ac496d7b618ab8e227f11da165791c38c48b9d#egg=django-sql-explorer
-Django==2.1.5
+-e git+https://github.com/randlet/django-sql-explorer.git@196e1f5af2abed61f504878b89a0719ae0901ed8#egg=django-sql-explorer
+Django==2.1.7
 PyVirtualDisplay==0.2
 beautifulsoup4==4.6.0
 coreapi==2.3.3
