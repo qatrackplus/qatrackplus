@@ -19,8 +19,10 @@ class TestLoginViews(TestCase):
 
         url = re.search(r"(?P<url>https?://[^\s]+)", mail.outbox[0].body).group("url")
         resp = self.client.get(url)
-        resp = self.client.post(resp.url, {
-            'new_password1': 'newpassword',
-            'new_password2': 'newpassword',
-        })
-        assert resp.url == "/accounts/reset/done/"
+        resp = self.client.post(
+            resp.url, {
+                'new_password1': 'newpassword',
+                'new_password2': 'newpassword',
+            }, follow=True
+        )
+        assert "/accounts/reset/done/" in resp.redirect_chain[0]
