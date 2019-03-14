@@ -511,16 +511,16 @@ class Tolerance(models.Model):
         verbose_name=_("Multiple Choice %s Values" % OK_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered passing"),
-        null=True,
         blank=True,
+        default='',
     )
 
     mc_tol_choices = models.CharField(
         verbose_name=_("Multiple Choice %s Values" % TOL_DISP),
         max_length=2048,
         help_text=_("Comma seperated list of choices that are considered at tolerance"),
-        null=True,
         blank=True,
+        default='',
     )
 
     bool_warning_only = models.BooleanField(
