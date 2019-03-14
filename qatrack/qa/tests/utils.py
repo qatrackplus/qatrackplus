@@ -236,7 +236,7 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
 
 
 def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None,
-                     mc_pass_choices=None, mc_tol_choices=None):
+                     mc_pass_choices='', mc_tol_choices=''):
 
     if created_by is None:
         created_by = create_user()
