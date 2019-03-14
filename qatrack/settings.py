@@ -591,6 +591,7 @@ SELENIUM_CHROME_PATH = ''  # Set full path of Chromedriver binary if SELENIUM_US
 SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
 
 if any(['test' in v for v in sys.argv]):
+    DATABASES.pop('readonly', None)
     from .test_settings import *  # noqa
 
 if DEBUG:
