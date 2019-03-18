@@ -45,7 +45,7 @@ class AutoReviewRuleFilter(filters.FilterSet):
     )
 
     pass_fail = filters.Filter(
-        name="pass_fail",
+        field_name="pass_fail",
         widget=widgets.Select(choices=[('', 'Any')] + list(models.PASS_FAIL_CHOICES)),
     )
 
@@ -60,14 +60,14 @@ class ReferenceFilter(filters.FilterSet):
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
     type = filters.Filter(
-        name="type",
+        field_name="type",
         widget=widgets.Select(choices=[('', 'Any')] + list(models.REF_TYPE_CHOICES)),
     )
 
-    created_min = MinDateFilter(name="created")
-    created_max = MaxDateFilter(name="created")
-    modified_min = MinDateFilter(name="modified")
-    modified_max = MaxDateFilter(name="modified")
+    created_min = MinDateFilter(field_name="created")
+    created_max = MaxDateFilter(field_name="created")
+    modified_min = MinDateFilter(field_name="modified")
+    modified_max = MaxDateFilter(field_name="modified")
 
     class Meta:
         model = models.Reference
@@ -82,7 +82,7 @@ class ReferenceFilter(filters.FilterSet):
 class ToleranceFilter(filters.FilterSet):
 
     type = filters.Filter(
-        name="type",
+        field_name="type",
         widget=widgets.Select(choices=[('', 'Any')] + list(models.TOL_TYPE_CHOICES)),
     )
 
@@ -118,14 +118,14 @@ class TestFilter(filters.FilterSet):
     category = filters.RelatedFilter(CategoryFilter, field_name="category", queryset=models.Category.objects.all())
 
     type = filters.Filter(
-        name="type",
+        field_name="type",
         widget=widgets.Select(choices=[('', 'Any')] + list(models.TEST_TYPE_CHOICES)),
     )
 
-    created_min = MinDateFilter(name="created")
-    created_max = MaxDateFilter(name="created")
-    modified_min = MinDateFilter(name="modified")
-    modified_max = MaxDateFilter(name="modified")
+    created_min = MinDateFilter(field_name="created")
+    created_max = MaxDateFilter(field_name="created")
+    modified_min = MinDateFilter(field_name="modified")
+    modified_max = MaxDateFilter(field_name="modified")
 
     class Meta:
         model = models.Test
@@ -157,10 +157,10 @@ class TestListFilter(filters.FilterSet):
         queryset=models.UnitTestCollection.objects.all(),
     )
 
-    created_min = MinDateFilter(name="created")
-    created_max = MaxDateFilter(name="created")
-    modified_min = MinDateFilter(name="modified")
-    modified_max = MaxDateFilter(name="modified")
+    created_min = MinDateFilter(field_name="created")
+    created_max = MaxDateFilter(field_name="created")
+    modified_min = MinDateFilter(field_name="modified")
+    modified_max = MaxDateFilter(field_name="modified")
 
     class Meta:
         model = models.TestList
@@ -185,10 +185,10 @@ class TestListCycleFilter(filters.FilterSet):
         queryset=models.UnitTestCollection.objects.all(),
     )
 
-    created_min = MinDateFilter(name="created")
-    created_max = MaxDateFilter(name="created")
-    modified_min = MinDateFilter(name="modified")
-    modified_max = MaxDateFilter(name="modified")
+    created_min = MinDateFilter(field_name="created")
+    created_max = MaxDateFilter(field_name="created")
+    modified_min = MinDateFilter(field_name="modified")
+    modified_max = MaxDateFilter(field_name="modified")
 
     class Meta:
         model = models.TestListCycle
@@ -218,8 +218,8 @@ class UnitTestCollectionFilter(filters.FilterSet):
         TestListCycleFilter, field_name="test_list_cycle", queryset=models.TestListCycle.objects.all()
     )
 
-    due_date_min = MinDateFilter(name="due_date")
-    due_date_max = MaxDateFilter(name="due_date")
+    due_date_min = MinDateFilter(field_name="due_date")
+    due_date_max = MaxDateFilter(field_name="due_date")
 
     class Meta:
         model = models.UnitTestCollection
@@ -244,22 +244,22 @@ class TestListInstanceFilter(filters.FilterSet):
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
-    due_date_min = MinDateFilter(name="due_date")
-    due_date_max = MaxDateFilter(name="due_date")
+    due_date_min = MinDateFilter(field_name="due_date")
+    due_date_max = MaxDateFilter(field_name="due_date")
 
-    reviewed_min = MinDateFilter(name="reviewed")
-    reviewed_max = MaxDateFilter(name="reviewed")
+    reviewed_min = MinDateFilter(field_name="reviewed")
+    reviewed_max = MaxDateFilter(field_name="reviewed")
 
-    work_started_min = MinDateFilter(name="work_started")
-    work_started_max = MaxDateFilter(name="work_started")
+    work_started_min = MinDateFilter(field_name="work_started")
+    work_started_max = MaxDateFilter(field_name="work_started")
 
-    work_completed_min = MinDateFilter(name="work_completed")
-    work_completed_max = MaxDateFilter(name="work_completed")
+    work_completed_min = MinDateFilter(field_name="work_completed")
+    work_completed_max = MaxDateFilter(field_name="work_completed")
 
-    created_min = MinDateFilter(name="created")
-    created_max = MaxDateFilter(name="created")
-    modified_min = MinDateFilter(name="modified")
-    modified_max = MaxDateFilter(name="modified")
+    created_min = MinDateFilter(field_name="created")
+    created_max = MaxDateFilter(field_name="created")
+    modified_min = MinDateFilter(field_name="modified")
+    modified_max = MaxDateFilter(field_name="modified")
 
     class Meta:
         model = models.TestListInstance
@@ -337,26 +337,26 @@ class TestInstanceFilter(filters.FilterSet):
     )
 
     pass_fail = filters.Filter(
-        name="pass_fail",
+        field_name="pass_fail",
         widget=widgets.Select(choices=[('', 'Any')] + list(models.PASS_FAIL_CHOICES)),
     )
 
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
-    work_started_min = MinDateFilter(name="work_started")
-    work_started_max = MaxDateFilter(name="work_started")
+    work_started_min = MinDateFilter(field_name="work_started")
+    work_started_max = MaxDateFilter(field_name="work_started")
 
-    work_completed_min = MinDateFilter(name="work_completed")
-    work_completed_max = MaxDateFilter(name="work_completed")
+    work_completed_min = MinDateFilter(field_name="work_completed")
+    work_completed_max = MaxDateFilter(field_name="work_completed")
 
-    review_date_min = MinDateFilter(name="review_date")
-    review_date_max = MaxDateFilter(name="review_date")
+    review_date_min = MinDateFilter(field_name="review_date")
+    review_date_max = MaxDateFilter(field_name="review_date")
 
-    created_min = MinDateFilter(name="created")
-    created_max = MaxDateFilter(name="created")
-    modified_min = MinDateFilter(name="modified")
-    modified_max = MaxDateFilter(name="modified")
+    created_min = MinDateFilter(field_name="created")
+    created_max = MaxDateFilter(field_name="created")
+    modified_min = MinDateFilter(field_name="modified")
+    modified_max = MaxDateFilter(field_name="modified")
 
     class Meta:
         model = models.TestInstance

@@ -7,8 +7,8 @@ from qatrack.api.filters import MaxDateFilter, MinDateFilter
 
 class UserFilter(filters.FilterSet):
 
-    date_joined_min = MinDateFilter(name="date_joined")
-    date_joined_max = MaxDateFilter(name="date_joined")
+    date_joined_min = MinDateFilter(field_name="date_joined")
+    date_joined_max = MaxDateFilter(field_name="date_joined")
 
     class Meta:
         model = User

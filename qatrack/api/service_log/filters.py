@@ -99,14 +99,14 @@ class ServiceEventFilter(filters.FilterSet):
         queryset=TestListInstance.objects.all(),
     )
 
-    datetime_status_changed_min = MinDateFilter(name="datetime_status_changed")
-    datetime_status_changed_max = MaxDateFilter(name="datetime_status_changed")
-    datetime_service_min = MinDateFilter(name="datetime_service")
-    datetime_service_max = MaxDateFilter(name="datetime_service")
-    datetime_created_min = MinDateFilter(name="datetime_created")
-    datetime_created_max = MaxDateFilter(name="datetime_created")
-    datetime_modified_min = MinDateFilter(name="datetime_modified")
-    datetime_modified_max = MaxDateFilter(name="datetime_modified")
+    datetime_status_changed_min = MinDateFilter(field_name="datetime_status_changed")
+    datetime_status_changed_max = MaxDateFilter(field_name="datetime_status_changed")
+    datetime_service_min = MinDateFilter(field_name="datetime_service")
+    datetime_service_max = MaxDateFilter(field_name="datetime_service")
+    datetime_created_min = MinDateFilter(field_name="datetime_created")
+    datetime_created_max = MaxDateFilter(field_name="datetime_created")
+    datetime_modified_min = MinDateFilter(field_name="datetime_modified")
+    datetime_modified_max = MaxDateFilter(field_name="datetime_modified")
 
     class Meta:
         model = models.ServiceEvent
@@ -162,8 +162,8 @@ class ReturnToServiceQAFilter(filters.FilterSet):
         ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
-    datetime_assigned_min = MinDateFilter(name="datetime_assigned")
-    datetime_assigned_max = MaxDateFilter(name="datetime_assigned")
+    datetime_assigned_min = MinDateFilter(field_name="datetime_assigned")
+    datetime_assigned_max = MaxDateFilter(field_name="datetime_assigned")
 
     class Meta:
         model = models.ReturnToServiceQA
@@ -195,8 +195,8 @@ class GroupLinkerInstanceFilter(filters.FilterSet):
         ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
-    datetime_linked_min = MinDateFilter(name="datetime_linked")
-    datetime_linked_max = MaxDateFilter(name="datetime_linked")
+    datetime_linked_min = MinDateFilter(field_name="datetime_linked")
+    datetime_linked_max = MaxDateFilter(field_name="datetime_linked")
 
     class Meta:
         model = models.GroupLinkerInstance

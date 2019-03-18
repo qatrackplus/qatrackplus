@@ -61,10 +61,10 @@ class UnitFilter(filters.FilterSet):
 
     type = filters.RelatedFilter(UnitTypeFilter, field_name='type', queryset=models.UnitType.objects.all())
     site = filters.RelatedFilter(SiteFilter, field_name='site', queryset=models.Site.objects.all())
-    date_acceptance_min = MinDateFilter(name="date_acceptance")
-    date_acceptance_max = MaxDateFilter(name="date_acceptance")
-    install_date_min = MinDateFilter(name="install_date")
-    install_date_max = MaxDateFilter(name="install_date")
+    date_acceptance_min = MinDateFilter(field_name="date_acceptance")
+    date_acceptance_max = MaxDateFilter(field_name="date_acceptance")
+    install_date_min = MinDateFilter(field_name="install_date")
+    install_date_max = MaxDateFilter(field_name="install_date")
     active = filters.BooleanFilter()
 
     class Meta:
@@ -82,8 +82,8 @@ class UnitFilter(filters.FilterSet):
 class UnitAvailableTimeEditFilter(filters.FilterSet):
 
     unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=models.Unit.objects.all())
-    date_min = MinDateFilter(name="date")
-    date_max = MaxDateFilter(name="date")
+    date_min = MinDateFilter(field_name="date")
+    date_max = MaxDateFilter(field_name="date")
 
     class Meta:
         model = models.UnitAvailableTimeEdit
@@ -97,8 +97,8 @@ class UnitAvailableTimeFilter(filters.FilterSet):
 
     unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=models.Unit.objects.all())
 
-    date_changed_min = MinDateFilter(name="date_changed")
-    date_changed_max = MaxDateFilter(name="date_changed")
+    date_changed_min = MinDateFilter(field_name="date_changed")
+    date_changed_max = MaxDateFilter(field_name="date_changed")
 
     class Meta:
         model = models.UnitAvailableTime
