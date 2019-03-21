@@ -508,8 +508,14 @@ class CompositePerformer:
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
+                try:
+                    formatted = "%.1f" % result
+                except:
+                    formatted = None
+
                 results[slug] = {
                     'value': result,
+                    'formatted': formatted,
                     'error': None,
                     'user_attached': list(self.calculation_context.get("__user_attached__", [])),
                     'comment': self.calculation_context.get("__comment__"),

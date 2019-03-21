@@ -351,7 +351,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             self.comment_box.val(comment);
         }
 
-        this.set_value = function(value, user_attached){
+        this.set_value = function(value, user_attached, formatted){
             //set value manually and update inputs accordingly
             var tt = self.test_info.test.type;
 
@@ -372,6 +372,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 }else{
                     self.inputs.filter(".qa-input:hidden").val(value["attachment_id"]);
                     self.value = value.result;
+                }
+            }else if (tt === QAUtils.COMPOSITE){
+                if (_.isNull(value)){
+                    self.inputs.val("");
+                }else{
+                    self.inputs.val(formatted);
                 }
             }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){
                 if (_.isNull(value)){
@@ -748,7 +754,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                                 ti.set_comment(result.comment);
                                 ti.set_comment_icon();
                             }
-                            ti.set_value(result.value, result.user_attached);
+                            ti.set_value(result.value, result.user_attached, result.formatted);
 
                             if (result.error){
                                 ti.status.attr("title", result.error);

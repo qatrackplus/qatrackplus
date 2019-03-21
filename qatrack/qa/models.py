@@ -751,6 +751,25 @@ class Test(models.Model, TestPackMixin):
         help_text=_("For Composite Tests Only: Enter a Python snippet for evaluation of this test.")
     )
 
+    fmt_help = _(
+        "Format string for numerical results. Use e.g. 2F  to display as fixed precision with 2 decimal places, or "
+        "3E to show as scientific format with 3 significant figures, or 4G to use 'general' formatting with up to 4 "
+        "significant figures."
+    )
+    fmt_choices = (
+        ("%.1f", "Fixed - 1 decimals"),
+        ("%.2f", "Fixed - 2 decimals"),
+        ("%.3f", "Fixed - 3 decimals"),
+        ("%.1E", "Scientific - 1 sig fig"),
+        ("%.2E", "Scientific - 2 sig figs"),
+    )
+    fmt_choices = [("%%.%df" % i, "Fixed - %d decimals" % i) for i in range(7)]
+    fmt_choices += [("%%.%dE" % i, "Scientific - %d sig figs" % i) for i in range(7)]
+    fmt_choices += [("%%.%dG" % i, "General - up to %d sig figs" % i) for i in range(7)]
+
+    formatting = models.CharField(blank=True, help_text=fmt_help, default='', max_length=10, choices=fmt_choices)
+
+
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="test_creator")
