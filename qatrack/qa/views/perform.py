@@ -510,10 +510,7 @@ class CompositePerformer:
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
-                try:
-                    formatted = self.formatters.get(slug) % result
-                except:  # noqa: E722
-                    formatted = result
+                formatted = utils.format_qa_value(result, self.formatters.get(slug))
 
                 results[slug] = {
                     'value': result,

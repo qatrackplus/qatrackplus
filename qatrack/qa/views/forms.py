@@ -13,6 +13,7 @@ from django.forms.widgets import (
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
+from qatrack.qa.utils import format_qa_value
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 
@@ -92,7 +93,7 @@ class TestInstanceWidgetsMixin(object):
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
         elif test_type == models.CONSTANT:
             test = self.unit_test_info.test
-            formatted = test.formatting % test.constant_value if test.formatting else test.constant_value
+            formatted = format_qa_value(test.constant_value, test.formatting)
             self.fields["value"].widget.attrs['title'] = 'Actual value = %s' % test.constant_value
             self.fields["value"].widget.attrs['data-formatted'] = formatted
         elif test_type == models.MULTIPLE_CHOICE:
@@ -103,7 +104,7 @@ class TestInstanceWidgetsMixin(object):
             self.fields["value"].widget = Input()
             if getattr(self, "instance", None):
                 test = self.unit_test_info.test
-                formatted = test.formatting % self.instance.value if test.formatting else self.instance.value
+                formatted = format_qa_value(self.instance.value, test.formatting)
                 self.fields["value"].widget.attrs['data-formatted'] = formatted
         else:
             self.fields["value"].widget = NumberInput(attrs={"step": "any"})

@@ -28,6 +28,7 @@ from qatrack.attachments.admin import (
     get_attachment_inline,
 )
 import qatrack.qa.models as models
+from qatrack.qa.utils import format_qa_value
 from qatrack.units.models import Unit
 
 admin.site.disable_action("delete_selected")
@@ -749,7 +750,7 @@ class TestForm(forms.ModelForm):
             fmt = cleaned_data.get('formatting')
             if fmt:
                 try:
-                    fmt % 123.4
+                    format_qa_value(123.4, fmt)
                 except:  # noqa: E722
                     self.add_error("formatting", forms.ValidationError("Invalid numerical format"))
 

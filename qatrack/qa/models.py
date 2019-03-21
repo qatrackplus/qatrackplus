@@ -755,7 +755,8 @@ class Test(models.Model, TestPackMixin):
         "Python style string format for numerical results. Leave blank for the QATrack+ default, "
         "select one of the predefined options, or enter your own formatting string. <br>"
         "Use e.g. %.2F to display as fixed precision with 2 decimal places, or %.3E to show as scientific format with "
-        "3 significant figures, or %.4G to use 'general' formatting with up to 4 significant figures."
+        "3 significant figures, or %.4G to use 'general' formatting with up to 4 significant figures.<br>"
+        "You may also use new style Python string formatting (e.g. {:06.2f})."
     )
 
     formatting = models.CharField(blank=True, help_text=fmt_help, default='', max_length=10)

@@ -187,7 +187,8 @@ places, or %.3E to show as scientific format with 3 significant figures, or
 does not affect the way other values are calculated, only the way composite and
 constant test values are *displayed*. For example a constant test with a value
 of 1.2345 and a format of %.1f will be displayed as 1.2, but the full 1.2345
-will be used for calculations).
+will be used for calculations).  Note you may also use "new style" Python
+string formatting: see https://pyformat.info/ for examples.
 
 Attachments
 ~~~~~~~~~~~

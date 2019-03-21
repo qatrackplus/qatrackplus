@@ -137,7 +137,7 @@ def almost_equal(a, b, significant=7):
     try:
         scale = 0.5 * (abs(b) + abs(a))
         scale = math.pow(10, math.floor(math.log10(scale)))
-    except:
+    except:  # noqa: E722
         pass
 
     try:
@@ -305,3 +305,20 @@ def month_start_and_end(year, month):
     start = tz.localize(timezone.datetime(year, month, 1))
     end = tz.localize(timezone.datetime(year, month, calendar.monthrange(year, month)[1]))
     return start, end
+
+
+def format_qa_value(val, format_str):
+    """Format a value with given format_str first by trying newstyle .format and then falling
+    back to try old (%) style"""
+
+    if not format_str:
+        return str(val)
+
+    try:
+        return format_str.format(val)
+    except:  # noqa: E722
+        try:
+            return format_str % val
+        except:  # noqa: E722
+            pass
+    return str(val)
