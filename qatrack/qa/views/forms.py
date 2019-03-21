@@ -1,14 +1,18 @@
 from django import forms
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.forms.models import inlineformset_factory
-from django.forms.widgets import HiddenInput, NumberInput, RadioSelect, Select
+from django.forms.widgets import (
+    HiddenInput,
+    Input,
+    NumberInput,
+    RadioSelect,
+    Select,
+)
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
-from qatrack.qa import utils
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 
@@ -86,10 +90,21 @@ class TestInstanceWidgetsMixin(object):
 
         if test_type == models.BOOLEAN:
             self.fields["value"].widget = RadioSelect(choices=BOOL_CHOICES)
+        elif test_type == models.CONSTANT:
+            test = self.unit_test_info.test
+            formatted = test.formatting % test.constant_value if test.formatting else test.constant_value
+            self.fields["value"].widget.attrs['title'] = 'Actual value = %s' % test.constant_value
+            self.fields["value"].widget.attrs['data-formatted'] = formatted
         elif test_type == models.MULTIPLE_CHOICE:
             self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
+        elif test_type == models.COMPOSITE:
+            self.fields["value"].widget = Input()
+            if getattr(self, "instance", None):
+                test = self.unit_test_info.test
+                formatted = test.formatting % self.instance.value if test.formatting else self.instance.value
+                self.fields["value"].widget.attrs['data-formatted'] = formatted
         else:
             self.fields["value"].widget = NumberInput(attrs={"step": "any"})
 
@@ -173,7 +188,7 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
             init = {"value": None}
 
             if uti.test.type == models.CONSTANT:
-                init["value"] = utils.to_precision(uti.test.constant_value, settings.CONSTANT_PRECISION)
+                init["value"] = uti.test.constant_value
 
             initial.append(init)
 
@@ -212,7 +227,13 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
         }
 
 
-BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=UpdateTestInstanceForm, extra=0, can_delete=False)
+BaseUpdateTestInstanceFormSet = inlineformset_factory(
+    models.TestListInstance,
+    models.TestInstance,
+    form=UpdateTestInstanceForm,
+    extra=0,
+    can_delete=False,
+)
 
 
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
@@ -226,7 +247,13 @@ class ReviewTestInstanceForm(forms.ModelForm):
         fields = ("status", )
 
 
-BaseReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=ReviewTestInstanceForm, extra=0, can_delete=False)
+BaseReviewTestInstanceFormSet = inlineformset_factory(
+    models.TestListInstance,
+    models.TestInstance,
+    form=ReviewTestInstanceForm,
+    extra=0,
+    can_delete=False,
+)
 
 
 class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet):
@@ -325,7 +352,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
             if work_completed == work_started:
                 cleaned_data["work_completed"] = work_started + timezone.timedelta(seconds=60)
             elif work_completed < work_started:
-                self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
+                self._errors["work_started"] = self.error_class(
+                    ["Work started date/time can not be after work completed date/time"]
+                )
                 del cleaned_data["work_started"]
 
         if work_started:
@@ -345,7 +374,8 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
 
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
-        self.fields['work_started'].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        now = timezone.localtime(timezone.now())
+        self.fields['work_started'].initial = now.strftime(settings.INPUT_DATE_FORMATS[0])
         self.fields['comment'].widget.attrs['rows'] = '3'
         self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
         self.fields['comment'].widget.attrs['class'] = 'autosize form-control'

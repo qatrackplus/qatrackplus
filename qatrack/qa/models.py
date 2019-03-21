@@ -16,11 +16,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_comments.models import Comment
+from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
 from qatrack.units.models import Unit
-from recurrence.fields import RecurrenceField
 
 # All available test types
 BOOLEAN = "boolean"
@@ -752,23 +752,13 @@ class Test(models.Model, TestPackMixin):
     )
 
     fmt_help = _(
-        "Format string for numerical results. Use e.g. 2F  to display as fixed precision with 2 decimal places, or "
-        "3E to show as scientific format with 3 significant figures, or 4G to use 'general' formatting with up to 4 "
-        "significant figures."
+        "Python style string format for numerical results. Leave blank for the QATrack+ default, "
+        "select one of the predefined options, or enter your own formatting string. <br>"
+        "Use e.g. %.2F to display as fixed precision with 2 decimal places, or %.3E to show as scientific format with "
+        "3 significant figures, or %.4G to use 'general' formatting with up to 4 significant figures."
     )
-    fmt_choices = (
-        ("%.1f", "Fixed - 1 decimals"),
-        ("%.2f", "Fixed - 2 decimals"),
-        ("%.3f", "Fixed - 3 decimals"),
-        ("%.1E", "Scientific - 1 sig fig"),
-        ("%.2E", "Scientific - 2 sig figs"),
-    )
-    fmt_choices = [("%%.%df" % i, "Fixed - %d decimals" % i) for i in range(7)]
-    fmt_choices += [("%%.%dE" % i, "Scientific - %d sig figs" % i) for i in range(7)]
-    fmt_choices += [("%%.%dG" % i, "General - up to %d sig figs" % i) for i in range(7)]
 
-    formatting = models.CharField(blank=True, help_text=fmt_help, default='', max_length=10, choices=fmt_choices)
-
+    formatting = models.CharField(blank=True, help_text=fmt_help, default='', max_length=10)
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)
@@ -1826,6 +1816,12 @@ class TestInstance(models.Model):
             return self.upload_link()
         elif test.is_string_type():
             return self.string_value
+        elif test.formatting:
+            try:
+                return test.formatting % self.value
+            except:  # noqa: E722
+                pass
+
         return "%.4g" % self.value
 
     def diff_display(self):

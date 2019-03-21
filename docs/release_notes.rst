@@ -39,6 +39,11 @@ Details of the v0.3.1 release
   been added. `review_all_unreviewed` updates the status of all unreviewed test list instances, while
   `clear_in_progress` will delete all in progress test lists.
 
+* Composite & Constant Tests now have an optional "Formatting" field to control how their results
+  are displayed.  For example a test with a formatting of "%.2E" will use scientific
+  notation with 2 decimal places (3 sig figures).
+
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------

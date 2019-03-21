@@ -171,6 +171,24 @@ Skip Without Comment
 Check this option if you want users to be able to skip this test without being
 forced to add a comment (regardless of their commenting permissions).
 
+Calculation Procedure
+~~~~~~~~~~~~~~~~~~~~~
+
+The Python snippet for calculating composite test results and processing uploads (see below).
+
+Formatting (Composite & Constant Tests Only)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python style string format for displaying numerical results. Leave blank for
+the QATrack+ default, select one of the predefined options, or enter your own
+formatting string.  Use e.g. %.2F to display as fixed precision with 2 decimal
+places, or %.3E to show as scientific format with 3 significant figures, or
+%.4G to use 'general' formatting with up to 4 significant figures. (Note this
+does not affect the way other values are calculated, only the way composite and
+constant test values are *displayed*. For example a constant test with a value
+of 1.2345 and a format of %.1f will be displayed as 1.2, but the full 1.2345
+will be used for calculations).
+
 Attachments
 ~~~~~~~~~~~
 

@@ -3,8 +3,20 @@
 Only show relevant fields for TestListItemAdmin
 
 */
+
+function toggle_formatting(test_type){
+    var $el = $(".field-formatting");
+    if (["constant", "composite", "simple"].indexOf(test_type) >= 0){
+        $el.show();
+    }else{
+        $el.hide();
+    }
+}
+
 function toggle_test_type(){
     var val = $("#id_type").find("option:selected").val();
+
+    toggle_formatting(val);
 
     if (val == "constant"){
         $(".field-constant_value, .field-hidden").show();
@@ -14,6 +26,7 @@ function toggle_test_type(){
         $(".field-calculation_procedure, .field-hidden, .field-display_image").show();
         $(".field-constant_value, .field-choices, .field-skip_without_comment").not(".errors").hide();
         if (val === "scomposite"){
+            $(".field-chart_visibility").prop("checked", false).hide();
             $(".field-chart_visibility").prop("checked", false).hide();
         }else{
             $(".field-chart_visibility").prop("checked", true).show();
@@ -65,5 +78,38 @@ $(document).ready(function() {
         });
         calcProcedureEditor.resize();
     }
+
+
+    var formatters = [
+        ['', 'Default'],
+        ['%.0f', 'Fixed - 0 decimals (%.0f)'],
+        ['%.1f', 'Fixed - 1 decimals (%.1f)'],
+        ['%.2f', 'Fixed - 2 decimals (%.2f)'],
+        ['%.3f', 'Fixed - 3 decimals (%.3f)'],
+        ['%.4f', 'Fixed - 4 decimals (%.4f)'],
+        ['%.5f', 'Fixed - 5 decimals (%.5f)'],
+        ['%.6f', 'Fixed - 6 decimals (%.6f)'],
+        ['%.0E', 'Scientific - 1 sig figs (%.0E) '],
+        ['%.1E', 'Scientific - 2 sig figs (%.1E) '],
+        ['%.2E', 'Scientific - 3 sig figs (%.2E) '],
+        ['%.3E', 'Scientific - 4 sig figs (%.3E) '],
+        ['%.4E', 'Scientific - 5 sig figs (%.4E) '],
+        ['%.5E', 'Scientific - 6 sig figs (%.5E) '],
+        ['%.0G', 'General - up to 1 sig figs (%.0G)'],
+        ['%.1G', 'General - up to 2 sig figs (%.1G)'],
+        ['%.2G', 'General - up to 3 sig figs (%.2G)'],
+        ['%.3G', 'General - up to 4 sig figs (%.3G)'],
+        ['%.4G', 'General - up to 5 sig figs (%.4G)'],
+        ['%.5G', 'General - up to 6 sig figs (%.5G)'],
+    ];
+
+    var sel = $('<select id="formatters">').insertAfter('#id_formatting');
+    $(formatters).each(function(idx, item) {
+        sel.append($("<option>").prop('value', item[0]).text(item[1]));
+    });
+    sel.change(function(el){
+        $("#id_formatting").val(el.target.value);
+    });
+
 
 });

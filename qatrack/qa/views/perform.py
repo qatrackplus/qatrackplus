@@ -483,6 +483,8 @@ class CompositePerformer:
         except (KeyError, Unit.DoesNotExist):
             return {"success": False, "errors": ["Invalid or missing unit_id"]}
 
+        self.set_formatters()
+
         self.set_composite_test_data()
         if not self.composite_tests:
             return {"success": False, "errors": ["No Valid Composite ID's"]}
@@ -509,9 +511,9 @@ class CompositePerformer:
                 result = self.calculation_context[key]
 
                 try:
-                    formatted = "%.1f" % result
-                except:
-                    formatted = None
+                    formatted = self.formatters.get(slug) % result
+                except:  # noqa: E722
+                    formatted = result
 
                 results[slug] = {
                     'value': result,
@@ -542,6 +544,16 @@ class CompositePerformer:
                 del self.calculation_context['__user_attached__'][:]
 
         return {"success": True, "errors": [], "results": results}
+
+    def set_formatters(self):
+        """Set formatters for tests where applicable"""
+        tests = self.all_tests.filter(
+            type__in=models.NUMERICAL_TYPES,
+        ).exclude(
+            formatting=""
+        ).values_list("slug", "formatting")
+
+        self.formatters = dict(tests)
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
@@ -1191,7 +1203,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             if not self.object.in_progress:
                 try:
                     signals.testlist_complete.send(sender=self, instance=self.object, created=False)
-                except:
+                except:  # noqa: E722
                     messages.add_message(
                         request=self.request,
                         message='Error sending notification email.',

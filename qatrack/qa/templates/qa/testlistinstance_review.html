@@ -300,7 +300,7 @@
                                                             {% if test.is_upload %}
                                                                 {{ti.value_display|safe|truncatechars_html:9}}
                                                             {% else %}
-                                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
+                                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}} diff from reference{% endif %}">
                                                                     {% with ti.pass_fail as status %}
                                                                         {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
                                                                             {% if status == 'tolerance' %}

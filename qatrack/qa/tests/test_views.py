@@ -8,10 +8,10 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.shortcuts import get_current_site
-from django.urls import reverse
 import django.forms
 from django.test import TestCase
 from django.test.client import RequestFactory
+from django.urls import reverse
 from django.utils import timezone
 from django_comments.models import Comment
 from freezegun import freeze_time
@@ -527,6 +527,42 @@ class TestComposite(TestCase):
             "results": {
                 "testc": {
                     "value": 3.0,
+                    "formatted": 3.0,
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                }
+            },
+            "success": True
+        }
+        self.assertDictEqual(values, expected)
+
+    def test_composite_with_formatting(self):
+
+        self.tc.formatting = "%.3E"
+        self.tc.save()
+
+        data = {
+            'tests': {
+                "testc": "",
+                "test1": 100,
+                "test2": 200,
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 300,
+                    "formatted": "3.000E+02",
                     "error": None,
                     "user_attached": [],
                     "comment": None,
@@ -755,6 +791,7 @@ class TestComposite(TestCase):
                 'testc': {
                     'error': None,
                     'value': 3.0,
+                    'formatted': 3.0,
                     "user_attached": [],
                     "comment": None,
                 }

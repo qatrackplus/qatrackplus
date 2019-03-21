@@ -731,7 +731,8 @@ class TestForm(forms.ModelForm):
 
         cleaned_data = super().clean()
 
-        user_changing_type = self.instance.type != cleaned_data.get("type")
+        test_type = cleaned_data.get("type")
+        user_changing_type = self.instance.type != test_type
         has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
         if user_changing_type and has_history:
             msg = (
@@ -741,6 +742,16 @@ class TestForm(forms.ModelForm):
             ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
             ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
             self.add_error('type', forms.ValidationError(msg % ttype_label))
+
+        if test_type not in models.NUMERICAL_TYPES:
+            cleaned_data['formatting'] = ''
+        else:
+            fmt = cleaned_data.get('formatting')
+            if fmt:
+                try:
+                    fmt % 123.4
+                except:  # noqa: E722
+                    self.add_error("formatting", forms.ValidationError("Invalid numerical format"))
 
         return cleaned_data
 
@@ -785,7 +796,14 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
             settings.STATIC_URL + "js/test_admin.js",
             settings.STATIC_URL + "js/admin_description_editor.js",
             settings.STATIC_URL + "ace/ace.js",
+            settings.STATIC_URL + "select2/js/select2.js",
         )
+        css = {
+            'all': (
+                settings.STATIC_URL + "qatrack_core/css/admin.css",
+                settings.STATIC_URL + "select2/css/select2.css",
+            ),
+        }
 
     def save_model(self, request, obj, form, change):
         if 'calculation_procedure' in form.changed_data:
