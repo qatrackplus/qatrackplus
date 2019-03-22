@@ -11,6 +11,7 @@ from django.contrib.sites.shortcuts import get_current_site
 import django.forms
 from django.test import TestCase
 from django.test.client import RequestFactory
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django_comments.models import Comment
@@ -505,6 +506,7 @@ class TestComposite(TestCase):
             utils.create_test_list_membership(self.test_list, t)
             utils.create_unit_test_info(test=t, unit=self.unit)
 
+    @override_settings(CONSTANT_PRECISION=2)
     def test_composite(self):
 
         data = {
@@ -527,7 +529,7 @@ class TestComposite(TestCase):
             "results": {
                 "testc": {
                     "value": 3.0,
-                    "formatted": 3.0,
+                    "formatted": "3.0",
                     "error": None,
                     "user_attached": [],
                     "comment": None,
@@ -747,6 +749,7 @@ class TestComposite(TestCase):
         }
         self.assertDictEqual(values, expected)
 
+    @override_settings(CONSTANT_PRECISION=2)
     def test_cyclic(self):
 
         self.cyclic1 = utils.create_test(name="cyclic1", test_type=models.COMPOSITE)
@@ -791,7 +794,7 @@ class TestComposite(TestCase):
                 'testc': {
                     'error': None,
                     'value': 3.0,
-                    'formatted': 3.0,
+                    'formatted': "3.0",
                     "user_attached": [],
                     "comment": None,
                 }

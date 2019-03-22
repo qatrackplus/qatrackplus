@@ -694,7 +694,7 @@ class TestTestListCycle(TestCase):
         assert self.utc.last_instance is None
 
         utc2.refresh_from_db()
-        assert utc2.last_instance.pk is tli.pk
+        assert utc2.last_instance.pk == tli.pk
 
 
 class TestUTCDueDates(TestCase):

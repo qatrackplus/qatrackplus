@@ -510,7 +510,7 @@ class CompositePerformer:
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
-                formatted = utils.format_qa_value(result, self.formatters.get(slug))
+                formatted = utils.format_qc_value(result, self.formatters.get(slug))
 
                 results[slug] = {
                     'value': result,

@@ -28,7 +28,7 @@ from qatrack.attachments.admin import (
     get_attachment_inline,
 )
 import qatrack.qa.models as models
-from qatrack.qa.utils import format_qa_value
+from qatrack.qa.utils import format_qc_value
 from qatrack.units.models import Unit
 
 admin.site.disable_action("delete_selected")
@@ -421,11 +421,11 @@ class TestListAdminForm(forms.ModelForm):
         return slug
 
     def clean(self):
-        retest = re.compile("^testlistmembership_set-\d+-test$")
+        retest = re.compile(r"^testlistmembership_set-\d+-test$")
         test_ids = [x[1] for x in self.data.items() if retest.findall(x[0]) and x[1]]
         slugs = list(models.Test.objects.filter(id__in=test_ids).values_list("slug", flat=True))
 
-        rechild = re.compile("^children-\d+-child$")
+        rechild = re.compile(r"^children-\d+-child$")
         child_ids = [x[1] for x in self.data.items() if rechild.findall(x[0]) and x[1]]
         for tl in models.TestList.objects.filter(id__in=child_ids):
             slugs.extend(tl.all_tests().values_list("slug", flat=True))
@@ -750,7 +750,7 @@ class TestForm(forms.ModelForm):
             fmt = cleaned_data.get('formatting')
             if fmt:
                 try:
-                    format_qa_value(123.4, fmt)
+                    format_qc_value(123.4, fmt)
                 except:  # noqa: E722
                     self.add_error("formatting", forms.ValidationError("Invalid numerical format"))
 

@@ -307,18 +307,30 @@ def month_start_and_end(year, month):
     return start, end
 
 
-def format_qa_value(val, format_str):
-    """Format a value with given format_str first by trying newstyle .format and then falling
-    back to try old (%) style"""
+def format_qc_value(val, format_str):
+    """Format a value with given format_str first by trying old style "<foo>" %
+    (*args)" and then trying new "<foo>".format(*args) style. If both of those
+    methods fail, then we try to format using to_precision and
+    settings.CONSTANT_PRECISION.  If that also fails, just return  str(val).
+    """
 
-    if not format_str:
-        return str(val)
-
-    try:
-        return format_str.format(val)
-    except:  # noqa: E722
+    if format_str:
         try:
             return format_str % val
+        except TypeError as e:
+            old_style_likely = "number is required" in str(e)
+            if not old_style_likely:
+                try:
+                    return format_str.format(val)
+                except:  # noqa: E722
+                    pass
         except:  # noqa: E722
             pass
+
+    try:
+        # try fall back on old behaviour
+        return to_precision(val, settings.CONSTANT_PRECISION)
+    except:  # noqa: E722
+        pass
+
     return str(val)
