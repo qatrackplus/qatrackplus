@@ -242,11 +242,33 @@ AUTO_REVIEW_DEFAULT
 Set `AUTO_REVIEW_DEFAULT = True` in your `local_settings.py` file in order to
 enable :ref:`Auto Review <qa_auto_review>` by default.
 
-CONSTANT_PRECISION
-...................
+CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
+..................................................................
 
 Set the `CONSTANT_PRECISION` setting to adjust the precision for which
 :ref:`Constant test type <qa_test_types>` values are displayed. (default 8)
+
+DEFAULT_NUMBER_FORMAT
+.....................
+
+Default formatting string to be used for Composite & Constant number formatting
+(can be overridden on a test by test basis). Set to a Python style string
+format for displaying numerical results.  Use e.g. %.2F to display as fixed
+precision with 2 decimal places, or %.3E to show as scientific format with 3
+significant figures, or %.4G to use 'general' formatting with up to 4
+significant figures. (Note this does not affect the way other values are
+calculated, only the way composite and constant test values are *displayed*.
+For example a constant test with a value of 1.2345 and a format of %.1f will be
+displayed as 1.2, but the full 1.2345 will be used for calculations).  Note you
+may also use "new style" Python string formatting: see https://pyformat.info/
+for examples.
+
+.. code-block:: python
+
+    DEFAULT_NUMBER_FORMAT = "%.3f"  # 3 decimal place fixed precision using "Old" style formatting
+    DEFAULT_NUMBER_FORMAT = "{:.3f}"  # 3 decimal place fixed precision using "New" style formatting
+    DEFAULT_NUMBER_FORMAT = "{:.4E}"  # 5 sig fig scientific notation using "New" style formatting
+
 
 DEFAULT_GROUP_NAMES
 ...................

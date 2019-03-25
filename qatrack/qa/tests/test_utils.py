@@ -487,3 +487,15 @@ class TestFormatQCValue:
 
     def test_non_numerical_val(self):
         assert qautils.format_qc_value(None, "%d") == "None"
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="{:.3f}")
+    def test_default_format_new(self):
+        assert qautils.format_qc_value(1, "") == qautils.format_qc_value(1, "{:.3f}")
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="%.3f")
+    def test_default_format_old(self):
+        assert qautils.format_qc_value(1, None) == qautils.format_qc_value(1, "{:.3f}")
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="{:foo}")
+    def test_invalid_default_fallback(self):
+        assert qautils.format_qc_value(1, None) == qautils.to_precision(1, settings.CONSTANT_PRECISION)

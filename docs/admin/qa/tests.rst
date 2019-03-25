@@ -190,6 +190,9 @@ of 1.2345 and a format of %.1f will be displayed as 1.2, but the full 1.2345
 will be used for calculations).  Note you may also use "new style" Python
 string formatting: see https://pyformat.info/ for examples.
 
+To set a default value for numerical formatting see the
+:ref:`DEFAULT_NUMBER_FORMAT <qatrack-config>` setting.
+
 Attachments
 ~~~~~~~~~~~
 

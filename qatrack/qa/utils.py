@@ -307,12 +307,12 @@ def month_start_and_end(year, month):
     return start, end
 
 
-def format_qc_value(val, format_str):
+def format_qc_value(val, format_str, _try_default=True):
     """Format a value with given format_str first by trying old style "<foo>" %
     (*args)" and then trying new "<foo>".format(*args) style. If both of those
-    methods fail, then we try to format using to_precision and
-    settings.CONSTANT_PRECISION.  If that also fails, just return  str(val).
-    """
+    methods fail, then we try using settings.DEFAULT_NUMBER_FORMAT before
+    falling back to using to_precision and settings.CONSTANT_PRECISION.  If
+    that also fails, just return  str(val).  """
 
     if format_str:
         try:
@@ -325,6 +325,12 @@ def format_qc_value(val, format_str):
                 except:  # noqa: E722
                     pass
         except:  # noqa: E722
+            pass
+
+    if _try_default and settings.DEFAULT_NUMBER_FORMAT:
+        try:
+            return format_qc_value(val, settings.DEFAULT_NUMBER_FORMAT, _try_default=False)
+        except:
             pass
 
     try:

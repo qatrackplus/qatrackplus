@@ -96,6 +96,8 @@ LANGUAGE_CODE = 'en-us'
 USE_I18N = True
 
 CONSTANT_PRECISION = 8
+DEFAULT_NUMBER_FORMAT = None
+
 
 # This is the warning message given to the user when a test result is out of tolerance
 # Override this setting in local_settings.py to a locally relevant warning message
