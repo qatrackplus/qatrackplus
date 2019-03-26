@@ -64,7 +64,7 @@ $(document).ready(function() {
         // IE7-8 explode with Ace editor sigh
 
         var calcProcedure = element.hide();
-        calcProcedure.after('<div style="height:200px; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');
+        calcProcedure.after('<div style="width: 50%; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');
 
         var calcProcedureEditor = ace.edit("calc-procedure-editor");
         var session = calcProcedureEditor.getSession();
@@ -76,6 +76,10 @@ $(document).ready(function() {
         calcProcedureEditor.on('blur', function(){
             calcProcedure.val(calcProcedureEditor.getValue());
         });
+        calcProcedureEditor.setAutoScrollEditorIntoView(true);
+        calcProcedureEditor.setOption("maxLines", 20);
+        calcProcedureEditor.setOption("minLines", 5);
+        calcProcedureEditor.setShowPrintMargin(false);
         calcProcedureEditor.resize();
     }
 
