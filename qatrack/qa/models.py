@@ -1315,11 +1315,17 @@ class TestList(TestCollectionInterface, TestPackMixin):
     def get_testpack_dependencies(self):
         sublists = list(Sublist.objects.filter(parent=self).select_related("child"))
         all_tests = list(self.all_tests())
+        tlms = self.testlistmembership_set.all()
+        for sl in sublists:
+            tlms |= sl.child.testlistmembership_set.all()
+
         return [
-            (Category, [s.category for s in all_tests]),
+            (Category,
+             [s.category for s in all_tests]),
             (Test, all_tests),
-            (TestListMembership, self.testlistmembership_set.all()),
-            (TestList, [sl.child for sl in sublists]),
+            (TestListMembership, tlms),
+            (TestList,
+             [sl.child for sl in sublists]),
             (Sublist, sublists),
         ]
 
