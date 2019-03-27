@@ -3,8 +3,7 @@ import json
 
 from django.test import TestCase
 
-from qatrack.qa import models
-from qatrack.qa import testpack
+from qatrack.qa import models, testpack
 from qatrack.qa import utils as qautils
 from qatrack.qa.tests import utils
 
@@ -218,5 +217,8 @@ class TestImportExport(TestCase):
         assert models.Sublist.objects.count() == 0
         testpack.add_testpack(pack, test_list_keys=[tl5.natural_key()])
         assert models.Sublist.objects.count() == 2
+        assert models.TestListMembership.objects.count() == 3
+        for sl in models.Sublist.objects.all():
+            assert sl.child.testlistmembership_set.count() == 1
         assert models.TestList.objects.count() == 3
         assert models.TestList.objects.get(name="tl5")
