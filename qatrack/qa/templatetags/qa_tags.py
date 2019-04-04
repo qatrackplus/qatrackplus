@@ -61,12 +61,12 @@ def reference_tolerance_span(test, ref, tol):
     if tol.type == models.ABSOLUTE:
         return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
             tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
-            str(tol).replace("Absolute", ""), ref.value_display())
+            str(tol).replace("Absolute", ""), ref.value_display() if ref else "")
         )
     elif tol.type == models.PERCENT:
         return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
             tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
-            str(tol).replace("Percent", ""), ref.value_display())
+            str(tol).replace("Percent", ""), ref.value_display() if ref else "")
         )
 
 
