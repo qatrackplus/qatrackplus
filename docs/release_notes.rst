@@ -44,6 +44,44 @@ Details of the v0.3.1 release
   notation with 2 decimal places (3 sig figures).
 
 
+QATrack+ v0.3.0.13 Release Notes
+--------------------------------
+
+For full details of v0.3.0 see the v0.3.0 release notes below.  v0.3.013 is
+a patch to v0.3.0 that fixes a few minor issues.
+
+- Service Events have been added to the admin so they can now be hard deleted.
+
+- A few bugs with testpacks has been fixed including where Sublist tests were
+  not created correctly when creating test packs.
+
+- A number of bugs with the API have been fixed.
+
+- A bug with the initial v0.3.0 migration has been fixed for those who
+  have `SITE_ID ~= 1` in their settings file.
+
+- skipped tests are now excluded by default from `UTILS.previous_test_instance`.
+
+- Bug where the Test List Members drop down would not be populated correctly
+  due to conflicting jQuery versions has been resolved.
+
+
+Upgrading to v0.3.0.13 from v0.3.0
+..................................
+
+If you haven't upgraded to v0.3.0 yet see instructions for v0.3.0 below.  If
+you've already upgraded to v0.3.0 then to upgrade to v0.3.0.13:
+
+#. Open shell and activate your Python 3 virtual environment then:
+#.  .. code-block:: bash
+
+        git fetch origin
+        git checkout v0.3.0.13
+        python manage.py collectstatic
+        python manage.py clearcache
+
+#. On Linux `sudo service apache2 restart` on Windows, restart QATrack3 CherryPy Service
+
 
 QATrack+ v0.3.0 Release Notes
 -----------------------------
@@ -545,13 +583,13 @@ carrying on to the next step!_
 
 From the git bash command shell (with your QATrack+ virtual env activated!):
 
-1. git pull origin master
-1. pip install -r requirements/base.txt
-1. python manage.py syncdb
-1. python manage.py migrate
-1. python manage.py collectstatic
-1. restart the QATrack+ app (i.e. the CherryPy service or Apache or gunicorn ...)
-1. In the `Admin --> Auth --> Groups` section of the website grant the new permissions
+#. git pull origin master
+#. pip install -r requirements/base.txt
+#. python manage.py syncdb
+#. python manage.py migrate
+#. python manage.py collectstatic
+#. restart the QATrack+ app (i.e. the CherryPy service or Apache or gunicorn ...)
+#. In the `Admin --> Auth --> Groups` section of the website grant the new permissions
 
     * **qa | test instance | Can chart test history**
     * **qa | test list instance | Can view previously completed instances**

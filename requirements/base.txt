@@ -30,6 +30,8 @@ numpy<=1.15.2
 pandas>=0.22.0,<0.25
 pep8==1.7.0
 pydicom==1.1.0
+scikit-image<0.14.0; python_version == '3.4'
+scikit-learn<1.0; python_version == '3.4'
 pylinac==2.1.0.1; python_version < '3.6'
 pylinac==2.2.0; python_version >= '3.6'
 pynliner==0.8.0
@@ -40,7 +42,7 @@ pytest==4.1.1
 python-dateutil==2.6.1
 pytz==2018.4
 reportlab==3.5.8
-requests==2.18.4
+requests==2.21.0
 scipy<=1.1.0
 selenium==3.11.0
 XlsxWriter==1.1.2

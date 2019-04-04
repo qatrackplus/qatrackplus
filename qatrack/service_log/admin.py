@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.contrib import admin
 from django.forms import ModelForm, ValidationError
@@ -6,6 +5,7 @@ from django.forms import ModelForm, ValidationError
 from .models import (
     GroupLinker,
     ServiceArea,
+    ServiceEvent,
     ServiceEventStatus,
     ServiceType,
     ThirdParty,
@@ -33,6 +33,50 @@ class DeleteOnlyFromOwnFormAdmin(admin.ModelAdmin):
         if obj is None:
             return False
         return super(DeleteOnlyFromOwnFormAdmin, self).has_delete_permission(request, obj)
+
+
+class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
+
+    list_display = [
+        "get_se_id",
+        "unit_service_area",
+        "service_type",
+        "service_status",
+        "datetime_created",
+        "datetime_modified",
+        "is_review_required",
+        "is_active",
+    ]
+
+    list_filter = ["unit_service_area", "service_type", "is_review_required", "is_active"]
+
+    raw_id_fields = [
+        "test_list_instance_initiated_by",
+    ]
+
+    filter_horizontal = ["service_event_related"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+
+        if db_field.name == "unit_service_area":
+            kwargs['queryset'] = UnitServiceArea.objects.select_related("unit", "service_area")
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_se_id(self, obj):
+        return "Service Event #%d" % obj.pk
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related(
+            "unit_service_area",
+            "unit_service_area__service_area",
+            "unit_service_area__unit",
+        )
+        return qs
 
 
 class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
@@ -85,6 +129,7 @@ class GroupLinkerAdmin(DeleteOnlyFromOwnFormAdmin):
 
 if settings.USE_SERVICE_LOG:
     admin.site.register(ServiceArea, ServiceAreaAdmin)
+    admin.site.register(ServiceEvent, ServiceEventAdmin)
     admin.site.register(ServiceType, ServiceTypeAdmin)
     admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
     admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
