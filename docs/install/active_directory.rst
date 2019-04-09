@@ -30,7 +30,7 @@ To confirm your installation is working, activate your virtual env
 
     cd C:\deploy
     .\venvs\qatrack3\scripts\activate
-    python -c "import ldap; print ldap.__version__"
+    python -c "import ldap; print(ldap.__version__)"
 
 If that commands prints the ldap version then ldap is installed correctly.
 
