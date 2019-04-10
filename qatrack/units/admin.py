@@ -4,7 +4,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ChoiceField, ModelForm, ModelMultipleChoiceField
-from django.utils.translation import ugettext as _, ugettext_lazy as _l
+from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _l
 
 from qatrack.service_log.models import (
     ServiceArea,
@@ -109,9 +110,10 @@ class UnitFormAdmin(ModelForm):
                     self.data = data_copy
                     self.add_error(
                         'service_areas',
-                        'Cannot remove {} from unit {}. There exists Service Event(s) with that Unit and Service Area.'.format(
-                            usa.service_area.name, unit.name
-                        )
+                        (
+                            'Cannot remove {} from unit {}. '
+                            'There exists Service Event(s) with that Unit and Service Area.'
+                        ).format(usa.service_area.name, unit.name)
                     )
 
         return service_areas
@@ -149,6 +151,8 @@ class UnitAdmin(admin.ModelAdmin):
     list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
     list_editable = ['site', 'is_serviceable']
+
+    save_as = True
 
     if settings.USE_SERVICE_LOG:
         inlines = [UnitAvailableTimeInline]
