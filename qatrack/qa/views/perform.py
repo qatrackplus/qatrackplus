@@ -738,9 +738,7 @@ class ChooseUnit(TemplateView):
 
             context['split_sites'] = True
 
-            split_by = 12 / len(ordered)
-            if split_by < 3:
-                split_by = 3
+            split_by = max(3, 12 / max(1, len(ordered)))
             context['split_by'] = int(split_by)
 
         else:
