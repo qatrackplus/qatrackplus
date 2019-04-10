@@ -2,6 +2,7 @@ import calendar
 
 from django.conf import settings
 from django.db import models
+from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
 from django.utils.translation import ugettext as _
 
@@ -159,7 +160,12 @@ class Unit(models.Model):
     type = models.ForeignKey(UnitType, verbose_name=_("Unit Type"), on_delete=models.PROTECT)
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.PROTECT)
 
-    number = models.PositiveIntegerField(null=False, unique=True, help_text=_('A unique number for this unit'))
+    number = models.PositiveIntegerField(
+        null=False,
+        blank=True,
+        unique=True,
+        help_text=_('A unique number for this unit. Leave blank to have it assigned automatically'),
+    )
     name = models.CharField(max_length=256, help_text=_('The display name for this unit'))
     serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional serial number'))
     location = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional location information'))
@@ -229,6 +235,12 @@ class Unit(models.Model):
             potential_time += uate_list[uate].total_seconds()
 
         return potential_time / 3600
+
+    def save(self, *args, **kwargs):
+        if self.number in ("", None):
+            next_available = Unit.objects.all().aggregate(max_num=Max("number") + 1)['max_num']
+            self.number = next_available
+        super().save(*args, **kwargs)
 
 
 class UnitAvailableTimeEdit(models.Model):

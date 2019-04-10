@@ -43,6 +43,10 @@ Details of the v0.3.1 release
   are displayed.  For example a test with a formatting of "%.2E" will use scientific
   notation with 2 decimal places (3 sig figures).
 
+* The Unit admin page now has "Save as New" as an option to make it easier to create new
+  units using an existing unit as a template.  You can also now leave the unit number blank
+  to have it assigned automatically.
+
 
 QATrack+ v0.3.0.13 Release Notes
 --------------------------------
