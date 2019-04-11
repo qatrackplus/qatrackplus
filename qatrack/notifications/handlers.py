@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -70,7 +71,7 @@ def email_on_testlist_save(*args, **kwargs):
             auth_password=pwd,
             fail_silently=False,
         )
-    except:
+    except:  # noqa: E722
         logger.exception("Error sending email.")
         if not fail_silently:
             raise
@@ -93,10 +94,12 @@ def get_notification_recipients():
     users = User.objects.filter(is_active=True)
 
     tolerance_users = users.filter(
-        groups__notificationsubscription__warning_level__lte=models.TOLERANCE
+        Q(groups__notificationsubscriptions__warning_level__lte=models.TOLERANCE) |
+        Q(notificationsubscriptions__warning_level__lte=models.TOLERANCE)
     ).distinct()
     action_users = users.filter(
-        groups__notificationsubscription__warning_level__lte=models.ACTION
+        Q(groups__notificationsubscriptions__warning_level__lte=models.ACTION) |
+        Q(notificationsubscriptions__warning_level__lte=models.TOLERANCE)
     ).distinct()
 
     return tolerance_users, action_users

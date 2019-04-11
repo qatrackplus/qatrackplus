@@ -69,24 +69,64 @@ class TestEmailSent(TestCase):
 
     def test_email_sent(self):
 
-        notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        notification.groups.add(self.group)
         notification.save()
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_inactive_not_included(self):
 
-        notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
-        notification.save()
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        notification.groups.add(self.group)
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertNotIn(self.inactive_user.email, mail.outbox[0].recipients())
 
     def test_email_not_sent(self):
         # no failing tests so
 
-        notification = NotificationSubscription(group=self.group, warning_level=TOLERANCE)
-        notification.save()
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        notification.groups.add(self.group)
 
         self.test_list_instance.testinstance_set.update(pass_fail=models.OK)
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_email_sent_to_group_for_unit(self):
+
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        notification.groups.add(self.group)
+        notification.units.add(self.unit_test_collection.unit)
+
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_email_not_sent_to_group_for_unit(self):
+        """Main group is not included in notification, only the new group, so only one email
+        should be sent to the new user"""
+
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        group2 = utils.create_group(name="group2")
+        notification.groups.add(group2)
+        user2 = utils.create_user(uname="user2")
+        user2.email = "user2@example.com"
+        user2.save()
+        user2.groups.add(group2)
+        notification.units.add(self.unit_test_collection.unit)
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        assert len(mail.outbox) == 1
+        assert mail.outbox[0].recipients() == ['user2@example.com']
+
+    def test_email_sent_to_group_and_single_user(self):
+        """Main group is not included in notification, only new user, so only one email
+        should be sent to the new user"""
+
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        notification.groups.add(self.group)
+        user2 = utils.create_user(uname="user2")
+        user2.email = "user2@example.com"
+        user2.save()
+        notification.users.add(user2)
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        assert len(mail.outbox) == 1
+        assert list(sorted(mail.outbox[0].recipients())) == ['example@example.com', 'user2@example.com']
