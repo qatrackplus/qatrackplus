@@ -44,8 +44,8 @@ class TestEmailSent(TestCase):
         self.inactive_user.is_active = False
         self.inactive_user.save()
 
-    def create_test_list_instance(self):
-        utc = self.unit_test_collection
+    def create_test_list_instance(self, utc=None):
+        utc = utc or self.unit_test_collection
 
         tli = utils.create_test_list_instance(unit_test_collection=utc)
 
@@ -100,6 +100,19 @@ class TestEmailSent(TestCase):
 
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_email_not_sent_to_group_for_excluded_unit(self):
+        """TLI is created on 2nd unit so no one should get an email"""
+
+        utc2 = utils.create_unit_test_collection(test_collection=self.test_list)
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        notification.groups.add(self.group)
+        notification.units.add(self.unit_test_collection.unit)
+
+        tli = self.create_test_list_instance(utc=utc2)
+
+        signals.testlist_complete.send(sender=self, instance=tli, created=True)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_email_not_sent_to_group_for_unit(self):
         """Main group is not included in notification, only the new group, so only one email
