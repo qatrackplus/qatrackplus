@@ -47,6 +47,10 @@ Details of the v0.3.1 release
   units using an existing unit as a template.  You can also now leave the unit number blank
   to have it assigned automatically.
 
+* You can now specify that notifications will only be sent to groups for specific units.
+  You can also add individual users to notifications, rather than a whole group. (Needs docs
+  before release)
+
 
 QATrack+ v0.3.0.13 Release Notes
 --------------------------------
