@@ -1,6 +1,95 @@
 Release Notes
 =============
 
+QATrack+ v0.3.0.14 Release Notes
+--------------------------------
+
+- A patch was made to fix a security flaw in LDAP/Active Directory
+  Authentication.  This patch is only required if you use LDAP/Active Directory
+  for authenticating your users.
+
+  To patch your system, please follow the following instructions for your version:
+
+    - v0.3.0.x:
+
+        - Windows. Open a Powershell Window then:
+
+            .. code-block:: bash
+
+                cd C:\deploy
+                .\venvs\qatrack3\Script\Activate.ps1
+                cd qatrackplus
+                git fetch upstream
+                git checkout v0.3.0.14
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+
+            then restart the CherryPy service
+
+        - Linux. Open a terminal:
+
+            .. code-block:: bash
+
+                cd ~/web/qatrackplus
+                source ~/venvs/qatrack3/bin/activate
+                git fetch upstream
+                git checkout v0.3.0.14
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                sudo service apache2 restart
+
+    - v0.2.9.x:
+
+        - Windows. Open a Powershell Window then:
+
+            .. code-block:: bash
+
+                cd C:\deploy
+                .\venvs\qatrack\Script\Activate.ps1
+                cd qatrackplus
+                git fetch upstream
+                git checkout v0.2.9.2
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+
+            then restart the CherryPy service
+
+        - Linux. Open a terminal:
+
+            .. code-block:: bash
+
+                cd ~/web/qatrackplus
+                source ~/venvs/qatrack3/bin/activate
+                git fetch upstream
+                git checkout v0.2.9.2
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                sudo service apache2 restart
+
+
+    - v0.2.8.x:
+
+        - Windows. Open a Powershell Window then:
+
+            .. code-block:: bash
+
+                cd C:\deploy
+                .\venvs\qatrack\Script\Activate.ps1
+                cd qatrackplus
+                git fetch upstream
+                git checkout v0.2.8.1
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+
+            then restart the CherryPy service
+
+        - Linux. Open a terminal:
+
+            .. code-block:: bash
+
+                cd ~/web/qatrackplus
+                source ~/venvs/qatrack3/bin/activate
+                git fetch upstream
+                git checkout v0.2.8.1
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                sudo service apache2 restart
+
+
 QATrack+ v0.3.0.13 Release Notes
 --------------------------------
 
