@@ -45,7 +45,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         if debug:
             debug.close()
 
-
     def get_or_create_user(self, username, password):
         try:
             user = User.objects.get(username=username)
@@ -100,7 +99,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
             user.is_staff = False
             user.is_superuser = False
-            user.set_password('ldap authenticated')
+            user.set_unusable_password()
             user.save()
             if debug:
                 print("User created: %s" % username, file=debug)
@@ -207,7 +206,7 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         user.is_staff = False
         user.is_superuser = False
-        user.set_password(None)
+        user.set_unusable_password()
 
         user.save()
         return user
