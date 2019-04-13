@@ -1,7 +1,8 @@
-import ldap
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import User
+
+import ldap
 
 
 #stripped down version of http://djangosnippets.org/snippets/901/
@@ -87,7 +88,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
             user.is_staff = False
             user.is_superuser = False
-            user.set_password('ldap authenticated')
+            user.set_unusable_password()
             user.save()
             if debug:
                 print >>debug, "User created: %s" % username
@@ -172,7 +173,7 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         user.is_staff = False
         user.is_superuser = False
-        user.set_password(None)
+        user.set_unusable_password()
 
         user.save()
         return user
