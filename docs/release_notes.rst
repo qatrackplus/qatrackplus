@@ -47,7 +47,9 @@ QATrack+ v0.3.0.14 Release Notes
                 cd qatrackplus
                 git fetch upstream
                 git checkout v0.2.9.2
-                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
 
             then restart the CherryPy service
 
@@ -59,7 +61,9 @@ QATrack+ v0.3.0.14 Release Notes
                 source ~/venvs/qatrack3/bin/activate
                 git fetch upstream
                 git checkout v0.2.9.2
-                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
                 sudo service apache2 restart
 
 
@@ -74,7 +78,9 @@ QATrack+ v0.3.0.14 Release Notes
                 cd qatrackplus
                 git fetch upstream
                 git checkout v0.2.8.1
-                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
 
             then restart the CherryPy service
 
@@ -86,7 +92,9 @@ QATrack+ v0.3.0.14 Release Notes
                 source ~/venvs/qatrack3/bin/activate
                 git fetch upstream
                 git checkout v0.2.8.1
-                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
                 sudo service apache2 restart
 
 
