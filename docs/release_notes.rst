@@ -19,7 +19,7 @@ QATrack+ v0.3.0.14 Release Notes
                 cd C:\deploy
                 .\venvs\qatrack3\Script\Activate.ps1
                 cd qatrackplus
-                git fetch upstream
+                git fetch origin
                 git checkout v0.3.0.14
                 python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
                 python manage.py collectstatic
@@ -32,7 +32,7 @@ QATrack+ v0.3.0.14 Release Notes
 
                 cd ~/web/qatrackplus
                 source ~/venvs/qatrack3/bin/activate
-                git fetch upstream
+                git fetch origin
                 git checkout v0.3.0.14
                 python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
                 python manage.py collectstatic
@@ -47,7 +47,7 @@ QATrack+ v0.3.0.14 Release Notes
                 cd C:\deploy
                 .\venvs\qatrack\Script\Activate.ps1
                 cd qatrackplus
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.9.2
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
@@ -62,7 +62,7 @@ QATrack+ v0.3.0.14 Release Notes
 
                 cd ~/web/qatrackplus
                 source ~/venvs/qatrack3/bin/activate
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.9.2
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
@@ -80,7 +80,7 @@ QATrack+ v0.3.0.14 Release Notes
                 cd C:\deploy
                 .\venvs\qatrack\Script\Activate.ps1
                 cd qatrackplus
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.8.1
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
@@ -95,7 +95,7 @@ QATrack+ v0.3.0.14 Release Notes
 
                 cd ~/web/qatrackplus
                 source ~/venvs/qatrack3/bin/activate
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.8.1
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
