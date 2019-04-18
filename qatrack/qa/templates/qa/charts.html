@@ -59,13 +59,13 @@
 
                                 <select id="test-lists" multiple class="form-control">
                                     {% for tl in test_lists %}
-                                        <option value="{{ tl.pk }}">{{ tl.name }}</option>
+                                      <option value="{{ tl.pk }}" title="{{ tl.description }}">{{ tl.name }}</option>
                                     {% endfor %}
                                 </select>
 
                                 <select id="tests" multiple class="form-control">
                                     {% for t in tests %}
-                                        <option value="{{ t.pk }}">{{ t.name }}</option>
+                                      <option value="{{ t.pk }}" title="{{ t.description }}">{{ t.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -339,8 +339,11 @@
 
 <div id="tli-tooltip-template" style="display: none;">
     <div class="row">
-        <div class="col-sm-12">
+        <div class="col-sm-9">
             <strong>__tli-kind__</strong>
+        </div>
+        <div class="col-sm-3">
+            <strong class="text-left">__tli-comments__</strong>
         </div>
         <div class="col-sm-12" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
             <strong >__tli-tl-name__</strong>

@@ -248,6 +248,9 @@ rect.handle {
 .tooltip {
     font-weight: normal;
 }
+.popover {
+  min-width: 300px;
+}
 .brush .extent {
     stroke: #FFF;
     shape-rendering: crispEdges;

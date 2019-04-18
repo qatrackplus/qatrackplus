@@ -593,7 +593,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         x: x,
                         y: val.value,
                         test_instance_id: val.test_instance_id,
-                        test_list_instance_id: val.test_list_instance.id
+                        test_list_instance_id: val.test_list_instance.id,
+                        test_instance_comment: val.test_instance_comment,
                     });
 
                     if (val.reference !== null) {
@@ -636,6 +637,29 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         function remove_tooltip_outter() {}
 
+
+        function circleRadius(dat, idx, series){
+            // Use larger circle radius for ti's with comments
+            if (dat.test_instance_comment){
+                return 5;
+            }
+            return 4;
+        }
+
+        function circleStroke(d, i, s) {
+            if (d.test_instance_comment){
+                return "rgb(60, 141, 188)";
+            }
+            return s[i].parentNode.__data__.color;
+        }
+
+        function circleStrokeWidth(d, i, s) {
+            if (d.test_instance_comment){
+                return 4;
+            }
+            return 2;
+        }
+
         function create_chart(_data) {
 
             // var allEmpty = _.every(_.map(series_data, function (o) {
@@ -660,6 +684,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 set_chart_height = $(window).height() - 50;
             }
             var chart_height = set_chart_height;
+
 
             var circle_radius = 3,
                 circle_radius_highlight = 4,
@@ -938,7 +963,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return d.line_data_test_results;
                 })
                 .enter().append('circle')
-            // .style("pointer-events", "none") // Stop line interferring with cursor
                 .attr('id', function (d) {
                     return 'ti_' + d.test_instance_id;
                 })
@@ -946,18 +970,18 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return 'tli_' + d.test_list_instance_id + ' tl_' + s[i].parentNode.__data__.test_list.id;
                 })
                 .attr("clip-path", "url(#clip)")
-                .attr("stroke-width", 1)
-                .attr("stroke", function (d, i, s) {
-                    return s[i].parentNode.__data__.color;
-                })
+                .attr("stroke-width", circleStrokeWidth)
+                .attr("stroke-opacity", 1)
+                .attr("stroke", circleStroke)
                 .attr("cx", function (d) {
                     return xScale(d.x);
                 })
                 .attr("cy", function (d) {
                     return yScale(d.y);
                 })
-                .attr("r", circle_radius)
-                .attr("fill", "white").attr("fill-opacity", 0.5)
+                .attr("r", circleRadius)
+                .attr("fill", "white")
+                .attr("fill-opacity", 1)
                 .on('mousemove', mousemove);
 
             var test_reference = test.append('g')
@@ -1524,8 +1548,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             function removeHighlights() {
 
                 d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
-                    .attr('stroke-width', 1);
+                    .attr('r', circleRadius)
+                    .attr('stroke-width', circleStrokeWidth);
 
                 d3.selectAll('.service-marker-icon')
                     .attr('stroke-width', 1);
@@ -1546,7 +1570,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 svg.selectAll('.tli_line').remove();
 
                 d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
+                    .attr('r', circleRadius)
                     .attr('stroke-width', 1);
 
                 d3.selectAll('.tooltip')
@@ -1659,6 +1683,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                             tli_coords.push({x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
 
+                            var comments = initiated_data[0].test_instance_comment || "";
+                            if (comments){
+                                comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
+                            }
+
                             var tli_initiated_tooltip = d3.select("body")
                                 .append("div")
                                 .attr('id', 'tli-' + initiated_data[0].test_list_instance_id + '_tooltip')
@@ -1677,6 +1706,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                     .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
                                     .replace(/__tli-tl-name__/g, initiated_name)
                                     .replace(/__tli-kind__/g, 'Initiating QC')
+                                    .replace(/__tli-comments__/g, comments)
                                     .replace(/__show-in__/g, 'style="display: none"')
                                 );
 
@@ -1730,6 +1760,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                         tli_coords.push({x: rtsqa_x, color: 'rgba(0, 192, 239, 0.6)'});
 
+                        var rtsqa_comments = rtsqa_data[0].test_instance_comment || "";
+                        if (rtsqa_comments){
+                            rtsqa_comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + rtsqa_comments + '"></i>';
+                        }
+
                         var tli_rtsqa_tooltip = d3.select("body")
                             .append("div")
                             .attr('id', 'tli-' + rtsqa_data[0].test_list_instance_id + '_tooltip')
@@ -1748,6 +1783,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
                                 .replace(/__tli-kind__/g, 'Return To Service QC')
+                                .replace(/__tli-comments__/g, rtsqa_comments)
                                 .replace(/__show-in__/g, 'style="display: none"')
                             );
 
@@ -1812,7 +1848,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     x_buffer = 0,
                     chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
 
-                if (x_pos > width - legend_expand_width + margin.right) {
+                var overlapped_by_legend = x_pos > width - legend_expand_width + margin.right;
+                if (legend_expanded && overlapped_by_legend) {
                     y_pos += legend_height + y_buffer;
                 }
 
@@ -1827,6 +1864,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 }
 
                 var colour = 'rgba(100, 100, 100, 0.2)';
+
+                var comments = tli_data[0].test_instance_comment;
+                if (comments){
+                    //comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="tooltip" title="' + comments + '"></i>';
+                    comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
+                }
 
                 var tli_tooltip = d3.select("body")
                     .append("div")
@@ -1846,6 +1889,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
                         .replace(/__tli-tl-name__/g, tli_name)
                         .replace(/__tli-kind__/g, 'Test List')
+                        .replace(/__tli-comments__/g, comments)
                         .replace(/__show-in__/g, 'style="display: block"')
                     )
                     .on('click', toggleLock);
@@ -2246,8 +2290,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             downloadURL("./export/csv/?" + $.param(get_data_filters()));
         }
 
-        $('#filter-box').fadeTo(1500, 1);
+        $('#filter-box').fadeTo(1, 1);
 
+    });
+
+    $("body").popover({
+        selector: '[data-toggle="popover"]',
+        html: true,
+        placement: 'auto',
+        trigger: 'hover'
     });
 
 });

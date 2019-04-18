@@ -27,7 +27,6 @@ from .. import models
 numpy.seterr(all='raise')
 
 
-
 JSON_CONTENT_TYPE = "application/json"
 
 
@@ -213,7 +212,7 @@ class BaseChartView(View):
         max_len = 0
         cols = []
 
-        r = lambda ref: ref if ref is not None else ""
+        r = lambda ref: ref if ref is not None else ""  # noqa: E731
 
         # collect all data in 'date/value/ref triplets
         for name, data in self.plot_data['series'].items():
@@ -292,8 +291,28 @@ class BaseChartView(View):
             value = ti.value
             ref_value = ti.reference.value if ti.reference is not None else None
 
+        comment = ""
+        tli_comments = list(ti.test_list_instance.comments.all())
+        if ti.comment or tli_comments:
+
+            comments = []
+            if ti.comment:
+                comments.append(
+                    "<strong>%s - %s:</strong> %s" %
+                    (ti.created.strftime("%d %b %Y"), ti.created_by.username, ti.comment)
+                )
+            for c in sorted(tli_comments, key=lambda c: c.submit_date):
+                user = c.user or ti.created_by
+                comments.append(
+                    "<strong>%s - %s:</strong> %s" % (c.submit_date.strftime("%d %b %Y"), user.username, c.comment)
+                )
+            comment = '<br/>'.join(comments)
+
         point = {
-            "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
+            "act_high": None,
+            "act_low": None,
+            "tol_low": None,
+            "tol_high": None,
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
             "display_date": ti.work_completed,
             "value": value,
@@ -301,8 +320,11 @@ class BaseChartView(View):
             "reference": ref_value,
             "orig_reference": ti.reference.value if ti.reference else None,
             'test_instance_id': ti.id,
-            'test_list_instance': {'date': ti.test_list_instance.created, 'id': ti.test_list_instance.id}
-
+            'test_instance_comment': comment,
+            'test_list_instance': {
+                'date': ti.test_list_instance.created,
+                'id': ti.test_list_instance.id
+            }
         }
 
         if ti.tolerance is not None and ref_value is not None:
@@ -321,10 +343,7 @@ class BaseChartView(View):
     def get_plot_data(self):
         """Retrieve all :model:`qa.TestInstance` data requested."""
 
-        self.plot_data = {
-            'series': {},
-            'events': []
-        }
+        self.plot_data = {'series': {}, 'events': []}
 
         now = timezone.now()
         dates = self.get_date(now, now - timezone.timedelta(days=365))
@@ -369,6 +388,9 @@ class BaseChartView(View):
                 ).select_related(
                     "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
                     'test_list_instance', 'test_list_instance__test_list'
+                ).prefetch_related(
+                    "test_list_instance__comments",
+                    "test_list_instance__comments__user",
                 ).order_by(
                     "work_completed"
                 )
@@ -391,10 +413,12 @@ class BaseChartView(View):
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
                 ).select_related(
-                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status", 'test_list_instance'
-                ).order_by(
-                    "work_completed"
-                )
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                    'test_list_instance'
+                ).prefetch_related(
+                    "test_list_instance__comments",
+                    "test_list_instance__comments__user",
+                ).order_by("work_completed")
                 if tis:
                     tli = tis.first().test_list_instance
                     name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "")
@@ -413,10 +437,13 @@ class BaseChartView(View):
                 datetime_service__lte=to_date,
                 service_type__in=service_types
             ).select_related(
-                'unit_service_area__unit', 'unit_service_area__service_area', 'service_type', 'test_list_instance_initiated_by'
+                'unit_service_area__unit',
+                'unit_service_area__service_area',
+                'service_type',
+                'test_list_instance_initiated_by',
             ).prefetch_related(
                 'returntoserviceqa_set',
-                'returntoserviceqa_set__test_list_instance'
+                'returntoserviceqa_set__test_list_instance',
             ).order_by('datetime_service')
 
             for se in ses:
@@ -441,7 +468,10 @@ class BaseChartView(View):
                     'work_description': se.work_description,
                     'problem_description': se.problem_description,
                     'unit': {'id': se.unit_service_area.unit_id, 'name': se.unit_service_area.unit.name},
-                    'service_area': {'id': se.unit_service_area.service_area_id, 'name': se.unit_service_area.service_area.name},
+                    'service_area': {
+                        'id': se.unit_service_area.service_area_id,
+                        'name': se.unit_service_area.service_area.name,
+                    },
                 })
 
         # self.plot_data['test_list_names'] = test_list_names
@@ -494,7 +524,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             self.get_number_from_request("width", 700) / dpi,
             self.get_number_from_request("height", 480) / dpi,
         )
-        canvas = FigureCanvas(fig)
+        FigureCanvas(fig)
         dates, data = [], []
 
         if context["plot_data"]['series'] and list(context["plot_data"]['series'].values()):
@@ -518,7 +548,9 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             fig.savefig(buf, format="png")
         else:
             try:
-                control_chart.display(fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates)
+                control_chart.display(
+                    fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates
+                )
                 fig.autofmt_xdate()
                 fig.savefig(buf, format="png")
             except (RuntimeError, OverflowError, TypeError) as e:  # pragma: nocover
