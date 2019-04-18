@@ -51,6 +51,7 @@ Details of the v0.3.1 release
   You can also add individual users to notifications, rather than a whole group. (Needs docs
   before release)
 
+* **Staff Status** has been renamed to **Admin Status** to reflect the fact that almost all QATrack+ users are "Staff"!
 
 
 QATrack+ v0.3.0.14 Release Notes

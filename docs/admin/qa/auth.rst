@@ -65,7 +65,7 @@ groups for managing all permissions.
 
    Creating a new user and setting permissions
 
-Any user that has **Staff Status** checked on their user profile page
+Any user that has **Admin Status** (formerly Staff Status) checked on their user profile page
 will have access to the admin site.
 
 A user with **Superuser status** checked will have all permissions
