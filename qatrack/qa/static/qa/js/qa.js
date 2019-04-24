@@ -756,7 +756,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (data.success){
                     _.each(data.results,function(result, name){
                         var ti = self.tests_by_slug[name];
-                        if (!ti.skipped){
+                        if (!_.isNil(ti) && !ti.skipped){
                             if (result.comment){
                                 ti.set_comment(result.comment);
                                 ti.set_comment_icon();
