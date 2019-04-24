@@ -91,7 +91,8 @@ def get_notification_recipients(unit):
 
     from qatrack.notifications import models
 
-    users = User.objects.filter(is_active=True)
+    users = User.objects.filter(is_active=True).exclude(email='')
+
     subs = models.NotificationSubscription.objects.filter(
         Q(units=None) | Q(units=unit)
     )
