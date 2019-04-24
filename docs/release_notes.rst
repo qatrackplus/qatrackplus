@@ -53,6 +53,8 @@ Details of the v0.3.1 release
 
 * **Staff Status** has been renamed to **Admin Status** to reflect the fact that almost all QATrack+ users are "Staff"!
 
+* Test Instance points with comments associated with them will now be highlighed in charts
+
 
 QATrack+ v0.3.0.14 Release Notes
 --------------------------------

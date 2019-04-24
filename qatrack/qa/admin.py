@@ -1156,6 +1156,10 @@ class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
         })
         return super().render_delete_form(request, context)
 
+    def has_add_permission(self, request):
+        """testlistinstancess are created via front end only"""
+        return False
+
 
 class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
@@ -1196,7 +1200,7 @@ class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     unit_name.admin_order_field = "unit_test_info__unit__number"
 
     def has_add_permission(self, request):
-        """testlistinstancess are created via front end only"""
+        """testistinstancess are created via front end only"""
         return False
 
 
