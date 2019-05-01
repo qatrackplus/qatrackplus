@@ -47,9 +47,10 @@ Details of the v0.3.1 release
   units using an existing unit as a template.  You can also now leave the unit number blank
   to have it assigned automatically.
 
-* You can now specify that notifications will only be sent to groups for specific units.
-  You can also add individual users to notifications, rather than a whole group. (Needs docs
-  before release)
+* Test List notifications have been improved.  (Needs docs before release)
+    * You can now send notifications on test lists being completed.
+    *  You can now specify to send notifications to individual users as well as groups.
+    *  You can now specify that a given notifications will only be sent for specific units or test lists.
 
 * **Staff Status** has been renamed to **Admin Status** to reflect the fact that almost all QATrack+ users are "Staff"!
 

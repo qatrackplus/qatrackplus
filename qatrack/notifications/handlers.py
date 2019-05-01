@@ -24,12 +24,15 @@ def email_on_testlist_save(*args, **kwargs):
     failing = failing_tests_to_report(test_list_instance)
     tolerance = tolerance_tests_to_report(test_list_instance)
 
-    if not (failing or tolerance):
+    recipients = get_notification_recipients(test_list_instance)
+    comp_recipients, tol_recipients, act_recipients = recipients
+
+    if not (failing or tolerance or comp_recipients):
         return
 
-    tol_recipients, act_recipients = get_notification_recipients(test_list_instance.unit_test_collection.unit)
-
-    recipients = tol_recipients
+    recipients = comp_recipients
+    if tolerance:
+        recipients |= tol_recipients
     if failing:
         recipients |= act_recipients
 
@@ -87,19 +90,28 @@ def tolerance_tests_to_report(test_list_instance):
     return test_list_instance.tolerance_tests()
 
 
-def get_notification_recipients(unit):
+def get_notification_recipients(test_list_instance):
 
     from qatrack.notifications import models
+
+    unit = test_list_instance.unit_test_collection.unit
+    test_list = test_list_instance.test_list
 
     users = User.objects.filter(is_active=True).exclude(email='')
 
     subs = models.NotificationSubscription.objects.filter(
-        Q(units=None) | Q(units=unit)
-    )
+        (Q(units=None) | Q(units=unit)) &
+        (Q(test_lists=None) | Q(test_lists=test_list))
+    )  # yapf: disable
 
+    completed_subs = subs.filter(warning_level__lte=models.COMPLETED)
     tolerance_subs = subs.filter(warning_level__lte=models.TOLERANCE)
     action_subs = subs.filter(warning_level__lte=models.ACTION)
 
+    completed_users = users.filter(
+        Q(groups__notificationsubscriptions__in=completed_subs) |
+        Q(notificationsubscriptions__in=completed_subs)
+    ).distinct()
     tolerance_users = users.filter(
         Q(groups__notificationsubscriptions__in=tolerance_subs) |
         Q(notificationsubscriptions__in=tolerance_subs)
@@ -109,4 +121,4 @@ def get_notification_recipients(unit):
         Q(notificationsubscriptions__in=action_subs)
     ).distinct()
 
-    return tolerance_users, action_users
+    return completed_users, tolerance_users, action_users

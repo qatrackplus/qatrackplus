@@ -4,7 +4,7 @@ from django.test import TestCase
 from qatrack.qa import models, signals
 import qatrack.qa.tests.utils as utils
 
-from .models import TOLERANCE, NotificationSubscription
+from .models import COMPLETED, TOLERANCE, NotificationSubscription
 
 
 class TestEmailSent(TestCase):
@@ -44,7 +44,7 @@ class TestEmailSent(TestCase):
         self.inactive_user.is_active = False
         self.inactive_user.save()
 
-    def create_test_list_instance(self, utc=None):
+    def create_test_list_instance(self, utc=None, all_passing=False):
         utc = utc or self.unit_test_collection
 
         tli = utils.create_test_list_instance(unit_test_collection=utc)
@@ -56,7 +56,7 @@ class TestEmailSent(TestCase):
             ti.tolerance = self.tol
             if i == 0:
                 ti.skipped = True
-            if i == 1:
+            if i == 1 or all_passing:
                 ti.tolerance = None
                 ti.reference = None
             else:
@@ -143,3 +143,58 @@ class TestEmailSent(TestCase):
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         assert len(mail.outbox) == 1
         assert list(sorted(mail.outbox[0].recipients())) == ['example@example.com', 'user2@example.com']
+
+    def test_email_sent_for_completion(self):
+
+        notification = NotificationSubscription.objects.create(warning_level=COMPLETED)
+        notification.groups.add(self.group)
+        tli = self.create_test_list_instance(all_passing=True)
+
+        signals.testlist_complete.send(sender=self, instance=tli, created=True)
+        assert len(mail.outbox) == 1
+        assert "list was just completed" in mail.outbox[0].alternatives[0][0]
+
+    def test_email_not_sent_for_completion_with_warning_level_tol(self):
+
+        notification = NotificationSubscription.objects.create(warning_level=TOLERANCE)
+        notification.groups.add(self.group)
+        tli = self.create_test_list_instance(all_passing=True)
+
+        signals.testlist_complete.send(sender=self, instance=tli, created=True)
+        assert len(mail.outbox) == 0
+
+    def test_email_not_sent_for_diff_testlist(self):
+
+        new_test_list = utils.create_test_list()
+        test = utils.create_test(name="new tl name")
+        utils.create_test_list_membership(new_test_list, test)
+        utc = utils.create_unit_test_collection(unit=self.unit_test_collection.unit, test_collection=new_test_list)
+
+        notification = NotificationSubscription.objects.create(warning_level=COMPLETED)
+        notification.test_lists.add(self.test_list)
+        tli = self.create_test_list_instance(utc=utc)
+
+        signals.testlist_complete.send(sender=self, instance=tli, created=True)
+        assert len(mail.outbox) == 0
+
+    def test_email_sent_for_specific_testlist(self):
+
+        notification = NotificationSubscription.objects.create(warning_level=COMPLETED)
+        notification.test_lists.add(self.test_list)
+        notification.groups.add(self.group)
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        assert len(mail.outbox) == 1
+
+    def test_email_not_sent_for_same_testlist_different_unit(self):
+
+        unit = utils.create_unit()
+        utc = utils.create_unit_test_collection(unit=unit, test_collection=self.test_list)
+
+        notification = NotificationSubscription.objects.create(warning_level=COMPLETED)
+        notification.test_lists.add(self.test_list)
+        notification.units.add(self.unit_test_collection.unit)
+
+        tli = self.create_test_list_instance(utc=utc)
+
+        signals.testlist_complete.send(sender=self, instance=tli, created=True)
+        assert len(mail.outbox) == 0

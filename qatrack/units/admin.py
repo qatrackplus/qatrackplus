@@ -151,6 +151,8 @@ class UnitAdmin(admin.ModelAdmin):
     list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
     list_editable = ['site', 'is_serviceable']
+    ordering = ['number']
+    search_fields = ['number', 'name']
 
     save_as = True
 

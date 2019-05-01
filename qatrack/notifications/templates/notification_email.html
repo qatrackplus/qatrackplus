@@ -332,8 +332,14 @@
                       <td>
                         <p>Hello</p>
                         <p>
-                          You are receiving this notice because one or more tests were at tolerance or action levels
-                          for the following test list instance:
+                          {% if failing_tests or tolerance_tests %}
+                            You are receiving this notice because one or more
+                            tests were at tolerance or action levels for the
+                            following test list instance:
+                          {% else %}
+                            You are receiving this notice because the following test
+                            list was just completed.
+                          {% endif %}
                         </p>
                         <table>
                           <tr>
@@ -381,70 +387,74 @@
                             </tr>
                           {% endif %}
                         </table>
-                        <table class="test-table">
-                          <thead>
-                            <tr>
-                              <th class="action" colspan="4">
-                                Failing Tests
-                              </th>
-                            </tr>
-                            <tr>
-                              <th class="test">Test</th>
-                              <th class="value">Value</th>
-                              <th class="value">Reference</th>
-                              <th class="value">Tolerance</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for test_instance in failing_tests %}
+                        {% if failing_tests %}
+                          <table class="test-table">
+                            <thead>
                               <tr>
-                                <td class="test">{{test_instance.unit_test_info.test.name}}</td>
-                                <td class="value">{{test_instance.value_display}}</td>
-                                <td class="value">{{test_instance.reference}}</td>
-                                <td class="value">{{test_instance.tolerance}}</td>
+                                <th class="action" colspan="4">
+                                  Failing Tests
+                                </th>
                               </tr>
-                              {% if test_instance.comment %}
-                                <tr>
-                                  <td class="comment" colspan="4">
-                                    {{ test_instance.comment }}
-                                  </td>
-                                </tr>
-                              {% endif %}
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                        <table class="test-table">
-                          <thead>
-                            <tr>
-                              <th class="tolerance" colspan="4">
-                                Tests at Tolerance
-                              </th>
-                            </tr>
-                            <tr>
-                              <th class="test">Test</th>
-                              <th class="value">Value</th>
-                              <th class="value">Reference</th>
-                              <th class="value">Tolerance</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for test_instance in tolerance_tests %}
                               <tr>
-                                <td class="test">{{test_instance.unit_test_info.test.name}}</td>
-                                <td class="value">{{test_instance.value_display}}</td>
-                                <td class="value">{{test_instance.reference}}</td>
-                                <td class="value">{{test_instance.tolerance}}</td>
+                                <th class="test">Test</th>
+                                <th class="value">Value</th>
+                                <th class="value">Reference</th>
+                                <th class="value">Tolerance</th>
                               </tr>
-                              {% if test_instance.comment %}
+                            </thead>
+                            <tbody>
+                              {% for test_instance in failing_tests %}
                                 <tr>
-                                  <td class="comment" colspan="4">
-                                    {{ test_instance.comment }}
-                                  </td>
+                                  <td class="test">{{test_instance.unit_test_info.test.name}}</td>
+                                  <td class="value">{{test_instance.value_display}}</td>
+                                  <td class="value">{{test_instance.reference}}</td>
+                                  <td class="value">{{test_instance.tolerance}}</td>
                                 </tr>
-                              {% endif %}
-                            {% endfor %}
-                          </tbody>
-                        </table>
+                                {% if test_instance.comment %}
+                                  <tr>
+                                    <td class="comment" colspan="4">
+                                      {{ test_instance.comment }}
+                                    </td>
+                                  </tr>
+                                {% endif %}
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% endif %}
+                        {% if tolerance_tests %}
+                          <table class="test-table">
+                            <thead>
+                              <tr>
+                                <th class="tolerance" colspan="4">
+                                  Tests at Tolerance
+                                </th>
+                              </tr>
+                              <tr>
+                                <th class="test">Test</th>
+                                <th class="value">Value</th>
+                                <th class="value">Reference</th>
+                                <th class="value">Tolerance</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for test_instance in tolerance_tests %}
+                                <tr>
+                                  <td class="test">{{test_instance.unit_test_info.test.name}}</td>
+                                  <td class="value">{{test_instance.value_display}}</td>
+                                  <td class="value">{{test_instance.reference}}</td>
+                                  <td class="value">{{test_instance.tolerance}}</td>
+                                </tr>
+                                {% if test_instance.comment %}
+                                  <tr>
+                                    <td class="comment" colspan="4">
+                                      {{ test_instance.comment }}
+                                    </td>
+                                  </tr>
+                                {% endif %}
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% endif %}
                       </td>
                     </tr>
                   </table>

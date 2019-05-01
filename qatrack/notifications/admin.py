@@ -1,35 +1,25 @@
-from itertools import groupby
-
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import ugettext as _
 from django.utils.translation import ugettext_lazy as _l
 
-from qatrack.units.models import Unit
-
-from . import models
+from qatrack.notifications import models
+from qatrack.units.forms import unit_site_unit_type_choices
 
 
 class NotificationAdminForm(forms.ModelForm):
     """Form for handling validation of TestList creation/editing"""
 
+    class Meta:
+        model = models.NotificationSubscription
+        fields = ("warning_level", "groups", "users", "units", "test_lists",)
+
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 
-        def site_unit_type(u):
-            return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
-
-        def site_unit_name(u):
-            return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
-
-        units = Unit.objects.select_related("site", "type").order_by("site__name", "type__name", "name")
-        choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
-        choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
-        choices = [("", "---------")] + choices
-
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
-        self.fields['units'].choices = choices
+        self.fields['units'].choices = unit_site_unit_type_choices()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -44,7 +34,7 @@ class NotificationAdminForm(forms.ModelForm):
 
 class NotificationAdmin(admin.ModelAdmin):
 
-    list_display = ["warning_level", "get_units", "get_groups", "get_users"]
+    list_display = ["warning_level", "get_units", "get_groups", "get_users", "get_testlists"]
     list_filter = ["warning_level", "units", "groups"]
     search_fields = [
         "units__number",
@@ -53,11 +43,42 @@ class NotificationAdmin(admin.ModelAdmin):
         "users__name",
         "users__email",
         "groups__user__email",
+        "test_lists__name",
     ]
 
-    filter_horizontal = ("groups", "users", "units", )
-
     form = NotificationAdminForm
+
+    fieldsets = (
+        (None, {
+            'fields': ["warning_level"],
+        }),
+        (
+            "Recipients", {
+                'fields': ["users", "groups"],
+                'description': _("Select which groups and/or users should receive this notification type"),
+            }
+        ),
+        (
+            "Filters", {
+                'fields': ['units', 'test_lists'],
+                'description':
+                    _("By using the below filters, you may limit this notification to "
+                      "certain units or test lists."),
+            }
+        ),
+    )
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "jquery/js/jquery.min.js",
+            settings.STATIC_URL + "select2/js/select2.js",
+            settings.STATIC_URL + "js/notification_admin.js",
+        )
+        css = {
+            'all': (
+                settings.STATIC_URL + "select2/css/select2.css",
+            ),
+        }
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).prefetch_related("units", "groups", "users")
@@ -77,6 +98,11 @@ class NotificationAdmin(admin.ModelAdmin):
         return ', '.join("%s (%s)" % (u.username, u.email) for u in obj.users.all())
     get_users.admin_order_field = "users__username"
     get_users.short_description = _l("Users")
+
+    def get_testlists(self, obj):
+        return ', '.join(tl.name for tl in obj.test_lists.all())
+    get_testlists.admin_order_field = "test_lists__name"
+    get_testlists.short_description = _l("Test Lists")
 
 
 admin.site.register([models.NotificationSubscription], NotificationAdmin)

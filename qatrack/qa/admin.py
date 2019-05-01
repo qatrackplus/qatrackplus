@@ -1,4 +1,3 @@
-from itertools import groupby
 import re
 
 from admin_views.admin import AdminViews
@@ -29,6 +28,7 @@ from qatrack.attachments.admin import (
 )
 import qatrack.qa.models as models
 from qatrack.qa.utils import format_qc_value
+from qatrack.units.forms import unit_site_unit_type_choices
 from qatrack.units.models import Unit
 
 admin.site.disable_action("delete_selected")
@@ -930,18 +930,7 @@ class UnitTestCollectionForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        def site_unit_type(u):
-            return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
-
-        def site_unit_name(u):
-            return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
-
-        units = Unit.objects.select_related("site", "type").order_by("site__name", "type__name", "name")
-        choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
-        choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
-        choices = [("", "---------")] + choices
-
-        self.fields['unit'].choices = choices
+        self.fields['unit'].choices = unit_site_unit_type_choices()
 
         freq = self.fields['frequency']
         freq.queryset = freq.queryset.order_by("name")

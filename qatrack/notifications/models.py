@@ -3,11 +3,13 @@ from django.contrib.auth.models import Group, User
 from django.db import models
 from django.utils.translation import ugettext_lazy as _l
 
+from qatrack.qa.models import TestList
 from qatrack.units.models import Unit
 
 # this import has to be here so that the signal handlers get registered
 from . import handlers  # NOQA
 
+COMPLETED = 0
 TOLERANCE = 10
 ACTION = 20
 
@@ -15,6 +17,7 @@ tol = settings.TEST_STATUS_DISPLAY.get("tolerance", "Tolerance")
 act = settings.TEST_STATUS_DISPLAY.get("action", "Action")
 
 WARNING_LEVELS = (
+    (COMPLETED, "Notify when Test List completed"),
     (TOLERANCE, "Notify on %s or %s" % (tol, act)),
     (ACTION, "Notify on Test at %s level only" % (act)),
 )
@@ -22,7 +25,10 @@ WARNING_LEVELS = (
 
 class NotificationSubscription(models.Model):
 
-    warning_level = models.IntegerField(choices=WARNING_LEVELS)
+    warning_level = models.IntegerField(
+        verbose_name=_l("Notification level"),
+        choices=WARNING_LEVELS,
+    )
 
     groups = models.ManyToManyField(
         Group,
@@ -41,7 +47,15 @@ class NotificationSubscription(models.Model):
     units = models.ManyToManyField(
         Unit,
         help_text=_l(
-            "Select which Units notifications should be sent to this group for. Leave blank to include all units"
+            "Select which Units should be included in this notification. Leave blank to include all units"
+        ),
+        blank=True,
+    )
+
+    test_lists = models.ManyToManyField(
+        TestList,
+        help_text=_l(
+            "Select which Test Lists should be included in this notification. Leave blank to include all Test Lists"
         ),
         blank=True,
     )
