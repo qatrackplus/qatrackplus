@@ -1772,7 +1772,7 @@ class TestInstance(models.Model):
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        value_null = self.value is None and self.string_value is None
+        value_null = self.value is None and self.string_value in (None, '')
         if ((self.skipped and not self.unit_test_info.test.hidden) or
             (value_null and self.test_list_instance.in_progress)):
             self.pass_fail = NOT_DONE
