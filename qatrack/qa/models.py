@@ -1738,13 +1738,6 @@ class TestInstance(models.Model):
             self.pass_fail = ACTION
 
     def float_pass_fail(self):
-
-        if self.value in (None, ""):
-            # this can happen in rare cases where a test is submitted that is
-            # failing due to an invalid test procedure
-            self.pass_fail = ACTION
-            return
-
         diff = self.calculate_diff()
 
         t = self.tolerance

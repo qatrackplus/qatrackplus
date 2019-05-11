@@ -245,6 +245,8 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
             "tolerance",
             "unit",
             "test",
+        ).exclude(
+            test__hidden=True,
         )
 
         return qs
