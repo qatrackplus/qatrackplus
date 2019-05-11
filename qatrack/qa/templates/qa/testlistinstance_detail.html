@@ -51,7 +51,7 @@
                                     <dt>Test List :</dt>
                                     <dd>
                                         {% if tli.test_list.description%}
-                                        <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="icon-info-sign" ></i></a>
+                                        <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="fa fa-info" ></i></a>
                                         {% else %}
                                            {{tli.test_list.name}}
                                         {% endif %}
@@ -279,9 +279,13 @@
                                                       {% with ti.pass_fail as status %}
                                                           {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
                                                               {% if status == 'tolerance' %}
-                                                                  <i class="pull-left icon-warning-sign"></i>
+                                                                  <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
                                                               {% elif status == 'action' %}
-                                                                  <i class="pull-left icon-minus-sign"></i>
+                                                                  <i class="pull-left fa fa-ban" aria-hidden="true"></i>
+                                                              {% elif status == 'ok' %}
+                                                                  <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
+                                                              {% elif status == 'not_done' %}
+                                                                  <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
                                                               {% endif %}
                                                           {% endif %}
                                                       {% endwith %}
