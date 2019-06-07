@@ -510,6 +510,9 @@ class CompositePerformer:
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
+                if result in (numpy.nan, numpy.inf):
+                    raise ValueError("%s has a result of '%s'" % (slug, str(result)))
+
                 formatted = utils.format_qc_value(result, self.formatters.get(slug))
 
                 results[slug] = {
