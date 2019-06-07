@@ -19,6 +19,21 @@
         $(rows).not(".add-row").removeClass("row1 row2")
             .filter(":even").addClass("row1").end()
             .filter("#member-container tbody tr" + ":odd").addClass("row2");
+
+        set_tab_order();
+    }
+
+    function set_tab_order(){
+
+        var tabindex = 1;
+        $('input,select').not("[type=checkbox]").each(function() {
+            if (this.type != "hidden") {
+            var $input = $(this);
+            $input.attr("tabindex", tabindex);
+            tabindex++;
+            }
+        });
+
     }
 
     function sort_container(){
