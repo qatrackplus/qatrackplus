@@ -1042,6 +1042,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var setDuration = function(start_date, complete_date) {
                 if (!start_date || !complete_date) {
                     $duration_picker.val('');
+                    $.Topic("valueChanged").publish();
                     return;
                 }
                 var diff = complete_date - start_date,
