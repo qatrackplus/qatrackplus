@@ -325,6 +325,11 @@ div.sublist-description {
     /*display: none;*/
     border-bottom: 1px solid #eeeeee !important;
 }
+
+#perform-qa-table > tbody > tr.qa-procedure.hidden-procedure {
+    /*display: none;*/
+    border-bottom: 0px !important;
+}
 tr.qa-comment {
     display: none;
 }

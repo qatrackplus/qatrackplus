@@ -109,7 +109,7 @@
     </td>
 </tr>
 
-<tr class="qa-procedure no-hover row-{{ form.prefix }}">
+<tr class="qa-procedure no-hover row-{{ form.prefix }} {%if test_info.test.hidden %}hidden-procedure{% endif %}">
     <td colspan="{% qa_table_colspan perms %}  class="" >
         {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description or form.unit_test_info.test.attachment_set.count %}
             <div class="error-bar {% if form.errors %}in{% endif %}">
