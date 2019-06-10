@@ -12,6 +12,7 @@ from django.db.models import Count, Q
 import django.forms as forms
 from django.shortcuts import HttpResponseRedirect, redirect, render
 from django.template import loader
+from django.template.defaultfilters import date as date_formatter
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import escape
@@ -828,14 +829,18 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     @mark_safe
     def obj_created(self, obj):
         fmt = '<abbr title="Created by %s">%s</abbr>'
-        return fmt % (obj.created_by, obj.created.strftime(settings.INPUT_DATE_FORMATS[0]))
+        dt = date_formatter(timezone.localtime(obj.created), "DATETIME_FORMAT")
+        return fmt % (obj.created_by, dt)
+
     obj_created.admin_order_field = "created"
     obj_created.short_description = "Created"
 
     @mark_safe
     def obj_modified(self, obj):
         fmt = '<abbr title="Modified by %s">%s</abbr>'
-        return fmt % (obj.modified_by, obj.modified.strftime(settings.INPUT_DATE_FORMATS[0]))
+        dt = date_formatter(timezone.localtime(obj.modified), "DATETIME_FORMAT")
+        return fmt % (obj.modified_by, dt)
+
     obj_modified.admin_order_field = "modified"
     obj_modified.short_description = "Modified"
 
