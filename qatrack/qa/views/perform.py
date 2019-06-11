@@ -1053,7 +1053,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         context["formset"] = formset
         context["history_dates"] = self.history_dates
-        context['categories'] = set([x.test.category for x in self.unit_test_infos])
+        context['categories'] = sorted(set([x.test.category for x in self.unit_test_infos]), key=lambda c: c.name)
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
