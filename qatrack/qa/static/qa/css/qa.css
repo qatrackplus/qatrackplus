@@ -98,13 +98,13 @@ input[readonly].qa-input {
 .qa-status{
     /*width: 90px;*/
     overflow-x:hidden;
-    border: none !important;
     min-width: 70px;
     text-align: center;
     vertical-align: middle !important;
 }
 td.qa-status {
     font-size: smaller;
+    border: none !important;
 }
 .qa-status > i {
     margin-top:3px;
@@ -268,16 +268,24 @@ div.sublist-description {
     transition: border-left 0.5s;
 }
 
-#perform-qa-table > thead > tr > th.qa-category {
-    width: 120px;
+#perform-qa-table > thead > tr > th {
     vertical-align: middle !important;
 }
+
+#perform-qa-table > thead > tr > th.qa-category {
+    min-width: 120px;
+    width: 200px;
+    max-width: 200px;
+    padding-left: 15px;
+}
+
 #perform-qa-table > tbody > tr > td.qa-category {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 0;
 }
+
 #perform-qa-table > tbody > tr > td.qa-category div {
     white-space: nowrap;
     overflow: hidden;
@@ -294,6 +302,13 @@ div.sublist-description {
     height: calc(100% + 2px);
     top:0;
 }
+
+#perform-qa-table > tbody > tr > td.qa-category .comment-bar {
+  padding-bottom: 3px;
+  padding-top: 3px;
+  padding-right: 5px;
+}
+
 #perform-qa-table, #review-table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -311,6 +326,11 @@ div.sublist-description {
 #perform-qa-table > tbody > tr.qa-procedure {
     /*display: none;*/
     border-bottom: 1px solid #eeeeee !important;
+}
+
+#perform-qa-table > tbody > tr.qa-procedure.hidden-procedure {
+    /*display: none;*/
+    border-bottom: 0px !important;
 }
 tr.qa-comment {
     display: none;
@@ -448,13 +468,12 @@ th.review-ref {
     text-align: right;
 }
 .due-status-lists {
-    overflow-y:scroll;
+    overflow-y: scroll;
     overflow-x: hidden;
-    height:400px;
+    max-height: 400px;
 }
 .due-status-container {
-
-    height:450px;
+    max-height:450px;
 }
 .pad-r-10 {
     padding-right: 10px;
@@ -494,7 +513,7 @@ row.procedure-open > td:nth-child(1) {
     border-left: 3px solid #00ff00;
 }
 td.qa-category.bar-container {
-    height: inherit;
+/*    height: inherit;*/ /* this causes cateogires to be hidden in FF */
 }
 td.qa-category .error-bar,
 td.qa-category .procedure-bar,
