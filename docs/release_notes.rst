@@ -57,6 +57,28 @@ Details of the v0.3.1 release
 * Test Instance points with comments associated with them will now be highlighed in charts
 
 
+QATrack+ v0.3.0.15 Release Notes
+--------------------------------
+
+- The Active Unit Test Info filter was fixed
+
+Upgrading to v0.3.0.15 from v0.3.0
+..................................
+
+If you haven't upgraded to v0.3.0 yet see instructions for v0.3.0 below.  If
+you've already upgraded to v0.3.0 then to upgrade to v0.3.0.15:
+
+#. Open shell and activate your Python 3 virtual environment then:
+#.  .. code-block:: bash
+
+        git fetch origin
+        git checkout v0.3.0.15
+        python manage.py collectstatic
+        python manage.py clearcache
+
+#. On Linux `sudo service apache2 restart` on Windows, restart QATrack3 CherryPy Service
+
+
 QATrack+ v0.3.0.14 Release Notes
 --------------------------------
 
@@ -75,7 +97,7 @@ QATrack+ v0.3.0.14 Release Notes
                 cd C:\deploy
                 .\venvs\qatrack3\Script\Activate.ps1
                 cd qatrackplus
-                git fetch upstream
+                git fetch origin
                 git checkout v0.3.0.14
                 python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
                 python manage.py collectstatic
@@ -88,7 +110,7 @@ QATrack+ v0.3.0.14 Release Notes
 
                 cd ~/web/qatrackplus
                 source ~/venvs/qatrack3/bin/activate
-                git fetch upstream
+                git fetch origin
                 git checkout v0.3.0.14
                 python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
                 python manage.py collectstatic
@@ -103,7 +125,7 @@ QATrack+ v0.3.0.14 Release Notes
                 cd C:\deploy
                 .\venvs\qatrack\Script\Activate.ps1
                 cd qatrackplus
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.9.2
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
@@ -118,7 +140,7 @@ QATrack+ v0.3.0.14 Release Notes
 
                 cd ~/web/qatrackplus
                 source ~/venvs/qatrack3/bin/activate
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.9.2
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
@@ -136,7 +158,7 @@ QATrack+ v0.3.0.14 Release Notes
                 cd C:\deploy
                 .\venvs\qatrack\Script\Activate.ps1
                 cd qatrackplus
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.8.1
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
@@ -151,7 +173,7 @@ QATrack+ v0.3.0.14 Release Notes
 
                 cd ~/web/qatrackplus
                 source ~/venvs/qatrack3/bin/activate
-                git fetch upstream
+                git fetch origin
                 git checkout v0.2.8.1
                 python manage.py shell
                 >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
