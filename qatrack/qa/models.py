@@ -946,7 +946,7 @@ class UnitTestInfoManager(models.Manager):
         tl_ids = get_utc_tl_ids(active=True)
         return qs.filter(
             Q(test__testlistmembership__test_list__in=tl_ids) |
-            Q(test__testlistmembership__test_list__sublist__child__in=tl_ids)
+            Q(test__testlistmembership__test_list__sublist__parent__in=tl_ids)
         ).distinct()
 
     def inactive(self, queryset=None):
@@ -958,7 +958,7 @@ class UnitTestInfoManager(models.Manager):
         tl_ids = get_utc_tl_ids(active=True)
         return qs.exclude(
             Q(test__testlistmembership__test_list__in=tl_ids) |
-            Q(test__testlistmembership__test_list__sublist__child__in=tl_ids)
+            Q(test__testlistmembership__test_list__sublist__parent__in=tl_ids)
         ).distinct()
 
 
