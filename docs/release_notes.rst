@@ -1,6 +1,28 @@
 Release Notes
 =============
 
+QATrack+ v0.3.0.15 Release Notes
+--------------------------------
+
+- The Active Unit Test Info filter was fixed
+
+Upgrading to v0.3.0.15 from v0.3.0
+..................................
+
+If you haven't upgraded to v0.3.0 yet see instructions for v0.3.0 below.  If
+you've already upgraded to v0.3.0 then to upgrade to v0.3.0.15:
+
+#. Open shell and activate your Python 3 virtual environment then:
+#.  .. code-block:: bash
+
+        git fetch origin
+        git checkout v0.3.0.15
+        python manage.py collectstatic
+        python manage.py clearcache
+
+#. On Linux `sudo service apache2 restart` on Windows, restart QATrack3 CherryPy Service
+
+
 QATrack+ v0.3.0.14 Release Notes
 --------------------------------
 
