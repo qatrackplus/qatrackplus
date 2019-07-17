@@ -45,6 +45,9 @@ class ServiceArea(models.Model):
 
     objects = NameNaturalKeyManager()
 
+    class Meta:
+        ordering = ("name",)
+
     def natural_key(self):
         return (self.name,)
 
