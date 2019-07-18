@@ -376,6 +376,11 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             elif type_ == models.UPLOAD:
                 d = validated_data['tests'].get(slug, {})
                 uploads.append((pk, slug, d))
+            elif type_ in models.CALCULATED_TYPES:
+                if slug not in validated_data['tests']:
+                    validated_data['tests'][slug] = {'value': ''}
+                elif 'value' not in validated_data['tests'][slug]:
+                    validated_data['tests'][slug]['value'] = ""
 
         self.ti_attachments = defaultdict(list)
 
@@ -556,7 +561,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
             try:
                 signals.testlist_complete.send(sender=self, instance=tli, created=False)
-            except:  # pragma: no cover
+            except:  # pragma: no cover, # noqa: E722
                 pass
 
         return tli
@@ -650,7 +655,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         if not instance.in_progress:
             try:
                 signals.testlist_complete.send(sender=self, instance=instance, created=False)
-            except:  # pragma: no cover
+            except:  # pragma: no cover, # noqa: E722
                 pass
 
         return instance

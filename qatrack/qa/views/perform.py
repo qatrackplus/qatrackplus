@@ -156,7 +156,7 @@ class CompositeUtils:
 
     def get_figure(self):
         fig = Figure()
-        canvas = FigureCanvasAgg(fig)
+        FigureCanvasAgg(fig)
         return fig
 
 
@@ -989,7 +989,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
             try:
                 signals.testlist_complete.send(sender=self, instance=self.object, created=False)
-            except:
+            except:  # noqa: E722
                 messages.add_message(
                     request=self.request, message='Error sending notification email.', level=messages.ERROR
                 )
@@ -1190,7 +1190,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             if not self.object.in_progress:
                 try:
                     signals.testlist_complete.send(sender=self, instance=self.object, created=False)
-                except:
+                except:  # noqa: E722
                     messages.add_message(
                         request=self.request,
                         message='Error sending notification email.',
@@ -1299,7 +1299,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context = super(EditTestListInstance, self).get_context_data(**kwargs)
         uti_pks = [f.instance.unit_test_info.pk for f in context["formset"]]
-        self.prev_ref_tols = {f.instance.unit_test_info.pk: (f.instance.reference, f.instance.tolerance) for f in context["formset"]}
+        self.prev_ref_tols = {
+            f.instance.unit_test_info.pk: (f.instance.reference, f.instance.tolerance) for f in context["formset"]
+        }
         utis = models.UnitTestInfo.objects.filter(pk__in=uti_pks).select_related(
             "unit",
             "test__category",

@@ -20,3 +20,5 @@ ignore =
     E129, E125
     # Allow binary operators to start rather than end lines
     W503
+    # Allow line break after binary operator
+    W504

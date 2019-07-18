@@ -361,6 +361,41 @@ class TestTestListInstanceAPI(APITestCase):
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
         assert tic.string_value == "hello test three"
 
+    def test_create_composite_of_composite(self):
+        """
+        Add a composite test which depends on another composite value to our test list.
+        """
+
+        tcc = utils.create_test(name="testcc", test_type=models.COMPOSITE)
+        tcc.calculation_procedure = "result = 2*testc"
+        tcc.save()
+        utils.create_test_list_membership(self.test_list, self.tc)
+        utils.create_test_list_membership(self.test_list, tcc)
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 2
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        ticc = models.TestInstance.objects.get(unit_test_info__test=tcc)
+        assert ticc.value == 2 * tic.value
+
+    def test_create_composite_of_composite_string(self):
+        """
+        Add a string composite test which depends on another composite value to our test list.
+        """
+
+        tscc = utils.create_test(name="testscc", test_type=models.STRING_COMPOSITE)
+        tscc.calculation_procedure = "result = 'composite of composite (%s)' % testsc"
+        tscc.save()
+
+        utils.create_test_list_membership(self.test_list, self.tsc)
+        utils.create_test_list_membership(self.test_list, tscc)
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=tscc)
+        assert tic.string_value == "composite of composite (hello test three)"
+
     def test_file_upload(self):
         """
         Add a file upload test and ensure we can upload, process and have

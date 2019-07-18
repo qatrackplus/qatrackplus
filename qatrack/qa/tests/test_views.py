@@ -534,6 +534,49 @@ class TestComposite(TestCase):
         }
         self.assertDictEqual(values, expected)
 
+    def test_composite_of_composite(self):
+
+        tcc = utils.create_test(name="testcc", test_type=models.COMPOSITE)
+        tcc.calculation_procedure = "result = 2*testc"
+        tcc.save()
+        utils.create_test_list_membership(self.test_list, tcc)
+        utils.create_unit_test_info(test=tcc, unit=self.unit)
+        data = {
+            'tests': {
+                "testc": "",
+                "testcc": "",
+                "test1": 1,
+                "test2": 2
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 3.0,
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+                "testcc": {
+                    "value": 6.0,
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+            },
+            "success": True
+        }
+        self.assertDictEqual(values, expected)
+
     def test_invalid_values(self):
 
         data = {
