@@ -56,6 +56,9 @@ Details of the v0.3.1 release
 
 * Test Instance points with comments associated with them will now be highlighed in charts
 
+* A new setting `SL_ALLOW_BLANK_SERVICE_AREA` has been added to optionally
+  allow users to submit ServiceEvents without a ServiceArea set explicitly.
+
 
 QATrack+ v0.3.0.15 Release Notes
 --------------------------------

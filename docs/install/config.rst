@@ -321,6 +321,15 @@ Set `REVIEW_DIFF_COL = True` to include a difference column when reviewing test
 list results. This column shows the difference between a test value and its
 reference value.
 
+
+SL_ALLOW_BLANK_SERVICE_AREA
+...........................
+
+Set `SL_ALLOW_BLANK_SERVICE_AREA = True` to allow users to create a ServiceEvent with
+a blank ServiceArea set.  When a Service Event is saved without a ServiceArea explicitly set,
+the ServiceArea will be set to "Not Specified".
+
+
 TESTPACK_TIMEOUT
 ................
 

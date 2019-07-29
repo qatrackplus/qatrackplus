@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.db.models import Q
 from django.test import RequestFactory, TestCase
 from django.utils import timezone
+from django.test.utils import override_settings
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
@@ -83,7 +84,9 @@ class TestDashboard(TestCase):
         se_default_status = sl_utils.create_service_event(service_status=ses_default)
         sl_utils.create_return_to_service_qa(add_test_list_instance=True)  # qa_not_reviewed +1
         sl_utils.create_return_to_service_qa()  # qa_not_complete +1
-        sl_utils.create_return_to_service_qa(service_event=se_requires_review)  # se_needing_review +1, qa_not_complete +1
+        sl_utils.create_return_to_service_qa(
+            service_event=se_requires_review
+        )  # se_needing_review +1, qa_not_complete +1
         sl_utils.create_return_to_service_qa(service_event=se_default_status)  # se_default +1, qa_not_complete +1
 
         self.user = create_user(is_superuser=True, uname='person')
@@ -226,7 +229,9 @@ class TestCreateServiceEvent(TestCase):
 
         perm = Permission.objects.get(codename='can_have_hours')
         user_with_hours = [('', '---------')]
-        for u in User.objects.filter(Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True)).distinct():
+        for u in User.objects.filter(
+            Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True)
+        ).distinct():
             name = u.username if not u.first_name or not u.last_name else u.last_name + ', ' + u.first_name
             user_with_hours.append(('user-' + str(u.id), name))
         for tp in models.ThirdParty.objects.all():
@@ -265,7 +270,11 @@ class TestCreateServiceEvent(TestCase):
         qa_utils.create_unit_test_collection(unit=unit, active=False)
         self.assertEqual(
             list(utc_initialed_by.values_list('id', 'name')),
-            list(response.context_data['rtsqa_formset'].forms[0].fields['unit_test_collection'].queryset.values_list('id', 'name'))
+            list(
+                response.context_data['rtsqa_formset'].forms[0].fields['unit_test_collection'].queryset.values_list(
+                    'id', 'name'
+                )
+            )
         )
 
         # Initiated by pre selected --------------------------------------------------
@@ -344,6 +353,7 @@ class TestCreateServiceEvent(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
+    @override_settings(SL_ALLOW_BLANK_SERVICE_AREA=False)
     def test_required_fields(self):
 
         data = {
@@ -374,8 +384,42 @@ class TestCreateServiceEvent(TestCase):
 
         self.assertFalse(response.context_data['form'].is_valid())
 
-        for e in ['service_type', 'unit_field', 'service_area_field', 'datetime_service', 'problem_description', 'service_status']:
+        for e in [
+            'service_type', 'unit_field', 'service_area_field', 'datetime_service', 'problem_description',
+            'service_status'
+        ]:
             self.assertTrue(e in response.context_data['form'].errors)
+
+    @override_settings(SL_ALLOW_BLANK_SERVICE_AREA=True)
+    def test_blank_sa_ok(self):
+
+        data = {
+
+            'datetime_service': '',
+            'unit_field': '',
+            'unit_field_fake': '',
+            'service_area_field': '',
+            'service_type': '',
+            'problem_description': '',
+            'service_status': '',
+
+            'hours-INITIAL_FORMS': 0,
+            'hours-MAX_NUM_FORMS': 1000,
+            'hours-TOTAL_FORMS': 1,
+            'hours-MIN_NUM_FORMS': 0,
+            'parts-INITIAL_FORMS': 0,
+            'parts-MAX_NUM_FORMS': 1000,
+            'parts-TOTAL_FORMS': 1,
+            'parts-MIN_NUM_FORMS': 0,
+            'rtsqa-INITIAL_FORMS': 0,
+            'rtsqa-MAX_NUM_FORMS': 1000,
+            'rtsqa-TOTAL_FORMS': 1,
+            'rtsqa-MIN_NUM_FORMS': 0,
+        }
+
+        response = self.client.post(self.url, data=data)
+
+        assert 'service_area_field' not in response.context_data['form'].errors
 
     def test_unreviewed_rtsqa(self):
 
