@@ -587,7 +587,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     if (_.isNull(val.value)) {
                         return;
                     }
-                    var x = moment(val.date).valueOf();
+                    var x = moment(val.date).valueOf(),
+                        tol_low,
+                        tol_high;
 
                     line_data_test_results.push({
                         x: x,
@@ -599,9 +601,53 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                     if (val.reference !== null) {
                         line_data_reference.push({x: x, y: val.reference});
-                        area_data_ok.push({x: x, y_high: val.tol_high, y_low: val.tol_low});
-                        area_data_upper_tol.push({x: x, y_high: val.act_high, y_low: val.tol_high});
-                        area_data_lower_tol.push({x: x, y_high: val.tol_low, y_low: val.act_low});
+
+                        var have_ok_reg = !_.isNull(val.tol_low) || !_.isNull(val.tol_high) || !_.isNull(val.act_high) || !_.isNull(val.act_low);
+                        if (have_ok_reg){
+                            if (!_.isNull(val.tol_low)){
+                                tol_low = val.tol_low;
+                            }else if (!_.isNull(val.act_low)){
+                                tol_low = val.act_low;
+                            }else {
+                                tol_low = val.reference;
+                            }
+
+                            if (!_.isNull(val.tol_high)){
+                                tol_high = val.tol_high;
+                            }else if (!_.isNull(val.act_high)){
+                                tol_high = val.act_high;
+                            }else {
+                                tol_high = val.reference;
+                            }
+
+                            area_data_ok.push({x: x, y_high: tol_high, y_low: tol_low});
+                        }else{
+                            area_data_ok.push({x: x, y_high: val.reference, y_low: val.reference});
+                        }
+
+                        var have_lower_tol_reg = !_.isNull(val.tol_low);
+                        if (have_lower_tol_reg){
+                            if (!_.isNull(val.act_low)){
+                                area_data_lower_tol.push({x: x, y_high: val.tol_low, y_low: val.act_low});
+                            }else{
+                                area_data_lower_tol.push({x: x, y_high: val.tol_low, y_low: val.tol_low});
+                            }
+                        }else{
+                            area_data_lower_tol.push({x: x, y_high: val.reference, y_low: val.reference});
+                        }
+
+                        var have_upper_tol_reg = !_.isNull(val.tol_high);
+                        if (have_upper_tol_reg){
+                            if (!_.isNull(val.act_high)){
+                                area_data_upper_tol.push({x: x, y_high: val.act_high, y_low: val.tol_high});
+                            }else{
+                                area_data_upper_tol.push({x: x, y_high: val.tol_high, y_low: val.tol_high});
+                            }
+                        }else{
+                            area_data_upper_tol.push({x: x, y_high: val.reference, y_low: val.reference});
+                        }
+
+
                     }
                 });
 

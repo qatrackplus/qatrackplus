@@ -369,9 +369,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             }else if (tt === QAUtils.UPLOAD){
                 if (_.isNull(value)){
                     self.inputs.filter(".qa-input:hidden").val("");
+                    self.upload_data = value;
                 }else{
                     self.inputs.filter(".qa-input:hidden").val(value.attachment_id);
                     self.value = value.result;
+                    self.upload_data = value;
                 }
             }else if (tt === QAUtils.COMPOSITE){
                 if (_.isNull(value)){
@@ -553,6 +555,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             // skipping sets value to null but we want to presever value in case it
             // is unfiltered later. Filtered values will be nulled on submitt
             var tmp_val = self.value;
+            if (self.test_info.test.type === QAUtils.UPLOAD){
+                tmp_val = self.upload_data;
+            }
             self.set_skip(true);
             self.set_value(tmp_val);
             if (self.test_info.test.type == QAUtils.BOOLEAN){
@@ -810,9 +815,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         $.Topic("categoryFilter").subscribe(function(categories) {
             _.each(self.test_instances, function(ti){
                 if (categories === "all" || _.includes(categories, ti.test_info.test.category.toString())){
-                    ti.show();
+                    if (!ti.visible){
+                        ti.show();
+                    }
                 }else{
-                    ti.hide();
+                    if (ti.visible){
+                        ti.hide();
+                    }
                 }
             });
             $.Topic("qaUpdated").publish();
