@@ -585,8 +585,8 @@ class TestComposite(TestCase):
             'tests': {
                 "testc": "",
                 "testcc": "",
-                "test1": 1,
-                "test2": 2
+                "test1": 1.,
+                "test2": 2.,
             },
             'meta': {},
             'test_list_id': self.test_list.id,
@@ -602,12 +602,14 @@ class TestComposite(TestCase):
             "results": {
                 "testc": {
                     "value": 3.0,
+                    "formatted": '3.0000000',
                     "error": None,
                     "user_attached": [],
                     "comment": None,
                 },
                 "testcc": {
                     "value": 6.0,
+                    "formatted": '6.0000000',
                     "error": None,
                     "user_attached": [],
                     "comment": None,
