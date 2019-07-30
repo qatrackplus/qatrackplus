@@ -405,24 +405,29 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
+                glis = models.GroupLinkerInstance.objects.filter(
+                    service_event=service_event,
+                    group_linker=form.g_link_dict[g_link]['g_link']
+                ).select_related("user")
+                existing_gli_users = set(gli.user.id for gli in glis)
+                current_cli_users = set(u.pk for u in (form.cleaned_data[g_link] or []))
 
-                try:
-                    gl_instance = models.GroupLinkerInstance.objects.get(
-                        service_event=service_event, group_linker=form.g_link_dict[g_link]['g_link']
-                    )
-                    gl_instance.user = form.cleaned_data[g_link]
-                    gl_instance.datetime_linked = timezone.now()
-                except ObjectDoesNotExist:
-                    gl_instance = models.GroupLinkerInstance(
+                # create any new GLIs
+                new_gli_users = current_cli_users - existing_gli_users
+                for user_id in new_gli_users:
+                    models.GroupLinkerInstance.objects.get_or_create(
                         service_event=service_event,
                         group_linker=form.g_link_dict[g_link]['g_link'],
-                        user=form.cleaned_data[g_link],
-                        datetime_linked=timezone.now()
+                        user_id=user_id,
+                        defaults={
+                            'datetime_linked': timezone.now(),
+                        },
                     )
-                if form.cleaned_data[g_link] is None:
-                    gl_instance.delete()
-                else:
-                    gl_instance.save()
+
+                # delete any existing link instances that aren't present anymore
+                deleted_gli_users = existing_gli_users - current_cli_users
+                glis.filter(user_id__in=deleted_gli_users).delete()
+
 
         for h_form in hours_formset:
 
