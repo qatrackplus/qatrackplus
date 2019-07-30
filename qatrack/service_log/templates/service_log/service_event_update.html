@@ -21,10 +21,7 @@
     <script type="text/javascript">
         var status_colours_dict = {{ status_tag_colours|safe }};
         var se_statuses = {{ se_statuses|safe }};
-        var ses_status_details = {{ ses_status_details|safe }};
         var se_types_review = {{ se_types_review|safe }};
-        var user_perm_can_approve_se = {{ perms.service_log.approve_serviceevent|yesno:'1,0' }};
-        var default_qa_status_name = "{{ default_qa_status_name|safe }}";
         var se_id = {% if form.instance.id %}{{ form.instance.id }}{% else %}false{% endif %};
     </script>
 {% endblock extra_js %}

@@ -241,15 +241,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         context_data['status_tag_colours'] = models.ServiceEventStatus.get_colour_dict()
         context_data['se_types_review'] = {st.id: int(st.is_review_required) for st in models.ServiceType.objects.all()}
 
-        context_data['ses_status_details'] = {
-            ses.id: {
-                'is_review_required': int(ses.is_review_required),
-                'rts_qa_must_be_reviewed': int(ses.rts_qa_must_be_reviewed),
-                'is_default': int(ses.is_default)
-            } for ses in models.ServiceEventStatus.objects.all()
-        }
-        context_data['default_qa_status_name'] = qa_models.TestInstanceStatus.objects.filter(is_default=True).first().name
-
         unit_field = self.object.unit_service_area.unit if self.object is not None else None
         if not unit_field:
             try:
