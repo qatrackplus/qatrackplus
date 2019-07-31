@@ -1,7 +1,7 @@
 // Regrets: Not using a more robust front end library here :(
 
 require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_utils', 'inputmask', 'site_base', 'comments'], function ($, _, moment, autosize) {
-    
+
     $(document).ready(function() {
 
         var $units = $('#id_unit_field'),
@@ -91,9 +91,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 }
             ]
         });
-        
+
         $('.inputmask').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});
-        
+
         // Service Event status -----------------------------------------------------------------
         function generate_status_label(status) {
             if (status.id) {
@@ -182,7 +182,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             templateSelection: generate_related_selection,
             width: '100%'
         });
-        
+
         // Unit -----------------------------------------------------------------------------------------------
         $units_fake.change(function() {
             var unit_id = $units_fake.val();
@@ -237,7 +237,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                     error: function (e, data) {
                         console.log('ErROr');
                     }
-                }); 
+                });
             }
             else {
                 $service_areas.prop('disabled', true).find('option:not(:first)').remove();
@@ -247,7 +247,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $utc_initiated_by.prop('disabled', true).find('option:not(:first)').remove();
             }
         });
-        
+
         // Hours Formset --------------------------------------------------------------------------------------
         function set_hours_time_to_service_time() {
             var service_time_val = $service_time.val();

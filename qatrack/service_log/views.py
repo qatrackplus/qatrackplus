@@ -241,15 +241,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         context_data['status_tag_colours'] = models.ServiceEventStatus.get_colour_dict()
         context_data['se_types_review'] = {st.id: int(st.is_review_required) for st in models.ServiceType.objects.all()}
 
-        context_data['ses_status_details'] = {
-            ses.id: {
-                'is_review_required': int(ses.is_review_required),
-                'rts_qa_must_be_reviewed': int(ses.rts_qa_must_be_reviewed),
-                'is_default': int(ses.is_default)
-            } for ses in models.ServiceEventStatus.objects.all()
-        }
-        context_data['default_qa_status_name'] = qa_models.TestInstanceStatus.objects.filter(is_default=True).first().name
-
         unit_field = self.object.unit_service_area.unit if self.object is not None else None
         if not unit_field:
             try:
@@ -405,24 +396,29 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
+                glis = models.GroupLinkerInstance.objects.filter(
+                    service_event=service_event,
+                    group_linker=form.g_link_dict[g_link]['g_link']
+                ).select_related("user")
+                existing_gli_users = set(gli.user.id for gli in glis)
+                current_cli_users = set(u.pk for u in (form.cleaned_data[g_link] or []))
 
-                try:
-                    gl_instance = models.GroupLinkerInstance.objects.get(
-                        service_event=service_event, group_linker=form.g_link_dict[g_link]['g_link']
-                    )
-                    gl_instance.user = form.cleaned_data[g_link]
-                    gl_instance.datetime_linked = timezone.now()
-                except ObjectDoesNotExist:
-                    gl_instance = models.GroupLinkerInstance(
+                # create any new GLIs
+                new_gli_users = current_cli_users - existing_gli_users
+                for user_id in new_gli_users:
+                    models.GroupLinkerInstance.objects.get_or_create(
                         service_event=service_event,
                         group_linker=form.g_link_dict[g_link]['g_link'],
-                        user=form.cleaned_data[g_link],
-                        datetime_linked=timezone.now()
+                        user_id=user_id,
+                        defaults={
+                            'datetime_linked': timezone.now(),
+                        },
                     )
-                if form.cleaned_data[g_link] is None:
-                    gl_instance.delete()
-                else:
-                    gl_instance.save()
+
+                # delete any existing link instances that aren't present anymore
+                deleted_gli_users = existing_gli_users - current_cli_users
+                glis.filter(user_id__in=deleted_gli_users).delete()
+
 
         for h_form in hours_formset:
 

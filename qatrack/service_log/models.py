@@ -338,14 +338,28 @@ class ReturnToServiceQA(models.Model):
 
 class GroupLinker(models.Model):
 
-    group = models.ForeignKey(Group, help_text=_('Select the group.'), on_delete=models.CASCADE)
+    group = models.ForeignKey(
+        Group,
+        help_text=_('Select the group. Leave blank to allow choosing any user.'),
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
     name = models.CharField(
         max_length=64, help_text=_('Enter this group\'s display name (ie: "Physicist reported to")')
     )
+
+    multiple = models.BooleanField(
+        verbose_name=_("Multiple users"),
+        help_text=_("Allow selecting multiple users when using this group linker"),
+        default=False,
+    )
+
     description = models.TextField(
         null=True, blank=True, help_text=_('Describe the relationship between this group and service events.')
     )
+
     help_text = models.CharField(
         max_length=64, null=True, blank=True,
         help_text=_('Message to display when selecting user in service event form.')
@@ -368,7 +382,6 @@ class GroupLinkerInstance(models.Model):
 
     class Meta:
         default_permissions = ()
-        unique_together = ('service_event', 'group_linker')
 
 
 class JSONField(models.TextField):

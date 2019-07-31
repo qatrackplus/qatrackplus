@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 from django.forms import ModelForm, ValidationError
+from django.db.models import Count, Max
 
 from .models import (
     GroupLinker,
@@ -121,10 +122,38 @@ class UnitServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     search_fields = ['unit__name', 'service_area__name']
 
 
+class GroupLinkerAdminForm(ModelForm):
+
+    class Meta:
+        model = GroupLinker
+        fields = '__all__'
+
+    def clean_multiple(self):
+        # check if this group linker has cases where there are already multiple group linker instances
+        # pointing to it, and if so, don't allow disabling of multiple
+        multiple = self.cleaned_data.get("multiple")
+        if self.instance and not multiple:
+            max_counts = self.instance.grouplinkerinstance_set.values(
+                "service_event_id",
+            ).annotate(
+                counts=Count("service_event_id"),
+            ).order_by(
+                "counts",
+            ).aggregate(max_counts=Max("counts"))['max_counts']
+            if max_counts and max_counts > 1:
+                raise ValidationError(
+                    'You can not disable "multiple" for since there are Service Events'
+                    'with multiple Group Linker Instances referring to this Group Linker'
+                )
+        return multiple
+
+
 class GroupLinkerAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ['name', 'group', 'description', 'help_text']
+    list_display = ['name', 'group', 'multiple', 'description', 'help_text']
     list_filter = ['group']
     search_fields = ['name', 'group__name']
+
+    form = GroupLinkerAdminForm
 
 
 if settings.USE_SERVICE_LOG:

@@ -35,7 +35,7 @@ def item_val_to_string(item):
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
         return '{}:{:02}'.format(hours, minutes)
-    elif isinstance(item, QuerySet):
+    elif isinstance(item, (QuerySet, list, tuple,)):
         return ', '.join([str(i) for i in item])
     else:
         return str(item)
@@ -81,7 +81,7 @@ class HoursMinDurationField(forms.DurationField):
         return value
 
 
-class UserModelChoiceField(forms.ModelChoiceField):
+class UserModelMultipleChoiceField(forms.ModelMultipleChoiceField):
 
     title = ''
 
@@ -457,22 +457,33 @@ class ServiceEventForm(BetterModelForm):
             self.g_link_dict[field_name] = {
                 'g_link': g_link,
             }
-            # if not is_new:
+
+            group_q = Q(groups=g_link.group, is_active=True) if g_link.group else Q(is_active=True)
+
             try:
-                g_link_instance = models.GroupLinkerInstance.objects.get(
-                    group_linker=g_link, service_event=self.instance
+                g_link_instances = models.GroupLinkerInstance.objects.filter(
+                    group_linker=g_link,
+                    service_event=self.instance
                 )
-                self.initial[field_name] = g_link_instance.user
+                g_link_users = [gli.user for gli in g_link_instances]
+                self.initial[field_name] = g_link_users
+
                 queryset = User.objects.filter(
-                    Q(groups=g_link.group, is_active=True) | Q(pk=g_link_instance.user.id)
+                    group_q |
+                    Q(pk__in=[u.id for u in g_link_users])
                 ).distinct().order_by('last_name')
             except ObjectDoesNotExist:
-                queryset = User.objects.filter(groups=g_link.group, is_active=True).order_by('last_name')
+                queryset = User.objects.filter(group_q).order_by('last_name')
 
-            self.fields[field_name] = UserModelChoiceField(
-                queryset=queryset, help_text=g_link.help_text, label=g_link.name, required=False
+            self.fields[field_name] = UserModelMultipleChoiceField(
+                queryset=queryset,
+                help_text=g_link.help_text,
+                label=g_link.name,
+                required=False,
             )
             self.fields[field_name].widget.attrs.update({'class': 'select2'})
+            if not g_link.multiple:
+                self.fields[field_name].widget.attrs.update({'data-maximum-selection-length': '1'})
             self.fields[field_name].title = g_link.description
 
             g_fields.append(field_name)
