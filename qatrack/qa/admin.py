@@ -937,7 +937,7 @@ class UnitTestCollectionForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        self.fields['unit'].choices = unit_site_unit_type_choices()
+        self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True)
 
         freq = self.fields['frequency']
         freq.queryset = freq.queryset.order_by("name")
