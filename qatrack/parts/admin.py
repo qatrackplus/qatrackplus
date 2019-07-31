@@ -88,8 +88,9 @@ if settings.USE_PARTS:
                 kwargs['queryset'] = kwargs['queryset'].select_related('room', 'room__site')
             else:
                 db = kwargs.pop('using', None)
-                kwargs['queryset'] = db_field.rel.to._default_manager.using(db).complex_filter(
-                    db_field.rel.limit_choices_to
+                rel = db_field.remote_field
+                kwargs['queryset'] = rel.model._default_manager.using(db).complex_filter(
+                    rel.limit_choices_to
                 ).select_related('room', 'room__site')
             return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
