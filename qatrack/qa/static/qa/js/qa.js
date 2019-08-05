@@ -401,7 +401,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 tt === QAUtils.DATE ||
                 tt === QAUtils.DATETIME
             ){
-                self.inputs.val(value);
+                if (_.isObject(value)){
+                    self.inputs.val(JSON.stringify(value));
+                }else{
+                    self.inputs.val(value);
+                }
             }else if (tt === QAUtils.UPLOAD){
                 if (_.isNull(value)){
                     self.inputs.filter(".qa-input:hidden").val("");
@@ -1038,6 +1042,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 var tt = ti.test_info.test.type;
                 if (tt === QAUtils.COMPOSITE || tt === QAUtils.CONSTANT){
                     ti.inputs.val(ti.value);
+                }else if (_.isObject(ti.value)){
+                    ti.inputs.val(JSON.stringify(ti.value));
                 }
             });
         });

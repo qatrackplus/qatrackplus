@@ -1665,7 +1665,7 @@ class TestInstance(models.Model):
         help_text=_("For boolean Tests a value of 0 equals False and any non zero equals True"),
         null=True,
     )
-    string_value = models.CharField(max_length=MAX_STRING_VAL_LEN, null=True, blank=True)
+    string_value = models.TextField(null=True, blank=True)
 
     skipped = models.BooleanField(help_text=_("Was this test skipped for some reason (add comment)"), default=False)
     comment = models.TextField(help_text=_("Add a comment to this test"), null=True, blank=True)

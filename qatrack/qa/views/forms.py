@@ -1,7 +1,6 @@
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxLengthValidator
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import (
     HiddenInput,
@@ -106,6 +105,8 @@ class TestInstanceWidgetsMixin(object):
                 test = self.unit_test_info.test
                 formatted = format_qc_value(self.instance.value, test.formatting)
                 self.fields["value"].widget.attrs['data-formatted'] = formatted
+        elif test_type in models.STRING_TYPES:
+            self.fields['string_value'].widget = Input({'maxlength': 20000})
         else:
             self.fields["value"].widget = NumberInput(attrs={"step": "any"})
 
@@ -140,7 +141,7 @@ class TestInstanceWidgetsMixin(object):
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
-    string_value = forms.CharField(required=False, validators=[MaxLengthValidator(models.MAX_STRING_VAL_LEN)])
+    string_value = forms.CharField(required=False)
 
     skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))

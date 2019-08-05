@@ -557,7 +557,9 @@ class CompositePerformer:
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
-        self.composite_tests = {x.slug: x.calculation_procedure for x in self.all_tests if x.type in models.COMPOSITE_TYPES}
+        self.composite_tests = {
+            x.slug: x.calculation_procedure for x in self.all_tests if x.type in models.COMPOSITE_TYPES
+        }
 
     def set_test_types(self):
         """retrieve calculation procs for all composite tests"""

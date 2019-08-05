@@ -3,7 +3,7 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
 
 		//(de)select checkboxes for child tests when user clicks on header checkbox
 		$("input.test-selected-toggle").on("change", function (e) {
-			$(this).closest("table").find("input.test-selected").prop("checked", $(this).is(":checked"))
+			$(this).closest("table").find("input.test-selected").prop("checked", $(this).is(":checked"));
 		});
 
 		$("#test-list-info-toggle").click(function () {
@@ -19,11 +19,18 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
 
 		$('.qa-showcmt > a.revealcomment').click(function () {
 			var this_row = $(this).parent().parent();
-			var comment_row = this_row.next();
+			var comment_row = this_row.next('.qa-comment');
 			comment_row.toggle('fast');
 			comment_row.find('.comment-bar').slideToggle('fast');
 			comment_row.find('.comment-bar').toggleClass('in');
 			this_row.find('.comment-bar').toggleClass('in');
+			return false;
+		});
+
+		$('a.revealtext').click(function () {
+			var this_row = $(this).parent().parent().parent();
+			var comment_row = this_row.nextAll(".qa-text-display").eq(0);
+			comment_row.toggle('fast');
 			return false;
 		});
 
@@ -47,10 +54,10 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
                     $(this).css(
                         'background-color',
                         lightenDarkenColor(rgbaStringToArray($(this).css('background-color')), -15)
-                    )
+                    );
                 },
                 function () {
-                    $(this).css('background-color', $(this).attr('data-bgcolour'))
+                    $(this).css('background-color', $(this).attr('data-bgcolour'));
                 }
             );
         });

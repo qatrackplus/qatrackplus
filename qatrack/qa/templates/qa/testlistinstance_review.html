@@ -300,7 +300,8 @@
                                                             {% if test.is_upload %}
                                                                 {{ti.value_display|safe|truncatechars_html:9}}
                                                             {% else %}
-                                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}} diff from reference{% endif %}">
+                                                              {% with vd=ti.value_display %}
+                                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{vd|slice:"100"}}{% else %}{{ti.diff_display}} diff from reference{% endif %}">
                                                                     {% with ti.pass_fail as status %}
                                                                         {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
                                                                             {% if status == 'tolerance' %}
@@ -314,8 +315,13 @@
                                                                             {% endif %}
                                                                         {% endif %}
                                                                     {% endwith %}
-                                                                    {{ti.value_display|safe}}
+                                                                    {% if vd|length > 100 %}
+                                                                      <a href="#!" style="color: white" class="revealtext" title="{{ vd|slice:"100" }}...Click to show full text"><i class="fa fa-book"></i></a>
+                                                                    {% else %}
+                                                                      {{ti.value_display|safe}}
+                                                                    {% endif %}
                                                                 </span>
+                                                              {% endwith %}
                                                             {% endif %}
                                                         </td>
                                                         <td class="review-ref">
@@ -362,6 +368,15 @@
                                                                         {{ ti.comment }}
                                                                     </div>
                                                                 </div>
+                                                            </td>
+                                                        </tr>
+                                                    {% endif %}
+                                                    {% if ti.string_value|length > 100 %}
+                                                        <tr class="qa-text-display no-hover row-{{ ti_form.prefix }}">
+                                                            <td colspan="{% qa_table_colspan perms %}"  class="">
+                                                              <pre style="">
+                                                                {{ ti.value_display }}
+                                                              </pre>
                                                             </td>
                                                         </tr>
                                                     {% endif %}
