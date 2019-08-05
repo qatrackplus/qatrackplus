@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.files.base import ContentFile
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -162,9 +162,14 @@ class CompositeUtils:
 
 def get_context_refs_tols(unit, tests):
 
+    if isinstance(tests, QuerySet):
+        ids = tests.values_list("id")
+    else:
+        ids = [x.id for x in tests]
+
     utis = models.UnitTestInfo.objects.filter(
         unit=unit,
-        test_id__in=tests.values_list("id"),
+        test_id__in=ids,
         active=True,
     ).select_related("reference", "test", "tolerance",).values(
         "test__slug",
@@ -474,7 +479,7 @@ class CompositePerformer:
 
         try:
             self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
-            self.all_tests = self.test_list.all_tests()
+            self.all_tests = list(self.test_list.all_tests())
         except (KeyError, models.TestList.DoesNotExist):
             return {"success": False, "errors": ["Invalid or missing test_list_id"]}
 
@@ -483,6 +488,7 @@ class CompositePerformer:
         except (KeyError, Unit.DoesNotExist):
             return {"success": False, "errors": ["Invalid or missing unit_id"]}
 
+        self.set_test_types()
         self.set_formatters()
 
         self.set_composite_test_data()
@@ -547,22 +553,15 @@ class CompositePerformer:
 
     def set_formatters(self):
         """Set formatters for tests where applicable"""
-        tests = self.all_tests.filter(
-            type__in=models.NUMERICAL_TYPES,
-        ).exclude(
-            formatting=""
-        ).values_list("slug", "formatting")
-
-        self.formatters = dict(tests)
+        self.formatters = {x.slug: x.formatting for x in self.all_tests if x.type in models.NUMERICAL_TYPES}
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
+        self.composite_tests = {x.slug: x.calculation_procedure for x in self.all_tests if x.type in models.COMPOSITE_TYPES}
 
-        composite_tests = self.all_tests.filter(
-            type__in=models.COMPOSITE_TYPES,
-        ).values_list("slug", "calculation_procedure")
-
-        self.composite_tests = dict(composite_tests)
+    def set_test_types(self):
+        """retrieve calculation procs for all composite tests"""
+        self.test_types = {x.slug: x.type for x in self.all_tests}
 
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
@@ -603,7 +602,15 @@ class CompositePerformer:
 
         for slug, val in values.items():
             self.context_keys.append(slug)
-            if slug not in self.composite_tests:
+            if self.test_types[slug] in models.DATE_TYPES:
+                has_time = self.test_types[slug] == models.DATETIME
+                fmt = "%Y-%m-%d %H:%M:%S" if has_time else "%Y-%m-%d"
+                try:
+                    dt = timezone.datetime.strptime(val, fmt)
+                    self.calculation_context[slug] = dt if has_time else dt.date()
+                except:  # noqa: E722
+                    self.calculation_context[slug] = None
+            elif slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
     def set_dependencies(self):

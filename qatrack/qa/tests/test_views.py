@@ -539,6 +539,57 @@ class TestComposite(TestCase):
         }
         self.assertDictEqual(values, expected)
 
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_date_composite(self):
+
+        td1 = utils.create_test(name="test_date_1", test_type=models.DATE)
+        td2 = utils.create_test(name="test_date_2", test_type=models.DATETIME)
+        tcd = utils.create_test(name="test_date_c", test_type=models.COMPOSITE)
+        tcd.calculation_procedure = "result = (test_date_2.date() - test_date_1).total_seconds()"
+        tcd.save()
+        for t in [td1, td2, tcd]:
+            utils.create_test_list_membership(self.test_list, t)
+            utils.create_unit_test_info(test=t, unit=self.unit)
+
+        data = {
+            'tests': {
+                "testc": "",
+                "test1": 1,
+                "test2": 2,
+                "test_date_1": "2019-08-01",
+                "test_date_2": "2019-08-02 23:45:00",
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 3.0,
+                    "formatted": "3.0",
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+                "test_date_c": {
+                    "value": 24*60*60,
+                    "formatted": "8.6e+4",
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                }
+            },
+            "success": True
+        }
+        self.assertDictEqual(values, expected)
+
     def test_composite_with_formatting(self):
 
         self.tc.formatting = "%.3E"

@@ -66,6 +66,25 @@
                     {{form.string_value}}
                     <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-xs btn-flat">Upload</a>
                 </span>
+            {% elif test.is_date or test.is_datetime %}
+              <div class="input-group">
+                {{ form.string_value }}
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-flat btn-xs" title="toggle" data-toggle>
+                    {% if test.is_datetime %}
+                      <i class="fa fa-stack fa-fw qa-date-pick">
+                        <i class="fa fa-calendar fa-stack-custom-main"></i>
+                        <i class="fa fa-clock-o fa-stack-custom-sub upper-1"></i>
+                      </i>
+                    {% else %}
+                      <i class="fa fa-calendar fa-fw qa-date-pick"></i>
+                    {% endif %}
+                  </button>
+                  <button type="button" class="btn btn-flat btn-xs qa-date-clear" title="toggle" data-clear>
+                    <i class="fa fa-close"></i>
+                  </button>
+                </span>
+              </div>
             {% elif test.is_string_type %}
                  <div>{{form.string_value}}</div>
             {% else %}

@@ -215,6 +215,30 @@ class TestTestListInstanceAPI(APITestCase):
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
         assert tic.value == self.data['tests']['test1']['value'] + self.data['tests']['test2']['value']
 
+    def test_create_date_composite(self):
+        """
+        Add a date composite test to our test list.  Submitting without data
+        included should result in it being calculated.
+        """
+
+        td1 = utils.create_test(name="test_date_1", test_type=models.DATE)
+        td2 = utils.create_test(name="test_date_2", test_type=models.DATETIME)
+        tcd = utils.create_test(name="test_date_c", test_type=models.COMPOSITE)
+        tcd.calculation_procedure = "result = (test_date_2.date() - test_date_1).total_seconds()"
+        tcd.save()
+        for t in [td1, td2, tcd]:
+            utils.create_test_list_membership(self.test_list, t)
+
+        self.data['tests']['test_date_1'] = {'value': "2019-08-01"}
+        self.data['tests']['test_date_2'] = {'value': "2019-08-02 23:45:00"}
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 3
+        tic = models.TestInstance.objects.get(unit_test_info__test=tcd)
+        assert tic.value == 86400
+
     def test_create_composite_invalid_proc(self):
         """
         An invalid calculation procedure should result in an error

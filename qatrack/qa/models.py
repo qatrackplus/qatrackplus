@@ -32,10 +32,13 @@ MULTIPLE_CHOICE = "multchoice"
 STRING = "string"
 UPLOAD = "upload"
 STRING_COMPOSITE = "scomposite"
+DATE = "date"
+DATETIME = "datetime"
 
 NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
-STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, )
+STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, DATE, DATETIME)
 COMPOSITE_TYPES = (COMPOSITE, STRING_COMPOSITE,)
+DATE_TYPES = (DATE, DATETIME,)
 CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
 NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
 
@@ -45,6 +48,8 @@ TEST_TYPE_CHOICES = (
     (MULTIPLE_CHOICE, "Multiple Choice"),
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
+    (DATE, "Date"),
+    (DATETIME, "Date & Time"),
     (STRING, "String"),
     (STRING_COMPOSITE, "String Composite"),
     (UPLOAD, "File Upload"),
@@ -788,6 +793,14 @@ class Test(models.Model, TestPackMixin):
     def is_upload(self):
         """Return whether or not this is a boolean test"""
         return self.type == UPLOAD
+
+    def is_date(self):
+        """Return whether or not this is a date test"""
+        return self.type == DATE
+
+    def is_datetime(self):
+        """Return whether or not this is a datetime test"""
+        return self.type == DATETIME
 
     def is_boolean(self):
         """Return whether or not this is a boolean test"""

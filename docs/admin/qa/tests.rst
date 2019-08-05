@@ -121,6 +121,14 @@ QATrack+ currently supports 8 different test types as outlined below.
    than a numerical value. Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.
 
+#. **Date** Allows the user to use a date picker to select a calendar date.
+   Test values will be coerced to Python datetime.date objects in compsite
+   calculations contexts.
+
+#. **Date & Time** Allow the user to use a date picker to select a calendar
+   date and time Test values will be coerced to Python datetime.datetime
+   objects in compsite calculations contexts.
+
 #. **Upload** A test that allows you to upload an arbitrary file and process it
    with a Python snippet.  Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.

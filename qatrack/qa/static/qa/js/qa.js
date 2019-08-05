@@ -1,4 +1,9 @@
+(function(){
+
 "use strict";
+
+/* globals jQuery, window, QAUtils, require, document */
+
 require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'inputmask', 'jquery-ui', 'comments', 'flatpickr'], function ($, _, moment, Dropzone, autosize) {
     var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
 
@@ -158,7 +163,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             return new Status(status,null,message);
         };
 
-        this.check_upload = function(value){
+        this.check_done = function(value){
             return value ? DONE : NOT_DONE;
         };
 
@@ -212,11 +217,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
         this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_multi;
         this.check_dispatch[QAUtils.STRING]=this.check_multi;
-        this.check_dispatch[QAUtils.UPLOAD]=this.check_upload;
+        this.check_dispatch[QAUtils.DATE]=this.check_done;
+        this.check_dispatch[QAUtils.DATETIME]=this.check_done;
+        this.check_dispatch[QAUtils.UPLOAD]=this.check_done;
 
         this.calculate_diff = function(value){
             if (self.tolerance.type === QAUtils.PERCENT){
-                return 100.*(value-self.reference.value)/self.reference.value;
+                return 100.0*(value-self.reference.value)/self.reference.value;
             }
             return value - self.reference.value;
         };
@@ -227,7 +234,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 return "(" + diff.toFixed(1)+"%)";
             }
             return "(" + diff.toFixed(2)+")";
-        }
+        };
 
     }
 
@@ -235,6 +242,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         var self = this;
         this.initialized = false;
         this.test_info = test_info;
+        var tt = this.test_info.test.type;
         this.row = $(row);
         this.prefix = this.row.attr('data-prefix');
         this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not("[name$=user_attached]");
@@ -273,7 +281,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             }
         });
 
-        var self = this;
         self.rows = $('.row-' + self.prefix);
         self.rows.hover(
             function() {
@@ -312,7 +319,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         });
         this.set_comment_icon = function(){
             self.comment_icon.removeClass();
-            if ( $.trim(self.comment_box.val()) != ''){
+            if ( $.trim(self.comment_box.val()) !== ''){
                 self.comment_icon.addClass("fa fa-commenting");
             }else{
                 self.comment_icon.addClass("fa fa-commenting-o");
@@ -337,6 +344,29 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         });
 
         this.value = null;
+
+        this.date_picker = null;
+        if (tt === "date" || tt === "datetime"){
+            var has_time = tt === "datetime";
+            this.date_picker = this.inputs.flatpickr({
+                enableTime: has_time,
+                time_24hr: true,
+                minuteIncrement: 1,
+                enableSeconds: true,
+                dateFormat: has_time ? "Y-m-d H:i:S" : "Y-m-d",
+                altInput: true,
+                altFormat: has_time ? "d-m-Y H:i:S" : "d-m-Y"
+            });
+
+            this.inputs.parent().find(".qa-date-clear").click(function(){
+                self.date_picker.clear();
+            });
+
+            this.inputs.parent().find(".qa-date-pick").click(function(){
+                self.date_picker.open();
+            });
+
+        }
 
         this.inputs.change(function(){
             self.update_value_from_input();
@@ -364,7 +394,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     self.inputs[0].checked = value === 0;
                     self.inputs[1].checked = !self.inputs[0].checked;
                 }
-            }else if (tt=== QAUtils.STRING || tt === QAUtils.MULTIPLE_CHOICE || tt === QAUtils.STRING_COMPOSITE){
+            }else if (
+                tt === QAUtils.STRING ||
+                tt === QAUtils.MULTIPLE_CHOICE ||
+                tt === QAUtils.STRING_COMPOSITE ||
+                tt === QAUtils.DATE ||
+                tt === QAUtils.DATETIME
+            ){
                 self.inputs.val(value);
             }else if (tt === QAUtils.UPLOAD){
                 if (_.isNull(value)){
@@ -414,7 +450,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     if (att.is_image){
                         self.display_image(att);
                     }
-                })
+                });
 
             }
 
@@ -464,7 +500,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                             }else{
                                 self.set_value(result);
                                 self.status.addClass("btn-success").text("Success");
-                                self.status.attr("title", result['url']);
+                                self.status.attr("title", result.url);
                                 if (window.console){
                                     console.log(result);
                                 }
@@ -481,7 +517,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     });
                 }
 
-            }else if (tt === QAUtils.STRING){
+            }else if (tt === QAUtils.STRING || tt === QAUtils.DATE || QAUtils.DATETIME){
                 self.value = self.inputs.val();
             }else if (tt === QAUtils.CONSTANT){
                 self.value = parseFloat(self.inputs.val());
@@ -713,11 +749,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         /***************************************************************/
         //set the intitial values, tolerances & refs for all of our tests
         this.initialize = function(){
-            var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e)});
+            var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e);});
             self.test_list_id = $("#test-list-id").val();
             self.unit_id = $("#unit-id").val();
-            self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1])});
-            self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug});
+            self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1]);});
+            self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug;});
             self.tests_by_slug = _.zipObject(self.slugs,self.test_instances);
             self.composites = _.filter(self.test_instances,function(ti){return ti.test_info.test.type === QAUtils.COMPOSITE || ti.test_info.test.type === QAUtils.STRING_COMPOSITE;});
             self.attachInput.on("change", function(){
@@ -737,8 +773,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 return;
             }
 
-            var cur_values = _.map(self.test_instances,function(ti){return ti.value;});
-            var qa_values = _.zipObject(self.slugs,cur_values);
+            var cur_values = _.map(self.test_instances, function(ti){return ti.value;});
+            var qa_values = _.zipObject(self.slugs, cur_values);
             var meta = get_meta_data();
             var comments = get_comments();
 
@@ -808,7 +844,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
         this.has_failing = function(){
             return _.filter(self.test_instances, function(ti){
-                    return ti.test_status === QAUtils.ACTION
+                    return ti.test_status === QAUtils.ACTION;
                 }).length > 0;
         };
 
@@ -851,29 +887,30 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var visible_user_inputs = user_inputs.filter(":visible");
             var to_focus;
+            var idx;
             //rather than submitting form on enter, move to next value
             if (e.which == QAUtils.KC_ENTER  || e.which == QAUtils.KC_DOWN ) {
-                var idx = visible_user_inputs.index(this);
+                idx = visible_user_inputs.index(this);
 
                 if (idx == visible_user_inputs.length - 1) {
                     to_focus= visible_user_inputs.first();
                 } else {
                     to_focus = visible_user_inputs[idx+1];
                 }
-                to_focus.focus()
+                to_focus.focus();
                 if (to_focus.type === "text" || to_focus.type === "number"){
                     to_focus.select();
                 }
                 return false;
             }else if (e.which == QAUtils.KC_UP ){
-                var idx = visible_user_inputs.index(this);
+                idx = visible_user_inputs.index(this);
 
-                if (idx == 0) {
+                if (idx === 0) {
                     to_focus = visible_user_inputs.last();
                 } else {
                     to_focus = visible_user_inputs[idx-1];
                 }
-                to_focus.focus()
+                to_focus.focus();
                 if (to_focus.type === "text" || to_focus.type === "number"){
                     to_focus.select();
                 }
@@ -1227,3 +1264,5 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
     });
 });
+
+})(); /* use strict IIFE */

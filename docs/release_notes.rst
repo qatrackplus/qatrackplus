@@ -60,6 +60,10 @@ Details of the v0.3.1 release
   allow users to submit ServiceEvents without a ServiceArea set explicitly.
 
 
+* New :ref:`Date and Date & Time test types <qa_tests>` have been added to
+  allow users to select dates/times with a calendar widget.
+
+
 Deprecations
 ............
 
