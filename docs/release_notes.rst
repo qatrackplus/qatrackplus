@@ -64,15 +64,12 @@ Details of the v0.3.1 release
   allow users to select dates/times with a calendar widget.
 
 
-Deprecations
-............
+Deprecations & Discontinuations
+...............................
 
-This will be the last version of QATrack+ to support Python 3.4.  Support for
-Python versions will include Python 3.6 & Python 3.7.  This will allow us to
-take advantage of a number of new features and performance improvements in
-recent versions of Python.  If you are currently on Python 3.4 or Python 3.5,
-keep in mind you will need to upgrade to a more recent Python version for
-future releases.
+* Python 3.4: As of March 2019, Python 3.4 is no longer receiving updates and
+  therefore QATrack+ will no longer be supporting Python 3.4 installations.
+
 
 
 QATrack+ v0.3.0.15 Release Notes

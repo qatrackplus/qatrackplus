@@ -38,7 +38,6 @@ urlpatterns = [
     url(r'^servicelog/', include('qatrack.service_log.urls')),
     url(r'^parts/', include('qatrack.parts.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
-    url(r'^reports/', include('explorer.urls')),
 
     # Uncomment the next line to enable the admin:
     path(r'admin/', admin.site.urls),
@@ -51,6 +50,9 @@ urlpatterns = [
     url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
     url(r'^api/', include('qatrack.api.urls')),
 ]
+
+if settings.USE_SQL_REPORTS:
+    urlpatterns.append(url(r'^reports/', include('explorer.urls')),)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

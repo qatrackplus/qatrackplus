@@ -570,7 +570,7 @@ def EXPLORER_PERMISSION_VIEW(user):
     return user.has_perm("qa.can_run_sql_reports")
 
 
-if os.path.exists('/root/.is_inside_docker'):
+if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
     from .docker_settings import *  # NOQA
 
 # ------------------------------------------------------------------------------
@@ -620,7 +620,7 @@ SELENIUM_USE_CHROME = False  # Set to True to use Chrome instead of FF (requires
 SELENIUM_CHROME_PATH = ''  # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
 SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
 
-if any(['py.test' in v for v in sys.argv]):
+if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
     DATABASES.pop('readonly', None)
     from .test_settings import *  # noqa
 
@@ -635,7 +635,7 @@ if USE_SQL_REPORTS:
     ]
 
     # use default database when testing
-    if any('py.test' in arg for arg in sys.argv):
+    if any(('py.test' in arg or 'pytest' in arg) for arg in sys.argv):
         EXPLORER_CONNECTIONS = {'Default': 'default'}
         EXPLORER_DEFAULT_CONNECTION = 'default'
     elif 'readonly' not in DATABASES:
