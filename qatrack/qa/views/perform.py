@@ -518,6 +518,11 @@ class CompositePerformer:
 
                 if result in (numpy.nan, numpy.inf):
                     raise ValueError("%s has a result of '%s'" % (slug, str(result)))
+                else:
+                    try:
+                        json.dumps(result)  # ensure result is JSON serializable
+                    except TypeError as e:
+                        raise ValueError("%s failed with error: %s." % (slug, str(e)))
 
                 formatted = utils.format_qc_value(result, self.formatters.get(slug))
 
