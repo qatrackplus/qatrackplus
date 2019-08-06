@@ -510,6 +510,7 @@ class CompositePerformer:
         for slug in self.calculation_order:
             raw_procedure = self.composite_tests[slug]
             procedure = process_procedure(raw_procedure)
+            tb_limit = 5
             try:
                 code = compile(procedure, "__QAT+COMP_%s" % slug, "exec")
                 exec(code, self.calculation_context)
@@ -520,7 +521,12 @@ class CompositePerformer:
                     raise ValueError("%s has a result of '%s'" % (slug, str(result)))
                 else:
                     try:
+                        # since the json test is happening in our code, we
+                        # don't want to send full traceback information.
+                        # instead, limit to not JSON serializable error
+                        tb_limit = 0
                         json.dumps(result)  # ensure result is JSON serializable
+                        tb_limit = 5
                     except TypeError as e:
                         raise ValueError("%s failed with error: %s." % (slug, str(e)))
 
@@ -535,7 +541,9 @@ class CompositePerformer:
                 }
                 self.calculation_context[slug] = result
             except Exception:
-                msg = traceback.format_exc(limit=5, chain=True).split("__QAT+COMP_")[-1].replace("<module>", slug)
+                msg = traceback.format_exc(
+                    limit=tb_limit, chain=True
+                ).split("__QAT+COMP_")[-1].replace("<module>", slug)
                 results[slug] = {
                     'value': None,
                     'error': "Invalid Test Procedure: %s" % msg,
