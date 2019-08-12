@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.templatetags.static import static as static_url
 from django.urls import path
 from django.views.generic.base import RedirectView
+from django.views.i18n import JavaScriptCatalog
 
 from qatrack.qatrack_core import views
 
@@ -50,6 +51,11 @@ urlpatterns = [
     url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
     url(r'^api/', include('qatrack.api.urls')),
 ]
+
+js_info_dict = {
+    'packages': ('recurrence', ),
+}
+urlpatterns += [url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict)]
 
 if settings.USE_SQL_REPORTS:
     urlpatterns.append(url(r'^reports/', include('explorer.urls')),)
