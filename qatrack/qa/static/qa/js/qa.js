@@ -520,8 +520,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         }
                     });
                 }
-
-            }else if (tt === QAUtils.STRING || tt === QAUtils.DATE || QAUtils.DATETIME){
+            }else if (tt === QAUtils.STRING || tt === QAUtils.DATE || tt === QAUtils.DATETIME){
                 self.value = self.inputs.val();
             }else if (tt === QAUtils.CONSTANT){
                 self.value = parseFloat(self.inputs.val());

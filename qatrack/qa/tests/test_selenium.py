@@ -616,4 +616,18 @@ class TestPerformQC(BaseQATests):
         self.login()
         self.open(self.url)
         assert len(self.driver.find_elements_by_css_selector(".qa-status.btn-danger")) == 0
-        assert len(self.driver.find_elements_by_class_name(".qa-status.btn-info")) == 3
+
+    def test_perform_ok(self):
+        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        self.login()
+        self.open(self.url)
+        inputs = self.driver.find_elements_by_class_name("qa-input")[:3]
+        inputs[0].send_keys(1)
+        inputs[1].send_keys(2)
+        inputs[1].send_keys(Keys.TAB)
+        time.sleep(0.2)
+        assert int(float(inputs[2].get_attribute("value"))) == 5
+        assert models.TestListInstance.objects.count() == 0
+        self.driver.find_element_by_id("submit-qa").click()
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        assert models.TestListInstance.objects.count() == 1
