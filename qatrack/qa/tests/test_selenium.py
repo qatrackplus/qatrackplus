@@ -1,28 +1,19 @@
-from contextlib import contextmanager
-from functools import wraps
 import time
 
 from django.conf import settings
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test.testcases import LiveServerThread, QuietWSGIRequestHandler
-from django.core.servers.basehttp import WSGIServer
+from django.contrib.auth.models import Permission
+from django.urls import reverse
 from django.utils import timezone
 import pytest
-from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.remote.command import Command
-from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as e_c
-from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.support.wait import WebDriverWait
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
 from qatrack.qa.tests import utils
+from qatrack.qatrack_core.tests.live import SeleniumTests
 from qatrack.service_log.tests import utils as sl_utils
 
 objects = {
@@ -34,64 +25,55 @@ objects = {
         'slug': 'testCategory',
         'description': 'test test test test'
     },
-    'Tests': [
-        {
-            'test_type': models.SIMPLE,
-            'name': 'simple',
-            'choices': None,
-            'constant_value': None,
-            'procedure': None
-        },
-        {
-            'test_type': models.BOOLEAN,
-            'name': 'boolean',
-            'choices': None,
-            'constant_value': None,
-            'procedure': None
-        },
-        {
-            'test_type': models.MULTIPLE_CHOICE,
-            'name': 'multchoice',
-            'choices': '1,2,3,4,5',
-            'constant_value': None,
-            'procedure': None
-        },
-        {
-            'test_type': models.CONSTANT,
-            'name': 'constant',
-            'choices': None,
-            'constant_value': '23.23',
-            'procedure': None
-        },
-        {
-            'test_type': models.COMPOSITE,
-            'name': 'composite',
-            'choices': None,
-            'constant_value': None,
-            'procedure': 'result = constant * simpleNumeric'
-        },
-        {
-            'test_type': models.STRING,
-            'name': 'string',
-            'choices': None,
-            'constant_value': None,
-            'procedure': None
-        },
-        {
-            'test_type': models.STRING_COMPOSITE,
-            'name': 'scomposite',
-            'choices': None,
-            'constant_value': None,
-            'procedure': 'result = string + " composite"'
-        },
-        {
-            'test_type': models.UPLOAD,
-            'name': 'upload',
-            'choices': None,
-            'constant_value': None,
-            'procedure': 'result = FILE[0]'
-        }
-    ],
+    'Tests': [{
+        'test_type': models.SIMPLE,
+        'name': 'simple',
+        'choices': None,
+        'constant_value': None,
+        'procedure': None
+    }, {
+        'test_type': models.BOOLEAN,
+        'name': 'boolean',
+        'choices': None,
+        'constant_value': None,
+        'procedure': None
+    }, {
+        'test_type': models.MULTIPLE_CHOICE,
+        'name': 'multchoice',
+        'choices': '1,2,3,4,5',
+        'constant_value': None,
+        'procedure': None
+    }, {
+        'test_type': models.CONSTANT,
+        'name': 'constant',
+        'choices': None,
+        'constant_value': '23.23',
+        'procedure': None
+    }, {
+        'test_type': models.COMPOSITE,
+        'name': 'composite',
+        'choices': None,
+        'constant_value': None,
+        'procedure': 'result = constant * simpleNumeric'
+    }, {
+        'test_type': models.STRING,
+        'name': 'string',
+        'choices': None,
+        'constant_value': None,
+        'procedure': None
+    }, {
+        'test_type': models.STRING_COMPOSITE,
+        'name': 'scomposite',
+        'choices': None,
+        'constant_value': None,
+        'procedure': 'result = string + " composite"'
+    }, {
+        'test_type': models.UPLOAD,
+        'name': 'upload',
+        'choices': None,
+        'constant_value': None,
+        'procedure': 'result = FILE[0]'
+    }],
     'TestList': {
         'name': 'TestTestList'
     },
@@ -113,9 +95,7 @@ objects = {
         'due_interval': '3',
         'window_end': '4'
     },
-    'UnitTestCollection': {
-
-    },
+    'UnitTestCollection': {},
     'absoluteTolerance': {
         'act_low': '-2',
         'tol_low': '-1',
@@ -151,144 +131,27 @@ objects = {
             'requiresApproval': False
         }
     },
-
 }
 
 
-# From http://stackoverflow.com/a/20559494
-def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
-    def outer(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            assert max_retries > 0
-            x = max_retries
-            while x:
-                try:
-                    return func(*args, **kwargs)
-                except:
-                    x -= 1
-                    if x == 0 and reraise:
-                        raise
-                if sleep_time is not None:
-                    time.sleep(sleep_time)
-        return wrapper
-    return outer
+class BaseQATests(SeleniumTests):
 
+    def setUp(self):
 
-@retry_if_exception(WebDriverException, 5, sleep_time=1)
-def WebElement_click(self):
-    """
-    Monkey patches the element click command to work around issue with
-    later versions of webdrivers that won't click on an element if it
-    is not in view
-    """
-    self.parent.execute_script("arguments[0].scrollIntoView();", self)
-    return self._execute(Command.CLICK_ELEMENT)
-WebElement.click = WebElement_click  # noqa: E305
+        self.password = 'password'
+        self.user = create_user(pwd=self.password)
 
+    def login(self):
+        self.open("/accounts/login/")
+        self.driver.find_element_by_id('id_username').send_keys(self.user.username)
+        self.driver.find_element_by_id('id_password').send_keys(self.password)
+        self.driver.find_element_by_css_selector('button').click()
 
-orig_send_keys = WebElement.send_keys
-@retry_if_exception(WebDriverException, 5, sleep_time=1)  # noqa: E302
-def WebElement_send_keys(self, keys):
-    """Monky patch send_keys to ensure element is in view"""
-    self.parent.execute_script("arguments[0].scrollIntoView();", self)
-    return orig_send_keys(self, keys)
-WebElement.send_keys = WebElement_send_keys  # noqa: E305
-
-
-# Following two classes are trying to work around this issue:
-# https://code.djangoproject.com/ticket/29062#no2
-class LiveServerSingleThread(LiveServerThread):
-    """Runs a single threaded server rather than multi threaded. Reverts https://github.com/django/django/pull/7832"""
-
-    def __create_server(self):
-        return WSGIServer((self.host, self.port), QuietWSGIRequestHandler, allow_reuse_address=False)
-
-
-from django.contrib.staticfiles.handlers import StaticFilesHandler
-class StaticLiveServerSingleThreadedTestCase(StaticLiveServerTestCase):
-    "A thin sub-class which only sets the single-threaded server as a class"
-    server_thread_class = LiveServerSingleThread
-
-    static_handler = StaticFilesHandler
-
-@pytest.mark.selenium
-class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
-        use_chrome = getattr(settings, 'SELENIUM_USE_CHROME', False)
-
-        if use_virtual_display:
-            # Make sure xvfb is installed
-            from pyvirtualdisplay import Display
-            cls.display = Display(visible=0, size=(1920, 1080))
-            cls.display.start()
-        else:
-            cls.display = None
-
-        if use_chrome:
-            chrome_driver_path = getattr(settings, 'SELENIUM_CHROME_PATH', '')
-            cls.driver = webdriver.Chrome(executable_path=chrome_driver_path)
-        else:
-            ff_profile = FirefoxProfile()
-            cls.driver = webdriver.Firefox(ff_profile)
-
-        orig_find_element = cls.driver.find_element
-
-        @retry_if_exception(WebDriverException, 5, sleep_time=1)
-        def WebElement_find_element(*args, **kwargs):
-            """Monky patch find element to allow retries"""
-            return orig_find_element(*args, **kwargs)
-        cls.driver.find_element = WebElement_find_element
-
-        cls.driver.set_page_load_timeout(5)
-        cls.driver.implicitly_wait(5)
-
-        cls.maximize()
-        cls.wait = WebDriverWait(cls.driver, 5)
-
-        super(SeleniumTests, cls).setUpClass()
-
-    @classmethod
-    def maximize(cls):
-
-        if getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False):
-            for i in range(5):
-                try:
-                    cls.driver.maximize_window()
-                    return
-                except WebDriverException:
-                    time.sleep(1)
-
-        cls.driver.set_window_size(1920, 1080)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
-        if cls.display:
-            cls.display.stop()
-        super(SeleniumTests, cls).tearDownClass()
-
-    def load_main(self):
-        self.open("")
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
-    @contextmanager
-    def wait_for_page_load(self, timeout=10):
-        old_page = self.driver.find_element_by_tag_name('html')
-        yield
-        WebDriverWait(self.driver, timeout).until(
-            staleness_of(old_page)
-        )
-
-    @retry_if_exception(Exception, 5, sleep_time=1)
-    def open(self, url):
-        with self.wait_for_page_load():
-            self.driver.execute_script(
-                "window.location.href='%s%s'" % (self.live_server_url, url)
-            )
+    def load_main(self):
+        self.login()
+        self.open("")
 
     def load_admin(self):
         self.open("/admin/")
@@ -298,17 +161,13 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
+
+@pytest.mark.selenium
+class LiveQATests(BaseQATests):
+
     def setUp(self):
 
-        self.password = 'password'
-        self.user = create_user(pwd=self.password)
-
-    def wait_for_success(self):
-        self.wait.until(
-            e_c.presence_of_element_located(
-                (By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]')
-            )
-        )
+        super().setUp()
 
     def test_admin_category(self):
 
@@ -328,7 +187,11 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         self.load_admin()
 
         if not utils.exists('qa', 'Category', 'name', objects['Category']['name']):
-            utils.create_category(name=objects['Category']['name'], slug=objects['Category']['slug'], description=objects['Category']['description'])
+            utils.create_category(
+                name=objects['Category']['name'],
+                slug=objects['Category']['slug'],
+                description=objects['Category']['description']
+            )
 
         self.driver.find_element_by_link_text('Tests').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'ADD TEST')))
@@ -350,7 +213,9 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 self.driver.find_element_by_id('id_constant_value').send_keys('23.23')
             if the_test['procedure']:
                 time.sleep(1)
-                self.driver.find_element_by_css_selector('#calc-procedure-editor > textarea').send_keys(the_test['procedure'])
+                self.driver.find_element_by_css_selector('#calc-procedure-editor > textarea').send_keys(
+                    the_test['procedure']
+                )
                 self.driver.find_element_by_css_selector('.submit-row').click()
 
             # Firefox webdriver being weird with clicks. Had to use javascript here:
@@ -368,7 +233,13 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         for i in range(len(objects['Tests'])):
             the_test = objects['Tests'][i]
             if not utils.exists('qa', 'Test', 'name', the_test['name']):
-                utils.create_test(name=the_test['name'], test_type=the_test['test_type'], choices=the_test['choices'], procedure=the_test['procedure'], constant_value=the_test['constant_value'])
+                utils.create_test(
+                    name=the_test['name'],
+                    test_type=the_test['test_type'],
+                    choices=the_test['choices'],
+                    procedure=the_test['procedure'],
+                    constant_value=the_test['constant_value']
+                )
 
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Test lists')))
         self.driver.find_element_by_link_text('Test lists').click()
@@ -527,7 +398,9 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         # Add multi tolerance
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
         Select(self.driver.find_element_by_id("id_type")).select_by_index(3)
-        self.driver.find_element_by_id('id_mc_pass_choices').send_keys(objects['multiChoiceTolerance']['mc_pass_choices'])
+        self.driver.find_element_by_id('id_mc_pass_choices').send_keys(
+            objects['multiChoiceTolerance']['mc_pass_choices']
+        )
         self.driver.find_element_by_id('id_mc_tol_choices').send_keys(objects['multiChoiceTolerance']['mc_tol_choices'])
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
@@ -542,7 +415,9 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
             if the_test['test_type'] == models.MULTIPLE_CHOICE:
                 if not utils.exists('qa', 'Test', 'name', the_test['name']):
-                    mult_test = utils.create_test(test_type=models.MULTIPLE_CHOICE, choices=the_test['choices'], name=the_test['name'])
+                    mult_test = utils.create_test(
+                        test_type=models.MULTIPLE_CHOICE, choices=the_test['choices'], name=the_test['name']
+                    )
             elif the_test['test_type'] == models.SIMPLE:
                 if not utils.exists('qa', 'Test', 'name', the_test['name']):
                     simp_test = utils.create_test(test_type=models.SIMPLE, name=the_test['name'])
@@ -604,7 +479,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         self.load_main()
 
         # Perform test
-        self.driver.find_element_by_link_text('Choose a Unit to perform QC for').click()
+        self.driver.find_element_by_link_text('Choose a unit to perform QC for').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'TestUnit')))
         self.driver.find_element_by_link_text('TestUnit').click()
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Perform')))
@@ -615,22 +490,42 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         boolean = self.driver.find_element_by_name('form-1-value')
         basic.send_keys('3')
         boolean.click()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "ACT(3.00)")]')))
-        # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[1]/td[5]').text == 'ACT(3.00)')
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "ACT(3.00)")]')
+            )
+        )
+
         basic.send_keys(Keys.BACKSPACE, '2')
         boolean.click()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "TOL(2.00)")]')))
-        # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[1]/td[5]').text == 'TOL(2.00)')
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "TOL(2.00)")]')
+            )
+        )
+
         basic.send_keys(Keys.BACKSPACE, '1')
         boolean.click()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "OK(1.00)")]')))
-        # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[1]/td[5]').text == 'OK(1.00)')
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "OK(0.0%)")]')))
-        # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[13]/td[5]').text == 'OK(0.0%)')
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "OK(1.00)")]')
+            )
+        )
+
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "OK(0.0%)")]')
+            )
+        )
+
         basic.send_keys(Keys.BACKSPACE, '1.06')
         boolean.click()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "ACT(6.0%)")]')))
-        # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[13]/td[5]').text == 'ACT(6.0%)')
+        self.wait.until(
+            e_c.presence_of_element_located(
+                (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "ACT(6.0%)")]')
+            )
+        )
+
         basic.send_keys(Keys.BACKSPACE, '5')
         boolean.click()
         self.wait.until(
@@ -638,7 +533,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "TOL(5.0%)")]')
             )
         )
-        # self.assertTrue(self.driver.find_element_by_xpath('//*[@id="perform-qa-table"]/tbody/tr[13]/td[5]').text == 'TOL(5.0%)')
+
         basic.send_keys(Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE)
         boolean.click()
         # time.sleep(1)
@@ -681,7 +576,44 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         self.driver.find_element_by_xpath('//button[@type = "submit"]').click()
 
         self.wait.until(
-            e_c.presence_of_element_located(
-                (By.XPATH, '//td[contains(text(), "No data available in table")]')
-            )
+            e_c.presence_of_element_located((By.XPATH, '//td[contains(text(), "No data available in table")]'))
         )
+
+
+@pytest.mark.selenium
+class TestPerformQC(BaseQATests):
+
+    def setUp(self):
+
+        super().setUp()
+
+        self.unit = utils.create_unit()
+        self.group = utils.create_group()
+        for p in Permission.objects.all():
+            self.group.permissions.add(p)
+        self.user.groups.add(self.group)
+        self.test_list = utils.create_test_list()
+        self.t1 = utils.create_test(name="test1")
+        self.t2 = utils.create_test(name="test2")
+        self.tc = utils.create_test(name="testc", test_type=models.COMPOSITE)
+        self.tc.calculation_procedure = "result = test1 + test2 + 2"
+        self.tc.save()
+        for t in [self.t1, self.t2, self.tc]:
+            utils.create_test_list_membership(self.test_list, t)
+
+        self.utc = utils.create_unit_test_collection(unit=self.unit, test_collection=self.test_list)
+
+        self.utc.visible_to.add(self.group)
+        self.url = reverse("perform_qa", kwargs={'pk': self.utc.pk})
+        self.status = models.TestInstanceStatus.objects.create(
+            name="foo",
+            slug="foo",
+            is_default=True,
+        )
+
+    def test_ok_on_load(self):
+        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        self.login()
+        self.open(self.url)
+        assert len(self.driver.find_elements_by_css_selector(".qa-status.btn-danger")) == 0
+        assert len(self.driver.find_elements_by_class_name(".qa-status.btn-info")) == 3
