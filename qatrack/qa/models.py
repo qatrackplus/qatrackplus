@@ -51,10 +51,9 @@ TEST_TYPE_CHOICES = (
     (DATE, "Date"),
     (DATETIME, "Date & Time"),
     (STRING, "String"),
-    (STRING_COMPOSITE, "String Composite"),
+    (STRING_COMPOSITE, "String Composite/JSON"),
     (UPLOAD, "File Upload"),
 )
-MAX_STRING_VAL_LEN = 1024
 
 # tolerance types
 ABSOLUTE = "absolute"

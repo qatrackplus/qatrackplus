@@ -33,6 +33,7 @@ import scipy
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -325,6 +326,7 @@ class Upload(JSONResponseMixin, View):
 
     # use html for IE8's sake :(
     content_type = "text/html"
+    json_encoder_class = QATrackJSONEncoder
 
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
@@ -517,7 +519,7 @@ class CompositePerformer:
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
-                if result in (numpy.nan, numpy.inf):
+                if type(result) == float and result in (numpy.nan, numpy.inf):
                     raise ValueError("%s has a result of '%s'" % (slug, str(result)))
                 else:
                     try:
@@ -525,7 +527,7 @@ class CompositePerformer:
                         # don't want to send full traceback information.
                         # instead, limit to not JSON serializable error
                         tb_limit = 0
-                        json.dumps(result)  # ensure result is JSON serializable
+                        json.dumps(result, cls=QATrackJSONEncoder)  # ensure result is JSON serializable
                         tb_limit = 5
                     except TypeError as e:
                         raise ValueError("%s failed with error: %s." % (slug, str(e)))
@@ -675,6 +677,8 @@ class CompositePerformer:
 
 class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+
+    json_encoder_class = QATrackJSONEncoder
 
     def post(self, *args, **kwargs):
         """calculate and return all composite values"""
@@ -1093,7 +1097,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         context["test_list"] = self.test_list
         context["in_progress"] = in_progress
-        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos(), cls=QATrackJSONEncoder)
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
 
@@ -1343,7 +1347,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         )
         self.unit_test_infos = list(sorted(utis, key=lambda x: uti_pks.index(x.pk)))
 
-        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos(), cls=QATrackJSONEncoder)
 
         context['attachments'] = context['test_list'].attachment_set.all(
         ) | self.object.unit_test_collection.tests_object.attachment_set.all()

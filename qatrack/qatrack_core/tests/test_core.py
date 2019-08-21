@@ -4,8 +4,11 @@ from django.contrib.sites.models import Site
 from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
+import numpy as np
+import pandas as pd
 
 from qatrack.qa.tests import utils
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 
 
 class TestLoginViews(TestCase):
@@ -26,3 +29,21 @@ class TestLoginViews(TestCase):
             }, follow=True
         )
         assert "/accounts/reset/done/" in resp.redirect_chain[0]
+
+
+class TestJSONEncoder:
+
+    def test_np_int(self):
+        enc = QATrackJSONEncoder()
+        assert enc.default(np.int8(1)) == 1
+
+    def test_np_array(self):
+        enc = QATrackJSONEncoder()
+        assert enc.default(np.array(range(3))) == [0, 1, 2]
+
+    def test_pd_df(self):
+        enc = QATrackJSONEncoder()
+        d = {'col1': [1, 2], 'col2': [3, 4]}
+        df = pd.DataFrame(data=d)
+        expected = {'col1': {0: 1, 1: 2}, 'col2': {0: 3, 1: 4}}
+        assert enc.default(df) == expected
