@@ -23,7 +23,8 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             if len(password) == 0:
                 return None
 
-            # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
+            if settings.AD_CERT_FILE:
+                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
             if debug:
                 print("\tinitialize...", file=debug)
             l = ldap.initialize(settings.AD_LDAP_URL)
