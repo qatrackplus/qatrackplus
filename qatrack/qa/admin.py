@@ -468,9 +468,22 @@ class SublistInlineFormSet(forms.models.BaseInlineFormSet):
             return {}
 
         children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data["DELETE"]]  # noqa: E501
+        children_with_child = [child for child in children if child.children.exists()]
         if self.instance and self.instance in children:
             raise forms.ValidationError(
-                "A test list can not be its own child. Please remove Sublist ID %d and try again" % (self.instance.pk)
+                "A Test List can not be its own child. Please remove Sublist ID %d and try again" % (self.instance.pk)
+            )
+        elif children_with_child:
+            names = ', '.join(c.name for c in children_with_child)
+            raise forms.ValidationError(
+                "Test Lists can not be nested more than 1 level. "
+                "Test List(s) %s already has(have) a sublist and therefore can't be used as a sublist." % names
+            )
+        elif self.instance and self.instance.sublist_set.exists() and children:
+            raise forms.ValidationError(
+                "This Test List is a Sublist of Test Lists: %s"
+                " and therefore can't have sublists of its own." %
+                ', '.join(self.instance.sublist_set.values_list("parent__name", flat=True))
             )
 
         return self.cleaned_data

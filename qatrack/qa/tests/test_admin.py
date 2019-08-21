@@ -505,7 +505,7 @@ class TestTestListAdmin(TestCase):
 
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2, order=0)
 
-        qa_utils.create_sublist(parent_test_list=self.tl_1)
+        self.sublist = qa_utils.create_sublist(parent_test_list=self.tl_1)
 
         self.url_add = reverse(
             'admin:%s_%s_add' % (qa_models.TestList._meta.app_label, qa_models.TestList._meta.model_name)
@@ -635,6 +635,8 @@ class TestTestListAdmin(TestCase):
     def test_sublist_formset_valid(self):
 
         data = self.data
+        data['children-0-child'] = self.sublist.child.id
+
         formset = inlineformset_factory(
             qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
             fields='__all__'
@@ -648,6 +650,33 @@ class TestTestListAdmin(TestCase):
             fields='__all__'
         )(data=data, queryset=qa_models.Sublist.objects.all(), instance=self.tl_1)
         self.assertFalse(formset.is_valid())
+
+    def test_sublist_nesting_parent(self):
+        """Shouldn't be able to add a sublist that has a sublist of its own"""
+        tl = qa_utils.create_test_list(name="sub")
+        qa_utils.create_sublist(parent_test_list=self.sublist.child, child_test_list=tl)
+        data = self.data
+        formset = inlineformset_factory(
+            qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
+            fields='__all__'
+        )(data=data, queryset=qa_models.Sublist.objects.all(), instance=None)
+        assert not formset.is_valid()
+        assert "Test Lists can not be nested more than 1 level" in formset.non_form_errors()[0]
+
+    def test_sublist_nesting_child(self):
+        """Shouldn't be able to add a sublist when you are a sublist"""
+        tl = qa_utils.create_test_list(name="sub")
+        data = self.data
+        data['children-0-child'] = tl.id
+        formset = inlineformset_factory(
+            qa_models.TestList,
+            qa_models.Sublist,
+            formset=qa_admin.SublistInlineFormSet,
+            fk_name='parent',
+            fields='__all__'
+        )(data=data, queryset=qa_models.Sublist.objects.all(), instance=self.sublist.child)
+        assert not formset.is_valid()
+        assert "This Test List is a Sublist" in formset.non_form_errors()[0]
 
     def test_sublist_duplicate(self):
         data = self.data
