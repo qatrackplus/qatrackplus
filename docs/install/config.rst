@@ -1065,10 +1065,11 @@ General AD Settings
     AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
     AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
-    AD_MEMBERSHIP_REQ = []  # optional list of groups that user must be a part of in order to create account
+    AD_MEMBERSHIP_REQ = []  # Currently not implemented! See issue #360
+                            # optional list of groups that user must be a part of in order to create account
                             # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 
-    AD_CERT_FILE='/path/to/your/cert.txt'
+    AD_CERT_FILE = '/path/to/your/cert.txt'
 
     AD_DEBUG = False  # turn on active directory loggin
     AD_DEBUG_FILE = None  # log file path for debugging AD connection issues

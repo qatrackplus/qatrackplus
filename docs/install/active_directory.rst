@@ -65,11 +65,13 @@ Copy the following lines to your `local_settings.py` file:
     # AD_LDAP_PORT=636
     # AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
 
+    AD_CERT_FILE = None  # AD_CERT_FILE='/path/to/your/cert.txt'
+
     AD_SEARCH_DN = "dc=yourdomain,dc=yourhospital,dc=com"
     AD_NT4_DOMAIN = "YOURDOMAIN"  # Network domain that AD server is part of
 
     AD_SEARCH_FIELDS = ['mail', 'givenName', 'sn', 'sAMAccountName', 'memberOf']
-    AD_MEMBERSHIP_REQ = []
+    AD_MEMBERSHIP_REQ = []  # not implemented. See issue # 360
 
     AD_DEBUG_FILE = "C:/deploy/qatrackplus/logs/ad_log.txt"
     AD_DEBUG = False # set to True and restart QATrack+ CherryPy Service if you need to debug AD Connection

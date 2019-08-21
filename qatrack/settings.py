@@ -353,7 +353,7 @@ AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
 AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_NAME, AD_LU_MEMBER_OF]
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
-# AD_CERT_FILE='/path/to/your/cert.txt'
+AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
 AD_DEBUG_FILE = None
 AD_DEBUG = False
