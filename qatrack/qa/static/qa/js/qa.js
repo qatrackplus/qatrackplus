@@ -913,9 +913,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 } else {
                     to_focus = visible_user_inputs[idx-1];
                 }
-                to_focus.focus();
-                if (to_focus.type === "text" || to_focus.type === "number"){
-                    to_focus.select();
+                if (to_focus){
+                    to_focus.focus();
+                    if (to_focus.type === "text" || to_focus.type === "number"){
+                        to_focus.select();
+                    }
                 }
                 return false;
             }
