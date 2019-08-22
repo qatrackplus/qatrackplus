@@ -41,6 +41,18 @@ class TestJSONEncoder:
         enc = QATrackJSONEncoder()
         assert enc.default(np.array(range(3))) == [0, 1, 2]
 
+    def test_range(self):
+        enc = QATrackJSONEncoder()
+        assert enc.default(range(3)) == [0, 1, 2]
+
+    def test_zip(self):
+        enc = QATrackJSONEncoder()
+        assert enc.default(zip(range(3), range(3))) == [(0, 0), (1, 1), (2, 2)]
+
+    def test_set(self):
+        enc = QATrackJSONEncoder()
+        assert set(enc.default(set(range(3)))) == set(range(3))
+
     def test_pd_df(self):
         enc = QATrackJSONEncoder()
         d = {'col1': [1, 2], 'col2': [3, 4]}
