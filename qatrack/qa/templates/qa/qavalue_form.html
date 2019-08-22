@@ -144,7 +144,7 @@
                         {% endif %}
         {#                {% spaceless %}#}
                             {% if form.unit_test_info.test.description %}
-                                <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
+                                <div class="pre">{{form.unit_test_info.test.description.strip|safe|linebreaks}}</div>
                             {% endif %}
         {#                {% endspaceless%}#}
                         {% for attach in form.unit_test_info.test.attachment_set.all %}

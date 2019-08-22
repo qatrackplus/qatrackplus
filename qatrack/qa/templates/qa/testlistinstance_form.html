@@ -152,14 +152,14 @@
                                         {% for day, display in days %}
                                             {% if day == current_day %}
                                                     <h5><b>Cycle Description: </b></h5>
-                                                    <div>{{unit_test_collection.tests_object.description|safe}}</div>
+                                                    <div>{{unit_test_collection.tests_object.description|safe|linebreaks}}</div>
                                                 </div>
                                                 <div class="col-sm-12 pre text-display">
                                                     <h5><b>Test List Description - {{ display }}: </b></h5>
                                             {% endif %}
                                         {% endfor %}
                                     {% endif %}
-                                    <div>{{test_list.description.strip|safe}}</div>
+                                    <div>{{test_list.description.strip|safe|linebreaks}}</div>
                                 </div>
                             {% endspaceless %}
                         </div>
