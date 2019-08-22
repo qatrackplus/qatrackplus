@@ -59,13 +59,13 @@
 
                                 <select id="test-lists" multiple class="form-control">
                                     {% for tl in test_lists %}
-                                      <option value="{{ tl.pk }}" title="{{ tl.description }}">{{ tl.name }}</option>
+                                      <option value="{{ tl.pk }}" title="{{ tl.description|striptags }}">{{ tl.name }}</option>
                                     {% endfor %}
                                 </select>
 
                                 <select id="tests" multiple class="form-control">
                                     {% for t in tests %}
-                                      <option value="{{ t.pk }}" title="{{ t.description }}">{{ t.name }}</option>
+                                      <option value="{{ t.pk }}" title="{{ t.description|striptags }}">{{ t.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
