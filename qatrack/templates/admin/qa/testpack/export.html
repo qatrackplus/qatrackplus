@@ -6,7 +6,8 @@
 
   <link href="{% static "fontawsome/css/font-awesome.min.css" %}" rel="stylesheet">
   <link href="{% static "css/bootstrap-grid.css" %}" rel="stylesheet">
-  <link href="{% static "css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/jquery.dataTables.min.css" %}" rel="stylesheet">
 {% endblock %}
 
 
@@ -200,12 +201,10 @@
 {% endblock %}
 
 {% block footer %}
-<script type="text/javascript">
-</script>
 
 <script src="{% static "jquery/js/jquery.min.js" %}"></script>
 
-<script src="{% static "js/datatables.min.js" %}"></script>
+<script src="{% static "datatables/1.10/js/datatables.min.js" %}"></script>
 <script src="{% static "js/testpack-export.js" %}"></script>
 
 {% endblock %}

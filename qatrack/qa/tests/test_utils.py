@@ -502,3 +502,20 @@ class TestFormatQCValue:
     @override_settings(DEFAULT_NUMBER_FORMAT="{:foo}")
     def test_invalid_default_fallback(self):
         assert qautils.format_qc_value(1, None) == qautils.to_precision(1, settings.CONSTANT_PRECISION)
+
+
+class TestDateFunctions:
+
+    def test_last_month_dates_jan(self):
+        dt = timezone.datetime(2019, 1, 15, tzinfo=timezone.utc)
+        start, end = qautils.last_month_dates(dt)
+        tz = timezone.get_current_timezone()
+        assert start == tz.localize(timezone.datetime(2018, 12, 1))
+        assert end == tz.localize(timezone.datetime(2018, 12, 31))
+
+    def test_last_month_dates_dec(self):
+        dt = timezone.datetime(2019, 12, 15, tzinfo=timezone.utc)
+        start, end = qautils.last_month_dates(dt)
+        tz = timezone.get_current_timezone()
+        assert start == tz.localize(timezone.datetime(2019, 11, 1))
+        assert end == tz.localize(timezone.datetime(2019, 11, 30))

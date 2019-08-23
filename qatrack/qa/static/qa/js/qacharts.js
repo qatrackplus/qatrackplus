@@ -27,6 +27,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $include_fit = $('#include-fit'),
             $combine_data = $('#combine-data'),
             $relative_diff = $('#relative-diff'),
+            $highlight_flags = $('#highlight-flags'),
+            $highlight_comments = $('#highlight-comments'),
             $control_chart_container = $("#control-chart-container"),
             $review_required = $('#review-required');
 
@@ -451,6 +453,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 fit_data: $include_fit.is(":checked"),
                 combine_data: $combine_data.is(":checked"),
                 relative: $relative_diff.is(":checked"),
+                highlight_comments: $highlight_comments.is(":checked"),
+                highlight_flags: $highlight_flags.is(":checked"),
                 show_events: $show_events.is(':checked'),
                 service_types: $service_type_selector.val(),
                 chart_type: $chart_type.val(),
@@ -597,6 +601,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         test_instance_id: val.test_instance_id,
                         test_list_instance_id: val.test_list_instance.id,
                         test_instance_comment: val.test_instance_comment,
+                        flagged: val.test_list_instance.flagged
                     });
 
                     if (val.reference !== null) {
@@ -686,21 +691,29 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         function circleRadius(dat, idx, series){
             // Use larger circle radius for ti's with comments
-            if (dat.test_instance_comment){
+            var showComment = $highlight_comments.is(":checked") && dat.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && dat.flagged;
+            if (showComment || showFlag){
                 return 5;
             }
             return 4;
         }
 
         function circleStroke(d, i, s) {
-            if (d.test_instance_comment){
+            var showComment = $highlight_comments.is(":checked") && d.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && d.flagged;
+            if (showComment){
                 return "rgb(60, 141, 188)";
+            }else if (showFlag){
+                return "rgb(243, 156, 18)";
             }
             return s[i].parentNode.__data__.color;
         }
 
         function circleStrokeWidth(d, i, s) {
-            if (d.test_instance_comment){
+            var showComment = $highlight_comments.is(":checked") && d.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && d.flagged;
+            if (showComment || showFlag){
                 return 4;
             }
             return 2;
@@ -1733,6 +1746,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                             if (comments){
                                 comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
                             }
+                            if (initiated_data[0].flagged){
+                                comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
+                            }
+
 
                             var tli_initiated_tooltip = d3.select("body")
                                 .append("div")
@@ -1809,6 +1826,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         var rtsqa_comments = rtsqa_data[0].test_instance_comment || "";
                         if (rtsqa_comments){
                             rtsqa_comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + rtsqa_comments + '"></i>';
+                        }
+
+                        if (rtsqa_data[0].flagged){
+                            rtsqa_comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
                         }
 
                         var tli_rtsqa_tooltip = d3.select("body")
@@ -1911,10 +1932,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 var colour = 'rgba(100, 100, 100, 0.2)';
 
-                var comments = tli_data[0].test_instance_comment;
+                var comments = tli_data[0].test_instance_comment || "";
                 if (comments){
-                    //comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="tooltip" title="' + comments + '"></i>';
                     comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
+                }
+                if (tli_data[0].flagged){
+                    comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
                 }
 
                 var tli_tooltip = d3.select("body")
@@ -2266,6 +2289,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             var include_fit = get_filtered_option_values("include_fit", options)[0];
             var combine_data = get_filtered_option_values("combine_data", options)[0];
             var relative_diff = get_filtered_option_values("relative_diff", options)[0];
+            var highlight_flags = get_filtered_option_values("highlight_flags", options)[0];
+            var highlight_comments = get_filtered_option_values("highlight_comments", options)[0];
             var show_events = get_filtered_option_values("show_events", options)[0];
             var inactive_units = get_filtered_option_values('inactive_units', options)[0];
             var inactive_test_lists = get_filtered_option_values('inactive_test_lists', options)[0];
@@ -2295,6 +2320,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             }
             $combine_data.prop('checked', combine_data);
             $relative_diff.prop('checked', relative_diff);
+            $highlight_flags.prop('checked', highlight_flags);
+            $highlight_comments.prop('checked', highlight_comments);
             if (!date_range) {
                 $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(date_format));
                 $date_range.data('daterangepicker').setEndDate(moment().format(date_format));

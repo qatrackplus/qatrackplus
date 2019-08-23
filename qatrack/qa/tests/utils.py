@@ -206,7 +206,7 @@ def create_unit_type(name=None, vendor=None, model="model"):
     return ut
 
 
-def create_unit(name=None, number=None, tipe=None):
+def create_unit(name=None, number=None, tipe=None, site=None):
 
     if name is None:
         name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
@@ -216,10 +216,9 @@ def create_unit(name=None, number=None, tipe=None):
     if tipe is None:
         tipe = create_unit_type()
 
-    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True)
+    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True, site=site)
     u.save()
     u.modalities.add(create_modality())
-    u.save()
     return u
 
 

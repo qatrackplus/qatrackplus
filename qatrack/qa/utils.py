@@ -8,6 +8,7 @@ import tokenize
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db.transaction import atomic
 from django.utils import timezone
 
 
@@ -307,6 +308,15 @@ def month_start_and_end(year, month):
     return start, end
 
 
+def last_month_dates(dt=None):
+    """Return the start and end datetimes of the month before either the input
+    datetime or timezone.now() if dt=None"""
+
+    dt = dt or timezone.now()
+    month, year = (12, dt.year - 1) if dt.month == 1 else (dt.month - 1, dt.year)
+    return month_start_and_end(year, month)
+
+
 def format_qc_value(val, format_str, _try_default=True):
     """Format a value with given format_str first by trying old style "<foo>" %
     (*args)" and then trying new "<foo>".format(*args) style. If both of those
@@ -330,7 +340,7 @@ def format_qc_value(val, format_str, _try_default=True):
     if _try_default and settings.DEFAULT_NUMBER_FORMAT:
         try:
             return format_qc_value(val, settings.DEFAULT_NUMBER_FORMAT, _try_default=False)
-        except:
+        except:  # noqa: E722
             pass
 
     try:
@@ -340,3 +350,46 @@ def format_qc_value(val, format_str, _try_default=True):
         pass
 
     return str(val)
+
+
+@atomic
+def copy_unit_config(from_unit, to_unit):
+    """
+    This function will copy all UnitTestCollection and reference and tolerances
+    from `from_unit` to `to_unit`. If the same TestList(Cycle) is already
+    assigned to the to_unit, that assignment is skipped.  Likewise, if a given
+    UnitTestInfo already exists on the to_unit, the reference and tolerance
+    values won't be updated.
+    """
+
+    from qatrack.qa.models import UnitTestCollection, UnitTestInfo
+
+    existing = list(UnitTestCollection.objects.filter(unit=to_unit).values_list("content_type_id", "object_id"))
+    existing_utis = list(UnitTestInfo.objects.filter(unit=to_unit).values_list("test_id", flat=True))
+    from_utcs = UnitTestCollection.objects.filter(unit=from_unit)
+
+    for utc in from_utcs:
+        if (utc.content_type_id, utc.object_id) in existing:
+            continue
+        visible_to = list(utc.visible_to.all())
+        utc.pk = None
+        utc.unit = to_unit
+        utc.last_instance = None
+        utc.due_date = None
+        utc.save()
+
+        for vt in visible_to:
+            utc.visible_to.add(vt)
+
+        for day in range(len(utc.tests_object)):
+            __, tl = utc.get_list(day=day)
+            for t in tl.ordered_tests():
+
+                uti_old = UnitTestInfo.objects.get(unit=from_unit, test=t)
+                if t.id in existing_utis:
+                    continue
+
+                uti_new = UnitTestInfo.objects.get(unit=to_unit, test=t)
+                uti_new.reference = uti_old.reference
+                uti_new.tolerance = uti_old.tolerance
+                uti_new.save()

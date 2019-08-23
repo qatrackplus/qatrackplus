@@ -39,7 +39,7 @@ class AdminFilter(admin.SimpleListFilter):
 class QATrackUserAdmin(UserAdmin):
 
     list_filter = (AdminFilter, 'is_superuser', 'is_active', 'groups')
-    list_display = ('username', 'email', 'first_name', 'last_name', "is_admin",)
+    list_display = ('username', 'email', 'first_name', 'last_name', "is_admin")
 
     def has_change_permission(self, request, obj=None):
 

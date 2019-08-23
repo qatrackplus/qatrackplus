@@ -1,0 +1,51 @@
+{% load widget_tweaks %}
+
+{% for hidden_field in form.hidden_fields %}
+  {{ hidden_field }}
+{% endfor %}
+
+{% if form.non_field_errors %}
+  <div class="alert alert-danger" role="alert">
+    {% for error in form.non_field_errors %}
+      {{ error }}
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% for field in form.visible_fields %}
+
+  <div class="form-group {% if field.errors %}has-error{% endif %}">
+
+    {% if field|field_type == "booleanfield" %}
+
+      <div class="checkbox-inline">
+        <label for="{{ field.id_for_label }}">
+          {% render_field field %}
+          {{ field.label }}
+
+          {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+          {% endif %}
+        </label>
+      </div>
+
+    {% else %}
+
+      {{ field.label_tag }}
+
+      {% render_field field class+="form-control" %}
+
+      {% if field.help_text %}
+        <small class="form-text text-muted">{{ field.help_text }}</small>
+      {% endif %}
+
+    {% endif %}
+
+    {% for error in field.errors %}
+      <div class="help-block error-message">
+        {{ error }}
+      </div>
+    {% endfor %}
+
+  </div>
+{% endfor %}

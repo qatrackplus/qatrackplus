@@ -330,15 +330,20 @@
                   <table border="0" cellpadding="0" cellspacing="0">
                     <tr>
                       <td>
-                        <p>Hello</p>
+                        <p>Hello,</p>
                         <p>
-                          {% if failing_tests or tolerance_tests %}
-                            You are receiving this notice because one or more
-                            tests were at tolerance or action levels for the
-                            following test list instance:
-                          {% else %}
-                            You are receiving this notice because the following test
-                            list was just completed.
+                          {% if notice_type == "follow_up" %}
+                            This is a follow up notice for the following Test List which
+                            was completed {{ test_list_instance.work_completed | timesince }} ago.
+                          {% elif notice_type == "completed" %}
+                            {% if failing_tests or tolerance_tests %}
+                              You are receiving this notice because one or more
+                              tests were at tolerance or action levels for the
+                              following test list instance:
+                            {% else %}
+                              You are receiving this notice because the following test
+                              list was just completed.
+                            {% endif %}
                           {% endif %}
                         </p>
                         <table>

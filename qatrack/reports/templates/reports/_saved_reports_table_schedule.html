@@ -1,0 +1,24 @@
+{% if editable %}
+<a href="#" id="report-id-{{ report.id }}-schedule"
+  class="schedule-report"
+  data-report-title="{{ report.title }}"
+  data-report="{{ report.id }}"
+  data-editable="{% if editable %}true{% else %}false{% endif %}"
+  data-schedule-form-url="{% url "reports-schedule-form" report.id %}"
+  data-toggle="tooltip"
+  {% if report.schedule and editable %}
+    title="Click to view or edit this reports schedule"
+  {% elif editable %}
+    title="Click to schedule delivery of this report"
+  {% endif %}
+>
+  <i class="fa fa-stack fa-fw">
+    {% if report.schedule %}
+      <i class="fa fa-calendar fa-stack-custom-main"></i>
+        <i class="fa fa-edit fa-stack-custom-sub"></i>
+    {% else %}
+      <i class="fa fa-calendar-plus-o fa-stack-custom-main"></i>
+    {% endif %}
+  </i>
+</a>
+{% endif %}

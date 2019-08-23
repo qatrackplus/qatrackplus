@@ -1,8 +1,9 @@
+import json
 import re
 
+from django import template
 from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
-from django import template
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -93,31 +94,51 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
 
     elif service_log.log_type == sl_models.MODIFIED_SERVICE_EVENT:
 
-        context['extra_info'] = service_log.extra_info
+        try:
+            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+        except:
+            extra_info = service_log.extra_info
+
+        context['extra_info'] = extra_info
         return get_template('service_log/log_service_event_modified.html').render(context)
 
     elif service_log.log_type == sl_models.STATUS_SERVICE_EVENT:
 
-        context['extra_info'] = service_log.extra_info
-        status_old_colour = cache.get('service-status-colours').get(service_log.extra_info['status_change']['old'])
-        context['old_status_tag'] = '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
-            status_old_colour, service_log.extra_info['status_change']['old']
-        ) if status_old_colour is not None else service_log.extra_info['status_change']['old']
+        try:
+            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+        except:
+            extra_info = service_log.extra_info
 
-        status_new_colour = cache.get('service-status-colours').get(service_log.extra_info['status_change']['new'])
+        context['extra_info'] = extra_info
+        status_old_colour = cache.get('service-status-colours').get(extra_info['status_change']['old'])
+        context['old_status_tag'] = '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
+            status_old_colour, extra_info['status_change']['old']
+        ) if status_old_colour is not None else extra_info['status_change']['old']
+
+        status_new_colour = cache.get('service-status-colours').get(extra_info['status_change']['new'])
         context['new_status_tag'] = '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
-            status_new_colour, service_log.extra_info['status_change']['new']
-        ) if status_new_colour is not None else service_log.extra_info['status_change']['new']
+            status_new_colour, extra_info['status_change']['new']
+        ) if status_new_colour is not None else extra_info['status_change']['new']
         context['new_status_colour'] = status_new_colour
 
         return get_template('service_log/log_service_event_status.html').render(context)
 
     elif service_log.log_type == sl_models.CHANGED_RTSQA:
 
-        context['extra_info'] = service_log.extra_info
+        try:
+            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+        except:
+            extra_info = service_log.extra_info
+
+        context['extra_info'] = extra_info
         return get_template('service_log/log_rtsqa.html').render(context)
 
     elif service_log.log_type == sl_models.DELETED_SERVICE_EVENT:
 
-        context['extra_info'] = service_log.extra_info
+        try:
+            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+        except:
+            extra_info = service_log.extra_info
+
+        context['extra_info'] = extra_info
         return get_template('service_log/log_service_event_deleted.html').render(context)

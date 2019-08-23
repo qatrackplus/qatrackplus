@@ -1,5 +1,6 @@
 {% extends "site_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
@@ -107,6 +108,13 @@
                                        </dl>
                                     </div>
                                     <div class="col-md-4">
+                                        {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                                          <div class="row">
+                                            <div class="col-sm-12">
+                                              {% include "qa/testlistinstance_pdf_button.html" with tli=tli %}
+                                            </div>
+                                          </div>
+                                        {% endif %}
                                         {% if USE_SERVICE_LOG and not from_se %}
                                             <div class="row">
                                                 <label class="col-md-8">

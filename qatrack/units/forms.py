@@ -140,9 +140,37 @@ def unit_site_unit_type_choices(include_empty=False):
     def site_unit_name(u):
         return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
 
-    units = u_models.Unit.objects.select_related("site", "type").order_by("site__name", "type__name", "name")
+    units = u_models.Unit.objects.select_related(
+        "site", "type",
+    ).order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
     choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
     choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
+    if include_empty:
+        choices = [("", "---------")] + choices
+
+    return choices
+
+
+def utc_choices(include_empty=False):
+    """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
+
+    def site_unit_type(u):
+        return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
+
+    def unit_utc_name(u):
+        return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
+
+    units = u_models.Unit.objects.select_related("site", "type").prefetch_related(
+        "unittestcollection_set",
+    ).order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
+
+    choices = []
+    for ut, units in groupby(units, key=site_unit_type):
+        choices.append((ut, []))
+        for unit in units:
+            for utc in sorted(unit.unittestcollection_set.all(), key=lambda uu: uu.name):
+                choices[-1][-1].append((utc.pk, "%s :: %s" % (unit.name, utc.name)))
+
     if include_empty:
         choices = [("", "---------")] + choices
 

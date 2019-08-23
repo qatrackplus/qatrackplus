@@ -19,7 +19,6 @@
 
 {% block require_javascript %}
     require(['jquery', 'qareview'], function() {
-        $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
 
@@ -98,6 +97,13 @@
                                </dl>
                             </div>
                             <div class="col-md-4">
+                                {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                                  <div class="row">
+                                    <div class="col-sm-12 text-right">
+                                      {% include "qa/testlistinstance_pdf_button.html" with tli=tli %}
+                                    </div>
+                                  </div>
+                                {% endif %}
                                 {% if USE_SERVICE_LOG %}
                                     <div class="row">
                                         <label class="col-md-8">

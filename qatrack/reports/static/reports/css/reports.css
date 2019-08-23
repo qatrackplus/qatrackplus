@@ -1,0 +1,121 @@
+.select2-container{ width: 100% !important; }
+
+.select2-container .select2-selection--single .select2-selection__rendered {
+  margin-top: -6px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+
+.tooltip {
+  font-size: 15px;
+}
+.tooltip .tooltip-inner {
+  min-width: 250px;
+}
+
+#report {
+  overflow-y: auto;
+  -webkit-transform:scale(0.95);
+  -moz-transform:scale(0.95);
+  -ms-transform:scale(0.95);
+  transform:scale(0.95);
+}
+
+#report .container-fluid {
+  margin: 20px;
+  padding: 30px;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+}
+
+/* page loading */
+.loading-modal {
+    display:    none;
+    position:   relative;
+    float: left;
+    z-index:    1000;
+    top:        100px;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .6 )
+}
+.loading-modal > .center {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.loading-modal > .center > div {
+    text-align: center;
+}
+#report-preview.loading {
+    overflow: hidden;
+}
+#report-preview.loading .loading-modal {
+    display: block;
+}
+.loading-logo {
+    font-size: 24px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: bold;
+
+}
+
+.loading-error {
+  margin: auto;
+  text-align: center;
+  font-size: 1.5em;
+  font-style: italic;
+}
+
+#report-form .form-group {
+  margin-bottom: 5px;
+}
+
+/* saved reports datatable */
+div.dataTables_wrapper div.dataTables_paginate {
+  text-align: center;
+}
+div.dataTables_wrapper div.dataTables_filter {
+  text-align: left;
+}
+
+div.recurrence-widget {
+    height: 100%;
+}
+
+div.recurrence-widget a.recurrence-label {
+    padding: 0 0;
+    font-weight: normal;
+    padding-right: 0;
+    color: #555;
+    padding-left: 1em;
+}
+
+div.recurrence-widget .remove,
+div.recurrence-widget .remove:link,
+div.recurrence-widget .remove:visited {
+    padding: 0em .5em;
+    font-weight: normal;
+}
+
+div.recurrence-widget .checkbox {
+    display: inline;
+}
+
+div.recurrence-widget .control {
+    padding: 0 0 0 0;
+}
+
+div.recurrence-widget .radio {
+    display: inline;
+}
+
+table.recurrence-calendar .body td.header {
+    border-top: 1px solid #ccc;
+    font-weight: bold;
+    color: #555;
+}

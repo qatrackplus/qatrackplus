@@ -1,0 +1,9 @@
+<a href="#" id="report-id-{{ report.id }}"
+  class="saved-report-link"
+  data-report="{{ report.id }}"
+  data-editable="{% if editable %}true{% else %}false{% endif %}"
+  title="Click to view {% if editable %}or edit {% endif %}this {{ report.get_report_type_display }} report"
+  data-toggle="tooltip"
+>
+  #{{ report.id }}. {{ report.title }}
+</a>

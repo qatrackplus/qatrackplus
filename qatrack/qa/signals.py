@@ -185,6 +185,18 @@ def on_test_save(*args, **kwargs):
                     "%s with a non-boolean reference" % (test.type, ua.unit.name))
 
 
+@receiver(testlist_complete)
+def check_tli_flag(*args, **kwargs):
+    """Flag this test list instance if required"""
+    tli = kwargs["instance"]
+    models.TestListInstance.objects.filter(pk=tli.pk).update(
+        flagged=tli.testinstance_set.filter(
+            Q(value=1, unit_test_info__test__flag_when=True) |
+            Q(value=0, unit_test_info__test__flag_when=False)
+        ).exists()
+    )
+
+
 @receiver(post_save, sender=models.TestListInstance)
 def on_test_list_instance_saved(*args, **kwargs):
     """set last instance for UnitTestInfo"""

@@ -5,9 +5,10 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import (
@@ -19,6 +20,8 @@ from django.views.generic import (
 )
 import pytz
 
+from qatrack.qatrack_core.utils import format_datetime
+from qatrack.reports.reports import UTCReport
 from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,
@@ -61,6 +64,29 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
         return context
+
+
+def test_list_instance_report(request, pk):
+
+    tli = get_object_or_404(models.TestListInstance, id=pk)
+    utc = tli.unit_test_collection
+    wc = format_datetime(tli.work_completed)
+
+    base_opts = {
+        'report_type': UTCReport.report_type,
+        'report_format': request.GET.get("type", "pdf"),
+        'title': "%s - %s - %s" % (utc.unit.name, tli.test_list.name, wc),
+        'include_signature': False,
+        'visible_to': [],
+    }
+
+    report_opts = {
+        'work_completed': "%s - %s" % (wc, wc),
+        'unit_test_collection': utc.id,
+    }
+    report = UTCReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
+
+    return report.render_to_response(base_opts['report_format'])
 
 
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
@@ -490,7 +516,7 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Overview, self).get_context_data()
-        context['title'] = 'Qa Program Overview'
+        context['title'] = 'QC Program Overview'
         context['msg'] = 'Overview of current QC status on all units'
         if '-user' in self.request.path:
             context['title'] += ' For Your Groups'
@@ -574,7 +600,7 @@ class UTCInstances(PermissionRequiredMixin, TestListInstances):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
             return "History for %s :: %s" % (utc.unit.name, utc.name)
-        except:
+        except models.UnitTestCollection.DoesNotExist:
             raise Http404
 
     def get_queryset(self):

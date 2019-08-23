@@ -1,0 +1,54 @@
+{% load i18n %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load attach_tags %}
+{% load comments %}
+
+<!DOCTYPE html> <!-- html5 -->
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link href="file://{{ STATIC_ROOT }}/fontawsome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/bootstrap/css/bootstrap.pdf.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/adminlte/css/admin-lte.pdf.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/custom-adminlte.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/custom-fontawesome.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/base.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/tables.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qa/css/qa.css" rel="stylesheet">
+    <style type="text/css">
+      @font-face {
+          font-family: 'FontAwesome';
+          src: url(data:application/x-font-truetype;base64,{% include "reports/fa.b64" %}) format('truetype');
+          font-weight: normal;
+          font-style: normal;
+      }
+    </style>
+    <style type="text/css">
+      {% include "reports/pdf.css" %}
+    </style>
+    {% block extra_head %}
+    {% endblock extra_head %}
+  </head>
+  <body >
+    <div class="container">
+
+      {% include "reports/_header.html" with for_pdf=1 %}
+
+      {% include "reports/_details.html" %}
+
+      <div class="row">
+        <div class="col-xs-12">
+
+          {% block content %}
+          {% endblock content %}
+
+          {% include "reports/_signature.html" %}
+
+        </div>
+      </div>
+
+    </div>
+  </body>
+</html>

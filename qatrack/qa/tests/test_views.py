@@ -1077,6 +1077,23 @@ class TestPerformQA(TestCase):
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
 
+    def test_flag_with_bool(self):
+        self.t_bool.flag_when = True
+        self.t_bool.save()
+        data = {
+            "work_started": "11-07-2012 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
+
+        self.client.post(self.url, data=data)
+        tli = models.TestListInstance.objects.latest("pk")
+        assert tli.flagged
+
     def test_work_started_work_completed_same(self):
         data = {
             "work_started": "11-07-2012 00:09",
@@ -1523,6 +1540,16 @@ class TestEditTestListInstance(TestCase):
 
         self.assertEqual(302, response.status_code)
         self.assertEqual(88, models.TestInstance.objects.get(pk=self.ti.pk).value)
+
+    def test_edit_and_flag(self):
+
+        assert not self.tli.flagged
+        self.test_bool.flag_when = True
+        self.test_bool.save()
+
+        self.client.post(self.url, data=self.base_data)
+        self.tli.refresh_from_db()
+        assert self.tli.flagged
 
     def test_blank_status_edit(self):
 

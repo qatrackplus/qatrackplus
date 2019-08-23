@@ -3,7 +3,6 @@ import re
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.signals import pre_save
@@ -13,6 +12,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from qatrack.qa.models import TestListInstance, UnitTestCollection
+from qatrack.qatrack_core.fields import JSONField
 from qatrack.units.models import NameNaturalKeyManager, Unit, Vendor
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
@@ -382,30 +382,6 @@ class GroupLinkerInstance(models.Model):
 
     class Meta:
         default_permissions = ()
-
-
-class JSONField(models.TextField):
-
-    def to_python(self, value):
-        if value == "":
-            return None
-
-        try:
-            if isinstance(value, str):
-                return json.loads(value)
-        except ValueError:
-            pass
-        return value
-
-    def from_db_value(self, value, *args):
-        return self.to_python(value)
-
-    def get_db_prep_save(self, value, *args, **kwargs):
-        if value == "":
-            return None
-        if isinstance(value, dict):
-            value = json.dumps(value, cls=DjangoJSONEncoder)
-        return value
 
 
 class ServiceLogManager(models.Manager):

@@ -1,7 +1,7 @@
 import json
 
 from django.conf import settings
-from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_save, pre_delete
@@ -104,7 +104,7 @@ def update_colours(*args, **kwargs):
 
 
 def site(request):
-    cur_site = Site.objects.get_current()
+    cur_site = get_current_site(request)
 
     unreviewed = cache.get(settings.CACHE_UNREVIEWED_COUNT)
     if unreviewed is None:

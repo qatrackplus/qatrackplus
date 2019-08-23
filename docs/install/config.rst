@@ -70,6 +70,18 @@ CherryPy or nginx):
 
     ALLOWED_HOSTS = ['127.0.0.1']
 
+HTTP or HTTPS Setting
+.....................
+
+In order for urls to use the correct protocol for links, set `HTTP_OR_HTTPS` to
+the appropriate protocol. 
+
+.. code-block:: python
+
+    HTTP_OR_HTTPS = 'http'  # when using http for your site (default)
+    # -or -
+    HTTP_OR_HTTPS = 'https'  # when using https/ssl for your site
+
 
 DATABASES Setting
 .................
@@ -241,6 +253,19 @@ AUTO_REVIEW_DEFAULT
 
 Set `AUTO_REVIEW_DEFAULT = True` in your `local_settings.py` file in order to
 enable :ref:`Auto Review <qa_auto_review>` by default.
+
+CHROME_PATH
+...........
+
+Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. For example
+
+.. code-block:: python
+    
+    CHROME_PATH = '/usr/bin/chromium-browser'  # default
+    # - or -
+    CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
+
+
 
 CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
 ..................................................................

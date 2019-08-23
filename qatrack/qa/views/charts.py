@@ -323,7 +323,8 @@ class BaseChartView(View):
             'test_instance_comment': comment,
             'test_list_instance': {
                 'date': ti.test_list_instance.created,
-                'id': ti.test_list_instance.id
+                'id': ti.test_list_instance.id,
+                'flagged': ti.test_list_instance.flagged
             }
         }
 

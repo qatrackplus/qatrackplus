@@ -427,6 +427,7 @@ td.review-value span {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    line-height: 12px;
 }
 td.review-status,
 th.review-status{

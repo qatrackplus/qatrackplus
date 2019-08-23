@@ -15,6 +15,7 @@ matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
 DEBUG = False
+DEBUG_TOOLBAR = False
 
 # Who to email when server errors occur
 ADMINS = (
@@ -26,6 +27,7 @@ SEND_BROKEN_LINK_EMAILS = False
 # -----------------------------------------------------------------------------
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 
 VERSION = "0.3.1"
@@ -85,6 +87,7 @@ INPUT_DATE_FORMATS = (
 )
 SIMPLE_DATE_FORMAT = "%d-%m-%Y"
 MONTH_ABBR_DATE_FORMAT = "%d %b %Y"
+MONTH_ABBR_DATETIME_FORMAT = "%d %b %Y %H:%M"
 DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)"
 
 # Language code for this installation. All choices can be found here:
@@ -109,7 +112,11 @@ DEFAULT_WARNING_MESSAGE = "Do not treat"
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "media")
-TMP_UPLOAD_PATH = os.path.join("uploads", "tmp")
+
+UPLOAD_PATH = "uploads"
+TMP_UPLOAD_PATH = os.path.join(UPLOAD_PATH, "tmp")
+UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
+TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -179,8 +186,7 @@ TEMPLATES = [
         ],
         'APP_DIRS': True,
         'OPTIONS': {
-            'debug':
-                False,
+            'debug': False,
             'context_processors': [
                 # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
                 # list if you haven't customized them:
@@ -217,6 +223,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django_extensions',
+    'django_q',
     'django_comments',
     'formtools',
     'django_filters',
@@ -239,6 +246,7 @@ INSTALLED_APPS = [
     'qatrack.service_log',
     'qatrack.parts',
     'qatrack.attachments',
+    'qatrack.reports',
     'admin_views',
 ]
 
@@ -297,6 +305,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 # set to False when not running behind reverse proxy
 # Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
 USE_X_FORWARDED_HOST = False
+HTTP_OR_HTTPS = "http"
 
 # -----------------------------------------------------------------------------
 # Email and notification settings
@@ -377,6 +386,9 @@ LOGGING = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
         }
     },
     'formatters': {
@@ -391,7 +403,7 @@ LOGGING = {
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
-            'filters': ['require_debug_false'],
+            'filters': [],
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
@@ -399,7 +411,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
         'file': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "debug.log"),
             'when': 'D',  # this specifies the interval
@@ -424,7 +436,7 @@ LOGGING = {
             'propagate': True,
         },
         'django.server': {
-            'handlers': ['console'],
+            'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': False,
         },
@@ -449,7 +461,7 @@ LOGGING = {
             'propagate': True,
         },
         'qatrack.migrations': {
-            'handlers': ['console', 'migrate'],
+            'handlers': ['console', 'migrate', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -573,6 +585,10 @@ def EXPLORER_PERMISSION_VIEW(user):
 if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
     from .docker_settings import *  # NOQA
 
+
+CHROME_PATH = "/usr/bin/chromium-browser"
+
+
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
@@ -624,9 +640,10 @@ if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
     DATABASES.pop('readonly', None)
     from .test_settings import *  # noqa
 
-if DEBUG:
+if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
 
 if USE_SQL_REPORTS:
     INSTALLED_APPS += [
@@ -644,5 +661,18 @@ if USE_SQL_REPORTS:
             "USE_SQL_REPORTS = False or set up readonly database connection"
         )
 
-
 LOGOUT_REDIRECT_URL = LOGIN_URL
+
+Q_CLUSTER = {
+    'name': 'qatrack',
+    'workers': 1,
+    'timeout': 60,
+    'catch_up': True,
+    'recycle': 20,
+    'compress': False,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'cpu_affinity': 1,
+    'label': 'Django Q',
+    'orm': 'default',
+}

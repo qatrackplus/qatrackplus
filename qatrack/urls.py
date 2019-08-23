@@ -34,11 +34,13 @@ urlpatterns = [
     url(r'^accounts/', include('qatrack.accounts.urls')),
     url(r'^qa/(?P<terms>.*)$', QAToQC.as_view()),
     url(r'^qc/', include('qatrack.qa.urls')),
+    url(r'^reports/', include('qatrack.reports.urls')),
     url(r'^units/', include('qatrack.units.urls')),
     url(r'^core/', include('qatrack.qatrack_core.urls')),
     url(r'^servicelog/', include('qatrack.service_log.urls')),
     url(r'^parts/', include('qatrack.parts.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
+    url(r'^sql-reports/', include('explorer.urls')),
 
     # Uncomment the next line to enable the admin:
     path(r'admin/', admin.site.urls),
@@ -71,5 +73,5 @@ handler500 = 'qatrack.qatrack_core.views.handle_500'
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns

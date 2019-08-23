@@ -24,8 +24,8 @@ class TestLoginViews(TestCase):
         resp = self.client.get(url)
         resp = self.client.post(
             resp.url, {
-                'new_password1': 'newpassword',
-                'new_password2': 'newpassword',
+                'new_password1': '8P0Cut!v6XUr',
+                'new_password2': '8P0Cut!v6XUr',
             }, follow=True
         )
         assert "/accounts/reset/done/" in resp.redirect_chain[0]

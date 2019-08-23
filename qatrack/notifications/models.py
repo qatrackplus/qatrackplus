@@ -12,22 +12,33 @@ from . import handlers  # NOQA
 COMPLETED = 0
 TOLERANCE = 10
 ACTION = 20
+FOLLOW_UP = 30
 
-tol = settings.TEST_STATUS_DISPLAY.get("tolerance", "Tolerance")
-act = settings.TEST_STATUS_DISPLAY.get("action", "Action")
+tol = settings.TEST_STATUS_DISPLAY.get("tolerance", _l("Tolerance"))
+act = settings.TEST_STATUS_DISPLAY.get("action", _l("Action"))
 
-WARNING_LEVELS = (
-    (COMPLETED, "Notify when Test List completed"),
-    (TOLERANCE, "Notify on %s or %s" % (tol, act)),
-    (ACTION, "Notify on Test at %s level only" % (act)),
+NOTIFICATION_TYPES = (
+    (COMPLETED, _l("Notify when Test List completed")),
+    (TOLERANCE, _l("Notify on %s or %s" % (tol, act))),
+    (ACTION, _l("Notify on Test at %s level only" % (act))),
+    (FOLLOW_UP, _l("Follow up notification")),
 )
 
 
 class NotificationSubscription(models.Model):
 
-    warning_level = models.IntegerField(
-        verbose_name=_l("Notification level"),
-        choices=WARNING_LEVELS,
+    notification_type = models.IntegerField(
+        verbose_name=_l("Notification Type"),
+        choices=NOTIFICATION_TYPES,
+    )
+
+    follow_up_days = models.PositiveIntegerField(
+        verbose_name=_l("Follow up days"),
+        blank=True,
+        null=True,
+        help_text=_l(
+            "Number of days after TestList completion to send follow up email. Used for follow up notifications only"
+        ),
     )
 
     groups = models.ManyToManyField(
@@ -61,4 +72,4 @@ class NotificationSubscription(models.Model):
     )
 
     def __str__(self):
-        return "<NotificationSubscription(%s)>" % self.id
+        return "<NotificationSubscription(%d, %s)>" % (self.pk, self.get_notification_type_display())

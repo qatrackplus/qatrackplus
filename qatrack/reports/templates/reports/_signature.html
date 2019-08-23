@@ -1,0 +1,22 @@
+{% load i18n %}
+
+{% block signature_block %}
+
+  {% if include_signature %}
+    <div class="row">
+      <div class="col-xs-6">
+      </div>
+      <div class="col-xs-4">
+        <div style="margin-top: 20px; border-top: 1px solid #ccc;">
+          {% trans "Signature" %}
+        </div>
+      </div>
+      <div class="col-xs-2">
+        <div style="margin-top: 20px; border-top: 1px solid #ccc;">
+          {% trans "Date" %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock signature_block %}

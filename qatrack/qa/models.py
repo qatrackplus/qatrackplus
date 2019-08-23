@@ -120,13 +120,11 @@ validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 PERMISSIONS = (
     (
         'Admin',
-        (
-            (
-                'auth.change_group',
-                'Can change groups',
-                'Allow user to change group permissions',
-            ),
-        ),
+        ((
+            'auth.change_group',
+            'Can change groups',
+            'Allow user to change group permissions',
+        ),),
     ),
     (
         'Performing',
@@ -197,14 +195,6 @@ PERMISSIONS = (
             'Can chart test history',
             'Gives user the ability to view and create charts of historical test results',
         ), (
-            'qa.can_run_sql_reports',
-            'Can Run SQL Reports',
-            'Gives user the ability to run SQL queries that others have created',
-        ), (
-            'qa.can_create_sql_reports',
-            'Can Create SQL Reports',
-            'Gives user the ability to create and run raw SQL queries on your data',
-        ), (
             'qa.can_review_own_tests',
             'Can review self-performed tests',
             'Allows a user to perform review & approval functions on self-performed tests',
@@ -213,6 +203,31 @@ PERMISSIONS = (
             'Can review non visible test list instances',
             'Allows a user to review test list instances that are not visible to any of their groups',
         )),
+    ),
+    (
+        "Reports",
+        (
+            (
+                'reports.can_run_reports',
+                'Can Run Reports',
+                'Gives user the ability to run reports that others have created',
+            ),
+            (
+                'reports.can_create_reports',
+                'Can Create Reports',
+                'Gives user the ability to create and run reports',
+            ),
+            (
+                'reports.can_run_sql_reports',
+                'Can Run SQL Reports',
+                'Gives user the ability to run SQL queries that others have created',
+            ),
+            (
+                'reports.can_create_sql_reports',
+                'Can Create SQL Reports',
+                'Gives user the ability to create and run raw SQL queries on your data',
+            ),
+        ),
     ),
 )
 
@@ -328,6 +343,10 @@ class Frequency(models.Model):
 
     def natural_key(self):
         return (self.slug,)
+
+    @property
+    def classical(self):
+        return self.window_start is None
 
     def __str__(self):
         return self.name
@@ -728,6 +747,18 @@ class Test(models.Model, TestPackMixin):
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
         help_text=_("Indicate if this test is a %s" % (','.join(x[1].title() for x in TEST_TYPE_CHOICES)))
+    )
+
+    flag_when = models.BooleanField(
+        verbose_name=_("Flag Parent When"),
+        help_text=_(
+            "If the test value matches this flag value, the parent test list instance "
+            "will have a flag set.  Leave blank to never set a flag."
+        ),
+        choices=[(None, _("Never Flag")), (True, _("When test is Yes/True")), (False, _("When test is No/False"))],
+        null=True,
+        blank=True,
+        default=None,
     )
 
     hidden = models.BooleanField(_("Hidden"), help_text=_("Don't display this test when performing QC"), default=False)
@@ -1622,6 +1653,21 @@ class UnitTestCollection(models.Model):
                 tolerance=source_uti.tolerance
             )
 
+    def window(self):
+
+        if self.due_date is None:
+            return None
+
+        if not self.frequency:
+            return (self.due_date, self.due_date)
+
+        if self.frequency.classical:
+            return (self.due_date, (self.due_date + timezone.timedelta(days=self.frequency.window_end)))
+
+        start = self.due_date - timezone.timedelta(days=self.frequency.window_start)
+        end = self.due_date + timezone.timedelta(days=self.frequency.window_end)
+        return (start, end)
+
     def __str__(self):
         return self.name
 
@@ -1707,8 +1753,6 @@ class TestInstance(models.Model):
         permissions = (
             ("can_view_history", "Can see test history when performing QC"),
             ("can_view_charts", "Can view charts of test history"),
-            ("can_run_sql_reports", "Can run SQL Data Reports"),
-            ("can_create_sql_reports", "Can create SQL Data Reports"),
             ("can_review", "Can review & approve tests"),
             ("can_skip_without_comment", "Can skip tests without comment"),
             ("can_review_own_tests", "Can review & approve  self-performed tests"),
@@ -1821,7 +1865,8 @@ class TestInstance(models.Model):
             except AutoReviewRule.DoesNotExist:
                 pass
 
-    def value_display(self):
+    def value_display(self, coerce_numerical=True):
+        """If coerce_numerical=False, the actual value will be returned rather than coercing to string representation"""
         if self.skipped:
             return "Skipped"
         elif self.value is None and self.string_value in (None, ""):
@@ -1829,11 +1874,15 @@ class TestInstance(models.Model):
 
         test = self.unit_test_info.test
         if test.is_boolean():
+            if not coerce_numerical:
+                return self.value
             return "Yes" if int(self.value) == 1 else "No"
         elif test.is_upload():
             return self.upload_link()
         elif test.is_string_type():
             return self.string_value
+        elif test.is_numerical_type() and not coerce_numerical:
+            return self.value
         elif test.formatting:
             try:
                 return test.formatting % self.value
@@ -1941,6 +1990,12 @@ class TestListInstance(models.Model):
         ),
         default=False,
         db_index=True,
+    )
+
+    flagged = models.BooleanField(
+        editable=False,
+        help_text=_("Used in cooperation with Boolean Tests to highligh this TestListInstance"),
+        default=False,
     )
 
     reviewed = models.DateTimeField(null=True, blank=True)

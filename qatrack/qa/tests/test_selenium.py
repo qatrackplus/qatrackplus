@@ -17,6 +17,7 @@ from qatrack.qatrack_core.tests.live import SeleniumTests
 from qatrack.service_log.tests import utils as sl_utils
 
 objects = {
+
     'Group': {
         'name': 'testGroup',
     },
@@ -25,55 +26,57 @@ objects = {
         'slug': 'testCategory',
         'description': 'test test test test'
     },
-    'Tests': [{
-        'test_type': models.SIMPLE,
-        'name': 'simple',
-        'choices': None,
-        'constant_value': None,
-        'procedure': None
-    }, {
-        'test_type': models.BOOLEAN,
-        'name': 'boolean',
-        'choices': None,
-        'constant_value': None,
-        'procedure': None
-    }, {
-        'test_type': models.MULTIPLE_CHOICE,
-        'name': 'multchoice',
-        'choices': '1,2,3,4,5',
-        'constant_value': None,
-        'procedure': None
-    }, {
-        'test_type': models.CONSTANT,
-        'name': 'constant',
-        'choices': None,
-        'constant_value': '23.23',
-        'procedure': None
-    }, {
-        'test_type': models.COMPOSITE,
-        'name': 'composite',
-        'choices': None,
-        'constant_value': None,
-        'procedure': 'result = constant * simpleNumeric'
-    }, {
-        'test_type': models.STRING,
-        'name': 'string',
-        'choices': None,
-        'constant_value': None,
-        'procedure': None
-    }, {
-        'test_type': models.STRING_COMPOSITE,
-        'name': 'scomposite',
-        'choices': None,
-        'constant_value': None,
-        'procedure': 'result = string + " composite"'
-    }, {
-        'test_type': models.UPLOAD,
-        'name': 'upload',
-        'choices': None,
-        'constant_value': None,
-        'procedure': 'result = FILE[0]'
-    }],
+    'Tests': [
+        {
+            'test_type': models.SIMPLE,
+            'name': 'simple',
+            'choices': None,
+            'constant_value': None,
+            'procedure': None
+        }, {
+            'test_type': models.BOOLEAN,
+            'name': 'boolean',
+            'choices': None,
+            'constant_value': None,
+            'procedure': None
+        }, {
+            'test_type': models.MULTIPLE_CHOICE,
+            'name': 'multchoice',
+            'choices': '1,2,3,4,5',
+            'constant_value': None,
+            'procedure': None
+        }, {
+            'test_type': models.CONSTANT,
+            'name': 'constant',
+            'choices': None,
+            'constant_value': '23.23',
+            'procedure': None
+        }, {
+            'test_type': models.COMPOSITE,
+            'name': 'composite',
+            'choices': None,
+            'constant_value': None,
+            'procedure': 'result = constant * simpleNumeric'
+        }, {
+            'test_type': models.STRING,
+            'name': 'string',
+            'choices': None,
+            'constant_value': None,
+            'procedure': None
+        }, {
+            'test_type': models.STRING_COMPOSITE,
+            'name': 'scomposite',
+            'choices': None,
+            'constant_value': None,
+            'procedure': 'result = string + " composite"'
+        }, {
+            'test_type': models.UPLOAD,
+            'name': 'upload',
+            'choices': None,
+            'constant_value': None,
+            'procedure': 'result = FILE[0]'
+        }
+    ],
     'TestList': {
         'name': 'TestTestList'
     },
@@ -131,7 +134,7 @@ objects = {
             'requiresApproval': False
         }
     },
-}
+}  # yapf: disable
 
 
 class BaseQATests(SeleniumTests):
@@ -190,7 +193,7 @@ class LiveQATests(BaseQATests):
             utils.create_category(
                 name=objects['Category']['name'],
                 slug=objects['Category']['slug'],
-                description=objects['Category']['description']
+                description=objects['Category']['description'],
             )
 
         self.driver.find_element_by_link_text('Tests').click()
@@ -214,7 +217,7 @@ class LiveQATests(BaseQATests):
             if the_test['procedure']:
                 time.sleep(1)
                 self.driver.find_element_by_css_selector('#calc-procedure-editor > textarea').send_keys(
-                    the_test['procedure']
+                    the_test['procedure'],
                 )
                 self.driver.find_element_by_css_selector('.submit-row').click()
 
@@ -238,7 +241,7 @@ class LiveQATests(BaseQATests):
                     test_type=the_test['test_type'],
                     choices=the_test['choices'],
                     procedure=the_test['procedure'],
-                    constant_value=the_test['constant_value']
+                    constant_value=the_test['constant_value'],
                 )
 
         self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, 'Test lists')))

@@ -441,8 +441,14 @@ class Upload(JSONResponseMixin, View):
 
         comments = self.get_json_data("comments")
 
+        try:
+            f = open(self.attachment.attachment.path, "r")
+        except NotImplementedError:
+            self.attachment.attachment.open("r")
+            f = self.attachment.attachment
+
         self.calculation_context.update({
-            "FILE": open(self.attachment.attachment.path, "r"),
+            "FILE": f,
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
             "REFS": refs,
@@ -759,6 +765,8 @@ class ChooseUnit(TemplateView):
 
             ordered = {}
             for s in unit_site_types:
+                if len(unit_site_types[s]) == 0:
+                    continue
                 ordered[s] = sorted(
                     list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]])
                 )

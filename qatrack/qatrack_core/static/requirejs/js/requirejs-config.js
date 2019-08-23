@@ -7,6 +7,7 @@ require.config({
         return 'v=' + siteConfig.VERSION;
     }()),
     baseUrl: siteConfig.STATIC_URL,
+    waitSeconds: 0,
     packages: [{
         name: "codemirror",
         location: siteConfig.STATIC_URL + "codemirror",
@@ -30,11 +31,14 @@ require.config({
         canvg: siteConfig.STATIC_URL + 'd3/js/canvg',
         rgbcolor: siteConfig.STATIC_URL + 'd3/js/rgbcolor.min',
         'stackblur-canvas': siteConfig.STATIC_URL + 'd3/js/stackblur.min',
+
+        /* listable data tables */
         datatables: siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.min',
         'datatables.bootstrap': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.bootstrap',
         'datatables.columnFilter': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.columnFilter',
         'datatables.searchPlugins': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.searchPlugins',
         'datatables.sort': siteConfig.STATIC_URL + 'listable/js/jquery.dataTables.sort',
+
         datepicker: siteConfig.STATIC_URL + 'datepicker/js/bootstrap-datepicker.min',
         daterangepicker: siteConfig.STATIC_URL + 'daterangepicker/js/daterangepicker',
         dropzone: siteConfig.STATIC_URL + 'dropzone/js/dropzone-amd-module',
@@ -44,6 +48,7 @@ require.config({
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
         inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min',
         jquery: siteConfig.STATIC_URL + 'jquery/js/jquery.min',
+        ajaxsetup: siteConfig.STATIC_URL + 'jquery/js/ajaxSetup',
         'jquery-ui': siteConfig.STATIC_URL + 'jqueryui/js/jquery-ui.min',
         'jquery-ui-sql': siteConfig.STATIC_URL + 'explorer/jquery-ui.min',
         'jquery-cookie': siteConfig.STATIC_URL + 'jquerycookie/js/jquery.cookie.min',
@@ -57,7 +62,9 @@ require.config({
         multiselect: siteConfig.STATIC_URL + 'multiselect/js/bootstrap.multiselect',
         select2: siteConfig.STATIC_URL + 'select2/js/select2.min',
         slimscroll: siteConfig.STATIC_URL + 'slimscroll/js/jquery.slimscroll.min',
-        vue: siteConfig.STATIC_URL + 'vue/js/vue',
+        zxcvbn: siteConfig.STATIC_URL + 'zxcvbn_password/js/zxcvbn',
+        password_strength: siteConfig.STATIC_URL + 'zxcvbn_password/js/password_strength',
+        vue: siteConfig.STATIC_URL + 'vue/js/vue.min',
 
         // Site wide:
         sidebar: siteConfig.STATIC_URL + 'qatrack_core/js/sidebar',
@@ -67,6 +74,9 @@ require.config({
 
         // accounts module:
         groups: siteConfig.STATIC_URL + 'accounts/js/groups',
+
+        // reports module:
+        reports: siteConfig.STATIC_URL + 'reports/js/reports',
 
         // qa module:
         qa: siteConfig.STATIC_URL + 'qa/js/qa',
@@ -106,6 +116,7 @@ require.config({
         codemirror: {
             exports: 'CodeMirror'
         },
+        /* listable data tables */
         datatables: {
             deps: ['jquery'],
             exports: 'dataTable'
@@ -122,6 +133,7 @@ require.config({
         'datatables.sort': {
             deps: ['datatables']
         },
+
         datepicker: {
             deps: ['jquery', 'bootstrap']
         },
@@ -172,6 +184,9 @@ require.config({
         multiselect: {
             deps: ['jquery', 'bootstrap']
         },
+        password_strength: {
+            deps: ['jquery']
+        },
         'pivottable/pivot': ['jquery', 'jqueryui'],
         'pivottable/d3_renderers': ['pivottable/pivot', 'd3'],
         'pivottable/c3_renderers': ['pivottable/pivot', 'c3'],
@@ -185,6 +200,9 @@ require.config({
             deps: ['rgbcolor', 'stackblur-canvas']
         },
         slimscroll: {
+            deps: ['jquery']
+        },
+        zxcvbn: {
             deps: ['jquery']
         },
 
@@ -202,6 +220,11 @@ require.config({
             deps: ['vue']
         },
 
+        // reports module:
+        reports: {
+            deps: ['jquery', 'ajaxsetup', 'lodash', 'moment', 'select2', 'jquery-ui', 'datepicker', 'daterangepicker']
+        },
+
         // qa module:
         qa: {
             deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils']
@@ -210,6 +233,15 @@ require.config({
         // service_log module
         sl_utils: {
             deps: ['jquery', 'site_base', 'bootstrap']
+        }
+    },
+    map: {
+        'reports': {
+            'datatables': 'datatables/1.10/datatables.min.js',
+        },
+        '*': {
+            'datatables.net': siteConfig.STATIC_URL + 'datatables/1.10/js/datatables.min.js',
+            'datatables.net-bs': siteConfig.STATIC_URL + 'datatables/1.10/DataTables-1.10.18/js/dataTables.bootstrap.min.js',
         }
     }
 });

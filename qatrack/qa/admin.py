@@ -29,31 +29,11 @@ from qatrack.attachments.admin import (
 )
 import qatrack.qa.models as models
 from qatrack.qa.utils import format_qc_value
+from qatrack.qatrack_core.admin import BasicSaveUserAdmin, SaveUserMixin
 from qatrack.units.forms import unit_site_unit_type_choices
-from qatrack.units.models import Unit
+from qatrack.units.models import Site, Unit
 
 admin.site.disable_action("delete_selected")
-
-
-class SaveUserMixin(object):
-    """A Mixin to save creating user and modifiying user
-
-    Set editable=False on the created_by and modified_by model you
-    want to use this for.
-    """
-
-    def save_model(self, request, obj, form, change):
-        """set user and modified date time"""
-        if not obj.pk:
-            obj.created_by = request.user
-            obj.created = timezone.now()
-        obj.modified_by = request.user
-
-        super(SaveUserMixin, self).save_model(request, obj, form, change)
-
-
-class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):
-    """manage reference values for tests"""
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -184,9 +164,9 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            (None, _('At Least One Active Unit Assignment')),
+            (None, _('All')),
+            (self.ACTIVE, _('At Least One Active Unit Assignment')),
             (self.NOTACTIVE, _('No Active Unit Assignments')),
-            ('all', _('All')),
         )
 
     def choices(self, cl):
@@ -199,11 +179,10 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
                 'display': title,
             }
 
-    # TODO fix this
     def queryset(self, request, qs):
-        if self.value() in (self.NOTACTIVE,):
+        if self.value() == self.NOTACTIVE:
             return models.UnitTestInfo.objects.inactive(qs)
-        elif self.value() is None:
+        elif self.value() == self.ACTIVE:
             return models.UnitTestInfo.objects.active(qs)
         return qs
 
@@ -690,12 +669,16 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
     parameter_name = 'assignedbyfreq'
 
     def lookups(self, request, model_admin):
-        return models.Frequency.objects.values_list("pk", "name")
+        return [("adhoc", "Ad Hoc")] + list(models.Frequency.objects.values_list("pk", "name"))
 
     def queryset(self, request, qs):
 
-        if self.value():
-            freq = models.Frequency.objects.get(pk=self.value())
+        v = self.value()
+        if v:
+            if v == "adhoc":
+                freq = None
+            else:
+                freq = models.Frequency.objects.get(pk=v)
             freq_tl_ids = models.get_utc_tl_ids(frequencies=[freq])
             return qs.filter(id__in=freq_tl_ids)
 
@@ -864,6 +847,12 @@ unit_name.admin_order_field = "unit__name"  # noqa: E305
 unit_name.short_description = "Unit"
 
 
+def site_name(obj):
+    return obj.unit.site.name if obj.unit.site else "No Site Assigned"
+site_name.admin_order_field = "unit__site__name"  # noqa: E305
+site_name.short_description = "Site"
+
+
 def freq_name(obj):
     return obj.frequency.name if obj.frequency else "Ad Hoc"
 freq_name.admin_order_field = "frequency__name"  # noqa: E305
@@ -874,6 +863,22 @@ def assigned_to_name(obj):
     return obj.assigned_to.name
 assigned_to_name.admin_order_field = "assigned_to__name"  # noqa: E305
 assigned_to_name.short_description = "Assigned To"
+
+
+class SiteFilter(admin.SimpleListFilter):
+
+    title = _('Site')
+    parameter_name = "sitefilter"
+
+    def lookups(self, request, model_admin):
+        return Site.objects.values_list('pk', 'name')
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            return queryset.filter(unit__site=self.value())
+
+        return queryset
 
 
 class UnitFilter(admin.SimpleListFilter):
@@ -898,12 +903,13 @@ class FrequencyFilter(admin.SimpleListFilter):
     parameter_name = "freqfilter"
 
     def lookups(self, request, model_admin):
-        return models.Frequency.objects.values_list('pk', 'name')
+        return [("adhoc", "Ad Hoc")] + list(models.Frequency.objects.values_list("pk", "name"))
 
     def queryset(self, request, queryset):
 
+        v = self.value()
         if self.value():
-            return queryset.filter(frequency=self.value())
+            return queryset.filter(frequency=None if v == "adhoc" else v)
 
         return queryset
 
@@ -991,8 +997,8 @@ class UnitTestCollectionForm(forms.ModelForm):
 class UnitTestCollectionAdmin(admin.ModelAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
-    list_display = ['name', unit_name, freq_name, assigned_to_name, "active"]
-    list_filter = [UnitFilter, FrequencyFilter, AssignedToFilter, ActiveFilter]
+    list_display = ['name', site_name, unit_name, freq_name, assigned_to_name, "active"]
+    list_filter = [SiteFilter, UnitFilter, FrequencyFilter, AssignedToFilter, ActiveFilter]
     search_fields = ['name', "unit__name", "frequency__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
     list_editable = ["active"]
@@ -1008,11 +1014,7 @@ class UnitTestCollectionAdmin(admin.ModelAdmin):
 
     def get_queryset(self, *args, **kwargs):
         qs = super(UnitTestCollectionAdmin, self).get_queryset(*args, **kwargs)
-        return qs.select_related(
-            "unit",
-            "frequency",
-            "assigned_to"
-        )
+        return qs.select_related("unit", "unit__site", "frequency", "assigned_to")
 
 
 class TestListCycleMembershipInline(DynamicRawIDMixin, admin.TabularInline):

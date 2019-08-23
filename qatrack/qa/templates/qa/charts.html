@@ -166,7 +166,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-sm-12">
+                                <div class="col-sm-6">
                                     <div class="form-group">
                                         <label class="col-sm-10" for="combine-data" title="Combine Test data from multiple TestLists on a given Unit (e.g. from a TestListCycle)">
                                             Combine test data for unit
@@ -175,6 +175,8 @@
                                             <input type="checkbox" id="combine-data" />
                                         </div>
                                     </div>
+                                </div>
+                                <div class="col-sm-6">
                                     <div class="form-group">
                                         <label class="col-sm-10" for="relative-diff" >
                                             <abbr title="The absolute difference is plotted for tests with absolute tolerances set or with reference values of zero, otherwise the percent difference is plotted">Relative to reference</abbr>
@@ -183,6 +185,32 @@
                                             <input type="checkbox" id="relative-diff" />
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label class="col-sm-10" for="highlight-comments" title="Show test instances with comments using a larger point & different color">
+                                            Highlight comments
+                                        </label>
+                                        <div class="col-sm-2">
+                                            <input type="checkbox" id="highlight-comments" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label class="col-sm-10" for="highlight-flags" title="Show test instances with flags using a larger point & different color" >
+                                            Highlight flags
+                                        </label>
+                                        <div class="col-sm-2">
+                                            <input type="checkbox" id="highlight-flags" checked/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
                                     <div id="status-container" class="form-group">
                                         <label for="status-selector" class="col-sm-4">Review Statuses</label>
                                         <div class="col-sm-8">
