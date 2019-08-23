@@ -7,16 +7,6 @@
     <h5 style="color: #1c9aea; font-weight: bold; padding-left: 4px;">{{ report_title }}</h5>
   </div>
   <div class="col-xs-4">
-    <a href="{{ SITE_URL }}">
-      <img
-        style="margin-top: 20px; z-index: 100; margin-right: 60px;"
-          {% if for_pdf %}
-            src="file://{{ STATIC_ROOT}}/TODO"
-          {% else %}
-            src="{% static "TODO" %}"
-          {% endif %}
-        />
-    </a>
   </div>
 </div>
 
