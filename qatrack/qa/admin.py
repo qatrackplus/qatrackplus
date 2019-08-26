@@ -410,7 +410,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
             "changed_by",
         ).order_by("-changed"))
         history = [obj] + list(hist)
-        new_olds = [(new, old) for (new, old) in zip(history, history[1:])]
+        new_olds = [(new, old) for (new, old) in zip(history, history[1:] + [None])]
 
         return loader.render_to_string('admin/unittestinfo_history.html', {'history': new_olds})
 
