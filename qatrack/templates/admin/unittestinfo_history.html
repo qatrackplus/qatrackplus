@@ -13,14 +13,14 @@
         </tr>
         </thead>
         <tbody>
-          {% for old, new in history %}
+          {% for new, old in history %}
             <tr>
-              <th scope="row">{{ new.changed }}</th>
-              <td>{{ new.changed_by.username }}</td>
-              <td>{{ new.reference }}</td>
+              <th scope="row">{{ old.changed }}</th>
+              <td>{{ old.changed_by.username }}</td>
               <td>{{ old.reference }}</td>
-              <td>{{ new.tolerance }}</td>
+              <td>{{ new.reference }}</td>
               <td>{{ old.tolerance }}</td>
+              <td>{{ new.tolerance }}</td>
               <td style="max-width: 300px" >{{ new.comment}}</td>
             </tr>
           {% endfor %}
