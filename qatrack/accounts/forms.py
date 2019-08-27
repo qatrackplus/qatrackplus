@@ -1,4 +1,5 @@
-from django.contrib.auth.views import PasswordChangeForm, SetPasswordForm as SetPasswordFormBase
+from django.contrib.auth.views import PasswordChangeForm
+from django.contrib.auth.views import SetPasswordForm as SetPasswordFormBase
 from registration.forms import RegistrationForm
 
 

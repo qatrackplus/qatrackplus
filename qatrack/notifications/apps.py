@@ -6,14 +6,14 @@ def do_scheduling(sender, **kwargs):
     from qatrack.qatrack_core.tasks import _schedule_periodic_task
 
     _schedule_periodic_task(
-        "qatrack.reports.tasks.run_reports",
-        "QATrack+ Report Sender",
+        "qatrack.notifications.qcscheduling.tasks.run_scheduling_notices",
+        "QATrack+ Scheduling Notices",
     )
 
 
-class ReportsConfig(AppConfig):
+class NotificationsConfig(AppConfig):
 
-    name = 'qatrack.reports'
+    name = 'qatrack.notifications'
 
     def ready(self):
         post_migrate.connect(do_scheduling, sender=self)

@@ -6,7 +6,7 @@ from qatrack.qatrack_core.tests.utils import get_next_id
 def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", is_active=True):
     try:
         u = User.objects.get(username=uname)
-    except:
+    except User.DoesNotExist:
         if is_superuser:
             u = User.objects.create_superuser(
                 uname, "super@qatrackplus.com", pwd, is_staff=is_staff, is_active=is_active

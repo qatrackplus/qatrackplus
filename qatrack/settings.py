@@ -184,7 +184,6 @@ TEMPLATES = [
             os.path.join(PROJECT_ROOT, 'templates'),
             'genericdropdown/templates',
         ],
-        'APP_DIRS': True,
         'OPTIONS': {
             'debug': False,
             'context_processors': [
@@ -200,6 +199,12 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'qatrack.context_processors.site',
             ],
+            'loaders': [(
+                'django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ]
+            )],
         },
     },
 ]
@@ -250,6 +255,7 @@ INSTALLED_APPS = [
     'admin_views',
 ]
 
+
 # ----------------------------------------------------------------------------
 # API settings
 
@@ -268,6 +274,20 @@ REST_FRAMEWORK = {
     ),
 }
 
+# -----------------------------------------------------------------------------
+# Password validation settings
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+]
 
 # -----------------------------------------------------------------------------
 # Cache settings
@@ -643,7 +663,6 @@ if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
 if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-
 
 if USE_SQL_REPORTS:
     INSTALLED_APPS += [

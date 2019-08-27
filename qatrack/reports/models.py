@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time as dt_time
 
 from django.contrib.auth.models import Group, User
 from django.db import models
@@ -96,7 +96,7 @@ class SavedReport(models.Model):
 
 class ReportSchedule(models.Model):
 
-    TIME_CHOICES = [(time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
+    TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
 
     report = models.OneToOneField(
         SavedReport,

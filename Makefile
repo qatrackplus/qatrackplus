@@ -2,7 +2,7 @@ VERSION=0.3.1
 DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 
 
-cover :
+cover:
 	py.test --reuse-db --cov-report term-missing --cov ./ ${args}
 
 test:

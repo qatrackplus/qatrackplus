@@ -32,15 +32,6 @@
     <script src="https://browser.sentry-cdn.com/4.6.3/bundle.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript">
 
-        {% if not DEBUG %}
-        if (typeof Sentry !== "undefined"){
-          Sentry.init({
-            dsn: 'https://71d525727ece45cdab42a500cb3d007b@sentry.io/1399029',
-            release: '{{ CUSTOMER }}',
-          });
-        }
-        {% endif %}
-
         var siteConfig = {
             VERSION: '{{ VERSION }}',
             STATIC_URL: '{{ STATIC_URL }}',
