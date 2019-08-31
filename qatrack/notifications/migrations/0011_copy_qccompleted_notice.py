@@ -31,7 +31,7 @@ def get_or_create_recipient_groups(ns, RecipientGroup):
         rg.users.add(user)
 
     for group in ns.groups.all():
-        rg.useres.add(group)
+        rg.groups.add(group)
 
     return rg
 
