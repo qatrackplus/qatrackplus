@@ -33,7 +33,6 @@ def send_email_to_users(
         subject = getattr(settings, "EMAIL_NOTIFICATION_SUBJECT", "QATrack+ Notification")
 
     html_content = render_to_string(template, context)
-    open("tmp.html", "w").write(html_content)
     html_body = pynliner.fromString(html_content)
 
     if text_template:
