@@ -34,11 +34,17 @@ class TestQCSchedulingAdmin(TestCase):
         f.clean()
         assert 'future_days' in f.errors
 
-    def test_clean_missing_future_days_not_required(self):
+    def test_clean_future_days_not_required(self):
         f = admin.QCSchedulingNoticeAdminForm()
         f.cleaned_data = {'notification_type': QCSchedulingNotice.DUE, 'future_days': 10}
         f.clean()
         assert 'future_days' in f.errors
+
+    def test_clean_ok(self):
+        f = admin.QCSchedulingNoticeAdminForm()
+        f.cleaned_data = {'notification_type': QCSchedulingNotice.UPCOMING_AND_DUE, 'future_days': 10}
+        f.clean()
+        assert not f.errors
 
     def test_get_notification_type_upcoming(self):
         rg = RecipientGroup.objects.create(name="RG")

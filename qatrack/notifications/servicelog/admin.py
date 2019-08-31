@@ -1,15 +1,10 @@
 from django import forms
 from django.conf import settings
 from django.contrib import admin
-from django.template.defaultfilters import truncatechars
 from django.utils.translation import ugettext as _
 from django.utils.translation import ugettext_lazy as _l
 
 from qatrack.notifications.servicelog import models
-
-
-def trim(string, length=200):
-    return truncatechars(string, length)
 
 
 class ServiceEventNoticeAdminForm(forms.ModelForm):
