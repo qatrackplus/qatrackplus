@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _l
 from qatrack.notifications import models
 import qatrack.notifications.qccompleted.admin as qccadmin  # noqa: F401
 import qatrack.notifications.qcscheduling.admin as qcsadmin  # noqa: F401
-import qatrack.notifications.servicelog.admin as slsadmin  # noqa: F401
+import qatrack.notifications.service_log.admin as slsadmin  # noqa: F401
 
 
 def trim(string, length=200):

@@ -29,10 +29,10 @@ def on_serviceevent_saved(sender, instance, created, **kwargs):
     try:
         send_email_to_users(
             recipients,
-            "servicelog/email.html",
+            "service_log/email.html",
             context=context,
-            subject_template="servicelog/subject.txt",
-            text_template="servicelog/email.txt",
+            subject_template="service_log/subject.txt",
+            text_template="service_log/email.txt",
         )
         logger.info(
             "Sent Service Event Notice for service event %d at %s" % (service_log.service_event_id, timezone.now())
@@ -50,7 +50,7 @@ def on_serviceevent_saved(sender, instance, created, **kwargs):
 
 def get_notification_recipients(service_event):
 
-    from qatrack.notifications.servicelog import models
+    from qatrack.notifications.service_log import models
 
     unit = service_event.unit_service_area.unit
 

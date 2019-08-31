@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext as _
 from django.utils.translation import ugettext_lazy as _l
 
-from qatrack.notifications.servicelog import models
+from qatrack.notifications.service_log import models
 
 
 class ServiceEventNoticeAdminForm(forms.ModelForm):

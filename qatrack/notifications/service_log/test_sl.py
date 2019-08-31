@@ -9,7 +9,7 @@ from qatrack.notifications.models import (
     ServiceEventNotice,
     UnitGroup,
 )
-from qatrack.notifications.servicelog import admin
+from qatrack.notifications.service_log import admin
 from qatrack.qa.tests import utils
 from qatrack.service_log import models
 from qatrack.service_log.tests import utils as sl_utils
