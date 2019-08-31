@@ -6,6 +6,7 @@ from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.db.models import Prefetch, Q
 from django.http import HttpResponse
@@ -94,6 +95,15 @@ class BaseReport(object, metaclass=ReportMeta):
     def get_filter_form(self):
         if self.filter_set:
             return self.filter_set.form
+
+    def filter_form_valid(self, filter_form):
+        """Add any extra checks for the filter_form here.  For example,
+        you may want to limit the number of objects included in a report and if
+        the number of objects is too large, you would do:
+            filter_form.add_error("__all__", "reduce the number of objects!")
+            return False
+        """
+        return True
 
     def get_template(self, using=None):
         t = getattr(self, "template", "reports/html_report.html")
@@ -316,7 +326,22 @@ class QCSummaryReport(BaseReport):
         "selected sites, units, frequencies, and groups."
     ))
 
+    MAX_TLIS = getattr(settings, "REPORT_QCSUMMARYREPORT_MAX_TLIS", 5000)
+
     template = "reports/reports/qc_summary.html"
+
+    def filter_form_valid(self, filter_form):
+
+        ntlis = self.filter_set.qs.count()
+        if ntlis > self.MAX_TLIS:
+            filter_form.add_error(
+                "__all__", "This report can only be generated with %d or fewer Test List "
+                "Instances.  Your filters are including %d. Please reduce the "
+                "number of Test List (Cycle) assignments, or Work Completed time "
+                "period." % (self.MAX_TLIS, ntlis)
+            )
+
+        return filter_form.is_valid()
 
     def get_queryset(self):
         return models.TestListInstance.objects.all()
@@ -455,7 +480,22 @@ class UTCReport(BaseReport):
         )
     )
 
+    MAX_TLIS = getattr(settings, "REPORT_UTCREPORT_MAX_TLIS", 365)
+
     template = "reports/reports/utc.html"
+
+    def filter_form_valid(self, filter_form):
+
+        ntlis = self.filter_set.qs.count()
+        if ntlis > self.MAX_TLIS:
+            filter_form.add_error(
+                "__all__", "This report can only be generated with %d or fewer Test List "
+                "Instances.  Your filters are including %d. Please reduce the "
+                "number of Test List (Cycle) assignments, or Work Completed time "
+                "period." % (self.MAX_TLIS, ntlis)
+            )
+
+        return filter_form.is_valid()
 
     def get_queryset(self):
         return models.TestListInstance.objects.select_related("created_by")
@@ -464,8 +504,8 @@ class UTCReport(BaseReport):
         return "%s.%s" % (slugify(self.name or "unit-test-list-assignment-summary-report"), report_format)
 
     def get_unit_test_collection_details(self, val):
-        utc = models.UnitTestCollection.objects.get(pk=val)
-        return ("Unit / Test List", "%s - %s" % (utc.unit.name, utc.name))
+        utcs = models.UnitTestCollection.objects.filter(pk__in=val)
+        return ("Unit / Test List", ', '.join("%s - %s" % (utc.unit.name, utc.name) for utc in utcs))
 
     def get_context(self):
 
@@ -478,6 +518,7 @@ class UTCReport(BaseReport):
             "test_list",
             "unit_test_collection",
             "unit_test_collection__unit",
+            "unit_test_collection__content_type",
         ).prefetch_related(
             "comments",
             Prefetch("testinstance_set", queryset=models.TestInstance.objects.order_by("created")),
@@ -493,23 +534,45 @@ class UTCReport(BaseReport):
         context['queryset'] = qs
 
         form = self.get_filter_form()
-        utc = models.UnitTestCollection.objects.get(pk=form.cleaned_data['unit_test_collection'])
-        context['utc'] = utc
+        utcs = models.UnitTestCollection.objects.filter(pk__in=form.cleaned_data['unit_test_collection'])
+        context['utcs'] = utcs
 
-        context['site_name'] = utc.unit.site if utc.unit.site else _("N/A")
-        if utc.content_type.name == "testlistcycle":
-            context['cycle_name'] = utc.name
+        context['site_name'] = ', '.join(sorted(set(utc.unit.site if utc.unit.site else _("N/A") for utc in utcs)))
 
-        context['test_list_borders'] = self.get_borders(utc)
+        context['test_list_borders'] = self.get_borders(utcs)
+        context['comments'] = self.get_comments(utcs)
         context['perms'] = PermWrapper(self.user)
         return context
 
-    def get_borders(self, utc):
+    def get_borders(self, utcs):
         borders = {}
-        for tl in utc.tests_object.all_lists():
-            borders[tl.pk] = tl.sublist_borders()
+        for utc in utcs:
+            for tl in utc.tests_object.all_lists():
+                borders[tl.pk] = tl.sublist_borders()
 
         return borders
+
+    def get_comments(self, utcs):
+        from django_comments.models import Comment
+        ct = ContentType.objects.get(model="testlistinstance").pk
+        tlis = models.TestListInstance.objects.filter(
+            unit_test_collection__id__in=utcs.values_list("id"),
+        )
+
+        comments_qs = Comment.objects.filter(
+            content_type_id=ct,
+            object_pk__in=tlis,
+        ).order_by(
+            "-submit_date",
+        ).values_list(
+            "pk",
+            "submit_date",
+            "user__username",
+            "comment",
+        )
+
+        comments = dict((c[0], c[1:]) for c in comments_qs)
+        return comments
 
     def to_table(self, context):
 
@@ -542,8 +605,8 @@ class UTCReport(BaseReport):
                 [_("Reviewed By") + ":", self.format_user(tli.reviewed_by)],
             ])
 
-            for c in tli.comments.order_by("-submit_date"):
-                rows.append([_("Comment") + ":", format_datetime(c.submit_date), self.format_user(c.user), c.comment])
+            for c in context['comments'].get(tli.pk, []):
+                rows.append([_("Comment") + ":", format_datetime(c[0]), c[1], c[2]])
 
             for a in tli.attachment_set.all():
                 rows.append([_("Attachment") + ":", a.label, self.make_url(a.attachment.url, plain=True)])
@@ -717,8 +780,23 @@ class TestDataReport(BaseReport):
 
     category = _l("General")
 
+    MAX_TIS = getattr(settings, "REPORT_TESTDATAREPORT_MAX_TIS", 365 * 3)
+
     template = "reports/reports/test_data.html"
     formats = [CSV, XLS]
+
+    def filter_form_valid(self, filter_form):
+
+        ntis = self.filter_set.qs.count()
+        if ntis > self.MAX_TIS:
+            filter_form.add_error(
+                "__all__", "This report can only be generated with %d or fewer Test "
+                "Instances.  Your filters are including %d. Please reduce the "
+                "number of Tests, Sites, Units, or Work Completed time "
+                "period." % (self.MAX_TIS, ntis)
+            )
+
+        return filter_form.is_valid()
 
     def get_queryset(self):
         return models.TestInstance.objects.order_by("work_completed")

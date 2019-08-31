@@ -37,7 +37,7 @@ def process_form_post(request, instance):
         report = ReportClass(base_opts=base_opts, report_opts=request.POST, user=request.user)
         filter_form = report.get_filter_form()
         if filter_form.is_valid():
-            all_valid = True
+            all_valid = report.filter_form_valid(filter_form)
 
     return all_valid, report, form, filter_form
 

@@ -664,6 +664,15 @@ if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
+if DEBUG:
+    try:
+        import django_actionlog
+        MIDDLEWARE.insert(1, 'django_actionlog.middleware.ActionLogMiddleware',)
+        ACTION_LOG_SETTING = {'handler_type': 'stdout'}
+    except ImportError:
+        pass
+
+
 if USE_SQL_REPORTS:
     INSTALLED_APPS += [
         'explorer',

@@ -338,9 +338,16 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         */
 
         _.each(data.report_errors, function(v, k){
-            var $parent = $("#id_" + k).parents("[class^='col-sm']");
+            var $parent, callback;
+            if (k === "__all__") {
+                $parent = $("#filters");
+                callback = function(content){$parent.prepend(content);};
+            } else {
+                $parent = $("#id_" + k).parents("[class^='col-sm']");
+                callback = function(content){$parent.append(content);};
+            }
             $parent.addClass("has-error");
-            $parent.append('<div class="help-block error-message">'+ v.join(", ") + '</div>');
+            callback('<div class="help-block error-message">'+ v.join(", ") + '</div>');
         });
 
         _.each(data.base_errors, function(v, k){

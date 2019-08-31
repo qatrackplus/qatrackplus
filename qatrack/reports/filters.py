@@ -107,7 +107,7 @@ class UnitTestCollectionFilter(django_filters.FilterSet):
         help_text=_l("Dates to include QC data from"),
     )
 
-    unit_test_collection = django_filters.filters.ChoiceFilter(
+    unit_test_collection = django_filters.filters.MultipleChoiceFilter(
         label=_l("Test List (Cycle) Assignment"),
         help_text=_l("Select the Unit Test List (Cycle) Assignment)"),
         required=True,

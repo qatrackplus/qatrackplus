@@ -32,9 +32,9 @@
               {{tli.test_list.name}}
           </dd>
 
-          {% if cycle_name %}
-          <dt>{% trans "Test List Cycle" %}:</dt>
-            <dd>{{ cycle_name }}</dd>
+          {% if "cycle" in tli.unit_test_collection.content_type.name %}
+            <dt>{% trans "Test List Cycle" %}:</dt>
+            <dd>{{ tli.unit_test_collection.name }}</dd>
           {% endif %}
 
           <dt>{% trans "Performed By" %}:</dt>
