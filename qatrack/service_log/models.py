@@ -499,15 +499,10 @@ def ensure_hours_unique(sender, instance, raw, using, update_fields, **kwargs):
     if instance.id is None:
         try:
             Hours.objects.get(
-<<<<<<< HEAD
                 service_event=instance.service_event,
                 third_party=instance.third_party,
                 user=instance.user,
             )
-=======
-                service_event=instance.service_event, third_party=instance.third_party, user=instance.user
-            )  # noqa: E501
->>>>>>> 0.3.1
         except Hours.DoesNotExist:
             pass
         else:
