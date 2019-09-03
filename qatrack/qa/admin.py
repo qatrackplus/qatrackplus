@@ -388,8 +388,10 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
             "tolerance",
             "changed_by",
         ).order_by("-changed"))
-        old_news = zip([obj] + hist[1:], hist)
-        return loader.render_to_string('admin/unittestinfo_history.html', {'history': old_news})
+        history = [obj] + list(hist)
+        new_olds = [(new, old) for (new, old) in zip(history, history[1:] + [None])]
+
+        return loader.render_to_string('admin/unittestinfo_history.html', {'history': new_olds})
 
 
 class TestListAdminForm(forms.ModelForm):

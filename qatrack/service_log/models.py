@@ -115,11 +115,17 @@ class ServiceEventStatus(models.Model):
         max_length=512, help_text=_('Give a brief description of this service event status'), null=True, blank=True
     )
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+    order = models.PositiveIntegerField(
+        verbose_name=_("Order"),
+        help_text=_("Choose what ordering this status will be listed as in drop down controls"),
+        default=0,
+    )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
         verbose_name_plural = _('Service event statuses')
+        ordering = ("order", "pk")
 
     def save(self, *args, **kwargs):
         if self.is_default:
@@ -493,10 +499,15 @@ def ensure_hours_unique(sender, instance, raw, using, update_fields, **kwargs):
     if instance.id is None:
         try:
             Hours.objects.get(
+<<<<<<< HEAD
                 service_event=instance.service_event,
                 third_party=instance.third_party,
                 user=instance.user,
             )
+=======
+                service_event=instance.service_event, third_party=instance.third_party, user=instance.user
+            )  # noqa: E501
+>>>>>>> 0.3.1
         except Hours.DoesNotExist:
             pass
         else:
