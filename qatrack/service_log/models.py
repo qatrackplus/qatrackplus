@@ -16,7 +16,7 @@ from qatrack.qa.models import TestListInstance, UnitTestCollection
 from qatrack.units.models import NameNaturalKeyManager, Unit, Vendor
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
-color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
+color_re = re.compile(r'^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + r',(0(\.[0-9][0-9]?)?|1)\)$')
 validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 
 NEW_SERVICE_EVENT = 'new_se'
@@ -114,11 +114,17 @@ class ServiceEventStatus(models.Model):
         max_length=512, help_text=_('Give a brief description of this service event status'), null=True, blank=True
     )
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+    order = models.PositiveIntegerField(
+        verbose_name=_("Order"),
+        help_text=_("Choose what ordering this status will be listed as in drop down controls"),
+        default=0,
+    )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
         verbose_name_plural = _('Service event statuses')
+        ordering = ("order", "pk")
 
     def save(self, *args, **kwargs):
         if self.is_default:
@@ -415,7 +421,7 @@ class ServiceLogManager(models.Manager):
             user=user,
             service_event=instance,
             log_type=NEW_SERVICE_EVENT,
-            datetime=timezone.now() - timezone.timedelta(seconds=1)  # Cheat to always show create logs before rtsqa logs created at same time
+            datetime=timezone.now() - timezone.timedelta(seconds=1)  # Cheat to always show create logs before rtsqa logs created at same time  # noqa: E501
         )
 
     def log_changed_service_event(self, user, instance, extra_info):
@@ -478,7 +484,9 @@ def ensure_hours_unique(sender, instance, raw, using, update_fields, **kwargs):
 
     if instance.id is None:
         try:
-            Hours.objects.get(service_event=instance.service_event, third_party=instance.third_party, user=instance.user)
+            Hours.objects.get(
+                service_event=instance.service_event, third_party=instance.third_party, user=instance.user
+            )  # noqa: E501
         except Hours.DoesNotExist:
             pass
         else:

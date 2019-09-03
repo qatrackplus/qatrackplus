@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
-from django.forms import ModelForm, ValidationError
 from django.db.models import Count, Max
+from django.forms import ModelForm, ValidationError
 
 from .models import (
     GroupLinker,
@@ -81,7 +81,8 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
 
 
 class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ['name', 'is_review_required', 'is_default', 'rts_qa_must_be_reviewed']
+    list_display = ['name', 'is_review_required', 'is_default', 'rts_qa_must_be_reviewed', 'order']
+    list_editable = ['order']
     form = ServiceEventStatusFormAdmin
 
     class Media:
