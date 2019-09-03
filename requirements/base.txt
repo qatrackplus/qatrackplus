@@ -34,7 +34,7 @@ pydicom==1.1.0
 scikit-image<0.14.0; python_version == '3.4'
 scikit-learn<1.0; python_version == '3.4'
 pylinac==2.1.0.1; python_version < '3.6'
--e git+https://github.com/randlet/pylinac.git@cf76d807f6a97dd8435e1b29ce126cf8cc4bd5bd#egg=pylinac ; python_version >= '3.6'
+-e git+https://github.com/randlet/pylinac.git@mlc#egg=pylinac ; python_version >= '3.6'
 Pillow<6
 pynliner==0.8.0
 pytest-cov==2.6.1
