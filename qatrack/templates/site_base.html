@@ -523,7 +523,7 @@
                   {% endif %}
                 {% endif %}
 
-                {% if perms.reports.can_create_sql_reports or perms.reports.can_run_sql_reports or perms.reports.can_create_reports or perms.reports.can_run_reports or perms.qa.can_view_charts or USE_SERVICE_LOG %}
+                {% if perms.reports.can_create_sql_reports or perms.reports.can_run_sql_reports or perms.reports.can_create_reports or perms.reports.can_run_reports or perms.qa.can_view_charts or USE_SERVICE_LOG and user.is_staff %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                       {% trans "Trends and Analysis" %}
