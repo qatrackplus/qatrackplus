@@ -1836,7 +1836,7 @@ class TestInstance(models.Model):
             self.bool_pass_fail()
         elif self.unit_test_info.test.is_string_type() and self.tolerance:
             self.string_pass_fail()
-        elif self.reference and self.tolerance:
+        elif self.reference and self.tolerance and not value_null:
             self.float_pass_fail()
         else:
             # no tolerance and/or reference set

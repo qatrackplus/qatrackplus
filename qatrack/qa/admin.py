@@ -15,7 +15,7 @@ from django.template import loader
 from django.template.defaultfilters import date as date_formatter
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import escape
+from django.utils.html import escape, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
@@ -755,6 +755,27 @@ class TestForm(forms.ModelForm):
                 except:  # noqa: E722
                     self.add_error("formatting", forms.ValidationError("Invalid numerical format"))
 
+        editing_hidden = self.instance.pk is not None and cleaned_data.get("hidden")
+        if editing_hidden:
+            existing_ref_tols = models.UnitTestInfo.objects.filter(test=self.instance).exclude(
+                reference=None,
+                tolerance=None,
+            )
+            if existing_ref_tols.exists():
+                links = []
+                for uti, name in existing_ref_tols.order_by("unit__name").values_list("pk", "unit__name"):
+                    url = reverse("admin:qa_unittestinfo_change", args=(uti,))
+                    links.append((url, name))
+
+                title = _("Click to edit the reference and tolerance (opens in new window)")
+                html_links = format_html_join(
+                    ", ", '<a href="{}" title="{}" target="_blank">{}</a>', ((u, title, l) for (u, l) in links)
+                )
+                msg = _(
+                    "Hidden tests can not have references and tolerances set. Please remove the references "
+                    "and tolerances for this test on the following units before making it hidden: "
+                ) + html_links
+                self.add_error("hidden", mark_safe(msg))
         return cleaned_data
 
 
