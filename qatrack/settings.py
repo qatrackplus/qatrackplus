@@ -649,6 +649,15 @@ if FORCE_SCRIPT_NAME:
     ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
 
 
+# no longer using EMAIL_NOTIFICATION_USER/PWD but people may have
+# notification specific settings set.
+if EMAIL_NOTIFICATION_USER and not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = EMAIL_NOTIFICATION_USER
+
+if EMAIL_NOTIFICATION_PWD and not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = EMAIL_NOTIFICATION_PWD
+
+
 # ------------------------------------------------------------------------------
 # Testing settings
 
@@ -666,7 +675,7 @@ if DEBUG_TOOLBAR:
 
 if DEBUG:
     try:
-        import django_actionlog
+        import django_actionlog  # noqa: F401
         MIDDLEWARE.insert(1, 'django_actionlog.middleware.ActionLogMiddleware',)
         ACTION_LOG_SETTING = {'handler_type': 'stdout'}
     except ImportError:

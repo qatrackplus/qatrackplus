@@ -74,7 +74,7 @@ HTTP or HTTPS Setting
 .....................
 
 In order for urls to use the correct protocol for links, set `HTTP_OR_HTTPS` to
-the appropriate protocol. 
+the appropriate protocol.
 
 .. code-block:: python
 
@@ -260,7 +260,7 @@ CHROME_PATH
 Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. For example
 
 .. code-block:: python
-    
+
     CHROME_PATH = '/usr/bin/chromium-browser'  # default
     # - or -
     CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
@@ -479,10 +479,6 @@ Notification specific settings
 These settings allow you to override the default notification settings in your
 local_settings.py file:
 
-* `EMAIL_NOTIFICATION_USER` allows you to use a diferent user from the default
-  set above (set to None to use `EMAIL_HOST_USER`)
-
-* `EMAIL_NOTIFICATION_PWD` password to go along with `EMAIL_NOTIFICATION_USER`
 
 * `EMAIL_NOTIFICATION_SENDER` name to use in the email "From" address
 
@@ -491,6 +487,14 @@ local_settings.py file:
 
 * `EMAIL_NOTIFICATION_TEMPLATE` allows you to override the default template to
   use for rendering the email body (see below)
+
+* (deprecated) `EMAIL_NOTIFICATION_USER` allows you to use a diferent user from
+  the default set above (set to None to use `EMAIL_HOST_USER`).  This setting
+  is no longer used, set `EMAIL_HOST_USER` instead.
+
+* (deprecated) `EMAIL_NOTIFICATION_PWD` password to go along with
+  `EMAIL_NOTIFICATION_USER`.  This setting is no longer used, set
+  `EMAIL_HOST_PASSWORD` instead.
 
 
 An example of these settings is shown here:

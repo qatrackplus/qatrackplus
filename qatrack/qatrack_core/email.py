@@ -21,8 +21,6 @@ def send_email_to_users(
     context = context or {}
 
     from_address = getattr(settings, "EMAIL_NOTIFICATION_SENDER", '"QATrack+" <notifications@qatrackplus.com>')
-    user = getattr(settings, "EMAIL_NOTIFICATION_USER", None)
-    pwd = getattr(settings, "EMAIL_NOTIFICATION_PWD", None)
     fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
 
     context["domain"] = Site.objects.get_current().domain
@@ -52,7 +50,6 @@ def send_email_to_users(
         message.attach(name, attachment, mimetype)
 
     try:
-        print("Still need auth users/password here")
         message.send(fail_silently=False)
     except:  # noqa: E722  # pragma: nocover
         logger.exception("Error sending email.")
