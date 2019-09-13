@@ -537,7 +537,7 @@ class UTCReport(BaseReport):
         utcs = models.UnitTestCollection.objects.filter(pk__in=form.cleaned_data['unit_test_collection'])
         context['utcs'] = utcs
 
-        context['site_name'] = ', '.join(sorted(set(utc.unit.site if utc.unit.site else _("N/A") for utc in utcs)))
+        context['site_name'] = ', '.join(sorted(set(utc.unit.site.name if utc.unit.site else _("N/A") for utc in utcs)))
 
         context['test_list_borders'] = self.get_borders(utcs)
         context['comments'] = self.get_comments(utcs)
