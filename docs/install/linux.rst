@@ -374,7 +374,8 @@ required):
     }
 
 
-    ALLOWED_HOSTS = ['XX.XXX.XXX.XX']  # Set to your server IP address (or *)!
+    # Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
+    ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
 
 Once you have got those settings done, we can now create the tables in our
 database and install the default data:
