@@ -40,7 +40,6 @@ urlpatterns = [
     url(r'^servicelog/', include('qatrack.service_log.urls')),
     url(r'^parts/', include('qatrack.parts.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
-    url(r'^sql-reports/', include('explorer.urls')),
 
     # Uncomment the next line to enable the admin:
     path(r'admin/', admin.site.urls),
@@ -60,7 +59,7 @@ js_info_dict = {
 urlpatterns += [url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict)]
 
 if settings.USE_SQL_REPORTS:
-    urlpatterns.append(url(r'^reports/', include('explorer.urls')),)
+    urlpatterns.append(url(r'^sql-reports/', include('explorer.urls')),)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
