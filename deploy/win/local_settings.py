@@ -21,8 +21,7 @@ DATABASES = {
     }
 }
 
-# Change XX.XXX.XXX.XX to your servers IP address or * (less secure)!
-ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # needs to be set to True when running behind reverse proxy (normal deploy)
 # set to False when not running behind reverse proxy
