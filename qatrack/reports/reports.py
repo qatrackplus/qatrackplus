@@ -561,7 +561,7 @@ class UTCReport(BaseReport):
 
         comments_qs = Comment.objects.filter(
             content_type_id=ct,
-            object_pk__in=tlis,
+            object_pk__in=map(str, tlis.values_list("id", flat=True)),
         ).order_by(
             "-submit_date",
         ).values_list(
