@@ -8,7 +8,7 @@ $(document).ready(function() {
         keyboardNavigation: false,
         timePicker: true,
         timePicker24Hour: true,
-        locale: {"format": siteConfig.MOMENT_DATETIME_FMT},
+        locale: {"format": siteConfig.DATERANGEPICKER_DATE_FMT},
         // startDate: moment(),
         // endDate: moment()
     });

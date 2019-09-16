@@ -154,7 +154,7 @@ function listableStatic(Listable, moment){
     };
 
     var date_range_locale = {
-        "format": siteConfig.MOMENT_DATE_FMT,
+        "format": siteConfig.DATERANGEPICKER_DATE_FMT,
         "separator": " - ",
         "applyLabel": "Apply",
         "cancelLabel": "Clear",

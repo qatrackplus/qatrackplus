@@ -320,7 +320,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             linkedCalendars: false,
             opens: 'left',
             locale: {
-                format: date_format
+                format: siteConfig.DATERANGEPICKER_DATE_FMT
             }
         });
 
@@ -2323,12 +2323,12 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $highlight_flags.prop('checked', highlight_flags);
             $highlight_comments.prop('checked', highlight_comments);
             if (!date_range) {
-                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(date_format));
-                $date_range.data('daterangepicker').setEndDate(moment().format(date_format));
+                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(siteConfig.MOMENT_DATE_FMT));
+                $date_range.data('daterangepicker').setEndDate(moment().format(siteConfig.MOMENT_DATE_FMT));
             } else {
                 date_range = date_range.replace(/%20/g, ' ');
-                $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], date_format).format(date_format));
-                $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], date_format).format(date_format));
+                $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
+                $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
             }
             $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
             $show_events.prop('checked', show_events);

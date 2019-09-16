@@ -185,4 +185,5 @@ def site(request):
         'MOMENT_DATETIME_FMT': get_format("MOMENT_DATETIME_FMT"),
         'FLATPICKR_DATE_FMT': get_format("FLATPICKR_DATE_FMT"),
         'FLATPICKR_DATETIME_FMT': get_format("FLATPICKR_DATETIME_FMT"),
+        'DATERANGEPICKER_DATE_FMT': get_format("DATERANGEPICKER_DATE_FMT"),
     }

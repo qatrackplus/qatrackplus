@@ -2,7 +2,7 @@
 require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, autosize) {
 
     var date_range_locale = {
-        "format": siteConfig.MOMENT_DATE_FMT,
+        "format": siteConfig.DATERANGEPICKER_DATE_FMT,
         "separator": " - ",
         "applyLabel": "Apply",
         "cancelLabel": "Clear",

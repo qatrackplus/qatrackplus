@@ -154,7 +154,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     var $updateSchedule = $("#schedule");
 
     var date_range_locale = {
-        "format": siteConfig.MOMENT_DATE_FMT,
+        "format": siteConfig.DATERANGEPICKER_DATE_FMT,
         "separator": " - ",
         "applyLabel": "Apply",
         "cancelLabel": "Clear",
