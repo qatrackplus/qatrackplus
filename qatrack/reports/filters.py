@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _l
 import django_filters
 
 from qatrack.qa import models
-from qatrack.qatrack_core.utils import format_datetime_as_date
+from qatrack.qatrack_core.utils import format_as_date
 from qatrack.units import models as umodels
 from qatrack.units.forms import unit_site_unit_type_choices, utc_choices
 
@@ -250,7 +250,7 @@ class TestDataFilter(django_filters.FilterSet):
 
         now = timezone.now()
         last_year = now - timezone.timedelta(days=365)
-        wc_range = "%s - %s" % (format_datetime_as_date(last_year), format_datetime_as_date(now))
+        wc_range = "%s - %s" % (format_as_date(last_year), format_as_date(now))
         self.form.fields['test_list_instance__work_completed'].widget.attrs['class'] = "pastdate"
         self.form.fields['test_list_instance__work_completed'].initial = wc_range
         self.form.fields['unit_test_info__unit'].choices = unit_site_unit_type_choices()

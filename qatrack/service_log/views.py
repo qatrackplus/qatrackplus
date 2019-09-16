@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.urls import resolve, reverse
 from django.db.models import Sum
 from django.forms.utils import timezone
 from django.http import (
@@ -21,6 +20,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
+from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
@@ -52,6 +52,12 @@ from qatrack.qa.templatetags import qa_tags
 from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.qa.views.review import UTCInstances
+from qatrack.qatrack_core.utils import (
+    format_as_date,
+    format_as_time,
+    format_datetime,
+    parse_date,
+)
 from qatrack.service_log import forms, models
 from qatrack.units import models as u_models
 
@@ -69,7 +75,7 @@ def get_time_display(dt):
         # ago = timezone.timedelta(minutes=ago.minute)
         return str(ago.seconds // 60) + ' minutes ago'
     else:
-        return dt.strftime('%I:%M %p')
+        return format_as_time(dt)
 
 
 def unit_sa_utc(request):
@@ -418,7 +424,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 # delete any existing link instances that aren't present anymore
                 deleted_gli_users = existing_gli_users - current_cli_users
                 glis.filter(user_id__in=deleted_gli_users).delete()
-
 
         for h_form in hours_formset:
 
@@ -899,7 +904,7 @@ class ServiceEventsReviewRequiredList(ServiceEventsBaseList):
         return "Service Events Requiring Review"
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(is_review_required=True,  service_status__is_review_required=True)
+        qs = super().get_queryset().filter(is_review_required=True, service_status__is_review_required=True)
         return qs
 
     def get_next(self):
@@ -913,7 +918,7 @@ class ServiceEventsInitiatedByList(ServiceEventsBaseList):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
         title = "%s %s - %s " % (
             tli.unit_test_collection.unit, tli.unit_test_collection.name,
-            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+            format_datetime(tli.work_completed)
         )
         return "Service Events Initiated By %s" % (title)
 
@@ -933,7 +938,7 @@ class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
         title = "%s %s - %s " % (
             tli.unit_test_collection.unit, tli.unit_test_collection.name,
-            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+            format_datetime(tli.work_completed)
         )
         return "Service Events with %s as Return To Service" % (title)
 
@@ -1142,7 +1147,7 @@ class ReturnToServiceQAForEventList(ReturnToServiceQABaseList):
         se = get_object_or_404(models.ServiceEvent, pk=self.kwargs['se_pk'])
         description = "%s - %s %s" % (
             se.unit_service_area,
-            timezone.localtime(se.datetime_service).strftime('%b %m, %I:%M %p'),
+            format_datetime(se.datetime_service),
             qa_tags.service_status_label(se.service_status),
         )
         return mark_safe("Return to Service QC - Service Event %d: %s" % (se.pk, description))
@@ -1307,8 +1312,9 @@ def handle_unit_down_time(request):
 
     if daterange:
         tz = timezone.get_current_timezone()
-        date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
-        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
+        from_, to = daterange.split(' - ')
+        date_from = parse_date(from_, as_date=False)
+        date_to = parse_date(to, as_date=False)
         date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
         date_from = tz.localize(date_from)
         date_to = tz.localize(date_to)
@@ -1362,7 +1368,7 @@ def handle_unit_down_time(request):
 
     writer = csv.writer(response)
     rows = [
-        ['Up Time Report: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Up Time Report: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
+        ['Up Time Report: ' + (format_as_date(date_from) + ' to ' + format_as_date(date_to)) if daterange else 'Up Time Report: All time until ' + format_datetime(timezone.datetime.now())],
         [''],
         [''],
         [''],
@@ -1448,7 +1454,7 @@ def handle_unit_down_time(request):
     totals['total_lost'] = '{:.2f}'.format(totals['total_lost'])
 
     if not service_areas:
-        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) is not 0 else 0
+        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) != 0 else 0
     rows += [[''], ['']]
     rows.append(['', 'Totals:'] + [str(totals[t]) for t in totals])
 

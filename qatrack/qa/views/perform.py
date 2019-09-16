@@ -34,6 +34,7 @@ from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
+from qatrack.qatrack_core.utils import parse_date, parse_datetime
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -627,10 +628,9 @@ class CompositePerformer:
             self.context_keys.append(slug)
             if self.test_types[slug] in models.DATE_TYPES:
                 has_time = self.test_types[slug] == models.DATETIME
-                fmt = "%Y-%m-%d %H:%M:%S" if has_time else "%Y-%m-%d"
+                parser = parse_datetime if has_time else parse_date
                 try:
-                    dt = timezone.datetime.strptime(val, fmt)
-                    self.calculation_context[slug] = dt if has_time else dt.date()
+                    self.calculation_context[slug] = parser(val)
                 except:  # noqa: E722
                     self.calculation_context[slug] = None
             elif slug not in self.composite_tests:

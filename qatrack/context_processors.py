@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
+from django.utils.formats import get_format
 
 from qatrack.parts.models import PartStorageCollection, PartUsed
 from qatrack.qa.models import TestListInstance, UnitTestCollection
@@ -178,4 +179,10 @@ def site(request):
         'DEFAULT_SE_STATUS': default_se_status,
         'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
         'IN_PROGRESS': in_progress_count,
+
+        # JavaScript Date Formats
+        'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
+        'MOMENT_DATETIME_FMT': get_format("MOMENT_DATETIME_FMT"),
+        'FLATPICKR_DATE_FMT': get_format("FLATPICKR_DATE_FMT"),
+        'FLATPICKR_DATETIME_FMT': get_format("FLATPICKR_DATETIME_FMT"),
     }

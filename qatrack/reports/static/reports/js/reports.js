@@ -154,7 +154,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     var $updateSchedule = $("#schedule");
 
     var date_range_locale = {
-        "format": "DD MMM YYYY",
+        "format": siteConfig.MOMENT_DATE_FMT,
         "separator": " - ",
         "applyLabel": "Apply",
         "cancelLabel": "Clear",
@@ -260,7 +260,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     function createDateRangePicker($el, ranges, initial){
 
         if ($el.val() === null || $el.val() === ""){
-            $el.val(ranges[initial][0].format('DD MMM YYYY') + ' - ' + ranges[initial][1].format('DD MMM YYYY'));
+            $el.val(ranges[initial][0].format(siteConfig.MOMENT_DATE_FMT) + ' - ' + ranges[initial][1].format(siteConfig.MOMENT_DATE_FMT));
         }
 
         $el.daterangepicker({
@@ -270,9 +270,9 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
             "linkedCalendars": false,
             "locale": date_range_locale
         }, function (start_date, end_date) {
-            $(this.element).val(start_date.format('DD MMM YYYY') + ' - ' + end_date.format('DD MMM YYYY'));
+            $(this.element).val(start_date.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + end_date.format(siteConfig.MOMENT_DATE_FMT));
         }).on('apply.daterangepicker', function (ev, picker) {
-            $(picker.element).val(picker.startDate.format('DD MMM YYYY') + ' - ' + picker.endDate.format('DD MMM YYYY'));
+            $(picker.element).val(picker.startDate.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + picker.endDate.format(siteConfig.MOMENT_DATE_FMT));
             if (!picker.startDate.isSame(picker.oldStartDate) || !picker.endDate.isSame(picker.oldEndDate)) {
                 $(this).trigger('keyup');
             }

@@ -6,7 +6,7 @@ from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
 from django.utils.translation import ugettext as _
 
-from qatrack.qatrack_core.utils import format_datetime_as_date as fmt_date
+from qatrack.qatrack_core.utils import format_as_date as fmt_date
 
 # ServiceArea = apps.get_app_config('service_log').get_model('ServiceArea')
 # UnitServiceArea = apps.get_app_config('service_log').get_model('UnitServiceArea')

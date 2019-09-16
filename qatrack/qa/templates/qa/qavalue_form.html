@@ -56,7 +56,7 @@
         <td class="qa-value" title="{{form.value.help_text|safe}}" >
             {% if test.is_boolean %}
                 <div class="row">
-                    <div class="col-xs-12">
+                    <div class="col-xs-12 boolean-wrapper">
                       <span class="pull-left">{{form.value.0}}</span>
                       <span class="pull-right">{{form.value.1}}</span>
                     </div>
@@ -91,7 +91,7 @@
                  <div>{{form.value}}</div>
             {% endif %}
         </td>
-        <td class="qa-skip"title="{{form.skipped.help_text|safe}}">
+        <td class="qa-skip" title="{{form.skipped.help_text|safe}}">
             {% if test.skip_required %}{{form.skipped}}{% endif %}
         </td>
         <td class="qa-status">Not Done</td>

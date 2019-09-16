@@ -48,6 +48,23 @@ input.qa-input[type="radio"]{
   vertical-align: middle;
 }
 
+.boolean-wrapper span.pull-right label {
+  margin-right: 20px;
+}
+/*.boolean-wrapper span label {
+border: 1px solid #eeeeee;
+background-color: #e8e8e8;
+
+margin: 0 5px;
+
+padding: 2px;
+
+line-height: 10px;
+
+border-radius: 4px;
+}
+*/
+
 input.qa-input:not([type="radio"]),
 select.qa-input,
 .review-status select {
@@ -89,7 +106,13 @@ input[readonly].qa-input {
     text-align:center;
     padding: 0;
     vertical-align: middle;
+
 }
+/*#perform-qa-table td.qa-skip {
+    border-left: 1px solid #eeeeee !important;
+    border-right: 1px solid #eeeeee !important;
+}
+*/
 .qa-skip {
     width:34px;
     text-align: center;

@@ -19,6 +19,11 @@ import numpy
 
 from qatrack.qa.control_chart import control_chart
 from qatrack.qa.utils import SetEncoder
+from qatrack.qatrack_core.utils import (
+    format_as_date,
+    format_datetime,
+    parse_date,
+)
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Unit
 
@@ -254,8 +259,9 @@ class BaseChartView(View):
         d_string = self.request.GET.get('date_range', '').replace('%20', ' ')
 
         if d_string:
-            d_from = timezone.datetime.strptime(d_string.split(' - ')[0], '%d %b %Y')
-            d_to = timezone.datetime.strptime(d_string.split(' - ')[1], '%d %b %Y')
+            from_, to = d_string.split(' - ')
+            d_from = parse_date(from_)
+            d_to = parse_date(to)
         else:
             d_from = default_from
             d_to = default_to
@@ -299,12 +305,12 @@ class BaseChartView(View):
             if ti.comment:
                 comments.append(
                     "<strong>%s - %s:</strong> %s" %
-                    (ti.created.strftime("%d %b %Y"), ti.created_by.username, ti.comment)
+                    (format_as_date(ti.created), ti.created_by.username, ti.comment)
                 )
             for c in sorted(tli_comments, key=lambda c: c.submit_date):
                 user = c.user or ti.created_by
                 comments.append(
-                    "<strong>%s - %s:</strong> %s" % (c.submit_date.strftime("%d %b %Y"), user.username, c.comment)
+                    "<strong>%s - %s:</strong> %s" % (format_as_date(c.submit_date), user.username, c.comment)
                 )
             comment = '<br/>'.join(comments)
 
@@ -503,7 +509,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         """look for a number in GET and convert it to the given datatype"""
         try:
             v = dtype(self.request.GET.get(param, default))
-        except:
+        except:  # noqa: E507
             v = default
         return v
 
@@ -571,7 +577,6 @@ class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
 
     def render_to_response(self, context):
         import csv
-        from django.utils import formats
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="qatrackexport.csv"'
 
@@ -588,7 +593,7 @@ class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
         for row_set in context['rows']:
             row = []
             for date, val, ref in row_set:
-                date = formats.date_format(date, "DATETIME_FORMAT") if date is not "" else ""
+                date = format_datetime(date) if date != "" else ""
                 row.extend([date, val, ref])
             writer.writerow(row)
 

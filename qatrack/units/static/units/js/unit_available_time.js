@@ -34,7 +34,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
     });
 
     var date_range_locale = {
-        "format": siteConfig.MOMENT_DAY_FMT,
+        "format": siteConfig.MOMENT_DATE_FMT,
         "separator": " - ",
         "applyLabel": "Apply",
         "cancelLabel": "Clear",
@@ -277,7 +277,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
             $('body').addClass('loading');
             $('#available_modal').modal('hide');
 
-            var day = moment($effective_date.val(), siteConfig.MOMENT_DAY_FMT).valueOf();
+            var day = moment($effective_date.val(), siteConfig.MOMENT_DATE_FMT).valueOf();
 
             $.ajax({
                 type: 'POST',
@@ -393,7 +393,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                             uate_data = unit_available_time_data[unit_id].available_time_edits,
                             date_acceptance = unit_available_time_data[unit_id].date_acceptance,
                             unit_avail_time_today = 0,
-                            day_str = day.format(siteConfig.MOMENT_DAY_FMT),
+                            day_str = day.format(siteConfig.MOMENT_DATE_FMT),
                             day_edit_name = null,
                             available_time_changed,
                             unit_name = unit_available_time_data[unit_id].name;
@@ -407,12 +407,12 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
 
                         if (day_str in uate_data) {
                             day_edit_name = uate_data[day_str].name;
-                            unit_avail_time_today = duration_minutes(uate_data[day.format(siteConfig.MOMENT_DAY_FMT)].hours);
+                            unit_avail_time_today = duration_minutes(uate_data[day.format(siteConfig.MOMENT_DATE_FMT)].hours);
                         } else {
                             // search through available time objects which should be ordered most recent to oldest
                             for (var j = 0; j < uat_data.length; j++) {
 
-                                if (moment(uat_data[j].date_changed, siteConfig.MOMENT_DAY_FMT).subtract(1, 'days').isBefore(day)) {
+                                if (moment(uat_data[j].date_changed, siteConfig.MOMENT_DATE_FMT).subtract(1, 'days').isBefore(day)) {
                                     unit_avail_time_today = duration_minutes(
                                         uat_data[j]['hours_' + day.format('dddd').toLocaleLowerCase()]
                                     );
@@ -683,7 +683,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                     disable_uat_btns();
 
                     $effective_date.val(
-                        selected_days.length > 0 ? selected_days.sort(function(a, b) { return a - b; })[0].format(siteConfig.MOMENT_DAY_FMT) : ''
+                        selected_days.length > 0 ? selected_days.sort(function(a, b) { return a - b; })[0].format(siteConfig.MOMENT_DATE_FMT) : ''
                     );
 
                     d3.selectAll('g.day-g')
@@ -747,7 +747,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                 var acceptance_icons = day_selection.selectAll('text.acceptance-icon')
                     .data(function(d) {
                         return d.hours_data.filter(function (f) {
-                            return selected_units.indexOf(f.id) !== -1 && moment(f.date_acceptance, siteConfig.MOMENT_DAY_FMT).isSame(d.day_moment);
+                            return selected_units.indexOf(f.id) !== -1 && moment(f.date_acceptance, siteConfig.MOMENT_DATE_FMT).isSame(d.day_moment);
                         });
                     });
 

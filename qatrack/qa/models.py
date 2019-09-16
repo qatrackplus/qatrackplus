@@ -20,6 +20,7 @@ from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
+from qatrack.qatrack_core.utils import format_datetime
 from qatrack.units.models import Unit
 
 # All available test types
@@ -2169,16 +2170,10 @@ class TestListInstance(models.Model):
         return "TestListInstance(pk=%s)" % self.pk
 
     def str_verbose(self):
-        return '%s (%s - %s)' % (
-            self.pk, self.test_list.name, timezone.localtime(self.created).strftime('%b %m, %I:%M %p')
-        )
+        return '%s (%s - %s)' % (self.pk, self.test_list.name, format_datetime(self.created))
 
     def str_summary(self):
-        return '%s (%s%s)' % (
-            self.pk,
-            timezone.localtime(self.created).strftime('%b %m, %I:%M %p'),
-            ' - All reviewed' if self.all_reviewed else ''
-        )
+        return '%s (%s%s)' % (self.pk, format_datetime(self.created), ' - All reviewed' if self.all_reviewed else '')
 
     def save(self, *args, **kwargs):
         if self.work_completed and self.work_completed == self.work_started:

@@ -43,7 +43,7 @@ require(['jquery', 'moment', 'lodash', 'felter'], function ($, moment, _) {
     function create_due_date(ti) {
         var status = ti.due_status,
             date = ti.due_date;
-        if (date) date = moment(ti.due_date).format("D MMM YYYY");
+        if (date) date = moment(ti.due_date).format(siteConfig.MOMENT_DATE_FMT);
         else date = 'No Due Date';
         return $('<span>', {
             class: 'label due-status ' + status,
@@ -70,7 +70,7 @@ require(['jquery', 'moment', 'lodash', 'felter'], function ($, moment, _) {
 
         var unit_filter = $('#unit-filter');
         $.each(unit_lists, function(k1, unit) {
-            
+
             var unit_slug = unit.unit_name.replace(/ /g, '_');
             var unit_name = unit.unit_name;
 

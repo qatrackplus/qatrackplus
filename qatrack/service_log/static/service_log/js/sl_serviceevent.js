@@ -81,7 +81,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             enableTime: true,
             time_24hr: true,
             minuteIncrement: 1,
-            dateFormat: 'd-m-Y H:i',
+            dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
             allowInput: true,
             onOpen: [
                 function(selectedDates, dateStr, instance) {
@@ -146,7 +146,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 var se_id = data.service_events[i][0],
                     se_status_id = data.service_events[i][1],
                     se_problem_description = data.service_events[i][2],
-                    se_date = moment(data.service_events[i][3]).format('MMM D, YYYY HH:mm'),
+                    se_date = moment(data.service_events[i][3]).format(siteConfig.MOMENT_DATETIME_FMT),
                     se_status_name = data.service_events[i][4];
                 results.push({id: se_id, text: se_id, title: se_problem_description, date: se_date, status: se_status_name});
                 se_statuses[se_id] = se_status_id;
@@ -339,7 +339,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             if (prefix === 'utc_initiated') {
 
                 var new_html = $tli_initiated_display_template.html()
-                    .replace(/__utc-date__/g, moment(data['datetime']).format('D MMM YYYY h:mm A'))
+                    .replace(/__utc-date__/g, moment(data['datetime']).format(siteConfig.MOMENT_DATETIME_FMT))
                     .replace(/__tli-id__/g, returnValue)
                     .replace(/__pass-fail__/g, $pass_fail_label_group.html())
                     .replace(/__utc-rev__/g, $review_label_group.html());
@@ -347,7 +347,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $tli_display.html(new_html);
                 $tli_display.slideDown('fast');
             } else {
-                var completed_hrml = data['in_progress'] ? 'In progress' : moment(data['work_completed']).format('D MMM YYYY h:mm A');
+                var completed_hrml = data['in_progress'] ? 'In progress' : moment(data['work_completed']).format(siteConfig.MOMENT_DATETIME_FMT);
                 $('#work-completed-' + prefix).html(completed_hrml);
                 $('#id_' + prefix + '-all_reviewed').val(data.all_reviewed);
 

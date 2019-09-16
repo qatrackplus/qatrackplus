@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
 import pytz
 
-from qatrack.qatrack_core.utils import format_datetime_as_date as fmt_date
+from qatrack.qatrack_core.utils import format_as_date as fmt_date
 from qatrack.units import forms
 from qatrack.units import models as u_models
 

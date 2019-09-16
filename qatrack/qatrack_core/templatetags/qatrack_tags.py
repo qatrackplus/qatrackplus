@@ -3,11 +3,11 @@ import re
 
 from django import template
 from django.core.cache import cache
-from django.db.models import ObjectDoesNotExist
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
+from qatrack.qatrack_core.utils import format_as_time, format_datetime
 from qatrack.service_log import models as sl_models
 
 register = template.Library()
@@ -75,11 +75,11 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
         if timezone.now() - service_log.datetime < timezone.timedelta(hours=1):
             datetime_display = '%s %s' % (int((timezone.now() - service_log.datetime).total_seconds() / 60), _('minutes ago'))
         else:
-            datetime_display = timezone.localtime(service_log.datetime).strftime('%I:%M %p')
+            datetime_display = format_as_time(service_log.datetime)
     elif service_log.datetime.date() == today - timezone.timedelta(days=1):
-        datetime_display = '%s %s' % (_('Yesterday'), timezone.localtime(service_log.datetime).strftime('%I:%M %p'))
+        datetime_display = '%s %s' % (_('Yesterday'), format_as_time(service_log.datetime))
     else:
-        datetime_display = timezone.localtime(service_log.datetime).strftime('%b %d, %I:%M %p')
+        datetime_display = format_datetime(service_log.datetime)
 
     context = {
         'instance': service_log,
@@ -95,7 +95,7 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
     elif service_log.log_type == sl_models.MODIFIED_SERVICE_EVENT:
 
         try:
-            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+            extra_info = json.loads(service_log.extra_info.replace("'", '"'))
         except:
             extra_info = service_log.extra_info
 
@@ -105,7 +105,7 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
     elif service_log.log_type == sl_models.STATUS_SERVICE_EVENT:
 
         try:
-            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+            extra_info = json.loads(service_log.extra_info.replace("'", '"'))
         except:
             extra_info = service_log.extra_info
 
@@ -126,7 +126,7 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
     elif service_log.log_type == sl_models.CHANGED_RTSQA:
 
         try:
-            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+            extra_info = json.loads(service_log.extra_info.replace("'", '"'))
         except:
             extra_info = service_log.extra_info
 
@@ -136,7 +136,7 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
     elif service_log.log_type == sl_models.DELETED_SERVICE_EVENT:
 
         try:
-            extra_info = json.loads(service_log.extra_info.replace("'",'"'))
+            extra_info = json.loads(service_log.extra_info.replace("'", '"'))
         except:
             extra_info = service_log.extra_info
 
