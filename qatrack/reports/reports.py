@@ -25,8 +25,8 @@ from qatrack.qa.templatetags.qa_tags import as_time_delta
 from qatrack.qa.utils import end_of_day
 from qatrack.qatrack_core.utils import (
     chrometopdf,
+    format_as_date,
     format_datetime,
-    format_datetime_as_date,
 )
 from qatrack.reports import filters
 from qatrack.units import models as umodels
@@ -216,12 +216,12 @@ class BaseReport(object, metaclass=ReportMeta):
             return val
 
         if isinstance(val, timezone.datetime):
-            return format_datetime_as_date(val)
+            return format_as_date(val)
 
         try:
             if len(val) > 0 and isinstance(val[0], timezone.datetime):
                 joiner = " - " if len(val) == 2 else ", "
-                return joiner.join(format_datetime_as_date(dt) for dt in val)
+                return joiner.join(format_as_date(dt) for dt in val)
         except:  # noqa: E722  # pragma: no cover
             pass
 
@@ -272,7 +272,7 @@ class BaseReport(object, metaclass=ReportMeta):
                 elif isinstance(data, timezone.datetime):
                     ws.write_string(row, col, format_datetime(data))
                 elif isinstance(data, datetime.date):
-                    ws.write_string(row, col, format_datetime_as_date(data))
+                    ws.write_string(row, col, format_as_date(data))
                 else:
                     ws.write(row, col, data)
 
@@ -384,7 +384,7 @@ class QCSummaryReport(BaseReport):
                 sites_data[-1][-1].append({
                     'unit_name': tli.unit_test_collection.unit.name,
                     'test_list_name': tli.test_list.name,
-                    'due_date': format_datetime_as_date(tli.due_date),
+                    'due_date': format_as_date(tli.due_date),
                     'work_completed': self.get_work_completed(tli),
                     'pass_fail': self.get_pass_fail_status(tli),
                     'link': self.make_url(tli.get_absolute_url(), plain=True),
@@ -430,7 +430,7 @@ class QCSummaryReport(BaseReport):
     def get_work_completed(self, tli):
         """Format work completed as link to instance if html report otherwise just return formatted date"""
 
-        wc = format_datetime_as_date(tli.work_completed)
+        wc = format_as_date(tli.work_completed)
 
         if self.html:
             return self.make_url(tli.get_absolute_url(), wc, _("Click to view on site"))
@@ -596,12 +596,12 @@ class UTCReport(BaseReport):
                 [],
                 ["Test List Instance:", self.make_url(tli.get_absolute_url())],
                 [_("Created By") + ":", self.format_user(tli.created_by)],
-                [_("Work Started") + ":", format_datetime_as_date(tli.work_started)],
-                [_("Work Completed") + ":", format_datetime_as_date(tli.work_completed)],
+                [_("Work Started") + ":", format_as_date(tli.work_started)],
+                [_("Work Completed") + ":", format_as_date(tli.work_completed)],
                 [_("Duration") + ":", _("In Progress") if tli.in_progress else as_time_delta(tli.duration())],
-                [_("Modified") + ":", format_datetime_as_date(tli.modified)],
+                [_("Modified") + ":", format_as_date(tli.modified)],
                 [_("Mofified By") + ":", self.format_user(tli.modified_by)],
-                [_("Reviewed") + ":", format_datetime_as_date(tli.reviewed)],
+                [_("Reviewed") + ":", format_as_date(tli.reviewed)],
                 [_("Reviewed By") + ":", self.format_user(tli.reviewed_by)],
             ])
 
@@ -686,7 +686,7 @@ class DueDatesReportMixin:
 
                 window = utc.window()
                 if window:
-                    window = "%s - %s" % (format_datetime_as_date(window[0]), format_datetime_as_date(window[1]))
+                    window = "%s - %s" % (format_as_date(window[0]), format_as_date(window[1]))
 
                 sites_data[-1][-1].append({
                     'utc': utc,
@@ -694,7 +694,7 @@ class DueDatesReportMixin:
                     'name': utc.name,
                     'window': window,
                     'frequency': utc.frequency.name if utc.frequency else _("Ad Hoc"),
-                    'due_date': format_datetime_as_date(utc.due_date),
+                    'due_date': format_as_date(utc.due_date),
                     'assigned_to': utc.assigned_to.name,
                     'link': self.make_url(utc.get_absolute_url(), plain=True),
                 })
@@ -730,7 +730,7 @@ class DueDatesReportMixin:
                     row['unit_name'],
                     row['name'],
                     row['frequency'],
-                    format_datetime_as_date(row['utc'].due_date),
+                    format_as_date(row['utc'].due_date),
                     row['window'],
                     row['assigned_to'],
                 ])

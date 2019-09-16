@@ -5,7 +5,7 @@ from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
 
-from qatrack.qatrack_core.utils import format_datetime_as_date
+from qatrack.qatrack_core.utils import format_as_date
 from qatrack.reports import models, reports
 from qatrack.reports.forms import (
     ReportForm,
@@ -152,7 +152,7 @@ def saved_reports_datatable(request):
     template = get_template("reports/_saved_reports_table_link.html")
     sch_template = get_template("reports/_saved_reports_table_schedule.html")
     for r in reports:
-        user = '<abbr title="Created on %s">%s</abbr>' % (format_datetime_as_date(r.created), r.created_by.username)
+        user = '<abbr title="Created on %s">%s</abbr>' % (format_as_date(r.created), r.created_by.username)
         context = {'report': r, 'editable': r.created_by == request.user}
         try:
             schedule = r.schedule

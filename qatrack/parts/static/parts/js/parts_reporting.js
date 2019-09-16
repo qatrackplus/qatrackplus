@@ -2,7 +2,7 @@
 require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, autosize) {
 
     var date_range_locale = {
-        "format": "DD MMM YYYY",
+        "format": siteConfig.MOMENT_DATE_FMT,
         "separator": " - ",
         "applyLabel": "Apply",
         "cancelLabel": "Clear",
@@ -86,7 +86,7 @@ require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter',
             $go_units_parts = $('#go_units_parts'),
             $form = $('#unit_area_type');
 
-        $daterange.val(ranges['This Year'][0].format('DD MMM YYYY') + ' - ' + ranges['This Year'][1].format('DD MMM YYYY'));
+        $daterange.val(ranges['This Year'][0].format(siteConfig.MOMENT_DATE_FMT) + ' - ' + ranges['This Year'][1].format(siteConfig.MOMENT_DATE_FMT));
 
         $daterange.daterangepicker({
             autoUpdateInput: false,
@@ -95,9 +95,9 @@ require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter',
             "linkedCalendars": false,
             "locale": date_range_locale
         }, function (start_date, end_date) {
-            $(this.element).val(start_date.format('DD MMM YYYY') + ' - ' + end_date.format('DD MMM YYYY'));
+            $(this.element).val(start_date.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + end_date.format(siteConfig.MOMENT_DATE_FMT));
         }).on('apply.daterangepicker', function (ev, picker) {
-            $(picker.element).val(picker.startDate.format('DD MMM YYYY') + ' - ' + picker.endDate.format('DD MMM YYYY'));
+            $(picker.element).val(picker.startDate.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + picker.endDate.format(siteConfig.MOMENT_DATE_FMT));
             if (!picker.startDate.isSame(picker.oldStartDate) || !picker.endDate.isSame(picker.oldEndDate)) {
                 $(this).trigger('keyup');
             }

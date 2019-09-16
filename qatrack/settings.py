@@ -81,14 +81,18 @@ USE_TZ = True
 
 FORMAT_MODULE_PATH = "qatrack.formats"
 
-INPUT_DATE_FORMATS = (
-    "%d-%m-%Y %H:%M", "%d/%m/%Y %H:%M",
-    "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
-)
-SIMPLE_DATE_FORMAT = "%d-%m-%Y"
-MONTH_ABBR_DATE_FORMAT = "%d %b %Y"
-MONTH_ABBR_DATETIME_FORMAT = "%d %b %Y %H:%M"
-DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)"
+
+# formats for strptime/strftime
+DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
+DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d %b %Y %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
+TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
+
+DATETIME_FORMAT = "j M Y H:i"
+DATE_FORMAT = "j M Y"
+TIME_FORMAT = "H:i"
+
+
+DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -184,6 +188,7 @@ TEMPLATES = [
             os.path.join(PROJECT_ROOT, 'templates'),
             'genericdropdown/templates',
         ],
+        'APP_DIRS': True,
         'OPTIONS': {
             'debug': False,
             'context_processors': [
@@ -199,12 +204,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'qatrack.context_processors.site',
             ],
-            'loaders': [(
-                'django.template.loaders.cached.Loader', [
-                    'django.template.loaders.filesystem.Loader',
-                    'django.template.loaders.app_directories.Loader',
-                ]
-            )],
         },
     },
 ]
@@ -260,18 +259,15 @@ INSTALLED_APPS = [
 # API settings
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication', 'rest_framework.authentication.SessionAuthentication'
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES':
+        ('rest_framework.authentication.TokenAuthentication', 'rest_framework.authentication.SessionAuthentication'),
     # Use Django's standard `django.contrib.auth` permissions
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
-    'DATETIME_INPUT_FORMATS': ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"],
+    'DATETIME_INPUT_FORMATS': DATETIME_INPUT_FORMATS,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-    'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_filters.backends.RestFrameworkFilterBackend',
-    ),
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework_filters.backends.RestFrameworkFilterBackend',),
 }
 
 # -----------------------------------------------------------------------------
@@ -672,14 +668,6 @@ if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
 if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-
-if DEBUG:
-    try:
-        import django_actionlog  # noqa: F401
-        MIDDLEWARE.insert(1, 'django_actionlog.middleware.ActionLogMiddleware',)
-        ACTION_LOG_SETTING = {'handler_type': 'stdout'}
-    except ImportError:
-        pass
 
 
 if USE_SQL_REPORTS:

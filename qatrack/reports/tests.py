@@ -854,7 +854,7 @@ class TestReportInterface(BaseQATests):
 
         self.driver.find_element_by_id("report-id-%s-schedule" % sr.pk).click()
 
-        time.sleep(0.2)
+        self.wait.until(e_c.presence_of_element_located((By.ID, "id_schedule-time")))
         select = Select(self.driver.find_element_by_id('id_schedule-time'))
         select.select_by_index(1)
         self.driver.find_element_by_id("id_schedule-emails").send_keys("a@b.com")
@@ -865,8 +865,8 @@ class TestReportInterface(BaseQATests):
         self.driver.find_element_by_id("schedule").click()
 
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
-        assert timezone.localtime(timezone.now()
-                                  ).strftime("%Y%m%d") in str(models.ReportSchedule.objects.first().schedule)
+        sched = str(models.ReportSchedule.objects.first().schedule)
+        assert timezone.localtime(timezone.now()).strftime("%Y%m%d") in sched
 
     def test_clear_schedule(self):
         """Select report from table and make sure it loads"""

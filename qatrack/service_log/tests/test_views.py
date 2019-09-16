@@ -1,18 +1,18 @@
 import json
 
-from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.serializers.json import DjangoJSONEncoder
-from django.urls import reverse
 from django.db.models import Q
 from django.test import RequestFactory, TestCase
-from django.utils import timezone
 from django.test.utils import override_settings
+from django.urls import reverse
+from django.utils import timezone
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
+from qatrack.qatrack_core.utils import format_as_date, format_datetime
 from qatrack.service_log import models, views
 from qatrack.service_log.tests import utils as sl_utils
 
@@ -301,7 +301,7 @@ class TestCreateServiceEvent(TestCase):
         user.user_permissions.add(Permission.objects.get(codename='can_have_hours'))
 
         data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'unit_field': self.u_1.id,
             'unit_field_fake': self.u_1.id,
             'service_area_field': self.usa_1.service_area.id,
@@ -438,7 +438,7 @@ class TestCreateServiceEvent(TestCase):
         )
 
         data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'unit_field': self.u_1.id,
             'service_area_field': self.sa_1.id,
             'service_type': self.st.id,
@@ -476,7 +476,7 @@ class TestCreateServiceEvent(TestCase):
     def test_formset_required_fields(self):
 
         data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'unit_field': self.u_1.id,
             'service_area_field': self.sa_1.id,
             'service_type': self.st.id,
@@ -610,7 +610,7 @@ class TestEditServiceEvent(TestCase):
         self.url = reverse('sl_edit', kwargs={"pk": self.se.pk})
 
         self.data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'service_status': self.default_ses.id,
             'service_type': self.st.id,
             'is_review_required': 0,
@@ -802,8 +802,8 @@ class TestServiceLogViews(TestCase):
             'unit': [self.usa3.unit.name, self.usa2.unit.name],
             'unit__type': [self.u3.type.name, self.u2.type.name],
             'daterange': '%s - %s' % (
-                (timezone.now() - timezone.timedelta(days=30)).strftime('%d %b %Y'),
-                timezone.now().strftime('%d %b %Y')
+                format_as_date((timezone.now() - timezone.timedelta(days=30))),
+                format_as_date(timezone.now())
             )
         }
 

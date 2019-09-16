@@ -6,7 +6,7 @@ from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
 from qatrack.qa import models, utils
-from qatrack.qatrack_core.utils import format_datetime_as_date
+from qatrack.qatrack_core.utils import format_as_date
 
 register = template.Library()
 
@@ -169,15 +169,15 @@ def as_qc_window(unit_test_collection):
 
     start, end = utils.qc_window(unit_test_collection.due_date, unit_test_collection.frequency)
     if start:
-        start = format_datetime_as_date(start)
+        start = format_as_date(start)
 
     if end:
-        end = format_datetime_as_date(end)
+        end = format_as_date(end)
 
     if start:
         return "%s - %s" % (start, end)
     elif unit_test_collection.due_date:
-        start = format_datetime_as_date(unit_test_collection.due_date)
+        start = format_as_date(unit_test_collection.due_date)
         return "%s - %s" % (start, end)
 
     return ""

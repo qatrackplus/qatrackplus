@@ -6,8 +6,7 @@ from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
 from django.utils.translation import ugettext as _
 
-# from qatrack.qa.models import Frequency
-
+from qatrack.qatrack_core.utils import format_as_date as fmt_date
 
 # ServiceArea = apps.get_app_config('service_log').get_model('ServiceArea')
 # UnitServiceArea = apps.get_app_config('service_log').get_model('UnitServiceArea')
@@ -260,7 +259,7 @@ class UnitAvailableTimeEdit(models.Model):
         default_permissions = ()
 
     def __str__(self):
-        return '%s (%s)' % (self.name, self.date.strftime('%b %d, %Y'))
+        return '%s (%s)' % (self.name, fmt_date(self.date))
 
 
 class UnitAvailableTime(models.Model):

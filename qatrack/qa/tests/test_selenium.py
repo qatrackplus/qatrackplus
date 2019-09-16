@@ -14,6 +14,7 @@ from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.tests.live import SeleniumTests
+from qatrack.qatrack_core.utils import format_as_date
 from qatrack.service_log.tests import utils as sl_utils
 
 objects = {
@@ -90,7 +91,7 @@ objects = {
     'Unit': {
         'name': 'TestUnit',
         'number': '1',
-        'date_acceptance': timezone.now().strftime('%Y-%m-%d')
+        'date_acceptance': format_as_date(timezone.now())
     },
     'Frequency': {
         'name': 'TestFrequency',

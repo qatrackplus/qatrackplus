@@ -12,11 +12,11 @@ from django.forms.widgets import (
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
+from qatrack.qa import models
 from qatrack.qa.utils import format_qc_value
+from qatrack.qatrack_core.utils import format_datetime
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
-
-from .. import models
 
 BOOL_CHOICES = [(0, "No"), (1, "Yes")]
 
@@ -303,8 +303,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
         for field in ('work_completed', 'work_started'):
             self.fields[field].widget = forms.widgets.DateTimeInput()
 
-            self.fields[field].widget.format = settings.INPUT_DATE_FORMATS[0]
-            self.fields[field].input_formats = settings.INPUT_DATE_FORMATS
+            self.fields[field].widget.format = settings.DATETIME_INPUT_FORMATS[0]
+            self.fields[field].input_formats = settings.DATETIME_INPUT_FORMATS
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
             self.fields[field].widget.attrs['class'] = 'form-control'
             self.fields[field].help_text = settings.DATETIME_HELP
@@ -377,7 +377,7 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
         now = timezone.localtime(timezone.now())
-        self.fields['work_started'].initial = now.strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['work_started'].initial = format_datetime(now)
         self.fields['comment'].widget.attrs['rows'] = '3'
         self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
         self.fields['comment'].widget.attrs['class'] = 'autosize form-control'

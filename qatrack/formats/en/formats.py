@@ -1,2 +1,12 @@
-DATETIME_FORMAT = "j M Y g:i A"
+DATETIME_FORMAT = "j M Y H:i"
 DATE_FORMAT = "j M Y"
+TIME_FORMAT = "H:i"
+DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
+DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d %b %Y %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
+TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
+
+# JavaScript formats
+MOMENT_DATE_FMT = "DD MMM YYY"
+MOMENT_DATETIME_FMT = 'DD MMM YYYY HH:mm'
+FLATPICKR_DATE_FMT = 'd M Y'
+FLATPICKR_DATETIME_FMT = 'd M Y H:i'

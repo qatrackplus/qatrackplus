@@ -154,7 +154,7 @@ function listableStatic(Listable, moment){
     };
 
     var date_range_locale = {
-        "format": "DD MMM YYYY",
+        "format": siteConfig.MOMENT_DATE_FMT,
         "separator": " - ",
         "applyLabel": "Apply",
         "cancelLabel": "Clear",
@@ -242,13 +242,13 @@ function listableStatic(Listable, moment){
                     "opens": opens
                 }, function (start_date, end_date) {
                     var div = $(this.element).find('.daterange-val-display');
-                    var dates = start_date.format('DD MMM YYYY') + ' - ' + end_date.format('DD MMM YYYY');
+                    var dates = start_date.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + end_date.format(siteConfig.MOMENT_DATE_FMT);
                     var input = $(this.element).siblings('input');
                     input.val(dates);
                     div.html(dates);
                 }).on('apply.daterangepicker', function (ev, picker) {
                     var div = $(picker.element).find('.daterange-val-display');
-                    var dates = picker.startDate.format('DD MMM YYYY') + ' - ' + picker.endDate.format('DD MMM YYYY');
+                    var dates = picker.startDate.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + picker.endDate.format(siteConfig.MOMENT_DATE_FMT);
                     var input = $(picker.element).siblings('input');
                     var started_null = input.val() === '';
                     input.val(dates);

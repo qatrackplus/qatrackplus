@@ -1,8 +1,9 @@
 from django.conf import settings
-from django.urls import reverse
 from django.test import TestCase
-from qatrack.service_log import models
+from django.urls import reverse
+
 from qatrack.qa.tests import utils as qa_utils
+from qatrack.service_log import models
 
 
 class TestServiceEventStatusAdmin(TestCase):
@@ -21,7 +22,8 @@ class TestServiceEventStatusAdmin(TestCase):
             'is_review_required': False,
             'rts_must_be_reviewed': False,
             'colour': settings.DEFAULT_COLOURS[0],
-            'description': 'test description'
+            'description': 'test description',
+            'order': 0,
         }
 
     def test_clean_is_default(self):

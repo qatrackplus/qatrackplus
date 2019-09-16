@@ -2,11 +2,11 @@ import json
 
 from dateutil import parser
 from django import forms
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model
 from django.utils.translation import ugettext as _
 
+from qatrack.qatrack_core.utils import format_as_date
 from qatrack.qatrack_core.widgets import ToolTipSelect
 from qatrack.reports import models, reports
 
@@ -34,10 +34,9 @@ def value_to_serializable(val, val_type=None):
     other input types (single date or datetime) """
 
     if 'daterange' in val_type.lower() and not isinstance(val, str):
-        df = settings.MONTH_ABBR_DATE_FORMAT
-        d1 = parser.parse(val[0])
-        d2 = parser.parse(val[1])
-        val = "%s - %s" % (d1.strftime(df), d2.strftime(df))
+        d1 = format_as_date(parser.parse(val[0]))
+        d2 = format_as_date(parser.parse(val[1]))
+        val = "%s - %s" % (d1, d2)
     elif val_type == "recurrencefield":
         val = str(val)
 

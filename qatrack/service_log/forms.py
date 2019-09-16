@@ -3,8 +3,8 @@ from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.db.models import ObjectDoesNotExist, Q, QuerySet
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
@@ -13,6 +13,7 @@ from form_utils.forms import BetterModelForm
 
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models as qa_models
+from qatrack.qatrack_core.utils import format_datetime
 from qatrack.service_log import models
 from qatrack.units import models as u_models
 
@@ -29,7 +30,7 @@ def item_val_to_string(item):
     elif isinstance(item, User):
         return get_user_name(item)
     elif isinstance(item, timezone.datetime):
-        return timezone.localtime(item).strftime('%b %m, %I:%M %p')
+        return format_datetime(item)
     elif isinstance(item, timezone.timedelta):
         total_seconds = int(item.total_seconds())
         hours = total_seconds // 3600
@@ -617,8 +618,8 @@ class ServiceEventForm(BetterModelForm):
 
         for f in ['datetime_service']:
             self.fields[f].widget.attrs['class'] = 'daterangepicker-input'
-            self.fields[f].widget.format = settings.INPUT_DATE_FORMATS[0]
-            self.fields[f].input_formats = settings.INPUT_DATE_FORMATS
+            self.fields[f].widget.format = settings.DATETIME_INPUT_FORMATS[0]
+            self.fields[f].input_formats = settings.DATETIME_INPUT_FORMATS
             self.fields[f].widget.attrs['title'] = settings.DATETIME_HELP
             # self.fields[f].help_text = settings.DATETIME_HELP
 

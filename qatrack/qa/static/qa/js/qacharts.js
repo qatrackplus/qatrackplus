@@ -32,7 +32,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $control_chart_container = $("#control-chart-container"),
             $review_required = $('#review-required');
 
-        var date_format = 'DD MMM YYYY';
+        var date_format = siteConfig.MOMENT_DATE_FMT;
 
         var default_service_type_ids = $service_type_selector.val();
 
@@ -1371,7 +1371,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
             // Add mouseover events for hover line.
             var old_x_closest,
-                format = d3.timeFormat('%a, %b %e, %Y at %H:%M');
+                format = d3.timeFormat('%a, %d %b %Y at %H:%M');
 
             var highlighted_event;
 
@@ -1766,7 +1766,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .style('top', y_pos + 'px')
                                 .html($('#tli-tooltip-template').html()
                                     .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
-                                    .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
+                                    .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                                     .replace(/__tli-tl-name__/g, initiated_name)
                                     .replace(/__tli-kind__/g, 'Initiating QC')
                                     .replace(/__tli-comments__/g, comments)
@@ -1847,7 +1847,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                             .style('top', y_pos + 'px')
                             .html($('#tli-tooltip-template').html()
                                 .replace(/__tli-id__/g, rtsqa_data[0].test_list_instance_id)
-                                .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
+                                .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
                                 .replace(/__tli-kind__/g, 'Return To Service QC')
                                 .replace(/__tli-comments__/g, rtsqa_comments)
@@ -1955,7 +1955,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .style('top', y_pos + 'px')
                     .html($('#tli-tooltip-template').html()
                         .replace(/__tli-id__/g, tli_data[0].test_list_instance_id)
-                        .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
+                        .replace(/__tli-date__/g, moment(x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                         .replace(/__tli-tl-name__/g, tli_name)
                         .replace(/__tli-kind__/g, 'Test List')
                         .replace(/__tli-comments__/g, comments)

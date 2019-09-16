@@ -25,6 +25,7 @@ import qatrack.qa.views.base
 import qatrack.qa.views.charts
 import qatrack.qa.views.perform
 import qatrack.qa.views.review
+from qatrack.qatrack_core.utils import format_as_date
 from qatrack.units import models as u_models
 
 from . import utils
@@ -186,8 +187,8 @@ class TestControlImage(TestCase):
         url += "&test_lists[]=%s" % tl_pk
         url += "&units[]=%s" % upk
         url += "&statuses[]=%s" % models.TestInstanceStatus.objects.all()[0].pk
-        url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
-        url += "&to_date=%s" % to_date.strftime(settings.SIMPLE_DATE_FORMAT)
+        url += "&from_date=%s" % format_as_date(from_date)
+        url += "&to_date=%s" % format_as_date(to_date)
         return url
 
     def test_valid(self):
@@ -579,7 +580,7 @@ class TestComposite(TestCase):
                     "comment": None,
                 },
                 "test_date_c": {
-                    "value": 24*60*60,
+                    "value": 24 * 60 * 60,
                     "formatted": "8.6e+4",
                     "error": None,
                     "user_attached": [],
@@ -1014,7 +1015,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_in_progress(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1033,7 +1034,7 @@ class TestPerformQA(TestCase):
     def test_perform_in_progress_no_data(self):
         """Test list should be allowed to be saved with no data if it is in progress"""
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1060,7 +1061,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_valid(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1081,7 +1082,7 @@ class TestPerformQA(TestCase):
         self.t_bool.flag_when = True
         self.t_bool.save()
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-07-11 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1096,8 +1097,8 @@ class TestPerformQA(TestCase):
 
     def test_work_started_work_completed_same(self):
         data = {
-            "work_started": "11-07-2012 00:09",
-            "work_completed": "11-07-2012 00:09",
+            "work_started": "2012-07-11 00:09",
+            "work_completed": "2012-07-11 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1114,7 +1115,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_valid_invalid_status(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
             "form-MAX_NUM_FORMS": "",
@@ -1127,8 +1128,8 @@ class TestPerformQA(TestCase):
 
     def test_perform_invalid_work_started(self):
         data = {
-            "work_completed": "11-07-2050 00:10",
-            "work_started": "11-07-2050 00:09",
+            "work_completed": "2050-11-07 00:10",
+            "work_started": "2050-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1143,7 +1144,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_valid_redirect(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1160,7 +1161,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_valid_redirect_non_statff(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1183,8 +1184,8 @@ class TestPerformQA(TestCase):
 
     def test_perform_invalid(self):
         data = {
-            "work_completed": "11-07-2012 00:10",
-            "work_started": "11-07-2012 00:09",
+            "work_completed": "2012-11-07 00:10",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1206,8 +1207,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped(self):
         data = {
-            "work_started": "11-07-2012 00:00",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:00",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1230,8 +1231,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped_no_comment_ok(self):
         data = {
-            "work_started": "11-07-2012 00:00",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:00",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1253,8 +1254,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped_with_val(self):
         data = {
-            "work_started": "11-07-2012 00:09",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:09",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1278,8 +1279,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped_with_invalid_val(self):
         data = {
-            "work_started": "11-07-2012 00:09",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:09",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1306,7 +1307,7 @@ class TestPerformQA(TestCase):
         not_required = [self.t_const, self.t_comp, self.t_string_comp]
 
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1513,8 +1514,8 @@ class TestEditTestListInstance(TestCase):
         self.user.save()
 
         self.base_data = {
-            "work_completed": "11-07-2012 00:10",
-            "work_started": "11-07-2012 00:09",
+            "work_completed": "2012-11-07 00:10",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "testinstance_set-TOTAL_FORMS": "2",
             "testinstance_set-INITIAL_FORMS": "2",
@@ -1596,8 +1597,8 @@ class TestEditTestListInstance(TestCase):
     def test_in_progress_no_data(self):
 
         data = {
-            "work_completed": "11-07-2012 00:10",
-            "work_started": "11-07-2012 00:09",
+            "work_completed": "2012-11-07 00:10",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "testinstance_set-TOTAL_FORMS": "2",
             "testinstance_set-INITIAL_FORMS": "2",
@@ -1637,14 +1638,14 @@ class TestEditTestListInstance(TestCase):
 
     def test_start_after_complete(self):
 
-        self.base_data["work_completed"] = "10-07-2012 00:10",
+        self.base_data["work_completed"] = "2012-10-07 00:10",
 
         response = self.client.post(self.url, data=self.base_data)
         self.assertEqual(200, response.status_code)
 
     def test_start_future(self):
         del self.base_data["work_completed"]
-        self.base_data["work_started"] = "10-07-2050 00:10",
+        self.base_data["work_started"] = "2050-10-07 00:10",
 
         response = self.client.post(self.url, data=self.base_data)
         self.assertEqual(200, response.status_code)

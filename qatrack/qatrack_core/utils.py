@@ -4,6 +4,7 @@ import tempfile
 
 from django.conf import settings
 from django.utils import timezone
+from django.utils.formats import get_format
 
 
 def chrometopdf(html, name=""):
@@ -46,8 +47,8 @@ def chrometopdf(html, name=""):
     return pdf
 
 
-def format_datetime_as_date(dt, fmt=settings.MONTH_ABBR_DATE_FORMAT):
-    """Take a date time and return as string formatted date after converting to localtime"""
+def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
+    """Take a date time and return as string formatted date time after converting to localtime"""
 
     if not dt:
         return ""
@@ -58,10 +59,35 @@ def format_datetime_as_date(dt, fmt=settings.MONTH_ABBR_DATE_FORMAT):
     return dt.strftime(fmt)
 
 
-def format_datetime(dt):
-    """Take a date time and return as string formatted date time after converting to localtime"""
+def format_as_date(dt, fmt=settings.DATE_INPUT_FORMATS[0]):
+    """Take a date time and return as string formatted date after converting to localtime"""
 
-    return format_datetime_as_date(dt, fmt=settings.MONTH_ABBR_DATETIME_FORMAT)
+    return format_datetime(dt, fmt=fmt)
+
+
+def format_as_time(dt, fmt=settings.TIME_INPUT_FORMATS[0]):
+    return format_datetime(dt, fmt=fmt)
+
+
+def parse_datetime(dt_str):
+    """Take string and return datetime object"""
+    for fmt in get_format("DATETIME_INPUT_FORMATS"):
+        try:
+            return timezone.datetime.strptime(dt_str, fmt)
+        except (ValueError, TypeError):
+            continue
+
+
+def parse_date(dt_str, as_date=True):
+    """Take a string and return date object"""
+    for fmt in get_format("DATE_INPUT_FORMATS"):
+        try:
+            dt = timezone.datetime.strptime(dt_str, fmt)
+            if as_date:
+                dt = dt.date()
+            return dt
+        except (ValueError, TypeError):
+            continue
 
 
 def end_of_day(dt):

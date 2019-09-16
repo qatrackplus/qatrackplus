@@ -5,6 +5,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework_filters import backends
 
 from qatrack.api.service_log import filters, serializers
+from qatrack.qatrack_core.utils import format_datetime
 from qatrack.service_log import models
 
 
@@ -84,7 +85,7 @@ def service_event_searcher(request):
     return JsonResponse({
         'items': [{
             'id': se.id,
-            'display': '{} - Created on {}'.format(se.service_status.name, se.datetime_service.strftime('%b %d, %Y'))
+            'display': '{} - Created on {}'.format(se.service_status.name, format_datetime(se.datetime_service))
         } for se in serviceevent],
         'name':
             'display'

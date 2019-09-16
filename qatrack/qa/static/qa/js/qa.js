@@ -353,9 +353,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 time_24hr: true,
                 minuteIncrement: 1,
                 enableSeconds: true,
-                dateFormat: has_time ? "Y-m-d H:i:S" : "Y-m-d",
+                dateFormat: has_time ? siteConfig.FLATPICKR_DATETIME_FMT: siteConfig.FLATPICKR_DATE_FMT,
                 altInput: true,
-                altFormat: has_time ? "d-m-Y H:i:S" : "d-m-Y"
+                altFormat: has_time ? siteConfig.FLATPICKR_DATETIME_FMT: siteConfig.FLATPICKR_DATE_FMT
             });
 
             this.inputs.parent().find(".qa-date-clear").click(function(){
@@ -1112,7 +1112,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 enableTime: true,
                 time_24hr: true,
                 minuteIncrement: 1,
-                dateFormat: 'd-m-Y H:i',
+                dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 maxDate: work_completed_initial ? _.max([work_completed_initial, moment().valueOf()]) : moment().valueOf(),
                 onChange: function(selectedDates, dateStr, instance) {
 
@@ -1136,7 +1136,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var complete_fp = $completed_picker.flatpickr({
                 enableTime: true,
                 time_24hr: true,
-                dateFormat: 'd-m-Y H:i',
+                dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 minuteIncrement: 1,
                 minDate: $start_picker[0]._flatpickr.selectedDates[0],
                 onOpen: function(selectedDates, dateStr, instance) {
@@ -1187,7 +1187,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     min = parseInt(duration.substring(duration.length - 2));
                 }
                 $completed_picker[0]._flatpickr.setDate(
-                    moment($start_picker.val(), 'DD-MM-YYYY HH:mm').add(hour, 'hours').add(min, 'minutes').valueOf()
+                    moment($start_picker.val(), siteConfig.MOMENT_DATETIME_FMT).add(hour, 'hours').add(min, 'minutes').valueOf()
                 );
                 $complete_clear.fadeIn('fast');
             });
