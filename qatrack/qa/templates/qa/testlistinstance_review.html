@@ -379,7 +379,7 @@
                                                             </td>
                                                         </tr>
                                                     {% endif %}
-                                                    {% if ti.string_value|length > 100 %}
+                                                    {% if not test.is_upload and ti.string_value|length > 100 %}
                                                         <tr class="qa-text-display no-hover row-{{ ti_form.prefix }}">
                                                             <td colspan="{% qa_table_colspan perms %}"  class="">
                                                               <pre style="">
