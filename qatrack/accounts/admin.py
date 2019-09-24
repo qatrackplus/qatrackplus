@@ -53,7 +53,7 @@ class QATrackUserAdmin(UserAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=obj, **kwargs)
-        if obj:
+        if obj and 'is_staff' in form.base_fields:
             form.base_fields['is_staff'].label = _("Admin Status")
 
         return form
