@@ -651,7 +651,11 @@ class UTCReport(BaseReport):
 class DueDatesReportMixin:
 
     def get_queryset(self):
-        return models.UnitTestCollection.objects.select_related("assigned_to", "unit", "frequency")
+        return models.UnitTestCollection.objects.select_related(
+            "assigned_to",
+            "unit",
+            "frequency",
+        ).exclude(active=False)
 
     def get_unit__site_details(self, val):
         sites = [x.name if x != "null" else _("No Site Assigned") for x in val]
