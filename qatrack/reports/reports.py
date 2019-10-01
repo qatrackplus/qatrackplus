@@ -47,6 +47,13 @@ def register_class(target_class):
     REPORT_REGISTRY[target_class.__name__] = target_class
 
 
+def format_user(user):
+    if not user:
+        return ""
+
+    return user.username if not user.email else "%s (%s)" % (user.username, user.email)
+
+
 class ReportMeta(type):
 
     required = ["to_table"]
@@ -595,14 +602,14 @@ class UTCReport(BaseReport):
                 [],
                 [],
                 ["Test List Instance:", self.make_url(tli.get_absolute_url())],
-                [_("Created By") + ":", self.format_user(tli.created_by)],
+                [_("Created By") + ":", format_user(tli.created_by)],
                 [_("Work Started") + ":", format_as_date(tli.work_started)],
                 [_("Work Completed") + ":", format_as_date(tli.work_completed)],
                 [_("Duration") + ":", _("In Progress") if tli.in_progress else as_time_delta(tli.duration())],
                 [_("Modified") + ":", format_as_date(tli.modified)],
-                [_("Mofified By") + ":", self.format_user(tli.modified_by)],
+                [_("Mofified By") + ":", format_user(tli.modified_by)],
                 [_("Reviewed") + ":", format_as_date(tli.reviewed)],
-                [_("Reviewed By") + ":", self.format_user(tli.reviewed_by)],
+                [_("Reviewed By") + ":", format_user(tli.reviewed_by)],
             ])
 
             for c in context['comments'].get(tli.pk, []):
@@ -639,12 +646,6 @@ class UTCReport(BaseReport):
                 rows.append(row)
 
         return rows
-
-    def format_user(self, user):
-        if not user:
-            return ""
-
-        return user.username if not user.email else "%s (%s)" % (user.username, user.email)
 
 
 class DueDatesReportMixin:
@@ -824,6 +825,7 @@ class TestDataReport(BaseReport):
             "value",
             "string_value",
             "skipped",
+            "created_by__username",
         )
         df = pd.DataFrame.from_records(qs)
         context['df'] = df
@@ -853,6 +855,7 @@ class TestDataReport(BaseReport):
             "unit_test_info__unit__site",
             "reference",
             "tolerance",
+            "created_by",
         )
 
         headers = [[
@@ -864,6 +867,7 @@ class TestDataReport(BaseReport):
             _("Reference"),
             _("Tolerance"),
             _("Skipped"),
+            _("Performed By"),
             _("Comment"),
         ]]
 
@@ -881,6 +885,7 @@ class TestDataReport(BaseReport):
                 ti.reference.value_display() if ti.reference else "",
                 ti.tolerance.name if ti.tolerance else "",
                 ti.skipped,
+                format_user(ti.created_by),
                 ti.comment,
             ])
 
@@ -904,7 +909,7 @@ class TestDataReport(BaseReport):
             flat=True,
         ))
 
-        cells_per_ti = 4
+        cells_per_ti = 5
         date_rows = {d: i for i, d in enumerate(unique_dates)}
         ut_cols = {ut: i * cells_per_ti for i, ut in enumerate(unit_test_combos)}
 
@@ -925,6 +930,7 @@ class TestDataReport(BaseReport):
             table[-1].append("%s - %s" % (units[unit_id], tests[test_id]))
             table[-1].append("Reference")
             table[-1].append("Tolerance")
+            table[-1].append("Peformed By")
             table[-1].append("Comment")
 
         ncombos = len(unit_test_combos)
@@ -934,11 +940,12 @@ class TestDataReport(BaseReport):
         for unit_id, test_id in unit_test_combos:
 
             tis = qs.filter(
-                unit_test_info__unit_id=unit_id, unit_test_info__test_id=test_id
+                unit_test_info__unit_id=unit_id, unit_test_info__test_id=test_id,
             ).select_related(
                 "unit_test_info__test",
                 "reference",
                 "tolerance",
+                "created_by",
             )
             for ti in tis:
                 val = ti.value_display(coerce_numerical=False)
@@ -947,7 +954,8 @@ class TestDataReport(BaseReport):
                 table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 1] = val
                 table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 2] = ref
                 table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 3] = tol
-                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 4] = ti.comment
+                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 4] = format_user(ti.created_by)
+                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 5] = ti.comment
 
         return table
 
