@@ -441,7 +441,9 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
             }else {
                 $save.html('<i class="fa fa-save"></i> Save');
             }
-            $preview.click();
+            if (!$preview.prop("disabled")){
+                $preview.click();
+            }
         });
 
     }
@@ -454,8 +456,11 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         }
         var opts = qs('opts');
         if (!_.isNil(opts)){
-            opts = JSON.parse(opts);
-            loadReport({'fields': opts});
+            try {
+                opts = JSON.parse(opts);
+                loadReport({'fields': opts});
+            }catch(e){
+            }
         }
     }
 
