@@ -1,6 +1,10 @@
+from functools import wraps
 import logging
+import os
+
 
 from django.conf import settings
+from django.db import connection, ProgrammingError
 from django.utils import timezone
 from django_q.models import Schedule
 from django_q.tasks import schedule
@@ -9,6 +13,16 @@ from qatrack.qatrack_core.utils import today_start_end
 
 logger = logging.getLogger('qatrack')
 
+def qatrack_task_wrapper(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if os.name.lower() == "nt":
+            try:
+                connection.cursor()
+            except ProgrammingError:
+                connection.connect()
+        return func(*args, **kwargs)
+    return wrapped
 
 def _schedule_periodic_task(function, task_name, interval_min=15):
     """Create a periodic schedule calling input function.  Default interval is 15min"""
@@ -44,6 +58,7 @@ def _schedule_periodic_task(function, task_name, interval_min=15):
         logger.info("%s schedule created and next run set to %s" % (function, next_run))
 
 
+@qatrack_task_wrapper
 def run_periodic_scheduler(model, log_name, handler, time_field="time", recurrence_field="recurrence"):
     """Check a model with a recurring schedule for instances that should be run in the next time period.
 

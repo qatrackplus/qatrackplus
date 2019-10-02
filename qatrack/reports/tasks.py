@@ -6,13 +6,13 @@ from django_q.models import Schedule
 from django_q.tasks import schedule
 
 from qatrack.qatrack_core.email import send_email_to_users
-from qatrack.qatrack_core.tasks import run_periodic_scheduler
+from qatrack.qatrack_core.tasks import run_periodic_scheduler, qatrack_task_wrapper
 from qatrack.reports.models import ReportSchedule
 from qatrack.reports.reports import CONTENT_TYPES
 
 logger = logging.getLogger('qatrack')
 
-
+@qatrack_task_wrapper
 def run_reports():
     """Should run every 15 minutes at HH:07:30, HH:22:30, HH:37:30, HH:52:30"""
 
@@ -20,7 +20,7 @@ def run_reports():
         ReportSchedule, "run_reports", schedule_report, time_field="time", recurrence_field="schedule"
     )
 
-
+@qatrack_task_wrapper
 def schedule_report(s, send_time):
 
     logger.info("Scheduling report %s for %s" % (s.report_id, send_time))
@@ -36,7 +36,7 @@ def schedule_report(s, send_time):
         task_name=name,
     )
 
-
+@qatrack_task_wrapper
 def send_report(schedule_id, task_name=""):
 
     logger.info("Attempting Send of ReportSchedule %s" % schedule_id)

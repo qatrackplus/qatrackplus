@@ -1,6 +1,6 @@
 -e git+https://github.com/randlet/django-genericdropdown.git@473ff52610af659f7d2a3616a6e3322e21673b4d#egg=django_genericdropdown-master
 -e git+https://github.com/randlet/django-listable.git@django_21#egg=django_listable
--e git+https://github.com/randlet/django-q.git@958c79e7285803362392bff4d94ba7bd00b66138#egg=django-q
+-e git+https://github.com/qatrackplus/django-q.git@qatrackplus#egg=django-q
 -e git+https://github.com/randlet/django-recurrence.git@035ef961483a9ed58ecea6cac5dc8909b1227ef7#egg=django-recurrence
 -e git+https://github.com/randlet/django-sql-explorer.git@196e1f5af2abed61f504878b89a0719ae0901ed8#egg=django-sql-explorer
 Django==2.1.11
@@ -34,7 +34,7 @@ pydicom==1.1.0
 scikit-image<0.14.0; python_version == '3.4'
 scikit-learn<1.0; python_version == '3.4'
 pylinac==2.1.0.1; python_version < '3.6'
--e git+https://github.com/randlet/pylinac.git@mlc#egg=pylinac ; python_version >= '3.6'
+-e git+https://github.com/qatrackplus/pylinac-qatrackplus.git@master#egg=pylinac ; python_version >= '3.6'
 Pillow<6
 pynliner==0.8.0
 pytest-cov==2.6.1

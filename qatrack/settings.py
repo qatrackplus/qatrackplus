@@ -328,7 +328,7 @@ HTTP_OR_HTTPS = "http"
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
-EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SENDER = "notifications@qatrackplus.com"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
@@ -700,4 +700,5 @@ Q_CLUSTER = {
     'cpu_affinity': 1,
     'label': 'Django Q',
     'orm': 'default',
+    'sync': os.name.lower() == "nt",
 }
