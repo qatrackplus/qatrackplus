@@ -1,6 +1,8 @@
 import os
 from subprocess import PIPE, Popen
+import subprocess
 import tempfile
+import uuid
 
 from django.conf import settings
 from django.utils import timezone
@@ -12,16 +14,18 @@ def chrometopdf(html, name=""):
 
     try:
 
-        if name:
-            path = os.path.join(tempfile.gettempdir(), name + ".html")
-            tmp_html = open(path, "wb")
-        else:
-            tmp_html = tempfile.NamedTemporaryFile(suffix=".html", delete=False)
+        if not name:
+            name = uuid.uuid4().hex[:10]
 
+        fname = "%s_%s.html" % (name, uuid.uuid4().hex[:10])
+        path = os.path.join(settings.TMP_REPORT_ROOT, fname)
+        out_path = "%s.pdf" % path
+
+        tmp_html = open(path, "wb")
         tmp_html.write(html.encode("UTF-8"))
         tmp_html.flush()
 
-        out_file = tempfile.NamedTemporaryFile(prefix=tmp_html.name, suffix=".pdf", delete=True)
+        out_file = open(out_path, "wb")
 
         command = [
             settings.CHROME_PATH, '--headless', '--disable-gpu',
@@ -29,8 +33,7 @@ def chrometopdf(html, name=""):
             "file://%s" % tmp_html.name
         ]
 
-        p = Popen(command, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
+        subprocess.call(' '.join(command))
 
         pdf = open(out_file.name, 'r+b').read()
 

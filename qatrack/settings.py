@@ -602,7 +602,10 @@ if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
     from .docker_settings import *  # NOQA
 
 
-CHROME_PATH = "/usr/bin/chromium-browser"
+if os.name.lower() == "nt":
+    CHROME_PATH = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"'
+else:
+    CHROME_PATH = "/usr/bin/chromium-browser"
 
 
 # ------------------------------------------------------------------------------
@@ -627,11 +630,9 @@ USE_PARTS = USE_PARTS or USE_SERVICE_LOG
 
 UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
 TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
+TMP_REPORT_ROOT = os.path.join(MEDIA_ROOT, "reports")
 
-if not os.path.isdir(LOG_ROOT):
-    os.mkdir(LOG_ROOT)
-
-for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
+for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT, LOG_ROOT, TMP_REPORT_ROOT):
     if not os.path.isdir(d):
         os.mkdir(d)
 
