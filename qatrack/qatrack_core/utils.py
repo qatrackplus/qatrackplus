@@ -1,7 +1,5 @@
 import os
-from subprocess import PIPE, Popen
 import subprocess
-import tempfile
 import uuid
 
 from django.conf import settings
@@ -33,7 +31,12 @@ def chrometopdf(html, name=""):
             "file://%s" % tmp_html.name
         ]
 
-        subprocess.call(' '.join(command))
+        if os.name.lower() == "nt":
+            command = ' '.join(command)
+
+        stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
+        stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
+        subprocess.call(command, stdout=stdout, stderr=stderr)
 
         pdf = open(out_file.name, 'r+b').read()
 
