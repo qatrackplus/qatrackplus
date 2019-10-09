@@ -82,7 +82,7 @@ def test_list_instance_report(request, pk):
 
     report_opts = {
         'work_completed': "%s - %s" % (wc, wc),
-        'unit_test_collection': utc.id,
+        'unit_test_collection': [utc.id],
     }
     report = UTCReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
 
