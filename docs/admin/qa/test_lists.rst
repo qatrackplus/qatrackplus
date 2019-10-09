@@ -34,8 +34,8 @@ Warning Message
 ---------------
 
 Use this field to define the message shown when a test within this test
-is at Action level. If the message is left blank, the default is "Do not
-treat".
+is at Action level. If the message is left blank, a warning message will not
+be shown for out of tolerance tests.
 
 Javascript
 ----------
