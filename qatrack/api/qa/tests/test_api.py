@@ -38,8 +38,8 @@ class TestTestListInstanceAPI(APITestCase):
         self.default_tests = [self.t1, self.t2, self.t3, self.t4, self.t5]
         self.ntests = len(self.default_tests)
 
-        for t in self.default_tests:
-            utils.create_test_list_membership(self.test_list, t)
+        for order, t in enumerate(self.default_tests):
+            utils.create_test_list_membership(self.test_list, t, order=order)
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list, unit=self.unit)
 
@@ -98,6 +98,13 @@ class TestTestListInstanceAPI(APITestCase):
             ti = models.TestInstance.objects.get(unit_test_info__test=t)
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
             assert v == self.data['tests'][t.slug]['value']
+
+    def test_create_order(self):
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        for tlm in self.test_list.testlistmembership_set.order_by("order"):
+            ti = models.TestInstance.objects.get(unit_test_info__test=tlm.test)
+            assert ti.order == tlm.order
 
     def test_create_no_status(self):
         models.TestInstanceStatus.objects.all().delete()

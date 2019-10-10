@@ -1735,6 +1735,8 @@ class TestInstance(models.Model):
     # when was the work actually performed
     work_completed = models.DateTimeField(default=timezone.now, help_text=settings.DATETIME_HELP, db_index=True)
 
+    order = models.PositiveIntegerField(default=0)
+
     # for keeping a very basic history
     created = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(
@@ -2151,11 +2153,11 @@ class TestListInstance(models.Model):
         dates = tlis.values_list("work_completed", flat=True)
 
         instances = []
-        # note sort  here rather than using self.testinstance_set.order_by(("created")
+        # note sort  here rather than using self.testinstance_set.order_by(("order", "created")
         # because that causes Django to requery db and negates the advantage of using
         # prefetch_related above
 
-        test_instances = sorted(self.testinstance_set.all(), key=lambda x: x.created)
+        test_instances = sorted(self.testinstance_set.all(), key=lambda x: (x.order, x.created))
         for ti in test_instances:
 
             test_history = []
