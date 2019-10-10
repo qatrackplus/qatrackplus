@@ -1,7 +1,7 @@
 import rest_framework_filters as filters
 
-from qatrack.units import models
 from qatrack.api.filters import MaxDateFilter, MinDateFilter
+from qatrack.units import models
 
 
 class VendorFilter(filters.FilterSet):
@@ -9,7 +9,7 @@ class VendorFilter(filters.FilterSet):
     class Meta:
         model = models.Vendor
         fields = {
-            "name": ["icontains", 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -18,7 +18,7 @@ class UnitClassFilter(filters.FilterSet):
     class Meta:
         model = models.UnitClass
         fields = {
-            "name": ["icontains", 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -27,7 +27,7 @@ class SiteFilter(filters.FilterSet):
     class Meta:
         model = models.Site
         fields = {
-            "name": ["icontains", 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -43,8 +43,8 @@ class UnitTypeFilter(filters.FilterSet):
     class Meta:
         model = models.UnitType
         fields = {
-            "name": ["icontains", 'in'],
-            "model": ["icontains", 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "model": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -53,7 +53,7 @@ class ModalityFilter(filters.FilterSet):
     class Meta:
         model = models.Modality
         fields = {
-            "name": ["icontains", 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -71,9 +71,9 @@ class UnitFilter(filters.FilterSet):
         model = models.Unit
         fields = {
             "number": ['exact', 'in'],
-            "name": ['icontains', 'in'],
-            "serial_number": ['icontains', 'in'],
-            "location": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "serial_number": ['exact', 'icontains', 'contains', 'in'],
+            "location": ['exact', 'icontains', 'contains', 'in'],
             "install_date": ['exact'],
             "date_acceptance": ['exact'],
         }
@@ -88,7 +88,7 @@ class UnitAvailableTimeEditFilter(filters.FilterSet):
     class Meta:
         model = models.UnitAvailableTimeEdit
         fields = {
-            "name": ["icontains"],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "date": ['exact'],
         }
 

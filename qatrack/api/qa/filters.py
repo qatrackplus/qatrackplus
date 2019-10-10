@@ -13,8 +13,8 @@ class FrequencyFilter(filters.FilterSet):
     class Meta:
         model = models.Frequency
         fields = {
-            "name": ['icontains', 'in'],
-            "slug": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "slug": ['exact', 'icontains', 'contains', 'in'],
             "nominal_interval": ['exact', 'in', 'gte', 'lte'],
             "window_start": ['exact', 'in', 'gte', 'lte'],
             "window_end": ['exact', 'in', 'gte', 'lte'],
@@ -26,8 +26,8 @@ class TestInstanceStatusFilter(filters.FilterSet):
     class Meta:
         model = models.TestInstanceStatus
         fields = {
-            "name": ['icontains', 'in'],
-            "slug": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "slug": ['exact', 'icontains', 'contains', 'in'],
             "description": ['icontains'],
             "is_default": ['exact'],
             "requires_review": ['exact'],
@@ -72,7 +72,7 @@ class ReferenceFilter(filters.FilterSet):
     class Meta:
         model = models.Reference
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "value": ['exact', 'in', 'gte', 'lte'],
             "created": ['exact'],
             "modified": ['exact'],
@@ -89,7 +89,7 @@ class ToleranceFilter(filters.FilterSet):
     class Meta:
         model = models.Tolerance
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "act_low": ['exact', 'in', 'gte', 'lte'],
             "tol_low": ['exact', 'in', 'gte', 'lte'],
             "tol_high": ['exact', 'in', 'gte', 'lte'],
@@ -105,8 +105,8 @@ class CategoryFilter(filters.FilterSet):
     class Meta:
         model = models.Category
         fields = {
-            "name": ['icontains', 'in'],
-            "slug": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "slug": ['exact', 'icontains', 'contains', 'in'],
             "description": ['icontains'],
         }
 
@@ -130,8 +130,8 @@ class TestFilter(filters.FilterSet):
     class Meta:
         model = models.Test
         fields = {
-            "name": ['icontains', 'in'],
-            "slug": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "slug": ['exact', 'icontains', 'contains', 'in'],
             "description": ['icontains'],
             "procedure": ['icontains'],
             "chart_visibility": ['exact'],
@@ -165,8 +165,8 @@ class TestListFilter(filters.FilterSet):
     class Meta:
         model = models.TestList
         fields = {
-            "name": ['icontains', 'in'],
-            "slug": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "slug": ['exact', 'icontains', 'contains', 'in'],
             "description": ['icontains'],
             "warning_message": ['icontains'],
             "created": ['exact'],
@@ -193,8 +193,8 @@ class TestListCycleFilter(filters.FilterSet):
     class Meta:
         model = models.TestListCycle
         fields = {
-            "name": ['icontains', 'in'],
-            "slug": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "slug": ['exact', 'icontains', 'contains', 'in'],
             "description": ['icontains'],
             "drop_down_label": ['icontains', 'in'],
             "day_option_text": ['icontains', 'in'],
@@ -226,7 +226,7 @@ class UnitTestCollectionFilter(filters.FilterSet):
         fields = {
             "auto_schedule": ['exact'],
             "active": ['exact'],
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "content_type": ['exact'],
         }
 
@@ -363,9 +363,9 @@ class TestInstanceFilter(filters.FilterSet):
         fields = {
             "review_date": ['exact'],
             "value": ['exact', 'in', 'gte', 'lte'],
-            "string_value": ['icontains', 'in'],
+            "string_value": ['exact', 'icontains', 'contains', 'in'],
             "skipped": ['exact'],
-            "comment": ['icontains'],
+            "comment": ['exact', 'icontains', 'contains', 'in'],
             "work_started": ['exact'],
             "work_completed": ['exact'],
             "created": ['exact'],

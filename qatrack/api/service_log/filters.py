@@ -20,7 +20,7 @@ class ServiceAreaFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceArea
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -36,7 +36,7 @@ class UnitServiceAreaFilter(filters.FilterSet):
     class Meta:
         model = models.UnitServiceArea
         fields = {
-            "notes": ['icontains'],
+            "notes": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -45,10 +45,10 @@ class ServiceTypeFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceType
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "is_review_required": ['exact'],
             "is_active": ['exact'],
-            "description": ['icontains'],
+            "description": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -57,12 +57,12 @@ class ServiceEventStatusFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceEventStatus
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "is_review_required": ['exact'],
             "is_default": ['exact'],
             "rts_qa_must_be_reviewed": ['exact'],
-            "description": ['icontains'],
-            "colour": ['icontains', 'in'],
+            "description": ['exact', 'icontains', 'contains', 'in'],
+            "colour": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -115,8 +115,8 @@ class ServiceEventFilter(filters.FilterSet):
             'datetime_created': ['exact'],
             'datetime_service': ['exact'],
             'datetime_modified': ['exact'],
-            'safety_precautions': ['icontains'],
-            'problem_description': ['icontains'],
+            'safety_precautions': ['exact', 'icontains', 'contains', 'in'],
+            'problem_description': ['exact', 'icontains', 'contains', 'in'],
             'duration_service_time': ['lte', 'gte'],
             'duration_lost_time': ['lte', 'gte'],
             'is_review_required': ['exact'],
@@ -130,8 +130,8 @@ class ThirdPartyFilter(filters.FilterSet):
     class Meta:
         model = models.ThirdParty
         fields = {
-            'first_name': ['icontains', 'in'],
-            'last_name': ['icontains', 'in'],
+            'first_name': ['exact', 'icontains', 'contains', 'in'],
+            'last_name': ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -140,7 +140,11 @@ class HoursFilter(filters.FilterSet):
     service_event = filters.RelatedFilter(
         ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
-    third_party = filters.RelatedFilter(ThirdPartyFilter, field_name='third_party', queryset=models.ThirdParty.objects.all())
+    third_party = filters.RelatedFilter(
+        ThirdPartyFilter,
+        field_name='third_party',
+        queryset=models.ThirdParty.objects.all(),
+    )
 
     class Meta:
         model = models.Hours
@@ -179,8 +183,8 @@ class GroupLinkerFilter(filters.FilterSet):
     class Meta:
         model = models.GroupLinker
         fields = {
-            "name": ['icontains', 'in'],
-            "description": ['icontains'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "description": ['exact', 'icontains', 'contains', 'in'],
             "help_text": ['icontains'],
         }
 
