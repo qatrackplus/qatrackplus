@@ -681,6 +681,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     if (response_data.comment){
                         self.set_comment(response_data.comment);
                         self.set_comment_icon();
+                        if (!self.showing_comment && !self.comment_closed_by_user) {
+                            self.show_comment.click();
+                        }
                     }
                     self.status.addClass("btn-success").text("Success");
                     self.status.attr("title", response_data.attachment.url);
