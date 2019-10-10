@@ -68,7 +68,7 @@ class TestInstanceWidgetsMixin(object):
                 self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
                 del cleaned_data["skipped"]
 
-            if value is None and skipped and "value" in self.errors:
+            if (value is None and not string_value) and skipped and "value" in self.errors:
                 del self.errors["value"]
         else:
             cleaned_data['skipped'] = value is None and not string_value

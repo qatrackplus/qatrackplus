@@ -344,6 +344,10 @@ When your script (calculation procedure) is executed, it has access to
 
     - **UTILS.set_comment(** "*your comment here*" **)** sets the comment for the current test
 
+    - **UTILS.set_skip(** *macro_name* **, True|False )** set skip status of a test
+
+    - **UTILS.get_skip(** *macro_name* **)** returns boolean indicating whether or not a given test is currently skipped.
+
     - **UTILS.write_file(file_name, object)** attaches a file to the current
       test (see below for an example). If you have :ref:`Display Image
       <qa_display_image>` checked for this test, and the object you pass to

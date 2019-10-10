@@ -519,6 +519,11 @@ class TestComposite(TestCase):
             'meta': {},
             'test_list_id': self.test_list.id,
             'unit_id': self.unit.id,
+            'skips': {
+                'testc': False,
+                'test1': False,
+                'test2': False,
+            },
         }
         request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
         request.user = self.user
@@ -534,7 +539,12 @@ class TestComposite(TestCase):
                     "error": None,
                     "user_attached": [],
                     "comment": None,
-                }
+                },
+            },
+            'skips': {
+                'testc': False,
+                'test1': False,
+                'test2': False,
             },
             "success": True
         }
@@ -585,8 +595,9 @@ class TestComposite(TestCase):
                     "error": None,
                     "user_attached": [],
                     "comment": None,
-                }
+                },
             },
+            "skips": {},
             "success": True
         }
         self.assertDictEqual(values, expected)
@@ -620,9 +631,10 @@ class TestComposite(TestCase):
                     "error": None,
                     "user_attached": [],
                     "comment": None,
-                }
+                },
             },
-            "success": True
+            "skips": {},
+            "success": True,
         }
         self.assertDictEqual(values, expected)
 
@@ -667,7 +679,65 @@ class TestComposite(TestCase):
                     "comment": None,
                 },
             },
+            'skips': {},
             "success": True
+        }
+        self.assertDictEqual(values, expected)
+
+    def test_set_skip(self):
+
+        ts = utils.create_test(name="test_skip", test_type=models.COMPOSITE)
+        ts.calculation_procedure = "UTILS.set_skip('test1', True)\nresult = 1"
+        ts.save()
+        utils.create_test_list_membership(self.test_list, ts)
+        utils.create_unit_test_info(test=ts, unit=self.unit)
+        data = {
+            'tests': {
+                "testc": "",
+                "test_skip": "",
+                "test1": 1.,
+                "test2": 2.,
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'skips': {
+                'test_skip': False,
+                'testc': False,
+                'test1': False,
+                'test2': False,
+            },
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 3.0,
+                    "formatted": '3.0000000',
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+                "test_skip": {
+                    "value": 1.0,
+                    "formatted": '1.0000000',
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+            },
+            'skips': {
+                'test_skip': False,
+                'testc': False,
+                'test1': True,
+                'test2': False,
+            },
+            "success": True,
         }
         self.assertDictEqual(values, expected)
 
@@ -729,8 +799,9 @@ class TestComposite(TestCase):
                     "comment": "",
                     'value':
                         None
-                }
+                },
             },
+            "skips": {},
             'success': True
         }
         self.assertDictEqual(values, expected)
@@ -840,8 +911,9 @@ class TestComposite(TestCase):
                     'user_attached': [],
                     "comment": "",
                     'value': None,
-                }
+                },
             },
+            "skips": {},
             'success': True
         }
         self.assertDictEqual(values, expected)
@@ -896,6 +968,7 @@ class TestComposite(TestCase):
                     "comment": None,
                 }
             },
+            "skips": {},
             'success': True,
         }
         self.assertDictEqual(values, expected)

@@ -484,7 +484,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         meta: JSON.stringify(get_meta_data()),
                         test_list_id: self.test_list_id,
                         unit_id: self.unit_id,
-                        comments: JSON.stringify(get_comments())
+                        comments: JSON.stringify(get_comments()),
+                        skips: JSON.stringify(get_skips())
                     };
 
                     $('body').addClass("loading");
@@ -626,7 +627,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     "meta": JSON.stringify(get_meta_data()),
                     "test_list_id": self.test_list_id,
                     "unit_id": self.unit_id,
-                    "comments": JSON.stringify(get_comments())
+                    "comments": JSON.stringify(get_comments()),
+                    "skips": JSON.stringify(get_skips())
                 },
                 accept: function(file, done) {
                     if (file.name.length > 150) {
@@ -678,6 +680,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }
                 } else {
                     self.set_value(response_data);
+                    if (response_data.skips){
+                        set_skips(response_data.skips);
+                    }
                     if (response_data.comment){
                         self.set_comment(response_data.comment);
                         self.set_comment_icon();
@@ -742,6 +747,24 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         return _.zipObject(tli.slugs, comments);
     }
 
+    function get_skips(){
+
+        var skips = _.map(tli.test_instances, function(ti){
+            return ti.skipped;
+        });
+        return _.zipObject(tli.slugs, skips);
+    }
+
+    function set_skips(skips){
+
+        _.each(tli.test_instances, function(ti){
+            var skip = skips[ti.test_info.test.slug];
+            if (skip !== ti.skipped){
+                ti.set_skip(skip);
+            }
+        });
+    }
+
     function TestListInstance(){
         var self = this;
 
@@ -785,13 +808,15 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var qa_values = _.zipObject(self.slugs, cur_values);
             var meta = get_meta_data();
             var comments = get_comments();
+            var skips = get_skips();
 
             var data = {
                 tests: qa_values,
                 meta: meta,
                 test_list_id: self.test_list_id,
                 unit_id: self.unit_id,
-                comments: comments
+                comments: comments,
+                skips: skips
             };
 
             var on_success = function(data, status, XHR){
@@ -831,6 +856,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         }
 
                     });
+
+                    if (data.skips){
+                        set_skips(data.skips);
+                    }
                 }
                 $.Topic("qaUpdated").publish();
             };

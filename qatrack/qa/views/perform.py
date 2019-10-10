@@ -84,7 +84,7 @@ def attachment_info(attachment):
 
 class CompositeUtils:
 
-    def __init__(self, user, unit, test_list, meta, context, comments):
+    def __init__(self, user, unit, test_list, meta, context, comments, skips):
         self.context = context
         self.context['__user_attached__'] = []
         self.user = user
@@ -92,12 +92,19 @@ class CompositeUtils:
         self.meta = meta
         self.test_list = test_list
         self.comments = comments
+        self.skips = skips
 
     def set_comment(self, comment):
         self.context["__comment__"] = comment
 
     def get_comment(self, slug):
         return self.comments.get(slug, "")
+
+    def set_skip(self, slug, skip):
+        self.skips[slug] = skip
+
+    def get_skip(self, slug):
+        return self.skips.get(slug, False)
 
     def write_file(self, fname, obj):
 
@@ -268,6 +275,7 @@ class UploadHandler:
             results["success"] = True
             results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
             results["comment"] = self.calculation_context.get("__comment__")
+            results["skips"] = self.calculation_context['UTILS'].skips
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
@@ -304,6 +312,7 @@ class UploadHandler:
                 pass
 
         comments = self.data["comments"]
+        skips = self.data.get("skips", {})
         self.calculation_context.update({
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
@@ -317,6 +326,7 @@ class UploadHandler:
                 meta_data,
                 self.calculation_context,
                 comments,
+                skips,
             ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -404,6 +414,7 @@ class Upload(JSONResponseMixin, View):
             results["success"] = True
             results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
             results["comment"] = self.calculation_context.get("__comment__")
+            results["skips"] = self.calculation_context['UTILS'].skips
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
@@ -441,6 +452,7 @@ class Upload(JSONResponseMixin, View):
                 pass
 
         comments = self.get_json_data("comments")
+        skips = self.get_json_data("skips")
 
         try:
             f = open(self.attachment.attachment.path, "r")
@@ -461,6 +473,7 @@ class Upload(JSONResponseMixin, View):
                 meta_data,
                 self.calculation_context,
                 comments,
+                skips,
             ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -571,7 +584,9 @@ class CompositePerformer:
 
                 del self.calculation_context['__user_attached__'][:]
 
-        return {"success": True, "errors": [], "results": results}
+        skips = self.calculation_context['UTILS'].skips
+
+        return {"success": True, "errors": [], "results": results, "skips": skips}
 
     def set_formatters(self):
         """Set formatters for tests where applicable"""
@@ -606,6 +621,7 @@ class CompositePerformer:
         refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
         comments = self.data.get("comments", {})
+        skips = self.data.get("skips", {})
         self.calculation_context.update({
             "META": meta_data,
             "REFS": refs,
@@ -617,6 +633,7 @@ class CompositePerformer:
                 meta_data,
                 self.calculation_context,
                 comments,
+                skips,
             ),
         })
 
