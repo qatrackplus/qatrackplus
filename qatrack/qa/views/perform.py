@@ -990,9 +990,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             )
             comment.save()
 
-        for delta, ti_form in enumerate(formset):
-
-            now = self.object.created + timezone.timedelta(milliseconds=delta)
+        for order, ti_form in enumerate(formset):
 
             attachments.extend(ti_form.attachments_to_process)
 
@@ -1005,7 +1003,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 reference=ti_form.unit_test_info.reference,
                 tolerance=ti_form.unit_test_info.tolerance,
                 status=status,
-                created=now,
+                order=order,
+                created=self.object.created,
                 created_by=self.request.user,
                 modified_by=self.request.user,
                 test_list_instance=self.object,

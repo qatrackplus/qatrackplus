@@ -509,8 +509,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         uti_tests = [x.test for x in utis]
         ordered_utis = [utis[uti_tests.index(test)] for test in tests]
         to_save = []
-        for delta, uti in enumerate(ordered_utis):
-            now = tli.created + timezone.timedelta(milliseconds=delta)
+        for order, uti in enumerate(ordered_utis):
             data = test_instance_data[uti.test.slug]
             ti = models.TestInstance(
                 value=data.get("value", None),
@@ -521,7 +520,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 reference=uti.reference,
                 tolerance=uti.tolerance,
                 status=status,
-                created=now,
+                order=order,
+                created=tli.created,
                 created_by=user,
                 modified_by=user,
                 test_list_instance=tli,

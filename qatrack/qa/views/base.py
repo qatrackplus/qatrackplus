@@ -105,7 +105,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         # override the default queryset for the formset so that we can pull in all the
         # reference/tolerance data without the ORM generating lots of extra queries
-        test_instances = self.object.testinstance_set.order_by("created").select_related(
+        test_instances = self.object.testinstance_set.order_by("order", "created").select_related(
             "status",
             "reference",
             "tolerance",
