@@ -14,6 +14,10 @@ Acknowledgements
 Details of the v0.3.1 release
 .............................
 
+
+* A new :ref:`Reports <reports>` tool has been added for generating and scheduling
+  reports.
+
 * A new :ref:`Query Tool <qa_query_tool>` has been added for advanced query and
   reporting.
 
@@ -63,6 +67,22 @@ Details of the v0.3.1 release
 * New :ref:`Date and Date & Time test types <qa_tests>` have been added to
   allow users to select dates/times with a calendar widget.
 
+* Added :ref:`UTILS.set_skip an UTILS.get_skip <composite_tests>` functions for setting/getting skip status
+  of tests.
+
+* Using `UTILS.set_comment` will now open the comment box on the front end.
+
+* Add test type css class to test rows.  Allows you to target different test types in site.css like:
+
+  .. code-block:: css
+
+        .qa-boolean, .qa-numerical {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+
+* Setting the `Warning message` field on a `TestList` will now prevent a
+  warning message/banner from being shown when tests are at action level.
 
 Deprecations & Discontinuations
 ...............................
