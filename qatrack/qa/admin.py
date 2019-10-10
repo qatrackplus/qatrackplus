@@ -448,7 +448,7 @@ class SublistInlineFormSet(forms.models.BaseInlineFormSet):
             # something else went wrong already
             return {}
 
-        children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data["DELETE"]]  # noqa: E501
+        children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data.get("DELETE")]  # noqa: E501
         children_with_child = [child for child in children if child.children.exists()]
         if self.instance and self.instance in children:
             raise forms.ValidationError(
