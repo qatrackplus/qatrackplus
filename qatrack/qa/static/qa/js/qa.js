@@ -251,6 +251,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.test_list_id = $("#test-list-id").val();
 
         this.comment = this.row.next();
+        this.comment_closed_by_user = false;
         this.error = $('.qa-error.row-' + this.prefix);
 
         this.visible = true;
@@ -313,6 +314,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             if (!self.showing_comment) {
                 show_comment();
             } else  {
+                self.comment_closed_by_user = true;
                 hide_comment();
             }
             return false;
@@ -803,7 +805,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         if (!_.isNil(ti) && !ti.skipped){
                             if (result.comment){
                                 ti.set_comment(result.comment);
+
                                 ti.set_comment_icon();
+                                if (!ti.showing_comment && !ti.comment_closed_by_user) {
+                                    ti.show_comment.click();
+                                }
                             }
                             ti.set_value(result.value, result.user_attached, result.formatted);
 
