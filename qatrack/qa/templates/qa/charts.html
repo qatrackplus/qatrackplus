@@ -44,7 +44,7 @@
                             <div class="col-sm-12">
                                 <select id="sites" multiple class="form-control">
                                     {% for s in sites %}
-                                    <option value="{{ s.pk }}" title="{{ s.name }}">{{ s.name }}</option>
+                                    <option selected value="{{ s.pk }}" title="{{ s.name }}">{{ s.name }}</option>
                                     {% endfor %}
                                 </select>
 

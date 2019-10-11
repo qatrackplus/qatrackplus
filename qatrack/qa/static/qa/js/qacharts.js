@@ -75,9 +75,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     filter: function () {
                         var sites = $sites.val();
                         if (_.isNull(sites)){
-                            return _.map($units.find("option"), function(opt){
-                                return parseInt(opt.value);
-                            });
+                            return [];
                         }
                         var units = [];
                         _.each($units.find("option"), function(opt){
