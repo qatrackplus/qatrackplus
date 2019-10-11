@@ -98,7 +98,10 @@ class SublistViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.UnitTestCollection.objects.all()
+    queryset = models.UnitTestCollection.objects.select_related().prefetch_related(
+        "visible_to",
+        "tests_object",
+    )
     serializer_class = serializers.UnitTestCollectionSerializer
     filterset_class = filters.UnitTestCollectionFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
