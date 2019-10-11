@@ -5,7 +5,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
     $(document).ready(function () {
 
-        var $units = $('#units'),
+        var $sites = $("#sites"),
+            $units = $('#units'),
             $frequencies = $('#frequencies'),
             $test_lists = $('#test-lists'),
             $tests = $('#tests'),
@@ -38,6 +39,16 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         var set_chart_height;
 
+        $sites.felter({
+            mainDivClass: 'col-sm-1',
+            selectAllClass: 'btn btn-flat btn-xs btn-default',
+            height: 350,
+            label: 'Sites',
+            slimscroll: true,
+            selectAll: true,
+            selectNone: true,
+            initially_displayed: true
+        });
         $units.felter({
             mainDivClass: 'col-sm-2',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
@@ -57,7 +68,29 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     },
                     refresh_on_dependent_changes: false
                 }
-            }
+            },
+            dependent_on_filters: [
+                {
+                    element: $sites,
+                    filter: function () {
+                        var sites = $sites.val();
+                        if (_.isNull(sites)){
+                            return _.map($units.find("option"), function(opt){
+                                return parseInt(opt.value);
+                            });
+                        }
+                        var units = [];
+                        _.each($units.find("option"), function(opt){
+                            var $opt = $(opt);
+                            if (sites.indexOf(opt.dataset.site) >= 0){
+                                units.push(parseInt($opt.val()));
+                            }
+                        });
+                        return units;
+                    },
+                    is_ajax: false
+                }
+            ]
         });
 
         $frequencies.felter({
@@ -186,7 +219,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         });
 
         $tests.felter({
-            mainDivClass: 'col-sm-5',
+            mainDivClass: 'col-sm-4',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
             label: 'Tests',

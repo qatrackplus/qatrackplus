@@ -25,7 +25,7 @@ from qatrack.qatrack_core.utils import (
     parse_date,
 )
 from qatrack.service_log import models as sl_models
-from qatrack.units.models import Unit
+from qatrack.units.models import Site, Unit
 
 from .. import models
 
@@ -116,7 +116,11 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'categories': models.Category.objects.all(),
             'statuses': models.TestInstanceStatus.objects.all(),
             'service_types': sl_models.ServiceType.objects.all(),
-            'units': Unit.objects.values('pk', 'name', 'active'),
+            'sites': [{
+                "pk": "",
+                "name": "No site"
+            }] + list(Site.objects.values('pk', 'name')),
+            'units': Unit.objects.values('pk', 'name', 'active', 'site_id'),
             'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),
             'active_unit_test_list': self.get_active_test_lists()
         }

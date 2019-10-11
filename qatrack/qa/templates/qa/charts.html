@@ -20,8 +20,6 @@
     <script>
         var QACharts = {
             unit_frequencies:{{unit_frequencies|safe}},
-            {#se_types: {{ service_types|safe }},#}
-{#            se_probs: {{ problem_types|safe }}#}
             unit_testlist_active: {{ active_unit_test_list|safe }}
         };
     </script>
@@ -44,9 +42,15 @@
                     <div class="col-sm-8 padding-right-0">
                         <div class="row">
                             <div class="col-sm-12">
+                                <select id="sites" multiple class="form-control">
+                                    {% for s in sites %}
+                                    <option value="{{ s.pk }}" title="{{ s.name }}">{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+
                                 <select id="units" multiple class="form-control">
                                     {% for u in units %}
-                                        <option data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
+                                    <option data-active="{{ u.active }}" data-site="{% firstof u.site_id '' %}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
                                     {% endfor %}
                                 </select>
 
