@@ -241,11 +241,6 @@ The meaning of the individual keys is as follows:
 Other Settings
 ~~~~~~~~~~~~~~
 
-AUTO_REVIEW_DEFAULT
-...................
-
-Set `AUTO_REVIEW_DEFAULT = True` in your `local_settings.py` file in order to
-enable :ref:`Auto Review <qa_auto_review>` by default.
 
 CHROME_PATH
 ...........

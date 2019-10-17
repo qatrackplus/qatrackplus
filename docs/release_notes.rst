@@ -84,6 +84,10 @@ Details of the v0.3.1 release
 * Setting the `Warning message` field on a `TestList` will now prevent a
   warning message/banner from being shown when tests are at action level.
 
+* Test.auto_review has been replaced by new AutoReviewRuleSet's that allow you
+  to apply different AutoReviewRules to different tests. For more information see
+  the :ref:`Auto Review page <qa_auto_review>`.
+
 Deprecations & Discontinuations
 ...............................
 

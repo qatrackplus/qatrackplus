@@ -8,6 +8,7 @@ from django.contrib.contenttypes.fields import (
     GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -100,8 +101,6 @@ PASS_FAIL_CHOICES = (
     (NO_TOL, NO_TOL_DISP),
 )
 PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
-
-AUTO_REVIEW_DEFAULT = getattr(settings, "AUTO_REVIEW_DEFAULT", False)
 
 
 # due date choices
@@ -277,6 +276,32 @@ if settings.USE_SERVICE_LOG:
     )
 
 
+def default_autoreviewruleset():
+    return AutoReviewRuleSet.objects.filter(is_default=True).first()
+
+
+def generate_autoreviewruleset_cache():
+    rulesets = AutoReviewRuleSet.objects.prefetch_related("rules")
+    cache_val = {}
+    for ruleset in rulesets:
+        cache_val[ruleset.id] = {rule.pass_fail: rule.status for rule in ruleset.rules.all()}
+    return cache_val
+
+
+def update_autoreviewruleset_cache():
+    cache_val = generate_autoreviewruleset_cache()
+    cache.set(settings.CACHE_AUTOREVIEW_RULESETS, cache_val)
+    return cache_val
+
+
+def autoreviewruleset_cache(rule_id):
+    cache_val = cache.get(settings.CACHE_AUTOREVIEW_RULESETS)
+    if cache_val is None or rule_id not in cache_val:
+        cache_val = update_autoreviewruleset_cache()
+
+    return cache_val[rule_id]
+
+
 class FrequencyManager(models.Manager):
     """Provides a convenience method for grabbing available convenience slug/names"""
 
@@ -439,7 +464,6 @@ class AutoReviewRule(models.Model):
         help_text="Pass fail state of test instances to apply this rule to.",
         max_length=15,
         choices=PASS_FAIL_CHOICES,
-        unique=True,
     )
     status = models.ForeignKey(
         TestInstanceStatus,
@@ -449,6 +473,30 @@ class AutoReviewRule(models.Model):
 
     def __str__(self):
         return "%s => %s" % (PASS_FAIL_CHOICES_DISPLAY[self.pass_fail], self.status)
+
+
+class AutoReviewRuleSet(models.Model):
+
+    name = models.CharField(
+        verbose_name=_("Name"),
+        unique=True,
+        max_length=255,
+        help_text=_("Give this rule set a unique descriptive name."),
+    )
+    rules = models.ManyToManyField(
+        AutoReviewRule,
+        verbose_name=_("Rules"),
+        help_text=_("Select the auto review rules to include in this rule set."),
+    )
+
+    is_default = models.BooleanField(
+        verbose_name=_("Default"),
+        default=False,
+        help_text=_("Check this option if you want this to be the default rule set for tests"),
+    )
+
+    def __str__(self):
+        return self.name
 
 
 class Reference(models.Model):
@@ -743,7 +791,15 @@ class Test(models.Model, TestPackMixin):
     )
     category = models.ForeignKey(Category, on_delete=models.PROTECT, help_text=_("Choose a category for this test"))
     chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
-    auto_review = models.BooleanField(_("Allow auto review of this test?"), default=AUTO_REVIEW_DEFAULT)
+    autoreviewruleset = models.ForeignKey(
+        "AutoReviewRuleSet",
+        verbose_name=_("Auto Review Rules"),
+        null=True,
+        blank=True,
+        default=default_autoreviewruleset,
+        on_delete=models.PROTECT,
+        help_text=_("Choose the Auto Review Rule Set to use for this Test. Leave blank to disable Auto Review for this Test."),
+    )
 
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
@@ -1767,7 +1823,11 @@ class TestInstance(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        self.calculate_pass_fail()
+
+        # if caller has already calculated pass_fail, we don't need to do it again
+        do_pass_fail = kwargs.pop('calculate_pass_fail', True)
+        if do_pass_fail:
+            self.calculate_pass_fail()
         super(TestInstance, self).save(*args, **kwargs)
 
     def difference(self):
@@ -1860,18 +1920,24 @@ class TestInstance(models.Model):
 
         return self.value
 
-    def auto_review(self):
+    def auto_review(self, has_tli_comment=None):
         """set review status of the current value if allowed"""
-        has_comment = self.comment or self.test_list_instance.comments.all().exists()
+
+        if has_tli_comment is None:
+            # allow caller to control whether or not we need to check
+            # if tli has a comment or not
+            has_tli_comment = self.test_list_instance.comments.all().exists()
+
+        has_comment = self.comment or has_tli_comment
         if has_comment and not self.skipped:
             return
-
-        if self.unit_test_info.test.auto_review:
-            try:
-                self.status = AutoReviewRule.objects.get(pass_fail=self.pass_fail).status
+        rule_id = self.unit_test_info.test.autoreviewruleset_id
+        if rule_id:
+            rules = autoreviewruleset_cache(rule_id)
+            status = rules.get(self.pass_fail)
+            if status:
+                self.status = status
                 self.review_date = timezone.now()
-            except AutoReviewRule.DoesNotExist:
-                pass
 
     def value_display(self, coerce_numerical=True):
         """If coerce_numerical=False, the actual value will be returned rather than coercing to string representation"""
@@ -1944,6 +2010,9 @@ class TestListInstanceManager(models.Manager):
         return self.complete().filter(all_reviewed=False).order_by("-work_completed")
 
     def unreviewed_count(self):
+        # future note: doing something like:
+        # return len([v == (False, False) for v in self.get_queryset().values_list("in_progress", "all_reviewed")])
+        # may be significantly faster for postgres than using count()
         return self.unreviewed().count()
 
     def your_unreviewed(self, user):
@@ -2156,7 +2225,6 @@ class TestListInstance(models.Model):
         # note sort  here rather than using self.testinstance_set.order_by(("order", "created")
         # because that causes Django to requery db and negates the advantage of using
         # prefetch_related above
-
         test_instances = sorted(self.testinstance_set.all(), key=lambda x: (x.order, x.created))
         for ti in test_instances:
 

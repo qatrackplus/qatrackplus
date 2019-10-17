@@ -1,4 +1,3 @@
-import pytest
 from unittest import mock
 
 from django.conf import settings
@@ -8,6 +7,7 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 from django_comments.models import Comment
+import pytest
 
 from qatrack.qa import models
 
@@ -192,7 +192,7 @@ class TestTestCollectionInterface(TestCase):
         self.assertRaises(NotImplementedError, models.TestCollectionInterface().test_list_members)
 
 
-class TestTest:
+class TestTest(TestCase):
 
     def create_test(self, **kwargs):
         return models.Test(**kwargs)
@@ -1269,7 +1269,7 @@ class TestSignals(TestCase):
 
         cycle1 = utils.create_cycle(test_lists=test_lists)
 
-        utc = utils.create_unit_test_collection(test_collection=cycle1)
+        utils.create_unit_test_collection(test_collection=cycle1)
 
         utis = list(models.UnitTestInfo.objects.order_by("test_id"))
 
@@ -1745,11 +1745,14 @@ class TestAutoReview(TestCase):
             models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
             models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
         ])
+        self.ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            self.ruleset.rules.add(rule)
 
         self.test_list = utils.create_test_list()
         for i in range(3):
             test = utils.create_test(name="name%d" % i)
-            test.auto_review = True
+            test.autoreviewruleset_id = self.ruleset.id
             test.save()
 
             self.tests.append(test)

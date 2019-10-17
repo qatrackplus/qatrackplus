@@ -298,8 +298,9 @@ CACHE_DEFAULT_SE_STATUS = 'default-se-status'
 CACHE_SE_NEEDING_REVIEW_COUNT = 'se_needing_review_count'
 CACHE_SERVICE_STATUS_COLOURS = 'service-status-colours'
 CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
+CACHE_AUTOREVIEW_RULESETS = "autoreviewrulesets"
 
-MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
+MAX_CACHE_TIMEOUT = None
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 

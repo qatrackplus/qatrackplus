@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseRedirect
@@ -935,6 +936,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.user_set_status = False
             return models.TestInstanceStatus.objects.default()
 
+    @transaction.atomic
     def form_valid(self, form):
         """
         TestListInstance form has validated, now check for validity of
@@ -980,7 +982,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         attachments = []
 
+        has_tli_comment = False
         if form.cleaned_data['comment']:
+            has_tli_comment = True
             comment = Comment(
                 submit_date=timezone.now(),
                 user=self.request.user,
@@ -1013,7 +1017,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             )
             ti.calculate_pass_fail()
             if not self.user_set_status:
-                ti.auto_review()
+                ti.auto_review(has_tli_comment=has_tli_comment)
 
             to_save.append(ti)
 
@@ -1194,6 +1198,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     form_class = forms.UpdateTestListInstanceForm
     formset_class = forms.UpdateTestInstanceFormSet
 
+    @transaction.atomic
     def form_valid(self, form):
 
         self.form = form
@@ -1203,6 +1208,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         if formset.is_valid():
             self.object = form.save(commit=False)
+            self.has_tli_comment = self.object.comments.all().exists()
 
             initially_requires_reviewed = not self.object.all_reviewed
 
@@ -1213,13 +1219,21 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             self.update_test_list_instance()
 
+            has_existing_attachments = set(
+                Attachment.objects.filter(testinstance__in=self.object.testinstance_set.all()).values_list(
+                    "testinstance_id",
+                    flat=True,
+                )
+            )
+
             for ti_form in formset:
 
                 ti = ti_form.save(commit=False)
 
                 self.update_test_instance(ti)
 
-                ti.attachment_set.clear()
+                if ti.id in has_existing_attachments:
+                    ti.attachment_set.clear()
 
                 for uti_pk, attachment in ti_form.attachments_to_process:
                     attachment.testinstance = ti
@@ -1325,9 +1339,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         try:
             ti.calculate_pass_fail()
             if not self.user_set_status:
-                ti.auto_review()
+                ti.auto_review(has_tli_comment=self.has_tli_comment)
 
-            ti.save()
+            ti.save(calculate_pass_fail=False)
         except ZeroDivisionError:
 
             msga = "Tried to calculate percent diff with a zero reference value. "

@@ -135,7 +135,6 @@ class TestFilter(filters.FilterSet):
             "description": ['icontains'],
             "procedure": ['icontains'],
             "chart_visibility": ['exact'],
-            "auto_review": ['exact'],
             "hidden": ['exact'],
             "skip_without_comment": ['exact'],
             "display_image": ['exact'],

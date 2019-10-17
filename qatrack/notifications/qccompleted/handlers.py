@@ -22,8 +22,18 @@ def email_on_testlist_save(*args, **kwargs):
 
     test_list_instance = kwargs["instance"]
 
-    failing = test_list_instance.failing_tests()
-    tolerance = test_list_instance.tolerance_tests()
+    failing = test_list_instance.failing_tests().select_related(
+        "tolerance",
+        "reference",
+        "unit_test_info",
+        "unit_test_info__test",
+    ).order_by("order", "created")
+    tolerance = test_list_instance.tolerance_tests().select_related(
+        "tolerance",
+        "reference",
+        "unit_test_info",
+        "unit_test_info__test",
+    ).order_by("order", "created")
 
     recipients = get_notification_recipients(test_list_instance)
     comp_recipients, tol_recipients, act_recipients = recipients

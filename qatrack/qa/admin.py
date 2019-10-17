@@ -1278,8 +1278,39 @@ class AutoReviewAdmin(admin.ModelAdmin):
     list_editable = ["pass_fail", "status"]
 
 
+class AutoReviewRuleSetAdminForm(forms.ModelForm):
+
+    class Meta:
+        model = models.AutoReviewRuleSet
+        fields = '__all__'
+
+    def clean_is_default(self):
+
+        is_default = self.cleaned_data['is_default']
+        if is_default and not self.initial.get('is_default', False):
+            if self.instance.pk is None and models.AutoReviewRuleSet.objects.filter(is_default=True).exists():
+                raise forms.ValidationError(
+                    'There must be one default auto review rule set. Edit another rule set to be default first.'
+                )
+        return is_default
+
+
+class AutoReviewRuleSetAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "is_default", 'get_rules_display')
+
+    filter_horizontal = ("rules",)
+
+    form = AutoReviewRuleSetAdminForm
+
+    @mark_safe
+    def get_rules_display(self, obj):
+        return "<br>".join(str(rule) for rule in obj.rules.all().order_by('pass_fail'))
+    get_rules_display.short_description = _l("Rules")
+
+
 admin.site.register([models.Tolerance], ToleranceAdmin)
 admin.site.register([models.AutoReviewRule], AutoReviewAdmin)
+admin.site.register([models.AutoReviewRuleSet], AutoReviewRuleSetAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList], TestListAdmin)
 admin.site.register([models.Test], TestAdmin)
