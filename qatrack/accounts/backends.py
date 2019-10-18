@@ -23,7 +23,8 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             if len(password) == 0:
                 return None
 
-            # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
+            if settings.AD_CERT_FILE:
+                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
             if debug:
                 print("\tinitialize...", file=debug)
             l = ldap.initialize(settings.AD_LDAP_URL)
@@ -44,7 +45,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 print(e, file=debug)
         if debug:
             debug.close()
-
 
     def get_or_create_user(self, username, password):
         try:
@@ -100,7 +100,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
             user.is_staff = False
             user.is_superuser = False
-            user.set_password('ldap authenticated')
+            user.set_unusable_password()
             user.save()
             if debug:
                 print("User created: %s" % username, file=debug)
@@ -207,7 +207,7 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         user.is_staff = False
         user.is_superuser = False
-        user.set_password(None)
+        user.set_unusable_password()
 
         user.save()
         return user

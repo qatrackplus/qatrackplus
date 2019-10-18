@@ -1,17 +1,13 @@
 from django.apps import apps
-from django.contrib.auth.models import Group, Permission, User
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 import recurrence
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
+from qatrack.qatrack_core.tests.utils import get_next_id
 from qatrack.units.models import PHOTON, Modality, Unit, UnitType, Vendor
-
-
-def get_next_id(obj):
-    if obj is None:
-        return 1
-    return obj.id + 1
 
 
 def exists(app, model, field, value):
@@ -20,23 +16,6 @@ def exists(app, model, field, value):
     if len(results) > 0:
         return True
     return False
-
-
-def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", is_active=True):
-    try:
-        u = User.objects.get(username=uname)
-    except:
-        if is_superuser:
-            u = User.objects.create_superuser(
-                uname, "super@qatrackplus.com", pwd, is_staff=is_staff, is_active=is_active
-            )
-        else:
-            u = User.objects.create_user(
-                uname, "user@qatrackplus.com", password=pwd, is_staff=is_staff, is_active=is_active
-            )
-    finally:
-        u.user_permissions.add(Permission.objects.get(codename="add_testlistinstance"))
-    return u
 
 
 def create_category(name="cat", slug="cat", description="cat"):
@@ -227,7 +206,7 @@ def create_unit_type(name=None, vendor=None, model="model"):
     return ut
 
 
-def create_unit(name=None, number=None, tipe=None):
+def create_unit(name=None, number=None, tipe=None, site=None):
 
     if name is None:
         name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
@@ -237,10 +216,9 @@ def create_unit(name=None, number=None, tipe=None):
     if tipe is None:
         tipe = create_unit_type()
 
-    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True)
+    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True, site=site)
     u.save()
     u.modalities.add(create_modality())
-    u.save()
     return u
 
 
@@ -257,7 +235,7 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
 
 
 def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None,
-                     mc_pass_choices=None, mc_tol_choices=None):
+                     mc_pass_choices='', mc_tol_choices=''):
 
     if created_by is None:
         created_by = create_user()
@@ -282,15 +260,6 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
     tol = models.Tolerance(**kwargs)
     tol.save()
     return tol
-
-
-def create_group(name=None):
-    if name is None:
-        name = 'group_%04d' % get_next_id(Group.objects.order_by('id').last())
-    g = Group(name=name)
-    g.save()
-    g.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
-    return g
 
 
 def create_frequency(name=None, slug=None, interval=1, window_end=1, save=True):

@@ -1,9 +1,11 @@
+from itertools import groupby
 
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import ModelForm, ModelMultipleChoiceField
+from django.forms import ChoiceField, ModelForm, ModelMultipleChoiceField
 from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _l
 
 from qatrack.service_log.models import (
     ServiceArea,
@@ -24,6 +26,8 @@ from .models import (
 
 
 class UnitFormAdmin(ModelForm):
+
+    type = ChoiceField(label=_l("Unit Type"))
 
     if settings.USE_SERVICE_LOG:
         service_areas = ModelMultipleChoiceField(
@@ -71,6 +75,25 @@ class UnitFormAdmin(ModelForm):
         if Site.objects.count() == 1 and not self.instance.pk:
             self.fields['site'].initial = Site.objects.first()
 
+        def vendor_name(ut):
+            return ut.vendor.name if ut.vendor else "Other"
+
+        def vendor_unit_type(ut):
+            return "%s :: %s" % (ut.vendor.name if ut.vendor else "Other", ut.name)
+
+        unit_types = UnitType.objects.order_by("vendor__name", "name")
+        choices = [(v, list(uts)) for (v, uts) in groupby(unit_types, key=vendor_name)]
+        choices = [(v, [(ut.id, vendor_unit_type(ut)) for ut in uts]) for (v, uts) in choices]
+        choices = [("", "---------")] + choices
+
+        self.fields['type'].choices = choices
+
+    def clean_type(self):
+        utype = self.cleaned_data.get('type')
+        if utype:
+            utype = UnitType.objects.get(pk=utype)
+        return utype
+
     def clean_service_areas(self):
         service_areas = self.cleaned_data['service_areas']
 
@@ -87,9 +110,10 @@ class UnitFormAdmin(ModelForm):
                     self.data = data_copy
                     self.add_error(
                         'service_areas',
-                        'Cannot remove {} from unit {}. There exists Service Event(s) with that Unit and Service Area.'.format(
-                            usa.service_area.name, unit.name
-                        )
+                        (
+                            'Cannot remove {} from unit {}. '
+                            'There exists Service Event(s) with that Unit and Service Area.'
+                        ).format(usa.service_area.name, unit.name)
                     )
 
         return service_areas
@@ -127,6 +151,10 @@ class UnitAdmin(admin.ModelAdmin):
     list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
     list_editable = ['site', 'is_serviceable']
+    ordering = ['number']
+    search_fields = ['number', 'name']
+
+    save_as = True
 
     if settings.USE_SERVICE_LOG:
         inlines = [UnitAvailableTimeInline]

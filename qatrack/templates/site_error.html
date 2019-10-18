@@ -1,0 +1,14 @@
+{% extends "site_base.html" %}
+{% load i18n %}
+{% block head_title %}{% trans "Error" %} {{ code }} : {{ type }}{% endblock %}
+{% block body %}
+<div class="row">
+  <div class="col-sm-12 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
+    <div class="page-header text-center">
+      <h1>{% trans "Error" %} {{ code }} : {{ type }}</h1>
+    </div>
+    <p class="text-center">{{ message }}</p>
+  </div>
+</div>
+{% endblock %}
+

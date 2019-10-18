@@ -206,6 +206,8 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         to_create = []
 
         model = model_map[model_name]
+        model_fields = set(f.attname for f in model._meta.fields)
+        model_fields |= set(f.name for f in model._meta.fields)
 
         for obj in to_import[model_name]:
 
@@ -223,7 +225,10 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             # add extra kwargs and fix natural key conflicts
             obj.update(extra_kwargs)
             obj.update(dict(zip(model.NK_FIELDS, nk_lookups[model_name][nk_vals])))
-            to_create.append(model(**obj))
+
+            # remove any fields that don't exist in this version for backwards compatibility
+            obj_fields = {k: v for k, v in obj.items() if k in model_fields}
+            to_create.append(model(**obj_fields))
 
         model.objects.bulk_create(to_create)
 
@@ -246,6 +251,8 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         to_create = []
         seen = set()
         model = model_map[mname]
+        model_fields = set(f.attname for f in model._meta.fields)
+        model_fields |= set(f.name for f in model._meta.fields)
 
         for obj in to_import[mname]:
 
@@ -262,7 +269,9 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
                 continue
             seen.add(tuple(obj.items()))
 
-            to_create.append(model(**obj))
+            # remove any fields that don't exist in this version for backwards compatibility
+            obj_fields = {k: v for k, v in obj.items() if k in model_fields}
+            to_create.append(model(**obj_fields))
 
         model.objects.bulk_create(to_create)
 

@@ -1,4 +1,10 @@
-# Django settings for qatrack project.
+""" settings.py
+
+    Default settings for QATrack+
+
+    isort:skip_file
+"""
+
 import datetime
 import os
 import sys
@@ -9,6 +15,7 @@ matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
 DEBUG = False
+DEBUG_TOOLBAR = False
 
 # Who to email when server errors occur
 ADMINS = (
@@ -20,6 +27,7 @@ SEND_BROKEN_LINK_EMAILS = False
 # -----------------------------------------------------------------------------
 # misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 
 VERSION = "0.3.1"
@@ -73,13 +81,18 @@ USE_TZ = True
 
 FORMAT_MODULE_PATH = "qatrack.formats"
 
-INPUT_DATE_FORMATS = (
-    "%d-%m-%Y %H:%M", "%d/%m/%Y %H:%M",
-    "%d-%m-%y %H:%M", "%d/%m/%y %H:%M",
-)
-SIMPLE_DATE_FORMAT = "%d-%m-%Y"
-MONTH_ABBR_DATE_FORMAT = "%d %b %Y"
-DATETIME_HELP = "Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)"
+
+# formats for strptime/strftime
+DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
+DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d %b %Y %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
+TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
+
+DATETIME_FORMAT = "j M Y H:i"
+DATE_FORMAT = "j M Y"
+TIME_FORMAT = "H:i"
+
+
+DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -90,6 +103,8 @@ LANGUAGE_CODE = 'en-us'
 USE_I18N = True
 
 CONSTANT_PRECISION = 8
+DEFAULT_NUMBER_FORMAT = None
+
 
 # This is the warning message given to the user when a test result is out of tolerance
 # Override this setting in local_settings.py to a locally relevant warning message
@@ -101,7 +116,11 @@ DEFAULT_WARNING_MESSAGE = "Do not treat"
 #  Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "media")
-TMP_UPLOAD_PATH = os.path.join("uploads", "tmp")
+
+UPLOAD_PATH = "uploads"
+TMP_UPLOAD_PATH = os.path.join(UPLOAD_PATH, "tmp")
+UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
+TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -157,7 +176,7 @@ MIDDLEWARE = [
 
 
 # login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^accounts/", r"api/*"]
+LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*"]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
@@ -171,8 +190,7 @@ TEMPLATES = [
         ],
         'APP_DIRS': True,
         'OPTIONS': {
-            'debug':
-                False,
+            'debug': False,
             'context_processors': [
                 # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
                 # list if you haven't customized them:
@@ -209,10 +227,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django_extensions',
+    'django_q',
     'django_comments',
     'formtools',
     'django_filters',
     'rest_framework',
+    'rest_framework_filters',
     'rest_framework.authtoken',
     'listable',
     'genericdropdown',
@@ -230,27 +250,40 @@ INSTALLED_APPS = [
     'qatrack.service_log',
     'qatrack.parts',
     'qatrack.attachments',
+    'qatrack.reports',
     'admin_views',
 ]
+
 
 # ----------------------------------------------------------------------------
 # API settings
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication', 'rest_framework.authentication.SessionAuthentication'
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES':
+        ('rest_framework.authentication.TokenAuthentication', 'rest_framework.authentication.SessionAuthentication'),
     # Use Django's standard `django.contrib.auth` permissions
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
-    'DATETIME_INPUT_FORMATS': ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"],
+    'DATETIME_INPUT_FORMATS': DATETIME_INPUT_FORMATS,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-    'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_filters.backends.DjangoFilterBackend',
-    ),
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework_filters.backends.RestFrameworkFilterBackend',),
 }
 
+# -----------------------------------------------------------------------------
+# Password validation settings
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+]
 
 # -----------------------------------------------------------------------------
 # Cache settings
@@ -265,8 +298,9 @@ CACHE_DEFAULT_SE_STATUS = 'default-se-status'
 CACHE_SE_NEEDING_REVIEW_COUNT = 'se_needing_review_count'
 CACHE_SERVICE_STATUS_COLOURS = 'service-status-colours'
 CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
+CACHE_AUTOREVIEW_RULESETS = "autoreviewrulesets"
 
-MAX_CACHE_TIMEOUT = 24 * 60 * 60  # 24hours
+MAX_CACHE_TIMEOUT = None
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 
@@ -288,13 +322,14 @@ SESSION_SAVE_EVERY_REQUEST = True
 # set to False when not running behind reverse proxy
 # Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
 USE_X_FORWARDED_HOST = False
+HTTP_OR_HTTPS = "http"
 
 # -----------------------------------------------------------------------------
 # Email and notification settings
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
-EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SENDER = "notifications@qatrackplus.com"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
@@ -344,7 +379,7 @@ AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
 AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_NAME, AD_LU_MEMBER_OF]
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
-# AD_CERT_FILE='/path/to/your/cert.txt'
+AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
 AD_DEBUG_FILE = None
 AD_DEBUG = False
@@ -368,6 +403,9 @@ LOGGING = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
         }
     },
     'formatters': {
@@ -382,7 +420,7 @@ LOGGING = {
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
-            'filters': ['require_debug_false'],
+            'filters': [],
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
@@ -390,7 +428,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
         'file': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "debug.log"),
             'when': 'D',  # this specifies the interval
@@ -415,7 +453,7 @@ LOGGING = {
             'propagate': True,
         },
         'django.server': {
-            'handlers': ['console'],
+            'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': False,
         },
@@ -440,7 +478,7 @@ LOGGING = {
             'propagate': True,
         },
         'qatrack.migrations': {
-            'handlers': ['console', 'migrate'],
+            'handlers': ['console', 'migrate', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -536,6 +574,8 @@ DEFAULT_AVAILABLE_TIMES = {
     'hours_saturday': datetime.timedelta(hours=0, minutes=0),
 }
 
+SL_ALLOW_BLANK_SERVICE_AREA = False
+
 TESTPACK_TIMEOUT = 30
 
 
@@ -546,9 +586,9 @@ USE_SQL_REPORTS = False
 EXPLORER_CONNECTIONS = {'Default': 'readonly'}
 EXPLORER_DEFAULT_CONNECTION = 'readonly'
 EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = ['auth_', 'qa', 'service_log', 'units', 'parts']
-EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken']
+EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken', 'sessions_']
 EXPLORER_ENABLE_TASKS = False
-EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE', 'SCHEMA', 'GRANT', 'OWNER TO']
+EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE', 'SCHEMA', 'GRANT', 'OWNER TO']  # noqa: E501
 
 
 def EXPLORER_PERMISSION_CHANGE(user):
@@ -559,17 +599,22 @@ def EXPLORER_PERMISSION_VIEW(user):
     return user.has_perm("qa.can_run_sql_reports")
 
 
-if os.path.exists('/root/.is_inside_docker'):
+if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
     from .docker_settings import *  # NOQA
+
+
+if os.name.lower() == "nt":
+    CHROME_PATH = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"'
+else:
+    CHROME_PATH = "/usr/bin/chromium-browser"
+
 
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-try:
-    from .local_settings import *  # NOQA
-except ImportError:
-    pass
+from .local_settings import *  # noqa: F403, F401
+
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
@@ -586,11 +631,9 @@ USE_PARTS = USE_PARTS or USE_SERVICE_LOG
 
 UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
 TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
+TMP_REPORT_ROOT = os.path.join(MEDIA_ROOT, "reports")
 
-if not os.path.isdir(LOG_ROOT):
-    os.mkdir(LOG_ROOT)
-
-for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT):
+for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT, LOG_ROOT, TMP_REPORT_ROOT):
     if not os.path.isdir(d):
         os.mkdir(d)
 
@@ -604,6 +647,15 @@ if FORCE_SCRIPT_NAME:
     ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
 
 
+# no longer using EMAIL_NOTIFICATION_USER/PWD but people may have
+# notification specific settings set.
+if EMAIL_NOTIFICATION_USER and not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = EMAIL_NOTIFICATION_USER
+
+if EMAIL_NOTIFICATION_PWD and not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = EMAIL_NOTIFICATION_PWD
+
+
 # ------------------------------------------------------------------------------
 # Testing settings
 
@@ -611,12 +663,14 @@ SELENIUM_USE_CHROME = False  # Set to True to use Chrome instead of FF (requires
 SELENIUM_CHROME_PATH = ''  # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
 SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
 
-if any(['test' in v for v in sys.argv]):
+if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
+    DATABASES.pop('readonly', None)
     from .test_settings import *  # noqa
 
-if DEBUG:
+if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
 
 if USE_SQL_REPORTS:
     INSTALLED_APPS += [
@@ -625,7 +679,7 @@ if USE_SQL_REPORTS:
     ]
 
     # use default database when testing
-    if any('py.test' in arg for arg in sys.argv):
+    if any(('py.test' in arg or 'pytest' in arg) for arg in sys.argv):
         EXPLORER_CONNECTIONS = {'Default': 'default'}
         EXPLORER_DEFAULT_CONNECTION = 'default'
     elif 'readonly' not in DATABASES:
@@ -633,3 +687,20 @@ if USE_SQL_REPORTS:
             "Missing 'readonly' connection information. Either set "
             "USE_SQL_REPORTS = False or set up readonly database connection"
         )
+
+LOGOUT_REDIRECT_URL = LOGIN_URL
+
+Q_CLUSTER = {
+    'name': 'qatrack',
+    'workers': 1,
+    'timeout': 60,
+    'catch_up': True,
+    'recycle': 20,
+    'compress': False,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'cpu_affinity': 1,
+    'label': 'Django Q',
+    'orm': 'default',
+    'sync': os.name.lower() == "nt",
+}

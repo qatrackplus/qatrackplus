@@ -4,9 +4,9 @@ import logging
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
-from django.core.urlresolvers import resolve, reverse
 from django.db.models import Q
 from django.template.loader import get_template
+from django.urls import resolve, reverse
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView
 from listable.views import (
@@ -105,7 +105,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         # override the default queryset for the formset so that we can pull in all the
         # reference/tolerance data without the ORM generating lots of extra queries
-        test_instances = self.object.testinstance_set.order_by("created").select_related(
+        test_instances = self.object.testinstance_set.order_by("order", "created").select_related(
             "status",
             "reference",
             "tolerance",
@@ -130,7 +130,9 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         self.add_histories(formset.forms)
         context["formset"] = formset
         context["history_dates"] = self.history_dates
-        context["categories"] = set([x.unit_test_info.test.category for x in test_instances])
+        context["categories"] = sorted(
+            set([x.unit_test_info.test.category for x in test_instances]), key=lambda c: c.name
+        )
         context["statuses"] = models.TestInstanceStatus.objects.all()
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection

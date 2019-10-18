@@ -24,7 +24,11 @@
             {% if comments %}
                 <span class="label label-info">{{ comments }} <i class="fa fa-comment" aria-hidden="true"></i></span>
             {% endif %}
+            {% if instance.flagged %}
+              <span class="label label-primary"><i class="fa fa-flag" aria-hidden="true"></i></span>
+            {% endif %}
         </span>
+
 
     {% endif %}
 {% else %}

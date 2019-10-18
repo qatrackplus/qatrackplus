@@ -42,6 +42,12 @@ function updateRRDisplay(cal, start, end){
 
 $(document).ready(function() {
 
+    var isFreqList = $("#cal-1").length === 0;
+    if (isFreqList){
+        // only need to initialize things on create/change page
+        return;
+    }
+
     var $el = $("#id_recurrences");
     var $start = $("#id_window_start");
     var $end = $("#id_window_end");
@@ -72,7 +78,7 @@ $(document).ready(function() {
         range: 6,
         domainDynamicDimension: false,
         domainLabelFormat: function(date) {
-            moment.lang("en");
+            moment.locale("en");
             return moment(date).format("MMMM").toUpperCase();
         },
         subDomainTextFormat: "%d",

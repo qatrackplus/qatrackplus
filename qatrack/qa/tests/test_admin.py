@@ -4,12 +4,13 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import constants, get_messages
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Count, Q
 from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, TransactionTestCase
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import admin as qa_admin
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
@@ -21,7 +22,7 @@ class TestSetReferencesAndTolerancesForm(TransactionTestCase):
 
     def setUp(self):
 
-        qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.url = reverse('qa_copy_refs_and_tols')
@@ -97,7 +98,7 @@ class TestTestlistjson(TestCase):
 
     def setUp(self):
 
-        qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.u = qa_utils.create_unit()
@@ -168,7 +169,7 @@ class TestToleranceAdmin(TestCase):
 
     def setUp(self):
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.t = qa_utils.create_tolerance()
@@ -211,7 +212,7 @@ class TestToleranceAdmin(TestCase):
 class TestTestInstanceAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
         qa_utils.create_test_instance()
         self.url = reverse(
@@ -226,7 +227,7 @@ class TestTestListInstanceAdmin(TestCase):
 
     def setUp(self):
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.tli = qa_utils.create_test_list_instance()
@@ -264,7 +265,7 @@ class TestTestListInstanceAdmin(TestCase):
 class TestUnitTestCollectionAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.u_1 = qa_utils.create_unit()
@@ -278,8 +279,8 @@ class TestUnitTestCollectionAdmin(TestCase):
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_1)
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2)
 
-        self.g_1 = qa_utils.create_group()
-        self.g_2 = qa_utils.create_group()
+        self.g_1 = create_group()
+        self.g_2 = create_group()
 
         self.tl_ct = ContentType.objects.get(model='testlist')
         self.tlc_ct = ContentType.objects.get(model='testlistcycle')
@@ -385,7 +386,7 @@ class TestUnitTestCollectionAdmin(TestCase):
 class TestTestAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.c_1 = qa_utils.create_category()
@@ -491,7 +492,7 @@ class TestTestAdmin(TestCase):
 class TestTestListAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.t_1 = qa_utils.create_test()
@@ -504,7 +505,7 @@ class TestTestListAdmin(TestCase):
 
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2, order=0)
 
-        qa_utils.create_sublist(parent_test_list=self.tl_1)
+        self.sublist = qa_utils.create_sublist(parent_test_list=self.tl_1)
 
         self.url_add = reverse(
             'admin:%s_%s_add' % (qa_models.TestList._meta.app_label, qa_models.TestList._meta.model_name)
@@ -634,6 +635,8 @@ class TestTestListAdmin(TestCase):
     def test_sublist_formset_valid(self):
 
         data = self.data
+        data['children-0-child'] = self.sublist.child.id
+
         formset = inlineformset_factory(
             qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
             fields='__all__'
@@ -647,6 +650,33 @@ class TestTestListAdmin(TestCase):
             fields='__all__'
         )(data=data, queryset=qa_models.Sublist.objects.all(), instance=self.tl_1)
         self.assertFalse(formset.is_valid())
+
+    def test_sublist_nesting_parent(self):
+        """Shouldn't be able to add a sublist that has a sublist of its own"""
+        tl = qa_utils.create_test_list(name="sub")
+        qa_utils.create_sublist(parent_test_list=self.sublist.child, child_test_list=tl)
+        data = self.data
+        formset = inlineformset_factory(
+            qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
+            fields='__all__'
+        )(data=data, queryset=qa_models.Sublist.objects.all(), instance=None)
+        assert not formset.is_valid()
+        assert "Test Lists can not be nested more than 1 level" in formset.non_form_errors()[0]
+
+    def test_sublist_nesting_child(self):
+        """Shouldn't be able to add a sublist when you are a sublist"""
+        tl = qa_utils.create_test_list(name="sub")
+        data = self.data
+        data['children-0-child'] = tl.id
+        formset = inlineformset_factory(
+            qa_models.TestList,
+            qa_models.Sublist,
+            formset=qa_admin.SublistInlineFormSet,
+            fk_name='parent',
+            fields='__all__'
+        )(data=data, queryset=qa_models.Sublist.objects.all(), instance=self.sublist.child)
+        assert not formset.is_valid()
+        assert "This Test List is a Sublist" in formset.non_form_errors()[0]
 
     def test_sublist_duplicate(self):
         data = self.data
@@ -691,7 +721,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         get_internal_user()

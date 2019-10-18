@@ -4,6 +4,7 @@ omit =
     qatrack/wsgi.py
     qatrack/middleware/profiler.py
     qatrack/**/tests/*
+    qatrack/**/apps.py
 source =
     qatrack.accounts
     qatrack.attachments
@@ -11,6 +12,7 @@ source =
     qatrack.contacts
     qatrack.notifications
     qatrack.parts
+    qatrack.reports
     qatrack.qa
     qatrack.qatrack_core
     qatrack.service_log

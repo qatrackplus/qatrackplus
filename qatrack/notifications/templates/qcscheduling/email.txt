@@ -1,0 +1,17 @@
+Hello,
+
+{% spaceless %}
+{% if notice.is_all %}The following test lists have due dates shown below.
+{% elif notice.is_due %}The following tests lists are currently due or overdue.
+{% elif notice.is_upcoming_and_due %}
+{% if notice.future_days == 0 %}The following tests lists are currently due, overdue.{% else %}The following tests lists are currently due, overdue, or coming due in the next {{ notice.future_days }} days.{% endif %}
+{% elif notice.is_upcoming %}{% if notice.future_days == 0 %}The following tests lists are due today.{% else %}The following tests lists coming due in the next {{ notice.future_days }} days.{% endif %}
+{% endif %}
+{% endspaceless %}
+{% regroup notice.utcs_to_notify by unit as utcs %}
+{% for unit, unit_utcs in utcs %}
+Unit: {{ unit.name }}
+===================================
+{% for utc in unit_utcs %}{{ utc.name }} : {% if utc.due_date %}{{ utc.due_date | date }}{% else %}Ad Hoc{% endif %}
+{% endfor %}
+{% endfor %}

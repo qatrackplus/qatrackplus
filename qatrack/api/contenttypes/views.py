@@ -12,13 +12,13 @@ class ContentTypeFilter(filters.FilterSet):
     class Meta:
         model = ContentType
         fields = {
-            "app_label": "__all__",
-            "model": "__all__",
+            "app_label": ['icontains', 'in'],
+            "model": ['icontains', 'in'],
         }
 
 
 class ContentTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ContentType.objects.all()
     serializer_class = ContentTypeSerializer
-    filter_class = ContentTypeFilter
-    filter_backends = (backends.DjangoFilterBackend, OrderingFilter,)
+    filterset_class = ContentTypeFilter
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)

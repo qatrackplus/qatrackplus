@@ -13,16 +13,18 @@
         </tr>
         </thead>
         <tbody>
-          {% for old, new in history %}
+          {% for new, old in history %}
+            {% if new.reference or new.tolerance or old.reference or old.tolerance %}
             <tr>
-              <th scope="row">{{ new.changed }}</th>
-              <td>{{ new.changed_by.username }}</td>
-              <td>{{ new.reference }}</td>
+              <th scope="row">{{ old.changed }}</th>
+              <td>{{ old.changed_by.username }}</td>
               <td>{{ old.reference }}</td>
-              <td>{{ new.tolerance }}</td>
+              <td>{% if forloop.first %}<strong>{% endif %}{{ new.reference }}{% if forloop.first %}</strong>{% endif %}</td>
               <td>{{ old.tolerance }}</td>
+              <td>{% if forloop.first %}<strong>{% endif %}{{ new.tolerance }}{% if forloop.first %}</strong>{% endif %}</td>
               <td style="max-width: 300px" >{{ new.comment}}</td>
             </tr>
+            {% endif %}
           {% endfor %}
         </tbody>
     </table>

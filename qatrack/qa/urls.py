@@ -57,6 +57,11 @@ urlpatterns = [
     # test list instances
     url(r"^session/details/$", base.TestListInstances.as_view(), name="complete_instances"),
     url(
+        r"^session/details(?:/(?P<pk>\d+))?/report/$",
+        review.test_list_instance_report,
+        name="test_list_instance_report"
+    ),
+    url(
         r"^session/details(?:/(?P<pk>\d+))?/$",
         review.TestListInstanceDetails.as_view(),
         name="view_test_list_instance"

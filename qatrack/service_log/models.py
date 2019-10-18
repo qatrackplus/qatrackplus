@@ -3,20 +3,21 @@ import re
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.signals import pre_save
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from qatrack.qa.models import TestListInstance, UnitTestCollection
+from qatrack.qatrack_core.fields import JSONField
 from qatrack.units.models import NameNaturalKeyManager, Unit, Vendor
 
 re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
-color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
+color_re = re.compile(r'^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + r',(0(\.[0-9][0-9]?)?|1)\)$')
 validate_color = RegexValidator(color_re, _('Enter a valid color.'), 'invalid')
 
 NEW_SERVICE_EVENT = 'new_se'
@@ -29,7 +30,7 @@ DELETED_SERVICE_EVENT = 'del_se'
 
 LOG_TYPES = (
     (NEW_SERVICE_EVENT, 'New Service Event'),
-    (MODIFIED_SERVICE_EVENT, 'Modified Servicew Event'),
+    (MODIFIED_SERVICE_EVENT, 'Modified Service Event'),
     (STATUS_SERVICE_EVENT, 'Service Event Status Changed'),
     (CHANGED_RTSQA, 'Changed Return To Service'),
     (PERFORMED_RTS, 'Performed Return To Service'),
@@ -44,6 +45,9 @@ class ServiceArea(models.Model):
     units = models.ManyToManyField(Unit, through='UnitServiceArea', related_name='service_areas')
 
     objects = NameNaturalKeyManager()
+
+    class Meta:
+        ordering = ("name",)
 
     def natural_key(self):
         return (self.name,)
@@ -111,11 +115,17 @@ class ServiceEventStatus(models.Model):
         max_length=512, help_text=_('Give a brief description of this service event status'), null=True, blank=True
     )
     colour = models.CharField(default=settings.DEFAULT_COLOURS[0], max_length=22, validators=[validate_color])
+    order = models.PositiveIntegerField(
+        verbose_name=_("Order"),
+        help_text=_("Choose what ordering this status will be listed as in drop down controls"),
+        default=0,
+    )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
         verbose_name_plural = _('Service event statuses')
+        ordering = ("order", "pk")
 
     def save(self, *args, **kwargs):
         if self.is_default:
@@ -211,8 +221,9 @@ class ServiceEvent(models.Model):
 
         permissions = (
             ('review_serviceevent', 'Can review service event'),
-            ('view_serviceevent', 'Can view service event'),
+            ('view_serviceevent', 'Can review service event'),
         )
+        default_permissions = ('add', 'change', 'delete',)
 
         ordering = ["-datetime_service"]
 
@@ -252,6 +263,9 @@ class ServiceEvent(models.Model):
         parts_used = self.partused_set.all()
         for pu in parts_used:
             pu.remove_from_storage()
+
+    def get_absolute_url(self):
+        return reverse("sl_details", kwargs={"pk": self.pk})
 
 
 class ThirdPartyManager(models.Manager):
@@ -326,21 +340,36 @@ class ReturnToServiceQA(models.Model):
     class Meta:
         permissions = (
             ('view_returntoserviceqa', 'Can view return to service qa'),
-            ('perform_returntoserviceqa', 'Can perform return to service qa')
+            ('perform_returntoserviceqa', 'Can perform return to service qa'),
         )
         ordering = ['-datetime_assigned']
+        default_permissions = ('add', 'change', 'delete',)
 
 
 class GroupLinker(models.Model):
 
-    group = models.ForeignKey(Group, help_text=_('Select the group.'), on_delete=models.CASCADE)
+    group = models.ForeignKey(
+        Group,
+        help_text=_('Select the group. Leave blank to allow choosing any user.'),
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
     name = models.CharField(
         max_length=64, help_text=_('Enter this group\'s display name (ie: "Physicist reported to")')
     )
+
+    multiple = models.BooleanField(
+        verbose_name=_("Multiple users"),
+        help_text=_("Allow selecting multiple users when using this group linker"),
+        default=False,
+    )
+
     description = models.TextField(
         null=True, blank=True, help_text=_('Describe the relationship between this group and service events.')
     )
+
     help_text = models.CharField(
         max_length=64, null=True, blank=True,
         help_text=_('Message to display when selecting user in service event form.')
@@ -363,31 +392,6 @@ class GroupLinkerInstance(models.Model):
 
     class Meta:
         default_permissions = ()
-        unique_together = ('service_event', 'group_linker')
-
-
-class JSONField(models.TextField):
-
-    def to_python(self, value):
-        if value == "":
-            return None
-
-        try:
-            if isinstance(value, str):
-                return json.loads(value)
-        except ValueError:
-            pass
-        return value
-
-    def from_db_value(self, value, *args):
-        return self.to_python(value)
-
-    def get_db_prep_save(self, value, *args, **kwargs):
-        if value == "":
-            return None
-        if isinstance(value, dict):
-            value = json.dumps(value, cls=DjangoJSONEncoder)
-        return value
 
 
 class ServiceLogManager(models.Manager):
@@ -397,7 +401,8 @@ class ServiceLogManager(models.Manager):
             user=user,
             service_event=instance,
             log_type=NEW_SERVICE_EVENT,
-            datetime=timezone.now() - timezone.timedelta(seconds=1)  # Cheat to always show create logs before rtsqa logs created at same time
+            # Cheat to always show create logs before rtsqa logs created at same time
+            datetime=timezone.now() - timezone.timedelta(seconds=1)
         )
 
     def log_changed_service_event(self, user, instance, extra_info):
@@ -452,6 +457,39 @@ class ServiceLog(models.Model):
         ordering = ('-datetime',)
         default_permissions = ()
 
+    def info(self):
+        if self.extra_info and isinstance(self.extra_info, str):
+            return json.loads(self.extra_info)
+        return self.extra_info or {}
+
+    @property
+    def is_new(self):
+        return self.log_type == NEW_SERVICE_EVENT
+
+    @property
+    def is_modified(self):
+        return self.log_type == MODIFIED_SERVICE_EVENT
+
+    @property
+    def is_status_change(self):
+        return self.log_type == STATUS_SERVICE_EVENT
+
+    @property
+    def is_rtsqa_change(self):
+        return self.log_type == CHANGED_RTSQA
+
+    @property
+    def is_rtsqa_performed(self):
+        return self.log_type == PERFORMED_RTS
+
+    @property
+    def is_rtsqa_approved(self):
+        return self.log_type == APPROVED_RTS
+
+    @property
+    def is_deleted(self):
+        return self.log_type == DELETED_SERVICE_EVENT
+
 
 @receiver(pre_save, sender=Hours, dispatch_uid="qatrack.service_log.models.ensure_hours_unique")
 def ensure_hours_unique(sender, instance, raw, using, update_fields, **kwargs):
@@ -460,7 +498,11 @@ def ensure_hours_unique(sender, instance, raw, using, update_fields, **kwargs):
 
     if instance.id is None:
         try:
-            Hours.objects.get(service_event=instance.service_event, third_party=instance.third_party, user=instance.user)
+            Hours.objects.get(
+                service_event=instance.service_event,
+                third_party=instance.third_party,
+                user=instance.user,
+            )
         except Hours.DoesNotExist:
             pass
         else:

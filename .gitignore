@@ -48,6 +48,7 @@ qatrack/accel_migration_tool/local_accel_settings.py
 qatrack/assets
 qatrack/cache/cache_data
 qatrack/media/uploads
+qatrack/media/reports
 qatrack/qa/static/css/site.css
 qatrack/qatrack_core/static/qatrack_core/css/site.css
 qatrack/static

@@ -1,11 +1,12 @@
 import json
 
 from django.conf import settings
-from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
+from django.utils.formats import get_format
 
 from qatrack.parts.models import PartStorageCollection, PartUsed
 from qatrack.qa.models import TestListInstance, UnitTestCollection
@@ -104,7 +105,7 @@ def update_colours(*args, **kwargs):
 
 
 def site(request):
-    cur_site = Site.objects.get_current()
+    cur_site = get_current_site(request)
 
     unreviewed = cache.get(settings.CACHE_UNREVIEWED_COUNT)
     if unreviewed is None:
@@ -120,7 +121,7 @@ def site(request):
         cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
 
     unreviewed_user_counts = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER)
-    if unreviewed_user_counts is None:
+    if unreviewed_user_counts is None and hasattr(request, "user"):
         your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
         unreviewed_user_counts = {request.user.pk: your_unreviewed}
         cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
@@ -131,6 +132,8 @@ def site(request):
             your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
             unreviewed_user_counts[request.user.pk] = your_unreviewed
             cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
+        except Exception:
+            your_unreviewed = 0
 
     default_se_status = cache.get(settings.CACHE_DEFAULT_SE_STATUS)
     if default_se_status is None:
@@ -176,4 +179,11 @@ def site(request):
         'DEFAULT_SE_STATUS': default_se_status,
         'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
         'IN_PROGRESS': in_progress_count,
+
+        # JavaScript Date Formats
+        'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
+        'MOMENT_DATETIME_FMT': get_format("MOMENT_DATETIME_FMT"),
+        'FLATPICKR_DATE_FMT': get_format("FLATPICKR_DATE_FMT"),
+        'FLATPICKR_DATETIME_FMT': get_format("FLATPICKR_DATETIME_FMT"),
+        'DATERANGEPICKER_DATE_FMT': get_format("DATERANGEPICKER_DATE_FMT"),
     }

@@ -1,0 +1,50 @@
+@media print {
+  /* headless chrome currently always inclues header/footer
+   * so we push them off the page by setting smaller than default margin */
+
+  @page {
+    margin: 20px 20px 20px 30px;
+    size: auto;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #efefef;
+  }
+
+  .table-bordered {
+    border: 1px solid #efefef;
+  }
+  .table-bordered > thead > tr > th,
+  .table-bordered > tbody > tr > th,
+  .table-bordered > tfoot > tr > th,
+  .table-bordered > thead > tr > td,
+  .table-bordered > tbody > tr > td,
+  .table-bordered > tfoot > tr > td {
+    border: 1px solid #efefef;
+  }
+  .dl-horizontal dt {
+    width: 120px;
+  }
+  .dl-horizontal dd {
+    margin-left: 130px;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid #ddd;
+  }
+  hr.tight {
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact;
+  }
+
+}

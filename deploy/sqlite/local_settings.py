@@ -9,12 +9,20 @@ DATABASES = {
         'PASSWORD': '',  # Not used with sqlite3.
         'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+    },
+    'readonly': {
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
+        'NAME': 'qatrackplus',  # Or path to database file if using sqlite3.
+        'USER': '',  # Not used with sqlite3.
+        'PASSWORD': '',  # Not used with sqlite3.
+        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
 DATABASES['readonly'] = DATABASES['default']
 
-# Change XX.XXX.XXX.XX to your servers IP address or * (less secure)!
+# Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
 ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
 
 # Set to False to disable the Service Log functionality

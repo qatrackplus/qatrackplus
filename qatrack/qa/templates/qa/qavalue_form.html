@@ -27,7 +27,7 @@
 {#        </tr>#}
     {% endif %}
 {% endfor %}
-<tr class="control-group qa-valuerow {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
+<tr class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
     {% for hidden in form.hidden_fields %}
         {{ hidden }}
@@ -39,7 +39,7 @@
             <div class="error-bar {% if form.errors %}in{% endif %}">
                 <div class="procedure-bar">
                     <div class="comment-bar">
-                        <div title="{{test.category.name}}" class="padding-left-5 padding-bottom-8">
+                        <div title="{{test.category.name}}" class="padding-left-5">
                           {{test.category.name}}
                         </div>
                     </div>
@@ -56,7 +56,7 @@
         <td class="qa-value" title="{{form.value.help_text|safe}}" >
             {% if test.is_boolean %}
                 <div class="row">
-                    <div class="col-xs-12">
+                    <div class="col-xs-12 boolean-wrapper">
                       <span class="pull-left">{{form.value.0}}</span>
                       <span class="pull-right">{{form.value.1}}</span>
                     </div>
@@ -66,13 +66,32 @@
                     {{form.string_value}}
                     <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-xs btn-flat">Upload</a>
                 </span>
+            {% elif test.is_date or test.is_datetime %}
+              <div class="input-group">
+                {{ form.string_value }}
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-flat btn-xs" title="toggle" data-toggle>
+                    {% if test.is_datetime %}
+                      <i class="fa fa-stack fa-fw qa-date-pick">
+                        <i class="fa fa-calendar fa-stack-custom-main"></i>
+                        <i class="fa fa-clock-o fa-stack-custom-sub upper-1"></i>
+                      </i>
+                    {% else %}
+                      <i class="fa fa-calendar fa-fw qa-date-pick"></i>
+                    {% endif %}
+                  </button>
+                  <button type="button" class="btn btn-flat btn-xs qa-date-clear" title="toggle" data-clear>
+                    <i class="fa fa-close"></i>
+                  </button>
+                </span>
+              </div>
             {% elif test.is_string_type %}
                  <div>{{form.string_value}}</div>
             {% else %}
                  <div>{{form.value}}</div>
             {% endif %}
         </td>
-        <td class="qa-skip"title="{{form.skipped.help_text|safe}}">
+        <td class="qa-skip" title="{{form.skipped.help_text|safe}}">
             {% if test.skip_required %}{{form.skipped}}{% endif %}
         </td>
         <td class="qa-status">Not Done</td>
@@ -109,7 +128,7 @@
     </td>
 </tr>
 
-<tr class="qa-procedure no-hover row-{{ form.prefix }}">
+<tr class="qa-procedure no-hover row-{{ form.prefix }} {%if test_info.test.hidden %}hidden-procedure{% endif %}">
     <td colspan="{% qa_table_colspan perms %}  class="" >
         {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description or form.unit_test_info.test.attachment_set.count %}
             <div class="error-bar {% if form.errors %}in{% endif %}">
@@ -125,7 +144,7 @@
                         {% endif %}
         {#                {% spaceless %}#}
                             {% if form.unit_test_info.test.description %}
-                                <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
+                                <div class="pre">{{form.unit_test_info.test.description.strip|safe|linebreaks}}</div>
                             {% endif %}
         {#                {% endspaceless%}#}
                         {% for attach in form.unit_test_info.test.attachment_set.all %}

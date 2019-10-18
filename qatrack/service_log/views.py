@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import resolve, reverse
 from django.db.models import Sum
 from django.forms.utils import timezone
 from django.http import (
@@ -21,6 +20,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
+from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
@@ -52,6 +52,12 @@ from qatrack.qa.templatetags import qa_tags
 from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.qa.views.review import UTCInstances
+from qatrack.qatrack_core.utils import (
+    format_as_date,
+    format_as_time,
+    format_datetime,
+    parse_date,
+)
 from qatrack.service_log import forms, models
 from qatrack.units import models as u_models
 
@@ -69,7 +75,7 @@ def get_time_display(dt):
         # ago = timezone.timedelta(minutes=ago.minute)
         return str(ago.seconds // 60) + ' minutes ago'
     else:
-        return dt.strftime('%I:%M %p')
+        return format_as_time(dt)
 
 
 def unit_sa_utc(request):
@@ -241,15 +247,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         context_data['status_tag_colours'] = models.ServiceEventStatus.get_colour_dict()
         context_data['se_types_review'] = {st.id: int(st.is_review_required) for st in models.ServiceType.objects.all()}
 
-        context_data['ses_status_details'] = {
-            ses.id: {
-                'is_review_required': int(ses.is_review_required),
-                'rts_qa_must_be_reviewed': int(ses.rts_qa_must_be_reviewed),
-                'is_default': int(ses.is_default)
-            } for ses in models.ServiceEventStatus.objects.all()
-        }
-        context_data['default_qa_status_name'] = qa_models.TestInstanceStatus.objects.filter(is_default=True).first().name
-
         unit_field = self.object.unit_service_area.unit if self.object is not None else None
         if not unit_field:
             try:
@@ -405,24 +402,28 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
+                glis = models.GroupLinkerInstance.objects.filter(
+                    service_event=service_event,
+                    group_linker=form.g_link_dict[g_link]['g_link']
+                ).select_related("user")
+                existing_gli_users = set(gli.user.id for gli in glis)
+                current_cli_users = set(u.pk for u in (form.cleaned_data[g_link] or []))
 
-                try:
-                    gl_instance = models.GroupLinkerInstance.objects.get(
-                        service_event=service_event, group_linker=form.g_link_dict[g_link]['g_link']
-                    )
-                    gl_instance.user = form.cleaned_data[g_link]
-                    gl_instance.datetime_linked = timezone.now()
-                except ObjectDoesNotExist:
-                    gl_instance = models.GroupLinkerInstance(
+                # create any new GLIs
+                new_gli_users = current_cli_users - existing_gli_users
+                for user_id in new_gli_users:
+                    models.GroupLinkerInstance.objects.get_or_create(
                         service_event=service_event,
                         group_linker=form.g_link_dict[g_link]['g_link'],
-                        user=form.cleaned_data[g_link],
-                        datetime_linked=timezone.now()
+                        user_id=user_id,
+                        defaults={
+                            'datetime_linked': timezone.now(),
+                        },
                     )
-                if form.cleaned_data[g_link] is None:
-                    gl_instance.delete()
-                else:
-                    gl_instance.save()
+
+                # delete any existing link instances that aren't present anymore
+                deleted_gli_users = existing_gli_users - current_cli_users
+                glis.filter(user_id__in=deleted_gli_users).delete()
 
         for h_form in hours_formset:
 
@@ -903,7 +904,7 @@ class ServiceEventsReviewRequiredList(ServiceEventsBaseList):
         return "Service Events Requiring Review"
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(is_review_required=True,  service_status__is_review_required=True)
+        qs = super().get_queryset().filter(is_review_required=True, service_status__is_review_required=True)
         return qs
 
     def get_next(self):
@@ -917,7 +918,7 @@ class ServiceEventsInitiatedByList(ServiceEventsBaseList):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
         title = "%s %s - %s " % (
             tli.unit_test_collection.unit, tli.unit_test_collection.name,
-            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+            format_datetime(tli.work_completed)
         )
         return "Service Events Initiated By %s" % (title)
 
@@ -937,7 +938,7 @@ class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
         title = "%s %s - %s " % (
             tli.unit_test_collection.unit, tli.unit_test_collection.name,
-            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+            format_datetime(tli.work_completed)
         )
         return "Service Events with %s as Return To Service" % (title)
 
@@ -1146,7 +1147,7 @@ class ReturnToServiceQAForEventList(ReturnToServiceQABaseList):
         se = get_object_or_404(models.ServiceEvent, pk=self.kwargs['se_pk'])
         description = "%s - %s %s" % (
             se.unit_service_area,
-            timezone.localtime(se.datetime_service).strftime('%b %m, %I:%M %p'),
+            format_datetime(se.datetime_service),
             qa_tags.service_status_label(se.service_status),
         )
         return mark_safe("Return to Service QC - Service Event %d: %s" % (se.pk, description))
@@ -1311,8 +1312,9 @@ def handle_unit_down_time(request):
 
     if daterange:
         tz = timezone.get_current_timezone()
-        date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
-        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
+        from_, to = daterange.split(' - ')
+        date_from = parse_date(from_, as_date=False)
+        date_to = parse_date(to, as_date=False)
         date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
         date_from = tz.localize(date_from)
         date_to = tz.localize(date_to)
@@ -1366,7 +1368,7 @@ def handle_unit_down_time(request):
 
     writer = csv.writer(response)
     rows = [
-        ['Up Time Report: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Up Time Report: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
+        ['Up Time Report: ' + (format_as_date(date_from) + ' to ' + format_as_date(date_to)) if daterange else 'Up Time Report: All time until ' + format_datetime(timezone.datetime.now())],
         [''],
         [''],
         [''],
@@ -1452,7 +1454,7 @@ def handle_unit_down_time(request):
     totals['total_lost'] = '{:.2f}'.format(totals['total_lost'])
 
     if not service_areas:
-        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) is not 0 else 0
+        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) != 0 else 0
     rows += [[''], ['']]
     rows.append(['', 'Totals:'] + [str(totals[t]) for t in totals])
 

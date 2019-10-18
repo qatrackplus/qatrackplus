@@ -1,9 +1,9 @@
 /*jslint browser: true */
 /*global window,$ */
-"use strict";
-
 
 var QAUtils = new function() {
+
+    "use strict";
 
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
@@ -40,6 +40,8 @@ var QAUtils = new function() {
     this.BOOLEAN = "boolean";
     this.MULTIPLE_CHOICE = "multchoice";
     this.COMPOSITE = "composite";
+    this.DATE = "date";
+    this.DATETIME = "datetime";
     this.STRING_COMPOSITE = "scomposite";
     this.UPLOAD = "upload";
     this.STRING = "string";

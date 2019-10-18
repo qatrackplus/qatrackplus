@@ -3,10 +3,10 @@ import collections
 from django import template
 from django.conf import settings
 from django.template.loader import get_template
-from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from qatrack.qa import models, utils
+from qatrack.qatrack_core.utils import format_as_date
 
 register = template.Library()
 
@@ -62,12 +62,12 @@ def reference_tolerance_span(test, ref, tol):
     if tol.type == models.ABSOLUTE:
         return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
             tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
-            str(tol).replace("Absolute", ""), ref.value_display())
+            str(tol).replace("Absolute", ""), ref.value_display() if ref else "")
         )
     elif tol.type == models.PERCENT:
         return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
             tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
-            str(tol).replace("Percent", ""), ref.value_display())
+            str(tol).replace("Percent", ""), ref.value_display() if ref else "")
         )
 
 
@@ -167,18 +167,17 @@ def as_due_date(unit_test_collection):
 @register.filter(expects_local_time=True)
 def as_qc_window(unit_test_collection):
 
-    tz = timezone.get_current_timezone()
     start, end = utils.qc_window(unit_test_collection.due_date, unit_test_collection.frequency)
     if start:
-        start = start.astimezone(tz).strftime(settings.MONTH_ABBR_DATE_FORMAT)
+        start = format_as_date(start)
 
     if end:
-        end = end.strftime(settings.MONTH_ABBR_DATE_FORMAT)
+        end = format_as_date(end)
 
     if start:
         return "%s - %s" % (start, end)
     elif unit_test_collection.due_date:
-        start = unit_test_collection.due_date.astimezone(tz).strftime(settings.MONTH_ABBR_DATE_FORMAT)
+        start = format_as_date(unit_test_collection.due_date)
         return "%s - %s" % (start, end)
 
     return ""

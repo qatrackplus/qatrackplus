@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import JsonResponse
 from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.utils.translation import ugettext as _
@@ -20,10 +20,10 @@ class SetReferencesAndTolerancesForm(forms.Form):
     """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
 
     source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
-    content_type = forms.ChoiceField((('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
+    content_type = forms.ChoiceField(choices=(('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
 
     # Populate the source testlist field
-    source_testlist = forms.ChoiceField([], label='Source testlist(cycle)')
+    source_testlist = forms.ChoiceField(choices=[], label='Source testlist(cycle)')
 
     # Populate the dest_unit field
     dest_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())

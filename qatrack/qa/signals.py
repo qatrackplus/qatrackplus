@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.signals import (
+    m2m_changed,
     post_delete,
     post_save,
     pre_delete,
@@ -185,6 +186,18 @@ def on_test_save(*args, **kwargs):
                     "%s with a non-boolean reference" % (test.type, ua.unit.name))
 
 
+@receiver(testlist_complete)
+def check_tli_flag(*args, **kwargs):
+    """Flag this test list instance if required"""
+    tli = kwargs["instance"]
+    models.TestListInstance.objects.filter(pk=tli.pk).update(
+        flagged=tli.testinstance_set.filter(
+            Q(value=1, unit_test_info__test__flag_when=True) |
+            Q(value=0, unit_test_info__test__flag_when=False)
+        ).exists()
+    )
+
+
 @receiver(post_save, sender=models.TestListInstance)
 def on_test_list_instance_saved(*args, **kwargs):
     """set last instance for UnitTestInfo"""
@@ -249,6 +262,19 @@ def test_list_added_to_cycle(*args, **kwargs):
     """
     if (not loaded_from_fixture(kwargs)):
         update_unit_test_infos(kwargs["instance"].test_list)
+
+
+@receiver(post_save, sender=models.AutoReviewRule)
+@receiver(post_save, sender=models.AutoReviewRuleSet)
+@receiver(post_save, sender=models.TestInstanceStatus)
+@receiver(post_delete, sender=models.AutoReviewRule)
+@receiver(post_delete, sender=models.AutoReviewRuleSet)
+@receiver(post_delete, sender=models.TestInstanceStatus)
+@receiver(m2m_changed, sender=models.AutoReviewRuleSet.rules.through)
+def on_autoreviewrule_save(*args, **kwargs):
+    """update auto review rule set cache"""
+    if not loaded_from_fixture(kwargs):
+        models.update_autoreviewruleset_cache()
 
 
 if settings.USE_SERVICE_LOG:

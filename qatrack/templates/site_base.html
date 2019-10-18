@@ -1,6 +1,7 @@
 {% load i18n %}
 {% load l10n %}
 {% load qatrack_tags %}
+{% load static %}
 {% load staticfiles %}
 <!DOCTYPE html> <!-- html5 -->
 <html lang="{{ LANGUAGE_CODE }}" xmlns="http://www.w3.org/1999/html">
@@ -17,7 +18,7 @@
 
     {% block style_base %}
       <link href="{{ STATIC_URL }}fontawsome/css/font-awesome.min.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css?v={{ VERSION }}" rel="stylesheet">
+      <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css?v={{ VERSION }}" rel="stylesheet">
       <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
       <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
       <link href="{{ STATIC_URL }}qatrack_core/css/custom-adminlte.css?v={{ VERSION }}" rel="stylesheet">
@@ -28,6 +29,7 @@
       <link href="{{ STATIC_URL }}qatrack_core/css/site.css?v={{VERSION}}" rel="stylesheet">
     {% endblock style_base %}
 
+    <script src="https://browser.sentry-cdn.com/4.6.3/bundle.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript">
 
         var siteConfig = {
@@ -36,7 +38,13 @@
             DEBUG: '{{ DEBUG }}',
             USE_SERVICE_LOG: '{{ USE_SERVICE_LOG }}',
             USE_PARTS: '{{ USE_PARTS }}',
-            USE_SQL_REPORTS: '{{ USE_PARTS }}'
+            USE_SQL_REPORTS: '{{ USE_PARTS }}',
+
+            MOMENT_DATE_FMT: '{{ MOMENT_DATE_FMT }}',
+            MOMENT_DATETIME_FMT: '{{ MOMENT_DATETIME_FMT }}',
+            FLATPICKR_DATE_FMT: '{{ FLATPICKR_DATE_FMT }}',
+            FLATPICKR_DATETIME_FMT: '{{ FLATPICKR_DATETIME_FMT }}',
+            DATERANGEPICKER_DATE_FMT: '{{ DATERANGEPICKER_DATE_FMT }}'
         };
 
         var QAURLs = {
@@ -116,7 +124,7 @@
     {% block head_extra %}{% endblock head_extra %}
   </head>
 
-  <body class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
+  <body {# data-instant-allow-query-string="true" #} class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
 
     <div class="wrapper">
 
@@ -521,7 +529,7 @@
                   {% endif %}
                 {% endif %}
 
-                {% if perms.qa.can_create_sql_reports or perms.qa.can_run_sql_reports or perms.qa.can_view_charts or USE_SERVICE_LOG and user.is_staff %}
+                {% if perms.reports.can_create_sql_reports or perms.reports.can_run_sql_reports or perms.reports.can_create_reports or perms.reports.can_run_reports or perms.qa.can_view_charts or USE_SERVICE_LOG and user.is_staff %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                       {% trans "Trends and Analysis" %}
@@ -536,6 +544,14 @@
                             {% trans "Charts" %}
                           </a>
                         </li>
+                      {% endif %}
+                      {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                      <li>
+                        <a href="{% url "reports" %}" title="{% trans "Run QATrack+ Reports" %}">
+                          <i class="fa fa-file-text-o fa-fw fa-lg"></i>
+                          {% trans "Reports" %}
+                        </a>
+                      </li>
                       {% endif %}
                       {% if USE_SQL_REPORTS %}
                         {% if perms.qa.can_run_sql_reports or perms.qa.can_create_sql_reports %}
@@ -695,7 +711,22 @@
                   </li>
                 {% endif %}
 
+                {% if perms.auth.change_group %}
+                  <li>
+                    <a href="{% url 'groups-app' %}" class="margin-left-10 control-sidebar-subheading">
+                      <span class="fa fa-stack fa-fw">
+                        <i class="fa fa-users fa-stack-custom-main"></i>
+                        <i class="fa fa-lock fa-stack-custom-sub primary"></i>
+                      </span>
+                      {% trans "Groups & Permissions" %}
+                    </a>
+                  </li>
+                {% endif %}
+
                 <li class="divider"></li>
+              </ul>
+              <h4 class="control-sidebar-heading">Backups</h4>
+              <ul class="control-sidebar-menu">
 
                 <li>
                   <a href="{% url "qa_paper_forms_request" %}" class="margin-left-10 control-sidebar-subheading" title="{% trans "Create a set of paper backup forms" %}">
@@ -730,6 +761,7 @@
 
     {% block loading_modal %}{% endblock loading_modal %}
 
+    {# <script src="{{ STATIC_URL }}instant/js/instant-1.0.0.js" type="module"></script> #}
   </body>
 
 </html>

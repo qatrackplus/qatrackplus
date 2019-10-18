@@ -3,8 +3,8 @@ from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
-from django.db.models import Field, ObjectDoesNotExist, Q, QuerySet
+from django.db.models import ObjectDoesNotExist, Q, QuerySet
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
@@ -13,12 +13,13 @@ from form_utils.forms import BetterModelForm
 
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models as qa_models
+from qatrack.qatrack_core.utils import format_datetime
 from qatrack.service_log import models
 from qatrack.units import models as u_models
 
 
 def get_user_name(user):
-    return user.username if not user.first_name or not user.last_name else '{} {}'.format(user.first_name, user.last_name)
+    return user.username if not (user.first_name and user.last_name) else '%s %s' % (user.first_name, user.last_name)
 
 
 def item_val_to_string(item):
@@ -29,13 +30,13 @@ def item_val_to_string(item):
     elif isinstance(item, User):
         return get_user_name(item)
     elif isinstance(item, timezone.datetime):
-        return timezone.localtime(item).strftime('%b %m, %I:%M %p')
+        return format_datetime(item)
     elif isinstance(item, timezone.timedelta):
         total_seconds = int(item.total_seconds())
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
         return '{}:{:02}'.format(hours, minutes)
-    elif isinstance(item, QuerySet):
+    elif isinstance(item, (QuerySet, list, tuple,)):
         return ', '.join([str(i) for i in item])
     else:
         return str(item)
@@ -81,12 +82,12 @@ class HoursMinDurationField(forms.DurationField):
         return value
 
 
-class UserModelChoiceField(forms.ModelChoiceField):
+class UserModelMultipleChoiceField(forms.ModelMultipleChoiceField):
 
     title = ''
 
     def label_from_instance(self, user):
-        return user.username if not user.first_name or not user.last_name else '{} {}'.format(user.first_name, user.last_name)
+        return get_user_name(user)
 
 
 class HoursForm(forms.ModelForm):
@@ -115,7 +116,7 @@ class HoursForm(forms.ModelForm):
                 Q(user_permissions=perm, is_active=True)
             ).distinct().order_by('last_name')
         for user in users:
-            name = user.username if not user.first_name or not user.last_name else '{} {}'.format(user.first_name, user.last_name)
+            name = get_user_name(user)
             choices.append(('user-%s' % user.id, name))
         for tp in models.ThirdParty.objects.all():
             choices.append(('tp-%s' % tp.id, tp.get_full_name()))
@@ -207,7 +208,6 @@ class ReturnToServiceQAForm(forms.ModelForm):
         self.fields['test_list_instance'].widget.attrs.update({'class': 'tli-instance', 'data-prefix': self.prefix})
         self.fields['all_reviewed'].widget.attrs.update({'class': 'tli-all-reviewed'})
 
-
     def clean_unit_test_collection(self):
         utc = self.cleaned_data['unit_test_collection']
         return utc
@@ -219,9 +219,13 @@ class ReturnToServiceQAForm(forms.ModelForm):
         return None
 
 
-# ReturnToServiceQAFormset = forms.inlineformset_factory(models.ServiceEvent, models.ReturnToServiceQA, form=ReturnToServiceQAForm, extra=0)
 def get_rtsqa_formset(extra):
-    return forms.inlineformset_factory(models.ServiceEvent, models.ReturnToServiceQA, form=ReturnToServiceQAForm, extra=extra)
+    return forms.inlineformset_factory(
+        models.ServiceEvent,
+        models.ReturnToServiceQA,
+        form=ReturnToServiceQAForm,
+        extra=extra,
+    )
 
 
 class ServiceEventMultipleField(forms.ModelMultipleChoiceField):
@@ -293,7 +297,7 @@ class TLIInitiatedField(forms.ModelChoiceField):
             return None
         try:
             tli = qa_models.TestListInstance.objects.get(pk=value)
-        except (ValueError, TypeError, qa_models.TestListInstance.DoesNotExist) as e:
+        except (ValueError, TypeError, qa_models.TestListInstance.DoesNotExist):
             raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
         return tli
 
@@ -403,13 +407,14 @@ class ServiceEventForm(BetterModelForm):
                 'fields': ['test_list_instance_initiated_by', 'is_review_required', 'unit_field'],
             }),
             ('service_status', {
-               'fields': [
-                   'service_status'
-               ],
+                'fields': [
+                    'service_status'
+                ],
             }),
             ('left_fields', {
                 'fields': [
-                    'datetime_service', 'unit_field_fake', 'service_area_field', 'service_type', 'is_review_required_fake',
+                    'datetime_service', 'unit_field_fake', 'service_area_field', 'service_type',
+                    'is_review_required_fake',
                 ],
             }),
             ('right_fields', {
@@ -453,22 +458,33 @@ class ServiceEventForm(BetterModelForm):
             self.g_link_dict[field_name] = {
                 'g_link': g_link,
             }
-            # if not is_new:
+
+            group_q = Q(groups=g_link.group, is_active=True) if g_link.group else Q(is_active=True)
+
             try:
-                g_link_instance = models.GroupLinkerInstance.objects.get(
-                    group_linker=g_link, service_event=self.instance
+                g_link_instances = models.GroupLinkerInstance.objects.filter(
+                    group_linker=g_link,
+                    service_event=self.instance
                 )
-                self.initial[field_name] = g_link_instance.user
+                g_link_users = [gli.user for gli in g_link_instances]
+                self.initial[field_name] = g_link_users
+
                 queryset = User.objects.filter(
-                    Q(groups=g_link.group, is_active=True) | Q(pk=g_link_instance.user.id)
+                    group_q |
+                    Q(pk__in=[u.id for u in g_link_users])
                 ).distinct().order_by('last_name')
             except ObjectDoesNotExist:
-                queryset = User.objects.filter(groups=g_link.group, is_active=True).order_by('last_name')
+                queryset = User.objects.filter(group_q).order_by('last_name')
 
-            self.fields[field_name] = UserModelChoiceField(
-                queryset=queryset, help_text=g_link.help_text, label=g_link.name, required=False
+            self.fields[field_name] = UserModelMultipleChoiceField(
+                queryset=queryset,
+                help_text=g_link.help_text,
+                label=g_link.name,
+                required=False,
             )
             self.fields[field_name].widget.attrs.update({'class': 'select2'})
+            if not g_link.multiple:
+                self.fields[field_name].widget.attrs.update({'data-maximum-selection-length': '1'})
             self.fields[field_name].title = g_link.description
 
             g_fields.append(field_name)
@@ -486,9 +502,11 @@ class ServiceEventForm(BetterModelForm):
                 self.initial['unit_field'] = initial_ib_utc_u
                 self.initial['initiated_utc_field'] = initial_ib_utc
                 self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
-                i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(unit=initial_ib_utc_u, active=True).order_by('name')
+                i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(
+                    unit=initial_ib_utc_u, active=True
+                ).order_by('name')
                 choices = (('', '---------'),) + tuple(
-                    ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
+                        ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)  # noqa: E501
                 )
                 self.fields['initiated_utc_field'].choices = choices
 
@@ -501,7 +519,7 @@ class ServiceEventForm(BetterModelForm):
                         unit=initial_unit, active=True
                     ).order_by('name')
                     self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
-                        ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
+                            ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)  # noqa: E501
                     )
                 except ObjectDoesNotExist:
                     pass
@@ -559,7 +577,7 @@ class ServiceEventForm(BetterModelForm):
             rtsqa_exisits = models.ReturnToServiceQA.objects.filter(service_event=self.instance).exists()
             if self.instance.test_list_instance_initiated_by or rtsqa_exisits:
                 self.fields['unit_field_fake'].widget.attrs.update({
-                   'title': 'Cannot change Unit once "Initiated By" or any "RTS QC" have been added',
+                    'title': 'Cannot change Unit once "Initiated By" or any "RTS QC" have been added',
                 })
 
             if self.instance.service_type.is_review_required:
@@ -585,7 +603,8 @@ class ServiceEventForm(BetterModelForm):
                 ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
             )
             if not self.instance.service_type.is_active:
-                self.fields['service_type'].queryset |= models.ServiceType.objects.filter(id=self.instance.service_type.id)
+                st_qs = models.ServiceType.objects.filter(id=self.instance.service_type.id)
+                self.fields['service_type'].queryset |= st_qs
 
         for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_comments']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
@@ -599,8 +618,8 @@ class ServiceEventForm(BetterModelForm):
 
         for f in ['datetime_service']:
             self.fields[f].widget.attrs['class'] = 'daterangepicker-input'
-            self.fields[f].widget.format = settings.INPUT_DATE_FORMATS[0]
-            self.fields[f].input_formats = settings.INPUT_DATE_FORMATS
+            self.fields[f].widget.format = settings.DATETIME_INPUT_FORMATS[0]
+            self.fields[f].input_formats = settings.DATETIME_INPUT_FORMATS
             self.fields[f].widget.attrs['title'] = settings.DATETIME_HELP
             # self.fields[f].help_text = settings.DATETIME_HELP
 
@@ -621,6 +640,8 @@ class ServiceEventForm(BetterModelForm):
 
         self.fields['problem_description'].widget.attrs['placeholder'] = 'required'
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
+
+        self.fields['service_area_field'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
 
     def strigify_form_item(self, item):
 
@@ -688,6 +709,14 @@ class ServiceEventForm(BetterModelForm):
 
         if not self.cleaned_data.get('unit_field'):
             self.add_error('unit_field_fake', ValidationError('This field is required'))
+        elif settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
+            # If SA can be blank, then make sure appropriate SA and USA's exist
+            sa, __ = models.ServiceArea.objects.get_or_create(name="Not specified")
+            usa, __ = models.UnitServiceArea.objects.get_or_create(
+                unit=self.cleaned_data['unit_field'],
+                service_area=sa,
+            )
+            self.cleaned_data['service_area_field'] = sa
 
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
@@ -700,12 +729,13 @@ class ServiceEventForm(BetterModelForm):
             for k, v in self.data.items():
                 if k.startswith('rtsqa-') and k.endswith('-id'):
                     prefix = k.replace('-id', '')
-
-                    if prefix + '-unit_test_collection' in self.data and self.data[prefix + '-unit_test_collection'] != '':
+                    utc_key = prefix + '-unit_test_collection'
+                    if utc_key in self.data and self.data[utc_key] != '':
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
                             if self.data[prefix + '-test_list_instance'] == '':
                                 raize = True
                                 break
+
                     tli_id = self.data[prefix + '-test_list_instance']
                     if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).all_reviewed:
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
@@ -718,7 +748,7 @@ class ServiceEventForm(BetterModelForm):
                 )
 
         # If unit field was disabled due to initiated by or rtsqa existing for already saved service event,
-        #   add the initial unit back to cleaned data since django tries to set it to None and unit is of course requried.
+        # add the initial unit back to cleaned data since django tries to set it to None and unit is of course requried.
         if self.instance.pk and ('unit_field' not in self.cleaned_data or self.cleaned_data['unit_field'] is None):
             self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
 
@@ -739,7 +769,7 @@ class ServiceEventDeleteForm(forms.ModelForm):
         fields = ('id',)
 
     def __init__(self, *args, **kwargs):
-        pk = kwargs.pop('pk', None)
+        kwargs.pop('pk', None)
         super().__init__(*args, **kwargs)
 
         self.fields['comment'].widget.attrs.update({'rows': 3, 'class': 'autosize form-control'})

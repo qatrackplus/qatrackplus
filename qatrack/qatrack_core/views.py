@@ -1,11 +1,11 @@
-
 from django.apps import apps
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import JsonResponse
-from django.template.loader import render_to_string
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django.utils.html import escape
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
@@ -82,7 +82,7 @@ def ajax_comment(request, next=None, using=None):
         )
 
     # Do we want to preview the comment?
-    preview = "preview" in data
+    # preview = "preview" in data
 
     # Construct the comment form
     form = CustomCommentForm(target, data=data)
@@ -149,3 +149,46 @@ def ajax_comment(request, next=None, using=None):
         'submit_date': comment.submit_date,
         'template': render_to_string('comments/comment.html', {'comment': comment, 'hidden': True})
     })
+
+
+def handle_error(request, code, type_, message, exception=None):
+    context = {
+        'code': code,
+        'type': type_,
+        'message': message,
+    }
+    return render(request, 'site_error.html', context, status=code)
+
+
+def handle_400(request, exception=None):
+    return handle_error(request, 400, _("Bad Request"), _("Please check your ALLOWED_HOST setting."), exception)
+
+
+def handle_403(request, exception=None):
+    return handle_error(
+        request,
+        403,
+        _("Insufficient Permission"),
+        _("Please talk to an administrator to acquire the required permission."),
+        exception,
+    )
+
+
+def handle_404(request, exception=None):
+    return handle_error(
+        request,
+        404,
+        _("Resource not found"),
+        _("The page or resource you were looking for can not be found"),
+        exception,
+    )
+
+
+def handle_500(request, exception=None):
+    return handle_error(
+        request,
+        500,
+        _("Server Error"),
+        _("Sorry, the server experienced an error processing your request. The site admin has been notified "),
+        exception,
+    )

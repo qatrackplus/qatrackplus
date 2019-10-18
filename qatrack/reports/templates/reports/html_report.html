@@ -1,0 +1,26 @@
+{% load i18n %}
+{% load static %}
+
+{% load comments %}
+
+{% load attach_tags %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+
+<div class="container-fluid" style="overflow-x: hidden">
+
+  {% include "reports/_header.html" with for_pdf=0 %}
+
+  {% include "reports/_details.html" %}
+
+  <div class="row">
+    <div class="col-xs-12">
+      {% block content %}
+      {% endblock content %}
+
+      {% include "reports/_signature.html" %}
+
+    </div>
+  </div>
+
+</div>

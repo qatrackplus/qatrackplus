@@ -20,7 +20,7 @@ DATABASES = {
     }
 }
 
-# Change XX.XXX.XXX.XX to your servers IP address or * (less secure)!
+# Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
 ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
 
 # Set to False to disable the Service Log functionality

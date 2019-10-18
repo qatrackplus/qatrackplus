@@ -2,7 +2,7 @@ VERSION=0.3.1
 DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 
 
-cover :
+cover:
 	py.test --reuse-db --cov-report term-missing --cov ./ ${args}
 
 test:
@@ -15,6 +15,12 @@ dumpdata:
 	python manage.py dumpdata \
 		-v1 --indent=2 --natural-foreign --natural-primary \
 		--output qatrack-dump-$(DATETIME).json
+
+clearct:
+	python manage.py shell -c "from qatrack.qa.models import *; [m.objects.all().delete() for m in [ContentType, Tolerance, User]]"
+
+flushdb:
+	python manage.py sqlflush | python manage.py dbshell
 
 yapf:
 	yapf --verbose --in-place --recursive --parallel \
@@ -47,5 +53,7 @@ schema:
 run:
 	python ./manage.py runserver
 
+__cleardb__:
+	python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"
 
-.PHONY: test test_simple test_broker yapf flake8 help autobuild docs qatrack_daemon.conf schema run
+.PHONY: test test_simple test_broker yapf flake8 help docs-autobuild docs qatrack_daemon.conf schema run __demo__ __cleardb__

@@ -72,7 +72,7 @@ values less than 78 or greater than 82 will be considered failing.
 Multiple Choice Tolerances
 --------------------------
 
-:ref:`Multiple choice tests <qa_tests>` can be subjected to
+:ref:`Multiple choice, String, & String Composite tests <qa_tests>` can be subjected to
 pass/tolerance/fail criteria by using the **Multiple Choice** tolerance
 type. First choose the **Multiple Choice** option for the **Type** field
 and then enter a comma separated list of choices which are to be

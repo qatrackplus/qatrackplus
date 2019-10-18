@@ -1,7 +1,9 @@
 import io
 import json
 
+from django.conf import settings
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.utils import timezone
 import pytz
 import recurrence
@@ -80,10 +82,10 @@ class TestImportExport(TestCase):
             cycles=self.tlcqs,
             extra_tests=self.extra,
         ))
-        models.Category.objects.all().delete()
         models.TestListCycle.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
+        models.Category.objects.all().delete()
         testpack.add_testpack(pack)
 
         assert models.Test.objects.count() == 4
@@ -230,6 +232,9 @@ class TestImportExport(TestCase):
         assert models.Sublist.objects.count() == 0
         testpack.add_testpack(pack, test_list_keys=[tl5.natural_key()])
         assert models.Sublist.objects.count() == 2
+        assert models.TestListMembership.objects.count() == 3
+        for sl in models.Sublist.objects.all():
+            assert sl.child.testlistmembership_set.count() == 1
         assert models.TestList.objects.count() == 3
         assert models.TestList.objects.get(name="tl5")
 
@@ -461,3 +466,56 @@ class TestCalcDueDate:
         due_date = self.make_dt(timezone.datetime(2018, 11, 28, 7, 0))
         expected_due_date = self.make_dt(timezone.datetime(2018, 12, 5, 7, 0))
         assert qautils.calc_due_date(thu, due_date, self.wed).date() == expected_due_date.date()
+
+
+class TestFormatQCValue:
+
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_null_format(self):
+        assert qautils.format_qc_value(1, None) == "1.0"
+
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_empty_format(self):
+        assert qautils.format_qc_value(1, "") == "1.0"
+
+    def test_old_style(self):
+        assert qautils.format_qc_value(1, "%.3f") == "1.000"
+
+    def test_new_style(self):
+        assert qautils.format_qc_value(1, "{:.3f}") == "1.000"
+
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_invalid_format(self):
+        assert qautils.format_qc_value(1, "{:foo}") == qautils.to_precision(1, settings.CONSTANT_PRECISION)
+
+    def test_non_numerical_val(self):
+        assert qautils.format_qc_value(None, "%d") == "None"
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="{:.3f}")
+    def test_default_format_new(self):
+        assert qautils.format_qc_value(1, "") == qautils.format_qc_value(1, "{:.3f}")
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="%.3f")
+    def test_default_format_old(self):
+        assert qautils.format_qc_value(1, None) == qautils.format_qc_value(1, "{:.3f}")
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="{:foo}")
+    def test_invalid_default_fallback(self):
+        assert qautils.format_qc_value(1, None) == qautils.to_precision(1, settings.CONSTANT_PRECISION)
+
+
+class TestDateFunctions:
+
+    def test_last_month_dates_jan(self):
+        dt = timezone.datetime(2019, 1, 15, tzinfo=timezone.utc)
+        start, end = qautils.last_month_dates(dt)
+        tz = timezone.get_current_timezone()
+        assert start == tz.localize(timezone.datetime(2018, 12, 1))
+        assert end == tz.localize(timezone.datetime(2018, 12, 31))
+
+    def test_last_month_dates_dec(self):
+        dt = timezone.datetime(2019, 12, 15, tzinfo=timezone.utc)
+        start, end = qautils.last_month_dates(dt)
+        tz = timezone.get_current_timezone()
+        assert start == tz.localize(timezone.datetime(2019, 11, 1))
+        assert end == tz.localize(timezone.datetime(2019, 11, 30))

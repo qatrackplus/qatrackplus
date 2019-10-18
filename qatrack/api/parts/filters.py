@@ -19,7 +19,7 @@ class SupplierFilter(filters.FilterSet):
 
 class RoomFilter(filters.FilterSet):
 
-    site = filters.RelatedFilter(SiteFilter, name="site", queryset=Site.objects.all())
+    site = filters.RelatedFilter(SiteFilter, field_name="site", queryset=Site.objects.all())
 
     class Meta:
         model = models.Room
@@ -30,7 +30,7 @@ class RoomFilter(filters.FilterSet):
 
 class StorageFilter(filters.FilterSet):
 
-    room = filters.RelatedFilter(RoomFilter, name="room", queryset=models.Room.objects.all())
+    room = filters.RelatedFilter(RoomFilter, field_name="room", queryset=models.Room.objects.all())
 
     class Meta:
         model = models.Storage
@@ -53,11 +53,11 @@ class PartFilter(filters.FilterSet):
 
     part_category = filters.RelatedFilter(
         PartCategoryFilter,
-        name="part_category",
+        field_name="part_category",
         queryset=models.PartCategory.objects.all(),
     )
-    suppliers = filters.RelatedFilter(SupplierFilter, name="suppliers", queryset=models.Supplier.objects.all())
-    storage = filters.RelatedFilter(StorageFilter, name="storage", queryset=models.Storage.objects.all())
+    suppliers = filters.RelatedFilter(SupplierFilter, field_name="suppliers", queryset=models.Supplier.objects.all())
+    storage = filters.RelatedFilter(StorageFilter, field_name="storage", queryset=models.Storage.objects.all())
 
     class Meta:
         model = models.Part
@@ -75,8 +75,8 @@ class PartFilter(filters.FilterSet):
 
 class PartStorageCollectionFilter(filters.FilterSet):
 
-    part = filters.RelatedFilter(PartFilter, name="part", queryset=models.Part.objects.all())
-    storage = filters.RelatedFilter(StorageFilter, name="storage", queryset=models.Storage.objects.all())
+    part = filters.RelatedFilter(PartFilter, field_name="part", queryset=models.Part.objects.all())
+    storage = filters.RelatedFilter(StorageFilter, field_name="storage", queryset=models.Storage.objects.all())
 
     class Meta:
         model = models.PartStorageCollection
@@ -87,8 +87,8 @@ class PartStorageCollectionFilter(filters.FilterSet):
 
 class PartSupplierCollectionFilter(filters.FilterSet):
 
-    part = filters.RelatedFilter(PartFilter, name="part", queryset=models.Part.objects.all())
-    supplier = filters.RelatedFilter(SupplierFilter, name="supplier", queryset=models.Supplier.objects.all())
+    part = filters.RelatedFilter(PartFilter, field_name="part", queryset=models.Part.objects.all())
+    supplier = filters.RelatedFilter(SupplierFilter, field_name="supplier", queryset=models.Supplier.objects.all())
 
     class Meta:
         model = models.PartSupplierCollection
@@ -99,9 +99,11 @@ class PartSupplierCollectionFilter(filters.FilterSet):
 
 class PartUsedFilter(filters.FilterSet):
 
-    service_event = filters.RelatedFilter(ServiceEventFilter, name="service_event", queryset=ServiceEvent.objects.all())
-    part = filters.RelatedFilter(PartFilter, name="part", queryset=models.Part.objects.all())
-    from_storage = filters.RelatedFilter(StorageFilter, name="from_storage", queryset=models.Storage.objects.all())
+    service_event = filters.RelatedFilter(ServiceEventFilter, field_name="service_event", queryset=ServiceEvent.objects.all())
+    part = filters.RelatedFilter(PartFilter, field_name="part", queryset=models.Part.objects.all())
+    from_storage = filters.RelatedFilter(
+        StorageFilter, field_name="from_storage", queryset=models.Storage.objects.all()
+    )
 
     class Meta:
         model = models.PartUsed

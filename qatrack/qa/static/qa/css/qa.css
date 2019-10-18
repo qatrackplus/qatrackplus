@@ -48,6 +48,23 @@ input.qa-input[type="radio"]{
   vertical-align: middle;
 }
 
+.boolean-wrapper span.pull-right label {
+  margin-right: 20px;
+}
+/*.boolean-wrapper span label {
+border: 1px solid #eeeeee;
+background-color: #e8e8e8;
+
+margin: 0 5px;
+
+padding: 2px;
+
+line-height: 10px;
+
+border-radius: 4px;
+}
+*/
+
 input.qa-input:not([type="radio"]),
 select.qa-input,
 .review-status select {
@@ -89,7 +106,13 @@ input[readonly].qa-input {
     text-align:center;
     padding: 0;
     vertical-align: middle;
+
 }
+/*#perform-qa-table td.qa-skip {
+    border-left: 1px solid #eeeeee !important;
+    border-right: 1px solid #eeeeee !important;
+}
+*/
 .qa-skip {
     width:34px;
     text-align: center;
@@ -98,13 +121,13 @@ input[readonly].qa-input {
 .qa-status{
     /*width: 90px;*/
     overflow-x:hidden;
-    border: none !important;
     min-width: 70px;
     text-align: center;
     vertical-align: middle !important;
 }
 td.qa-status {
     font-size: smaller;
+    border: none !important;
 }
 .qa-status > i {
     margin-top:3px;
@@ -154,6 +177,13 @@ th.qa-history div{
 /* qa table extra rows */
 tr .callout {
     margin: 10px 0;
+}
+tr.qa-text-display pre{
+  white-space: normal;
+  word-wrap: break-word;
+  max-height: 100px;
+  max-width: 80%;
+  overflow: auto;
 }
 tr.qa-comment div.comment-container {
     display: none;
@@ -268,16 +298,22 @@ div.sublist-description {
     transition: border-left 0.5s;
 }
 
-#perform-qa-table > thead > tr > th.qa-category {
-    width: 120px;
+#perform-qa-table > thead > tr > th {
     vertical-align: middle !important;
 }
+
+#perform-qa-table > thead > tr > th.qa-category {
+    width: 120px;
+    padding-left: 15px;
+}
+
 #perform-qa-table > tbody > tr > td.qa-category {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 0;
 }
+
 #perform-qa-table > tbody > tr > td.qa-category div {
     white-space: nowrap;
     overflow: hidden;
@@ -294,6 +330,13 @@ div.sublist-description {
     height: calc(100% + 2px);
     top:0;
 }
+
+#perform-qa-table > tbody > tr > td.qa-category .comment-bar {
+  padding-bottom: 3px;
+  padding-top: 3px;
+  padding-right: 5px;
+}
+
 #perform-qa-table, #review-table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -311,6 +354,11 @@ div.sublist-description {
 #perform-qa-table > tbody > tr.qa-procedure {
     /*display: none;*/
     border-bottom: 1px solid #eeeeee !important;
+}
+
+#perform-qa-table > tbody > tr.qa-procedure.hidden-procedure {
+    /*display: none;*/
+    border-bottom: 0px !important;
 }
 tr.qa-comment {
     display: none;
@@ -402,6 +450,7 @@ td.review-value span {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    line-height: 12px;
 }
 td.review-status,
 th.review-status{

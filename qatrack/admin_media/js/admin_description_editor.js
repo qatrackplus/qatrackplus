@@ -6,7 +6,7 @@
         if (element.length > 0){
             var description = element.hide();
             description.after(
-                '<div style="height:100px; " id="description-editor" class="colM aligned vLargeTextField"></div>'
+                '<div style="width: 50%;" id="description-editor" class="colM aligned vLargeTextField"></div>'
             );
 
             description.parents(".form-row").after('<div class="form-row"><div><label>Description Preview:</label><pre id="description-preview"></pre></div></div>');
@@ -29,12 +29,16 @@
             descriptionEditor.on('change', function(){
                 preview.html(descriptionEditor.getValue());
             });
+            descriptionEditor.setAutoScrollEditorIntoView(true);
+            descriptionEditor.setOption("maxLines", 20);
+            descriptionEditor.setOption("minLines", 5);
+            descriptionEditor.setShowPrintMargin(false);
             descriptionEditor.resize();
 
             if (js_element.length == 1) {
                 var javascript = js_element.hide();
                 javascript.after(
-                    '<div style="height: 100px;" id="javascript-editor" class="colM aligned vLargeTextField"></div>'
+                    '<div style="width: 50%;" id="javascript-editor" class="colL aligned vLargeTextField"></div>'
                 );
                 var javascriptEditor = ace.edit("javascript-editor");
                 var javascriptSession = javascriptEditor.getSession();
@@ -46,10 +50,11 @@
                 javascriptEditor.on('blur', function () {
                     javascript.val(javascriptEditor.getValue());
                 });
+                javascriptEditor.setAutoScrollEditorIntoView(true);
+                javascriptEditor.setOption("maxLines", 20);
+                javascriptEditor.setOption("minLines", 5);
+                javascriptEditor.setShowPrintMargin(false);
 
-                // javascriptEditor.on('change', function(){
-                //     preview.html(javascriptEditor.getValue());
-                // });
                 javascriptEditor.resize();
             }
         }

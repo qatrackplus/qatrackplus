@@ -8,10 +8,11 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.urlresolvers import reverse
 import django.forms
 from django.test import TestCase
 from django.test.client import RequestFactory
+from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils import timezone
 from django_comments.models import Comment
 from freezegun import freeze_time
@@ -24,6 +25,7 @@ import qatrack.qa.views.base
 import qatrack.qa.views.charts
 import qatrack.qa.views.perform
 import qatrack.qa.views.review
+from qatrack.qatrack_core.utils import format_as_date
 from qatrack.units import models as u_models
 
 from . import utils
@@ -124,6 +126,8 @@ class TestControlImage(TestCase):
         self.url = reverse("control_chart")
 
     def tearDown(self):
+        models.TestListInstance.objects.all().delete()
+        models.UnitTestInfo.objects.all().delete()
         models.Test.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Unit.objects.all().delete()
@@ -183,8 +187,8 @@ class TestControlImage(TestCase):
         url += "&test_lists[]=%s" % tl_pk
         url += "&units[]=%s" % upk
         url += "&statuses[]=%s" % models.TestInstanceStatus.objects.all()[0].pk
-        url += "&from_date=%s" % from_date.strftime(settings.SIMPLE_DATE_FORMAT)
-        url += "&to_date=%s" % to_date.strftime(settings.SIMPLE_DATE_FORMAT)
+        url += "&from_date=%s" % format_as_date(from_date)
+        url += "&to_date=%s" % format_as_date(to_date)
         return url
 
     def test_valid(self):
@@ -503,6 +507,7 @@ class TestComposite(TestCase):
             utils.create_test_list_membership(self.test_list, t)
             utils.create_unit_test_info(test=t, unit=self.unit)
 
+    @override_settings(CONSTANT_PRECISION=2)
     def test_composite(self):
 
         data = {
@@ -510,6 +515,60 @@ class TestComposite(TestCase):
                 "testc": "",
                 "test1": 1,
                 "test2": 2
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'skips': {
+                'testc': False,
+                'test1': False,
+                'test2': False,
+            },
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 3.0,
+                    "formatted": "3.0",
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+            },
+            'skips': {
+                'testc': False,
+                'test1': False,
+                'test2': False,
+            },
+            "success": True
+        }
+        self.assertDictEqual(values, expected)
+
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_date_composite(self):
+
+        td1 = utils.create_test(name="test_date_1", test_type=models.DATE)
+        td2 = utils.create_test(name="test_date_2", test_type=models.DATETIME)
+        tcd = utils.create_test(name="test_date_c", test_type=models.COMPOSITE)
+        tcd.calculation_procedure = "result = (test_date_2.date() - test_date_1).total_seconds()"
+        tcd.save()
+        for t in [td1, td2, tcd]:
+            utils.create_test_list_membership(self.test_list, t)
+            utils.create_unit_test_info(test=t, unit=self.unit)
+
+        data = {
+            'tests': {
+                "testc": "",
+                "test1": 1,
+                "test2": 2,
+                "test_date_1": "2019-08-01",
+                "test_date_2": "2019-08-02 23:45:00",
             },
             'meta': {},
             'test_list_id': self.test_list.id,
@@ -525,12 +584,160 @@ class TestComposite(TestCase):
             "results": {
                 "testc": {
                     "value": 3.0,
+                    "formatted": "3.0",
                     "error": None,
                     "user_attached": [],
                     "comment": None,
-                }
+                },
+                "test_date_c": {
+                    "value": 24 * 60 * 60,
+                    "formatted": "8.6e+4",
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
             },
+            "skips": {},
             "success": True
+        }
+        self.assertDictEqual(values, expected)
+
+    def test_composite_with_formatting(self):
+
+        self.tc.formatting = "%.3E"
+        self.tc.save()
+
+        data = {
+            'tests': {
+                "testc": "",
+                "test1": 100,
+                "test2": 200,
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 300,
+                    "formatted": "3.000E+02",
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+            },
+            "skips": {},
+            "success": True,
+        }
+        self.assertDictEqual(values, expected)
+
+    def test_composite_of_composite(self):
+
+        tcc = utils.create_test(name="testcc", test_type=models.COMPOSITE)
+        tcc.calculation_procedure = "result = 2*testc"
+        tcc.save()
+        utils.create_test_list_membership(self.test_list, tcc)
+        utils.create_unit_test_info(test=tcc, unit=self.unit)
+        data = {
+            'tests': {
+                "testc": "",
+                "testcc": "",
+                "test1": 1.,
+                "test2": 2.,
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 3.0,
+                    "formatted": '3.0000000',
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+                "testcc": {
+                    "value": 6.0,
+                    "formatted": '6.0000000',
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+            },
+            'skips': {},
+            "success": True
+        }
+        self.assertDictEqual(values, expected)
+
+    def test_set_skip(self):
+
+        ts = utils.create_test(name="test_skip", test_type=models.COMPOSITE)
+        ts.calculation_procedure = "UTILS.set_skip('test1', True)\nresult = 1"
+        ts.save()
+        utils.create_test_list_membership(self.test_list, ts)
+        utils.create_unit_test_info(test=ts, unit=self.unit)
+        data = {
+            'tests': {
+                "testc": "",
+                "test_skip": "",
+                "test1": 1.,
+                "test2": 2.,
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+            'skips': {
+                'test_skip': False,
+                'testc': False,
+                'test1': False,
+                'test2': False,
+            },
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        expected = {
+            "errors": [],
+            "results": {
+                "testc": {
+                    "value": 3.0,
+                    "formatted": '3.0000000',
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+                "test_skip": {
+                    "value": 1.0,
+                    "formatted": '1.0000000',
+                    "error": None,
+                    "user_attached": [],
+                    "comment": None,
+                },
+            },
+            'skips': {
+                'test_skip': False,
+                'testc': False,
+                'test1': True,
+                'test2': False,
+            },
+            "success": True,
         }
         self.assertDictEqual(values, expected)
 
@@ -592,8 +799,9 @@ class TestComposite(TestCase):
                     "comment": "",
                     'value':
                         None
-                }
+                },
             },
+            "skips": {},
             'success': True
         }
         self.assertDictEqual(values, expected)
@@ -617,6 +825,7 @@ class TestComposite(TestCase):
 
     def test_invalid_composite(self):
 
+        self.tc.unittestinfo_set.all().delete()
         self.tc.delete()
         data = {
             'tests': {
@@ -638,6 +847,7 @@ class TestComposite(TestCase):
 
     def test_no_composite(self):
 
+        self.tc.unittestinfo_set.all().delete()
         self.tc.delete()
         data = {
             'tests': {
@@ -701,12 +911,14 @@ class TestComposite(TestCase):
                     'user_attached': [],
                     "comment": "",
                     'value': None,
-                }
+                },
             },
+            "skips": {},
             'success': True
         }
         self.assertDictEqual(values, expected)
 
+    @override_settings(CONSTANT_PRECISION=2)
     def test_cyclic(self):
 
         self.cyclic1 = utils.create_test(name="cyclic1", test_type=models.COMPOSITE)
@@ -751,10 +963,12 @@ class TestComposite(TestCase):
                 'testc': {
                     'error': None,
                     'value': 3.0,
+                    'formatted': "3.0",
                     "user_attached": [],
                     "comment": None,
                 }
             },
+            "skips": {},
             'success': True,
         }
         self.assertDictEqual(values, expected)
@@ -874,7 +1088,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_in_progress(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -893,7 +1107,7 @@ class TestPerformQA(TestCase):
     def test_perform_in_progress_no_data(self):
         """Test list should be allowed to be saved with no data if it is in progress"""
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -920,7 +1134,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_valid(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -937,9 +1151,44 @@ class TestPerformQA(TestCase):
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
 
+    def test_flag_with_bool(self):
+        self.t_bool.flag_when = True
+        self.t_bool.save()
+        data = {
+            "work_started": "2012-07-11 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
+
+        self.client.post(self.url, data=data)
+        tli = models.TestListInstance.objects.latest("pk")
+        assert tli.flagged
+
+    def test_work_started_work_completed_same(self):
+        data = {
+            "work_started": "2012-07-11 00:09",
+            "work_completed": "2012-07-11 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
+
+        self.client.post(self.url, data=data)
+
+        tli = models.TestListInstance.objects.first()
+        ws, wc = tli.work_started, tli.work_completed
+        assert (wc - ws).total_seconds() == 60
+
     def test_perform_valid_invalid_status(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
             "form-MAX_NUM_FORMS": "",
@@ -952,8 +1201,8 @@ class TestPerformQA(TestCase):
 
     def test_perform_invalid_work_started(self):
         data = {
-            "work_completed": "11-07-2050 00:10",
-            "work_started": "11-07-2050 00:09",
+            "work_completed": "2050-11-07 00:10",
+            "work_started": "2050-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -968,7 +1217,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_valid_redirect(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -985,7 +1234,7 @@ class TestPerformQA(TestCase):
 
     def test_perform_valid_redirect_non_statff(self):
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1008,8 +1257,8 @@ class TestPerformQA(TestCase):
 
     def test_perform_invalid(self):
         data = {
-            "work_completed": "11-07-2012 00:10",
-            "work_started": "11-07-2012 00:09",
+            "work_completed": "2012-11-07 00:10",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": len(self.tests),
@@ -1031,8 +1280,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped(self):
         data = {
-            "work_started": "11-07-2012 00:00",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:00",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1055,8 +1304,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped_no_comment_ok(self):
         data = {
-            "work_started": "11-07-2012 00:00",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:00",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1078,8 +1327,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped_with_val(self):
         data = {
-            "work_started": "11-07-2012 00:09",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:09",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1103,8 +1352,8 @@ class TestPerformQA(TestCase):
 
     def test_skipped_with_invalid_val(self):
         data = {
-            "work_started": "11-07-2012 00:09",
-            "work_completed": "11-07-2012 00:10",
+            "work_started": "2012-11-07 00:09",
+            "work_completed": "2012-11-07 00:10",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1131,7 +1380,7 @@ class TestPerformQA(TestCase):
         not_required = [self.t_const, self.t_comp, self.t_string_comp]
 
         data = {
-            "work_started": "11-07-2012 00:09",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "form-TOTAL_FORMS": len(self.tests),
             "form-INITIAL_FORMS": "0",
@@ -1338,8 +1587,8 @@ class TestEditTestListInstance(TestCase):
         self.user.save()
 
         self.base_data = {
-            "work_completed": "11-07-2012 00:10",
-            "work_started": "11-07-2012 00:09",
+            "work_completed": "2012-11-07 00:10",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "testinstance_set-TOTAL_FORMS": "2",
             "testinstance_set-INITIAL_FORMS": "2",
@@ -1365,6 +1614,16 @@ class TestEditTestListInstance(TestCase):
 
         self.assertEqual(302, response.status_code)
         self.assertEqual(88, models.TestInstance.objects.get(pk=self.ti.pk).value)
+
+    def test_edit_and_flag(self):
+
+        assert not self.tli.flagged
+        self.test_bool.flag_when = True
+        self.test_bool.save()
+
+        self.client.post(self.url, data=self.base_data)
+        self.tli.refresh_from_db()
+        assert self.tli.flagged
 
     def test_blank_status_edit(self):
 
@@ -1411,8 +1670,8 @@ class TestEditTestListInstance(TestCase):
     def test_in_progress_no_data(self):
 
         data = {
-            "work_completed": "11-07-2012 00:10",
-            "work_started": "11-07-2012 00:09",
+            "work_completed": "2012-11-07 00:10",
+            "work_started": "2012-11-07 00:09",
             "status": self.status.pk,
             "testinstance_set-TOTAL_FORMS": "2",
             "testinstance_set-INITIAL_FORMS": "2",
@@ -1452,14 +1711,14 @@ class TestEditTestListInstance(TestCase):
 
     def test_start_after_complete(self):
 
-        self.base_data["work_completed"] = "10-07-2012 00:10",
+        self.base_data["work_completed"] = "2012-10-07 00:10",
 
         response = self.client.post(self.url, data=self.base_data)
         self.assertEqual(200, response.status_code)
 
     def test_start_future(self):
         del self.base_data["work_completed"]
-        self.base_data["work_started"] = "10-07-2050 00:10",
+        self.base_data["work_started"] = "2050-10-07 00:10",
 
         response = self.client.post(self.url, data=self.base_data)
         self.assertEqual(200, response.status_code)

@@ -14,6 +14,10 @@ Acknowledgements
 Details of the v0.3.1 release
 .............................
 
+
+* A new :ref:`Reports <reports>` tool has been added for generating and scheduling
+  reports.
+
 * A new :ref:`Query Tool <qa_query_tool>` has been added for advanced query and
   reporting.
 
@@ -21,6 +25,239 @@ Details of the v0.3.1 release
   reflect the fact that data collected in QATrack+ is QC data. This has been an
   annoyance since I first made the labeling error in the original version of
   QATrack+.
+
+* A bug in the API which was causing extra information to be returned for
+  list views has been fixed.  This may require you to adjust scripts if you
+  were relying on:
+
+    - permissions or user_set data present in the Groups list view
+    - first_name, last_name, date_joined, permissions in the User List view
+    - Fields other than name, number, or site in the Unit list
+
+* First Name & Last Name have been added to the user-list api view
+
+* Improved the ordering and organization of unit, frequency, and test lists fields
+  when assigning a test list to a unit. Also improve UnitType dropdown for Unit Admin.
+
+* New management commands `review_all_unreviewed` and `clear_in_progress` have
+  been added. `review_all_unreviewed` updates the status of all unreviewed test list instances, while
+  `clear_in_progress` will delete all in progress test lists.
+
+* Composite & Constant Tests now have an optional "Formatting" field to control how their results
+  are displayed.  For example a test with a formatting of "%.2E" will use scientific
+  notation with 2 decimal places (3 sig figures).
+
+* The Unit admin page now has "Save as New" as an option to make it easier to create new
+  units using an existing unit as a template.  You can also now leave the unit number blank
+  to have it assigned automatically.
+
+* Test List notifications have been improved.  (Needs docs before release)
+    * You can now send notifications on test lists being completed.
+    *  You can now specify to send notifications to individual users as well as groups.
+    *  You can now specify that a given notifications will only be sent for specific units or test lists.
+
+* **Staff Status** has been renamed to **Admin Status** to reflect the fact that almost all QATrack+ users are "Staff"!
+
+* Test Instance points with comments associated with them will now be highlighed in charts
+
+* A new setting `SL_ALLOW_BLANK_SERVICE_AREA` has been added to optionally
+  allow users to submit ServiceEvents without a ServiceArea set explicitly.
+
+
+* New :ref:`Date and Date & Time test types <qa_tests>` have been added to
+  allow users to select dates/times with a calendar widget.
+
+* Added :ref:`UTILS.set_skip an UTILS.get_skip <composite_tests>` functions for setting/getting skip status
+  of tests.
+
+* Using `UTILS.set_comment` will now open the comment box on the front end.
+
+* Add test type css class to test rows.  Allows you to target different test types in site.css like:
+
+  .. code-block:: css
+
+        .qa-boolean, .qa-numerical {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+
+* Setting the `Warning message` field on a `TestList` will now prevent a
+  warning message/banner from being shown when tests are at action level.
+
+* Test.auto_review has been replaced by new AutoReviewRuleSet's that allow you
+  to apply different AutoReviewRules to different tests. For more information see
+  the :ref:`Auto Review page <qa_auto_review>`.
+
+Deprecations & Discontinuations
+...............................
+
+* Python 3.4: As of March 2019, Python 3.4 is no longer receiving updates and
+  therefore QATrack+ will no longer be supporting Python 3.4 installations.
+
+
+
+QATrack+ v0.3.0.15 Release Notes
+--------------------------------
+
+- The Active Unit Test Info filter was fixed
+
+Upgrading to v0.3.0.15 from v0.3.0
+..................................
+
+If you haven't upgraded to v0.3.0 yet see instructions for v0.3.0 below.  If
+you've already upgraded to v0.3.0 then to upgrade to v0.3.0.15:
+
+#. Open shell and activate your Python 3 virtual environment then:
+#.  .. code-block:: bash
+
+        git fetch origin
+        git checkout v0.3.0.15
+        python manage.py collectstatic
+        python manage.py clearcache
+
+#. On Linux `sudo service apache2 restart` on Windows, restart QATrack3 CherryPy Service
+
+
+QATrack+ v0.3.0.14 Release Notes
+--------------------------------
+
+- A patch was made to fix a security flaw in LDAP/Active Directory
+  Authentication.  This patch is only required if you use LDAP/Active Directory
+  for authenticating your users.
+
+  To patch your system, please follow the following instructions for your version:
+
+    - v0.3.0.x:
+
+        - Windows. Open a Powershell Window then:
+
+            .. code-block:: bash
+
+                cd C:\deploy
+                .\venvs\qatrack3\Script\Activate.ps1
+                cd qatrackplus
+                git fetch origin
+                git checkout v0.3.0.14
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                python manage.py collectstatic
+
+            then restart the CherryPy service
+
+        - Linux. Open a terminal:
+
+            .. code-block:: bash
+
+                cd ~/web/qatrackplus
+                source ~/venvs/qatrack3/bin/activate
+                git fetch origin
+                git checkout v0.3.0.14
+                python manage.py shell -c "from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()"
+                python manage.py collectstatic
+                sudo service apache2 restart
+
+    - v0.2.9.x:
+
+        - Windows. Open a Powershell Window then:
+
+            .. code-block:: bash
+
+                cd C:\deploy
+                .\venvs\qatrack\Script\Activate.ps1
+                cd qatrackplus
+                git fetch origin
+                git checkout v0.2.9.2
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
+                python manage.py collectstatic
+
+            then restart the CherryPy service
+
+        - Linux. Open a terminal:
+
+            .. code-block:: bash
+
+                cd ~/web/qatrackplus
+                source ~/venvs/qatrack3/bin/activate
+                git fetch origin
+                git checkout v0.2.9.2
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
+                python manage.py collectstatic
+                sudo service apache2 restart
+
+
+    - v0.2.8.x:
+
+        - Windows. Open a Powershell Window then:
+
+            .. code-block:: bash
+
+                cd C:\deploy
+                .\venvs\qatrack\Script\Activate.ps1
+                cd qatrackplus
+                git fetch origin
+                git checkout v0.2.8.1
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
+                python manage.py collectstatic
+
+            then restart the CherryPy service
+
+        - Linux. Open a terminal:
+
+            .. code-block:: bash
+
+                cd ~/web/qatrackplus
+                source ~/venvs/qatrack3/bin/activate
+                git fetch origin
+                git checkout v0.2.8.1
+                python manage.py shell
+                >>> from qatrack.accounts.utils import fix_ldap_passwords; fix_ldap_passwords()
+                >>> exit()
+                python manage.py collectstatic
+                sudo service apache2 restart
+
+
+QATrack+ v0.3.0.13 Release Notes
+--------------------------------
+
+For full details of v0.3.0 see the v0.3.0 release notes below.  v0.3.013 is
+a patch to v0.3.0 that fixes a few minor issues.
+
+- Service Events have been added to the admin so they can now be hard deleted.
+
+- A few bugs with testpacks has been fixed including where Sublist tests were
+  not created correctly when creating test packs.
+
+- A number of bugs with the API have been fixed.
+
+- A bug with the initial v0.3.0 migration has been fixed for those who
+  have `SITE_ID ~= 1` in their settings file.
+
+- skipped tests are now excluded by default from `UTILS.previous_test_instance`.
+
+- Bug where the Test List Members drop down would not be populated correctly
+  due to conflicting jQuery versions has been resolved.
+
+
+Upgrading to v0.3.0.13 from v0.3.0
+..................................
+
+If you haven't upgraded to v0.3.0 yet see instructions for v0.3.0 below.  If
+you've already upgraded to v0.3.0 then to upgrade to v0.3.0.13:
+
+#. Open shell and activate your Python 3 virtual environment then:
+#.  .. code-block:: bash
+
+        git fetch origin
+        git checkout v0.3.0.13
+        python manage.py collectstatic
+        python manage.py clearcache
+
+#. On Linux `sudo service apache2 restart` on Windows, restart QATrack3 CherryPy Service
 
 
 QATrack+ v0.3.0 Release Notes
@@ -523,13 +760,13 @@ carrying on to the next step!_
 
 From the git bash command shell (with your QATrack+ virtual env activated!):
 
-1. git pull origin master
-1. pip install -r requirements/base.txt
-1. python manage.py syncdb
-1. python manage.py migrate
-1. python manage.py collectstatic
-1. restart the QATrack+ app (i.e. the CherryPy service or Apache or gunicorn ...)
-1. In the `Admin --> Auth --> Groups` section of the website grant the new permissions
+#. git pull origin master
+#. pip install -r requirements/base.txt
+#. python manage.py syncdb
+#. python manage.py migrate
+#. python manage.py collectstatic
+#. restart the QATrack+ app (i.e. the CherryPy service or Apache or gunicorn ...)
+#. In the `Admin --> Auth --> Groups` section of the website grant the new permissions
 
     * **qa | test instance | Can chart test history**
     * **qa | test list instance | Can view previously completed instances**

@@ -121,6 +121,14 @@ QATrack+ currently supports 8 different test types as outlined below.
    than a numerical value. Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.
 
+#. **Date** Allows the user to use a date picker to select a calendar date.
+   Test values will be coerced to Python datetime.date objects in compsite
+   calculations contexts.
+
+#. **Date & Time** Allow the user to use a date picker to select a calendar
+   date and time Test values will be coerced to Python datetime.datetime
+   objects in compsite calculations contexts.
+
 #. **Upload** A test that allows you to upload an arbitrary file and process it
    with a Python snippet.  Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.
@@ -159,17 +167,41 @@ Uncheck this option to hide the test from the charting page.  This can
 help keep your charting page clean and limited to the tests you
 really care about.
 
-Allow auto review of this test?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Auto Review Rules
+~~~~~~~~~~~~~~~~~
 
-Indicate whether this test should be auto-reviewable.  For more information
-about this option see the :ref:`Auto Review page <qa_auto_review>`.
+Indicate whether this test should be auto-reviewable.  Select the
+AutoReviewRuleSet you would like to use for this, or leave blank, to disable
+Auto Review for this test.  For more information about this option see the
+:ref:`Auto Review page <qa_auto_review>`.
 
 Skip Without Comment
 ~~~~~~~~~~~~~~~~~~~~
 
 Check this option if you want users to be able to skip this test without being
 forced to add a comment (regardless of their commenting permissions).
+
+Calculation Procedure
+~~~~~~~~~~~~~~~~~~~~~
+
+The Python snippet for calculating composite test results and processing uploads (see below).
+
+Formatting (Composite & Constant Tests Only)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python style string format for displaying numerical results. Leave blank for
+the QATrack+ default, select one of the predefined options, or enter your own
+formatting string.  Use e.g. %.2F to display as fixed precision with 2 decimal
+places, or %.3E to show as scientific format with 3 significant figures, or
+%.4G to use 'general' formatting with up to 4 significant figures. (Note this
+does not affect the way other values are calculated, only the way composite and
+constant test values are *displayed*. For example a constant test with a value
+of 1.2345 and a format of %.1f will be displayed as 1.2, but the full 1.2345
+will be used for calculations).  Note you may also use "new style" Python
+string formatting: see https://pyformat.info/ for examples.
+
+To set a default value for numerical formatting see the
+:ref:`DEFAULT_NUMBER_FORMAT <qatrack-config>` setting.
 
 Attachments
 ~~~~~~~~~~~
@@ -313,6 +345,10 @@ When your script (calculation procedure) is executed, it has access to
     - **UTILS.get_comment(** *macro_name* **)** gets the user set comment for the input
 
     - **UTILS.set_comment(** "*your comment here*" **)** sets the comment for the current test
+
+    - **UTILS.set_skip(** *macro_name* **, True|False )** set skip status of a test
+
+    - **UTILS.get_skip(** *macro_name* **)** returns boolean indicating whether or not a given test is currently skipped.
 
     - **UTILS.write_file(file_name, object)** attaches a file to the current
       test (see below for an example). If you have :ref:`Display Image

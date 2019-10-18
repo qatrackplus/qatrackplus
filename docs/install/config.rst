@@ -50,25 +50,30 @@ issues.
 Allowed Host Setting
 ....................
 
-If you are behind a hospital firewall you can set the `ALLOWED_HOSTS` setting to:
 
-.. code-block:: python
-
-    ALLOWED_HOSTS = ['*']
-
-otherwise you need to set allowed hosts either to your server name or IP
-address (e.g. for Apache):
+On Linux, set allowed hosts either to your server name or IP address (e.g. for Apache):
 
 .. code-block:: python
 
     ALLOWED_HOSTS = ['52.123.4.9']
 
-or if you are running QATrack+ behind a reverse proxy (e.g. using IIS &
-CherryPy or nginx):
+On Windows using CherryPy/IIS (or if you are running QATrack+ behind a reverse proxy on Linux):
 
 .. code-block:: python
 
-    ALLOWED_HOSTS = ['127.0.0.1']
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+HTTP or HTTPS Setting
+.....................
+
+In order for urls to use the correct protocol for links, set `HTTP_OR_HTTPS` to
+the appropriate protocol.
+
+.. code-block:: python
+
+    HTTP_OR_HTTPS = 'http'  # when using http for your site (default)
+    # -or -
+    HTTP_OR_HTTPS = 'https'  # when using https/ssl for your site
 
 
 DATABASES Setting
@@ -236,17 +241,47 @@ The meaning of the individual keys is as follows:
 Other Settings
 ~~~~~~~~~~~~~~
 
-AUTO_REVIEW_DEFAULT
-...................
 
-Set `AUTO_REVIEW_DEFAULT = True` in your `local_settings.py` file in order to
-enable :ref:`Auto Review <qa_auto_review>` by default.
+CHROME_PATH
+...........
 
-CONSTANT_PRECISION
-...................
+Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. For example
+
+.. code-block:: python
+
+    CHROME_PATH = '/usr/bin/chromium-browser'  # default
+    # - or -
+    CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
+
+
+
+CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
+..................................................................
 
 Set the `CONSTANT_PRECISION` setting to adjust the precision for which
 :ref:`Constant test type <qa_test_types>` values are displayed. (default 8)
+
+DEFAULT_NUMBER_FORMAT
+.....................
+
+Default formatting string to be used for Composite & Constant number formatting
+(can be overridden on a test by test basis). Set to a Python style string
+format for displaying numerical results.  Use e.g. %.2F to display as fixed
+precision with 2 decimal places, or %.3E to show as scientific format with 3
+significant figures, or %.4G to use 'general' formatting with up to 4
+significant figures. (Note this does not affect the way other values are
+calculated, only the way composite and constant test values are *displayed*.
+For example a constant test with a value of 1.2345 and a format of %.1f will be
+displayed as 1.2, but the full 1.2345 will be used for calculations).  Note you
+may also use "new style" Python string formatting: see https://pyformat.info/
+for examples.
+
+.. code-block:: python
+
+    DEFAULT_NUMBER_FORMAT = "%.3f"  # 3 decimal place fixed precision using "Old" style formatting
+    DEFAULT_NUMBER_FORMAT = "{:.3f}"  # 3 decimal place fixed precision using "New" style formatting
+    DEFAULT_NUMBER_FORMAT = "{:.4E}"  # 5 sig fig scientific notation using "New" style formatting
+
 
 DEFAULT_GROUP_NAMES
 ...................
@@ -298,6 +333,15 @@ REVIEW_DIFF_COL
 Set `REVIEW_DIFF_COL = True` to include a difference column when reviewing test
 list results. This column shows the difference between a test value and its
 reference value.
+
+
+SL_ALLOW_BLANK_SERVICE_AREA
+...........................
+
+Set `SL_ALLOW_BLANK_SERVICE_AREA = True` to allow users to create a ServiceEvent with
+a blank ServiceArea set.  When a Service Event is saved without a ServiceArea explicitly set,
+the ServiceArea will be set to "Not Specified".
+
 
 TESTPACK_TIMEOUT
 ................
@@ -423,10 +467,6 @@ Notification specific settings
 These settings allow you to override the default notification settings in your
 local_settings.py file:
 
-* `EMAIL_NOTIFICATION_USER` allows you to use a diferent user from the default
-  set above (set to None to use `EMAIL_HOST_USER`)
-
-* `EMAIL_NOTIFICATION_PWD` password to go along with `EMAIL_NOTIFICATION_USER`
 
 * `EMAIL_NOTIFICATION_SENDER` name to use in the email "From" address
 
@@ -435,6 +475,14 @@ local_settings.py file:
 
 * `EMAIL_NOTIFICATION_TEMPLATE` allows you to override the default template to
   use for rendering the email body (see below)
+
+* (deprecated) `EMAIL_NOTIFICATION_USER` allows you to use a diferent user from
+  the default set above (set to None to use `EMAIL_HOST_USER`).  This setting
+  is no longer used, set `EMAIL_HOST_USER` instead.
+
+* (deprecated) `EMAIL_NOTIFICATION_PWD` password to go along with
+  `EMAIL_NOTIFICATION_USER`.  This setting is no longer used, set
+  `EMAIL_HOST_PASSWORD` instead.
 
 
 An example of these settings is shown here:
@@ -1034,10 +1082,11 @@ General AD Settings
     AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
     AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
-    AD_MEMBERSHIP_REQ = []  # optional list of groups that user must be a part of in order to create account
+    AD_MEMBERSHIP_REQ = []  # Currently not implemented! See issue #360
+                            # optional list of groups that user must be a part of in order to create account
                             # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 
-    AD_CERT_FILE='/path/to/your/cert.txt'
+    AD_CERT_FILE = '/path/to/your/cert.txt'
 
     AD_DEBUG = False  # turn on active directory loggin
     AD_DEBUG_FILE = None  # log file path for debugging AD connection issues

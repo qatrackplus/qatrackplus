@@ -7,6 +7,7 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 from django_comments.models import Comment
+import pytest
 
 from qatrack.qa import models
 
@@ -193,48 +194,59 @@ class TestTestCollectionInterface(TestCase):
 
 class TestTest(TestCase):
 
+    def create_test(self, **kwargs):
+        return models.Test(**kwargs)
+
     def test_is_boolean(self):
-        test = utils.create_test(name="bool", test_type=models.BOOLEAN)
-        self.assertTrue(test.is_boolean())
+        test = self.create_test(name="bool", type=models.BOOLEAN)
+        assert test.is_boolean()
+
+    def test_is_date(self):
+        test = self.create_test(name="date", type=models.DATE)
+        assert test.is_date()
+
+    def test_is_datetime(self):
+        test = self.create_test(name="datetime", type=models.DATETIME)
+        assert test.is_datetime()
 
     def test_is_string(self):
-        test = utils.create_test(name="bool", test_type=models.STRING)
-        self.assertTrue(test.is_string())
+        test = self.create_test(name="string", type=models.STRING)
+        assert test.is_string()
 
     def test_is_string_composite(self):
-        test = utils.create_test(name="bool", test_type=models.STRING_COMPOSITE)
-        self.assertTrue(test.is_string_composite())
+        test = self.create_test(name="stringcomp", type=models.STRING_COMPOSITE)
+        assert test.is_string_composite()
 
     def test_is_upload(self):
-        test = utils.create_test(name="upload", test_type=models.UPLOAD)
-        self.assertTrue(test.is_upload())
+        test = self.create_test(name="upload", type=models.UPLOAD)
+        assert test.is_upload()
 
     def test_is_numerical_type(self):
         for t in (models.COMPOSITE, models.CONSTANT, models.SIMPLE):
-            test = utils.create_test(name="num", test_type=t)
-            self.assertTrue(test.is_numerical_type())
+            test = self.create_test(name="num", type=t)
+            assert test.is_numerical_type()
 
     def test_is_string_type(self):
         for t in (
             models.STRING_COMPOSITE,
             models.STRING,
         ):
-            test = utils.create_test(name="num", test_type=t)
-            self.assertTrue(test.is_string_type())
+            test = self.create_test(name="num", type=t)
+            assert test.is_string_type()
 
-    def test_valid_check_test_type(self):
-        test_types = (
+    def test_valid_check_type(self):
+        types = (
             ("choices", "foo, bar", models.MULTIPLE_CHOICE, "Multiple Choice"),
             ("constant_value", 1.0, models.CONSTANT, "Constant"),
             ("calculation_procedure", "result=foo", models.COMPOSITE, "Composite"),
         )
-        for attr, val, ttype, display in test_types:
-            test = utils.create_test(name=display, test_type=ttype)
+        for attr, val, ttype, display in types:
+            test = self.create_test(name=display, type=ttype)
             setattr(test, attr, val)
             test.check_test_type(getattr(test, attr), ttype, display)
 
-    def test_invalid_check_test_type(self):
-        test_types = (
+    def test_invalid_check_type(self):
+        types = (
             ("choices", "foo, bar", models.CONSTANT, "Invalid"),
             ("constant_value", 1., models.COMPOSITE, "Constant"),
             ("calculation_procedure", "result=foo", models.MULTIPLE_CHOICE, "Composite"),
@@ -242,20 +254,20 @@ class TestTest(TestCase):
             ("constant_value", None, models.COMPOSITE, "Constant"),
             ("calculation_procedure", None, models.COMPOSITE, "Composite"),
         )
-        for attr, val, ttype, display in test_types:
-            test = utils.create_test(name=display, test_type=ttype)
+        for attr, val, ttype, display in types:
+            test = self.create_test(name=display, type=ttype)
             setattr(test, attr, val)
-            test_type = ttype if val is None else models.SIMPLE
-            errors = test.check_test_type(getattr(test, attr), test_type, display)
-            self.assertTrue(len(errors) > 0)
+            type = ttype if val is None else models.SIMPLE
+            errors = test.check_test_type(getattr(test, attr), type, display)
+            assert len(errors) > 0
 
     def test_clean_calc_proc_not_needed(self):
-        test = utils.create_test(test_type=models.SIMPLE)
-        self.assertIsNone(test.clean_calculation_procedure())
+        test = self.create_test(type=models.SIMPLE)
+        assert test.clean_calculation_procedure() is None
 
     def test_invalid_clean_calculation_procedure(self):
 
-        test = utils.create_test(test_type=models.COMPOSITE)
+        test = self.create_test(type=models.COMPOSITE)
 
         invalid_calc_procedures = (
             "resul t = a + b",
@@ -275,11 +287,11 @@ class TestTest(TestCase):
                 test.clean_calculation_procedure()
             except ValidationError:
                 msg = ""
-            self.assertTrue(len(msg) == 0, msg=msg)
+            assert len(msg) == 0, msg
 
     def test_valid_calc_procedure(self):
 
-        test = utils.create_test(test_type=models.COMPOSITE)
+        test = self.create_test(type=models.COMPOSITE)
 
         valid_calc_procedures = (
             "result = a + b", "result = 42", """foo = a + b
@@ -295,20 +307,21 @@ result = foo + bar
                 test.clean_calculation_procedure()
             except ValidationError:
                 msg = "Failed but should have passed:\n %s" % vcp
-            self.assertTrue(len(msg) == 0, msg=msg)
+            assert len(msg) == 0, msg
 
     def test_clean_constant_value(self):
-        test = utils.create_test(test_type=models.CONSTANT)
-        self.assertRaises(ValidationError, test.clean_constant_value)
+        test = self.create_test(type=models.CONSTANT)
+        with pytest.raises(ValidationError):
+            test.clean_constant_value()
         test.constant_value = 1
-        self.assertIsNone(test.clean_constant_value())
+        assert test.clean_constant_value() is None
 
     def test_clean_mult_choice_not_needed(self):
-        test = utils.create_test(test_type=models.SIMPLE)
-        self.assertIsNone(test.clean_choices())
+        test = self.create_test(type=models.SIMPLE)
+        assert test.clean_choices() is None
 
     def test_valid_mult_choice(self):
-        test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
+        test = self.create_test(type=models.MULTIPLE_CHOICE)
         valid = ("foo, bar, baz", "foo, bar, baz", "foo, \tbar")
         for v in valid:
             test.choices = v
@@ -316,10 +329,10 @@ result = foo + bar
 
         test.choices = valid[0]
         test.clean_choices()
-        self.assertListEqual([("foo", "foo"), ("bar", "bar"), ("baz", "baz")], test.get_choices())
+        assert [("foo", "foo"), ("bar", "bar"), ("baz", "baz")] == test.get_choices()
 
     def test_invalid_mult_choice(self):
-        test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
+        test = self.create_test(type=models.MULTIPLE_CHOICE)
         invalid = (
             None,
             "",
@@ -327,10 +340,11 @@ result = foo + bar
         )
         for i in invalid:
             test.choices = i
-            self.assertRaises(ValidationError, test.clean_choices)
+            with pytest.raises(ValidationError):
+                test.clean_choices()
 
     def test_invalid_clean_slug(self):
-        test = utils.create_test()
+        test = self.create_test()
 
         invalid = ("0 foo", "foo ", " foo" "foo bar", "foo*bar", "%foo", "foo$")
 
@@ -342,14 +356,15 @@ result = foo + bar
             except ValidationError:
                 msg = ""
 
-            self.assertTrue(len(msg) == 0, msg=msg)
+            assert len(msg) == 0, msg
         test.type = models.COMPOSITE
         test.slug = ""
 
-        self.assertRaises(ValidationError, test.clean_slug)
+        with pytest.raises(ValidationError):
+            test.clean_slug()
 
     def test_valid_clean_slug(self):
-        test = utils.create_test()
+        test = self.create_test()
         valid = ("foo", "f6oo", "foo6", "_foo", "foo_", "foo_bar")
         for v in valid:
             test.slug = v
@@ -358,17 +373,17 @@ result = foo + bar
                 test.clean_slug()
             except ValidationError:
                 msg = "Short name should have passed but failed: %s" % v
-            self.assertTrue(len(msg) == 0, msg=msg)
+            assert len(msg) == 0, msg
 
+    @pytest.mark.django_db
     def test_clean_fields(self):
         test = utils.create_test()
         test.clean_fields()
 
     def test_get_choices(self):
-        test = utils.create_test(test_type=models.MULTIPLE_CHOICE)
+        test = self.create_test(type=models.MULTIPLE_CHOICE)
         test.choices = "a,b"
-
-        self.assertEqual(test.get_choices(), [("a", "a"), ("b", "b")])
+        assert test.get_choices() == [("a", "a"), ("b", "b")]
 
 
 class TestOnTestSaveSignal(TestCase):
@@ -694,7 +709,7 @@ class TestTestListCycle(TestCase):
         assert self.utc.last_instance is None
 
         utc2.refresh_from_db()
-        assert utc2.last_instance.pk is tli.pk
+        assert utc2.last_instance.pk == tli.pk
 
 
 class TestUTCDueDates(TestCase):
@@ -1166,20 +1181,6 @@ class TestUnitTestCollection(TestCase):
         self.assertEqual(utc.name, str(utc))
         self.assertEqual(tl.name, utc.name)
 
-    def test_delete_utc(self):
-
-        utc = utils.create_unit_test_collection()
-
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-        tl = utc.tests_object
-        utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(utc.last_instance, tli)
-        utc.delete()
-
-        self.assertRaises(models.UnitTestCollection.DoesNotExist, models.UnitTestCollection.objects.get, pk=utc.pk)
-
-        self.assertRaises(models.TestListInstance.DoesNotExist, models.TestListInstance.objects.get, pk=tl.pk)
-
 
 class TestSignals(TestCase):
 
@@ -1268,7 +1269,7 @@ class TestSignals(TestCase):
 
         cycle1 = utils.create_cycle(test_lists=test_lists)
 
-        utc = utils.create_unit_test_collection(test_collection=cycle1)
+        utils.create_unit_test_collection(test_collection=cycle1)
 
         utis = list(models.UnitTestInfo.objects.order_by("test_id"))
 
@@ -1744,11 +1745,14 @@ class TestAutoReview(TestCase):
             models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
             models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
         ])
+        self.ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            self.ruleset.rules.add(rule)
 
         self.test_list = utils.create_test_list()
         for i in range(3):
             test = utils.create_test(name="name%d" % i)
-            test.auto_review = True
+            test.autoreviewruleset_id = self.ruleset.id
             test.save()
 
             self.tests.append(test)

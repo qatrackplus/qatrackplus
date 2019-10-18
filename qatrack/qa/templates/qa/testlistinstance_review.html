@@ -1,5 +1,6 @@
 {% extends "site_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
@@ -107,6 +108,13 @@
                                        </dl>
                                     </div>
                                     <div class="col-md-4">
+                                        {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                                          <div class="row">
+                                            <div class="col-sm-12">
+                                              {% include "qa/testlistinstance_pdf_button.html" with tli=tli %}
+                                            </div>
+                                          </div>
+                                        {% endif %}
                                         {% if USE_SERVICE_LOG and not from_se %}
                                             <div class="row">
                                                 <label class="col-md-8">
@@ -206,7 +214,7 @@
                                         <div class="col-md-12">
                                             {% spaceless %}
                                                 <div class="col-lg-12">
-                                                    <div class="text-display pre">{{tli.test_list.description.strip|safe}}</div>
+                                                    <div class="text-display pre">{{tli.test_list.description.strip|safe|linebreaks}}</div>
                                                 </div>
                                             {% endspaceless %}
                                         </div>
@@ -300,18 +308,28 @@
                                                             {% if test.is_upload %}
                                                                 {{ti.value_display|safe|truncatechars_html:9}}
                                                             {% else %}
-                                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
+                                                              {% with vd=ti.value_display %}
+                                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{vd|slice:"100"}}{% else %}{{ti.diff_display}} diff from reference{% endif %}">
                                                                     {% with ti.pass_fail as status %}
                                                                         {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
                                                                             {% if status == 'tolerance' %}
-                                                                                <i class="pull-left icon-warning-sign"></i>
+                                                                                <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
                                                                             {% elif status == 'action' %}
-                                                                                <i class="pull-left icon-minus-sign"></i>
+                                                                                <i class="pull-left fa fa-ban" aria-hidden="true"></i>
+                                                                            {% elif status == 'ok' %}
+                                                                                <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
+                                                                            {% elif status == 'not_done' %}
+                                                                                <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
                                                                             {% endif %}
                                                                         {% endif %}
                                                                     {% endwith %}
-                                                                    {{ti.value_display|safe}}
+                                                                    {% if vd|length > 100 %}
+                                                                      <a href="#!" style="color: white" class="revealtext" title="{{ vd|slice:"100" }}...Click to show full text"><i class="fa fa-book"></i></a>
+                                                                    {% else %}
+                                                                      {{ti.value_display|safe}}
+                                                                    {% endif %}
                                                                 </span>
+                                                              {% endwith %}
                                                             {% endif %}
                                                         </td>
                                                         <td class="review-ref">
@@ -358,6 +376,15 @@
                                                                         {{ ti.comment }}
                                                                     </div>
                                                                 </div>
+                                                            </td>
+                                                        </tr>
+                                                    {% endif %}
+                                                    {% if not test.is_upload and ti.string_value|length > 100 %}
+                                                        <tr class="qa-text-display no-hover row-{{ ti_form.prefix }}">
+                                                            <td colspan="{% qa_table_colspan perms %}"  class="">
+                                                              <pre style="">
+                                                                {{ ti.value_display }}
+                                                              </pre>
                                                             </td>
                                                         </tr>
                                                     {% endif %}

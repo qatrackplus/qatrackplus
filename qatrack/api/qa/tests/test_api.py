@@ -38,8 +38,8 @@ class TestTestListInstanceAPI(APITestCase):
         self.default_tests = [self.t1, self.t2, self.t3, self.t4, self.t5]
         self.ntests = len(self.default_tests)
 
-        for t in self.default_tests:
-            utils.create_test_list_membership(self.test_list, t)
+        for order, t in enumerate(self.default_tests):
+            utils.create_test_list_membership(self.test_list, t, order=order)
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list, unit=self.unit)
 
@@ -98,6 +98,13 @@ class TestTestListInstanceAPI(APITestCase):
             ti = models.TestInstance.objects.get(unit_test_info__test=t)
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
             assert v == self.data['tests'][t.slug]['value']
+
+    def test_create_order(self):
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        for tlm in self.test_list.testlistmembership_set.order_by("order"):
+            ti = models.TestInstance.objects.get(unit_test_info__test=tlm.test)
+            assert ti.order == tlm.order
 
     def test_create_no_status(self):
         models.TestInstanceStatus.objects.all().delete()
@@ -214,6 +221,30 @@ class TestTestListInstanceAPI(APITestCase):
         assert models.TestInstance.objects.count() == self.ntests + 1
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
         assert tic.value == self.data['tests']['test1']['value'] + self.data['tests']['test2']['value']
+
+    def test_create_date_composite(self):
+        """
+        Add a date composite test to our test list.  Submitting without data
+        included should result in it being calculated.
+        """
+
+        td1 = utils.create_test(name="test_date_1", test_type=models.DATE)
+        td2 = utils.create_test(name="test_date_2", test_type=models.DATETIME)
+        tcd = utils.create_test(name="test_date_c", test_type=models.COMPOSITE)
+        tcd.calculation_procedure = "result = (test_date_2.date() - test_date_1).total_seconds()"
+        tcd.save()
+        for t in [td1, td2, tcd]:
+            utils.create_test_list_membership(self.test_list, t)
+
+        self.data['tests']['test_date_1'] = {'value': "2019-08-01"}
+        self.data['tests']['test_date_2'] = {'value': "2019-08-02 23:45:00"}
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 3
+        tic = models.TestInstance.objects.get(unit_test_info__test=tcd)
+        assert tic.value == 86400
 
     def test_create_composite_invalid_proc(self):
         """
@@ -360,6 +391,41 @@ class TestTestListInstanceAPI(APITestCase):
         assert response.status_code == status.HTTP_201_CREATED
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
         assert tic.string_value == "hello test three"
+
+    def test_create_composite_of_composite(self):
+        """
+        Add a composite test which depends on another composite value to our test list.
+        """
+
+        tcc = utils.create_test(name="testcc", test_type=models.COMPOSITE)
+        tcc.calculation_procedure = "result = 2*testc"
+        tcc.save()
+        utils.create_test_list_membership(self.test_list, self.tc)
+        utils.create_test_list_membership(self.test_list, tcc)
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 2
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        ticc = models.TestInstance.objects.get(unit_test_info__test=tcc)
+        assert ticc.value == 2 * tic.value
+
+    def test_create_composite_of_composite_string(self):
+        """
+        Add a string composite test which depends on another composite value to our test list.
+        """
+
+        tscc = utils.create_test(name="testscc", test_type=models.STRING_COMPOSITE)
+        tscc.calculation_procedure = "result = 'composite of composite (%s)' % testsc"
+        tscc.save()
+
+        utils.create_test_list_membership(self.test_list, self.tsc)
+        utils.create_test_list_membership(self.test_list, tscc)
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=tscc)
+        assert tic.string_value == "composite of composite (hello test three)"
 
     def test_file_upload(self):
         """

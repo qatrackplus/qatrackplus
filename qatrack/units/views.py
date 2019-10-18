@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
 import pytz
 
+from qatrack.qatrack_core.utils import format_as_date as fmt_date
 from qatrack.units import forms
 from qatrack.units import models as u_models
 
@@ -16,19 +17,21 @@ from qatrack.units import models as u_models
 def get_unit_available_time_data(request):
 
     unit_qs = u_models.Unit.objects.prefetch_related('unitavailabletime_set', 'unitavailabletimeedit_set').all()
-    unit_available_time_data = {u.id: {
-        'number': u.number,
-        'name': u.name,
-        'active': u.active,
-        'date_acceptance': u.date_acceptance.strftime('%Y-%m-%d') if u.date_acceptance else None,
-        'available_time_edits': {
-            uate.date.strftime('%Y-%m-%d'): {
-                'name': uate.name,
-                'hours': uate.hours
-            } for uate in u.unitavailabletimeedit_set.all()
-        },
-        'available_times': list(u.unitavailabletime_set.all().values())
-    } for u in unit_qs}
+    unit_available_time_data = {
+        u.id: {
+            'number': u.number,
+            'name': u.name,
+            'active': u.active,
+            'date_acceptance': fmt_date(u.date_acceptance) if u.date_acceptance else None,
+            'available_time_edits': {
+                fmt_date(uate.date): {
+                    'name': uate.name,
+                    'hours': uate.hours
+                } for uate in u.unitavailabletimeedit_set.all()
+            },
+            'available_times': list(u.unitavailabletime_set.all().values())
+        } for u in unit_qs
+    }
 
     return JsonResponse({'unit_available_time_data': unit_available_time_data})
 

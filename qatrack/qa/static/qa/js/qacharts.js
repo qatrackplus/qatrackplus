@@ -5,7 +5,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
     $(document).ready(function () {
 
-        var $units = $('#units'),
+        var $sites = $("#sites"),
+            $units = $('#units'),
             $frequencies = $('#frequencies'),
             $test_lists = $('#test-lists'),
             $tests = $('#tests'),
@@ -27,15 +28,27 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $include_fit = $('#include-fit'),
             $combine_data = $('#combine-data'),
             $relative_diff = $('#relative-diff'),
+            $highlight_flags = $('#highlight-flags'),
+            $highlight_comments = $('#highlight-comments'),
             $control_chart_container = $("#control-chart-container"),
             $review_required = $('#review-required');
 
-        var date_format = 'DD MMM YYYY';
+        var date_format = siteConfig.MOMENT_DATE_FMT;
 
         var default_service_type_ids = $service_type_selector.val();
 
         var set_chart_height;
 
+        $sites.felter({
+            mainDivClass: 'col-sm-1',
+            selectAllClass: 'btn btn-flat btn-xs btn-default',
+            height: 350,
+            label: 'Sites',
+            slimscroll: true,
+            selectAll: true,
+            selectNone: true,
+            initially_displayed: true
+        });
         $units.felter({
             mainDivClass: 'col-sm-2',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
@@ -55,7 +68,27 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     },
                     refresh_on_dependent_changes: false
                 }
-            }
+            },
+            dependent_on_filters: [
+                {
+                    element: $sites,
+                    filter: function () {
+                        var sites = $sites.val();
+                        if (_.isNull(sites)){
+                            return [];
+                        }
+                        var units = [];
+                        _.each($units.find("option"), function(opt){
+                            var $opt = $(opt);
+                            if (sites.indexOf(opt.dataset.site) >= 0){
+                                units.push(parseInt($opt.val()));
+                            }
+                        });
+                        return units;
+                    },
+                    is_ajax: false
+                }
+            ]
         });
 
         $frequencies.felter({
@@ -184,7 +217,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         });
 
         $tests.felter({
-            mainDivClass: 'col-sm-5',
+            mainDivClass: 'col-sm-4',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
             label: 'Tests',
@@ -318,7 +351,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             linkedCalendars: false,
             opens: 'left',
             locale: {
-                format: date_format
+                format: siteConfig.DATERANGEPICKER_DATE_FMT
             }
         });
 
@@ -451,6 +484,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 fit_data: $include_fit.is(":checked"),
                 combine_data: $combine_data.is(":checked"),
                 relative: $relative_diff.is(":checked"),
+                highlight_comments: $highlight_comments.is(":checked"),
+                highlight_flags: $highlight_flags.is(":checked"),
                 show_events: $show_events.is(':checked'),
                 service_types: $service_type_selector.val(),
                 chart_type: $chart_type.val(),
@@ -587,20 +622,68 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     if (_.isNull(val.value)) {
                         return;
                     }
-                    var x = moment(val.date).valueOf();
+                    var x = moment(val.date).valueOf(),
+                        tol_low,
+                        tol_high;
 
                     line_data_test_results.push({
                         x: x,
                         y: val.value,
                         test_instance_id: val.test_instance_id,
-                        test_list_instance_id: val.test_list_instance.id
+                        test_list_instance_id: val.test_list_instance.id,
+                        test_instance_comment: val.test_instance_comment,
+                        flagged: val.test_list_instance.flagged
                     });
 
                     if (val.reference !== null) {
                         line_data_reference.push({x: x, y: val.reference});
-                        area_data_ok.push({x: x, y_high: val.tol_high, y_low: val.tol_low});
-                        area_data_upper_tol.push({x: x, y_high: val.act_high, y_low: val.tol_high});
-                        area_data_lower_tol.push({x: x, y_high: val.tol_low, y_low: val.act_low});
+
+                        var have_ok_reg = !_.isNull(val.tol_low) || !_.isNull(val.tol_high) || !_.isNull(val.act_high) || !_.isNull(val.act_low);
+                        if (have_ok_reg){
+                            if (!_.isNull(val.tol_low)){
+                                tol_low = val.tol_low;
+                            }else if (!_.isNull(val.act_low)){
+                                tol_low = val.act_low;
+                            }else {
+                                tol_low = val.reference;
+                            }
+
+                            if (!_.isNull(val.tol_high)){
+                                tol_high = val.tol_high;
+                            }else if (!_.isNull(val.act_high)){
+                                tol_high = val.act_high;
+                            }else {
+                                tol_high = val.reference;
+                            }
+
+                            area_data_ok.push({x: x, y_high: tol_high, y_low: tol_low});
+                        }else{
+                            area_data_ok.push({x: x, y_high: val.reference, y_low: val.reference});
+                        }
+
+                        var have_lower_tol_reg = !_.isNull(val.tol_low);
+                        if (have_lower_tol_reg){
+                            if (!_.isNull(val.act_low)){
+                                area_data_lower_tol.push({x: x, y_high: val.tol_low, y_low: val.act_low});
+                            }else{
+                                area_data_lower_tol.push({x: x, y_high: val.tol_low, y_low: val.tol_low});
+                            }
+                        }else{
+                            area_data_lower_tol.push({x: x, y_high: val.reference, y_low: val.reference});
+                        }
+
+                        var have_upper_tol_reg = !_.isNull(val.tol_high);
+                        if (have_upper_tol_reg){
+                            if (!_.isNull(val.act_high)){
+                                area_data_upper_tol.push({x: x, y_high: val.act_high, y_low: val.tol_high});
+                            }else{
+                                area_data_upper_tol.push({x: x, y_high: val.tol_high, y_low: val.tol_high});
+                            }
+                        }else{
+                            area_data_upper_tol.push({x: x, y_high: val.reference, y_low: val.reference});
+                        }
+
+
                     }
                 });
 
@@ -636,6 +719,37 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
         function remove_tooltip_outter() {}
 
+
+        function circleRadius(dat, idx, series){
+            // Use larger circle radius for ti's with comments
+            var showComment = $highlight_comments.is(":checked") && dat.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && dat.flagged;
+            if (showComment || showFlag){
+                return 5;
+            }
+            return 4;
+        }
+
+        function circleStroke(d, i, s) {
+            var showComment = $highlight_comments.is(":checked") && d.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && d.flagged;
+            if (showComment){
+                return "rgb(60, 141, 188)";
+            }else if (showFlag){
+                return "rgb(243, 156, 18)";
+            }
+            return s[i].parentNode.__data__.color;
+        }
+
+        function circleStrokeWidth(d, i, s) {
+            var showComment = $highlight_comments.is(":checked") && d.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && d.flagged;
+            if (showComment || showFlag){
+                return 4;
+            }
+            return 2;
+        }
+
         function create_chart(_data) {
 
             // var allEmpty = _.every(_.map(series_data, function (o) {
@@ -660,6 +774,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 set_chart_height = $(window).height() - 50;
             }
             var chart_height = set_chart_height;
+
 
             var circle_radius = 3,
                 circle_radius_highlight = 4,
@@ -938,7 +1053,6 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return d.line_data_test_results;
                 })
                 .enter().append('circle')
-            // .style("pointer-events", "none") // Stop line interferring with cursor
                 .attr('id', function (d) {
                     return 'ti_' + d.test_instance_id;
                 })
@@ -946,18 +1060,18 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return 'tli_' + d.test_list_instance_id + ' tl_' + s[i].parentNode.__data__.test_list.id;
                 })
                 .attr("clip-path", "url(#clip)")
-                .attr("stroke-width", 1)
-                .attr("stroke", function (d, i, s) {
-                    return s[i].parentNode.__data__.color;
-                })
+                .attr("stroke-width", circleStrokeWidth)
+                .attr("stroke-opacity", 1)
+                .attr("stroke", circleStroke)
                 .attr("cx", function (d) {
                     return xScale(d.x);
                 })
                 .attr("cy", function (d) {
                     return yScale(d.y);
                 })
-                .attr("r", circle_radius)
-                .attr("fill", "white").attr("fill-opacity", 0.5)
+                .attr("r", circleRadius)
+                .attr("fill", "white")
+                .attr("fill-opacity", 1)
                 .on('mousemove', mousemove);
 
             var test_reference = test.append('g')
@@ -1288,7 +1402,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
             // Add mouseover events for hover line.
             var old_x_closest,
-                format = d3.timeFormat('%a, %b %e, %Y at %H:%M');
+                format = d3.timeFormat('%a, %d %b %Y at %H:%M');
 
             var highlighted_event;
 
@@ -1524,8 +1638,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             function removeHighlights() {
 
                 d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
-                    .attr('stroke-width', 1);
+                    .attr('r', circleRadius)
+                    .attr('stroke-width', circleStrokeWidth);
 
                 d3.selectAll('.service-marker-icon')
                     .attr('stroke-width', 1);
@@ -1546,7 +1660,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 svg.selectAll('.tli_line').remove();
 
                 d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
+                    .attr('r', circleRadius)
                     .attr('stroke-width', 1);
 
                 d3.selectAll('.tooltip')
@@ -1659,6 +1773,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                             tli_coords.push({x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
 
+                            var comments = initiated_data[0].test_instance_comment || "";
+                            if (comments){
+                                comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
+                            }
+                            if (initiated_data[0].flagged){
+                                comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
+                            }
+
+
                             var tli_initiated_tooltip = d3.select("body")
                                 .append("div")
                                 .attr('id', 'tli-' + initiated_data[0].test_list_instance_id + '_tooltip')
@@ -1674,9 +1797,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .style('top', y_pos + 'px')
                                 .html($('#tli-tooltip-template').html()
                                     .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
-                                    .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
+                                    .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                                     .replace(/__tli-tl-name__/g, initiated_name)
                                     .replace(/__tli-kind__/g, 'Initiating QC')
+                                    .replace(/__tli-comments__/g, comments)
                                     .replace(/__show-in__/g, 'style="display: none"')
                                 );
 
@@ -1730,6 +1854,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                         tli_coords.push({x: rtsqa_x, color: 'rgba(0, 192, 239, 0.6)'});
 
+                        var rtsqa_comments = rtsqa_data[0].test_instance_comment || "";
+                        if (rtsqa_comments){
+                            rtsqa_comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + rtsqa_comments + '"></i>';
+                        }
+
+                        if (rtsqa_data[0].flagged){
+                            rtsqa_comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
+                        }
+
                         var tli_rtsqa_tooltip = d3.select("body")
                             .append("div")
                             .attr('id', 'tli-' + rtsqa_data[0].test_list_instance_id + '_tooltip')
@@ -1745,9 +1878,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                             .style('top', y_pos + 'px')
                             .html($('#tli-tooltip-template').html()
                                 .replace(/__tli-id__/g, rtsqa_data[0].test_list_instance_id)
-                                .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
+                                .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
                                 .replace(/__tli-kind__/g, 'Return To Service QC')
+                                .replace(/__tli-comments__/g, rtsqa_comments)
                                 .replace(/__show-in__/g, 'style="display: none"')
                             );
 
@@ -1812,7 +1946,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     x_buffer = 0,
                     chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
 
-                if (x_pos > width - legend_expand_width + margin.right) {
+                var overlapped_by_legend = x_pos > width - legend_expand_width + margin.right;
+                if (legend_expanded && overlapped_by_legend) {
                     y_pos += legend_height + y_buffer;
                 }
 
@@ -1827,6 +1962,14 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 }
 
                 var colour = 'rgba(100, 100, 100, 0.2)';
+
+                var comments = tli_data[0].test_instance_comment || "";
+                if (comments){
+                    comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
+                }
+                if (tli_data[0].flagged){
+                    comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
+                }
 
                 var tli_tooltip = d3.select("body")
                     .append("div")
@@ -1843,9 +1986,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .style('top', y_pos + 'px')
                     .html($('#tli-tooltip-template').html()
                         .replace(/__tli-id__/g, tli_data[0].test_list_instance_id)
-                        .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
+                        .replace(/__tli-date__/g, moment(x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                         .replace(/__tli-tl-name__/g, tli_name)
                         .replace(/__tli-kind__/g, 'Test List')
+                        .replace(/__tli-comments__/g, comments)
                         .replace(/__show-in__/g, 'style="display: block"')
                     )
                     .on('click', toggleLock);
@@ -2176,6 +2320,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             var include_fit = get_filtered_option_values("include_fit", options)[0];
             var combine_data = get_filtered_option_values("combine_data", options)[0];
             var relative_diff = get_filtered_option_values("relative_diff", options)[0];
+            var highlight_flags = get_filtered_option_values("highlight_flags", options)[0];
+            var highlight_comments = get_filtered_option_values("highlight_comments", options)[0];
             var show_events = get_filtered_option_values("show_events", options)[0];
             var inactive_units = get_filtered_option_values('inactive_units', options)[0];
             var inactive_test_lists = get_filtered_option_values('inactive_test_lists', options)[0];
@@ -2205,13 +2351,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             }
             $combine_data.prop('checked', combine_data);
             $relative_diff.prop('checked', relative_diff);
+            $highlight_flags.prop('checked', highlight_flags);
+            $highlight_comments.prop('checked', highlight_comments);
             if (!date_range) {
-                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(date_format));
-                $date_range.data('daterangepicker').setEndDate(moment().format(date_format));
+                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(siteConfig.MOMENT_DATE_FMT));
+                $date_range.data('daterangepicker').setEndDate(moment().format(siteConfig.MOMENT_DATE_FMT));
             } else {
                 date_range = date_range.replace(/%20/g, ' ');
-                $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], date_format).format(date_format));
-                $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], date_format).format(date_format));
+                $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
+                $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
             }
             $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
             $show_events.prop('checked', show_events);
@@ -2246,8 +2394,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             downloadURL("./export/csv/?" + $.param(get_data_filters()));
         }
 
-        $('#filter-box').fadeTo(1500, 1);
+        $('#filter-box').fadeTo(1, 1);
 
+    });
+
+    $("body").popover({
+        selector: '[data-toggle="popover"]',
+        html: true,
+        placement: 'auto',
+        trigger: 'hover'
     });
 
 });

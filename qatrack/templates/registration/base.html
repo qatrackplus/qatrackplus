@@ -39,7 +39,7 @@
                                         </span>
                                         {% trans "Account Details" %}
                                     </a></li>
-                                    <li{% block change_active %}{% endblock change_active %}><a href="{% url "auth_password_change" %}">
+                                    <li{% block change_active %}{% endblock change_active %}><a href="{% url "account-change-password" %}">
                                         <span class="fa fa-stack fa-fw" aria-hidden="true">
                                             <i class="fa fa-lock fa-stack-custom-main"></i>
                                             <i class="fa fa-pencil fa-stack-custom-sub primary"></i>
@@ -54,13 +54,26 @@
                                     </span>
                                     {% trans "Reset Password" %}
                                 </a></li>
+
+                                {% if perms.auth.change_group %}
+                                  <li role="separator" class="divider"></li>
+                                  <li class="{% block groups_active %}{% endblock groups_active %}"><a href="{% url "groups-app" %}">
+                                      <span class="fa fa-stack fa-fw" aria-hidden="true">
+                                          <i class="fa fa-users fa-stack-custom-main"></i>
+                                          <i class="fa fa-lock fa-stack-custom-sub primary"></i>
+                                      </span>
+                                      {% trans "Group Membership & Permissions" %}
+                                  </a></li>
+                                {% endif %}
+
                                 {% if user.is_authenticated %}
+                                    <li role="separator" class="divider"></li>
                                     <li><a href="{% url "auth_logout" %}">
                                         <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
                                         {% trans "Log Out" %}
                                     </a></li>
                                 {% else %}
-                                    <li {% block register_active %}{% endblock register_active %}><a href="{% url "registration_register" %}">
+                                    <li {% block register_active %}{% endblock register_active %}><a href="{% url "account-register" %}">
                                         <i class="fa fa-user fa-fw " aria-hidden="true"></i>
                                         {% trans "Register" %}
                                     </a></li>
@@ -81,21 +94,5 @@
 
         <div class="col-md-2"></div>
     </div>
-
-
-{#    <ul class="nav nav-list">#}
-{#        <li class="nav-header">{% trans "Account" %}</li>#}
-{#        {% comment%}#}
-{#        <li><a href="{% url "acct_email' %}">{% trans "Email Addresses" %}</a></li>#}
-{#        <li><a href="{% url "auth_password_reset" %}">{% trans "Set Password" %}</a></li>#}
-{#        {% endcomment %}#}
-{#        <li><a href="{% url "account-details" %}">{% trans "Account Details" %}</a></li>#}
-{#        <li><a href="{% url "auth_password_change" %}">{% trans "Change Password" %}</a></li>#}
-{#        <li><a href="{% url "auth_password_reset" %}">{% trans "Reset Password" %}</a></li>#}
-{#        {% comment %}#}
-{#            <li><a href="{% url "acct_language_change" %}">{% trans "Language" %}</a></li>#}
-{#            <li><a href="{% url "acct_timezone_change" %}">{% trans "Timezone" %}</a></li>#}
-{#        {% endcomment %}#}
-{#    </ul>#}
 
 {% endblock body %}

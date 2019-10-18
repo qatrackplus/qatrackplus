@@ -1,0 +1,325 @@
+{% load i18n %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load attach_tags %}
+{% load comments %}
+
+<!DOCTYPE html> <!-- html5 -->
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link href="file://{{ STATIC_ROOT }}/fontawsome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/bootstrap/css/bootstrap.pdf.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/adminlte/css/admin-lte.pdf.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/custom-adminlte.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/custom-fontawesome.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/base.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qatrack_core/css/tables.css" rel="stylesheet">
+    <link href="file://{{ STATIC_ROOT }}/qa/css/qa.css" rel="stylesheet">
+    <style type="text/css">
+      {% include "reports/pdf.css" %}
+    </style>
+  </head>
+  <body >
+  {% with tli=test_list_instance %}
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8">
+          <h1 style="color:#777; margin-top: 20px; padding-bottom: 10px; margin-bottom: -10px" class="pdf">QATrack+ Reports</h1>
+          <h5 style="padding-left: 5px; padding-bottom: 0; margin-bottom:0;">Site: <a href="https://{{site.domain}}">{{ site.name }}</a></h5>
+        </div>
+        <div class="col-xs-4">
+          <img style="margin-top: 20px; z-index: 100; margin-right: 60px;" src="http://www.multileaf.ca/static/img/logo/color_logo_transparent_background_small.png"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-xs-12">
+          <hr style="padding-top: 0; margin-top: 5px;" class="tight"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-xs-12">
+          <strong>Report Details ::</strong>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <dl class="dl-horizontal">
+            <dt>Report Type:</dt>
+            <dd>Test List Instance Report</dd>
+
+            <dt>Generated:</dt>
+            <dd>{% now "Y-m-d H:i:s" %}</dd>
+
+            <dt>View on site:</dt>
+            <dd>
+              <a href="https://{{ site.domain }}{% url 'view_test_list_instance' pk=tli.pk %}" title="View Test List Instance">
+                {{ tli.unit_test_collection.unit.name }} :: {{ tli.test_list.name }} :: {{ tli.work_completed }}
+              </a>
+            </dd>
+
+          </dl>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <strong>Test List Instance Details ::</strong>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-xs-6">
+          <dl class="dl-horizontal">
+            <dt>Unit:</dt>
+            <dd>{{tli.unit_test_collection.unit.name}}</dd>
+
+            <dt>Test List:</dt>
+            <dd>
+                {{tli.test_list.name}}
+            </dd>
+
+            {% if cycle_name %}
+              <dt>Test List Cycle:</dt>
+              <dd>{{ cycle_name }}</dd>
+            {% endif %}
+
+            <dt>Performed By:</dt>
+            <dd>{{ tli.created_by }} {% if tli.created_by.email %} ({{ tli.created_by.email }}){% endif %}</dd>
+
+            <dt>Reviewed by:</dt>
+            <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}} {% else %}<em>Not reviewed</em>{% endif %}</dd>
+          </dl>
+        </div>
+        <div class="col-xs-6">
+          <dl class="dl-horizontal">
+
+            <dt>Work Started:</dt>
+            <dd>{{tli.work_started}}</dd>
+
+            <dt>Work Completed:</dt>
+            <dd>
+                {% if tli.in_progress %}
+                  <em>In Progress</em>
+                {% else %}
+                  {{tli.work_completed}}
+                {% endif %}
+            </dd>
+
+            <dt>Duration:</dt>
+            <dd>
+                {% if not tli.in_progress%}
+                    {{tli.duration|as_time_delta}}
+                {% else %}
+                    <em>In Progress</em>
+                {% endif %}
+            </dd>
+
+            <dt>Last Modification:</dt>
+            <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
+
+          </dl>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          {% if tli.test_list.description %}
+            <div class="row">
+              <div class="col-md-12">
+                <dl class="dl-horizontal">
+                  <dt>Description:</dt>
+                  <dd>{{tli.test_list.description.strip|safe}}</dd>
+                </dl>
+              </div>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% if perms.service_log.view_serviceevent %}
+        <div class="row">
+          <div class="col-xs-12">
+            <strong>Service Log Details ::</strong>
+            <dl class="dl-horizontal">
+              <dt>Events Initiated:</dt>
+              <dd>
+                {% for se in service_events_ib %}
+                  <a href="{% url 'sl_details' pk=se.id %}"
+                    style="color: {{ se.service_status.colour }}"
+                    title="View service event"
+                    >Service Event {{ se.id }}</a>{% if not forloop.last %},{% endif %}
+                {% empty %}
+                  <em>None</em>
+                {% endfor %}
+              </dd>
+
+              <dt>RtS for Events:</dt>
+              <dd>
+                {% for se in service_events_rtsqa %}
+                <a href="{% url 'sl_details' pk=se.id %}"
+                    style="color: {{ se.service_status.colour }}"
+                    title="View service event"
+                    >Service Event {{ se.id }}</a>{% if not forloop.last %},{% endif %}
+                  {% empty %}
+                    <em>None</em>
+                  {% endfor %}
+              </dd>
+            </dl>
+          </div>
+        </div>
+      {% endif %}
+      <div class="row">
+        <div class="col-xs-12">
+          {% with test_list_instance.history as instances_and_dates  %}
+            <table id="review-table" class="table table-bordered table-striped table-condensed" >
+              <thead>
+                <tr>
+                  <th style="">Test<div></div></th>
+                  <th style="width: 20%"  class="review-value">Value</th>
+                  <th style="width: 8%" class="review-ref">Reference</th>
+                  <th style=""  >Tolerance</th>
+                  <th style="width: 8%" class="review-status">Pass/Fail</th>
+                  <th style="width: 10%" class="review-status">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ti, history in instances_and_dates.0 %}
+
+                  {% with test=ti.unit_test_info.test %}
+                    {% with borders.starts|lookup:forloop.counter0 as delim %}
+                      {% if delim and delim.class == "sublist" %}
+                        <tr class="{{delim.class }}">
+                          <td colspan="2">
+                            {% if delim.description %}
+                              <a class="show-sublist-details" href="#">
+                                {{ delim.name }}
+                              </a>
+                            {% else %}
+                                {{ delim.name }}
+                            {% endif %}
+                          </td>
+                          <td colspan="{% qa_table_colspan perms offset=2 %}">&nbsp;</td>
+                        </tr>
+                      {% endif %}
+                    {% endwith %}
+                    <tr>
+                      <td>{{test.name}}</td>
+                      <td class="review-value">
+                        <span
+                          class="label pass-fail {{ ti.pass_fail }}"
+                          title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}"
+                        >
+                          {% with ti.pass_fail as status %}
+                            {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                              {% if status == 'tolerance' %}
+                                <i class="pull-left icon-warning-sign"></i>
+                              {% elif status == 'action' %}
+                                <i class="pull-left icon-minus-sign"></i>
+                              {% endif %}
+                            {% endif %}
+                          {% endwith %}
+                          {{ ti.value_display | safe}}
+                        </span>
+                      </td>
+                      <td class="review-ref">
+                        {% if ti.reference %}
+                          {{ ti.reference.value_display }}
+                        {% endif %}
+                      </td>
+                      <td style="font-size: 0.8em">
+                        {% if ti.tolerance %}
+                            {{ ti.tolerance.name }}
+                        {% endif %}
+                      </td>
+                      <td class="review-status">
+                        {{ti.get_pass_fail_display}}
+                      </td>
+                      <td class="review-status">
+                        {{ti.status.name}}
+                      </td>
+                    </tr>
+
+                    {% if ti.comment %}
+                    <tr>
+                      <td colspan="6" style="padding-left: 20px;"><em>Comment: {{ ti.comment }}</em></td>
+                    </tr>
+                    {% endif %}
+
+                    {% if ti.attachment_set.exists %}
+                      <tr class="qa-attach no-hover">
+                        <td colspan="6" style="padding-left: 20px"><em>Attachments:
+                            {% for attach in ti.attachment_set.all %}
+                              <a href="https://{{ site.domain }}/{{ attach.attachment.url }}" title="View Attachment">
+                                {{ attach.label }}
+                              </a>
+                              {% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {%endwith%}
+
+                  {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
+                    {% with borders.starts|lookup:forloop.counter as delim %}
+                      {% if not delim or delim.class != "sublist" %}
+                      <tr class="end-sublist">
+                          <td colspan="{% qa_table_colspan perms %}"></td>
+                      </tr>
+                      {% endif %}
+                    {% endwith %}
+                  {% endif %}
+
+                {% endfor %}
+
+                {% if test_list_instance.attachment_set.exists %}
+                  <tr>
+                    <td><strong>Attachments</strong></td>
+
+                    <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
+                      {% for attach in test_list_instance.attachment_set.all %}
+                        <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
+                      {% endfor %}
+                    </td>
+                  </tr>
+                {% endif %}
+
+              </tbody>
+            </table>
+
+            {% if test_list_instance.comments.exists %}
+              <table class="table table-bordered table-striped table-condensed" >
+                <thead>
+                  <tr>
+                    <th colspan="3" style="text-align: center">Comments</th>
+                  </tr>
+                  <tr>
+                    <th>User</th>
+                    <th>Date</th>
+                    <th style="width: 70%">Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for c in test_list_instance.comments.all %}
+                    <tr>
+                      <td>{{ c.user }}</td>
+                      <td>{{ c.submit_date|date:"Y-m-d H:i:s" }}</dt>
+                      <td style="width: 70%">{{ c.comment }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  {% endwith %}
+
+  </body>
+</html>

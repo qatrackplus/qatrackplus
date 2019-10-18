@@ -69,5 +69,5 @@ class GroupLinkerSerializer(serializers.HyperlinkedModelSerializer):
 class GroupLinkerInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
-        models = models.GroupLinkerInstance
+        model = models.GroupLinkerInstance
         fields = "__all__"

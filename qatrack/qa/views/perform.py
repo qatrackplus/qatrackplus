@@ -12,12 +12,13 @@ from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.files.base import ContentFile
-from django.core.urlresolvers import reverse
-from django.db.models import Q
+from django.db import transaction
+from django.db.models import Q, QuerySet
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import CreateView, TemplateView, View
@@ -33,6 +34,8 @@ import scipy
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
+from qatrack.qatrack_core.utils import parse_date, parse_datetime
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -82,7 +85,7 @@ def attachment_info(attachment):
 
 class CompositeUtils:
 
-    def __init__(self, user, unit, test_list, meta, context, comments):
+    def __init__(self, user, unit, test_list, meta, context, comments, skips):
         self.context = context
         self.context['__user_attached__'] = []
         self.user = user
@@ -90,12 +93,19 @@ class CompositeUtils:
         self.meta = meta
         self.test_list = test_list
         self.comments = comments
+        self.skips = skips
 
     def set_comment(self, comment):
         self.context["__comment__"] = comment
 
     def get_comment(self, slug):
         return self.comments.get(slug, "")
+
+    def set_skip(self, slug, skip):
+        self.skips[slug] = skip
+
+    def get_skip(self, slug):
+        return self.skips.get(slug, False)
 
     def write_file(self, fname, obj):
 
@@ -130,7 +140,7 @@ class CompositeUtils:
         except models.TestListInstance.DoesNotExist:
             return None
 
-    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False):
+    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False, exclude_skipped=True):
         try:
             slug = test.slug
         except AttributeError:
@@ -146,6 +156,8 @@ class CompositeUtils:
             qs = qs.filter(test_list_instance__test_list=self.test_list)
         if not include_in_progress:
             qs = qs.exclude(test_list_instance__in_progress=True)
+        if exclude_skipped:
+            qs = qs.exclude(skipped=True)
 
         try:
             return qs.latest("work_completed")
@@ -160,9 +172,14 @@ class CompositeUtils:
 
 def get_context_refs_tols(unit, tests):
 
+    if isinstance(tests, QuerySet):
+        ids = tests.values_list("id")
+    else:
+        ids = [x.id for x in tests]
+
     utis = models.UnitTestInfo.objects.filter(
         unit=unit,
-        test_id__in=tests.values_list("id"),
+        test_id__in=ids,
         active=True,
     ).select_related("reference", "test", "tolerance",).values(
         "test__slug",
@@ -259,6 +276,7 @@ class UploadHandler:
             results["success"] = True
             results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
             results["comment"] = self.calculation_context.get("__comment__")
+            results["skips"] = self.calculation_context['UTILS'].skips
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
@@ -295,6 +313,7 @@ class UploadHandler:
                 pass
 
         comments = self.data["comments"]
+        skips = self.data.get("skips", {})
         self.calculation_context.update({
             "FILE": open(self.attachment.attachment.path, "r"),
             "BIN_FILE": self.attachment.attachment,
@@ -308,6 +327,7 @@ class UploadHandler:
                 meta_data,
                 self.calculation_context,
                 comments,
+                skips,
             ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -318,6 +338,7 @@ class Upload(JSONResponseMixin, View):
 
     # use html for IE8's sake :(
     content_type = "text/html"
+    json_encoder_class = QATrackJSONEncoder
 
     def post(self, *args, **kwargs):
         """process file, apply calculation procedure and return results"""
@@ -394,6 +415,7 @@ class Upload(JSONResponseMixin, View):
             results["success"] = True
             results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
             results["comment"] = self.calculation_context.get("__comment__")
+            results["skips"] = self.calculation_context['UTILS'].skips
         except models.Test.DoesNotExist:
             results["errors"].append("Test with that ID does not exist")
         except Exception:
@@ -431,9 +453,16 @@ class Upload(JSONResponseMixin, View):
                 pass
 
         comments = self.get_json_data("comments")
+        skips = self.get_json_data("skips")
+
+        try:
+            f = open(self.attachment.attachment.path, "r")
+        except NotImplementedError:
+            self.attachment.attachment.open("r")
+            f = self.attachment.attachment
 
         self.calculation_context.update({
-            "FILE": open(self.attachment.attachment.path, "r"),
+            "FILE": f,
             "BIN_FILE": self.attachment.attachment,
             "META": meta_data,
             "REFS": refs,
@@ -445,6 +474,7 @@ class Upload(JSONResponseMixin, View):
                 meta_data,
                 self.calculation_context,
                 comments,
+                skips,
             ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -472,7 +502,7 @@ class CompositePerformer:
 
         try:
             self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
-            self.all_tests = self.test_list.all_tests()
+            self.all_tests = list(self.test_list.all_tests())
         except (KeyError, models.TestList.DoesNotExist):
             return {"success": False, "errors": ["Invalid or missing test_list_id"]}
 
@@ -480,6 +510,9 @@ class CompositePerformer:
             self.unit = Unit.objects.get(pk=self.data["unit_id"])
         except (KeyError, Unit.DoesNotExist):
             return {"success": False, "errors": ["Invalid or missing unit_id"]}
+
+        self.set_test_types()
+        self.set_formatters()
 
         self.set_composite_test_data()
         if not self.composite_tests:
@@ -500,21 +533,40 @@ class CompositePerformer:
         for slug in self.calculation_order:
             raw_procedure = self.composite_tests[slug]
             procedure = process_procedure(raw_procedure)
+            tb_limit = 5
             try:
                 code = compile(procedure, "__QAT+COMP_%s" % slug, "exec")
                 exec(code, self.calculation_context)
                 key = "result" if "result" in self.calculation_context else slug
                 result = self.calculation_context[key]
 
+                if type(result) == float and result in (numpy.nan, numpy.inf):
+                    raise ValueError("%s has a result of '%s'" % (slug, str(result)))
+                else:
+                    try:
+                        # since the json test is happening in our code, we
+                        # don't want to send full traceback information.
+                        # instead, limit to not JSON serializable error
+                        tb_limit = 0
+                        json.dumps(result, cls=QATrackJSONEncoder)  # ensure result is JSON serializable
+                        tb_limit = 5
+                    except TypeError as e:
+                        raise ValueError("%s failed with error: %s." % (slug, str(e)))
+
+                formatted = utils.format_qc_value(result, self.formatters.get(slug))
+
                 results[slug] = {
                     'value': result,
+                    'formatted': formatted,
                     'error': None,
                     'user_attached': list(self.calculation_context.get("__user_attached__", [])),
                     'comment': self.calculation_context.get("__comment__"),
                 }
                 self.calculation_context[slug] = result
             except Exception:
-                msg = traceback.format_exc(limit=5, chain=True).split("__QAT+COMP_")[-1].replace("<module>", slug)
+                msg = traceback.format_exc(
+                    limit=tb_limit, chain=True
+                ).split("__QAT+COMP_")[-1].replace("<module>", slug)
                 results[slug] = {
                     'value': None,
                     'error': "Invalid Test Procedure: %s" % msg,
@@ -533,16 +585,23 @@ class CompositePerformer:
 
                 del self.calculation_context['__user_attached__'][:]
 
-        return {"success": True, "errors": [], "results": results}
+        skips = self.calculation_context['UTILS'].skips
+
+        return {"success": True, "errors": [], "results": results, "skips": skips}
+
+    def set_formatters(self):
+        """Set formatters for tests where applicable"""
+        self.formatters = {x.slug: x.formatting for x in self.all_tests if x.type in models.NUMERICAL_TYPES}
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
+        self.composite_tests = {
+            x.slug: x.calculation_procedure for x in self.all_tests if x.type in models.COMPOSITE_TYPES
+        }
 
-        composite_tests = self.all_tests.filter(
-            type__in=models.COMPOSITE_TYPES,
-        ).values_list("slug", "calculation_procedure")
-
-        self.composite_tests = dict(composite_tests)
+    def set_test_types(self):
+        """retrieve calculation procs for all composite tests"""
+        self.test_types = {x.slug: x.type for x in self.all_tests}
 
     def set_calculation_context(self):
         """set up the environment that the composite test will be calculated in"""
@@ -563,6 +622,7 @@ class CompositePerformer:
         refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
         comments = self.data.get("comments", {})
+        skips = self.data.get("skips", {})
         self.calculation_context.update({
             "META": meta_data,
             "REFS": refs,
@@ -574,6 +634,7 @@ class CompositePerformer:
                 meta_data,
                 self.calculation_context,
                 comments,
+                skips,
             ),
         })
 
@@ -583,7 +644,14 @@ class CompositePerformer:
 
         for slug, val in values.items():
             self.context_keys.append(slug)
-            if slug not in self.composite_tests:
+            if self.test_types[slug] in models.DATE_TYPES:
+                has_time = self.test_types[slug] == models.DATETIME
+                parser = parse_datetime if has_time else parse_date
+                try:
+                    self.calculation_context[slug] = parser(val)
+                except:  # noqa: E722
+                    self.calculation_context[slug] = None
+            elif slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
     def set_dependencies(self):
@@ -633,6 +701,8 @@ class CompositePerformer:
 
 class CompositeCalculation(JSONResponseMixin, View):
     """validate all qa tests in the request for the :model:`TestList` with id test_list_id"""
+
+    json_encoder_class = QATrackJSONEncoder
 
     def post(self, *args, **kwargs):
         """calculate and return all composite values"""
@@ -713,6 +783,8 @@ class ChooseUnit(TemplateView):
 
             ordered = {}
             for s in unit_site_types:
+                if len(unit_site_types[s]) == 0:
+                    continue
                 ordered[s] = sorted(
                     list(unit_site_types[s].items()), key=lambda x: min([u[units_ordering] for u in x[1]])
                 )
@@ -721,9 +793,7 @@ class ChooseUnit(TemplateView):
 
             context['split_sites'] = True
 
-            split_by = 12 / len(ordered)
-            if split_by < 3:
-                split_by = 3
+            split_by = max(3, 12 / max(1, len(ordered)))
             context['split_by'] = int(split_by)
 
         else:
@@ -866,6 +936,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.user_set_status = False
             return models.TestInstanceStatus.objects.default()
 
+    @transaction.atomic
     def form_valid(self, form):
         """
         TestListInstance form has validated, now check for validity of
@@ -911,7 +982,9 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         attachments = []
 
+        has_tli_comment = False
         if form.cleaned_data['comment']:
+            has_tli_comment = True
             comment = Comment(
                 submit_date=timezone.now(),
                 user=self.request.user,
@@ -921,9 +994,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             )
             comment.save()
 
-        for delta, ti_form in enumerate(formset):
-
-            now = self.object.created + timezone.timedelta(milliseconds=delta)
+        for order, ti_form in enumerate(formset):
 
             attachments.extend(ti_form.attachments_to_process)
 
@@ -936,7 +1007,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 reference=ti_form.unit_test_info.reference,
                 tolerance=ti_form.unit_test_info.tolerance,
                 status=status,
-                created=now,
+                order=order,
+                created=self.object.created,
                 created_by=self.request.user,
                 modified_by=self.request.user,
                 test_list_instance=self.object,
@@ -945,7 +1017,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             )
             ti.calculate_pass_fail()
             if not self.user_set_status:
-                ti.auto_review()
+                ti.auto_review(has_tli_comment=has_tli_comment)
 
             to_save.append(ti)
 
@@ -985,12 +1057,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
-            try:
-                signals.testlist_complete.send(sender=self, instance=self.object, created=False)
-            except:
-                messages.add_message(
-                    request=self.request, message='Error sending notification email.', level=messages.ERROR
-                )
+            signals.testlist_complete.send(sender=self, instance=self.object, created=False)
 
         # let user know request succeeded and return to unit list
         messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
@@ -1040,7 +1107,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         context["formset"] = formset
         context["history_dates"] = self.history_dates
-        context['categories'] = set([x.test.category for x in self.unit_test_infos])
+        context['categories'] = sorted(set([x.test.category for x in self.unit_test_infos]), key=lambda c: c.name)
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
@@ -1058,7 +1125,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         context["test_list"] = self.test_list
         context["in_progress"] = in_progress
-        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos(), cls=QATrackJSONEncoder)
         context["unit_test_collection"] = self.unit_test_col
         context["contacts"] = list(Contact.objects.all().order_by("name"))
 
@@ -1131,6 +1198,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     form_class = forms.UpdateTestListInstanceForm
     formset_class = forms.UpdateTestInstanceFormSet
 
+    @transaction.atomic
     def form_valid(self, form):
 
         self.form = form
@@ -1140,6 +1208,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         if formset.is_valid():
             self.object = form.save(commit=False)
+            self.has_tli_comment = self.object.comments.all().exists()
 
             initially_requires_reviewed = not self.object.all_reviewed
 
@@ -1150,13 +1219,21 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
             self.update_test_list_instance()
 
+            has_existing_attachments = set(
+                Attachment.objects.filter(testinstance__in=self.object.testinstance_set.all()).values_list(
+                    "testinstance_id",
+                    flat=True,
+                )
+            )
+
             for ti_form in formset:
 
                 ti = ti_form.save(commit=False)
 
                 self.update_test_instance(ti)
 
-                ti.attachment_set.clear()
+                if ti.id in has_existing_attachments:
+                    ti.attachment_set.clear()
 
                 for uti_pk, attachment in ti_form.attachments_to_process:
                     attachment.testinstance = ti
@@ -1188,7 +1265,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             if not self.object.in_progress:
                 try:
                     signals.testlist_complete.send(sender=self, instance=self.object, created=False)
-                except:
+                except:  # noqa: E722
                     messages.add_message(
                         request=self.request,
                         message='Error sending notification email.',
@@ -1262,9 +1339,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         try:
             ti.calculate_pass_fail()
             if not self.user_set_status:
-                ti.auto_review()
+                ti.auto_review(has_tli_comment=self.has_tli_comment)
 
-            ti.save()
+            ti.save(calculate_pass_fail=False)
         except ZeroDivisionError:
 
             msga = "Tried to calculate percent diff with a zero reference value. "
@@ -1308,7 +1385,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         )
         self.unit_test_infos = list(sorted(utis, key=lambda x: uti_pks.index(x.pk)))
 
-        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos())
+        context["unit_test_infos"] = json.dumps(self.template_unit_test_infos(), cls=QATrackJSONEncoder)
 
         context['attachments'] = context['test_list'].attachment_set.all(
         ) | self.object.unit_test_collection.tests_object.attachment_set.all()
