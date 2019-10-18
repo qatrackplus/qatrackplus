@@ -2,11 +2,13 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.forms.utils import ErrorList, ValidationError
-from django.utils.translation import ugettext as _, ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
-from .models import Attachment
 from qatrack.qa import models as qa_models
 from qatrack.service_log import models as sl_models
+
+from .models import Attachment
 
 
 class AjaxModelChoiceField(forms.ModelChoiceField):
@@ -28,12 +30,12 @@ class AjaxModelChoiceField(forms.ModelChoiceField):
 
 class AttachmentAdminForm(forms.ModelForm):
 
-    test = AjaxModelChoiceField(qa_models.Test, required=False, label=_('Test'))
-    testlist = AjaxModelChoiceField(qa_models.TestList, required=False, label=_('Test List'))
-    testlistcycle = AjaxModelChoiceField(qa_models.TestListCycle, required=False, label=_('Test List Cycle'))
-    testinstance = AjaxModelChoiceField(qa_models.TestInstance, required=False, label=_('Test Instance'))
-    testlistinstance = AjaxModelChoiceField(qa_models.TestListInstance, required=False, label=_('Test List Instance'))
-    serviceevent = AjaxModelChoiceField(sl_models.ServiceEvent, required=False, label=_('Service Event'))
+    test = AjaxModelChoiceField(qa_models.Test, required=False, label=_l('Test'))
+    testlist = AjaxModelChoiceField(qa_models.TestList, required=False, label=_l('Test List'))
+    testlistcycle = AjaxModelChoiceField(qa_models.TestListCycle, required=False, label=_l('Test List Cycle'))
+    testinstance = AjaxModelChoiceField(qa_models.TestInstance, required=False, label=_l('Test Instance'))
+    testlistinstance = AjaxModelChoiceField(qa_models.TestListInstance, required=False, label=_l('Test List Instance'))
+    serviceevent = AjaxModelChoiceField(sl_models.ServiceEvent, required=False, label=_l('Service Event'))
 
     class Meta:
         model = Attachment
@@ -80,7 +82,7 @@ class AttachmentAdminForm(forms.ModelForm):
 
 class TypeFilter(admin.SimpleListFilter):
 
-    title = _('Attachment Type')
+    title = _l('Attachment Type')
     parameter_name = "typefilter"
 
     def lookups(self, request, model_admin):

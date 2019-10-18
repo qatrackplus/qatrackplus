@@ -2,9 +2,9 @@ from urllib.parse import urlencode
 
 from django import forms
 from django.contrib.auth.models import Group
-from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.utils.translation import ugettext as _
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import FormView, ListView
 
 from qatrack.units.models import Unit
@@ -16,34 +16,39 @@ class PaperBackupRequestForm(forms.Form):
     """Form for choosing paper backup options"""
 
     units = forms.models.ModelMultipleChoiceField(
+        label=_l("Units"),
         queryset=Unit.objects,
-        help_text=_("Choose which units to include")
+        help_text=_l("Choose which units to include")
     )
 
     frequencies = forms.models.ModelMultipleChoiceField(
+        label=_l("Frequencies"),
         queryset=models.Frequency.objects,
-        help_text=_("Choose which test list frequencies to include"),
+        help_text=_l("Choose which test list frequencies to include"),
     )
 
     test_categories = forms.models.ModelMultipleChoiceField(
+        label=_l("Categories"),
         queryset=models.Category.objects,
-        help_text=_("Choose which test categories to include"),
+        help_text=_l("Choose which test categories to include"),
     )
 
     assigned_to = forms.models.ModelMultipleChoiceField(
+        label=_l("Assigned To"),
         queryset=Group.objects,
-        help_text=_("Filter test lists by who they are assigned to"),
+        help_text=_l("Filter test lists by who they are assigned to"),
     )
 
     include_refs = forms.BooleanField(
-        label=_("References & Tolerances"),
+        label=_l("References & Tolerances"),
         initial=True,
         required=False,
-        help_text=_("Display references and tolerances in forms"),
+        help_text=_l("Display references and tolerances in forms"),
     )
 
     include_inactive = forms.BooleanField(
-        help_text=_("Include Inactive Test Lists"),
+        label=_l("Include Inactive"),
+        help_text=_l("Include Inactive Test Lists"),
         initial=False,
         required=False,
     )

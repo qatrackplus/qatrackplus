@@ -7,7 +7,8 @@ from django.contrib.auth.context_processors import PermWrapper
 from django.db.models import Q
 from django.template.loader import get_template
 from django.urls import resolve, reverse
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import UpdateView
 from listable.views import (
     DATE_RANGE,
@@ -177,8 +178,8 @@ class UTCList(BaseListableView):
     model = models.UnitTestCollection
 
     action = "perform"
-    action_display = "Perform"
-    page_title = "All QC"
+    action_display = _l("Perform")
+    page_title = _l("All QC")
     active_only = True
     inactive_only = False
     visible_only = True
@@ -234,13 +235,13 @@ class UTCList(BaseListableView):
     )
 
     headers = {
-        "name": _("Test List/Cycle"),
-        "unit__name": _("Unit"),
-        "frequency__name": _("Frequency"),
-        "assigned_to__name": _("Assigned To"),
-        "last_instance__work_completed": _("Completed"),
-        "last_instance_pass_fail": _("Pass/Fail Status"),
-        "last_instance_review_status": _("Review Status"),
+        "name": _l("Test List/Cycle"),
+        "unit__name": _l("Unit"),
+        "frequency__name": _l("Frequency"),
+        "assigned_to__name": _l("Assigned To"),
+        "last_instance__work_completed": _l("Completed"),
+        "last_instance_pass_fail": _l("Pass/Fail Status"),
+        "last_instance_review_status": _l("Review Status"),
     }
 
     prefetch_related = (

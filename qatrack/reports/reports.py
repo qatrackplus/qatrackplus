@@ -15,8 +15,8 @@ from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 import pandas as pd
 import xlsxwriter
 
@@ -622,7 +622,7 @@ class UTCReport(BaseReport):
             rows.append([
                 _("Test"),
                 _("Value"),
-                ("Reference"),
+                _("Reference"),
                 _("Tolerance"),
                 _("Pass/Fail"),
                 _("Review Status"),
@@ -659,12 +659,12 @@ class DueDatesReportMixin:
 
     def get_unit__site_details(self, val):
         sites = [x.name if x != "null" else _("No Site Assigned") for x in val]
-        return ("Site(s)", ", ".join(sites))
+        return (_("Site(s)"), ", ".join(sites))
 
     def get_unit_details(self, val):
         units = models.Unit.objects.select_related("site").filter(pk__in=val)
         units = ('%s - %s' % (u.site.name if u.site else _("No Site Assigned"), u.name) for u in units)
-        return ("Unit(s)", ', '.join(units))
+        return (_("Unit(s)"), ', '.join(units))
 
     def get_context(self):
 
@@ -754,7 +754,7 @@ class NextDueDatesReport(DueDatesReportMixin, BaseReport):
     template = "reports/reports/next_due.html"
 
     def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "next-due-dates-report"), report_format)
+        return "%s.%s" % (slugify(self.name or _("next-due-dates-report")), report_format)
 
 
 class DueAndOverdueQCReport(DueDatesReportMixin, BaseReport):
@@ -773,7 +773,7 @@ class DueAndOverdueQCReport(DueDatesReportMixin, BaseReport):
         ).exclude(due_date=None)
 
     def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "due-and-overdue-report"), report_format)
+        return "%s.%s" % (slugify(self.name or _("due-and-overdue-report")), report_format)
 
 
 class TestDataReport(BaseReport):
@@ -794,12 +794,15 @@ class TestDataReport(BaseReport):
 
         ntis = self.filter_set.qs.count()
         if ntis > self.MAX_TIS:
-            filter_form.add_error(
-                "__all__", "This report can only be generated with %d or fewer Test "
-                "Instances.  Your filters are including %d. Please reduce the "
-                "number of Tests, Sites, Units, or Work Completed time "
-                "period." % (self.MAX_TIS, ntis)
-            )
+            msg = _(
+                "This report can only be generated with %(max_num_test_instances)d or fewer Test "
+                "Instances.  Your filters are including %(num_test_instances)d. Please reduce the "
+                "number of Tests, Sites, Units, or Work Completed time period."
+            ) % {
+                'max_num_test_instances': self.MAX_TIS,
+                'num_test_instances': ntis
+            }
+            filter_form.add_error("__all__", msg)
 
         return filter_form.is_valid()
 
@@ -807,7 +810,7 @@ class TestDataReport(BaseReport):
         return models.TestInstance.objects.order_by("work_completed")
 
     def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "test-instance-values-report"), report_format)
+        return "%s.%s" % (slugify(self.name or _("test-instance-values-report")), report_format)
 
     def get_unit_test_info__test_details(self, val):
         return (
@@ -932,10 +935,10 @@ class TestDataReport(BaseReport):
 
         for unit_id, test_id in unit_test_combos:
             table[-1].append("%s - %s" % (units[unit_id], tests[test_id]))
-            table[-1].append("Reference")
-            table[-1].append("Tolerance")
-            table[-1].append("Peformed By")
-            table[-1].append("Comment")
+            table[-1].append(_("Reference"))
+            table[-1].append(_("Tolerance"))
+            table[-1].append(_("Peformed By"))
+            table[-1].append(_("Comment"))
 
         ncombos = len(unit_test_combos)
         table += [[ut] + [""] * (cells_per_ti * ncombos) for ut in unique_dates]

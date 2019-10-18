@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
 
 from qatrack.attachments.models import Attachment
@@ -343,33 +344,33 @@ class ServiceEventForm(BetterModelForm):
         queryset=models.ServiceArea.objects.all(), label='Service area'
     )
     duration_service_time = HoursMinDurationField(
-        label=_('Service time'), required=False,
+        label=_l('Service time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_service_time').help_text
     )
     duration_lost_time = HoursMinDurationField(
-        label=_('Lost time'), required=False,
+        label=_l('Lost time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
-        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Related Service Events'),
+        required=False, queryset=models.ServiceEvent.objects.none(), label=_l('Related Service Events'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
-    is_review_required = forms.BooleanField(required=False, label=_('Review required'))
+    is_review_required = forms.BooleanField(required=False, label=_l('Review required'))
     is_review_required_fake = forms.BooleanField(
-        required=False, widget=forms.CheckboxInput(), label=_('Review required'), initial=True,
+        required=False, widget=forms.CheckboxInput(), label=_l('Review required'), initial=True,
         help_text=models.ServiceEvent._meta.get_field('is_review_required').help_text
     )
 
     test_list_instance_initiated_by = TLIInitiatedField(
-        required=False, label=_('Initiated By'), queryset=qa_models.TestListInstance.objects.none()
+        required=False, label=_l('Initiated By'), queryset=qa_models.TestListInstance.objects.none()
     )
 
     initiated_utc_field = forms.ModelChoiceField(
         required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated By',
-        help_text=_('Was there a QC session that initiated this service event?')
+        help_text=_l('Was there a QC session that initiated this service event?')
     )
     service_type = forms.ModelChoiceField(
-        queryset=models.ServiceType.objects.filter(is_active=True), label=_('Service type'),
+        queryset=models.ServiceType.objects.filter(is_active=True), label=_l('Service type'),
         widget=ModelSelectWithOptionTitles(model=models.ServiceType, title_variable='description')
     )
     service_status = forms.ModelChoiceField(
@@ -377,8 +378,8 @@ class ServiceEventForm(BetterModelForm):
         queryset=models.ServiceEventStatus.objects.none()
     )
     qafollowup_comments = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 3}), required=False, label=_('Add Comment'),
-        help_text=_('Comments related to return to service')
+        widget=forms.Textarea(attrs={'rows': 3}), required=False, label=_l('Add Comment'),
+        help_text=_l('Comments related to return to service')
     )
 
     se_attachments = forms.FileField(
@@ -658,7 +659,7 @@ class ServiceEventForm(BetterModelForm):
 
         new = item_val_to_string(new)
         old = item_val_to_string(old)
-        name = self.fields[item].label
+        name = str(self.fields[item].label)
 
         return name, new, old
 

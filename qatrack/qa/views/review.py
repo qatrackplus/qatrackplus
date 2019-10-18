@@ -10,7 +10,8 @@ from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import (
     DeleteView,
     DetailView,
@@ -165,13 +166,13 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             if settings.USE_SERVICE_LOG:
                 changed_se = test_list_instance.update_service_event_statuses()
                 if len(changed_se) > 0 and self.from_se:
-                    messages.add_message(
-                        request=self.request, level=messages.INFO,
-                        message='Changed status of service event(s) %s to "%s".' % (
-                            ', '.join(str(x) for x in changed_se),
-                            ServiceEventStatus.get_default().name
-                        )
-                    )
+                    msg = _(
+                        'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+                    ) % {
+                        'service_event_ids': ', '.join(str(x) for x in changed_se),
+                        'serviceeventstatus_name': ServiceEventStatus.get_default().name,
+                    }
+                    messages.add_message(request=self.request, level=messages.INFO, message=msg)
         if settings.USE_SERVICE_LOG and initially_requires_reviewed != still_requires_review:
             for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
                 ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
@@ -183,10 +184,8 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
 
         # let user know request succeeded and return to unit list
-        messages.add_message(
-            request=self.request, message=_("Successfully updated %s " % self.object.test_list.name),
-            level=messages.SUCCESS
-        )
+        msg = _("Successfully updated %(test_list_name)s") % {'test_list_name': self.object.test_list.name}
+        messages.add_message(request=self.request, message=msg, level=messages.SUCCESS)
         return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
@@ -246,7 +245,7 @@ class UTCReview(PermissionRequiredMixin, UTCList):
         return 'fa-users'
 
     def get_page_title(self):
-        return "Review Test List Data"
+        return _("Review Test List Data")
 
 
 class UTCYourReview(PermissionRequiredMixin, UTCList):
@@ -256,13 +255,13 @@ class UTCYourReview(PermissionRequiredMixin, UTCList):
     raise_exception = True
 
     action = "review"
-    action_display = "Review"
+    action_display = _l("Review")
 
     def get_icon(self):
         return 'fa-users'
 
     def get_page_title(self):
-        return "Review Your Test List Data"
+        return _("Review Your Test List Data")
 
 
 class UTCFrequencyReview(UTCYourReview):
@@ -286,7 +285,9 @@ class UTCFrequencyReview(UTCYourReview):
         return 'fa-clock-o'
 
     def get_page_title(self):
-        return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+        return _(" Review %(frequency_names)s Test Lists") % {
+            'frequency_names': ", ".join([x.name for x in self.frequencies])
+        }
 
 
 class UTCUnitReview(UTCYourReview):
@@ -302,7 +303,7 @@ class UTCUnitReview(UTCYourReview):
         return 'fa-cube'
 
     def get_page_title(self):
-        return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
+        return _(" Review %(unit_names)s Test Lists") % {'unit_names': ", ".join([x.name for x in self.units])}
 
 
 class ChooseUnitForReview(ChooseUnit):
@@ -327,7 +328,7 @@ class InactiveReview(UTCReview):
     inactive_only = True
 
     def get_page_title(self):
-        return "Review All Inactive Test Lists"
+        return _("Review All Inactive Test Lists")
 
     def get_icon(self):
         return 'fa-file'
@@ -340,7 +341,7 @@ class YourInactiveReview(UTCYourReview):
     inactive_only = True
 
     def get_page_title(self):
-        return "Review Your Inactive Test Lists"
+        return _("Review Your Inactive Test Lists")
 
     def get_icon(self):
         return 'fa-file'
@@ -357,7 +358,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         return models.TestListInstance.objects.unreviewed()
 
     def get_page_title(self):
-        return "Unreviewed Test List Instances"
+        return _("Unreviewed Test List Instances")
 
 
 class UnreviewedVisibleTo(Unreviewed):
@@ -368,7 +369,7 @@ class UnreviewedVisibleTo(Unreviewed):
         return models.TestListInstance.objects.your_unreviewed(self.request.user)
 
     def get_page_title(self):
-        return "Unreviewed Test List Instances Visible To Your Groups"
+        return _("Unreviewed Test List Instances Visible To Your Groups")
 
 
 class ChooseGroupVisibleTo(ListView):
@@ -392,7 +393,9 @@ class UnreviewedByVisibleToGroup(Unreviewed):
         return 'fa-users'
 
     def get_page_title(self):
-        return "Unreviewed Test List Instances Visible To " + models.Group.objects.get(pk=self.kwargs['group']).name
+        return _("Unreviewed Test List Instances Visible To %(group_name)s") % {
+            'group_name': models.Group.objects.get(pk=self.kwargs['group']).name
+        }
 
 
 class DueDateOverview(PermissionRequiredMixin, TemplateView):
@@ -403,11 +406,11 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     raise_exception = True
 
     DUE_DISPLAY_ORDER = (
-        ("overdue", "Due & Overdue"),
-        ("this_week", "Due This Week"),
-        ("next_week", "Due Next Week"),
-        ("this_month", "Due This Month"),
-        ("next_month", "Due Next Month"),
+        ("overdue", _l("Due & Overdue")),
+        ("this_week", _l("Due This Week")),
+        ("next_week", _l("Due Next Week")),
+        ("this_month", _l("Due This Month")),
+        ("next_month", _l("Due Next Month")),
     )
 
     def check_permissions(self, request):
@@ -478,7 +481,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
                 due["next_month"].append(utc)
 
             units.add(str(utc.unit))
-            freqs.add(str(utc.frequency or "Ad-Hoc"))
+            freqs.add(str(utc.frequency or _("Ad-Hoc")))
             groups.add(str(utc.assigned_to))
 
         ordered_due_lists = []
@@ -516,11 +519,11 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Overview, self).get_context_data()
-        context['title'] = 'QC Program Overview'
-        context['msg'] = 'Overview of current QC status on all units'
+        context['title'] = _('QC Program Overview')
+        context['msg'] = _('Overview of current QC status on all units')
         if '-user' in self.request.path:
-            context['title'] += ' For Your Groups'
-            context['msg'] = 'Overview of current QC status (visible to your groups) on all units'
+            context['title'] = _('QC Program Overview For Your Groups')
+            context['msg'] = _('Overview of current QC status (visible to your groups) on all units')
             context['user_groups'] = True
         return context
 
@@ -561,7 +564,7 @@ class OverviewObjects(JSONResponseMixin, View):
         for unit in units:
             unit_freqs = collections.OrderedDict()
             for freq in frequencies:
-                freq_name = freq.name if freq else 'Ad Hoc'
+                freq_name = freq.name if freq else _('Ad Hoc')
                 if freq_name not in unit_freqs:
                     unit_freqs[freq_name] = collections.OrderedDict()
                 for utc in qs:
@@ -572,7 +575,7 @@ class OverviewObjects(JSONResponseMixin, View):
                             for lipfs in utc.last_instance.pass_fail_status():
                                 last_instance_pfs[lipfs[0]] = len(lipfs[2])
                         else:
-                            last_instance_pfs = 'New List'
+                            last_instance_pfs = _('New List')
 
                         ds = utc.due_status()
                         last_completed = utc.last_instance.work_completed if utc.last_instance else None
@@ -599,7 +602,10 @@ class UTCInstances(PermissionRequiredMixin, TestListInstances):
     def get_page_title(self):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
-            return "History for %s :: %s" % (utc.unit.name, utc.name)
+            return _("History for %(unit_name)s :: %(unit_test_collection_name)s") % {
+                'unit_name': utc.unit.name,
+                'unit_test_collection_name': utc.name
+            }
         except models.UnitTestCollection.DoesNotExist:
             raise Http404
 

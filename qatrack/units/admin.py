@@ -4,8 +4,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ChoiceField, ModelForm, ModelMultipleChoiceField
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.service_log.models import (
     ServiceArea,
@@ -34,7 +33,7 @@ class UnitFormAdmin(ModelForm):
             queryset=ServiceArea.objects.all(),
             required=False,
             widget=FilteredSelectMultiple(
-                verbose_name=_('Service areas'),
+                verbose_name=_l('Service areas'),
                 is_stacked=False
             )
         )
@@ -42,7 +41,7 @@ class UnitFormAdmin(ModelForm):
         queryset=Modality.objects.all(),
         required=False,
         widget=FilteredSelectMultiple(
-            verbose_name=_('Modalities'),
+            verbose_name=_l('Modalities'),
             is_stacked=False
         )
     )

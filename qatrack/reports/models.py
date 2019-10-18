@@ -2,7 +2,7 @@ from datetime import time as dt_time
 
 from django.contrib.auth.models import Group, User
 from django.db import models
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.qatrack_core.fields import JSONField
@@ -57,10 +57,10 @@ class SavedReport(models.Model):
 
     class Meta:
         permissions = (
-            ("can_run_reports", "Can Run Reports"),
-            ("can_create_reports", "Can create Reports"),
-            ("can_run_sql_reports", "Can run SQL Data Reports"),
-            ("can_create_sql_reports", "Can create SQL Data Reports"),
+            ("can_run_reports", _l("Can Run Reports")),
+            ("can_create_reports", _l("Can create Reports")),
+            ("can_run_sql_reports", _l("Can run SQL Data Reports")),
+            ("can_create_sql_reports", _l("Can create SQL Data Reports")),
         )
 
         ordering = ("title", "created",)

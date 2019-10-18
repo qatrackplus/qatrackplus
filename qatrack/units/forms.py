@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.timezone import timedelta
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from qatrack.service_log.forms import HoursMinDurationField
 from qatrack.units import models as u_models

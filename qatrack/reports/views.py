@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.http import Http404, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import get_template
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from qatrack.qatrack_core.utils import format_as_date

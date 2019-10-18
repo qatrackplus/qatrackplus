@@ -790,15 +790,14 @@ class TestComposite(TestCase):
             'results': {
                 'testc': {
                     'error': (
-                        'Invalid Test Procedure: testc", line 2, in '
+                        'Invalid Test Procedure: testc", line 1, in '
                         'testc\n'
                         'TypeError: unsupported operand type(s) for +: '
                         "'dict' and 'dict'\n"
                     ),
                     'user_attached': [],
                     "comment": "",
-                    'value':
-                        None
+                    'value': None
                 },
             },
             "skips": {},
@@ -904,7 +903,7 @@ class TestComposite(TestCase):
             'results': {
                 'testc': {
                     'error': (
-                        'Invalid Test Procedure: testc", line 2, in '
+                        'Invalid Test Procedure: testc", line 1, in '
                         'testc\n'
                         "NameError: name 'foo' is not defined\n"
                     ),

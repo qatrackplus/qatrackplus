@@ -4,12 +4,9 @@ from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.utils import format_as_date as fmt_date
-
-# ServiceArea = apps.get_app_config('service_log').get_model('ServiceArea')
-# UnitServiceArea = apps.get_app_config('service_log').get_model('UnitServiceArea')
 
 PHOTON = 'photon'
 ELECTRON = 'electron'
@@ -27,8 +24,8 @@ class Vendor(models.Model):
     Stores information (just name for now) of unit vendor.
     """
 
-    name = models.CharField(max_length=64, unique=True, help_text=_('Name of this vendor'))
-    notes = models.TextField(max_length=255, blank=True, null=True, help_text=_('Additional notes about this vendor'))
+    name = models.CharField(max_length=64, unique=True, help_text=_l('Name of this vendor'))
+    notes = models.TextField(max_length=255, blank=True, null=True, help_text=_l('Additional notes about this vendor'))
 
     objects = NameNaturalKeyManager()
 
@@ -49,7 +46,7 @@ class UnitClass(models.Model):
     Unit class, ie. linac, CT, MR, etc.
     """
 
-    name = models.CharField(max_length=64, unique=True, help_text=_('Name of this unit class'))
+    name = models.CharField(max_length=64, unique=True, help_text=_l('Name of this unit class'))
 
     objects = NameNaturalKeyManager()
 
@@ -70,7 +67,7 @@ class Site(models.Model):
 
     Allows for multiple site filtering (different campuses, buildings, hospitals, etc)
     """
-    name = models.CharField(max_length=64, unique=True, help_text=_('Name of this site'))
+    name = models.CharField(max_length=64, unique=True, help_text=_l('Name of this site'))
 
     class Meta:
         ordering = ("name",)
@@ -96,8 +93,8 @@ class UnitType(models.Model):
     vendor = models.ForeignKey(Vendor, null=True, blank=True, on_delete=models.PROTECT)
     unit_class = models.ForeignKey(UnitClass, null=True, blank=True, on_delete=models.PROTECT)
 
-    name = models.CharField(max_length=50, help_text=_('Name for this unit type'))
-    model = models.CharField(max_length=50, null=True, blank=True, help_text=_('Optional model name for this group'))
+    name = models.CharField(max_length=50, help_text=_l('Name for this unit type'))
+    model = models.CharField(max_length=50, null=True, blank=True, help_text=_l('Optional model name for this group'))
 
     objects = UnitTypeManager()
 
@@ -124,16 +121,16 @@ class Modality(models.Model):
     """
 
     name = models.CharField(
-        _('Name'),
+        _l('Name'),
         max_length=255,
-        help_text=_('Descriptive name for this modality'),
+        help_text=_l('Descriptive name for this modality'),
         unique=True
     )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
-        verbose_name_plural = _('Modalities')
+        verbose_name_plural = _l('Modalities')
 
     def natural_key(self):
         return (self.name,)
@@ -156,27 +153,27 @@ class Unit(models.Model):
     """Radiation devices
     Stores a single radiation device (e.g. Linac, Tomo unit, Cyberkinfe etc.)
     """
-    type = models.ForeignKey(UnitType, verbose_name=_("Unit Type"), on_delete=models.PROTECT)
+    type = models.ForeignKey(UnitType, verbose_name=_l("Unit Type"), on_delete=models.PROTECT)
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.PROTECT)
 
     number = models.PositiveIntegerField(
         null=False,
         blank=True,
         unique=True,
-        help_text=_('A unique number for this unit. Leave blank to have it assigned automatically'),
+        help_text=_l('A unique number for this unit. Leave blank to have it assigned automatically'),
     )
-    name = models.CharField(max_length=256, help_text=_('The display name for this unit'))
-    serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional serial number'))
-    location = models.CharField(max_length=256, null=True, blank=True, help_text=_('Optional location information'))
-    install_date = models.DateField(null=True, blank=True, help_text=_('Optional install date'))
+    name = models.CharField(max_length=256, help_text=_l('The display name for this unit'))
+    serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_l('Optional serial number'))
+    location = models.CharField(max_length=256, null=True, blank=True, help_text=_l('Optional location information'))
+    install_date = models.DateField(null=True, blank=True, help_text=_l('Optional install date'))
     date_acceptance = models.DateField(
-        verbose_name=_("Acceptance date"),
-        help_text=_('Changing acceptance date will delete unit available times that occur before it'),
+        verbose_name=_l("Acceptance date"),
+        help_text=_l('Changing acceptance date will delete unit available times that occur before it'),
     )
-    active = models.BooleanField(default=True, help_text=_('Set to false if unit is no longer in use'))
-    # restricted = models.BooleanField(default=False, help_text=_('Set to false to restrict unit from operation'))
+    active = models.BooleanField(default=True, help_text=_l('Set to false if unit is no longer in use'))
+    # restricted = models.BooleanField(default=False, help_text=_l('Set to false to restrict unit from operation'))
     is_serviceable = models.BooleanField(
-        default=True, help_text=_('Set to true to enable this unit to be selectable in service events')
+        default=True, help_text=_l('Set to true to enable this unit to be selectable in service events')
     )
 
     modalities = models.ManyToManyField(Modality)
@@ -248,9 +245,9 @@ class UnitAvailableTimeEdit(models.Model):
     """
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
-    name = models.CharField(max_length=64, help_text=_('A quick name or reason for the change'), blank=True, null=True)
-    date = models.DateField(help_text=_('Date of available time change'))
-    hours = models.DurationField(help_text=_('New duration of availability'))
+    name = models.CharField(max_length=64, help_text=_l('A quick name or reason for the change'), blank=True, null=True)
+    date = models.DateField(help_text=_l('Date of available time change'))
+    hours = models.DurationField(help_text=_l('New duration of availability'))
 
     class Meta:
         ordering = ['-date']
@@ -266,14 +263,14 @@ class UnitAvailableTime(models.Model):
 
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
-    date_changed = models.DateField(blank=True, help_text=_('Date the units available time changed or will change'))
-    hours_sunday = models.DurationField(help_text=_('Duration of available time on Sundays'))
-    hours_monday = models.DurationField(help_text=_('Duration of available time on Mondays'))
-    hours_tuesday = models.DurationField(help_text=_('Duration of available time on Tuesdays'))
-    hours_wednesday = models.DurationField(help_text=_('Duration of available time on Wednesdays'))
-    hours_thursday = models.DurationField(help_text=_('Duration of available time on Thursdays'))
-    hours_friday = models.DurationField(help_text=_('Duration of available time on Fridays'))
-    hours_saturday = models.DurationField(help_text=_('Duration of available time on Saturdays'))
+    date_changed = models.DateField(blank=True, help_text=_l('Date the units available time changed or will change'))
+    hours_sunday = models.DurationField(help_text=_l('Duration of available time on Sundays'))
+    hours_monday = models.DurationField(help_text=_l('Duration of available time on Mondays'))
+    hours_tuesday = models.DurationField(help_text=_l('Duration of available time on Tuesdays'))
+    hours_wednesday = models.DurationField(help_text=_l('Duration of available time on Wednesdays'))
+    hours_thursday = models.DurationField(help_text=_l('Duration of available time on Thursdays'))
+    hours_friday = models.DurationField(help_text=_l('Duration of available time on Fridays'))
+    hours_saturday = models.DurationField(help_text=_l('Duration of available time on Saturdays'))
 
     class Meta:
         ordering = ['-date_changed']
