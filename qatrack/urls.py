@@ -69,6 +69,11 @@ handler403 = 'qatrack.qatrack_core.views.handle_403'
 handler404 = 'qatrack.qatrack_core.views.handle_404'
 handler500 = 'qatrack.qatrack_core.views.handle_500'
 
+
+if settings.USE_ADFS:
+    urlpatterns.append(path('oauth2/', include('django_auth_adfs.urls')))
+
+
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [

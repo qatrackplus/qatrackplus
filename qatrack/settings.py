@@ -176,7 +176,7 @@ MIDDLEWARE = [
 
 
 # login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*"]
+LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2"]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
@@ -349,11 +349,11 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 
 # -----------------------------------------------------------------------------
 # Authentication backend settings
-AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     # 'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
-)
+]
 
 # active directory settings (not required if only using ModelBackend
 AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
@@ -481,6 +481,10 @@ LOGGING = {
             'handlers': ['console', 'migrate', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': True,
+        },
+        'django_auth_adfs': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
         },
     }
 }
@@ -670,6 +674,12 @@ if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
 if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
+
+if USE_ADFS:
+    AUTHENTICATION_BACKENDS.append('django_auth_adfs.backend.AdfsAuthCodeBackend')
+    INSTALLED_APPS.append('django_auth_adfs')
+
 
 
 if USE_SQL_REPORTS:
