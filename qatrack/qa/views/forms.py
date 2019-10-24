@@ -1,6 +1,5 @@
 from django import forms
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.forms.models import inlineformset_factory
@@ -136,8 +135,9 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
         self.in_progress = False
         self.fields["comment"].widget.attrs["rows"] = 2
 
-    def set_unit_test_info(self, unit_test_info):
+    def set_unit_test_info(self, unit_test_info, show_category):
         self.unit_test_info = unit_test_info
+        self.show_category = show_category or not settings.CATEGORY_FIRST_OF_GROUP_ONLY
         self.set_value_widget()
         self.disable_read_only_fields()
 
@@ -147,6 +147,7 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
             "tolerance": self.unit_test_info.tolerance,
             "unit_test_info": self.unit_test_info,
             "test": self.unit_test_info.test,
+            "show_category": self.show_category,
         }
 
 
@@ -181,8 +182,12 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
         super(CreateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
+        prev_cat = None
         for form, uti in zip(self.forms, unit_test_infos):
-            form.set_unit_test_info(uti)
+            cur_cat = uti.test.category_id
+            show_cat = cur_cat != prev_cat
+            prev_cat = cur_cat
+            form.set_unit_test_info(uti, show_cat)
 
 
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
@@ -212,7 +217,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
         }
 
 
-BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=UpdateTestInstanceForm, extra=0, can_delete=False)
+BaseUpdateTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=UpdateTestInstanceForm, extra=0, can_delete=False)  # noqa: E501
 
 
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
@@ -226,7 +231,7 @@ class ReviewTestInstanceForm(forms.ModelForm):
         fields = ("status", )
 
 
-BaseReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=ReviewTestInstanceForm, extra=0, can_delete=False)
+BaseReviewTestInstanceFormSet = inlineformset_factory(models.TestListInstance, models.TestInstance, form=ReviewTestInstanceForm, extra=0, can_delete=False)  # noqa: E501
 
 
 class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet):
@@ -325,7 +330,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
             if work_completed == work_started:
                 cleaned_data["work_completed"] = work_started + timezone.timedelta(seconds=60)
             elif work_completed < work_started:
-                self._errors["work_started"] = self.error_class(["Work started date/time can not be after work completed date/time"])
+                self._errors["work_started"] = self.error_class(
+                    ["Work started date/time can not be after work completed date/time"]
+                )
                 del cleaned_data["work_started"]
 
         if work_started:
@@ -345,7 +352,8 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
 
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
-        self.fields['work_started'].initial = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        ws = timezone.localtime(timezone.now()).strftime(settings.INPUT_DATE_FORMATS[0])
+        self.fields['work_started'].initial = ws
         self.fields['comment'].widget.attrs['rows'] = '3'
         self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
         self.fields['comment'].widget.attrs['class'] = 'autosize form-control'

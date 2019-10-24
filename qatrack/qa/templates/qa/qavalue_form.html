@@ -27,7 +27,7 @@
 {#        </tr>#}
     {% endif %}
 {% endfor %}
-<tr class="control-group qa-valuerow {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
+<tr class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
     {% for hidden in form.hidden_fields %}
         {{ hidden }}
@@ -40,7 +40,9 @@
                 <div class="procedure-bar">
                     <div class="comment-bar">
                         <div title="{{test.category.name}}" class="padding-left-5 padding-bottom-8">
-                          {{test.category.name}}
+                          {% if show_category %}
+                            {{test.category.name}}
+                          {% endif %}
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,13 @@ QATrack+ v0.3.0.15 Release Notes
 --------------------------------
 
 - The Active Unit Test Info filter was fixed
+- Fixed minimum width of Category display when performing QC tests
+- Added new setting `CATEGORY_FIRST_OF_GROUP_ONLY`.  When True,
+  if there is a group of sequential tests with the same category, only
+  the top most category name will be shown to allow better visual
+  separation of groups of categories.  Currently this defaults to False
+  to maintain current behaviour but this will default to True for the
+  v0.3.1 release.
 
 Upgrading to v0.3.0.15 from v0.3.0
 ..................................
