@@ -50,25 +50,18 @@ issues.
 Allowed Host Setting
 ....................
 
-If you are behind a hospital firewall you can set the `ALLOWED_HOSTS` setting to:
 
-.. code-block:: python
-
-    ALLOWED_HOSTS = ['*']
-
-otherwise you need to set allowed hosts either to your server name or IP
-address (e.g. for Apache):
+On Linux, set allowed hosts either to your server name or IP address (e.g. for Apache):
 
 .. code-block:: python
 
     ALLOWED_HOSTS = ['52.123.4.9']
 
-or if you are running QATrack+ behind a reverse proxy (e.g. using IIS &
-CherryPy or nginx):
+On Windows using CherryPy/IIS (or if you are running QATrack+ behind a reverse proxy on Linux):
 
 .. code-block:: python
 
-    ALLOWED_HOSTS = ['127.0.0.1']
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 DATABASES Setting
