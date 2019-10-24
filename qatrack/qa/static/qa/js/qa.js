@@ -283,6 +283,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $('.hover').removeClass('hover');
             }
         );
+        self.inputs.focus(function(){self.rows.addClass("hover");});
+        self.inputs.blur(function(){self.rows.removeClass("hover");});
+
         function show_comment() {
             self.comment.slideDown('fast');
             self.showing_comment = true;
