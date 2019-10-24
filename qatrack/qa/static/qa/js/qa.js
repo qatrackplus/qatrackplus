@@ -1138,6 +1138,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             do_not_treat = $('.do-not-treat');
 
         function display_fail(fail) {
+            if (do_not_treat.length === 0){
+                return;
+            }
             fail ? function() {
                 do_not_treat.show();
                 box_perform.switchClass('box-pho-borders', 'box-danger box-red-borders', 1000);

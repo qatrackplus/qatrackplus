@@ -1162,8 +1162,13 @@ class TestList(TestCollectionInterface, TestPackMixin):
     )
 
     warning_message = models.CharField(
-        max_length=255, help_text=_("Message given when a test value is out of tolerance"),
-        default=settings.DEFAULT_WARNING_MESSAGE
+        max_length=255,
+        help_text=_(
+            "Message given when a test value is out of tolerance.  Leave blank to "
+            "disable warnings from being shown when tests are out of tolerance."
+        ),
+        default=settings.DEFAULT_WARNING_MESSAGE,
+        blank=True,
     )
     utcs = GenericRelation('UnitTestCollection', related_query_name='test_list')
 
