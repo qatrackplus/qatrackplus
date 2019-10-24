@@ -27,7 +27,7 @@
 {#        </tr>#}
     {% endif %}
 {% endfor %}
-<tr class="control-group qa-valuerow {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
+<tr class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
     {% for hidden in form.hidden_fields %}
         {{ hidden }}
