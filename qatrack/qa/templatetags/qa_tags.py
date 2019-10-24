@@ -11,14 +11,15 @@ register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, test_list, perms, test_info=None, unit_test_collection=None):
+def qa_value_form(form, test_list, perms, test_info=None, unit_test_collection=None, show_category=True):
     template = get_template("qa/qavalue_form.html")
     c = {
         "form": form,
         "perms": perms,
         "test_list": test_list,
         "test_info": test_info,
-        'unit_test_collection': unit_test_collection
+        'unit_test_collection': unit_test_collection,
+        'show_category': show_category,
     }
     return template.render(c)
 
@@ -79,7 +80,9 @@ def tolerance_for_reference(tol, ref):
     tsd = settings.TEST_STATUS_DISPLAY
     if ref and ref.type == models.BOOLEAN:
         expected = ref.value_display()
-        return mark_safe('<span>%s: %s; %s: %s</span>' % (tsd['ok'], expected, tsd['action'], "Yes" if expected == "No" else "No"))
+        return mark_safe(
+            '<span>%s: %s; %s: %s</span>' % (tsd['ok'], expected, tsd['action'], "Yes" if expected == "No" else "No")
+        )
 
     if not tol:
         return mark_safe('<span><em>N/A</em></span>')
@@ -146,7 +149,11 @@ def as_review_status(test_list_instance):
     #     comment_count += 1
     comment_count += test_list_instance.comments.count()
     template = get_template("qa/review_status.html")
-    c = {"statuses": dict(statuses), "comments": comment_count, "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']}
+    c = {
+        "statuses": dict(statuses),
+        "comments": comment_count,
+        "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS'],
+    }
     return template.render(c)
 
 
@@ -162,7 +169,7 @@ def as_time_delta(time_delta):
     hours, remainder = divmod(time_delta.seconds, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
     return '%dd %dh %dm %ds' % (time_delta.days, hours, minutes, seconds)
-as_time_delta.safe = True
+as_time_delta.safe = True  # noqa E305
 
 
 @register.filter

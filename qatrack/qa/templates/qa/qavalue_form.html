@@ -40,7 +40,9 @@
                 <div class="procedure-bar">
                     <div class="comment-bar">
                         <div title="{{test.category.name}}" class="padding-left-5 padding-bottom-8">
-                          {{test.category.name}}
+                          {% if show_category %}
+                            {{test.category.name}}
+                          {% endif %}
                         </div>
                     </div>
                 </div>
