@@ -203,6 +203,28 @@ var QAUtils = new function() {
 
     };
 
+   //parse a date in dd-mmm-yyyy hh:mm format (24 hour clock) e..g 01 Oct 2019
+    this.parse_dd_mmm_yyyy_date= function(s){
+        var months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+        try {
+            var dt = s.split(" ");
+
+            var dd = parseInt(dt[0]);
+            var mm = months.indexOf(dt[1].toLowerCase());
+            var yy = parseInt(dt[2]);
+
+            var time = dt[3].split(':');
+            var hh = parseInt(time[0]);
+            var nn = parseInt(time[1]);
+            console.log(new Date(yy, mm, dd, hh, nn));
+            return new Date(yy, mm, dd, hh, nn);
+        }catch(err){
+            return null;
+        }
+
+    };
+
     //taken from http://n8v.enteuxis.org/2010/12/parsing-iso-8601-dates-in-javascript/
     this.parse_iso8601_date = function(s){
 
