@@ -525,8 +525,15 @@
                                                   </td>
                                               </tr>
                                             {% endif %}
+
+                                            {% if delim.class == "sublist" or test_form.get_test_info.show_category %}
+                                              {% qa_value_form test_form test_list perms test_info=test_form.get_test_info unit_test_collection=unit_test_collection show_category=1 %}
+                                            {% else %}
+                                              {% qa_value_form test_form test_list perms test_info=test_form.get_test_info unit_test_collection=unit_test_collection show_category=0 %}
+                                            {% endif %}
+
                                         {% endwith %}
-                                        {% qa_value_form test_form test_list perms test_info=test_form.get_test_info unit_test_collection=unit_test_collection %}
+
 
                                         {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
                                           {% with borders.starts|lookup:forloop.counter as delim %}

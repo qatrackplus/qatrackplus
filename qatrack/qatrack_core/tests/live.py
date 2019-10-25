@@ -101,17 +101,17 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
         orig_find_element = cls.driver.find_element
 
-        @retry_if_exception(WebDriverException, 5, sleep_time=1)
+        @retry_if_exception(WebDriverException, 10, sleep_time=1)
         def WebElement_find_element(*args, **kwargs):
             """Monky patch find element to allow retries"""
             return orig_find_element(*args, **kwargs)
         cls.driver.find_element = WebElement_find_element
 
-        cls.driver.set_page_load_timeout(5)
-        cls.driver.implicitly_wait(5)
+        cls.driver.set_page_load_timeout(10)
+        cls.driver.implicitly_wait(10)
 
         cls.maximize()
-        cls.wait = WebDriverWait(cls.driver, 5)
+        cls.wait = WebDriverWait(cls.driver, 10)
 
         super(SeleniumTests, cls).setUpClass()
 

@@ -12,14 +12,15 @@ register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, test_list, perms, test_info=None, unit_test_collection=None):
+def qa_value_form(form, test_list, perms, test_info=None, unit_test_collection=None, show_category=True):
     template = get_template("qa/qavalue_form.html")
     c = {
         "form": form,
         "perms": perms,
         "test_list": test_list,
         "test_info": test_info,
-        'unit_test_collection': unit_test_collection
+        'unit_test_collection': unit_test_collection,
+        'show_category': show_category,
     }
     return template.render(c)
 

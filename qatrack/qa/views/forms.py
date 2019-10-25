@@ -153,8 +153,9 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
         self.in_progress = False
         self.fields["comment"].widget.attrs["rows"] = 2
 
-    def set_unit_test_info(self, unit_test_info):
+    def set_unit_test_info(self, unit_test_info, show_category):
         self.unit_test_info = unit_test_info
+        self.show_category = show_category or not settings.CATEGORY_FIRST_OF_GROUP_ONLY
         self.set_value_widget()
         self.disable_read_only_fields()
 
@@ -164,6 +165,7 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
             "tolerance": self.unit_test_info.tolerance,
             "unit_test_info": self.unit_test_info,
             "test": self.unit_test_info.test,
+            "show_category": self.show_category,
         }
 
 
@@ -198,8 +200,12 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
         super(CreateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
+        prev_cat = None
         for form, uti in zip(self.forms, unit_test_infos):
-            form.set_unit_test_info(uti)
+            cur_cat = uti.test.category_id
+            show_cat = cur_cat != prev_cat
+            prev_cat = cur_cat
+            form.set_unit_test_info(uti, show_cat)
 
 
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):

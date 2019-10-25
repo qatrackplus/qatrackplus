@@ -255,6 +255,13 @@ Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. 
 
 
 
+CATEGORY_FIRST_OF_GROUP_ONLY
+............................
+
+When `CATEGORY_FIRST_OF_GROUP_ONLY = True`, then the category will only be shown for the first test of a consecutive group of tests sharing the same category, otherwise the category will be shown
+next to each test line when performing QC.
+
+
 CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
 ..................................................................
 

@@ -39,8 +39,10 @@
             <div class="error-bar {% if form.errors %}in{% endif %}">
                 <div class="procedure-bar">
                     <div class="comment-bar">
-                        <div title="{{test.category.name}}" class="padding-left-5">
-                          {{test.category.name}}
+                        <div title="{{test.category.name}}" class="padding-left-5 padding-bottom-8">
+                          {% if show_category %}
+                            {{test.category.name}}
+                          {% endif %}
                         </div>
                     </div>
                 </div>

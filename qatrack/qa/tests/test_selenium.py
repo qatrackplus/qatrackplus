@@ -285,6 +285,7 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
     def test_admin_unit(self):
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
 
         if not utils.exists('units', 'UnitType', 'name', objects['UnitType']['name']):
             utils.create_unit_type(
