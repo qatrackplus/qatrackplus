@@ -366,6 +366,12 @@ class GroupLinker(models.Model):
         default=False,
     )
 
+    required = models.BooleanField(
+        verbose_name=_("Required"),
+        help_text=_("Force users to add user from this group linker when creating a service event"),
+        default=False,
+    )
+
     description = models.TextField(
         null=True, blank=True, help_text=_('Describe the relationship between this group and service events.')
     )

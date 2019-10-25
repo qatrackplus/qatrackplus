@@ -241,9 +241,9 @@
                                 <div class="row margin-bottom-15">
                                     <div id="g-link-fields" class="col-md-12 form-horizontal">
                                         {% for field in form.fieldsets.g_link_fields %}
-                                            <div class="form-group margin-bottom-5{% if field.errors %}has-error{% endif %}" title="{{ field.field.title }}">
+                                            <div class="form-group margin-bottom-5{% if field.errors %} has-error{% endif %}" title="{{ field.field.title }}">
                                                 <label for="{{ field.id_for_label }}" class="col-sm-6{% if field.field.required %} required{% endif %}">
-                                                    <div>{{ field.label }}</div>
+                                                    <div>{{ field.label }}{% if field.field.required %} *{% endif %}</div>
                                                     {% if field.help_text %}<div class="help-block margin-0 display-inline-block">{{ field.help_text }}</div>{% endif %}
                                                 </label>
                                                 <div class="col-sm-6">

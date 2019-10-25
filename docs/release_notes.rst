@@ -63,6 +63,10 @@ Details of the v0.3.1 release
 * A new setting `SL_ALLOW_BLANK_SERVICE_AREA` has been added to optionally
   allow users to submit ServiceEvents without a ServiceArea set explicitly.
 
+* A new setting `SL_ALLOW_BLANK_SERVICE_TYPE` has been added to optionally
+  allow users to submit ServiceEvents without a ServiceType set explicitly.
+
+* Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group Linker required when submitting a ServiceEvent.
 
 * New :ref:`Date and Date & Time test types <qa_tests>` have been added to
   allow users to select dates/times with a calendar widget.

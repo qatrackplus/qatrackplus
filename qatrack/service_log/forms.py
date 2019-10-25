@@ -480,7 +480,7 @@ class ServiceEventForm(BetterModelForm):
                 queryset=queryset,
                 help_text=g_link.help_text,
                 label=g_link.name,
-                required=False,
+                required=g_link.required,
             )
             self.fields[field_name].widget.attrs.update({'class': 'select2'})
             if not g_link.multiple:

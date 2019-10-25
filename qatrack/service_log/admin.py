@@ -150,7 +150,7 @@ class GroupLinkerAdminForm(ModelForm):
 
 
 class GroupLinkerAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ['name', 'group', 'multiple', 'description', 'help_text']
+    list_display = ['name', 'group', 'required', 'multiple', 'description', 'help_text']
     list_filter = ['group']
     search_fields = ['name', 'group__name']
 
