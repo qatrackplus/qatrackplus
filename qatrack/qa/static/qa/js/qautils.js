@@ -217,7 +217,6 @@ var QAUtils = new function() {
             var time = dt[3].split(':');
             var hh = parseInt(time[0]);
             var nn = parseInt(time[1]);
-            console.log(new Date(yy, mm, dd, hh, nn));
             return new Date(yy, mm, dd, hh, nn);
         }catch(err){
             return null;
