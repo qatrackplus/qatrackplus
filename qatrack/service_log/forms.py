@@ -642,6 +642,7 @@ class ServiceEventForm(BetterModelForm):
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
         self.fields['service_area_field'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
+        self.fields['service_type'].required = not settings.SL_ALLOW_BLANK_SERVICE_TYPE
 
     def strigify_form_item(self, item):
 
@@ -751,6 +752,19 @@ class ServiceEventForm(BetterModelForm):
         # add the initial unit back to cleaned data since django tries to set it to None and unit is of course requried.
         if self.instance.pk and ('unit_field' not in self.cleaned_data or self.cleaned_data['unit_field'] is None):
             self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
+
+
+        if settings.SL_ALLOW_BLANK_SERVICE_TYPE and not self.cleaned_data.get('service_type'):
+            # If ST can be blank, then make sure appropriate ST exists
+            st, __ = models.ServiceType.objects.get_or_create(
+                name="Not specified",
+                defaults={
+                    'is_review_required': False,
+                    'is_active': True,
+                    'description': _("Unspecified service type"),
+                }
+            )
+            self.cleaned_data['service_type'] = st
 
         return self.cleaned_data
 

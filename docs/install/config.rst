@@ -349,6 +349,12 @@ Set `SL_ALLOW_BLANK_SERVICE_AREA = True` to allow users to create a ServiceEvent
 a blank ServiceArea set.  When a Service Event is saved without a ServiceArea explicitly set,
 the ServiceArea will be set to "Not Specified".
 
+SL_ALLOW_BLANK_SERVICE_TYPE
+...........................
+
+Set `SL_ALLOW_BLANK_SERVICE_TYPE = True` to allow users to create a ServiceEvent with
+a blank ServiceType set.  When a Service Event is saved without a ServiceType explicitly set,
+the ServiceType will be set to "Not Specified".
 
 TESTPACK_TIMEOUT
 ................
