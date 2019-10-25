@@ -58,7 +58,7 @@ from qatrack.qatrack_core.utils import (
     format_datetime,
     parse_date,
 )
-from qatrack.service_log import forms, models, signals
+from qatrack.service_log import forms, models
 from qatrack.units import models as u_models
 
 if settings.USE_PARTS:

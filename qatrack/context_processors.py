@@ -20,6 +20,7 @@ from qatrack.units.models import Unit
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
+cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
 cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
 cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
 cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
@@ -57,6 +58,7 @@ def update_unreviewed_cache(*args, **kwargs):
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
     cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
+    cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
     cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
 
 
@@ -65,10 +67,12 @@ def update_unreviewed_cache(*args, **kwargs):
 def update_rts_cache(*args, **kwargs):
     """When a RTS is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_RTS_QA_COUNT)
+    cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
 
 
 @receiver(post_save, sender=ServiceEventStatus)
 @receiver(post_delete, sender=ServiceEventStatus)
+@receiver(post_delete, sender=ServiceEvent)
 def update_se_cache(*args, **kwargs):
     """When a service status is changed invalidate the default and review count"""
     cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
@@ -112,13 +116,20 @@ def site(request):
         unreviewed = TestListInstance.objects.unreviewed_count()
         cache.set(settings.CACHE_UNREVIEWED_COUNT, unreviewed)
 
-    unreviewed_rts = cache.get(settings.CACHE_RTS_QA_COUNT)
-    if unreviewed_rts is None:
-        unreviewed_rts = ReturnToServiceQA.objects.filter(
+    se_unreviewed_rts = cache.get(settings.CACHE_RTS_QA_COUNT)
+    if se_unreviewed_rts is None:
+        se_unreviewed_rts = ReturnToServiceQA.objects.filter(
             test_list_instance__isnull=False,
             test_list_instance__all_reviewed=False
         ).count()
-        cache.set(settings.CACHE_RTS_QA_COUNT, unreviewed_rts)
+        cache.set(settings.CACHE_RTS_QA_COUNT, se_unreviewed_rts)
+
+    se_incomplete_rts = cache.get(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
+    if se_incomplete_rts is None:
+        se_incomplete_rts = ReturnToServiceQA.objects.filter(
+            test_list_instance__isnull=True,
+        ).count()
+        cache.set(settings.CACHE_RTS_INCOMPLETE_QA_COUNT, se_incomplete_rts)
 
     unreviewed_user_counts = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER)
     if unreviewed_user_counts is None and hasattr(request, "user"):
@@ -165,7 +176,6 @@ def site(request):
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'UNREVIEWED': unreviewed,
-        'UNREVIEWED_RTS': unreviewed_rts,
         'USERS_UNREVIEWED': your_unreviewed,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
@@ -178,6 +188,8 @@ def site(request):
         'USE_ISSUES': settings.USE_ISSUES,
         'DEFAULT_SE_STATUS': default_se_status,
         'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
+        'SE_RTS_INCOMPLETE_QA_COUNT': se_incomplete_rts,
+        'SE_RTS_UNREVIEWED_QA_COUNT': se_unreviewed_rts,
         'IN_PROGRESS': in_progress_count,
 
         # JavaScript Date Formats

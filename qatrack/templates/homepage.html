@@ -91,6 +91,19 @@
               {% trans "Open new service event" %}
             </a>
           {% endif %}
+          {% if perms.service_log.review_serviceevent %}
+            <a class="list-group-item" title="{% trans "Service Events Needing Review" %}" href="{% url 'sl_list_review_required' %}">
+              <i class="fa fa-stack fa-lg fa-fw">
+                <i class="fa fa-wrench fa-stack-custom-main"></i>
+                <i class="fa fa-question-circle fa-stack-custom-sub upper-left hover-sub-success"></i>
+              </i>
+              {% trans "Service Events Needing Review" %}
+              <span title="{% trans "There are currently {{SE_NEEDING_REVIEW_COUNT}} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                  <span class="total-unreviewed-count">{{SE_NEEDING_REVIEW_COUNT}}</span>
+              </span>
+            </a>
+          {% endif %}
+
           {% if perms.service_log.perform_returntoserviceqa %}
             <a class="list-group-item" title="{% trans "View all incomplete RTS QC" %}" href="{% url 'rtsqa_list_incomplete' %}">
               <i class="fa fa-stack fa-lg fa-fw">
@@ -98,12 +111,19 @@
                 <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
               </i>
               {% trans "View all incomplete return to service QC" %}
+
+              <span title="{% trans "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} incomplete return to service test lists" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0 %}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                  <span class="total-unreviewed-count">{{ SE_RTS_INCOMPLETE_QA_COUNT }}</span>
+              </span>
             </a>
           {% endif %}
           {% if perms.qa.can_review %}
             <a class="list-group-item" title="{% trans "View unreviewed RTS QC" %}" href="{% url 'rtsqa_list_unreviewed' %}">
               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
               {% trans "View unreviewed return to service QC" %}
+              <span title="{% trans "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>
+              </span>
             </a>
           {% endif %}
         </div>
