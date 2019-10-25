@@ -58,7 +58,7 @@ from qatrack.qatrack_core.utils import (
     format_datetime,
     parse_date,
 )
-from qatrack.service_log import forms, models
+from qatrack.service_log import forms, models, signals
 from qatrack.units import models as u_models
 
 if settings.USE_PARTS:
@@ -387,7 +387,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 service_status__in=models.ServiceEventStatus.objects.filter(is_review_required=True),
                 is_review_required=True
             ).count()
-            cache.set('se_needing_review_count', se_needing_review_count)
+            cache.set(settings.CACHE_SE_NEEDING_REVIEW_COUNT, se_needing_review_count)
 
         comment = form.cleaned_data['qafollowup_comments']
         if comment:
