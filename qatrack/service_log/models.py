@@ -215,6 +215,7 @@ class ServiceEvent(models.Model):
     is_active = models.BooleanField(default=True, blank=True)
 
     objects = ServiceEventManager()
+    all_objects = models.Manager()
 
     class Meta:
         get_latest_by = "datetime_service"

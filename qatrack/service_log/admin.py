@@ -57,9 +57,9 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
 
     filter_horizontal = ["service_event_related"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+    def get_queryset(self, request):
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+        # use our manager, rather than the default one
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
         if db_field.name == "unit_service_area":
@@ -71,7 +71,14 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
         return "Service Event #%d" % obj.pk
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+
+        qs = self.model.all_objects.get_queryset()
+
+        # we need this from the superclass method
+        ordering = self.ordering or () # otherwise we might try to *None, which is bad ;)
+        if ordering:
+            qs = qs.order_by(*ordering)
+
         qs = qs.select_related(
             "unit_service_area",
             "unit_service_area__service_area",
