@@ -5,10 +5,11 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.http import JsonResponse
 from django.shortcuts import HttpResponse, HttpResponseRedirect
-from django.utils.translation import ugettext as _
+from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import FormView
 from formtools.preview import FormPreview
 
@@ -19,14 +20,29 @@ from qatrack.qa.testpack import add_testpack, create_testpack
 class SetReferencesAndTolerancesForm(forms.Form):
     """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
 
-    source_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
-    content_type = forms.ChoiceField(choices=(('', '---------'), ('testlist', 'TestList'), ('testlistcycle', 'TestListCycle')))
+    source_unit = forms.ModelChoiceField(
+        label=_l("Source Unit"),
+        queryset=models.Unit.objects.all(),
+        help_text=_("Choose the unit to copy references and tolerances from"),
+    )
+    content_type = forms.ChoiceField(
+        label=_l("Copy from TestList or TestListCycle"),
+        choices=(
+            ('', '---------'),
+            ('testlist', _l('TestList')),
+            ('testlistcycle', _l('TestListCycle')),
+        )
+    )
 
     # Populate the source testlist field
-    source_testlist = forms.ChoiceField(choices=[], label='Source testlist(cycle)')
+    source_testlist = forms.ChoiceField(choices=[], label=_l('Source testlist(cycle)'))
 
     # Populate the dest_unit field
-    dest_unit = forms.ModelChoiceField(queryset=models.Unit.objects.all())
+    dest_unit = forms.ModelChoiceField(
+        label=_l("Destination Unit"),
+        help_text=_("Choose the unit to copy references and tolerances to"),
+        queryset=models.Unit.objects.all(),
+    )
 
     def __init__(self, *args, **kwargs):
 
@@ -61,7 +77,7 @@ class SetReferencesAndTolerances(FormPreview):
     def get_context(self, request, form):
 
         context = super(SetReferencesAndTolerances, self).get_context(request, form)
-        context['title'] = "Set References & Tolerances"
+        context['title'] = _("Set References & Tolerances")
         if not request.POST:
             return context
 
@@ -100,13 +116,13 @@ class SetReferencesAndTolerances(FormPreview):
     def done(self, request, cleaned_data):
 
         if 'cancel' in request.POST:
-            messages.warning(request, "Copy references & tolerances cancelled")
+            messages.warning(request, _("Copy references & tolerances cancelled"))
         else:
             form = SetReferencesAndTolerancesForm(request.POST)
             form.full_clean()
             form.save()
 
-            messages.success(request, "References & tolerances successfully copied")
+            messages.success(request, _("References & tolerances successfully copied"))
 
         return HttpResponseRedirect(reverse('qa_copy_refs_and_tols'))
 
@@ -134,8 +150,9 @@ def testlist_json(request, source_unit, content_type):
 
 class ExportTestPackForm(forms.Form):
 
-    name = forms.SlugField(label="Test Pack Name")
+    name = forms.SlugField(label=_l("Test Pack Name"))
     description = forms.CharField(
+        label=_("Description"),
         widget=forms.Textarea(attrs={'rows': 4, 'cols': ""}),
         required=False,
     )
@@ -169,7 +186,7 @@ class ExportTestPackForm(forms.Form):
 
     def clean(self):
         if not any(self.data[t].strip() for t in ['tests', 'testlists', 'testlistcycles']):
-            raise ValidationError("You must select at least one Test, TestList, or TestListCycle for Export")
+            raise ValidationError(_("You must select at least one Test, TestList, or TestListCycle for Export"))
         return super().clean()
 
 
@@ -182,7 +199,7 @@ class ExportTestPack(FormView):
     def get_context_data(self, **kwargs):
 
         context = super(ExportTestPack, self).get_context_data(**kwargs)
-        context['title'] = "Export Test Pack"
+        context['title'] = _("Export Test Pack")
 
         context['cycles'] = models.TestListCycle.objects.all()
         context['testlists'] = models.TestList.objects.only(
@@ -245,7 +262,7 @@ class ImportTestPack(FormView):
     def get_context_data(self, **kwargs):
 
         context = super(ImportTestPack, self).get_context_data(**kwargs)
-        context['title'] = "Import Test Pack"
+        context['title'] = _("Import Test Pack")
         context['test_types'] = json.dumps(dict(models.TEST_TYPE_CHOICES))
 
         return context
@@ -287,11 +304,11 @@ class ImportTestPack(FormView):
                 cycle_keys=cycles,
             )
             count_msg = ", ".join("%d/%d %s's" % (counts[k], totals[k], k) for k in totals)
-            msg = "Test Pack import successfully: %s were imported." % count_msg
+            msg = _("Test Pack import successfully: %(item_counts)s were imported.") % {'item_counts': count_msg}
 
             messages.success(self.request, msg)
-        except:
-            msg = "Sorry, but an error occurred when trying to import your TestPack. Please file a bug report."
+        except:  # noqa: E722
+            msg = _("Sorry, but an error occurred when trying to import your TestPack. Please file a bug report.")
             messages.error(self.request, msg)
 
         return super(ImportTestPack, self).form_valid(form)

@@ -3,7 +3,7 @@ from itertools import groupby
 import dateutil.parser
 from django import forms
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 import django_filters
 
 from qatrack.qa import models

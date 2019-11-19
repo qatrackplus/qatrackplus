@@ -10,7 +10,8 @@ from django.forms.widgets import (
     Select,
 )
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qa import models
 from qatrack.qa.utils import format_qc_value
@@ -18,7 +19,7 @@ from qatrack.qatrack_core.utils import format_datetime
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 
-BOOL_CHOICES = [(0, "No"), (1, "Yes")]
+BOOL_CHOICES = [(0, _l("No")), (1, _l("Yes"))]
 
 
 class UserFormsetMixin(object):
@@ -56,16 +57,16 @@ class TestInstanceWidgetsMixin(object):
         if self.unit_test_info.test.skip_required():
             # force user to enter value unless skipping test
             if value is None and not string_value and not skipped:
-                self._errors["value"] = self.error_class(["Value required if not skipping"])
+                self._errors["value"] = self.error_class([_("Value required if not skipping")])
             elif (value is not None or string_value) and skipped:
-                self._errors["value"] = self.error_class(["Clear value if skipping"])
+                self._errors["value"] = self.error_class([_("Clear value if skipping")])
 
             no_comment_required = (
                 self.user.has_perm("qa.can_skip_without_comment") or
                 self.unit_test_info.test.skip_without_comment
             )
             if not no_comment_required and skipped and not comment:
-                self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
+                self._errors["skipped"] = self.error_class([_("Please add comment when skipping")])
                 del cleaned_data["skipped"]
 
             if (value is None and not string_value) and skipped and "value" in self.errors:
@@ -93,7 +94,9 @@ class TestInstanceWidgetsMixin(object):
         elif test_type == models.CONSTANT:
             test = self.unit_test_info.test
             formatted = format_qc_value(test.constant_value, test.formatting)
-            self.fields["value"].widget.attrs['title'] = 'Actual value = %s' % test.constant_value
+            self.fields["value"].widget.attrs['title'] = _('Actual value = %(constant_value)s') % {
+                'constant_value': test.constant_value
+            }
             self.fields["value"].widget.attrs['data-formatted'] = formatted
         elif test_type == models.MULTIPLE_CHOICE:
             self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
@@ -143,8 +146,8 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
     string_value = forms.CharField(required=False)
 
-    skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
-    comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
+    skipped = forms.BooleanField(required=False, help_text=_l("Was this test skipped for some reason (add comment)"))
+    comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_l("Show or hide comment field"))
 
     user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
 
@@ -285,7 +288,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
     # now handle saving of qa or service event and link rtsqa
 
     tli_attachments = forms.FileField(
-        label="Attachments",
+        label=_l("Attachments"),
         max_length=150,
         required=False,
         widget=forms.FileInput(attrs={
@@ -361,13 +364,13 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 cleaned_data["work_completed"] = work_started + timezone.timedelta(seconds=60)
             elif work_completed < work_started:
                 self._errors["work_started"] = self.error_class(
-                    ["Work started date/time can not be after work completed date/time"]
+                    [_("Work started date/time can not be after work completed date/time")]
                 )
                 del cleaned_data["work_started"]
 
         if work_started:
             if work_started >= timezone.now().astimezone(timezone.get_current_timezone()):
-                self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
+                self._errors["work_started"] = self.error_class([_("Work started date/time can not be in the future")])
                 if "work_started" in cleaned_data:
                     del cleaned_data["work_started"]
 
@@ -378,14 +381,14 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
     comment = forms.CharField(widget=forms.Textarea, required=False)
-    initiate_service = forms.BooleanField(help_text=_('Initiate service event'), required=False)
+    initiate_service = forms.BooleanField(help_text=_l('Initiate service event'), required=False)
 
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
         now = timezone.localtime(timezone.now())
         self.fields['work_started'].initial = format_datetime(now)
         self.fields['comment'].widget.attrs['rows'] = '3'
-        self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
+        self.fields['comment'].widget.attrs['placeholder'] = _('Add comment about this set of tests')
         self.fields['comment'].widget.attrs['class'] = 'autosize form-control'
 
 
@@ -422,5 +425,5 @@ class ReviewTestListInstanceForm(forms.ModelForm):
         cleaned_data = super(ReviewTestListInstanceForm, self).clean()
 
         if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
-            raise ValidationError("You do not have the required permission to review your own tests.")
+            raise ValidationError(_("You do not have the required permission to review your own tests."))
         return cleaned_data

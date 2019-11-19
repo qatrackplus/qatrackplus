@@ -1,47 +1,48 @@
 {% extends "site_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 
-{% block head_title %}Up Time Summary{% endblock %}
+{% block head_title %}{% trans "Up Time Summary" %}{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
-    require(['down_time_summary']);
+  require(['down_time_summary']);
 {% endblock require_javascript %}
 
 {% block body_class %}layout-top-nav{% endblock body_class %}
 
 {% block body %}
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">
-                        <i class="fa fa-wrench" aria-hidden="true"></i>
-                        Down Time Summary
-                    </h3>
-                </div>
-                <div class="box-body">
-                    TODO
-                </div>
-                <div class="box-footer">
+<div class="row">
+  <div class="col-md-12">
+    <div class="box">
+      <div class="box-header">
+        <h3 class="box-title">
+          <i class="fa fa-wrench" aria-hidden="true"></i>
+          {% trans "Down Time Summary" %}
+        </h3>
+      </div>
+      <div class="box-body">
+        {# TODO #}
+      </div>
+      <div class="box-footer">
 
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div class="row">
-        <div class="col-md-12">
+<div class="row">
+  <div class="col-md-12">
 
-        </div>
-    </div>
+  </div>
+</div>
 {% endblock body %}

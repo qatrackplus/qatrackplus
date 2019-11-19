@@ -1,8 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.contrib import admin
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications.service_log import models
 
@@ -48,13 +47,13 @@ class ServiceEventNoticeAdmin(admin.ModelAdmin):
         (
             "Recipients", {
                 'fields': ["recipients"],
-                'description': _("Select which recipient group should receive this notification."),
+                'description': _l("Select which recipient group should receive this notification."),
             }
         ),
         (
             "Filters", {
                 'fields': ['units'],
-                'description': _("By using the below filters, you may limit this notification to certain units."),
+                'description': _l("By using the below filters, you may limit this notification to certain units."),
             }
         ),
     )

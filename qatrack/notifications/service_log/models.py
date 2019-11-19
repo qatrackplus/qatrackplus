@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications.common.models import RecipientGroup, UnitGroup
 

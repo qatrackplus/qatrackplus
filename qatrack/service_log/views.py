@@ -22,7 +22,8 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
@@ -787,13 +788,13 @@ class ServiceEventsBaseList(BaseListableView):
     )
 
     headers = {
-        'pk': _('ID'),
-        'datetime_service': _('Service Date'),
-        'unit_service_area__unit__name': _('Unit'),
-        'unit_service_area__service_area__name': _('Service Area'),
-        'service_type__name': _('Service Type'),
-        # 'problem_type__name': _('Problem Type'),
-        'service_status__name': _('Service Status'),
+        'pk': _l('ID'),
+        'datetime_service': _l('Service Date'),
+        'unit_service_area__unit__name': _l('Unit'),
+        'unit_service_area__service_area__name': _l('Service Area'),
+        'service_type__name': _l('Service Type'),
+        # 'problem_type__name': _l('Problem Type'),
+        'service_status__name': _l('Service Status'),
     }
 
     widgets = {
@@ -986,13 +987,13 @@ class ReturnToServiceQABaseList(BaseListableView):
     )
 
     headers = {
-        'service_event__datetime_service': _('Service Date'),
-        'service_event__unit_service_area__unit__name': _('Unit'),
-        'unit_test_collection__name': _('Test List'),
-        'test_list_instance__work_completed': _('Test List Completed'),
-        'test_list_instance_pass_fail': _('Pass/Fail'),
-        'test_list_instance_review_status': _('Review Status'),
-        'service_event__service_status__name': _('Service Event Status')
+        'service_event__datetime_service': _l('Service Date'),
+        'service_event__unit_service_area__unit__name': _l('Unit'),
+        'unit_test_collection__name': _l('Test List'),
+        'test_list_instance__work_completed': _l('Test List Completed'),
+        'test_list_instance_pass_fail': _l('Pass/Fail'),
+        'test_list_instance_review_status': _l('Review Status'),
+        'service_event__service_status__name': _l('Service Event Status')
     }
 
     widgets = {
@@ -1168,7 +1169,7 @@ class TLISelect(UTCInstances):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
             return "Select a %s instance" % utc.name
-        except:
+        except models.UnitTestCollection.DoesNotExist:
             raise Http404
 
     def actions(self, tli):
@@ -1234,15 +1235,15 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     )
 
     headers = {
-        # 'pk': _('ID'),
-        'datetime_service': _('Service Date'),
-        'unit_service_area__unit__name': _('Unit'),
-        'unit_service_area__unit__type__name': _('Unit Type'),
-        'unit_service_area__unit__active': _('Active'),
-        'unit_service_area__service_area__name': _('Service Area'),
-        # 'service_type__name': _('Service Type'),
-        'duration_service_time': _('Service Time (hh:mm)'),
-        'duration_lost_time': _('Lost Time (hh:mm)')
+        # 'pk': _l('ID'),
+        'datetime_service': _l('Service Date'),
+        'unit_service_area__unit__name': _l('Unit'),
+        'unit_service_area__unit__type__name': _l('Unit Type'),
+        'unit_service_area__unit__active': _l('Active'),
+        'unit_service_area__service_area__name': _l('Service Area'),
+        # 'service_type__name': _l('Service Type'),
+        'duration_service_time': _l('Service Time (hh:mm)'),
+        'duration_lost_time': _l('Lost Time (hh:mm)')
     }
 
     widgets = {

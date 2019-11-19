@@ -4,7 +4,7 @@ from dateutil import parser
 from django import forms
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from qatrack.qatrack_core.utils import format_as_date
 from qatrack.qatrack_core.widgets import ToolTipSelect

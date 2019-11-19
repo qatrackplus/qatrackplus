@@ -1,6 +1,6 @@
 from django.contrib.auth.models import Group, User
 from django.db import models
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 
 # this import has to be here so that the signal handlers get registered
 from qatrack.notifications.qccompleted import handlers as qccompleted_handlers  # noqa: F401
@@ -12,7 +12,10 @@ from qatrack.units.models import Unit
 
 class RecipientGroup(models.Model):
 
-    name = models.CharField(max_length=255, help_text=_l("Enter a name for this group of recipients"))
+    name = models.CharField(
+        max_length=255,
+        help_text=_l("Enter a name for this group of recipients"),
+    )
 
     groups = models.ManyToManyField(
         Group,

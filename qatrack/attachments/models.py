@@ -12,7 +12,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
+
 import qatrack.qa.models as qam
 import qatrack.service_log.models as slm
 
@@ -79,9 +81,9 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
 
 class Attachment(models.Model):
 
-    attachment = models.FileField(verbose_name=_("Attachment"), upload_to=get_upload_path, max_length=255)
-    label = models.CharField(verbose_name=_("Label"), max_length=255, blank=True)
-    comment = models.TextField(verbose_name=_("Comment"), blank=True)
+    attachment = models.FileField(verbose_name=_l("Attachment"), upload_to=get_upload_path, max_length=255)
+    label = models.CharField(verbose_name=_l("Label"), max_length=255, blank=True)
+    comment = models.TextField(verbose_name=_l("Comment"), blank=True)
 
     test = models.ForeignKey(qam.Test, on_delete=models.CASCADE, null=True, blank=True)
     testlist = models.ForeignKey(qam.TestList, on_delete=models.CASCADE, null=True, blank=True)
@@ -156,7 +158,7 @@ class Attachment(models.Model):
     def clean(self):
         nowners = sum(1 for o in self._possible_owners if o)
         if nowners > 1:
-            raise ValidationError(_("An attachment should only have one owner"))
+            raise ValidationError(_l("An attachment should only have one owner"))
 
     @property
     def is_image(self):
@@ -172,4 +174,4 @@ class Attachment(models.Model):
         return is_img or force
 
     def __str__(self):
-        return "Attachment(%s, %s)" % (self.owner or _("No Owner"), self.attachment.name)
+        return "%s(%s, %s)" % (_("Attachment"), self.owner or _("No Owner"), self.attachment.name)

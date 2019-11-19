@@ -18,8 +18,8 @@ from django.utils import timezone
 from django.utils.html import escape, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
 
@@ -190,7 +190,7 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
 class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
 
     admin_views = (
-        ('Copy References & Tolerances', 'redirect_to'),
+        (_l("Copy References & Tolerances"), 'redirect_to'),
     )
 
     actions = ['set_multiple_references_and_tolerances']
@@ -288,7 +288,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
         if [has_bool, has_num, has_str].count(True) > 1 or has_upload:
             messages.error(
                 request,
-                (
+                _(
                     "Invalid combination of tests selected.  Tests must be either all "
                     "Numerical types, all String types, or all Boolean"
                 )
@@ -331,8 +331,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
             }
             return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
-
-    set_multiple_references_and_tolerances.short_description = "Set multiple references and tolerances"
+    set_multiple_references_and_tolerances.short_description = _l("Set multiple references and tolerances")
 
     def save_model(self, request, test_info, form, change):
         """create new reference when user updates value"""
@@ -401,7 +400,9 @@ class TestListAdminForm(forms.ModelForm):
         slug = self.cleaned_data.get("slug")
         dup = models.TestList.objects.exclude(pk=self.instance.pk).filter(slug=slug)
         if dup:
-            raise forms.ValidationError("A test list with the slug '%s' already exists in the database" % slug)
+            raise forms.ValidationError(
+                _("A test list with the slug '%(test_name)s' already exists in the database") % {'test_name': slug}
+            )
         return slug
 
     def clean(self):
@@ -416,10 +417,10 @@ class TestListAdminForm(forms.ModelForm):
 
         duplicates = list(set([sn for sn in slugs if slugs.count(sn) > 1]))
         if duplicates:
-            msg = (
-                "The following test macro names are duplicated (either in this test list or one of its sublists) :: " +
-                ",".join(duplicates)
+            msg = _(
+                "The following test macro names are duplicated (either in this test list or one of its sublists) :: "
             )
+            msg += ",".join(duplicates)
             raise forms.ValidationError(msg)
 
         return self.cleaned_data
@@ -452,19 +453,23 @@ class SublistInlineFormSet(forms.models.BaseInlineFormSet):
         children_with_child = [child for child in children if child.children.exists()]
         if self.instance and self.instance in children:
             raise forms.ValidationError(
-                "A Test List can not be its own child. Please remove Sublist ID %d and try again" % (self.instance.pk)
+                _("A Test List can not be its own child. Please remove Sublist ID %(sublist_id)d and try again") %
+                {'sublist_id': self.instance.pk}
             )
         elif children_with_child:
             names = ', '.join(c.name for c in children_with_child)
             raise forms.ValidationError(
-                "Test Lists can not be nested more than 1 level. "
-                "Test List(s) %s already has(have) a sublist and therefore can't be used as a sublist." % names
+                _(
+                    "Test Lists can not be nested more than 1 level. Test List(s) "
+                    "%(test_list_names)s already has(have) a sublist and therefore can't be used as a sublist."
+                ) % {'test_list_names': names}
             )
         elif self.instance and self.instance.sublist_set.exists() and children:
             raise forms.ValidationError(
-                "This Test List is a Sublist of Test Lists: %s"
-                " and therefore can't have sublists of its own." %
-                ', '.join(self.instance.sublist_set.values_list("parent__name", flat=True))
+                _(
+                    "This Test List is a Sublist of Test Lists: %(sublist_name)s"
+                    " and therefore can't have sublists of its own."
+                ) % {'sublist_name': ', '.join(self.instance.sublist_set.values_list("parent__name", flat=True))}
             )
 
         return self.cleaned_data
@@ -613,15 +618,15 @@ class ActiveTestListFilter(admin.SimpleListFilter):
     NOACTIVEUTCS = 'noactiveutcs'
     HASACTIVEUTCS = 'hasactiveutcs'
 
-    title = _('Active Unit Assignments')
+    title = _l('Active Unit Assignments')
 
     # Parameter for the filter that will be used in the URL query.
     parameter_name = 'activeutcs'
 
     def lookups(self, request, model_admin):
         return (
-            (self.NOACTIVEUTCS, _('No Active Unit Assignments')),
-            (self.HASACTIVEUTCS, _('At Least One Active Unit Assignment')),
+            (self.NOACTIVEUTCS, _l('No Active Unit Assignments')),
+            (self.HASACTIVEUTCS, _l('At Least One Active Unit Assignment')),
         )
 
     def queryset(self, request, qs):
@@ -645,7 +650,7 @@ class ActiveTestListFilter(admin.SimpleListFilter):
 
 class UnitTestListFilter(admin.SimpleListFilter):
 
-    title = _('Assigned to Unit')
+    title = _l('Assigned to Unit')
 
     # Parameter for the filter that will be used in the URL query.
     parameter_name = 'assignedtounit'
@@ -665,13 +670,13 @@ class UnitTestListFilter(admin.SimpleListFilter):
 
 class FrequencyTestListFilter(admin.SimpleListFilter):
 
-    title = _('Assigned To Units by Frequency')
+    title = _l('Assigned To Units by Frequency')
 
     # Parameter for the filter that will be used in the URL query.
     parameter_name = 'assignedbyfreq'
 
     def lookups(self, request, model_admin):
-        return [("adhoc", "Ad Hoc")] + list(models.Frequency.objects.values_list("pk", "name"))
+        return [("adhoc", _("Ad Hoc"))] + list(models.Frequency.objects.values_list("pk", "name"))
 
     def queryset(self, request, qs):
 
@@ -690,8 +695,8 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
 class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     admin_views = (
-        ('Export Test Pack', 'export_testpack'),
-        ('Import Test Pack', 'import_testpack'),
+        (_l("Export Test Pack"), 'export_testpack'),
+        (_l("Import Test Pack"), 'import_testpack'),
     )
 
     prepopulated_fields = {'slug': ('name',)}
@@ -737,13 +742,13 @@ class TestForm(forms.ModelForm):
         user_changing_type = self.instance.type != test_type
         has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
         if user_changing_type and has_history:
-            msg = (
+            msg = _(
                 "You can't change the test type of a test that has already been performed. "
-                "Revert to '%s' before saving."
+                "Revert to '%(test_type)s' before saving."
             )
             ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
             ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
-            self.add_error('type', forms.ValidationError(msg % ttype_label))
+            self.add_error('type', forms.ValidationError(msg % {'test_type': ttype_label}))
 
         if test_type not in models.NUMERICAL_TYPES:
             cleaned_data['formatting'] = ''
@@ -753,7 +758,7 @@ class TestForm(forms.ModelForm):
                 try:
                     format_qc_value(123.4, fmt)
                 except:  # noqa: E722
-                    self.add_error("formatting", forms.ValidationError("Invalid numerical format"))
+                    self.add_error("formatting", forms.ValidationError(_("Invalid numerical format")))
 
         editing_hidden = self.instance.pk is not None and cleaned_data.get("hidden")
         if editing_hidden:
@@ -767,7 +772,7 @@ class TestForm(forms.ModelForm):
                     url = reverse("admin:qa_unittestinfo_change", args=(uti,))
                     links.append((url, name))
 
-                title = _("Click to edit the reference and tolerance (opens in new window)")
+                title = _(_("Click to edit the reference and tolerance l(opens in new window)"))
                 html_links = format_html_join(
                     ", ", '<a href="{}" title="{}" target="_blank">{}</a>', ((u, title, l) for (u, l) in links)
                 )
@@ -783,15 +788,15 @@ class TestListMembershipFilter(admin.SimpleListFilter):
     NOMEMBERSHIPS = 'nomemberships'
     HASMEMBERSHIPS = 'hasmemberships'
 
-    title = _('Test List Membership')
+    title = _l('Test List Membership')
 
     # Parameter for the filter that will be used in the URL query.
     parameter_name = 'tlmembership'
 
     def lookups(self, request, model_admin):
         return (
-            (self.NOMEMBERSHIPS, _('No TestList Membership')),
-            (self.HASMEMBERSHIPS, _('At Least One TestList Membership')),
+            (self.NOMEMBERSHIPS, _l('No TestList Membership')),
+            (self.HASMEMBERSHIPS, _l('At Least One TestList Membership')),
         )
 
     def queryset(self, request, queryset):
@@ -832,7 +837,7 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
         if 'calculation_procedure' in form.changed_data:
             cp = obj.calculation_procedure or ""
             if "pyplot" in cp or "pylab" in cp:
-                warning = (
+                warning = _(
                     "Warning: Instead of using pyplot or pylab, it is recommended that you use "
                     "the object oriented interface to matplotlib."
                 )
@@ -840,57 +845,55 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
         if obj.procedure:
             if not obj.procedure.startswith("http"):
-                warning = "Warning: test procedure links should usually begin with http:// or https://"
+                warning = _("Warning: test procedure links should usually begin with http:// or https://")
                 messages.add_message(request, messages.WARNING, warning)
 
         super(TestAdmin, self).save_model(request, obj, form, change)
 
     @mark_safe
     def obj_created(self, obj):
-        fmt = '<abbr title="Created by %s">%s</abbr>'
+        link_title = _("Created by %(username)s") % {'username': obj.created_by}
         dt = date_formatter(timezone.localtime(obj.created), "DATETIME_FORMAT")
-        return fmt % (obj.created_by, dt)
-
+        return '<abbr title="%s">%s</abbr>' % (link_title, dt)
     obj_created.admin_order_field = "created"
-    obj_created.short_description = "Created"
+    obj_created.short_description = _l("Created")
 
     @mark_safe
     def obj_modified(self, obj):
-        fmt = '<abbr title="Modified by %s">%s</abbr>'
+        link_title = _("Modified by %(username)s") % {'username': obj.modified_by}
         dt = date_formatter(timezone.localtime(obj.modified), "DATETIME_FORMAT")
-        return fmt % (obj.modified_by, dt)
-
+        return '<abbr title="Modified by %s">%s</abbr>' % (link_title, dt)
     obj_modified.admin_order_field = "modified"
-    obj_modified.short_description = "Modified"
+    obj_modified.short_description = _l("Modified")
 
 
 def unit_name(obj):
     return obj.unit.name
 unit_name.admin_order_field = "unit__name"  # noqa: E305
-unit_name.short_description = "Unit"
+unit_name.short_description = _l("Unit")
 
 
 def site_name(obj):
-    return obj.unit.site.name if obj.unit.site else "No Site Assigned"
+    return obj.unit.site.name if obj.unit.site else _l("No Site Assigned")
 site_name.admin_order_field = "unit__site__name"  # noqa: E305
-site_name.short_description = "Site"
+site_name.short_description = _l("Site")
 
 
 def freq_name(obj):
-    return obj.frequency.name if obj.frequency else "Ad Hoc"
+    return obj.frequency.name if obj.frequency else _l("Ad Hoc")
 freq_name.admin_order_field = "frequency__name"  # noqa: E305
-freq_name.short_description = "Frequency"
+freq_name.short_description = _l("Frequency")
 
 
 def assigned_to_name(obj):
     return obj.assigned_to.name
 assigned_to_name.admin_order_field = "assigned_to__name"  # noqa: E305
-assigned_to_name.short_description = "Assigned To"
+assigned_to_name.short_description = _l("Assigned To")
 
 
 class SiteFilter(admin.SimpleListFilter):
 
-    title = _('Site')
+    title = _l('Site')
     parameter_name = "sitefilter"
 
     def lookups(self, request, model_admin):
@@ -906,7 +909,7 @@ class SiteFilter(admin.SimpleListFilter):
 
 class UnitFilter(admin.SimpleListFilter):
 
-    title = _('Unit')
+    title = _l('Unit')
     parameter_name = "unitfilter"
 
     def lookups(self, request, model_admin):
@@ -922,11 +925,11 @@ class UnitFilter(admin.SimpleListFilter):
 
 class FrequencyFilter(admin.SimpleListFilter):
 
-    title = _('Frequency')
+    title = _l('Frequency')
     parameter_name = "freqfilter"
 
     def lookups(self, request, model_admin):
-        return [("adhoc", "Ad Hoc")] + list(models.Frequency.objects.values_list("pk", "name"))
+        return [("adhoc", _l("Ad Hoc"))] + list(models.Frequency.objects.values_list("pk", "name"))
 
     def queryset(self, request, queryset):
 
@@ -939,7 +942,7 @@ class FrequencyFilter(admin.SimpleListFilter):
 
 class AssignedToFilter(admin.SimpleListFilter):
 
-    title = _('Assigned To')
+    title = _l('Assigned To')
     parameter_name = "assignedtoname"
 
     def lookups(self, request, model_admin):
@@ -955,7 +958,7 @@ class AssignedToFilter(admin.SimpleListFilter):
 
 class ActiveFilter(admin.SimpleListFilter):
 
-    title = _('Active')
+    title = _l('Active')
     parameter_name = "activefilter"
 
     def lookups(self, request, model_admin):
@@ -994,10 +997,12 @@ class UnitTestCollectionForm(forms.ModelForm):
                 orig = str(self.instance.tests_object)
             else:
                 orig = getattr(self.instance, f)
-            err_msg = (
+            err_msg = _(
                 "To prevent data loss, you can not change the Unit, TestList or TestListCycle "
-                "of a UnitTestCollection after it has been created. The original value was: %s"
-            ) % orig
+                "of a UnitTestCollection after it has been created. The original value was: %(object_id)s"
+            ) % {
+                'object_id': orig
+            }
             self.add_error(f, err_msg)
 
         return data
@@ -1125,7 +1130,7 @@ class FrequencyAdmin(admin.ModelAdmin):
             processed.append(rule)
 
         return "<br/>".join(processed)
-    get_recurrences.short_description = "Recurrences"
+    get_recurrences.short_description = _l("Recurrences")
 
 
 class StatusAdmin(admin.ModelAdmin):
@@ -1158,13 +1163,13 @@ class StatusAdmin(admin.ModelAdmin):
     @mark_safe
     def get_colour(self, obj):
         return '<div style="display: inline-block; width: 20px; height:20px; background-color: %s;"></div>' % obj.colour
-    get_colour.short_description = "Color"
+    get_colour.short_description = _l("Color")
 
 
 def utc_unit_name(obj):
     return obj.unit_test_collection.unit.name
 utc_unit_name.admin_order_field = "unit_test_collection__unit__name"  # noqa: E305
-utc_unit_name.short_description = "Unit"
+utc_unit_name.short_description = _l("Unit")
 
 
 class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
@@ -1220,17 +1225,17 @@ class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     def test_list_name(self, obj):
         return obj.test_list_instance.test_list.name
-    test_list_name.short_description = _("Test List Name")
+    test_list_name.short_description = _l("Test List Name")
     test_list_name.admin_order_field = "test_list_instance__test_list__name"
 
     def test_name(self, obj):
         return obj.unit_test_info.test.name
-    test_name.short_description = _("Test Name")
+    test_name.short_description = _l("Test Name")
     test_name.admin_order_field = "unit_test_info__test__name"
 
     def unit_name(self, obj):
         return obj.unit_test_info.unit
-    unit_name.short_description = _("Unit Name")
+    unit_name.short_description = _l("Unit Name")
     unit_name.admin_order_field = "unit_test_info__unit__number"
 
     def has_add_permission(self, request):
@@ -1248,7 +1253,7 @@ class ToleranceForm(forms.ModelForm):
             params = forms.model_to_dict(self.instance)
             params.pop("id")
             if models.Tolerance.objects.filter(**params).count() > 0:
-                errs = ["Duplicate Tolerance. A Tolerance with these values already exists"]
+                errs = [_("Duplicate Tolerance. A Tolerance with these values already exists")]
                 self._update_errors({forms.models.NON_FIELD_ERRORS: errs})
 
 
@@ -1290,7 +1295,7 @@ class AutoReviewRuleSetAdminForm(forms.ModelForm):
         if is_default and not self.initial.get('is_default', False):
             if self.instance.pk is None and models.AutoReviewRuleSet.objects.filter(is_default=True).exists():
                 raise forms.ValidationError(
-                    'There must be one default auto review rule set. Edit another rule set to be default first.'
+                    _("There must be one default auto review rule set. Edit another rule set to be default first.")
                 )
         return is_default
 

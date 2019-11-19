@@ -2,8 +2,8 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications import models
 
@@ -70,15 +70,16 @@ class QCCompletedAdmin(admin.ModelAdmin):
         (
             "Recipients", {
                 'fields': ["recipients"],
-                'description': _("Select which recipient group should receive this notification."),
+                'description': _l("Select which recipient group should receive this notification."),
             }
         ),
         (
             "Filters", {
                 'fields': ['units', 'test_lists'],
-                'description':
-                    _("By using the below filters, you may limit this notification to "
-                      "certain units or test lists."),
+                'description': _l(
+                    "By using the below filters, you may limit this notification to "
+                    "certain units or test lists."
+                ),
             }
         ),
     )

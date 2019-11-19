@@ -4,8 +4,8 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.template.defaultfilters import truncatechars
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications import models
 import qatrack.notifications.qccompleted.admin as qccadmin  # noqa: F401
@@ -38,7 +38,7 @@ class RecipientGroupForm(forms.ModelForm):
                 invalid_emails.append(email)
 
         if invalid_emails:
-            self.add_error("emails", _("The following emails are invalid: ") + ", ".join(invalid_emails))
+            self.add_error("emails", "%s: %s" % (_("The following emails are invalid"), ", ".join(invalid_emails)))
 
         return ", ".join(sorted(invalid_emails + valid_emails))
 

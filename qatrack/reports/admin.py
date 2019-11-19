@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.contrib import admin
 import django.forms as forms
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.admin import BasicSaveUserAdmin
 from qatrack.reports.models import ReportSchedule, SavedReport
