@@ -811,13 +811,20 @@ class TestListMembershipFilter(admin.SimpleListFilter):
 class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
 
     inlines = [get_attachment_inline("test")]
-    list_display = ["name", "slug", "category", "type", 'obj_created', 'obj_modified']
+    list_display = ["name", "id", "slug", "category", "type", 'obj_created', 'obj_modified']
     list_filter = ["category", "type", TestListMembershipFilter, "testlistmembership__test_list"]
     search_fields = ["name", "slug", "category__name"]
+    readonly_fields = ("id",)
     save_as = True
 
     form = TestForm
     fieldsets = [
+        (
+            "Test ID",
+            {
+                'fields': ['id']
+            },
+        ),
         (
             "Test options",
             {
