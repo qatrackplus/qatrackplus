@@ -279,7 +279,7 @@
                                               {% endif %}
                                             {% endwith %}
                                           <tr>
-                                              <td><strong>{{test.name}}</strong></td>
+                                              <td title="{{ ti.unit_test_info.test.name }}"><strong>{{test}}</strong></td>
                                               <td class="review-value">
                                                   <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
                                                       {% with ti.pass_fail as status %}
@@ -328,7 +328,7 @@
 
                                           {% if ti.attachment_set.exists %}
                                               <tr class="qa-attach no-hover">
-                                                  <td>{{ti.unit_test_info.test.name}} Attachments</td>
+                                                  <td>{{ti.unit_test_info.test}} Attachments</td>
                                                   <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
                                                       <ul>
                                                           {% for attach in ti.attachment_set.all %}

@@ -186,12 +186,12 @@ class ChartView(PermissionRequiredMixin, TemplateView):
     def set_tests(self):
         """self.tests is set to all tests that are chartable"""
 
-        self.tests = models.Test.objects.order_by(
-            "name"
-        ).filter(
-            chart_visibility=True
-        ).values(
-            "pk", "category", "name", "description",
+        self.tests = models.Test.objects.order_by("name").filter(chart_visibility=True).values(
+            "pk",
+            "category",
+            "name",
+            "display_name",
+            "description",
         )
 
 

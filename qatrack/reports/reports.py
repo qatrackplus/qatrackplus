@@ -826,6 +826,7 @@ class TestDataReport(BaseReport):
         qs = self.filter_set.qs.values(
             "test_list_instance__work_completed",
             "unit_test_info__test__name",
+            "unit_test_info__test__display_name",
             "unit_test_info__test__type",
             "unit_test_info__unit__name",
             "unit_test_info__unit__site__name",
@@ -906,7 +907,7 @@ class TestDataReport(BaseReport):
             "unit_test_info__test",
         ).order_by(
             "unit_test_info__unit__%s" % settings.ORDER_UNITS_BY,
-            "unit_test_info__test__name",
+            "unit_test_info__test__display_name",
         ).distinct())
 
         unique_dates = list(qs.order_by(
@@ -920,7 +921,7 @@ class TestDataReport(BaseReport):
         date_rows = {d: i for i, d in enumerate(unique_dates)}
         ut_cols = {ut: i * cells_per_ti for i, ut in enumerate(unit_test_combos)}
 
-        tests = dict(qs.values_list("unit_test_info__test_id", "unit_test_info__test__name").distinct())
+        tests = dict(qs.values_list("unit_test_info__test_id", "unit_test_info__test__display_name").distinct())
 
         unit_qs = qs.values_list(
             "unit_test_info__unit_id",

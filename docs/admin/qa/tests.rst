@@ -13,7 +13,14 @@ configuring a tests are described below.
 Name
 ....
 
-A name that describes what the test is (e.g. something like *Temperature (deg C)* or *0 deg Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
+A unique name that describes what the test is (e.g. something like *Temperature (deg C)* or *0 deg Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
+
+Display Name (Optional)
+.......................
+
+Text describing how a test should be displayed when performing or reviewing. Having a separate name & display name allows
+you to create tests with descriptive names that are easy to find in the admin, but use a more succinct name when
+performing a Test List. If left blank, the test name will be used.
 
 Macro Name
 ..........

@@ -212,7 +212,7 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
     list_display = [test_name, "unit", test_type, "reference", "tolerance"]
     list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
     readonly_fields = ("reference", "test", "unit", "history")
-    search_fields = ("test__name", "test__slug", "unit__name")
+    search_fields = ("test__name", "test__display_name", "test__slug", "unit__name")
     # list_select_related = ['reference', 'tolerance', 'test', 'unit']
 
     def redirect_to(self, *args, **kwargs):
@@ -731,7 +731,7 @@ class TestForm(forms.ModelForm):
 
     class Meta:
         model = models.Test
-        fields = '__all__'
+        fields = "__all__"
 
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
@@ -817,6 +817,35 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
     save_as = True
 
     form = TestForm
+    fieldsets = [
+        (
+            "Test options",
+            {
+                'fields': ['name', 'display_name', 'slug', 'description', 'procedure', 'category'],
+            },
+        ),
+        (
+            "Test type options",
+            {
+                'fields': [
+                    'type',
+                    'flag_when',
+                    'choices',
+                    'constant_value',
+                    'calculation_procedure',
+                    'hidden',
+                    'skip_without_comment',
+                    'formatting',
+                ],
+            },
+        ),
+        (
+            "Autoreview Rules",
+            {
+                'fields': ['autoreviewruleset'],
+            },
+        ),
+    ]
 
     class Media:
         js = (

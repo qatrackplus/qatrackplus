@@ -92,6 +92,14 @@ Details of the v0.3.1 release
   to apply different AutoReviewRules to different tests. For more information see
   the :ref:`Auto Review page <qa_auto_review>`.
 
+* A new "Display Name" field has been added to tests.  This is an optional
+  field where you can add text describing how a test should be displayed when
+  performing or reviewing. Having a separate name & display name allows you to
+  create tests with descriptive names that are easy to find in the admin aread,
+  but use a more succinct name when performing a Test List. If left blank, the
+  test name will be used.
+
+
 Deprecations & Discontinuations
 ...............................
 

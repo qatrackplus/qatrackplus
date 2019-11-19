@@ -779,7 +779,23 @@ class Test(models.Model, TestPackMixin):
     VARIABLE_RE = re.compile("^[a-zA-Z_]+[0-9a-zA-Z_]*$")
     RESULT_RE = re.compile(r"^\s*result\s*=.*$", re.MULTILINE)
 
-    name = models.CharField(max_length=255, help_text=_l("Name for this test"), db_index=True, unique=True)
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=255,
+        help_text=_l("A unique identifying name for this test"),
+        db_index=True,
+        unique=True,
+    )
+    display_name = models.CharField(
+        verbose_name=_l("Display Name"),
+        max_length=255,
+        help_text=_l(
+            "How should this test be displayed when performing or reviewing? Leave blank to use the tests name."
+        ),
+        default="",
+        db_index=True,
+        blank=True,
+    )
     slug = models.SlugField(
         verbose_name="Macro name", max_length=128,
         help_text=_l(
@@ -1028,7 +1044,7 @@ class Test(models.Model, TestPackMixin):
 
     def __str__(self):
         """return display representation of object"""
-        return "%s" % (self.name)
+        return "%s" % (self.display_name or self.name)
 
 
 def get_utc_tlc_ids(active=None, units=None, frequencies=None):

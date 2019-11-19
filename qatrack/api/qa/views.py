@@ -204,7 +204,8 @@ def test_list_cycle_searcher(request):
 def test_instance_searcher(request):
     q = request.GET.get('q')
     testinstance = models.TestInstance.objects.filter(
-        Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q),
+        Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q)
+        | Q(unit_test_info__test__display_name__icontains=q),
     ).values('id', 'unit_test_info__test__name')[0:50]
     return JsonResponse({'items': list(testinstance), 'name': 'unit_test_info__test__name'})
 

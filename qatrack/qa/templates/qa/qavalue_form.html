@@ -8,7 +8,7 @@
                 <div class="error-container error-bar in">
                     {% for error in field.errors %}
                         <div class="qa-error-text">
-                            {{test_info.test.name}}:&nbsp;{{ error }}
+                            {{ test_info.test }}:&nbsp;{{ error }}
                         </div>
                     {% endfor %}
                 </div>
@@ -48,11 +48,11 @@
                 </div>
             </div>
         </td>
-        <td class="qa-name qa-showproc">
+        <td class="qa-name qa-showproc" title="{{ test.name }}">
           {%if test.procedure or test.description or test.attachment_set.count %}
-                <a href="#" class="revealprocedure" title="Show/hide procedure & attachments for this test">{{test.name}}</a>
+                <a href="#" class="revealprocedure" title="Show/hide procedure & attachments for this test">{{ test }}</a>
             {% else %}
-                {{test.name}}
+                {{ test }}
             {% endif %}
         </td>
         <td class="qa-value" title="{{form.value.help_text|safe}}" >
@@ -140,7 +140,7 @@
                             <h6>
                                 Detailed procedure link:
                                 <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">
-                                    {{form.unit_test_info.test.name}}
+                                    {{ form.unit_test_info.test }}
                                 </a>
                             </h6>
                         {% endif %}
