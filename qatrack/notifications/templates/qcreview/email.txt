@@ -1,0 +1,12 @@
+Hello,
+{% spaceless %}
+The following test lists assignments currently have unreviewed instances:
+{% endspaceless %}
+{% regroup notice.tlis_by_unit_utc by unit_test_collection__unit__name as unit_groups %}
+{% for unit, unit_utcs in unit_groups %}
+
+Unit: {{ unit }}
+===================================
+{% for unit_utc in unit_utcs %}{{ unit_utc.unit_test_collection__name }} : {{ unit_utc.unit_test_collection__name__count }} Unreviewed
+{% endfor %}
+{% endfor %}

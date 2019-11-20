@@ -56,6 +56,8 @@ Details of the v0.3.1 release
     *  You can now specify to send notifications to individual users as well as groups.
     *  You can now specify that a given notifications will only be sent for specific units or test lists.
 
+* New QC Scheduling & Unreviewed Notices. (Needs docs before release)
+
 * **Staff Status** has been renamed to **Admin Status** to reflect the fact that almost all QATrack+ users are "Staff"!
 
 * Test Instance points with comments associated with them will now be highlighed in charts

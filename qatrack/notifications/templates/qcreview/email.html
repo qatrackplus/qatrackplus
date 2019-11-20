@@ -1,0 +1,55 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% load i18n %}
+{% block title%}QATrack+ QC Review Notice{% endblock %}
+{% block preheader %}QATrack+ QC Review Notice{% endblock %}
+{% block extra_css %}
+  th.header {
+    font-weight: bold;
+  }
+  thead th.header {
+    text-align: center;
+  }
+  thead th {
+    font-weight: bold;
+    text-align: center;
+  }
+  tbody th.header {
+    padding-right: 10px;
+  }
+  .due-date {
+    text-align: center;
+    font-size: 0.9em;
+  }
+{% endblock %}
+{% block content %}
+<p>Hello,</p>
+<p>
+  The following test list assignments currently have unreviewed instances
+</p>
+<table style="border: none;" cellspacing="0" cellpadding="0">
+  <thead>
+    <tr>
+      <th class="header" style="border-bottom: 1px solid #ccc;">Unit</th>
+      <th style="border-bottom: 1px solid #ccc;">Test List (Cycle)</th>
+      <th style="border-bottom: 1px solid #ccc;">Unreviewed Count</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% regroup notice.tlis_by_unit_utc by unit_test_collectio__unit__name as unit_groups %}
+    {% for unit, unit_utcs in unit_groups %}
+      {% for unit_utc in unit_utcs %}
+        <tr>
+          {% if forloop.first %}
+            <th class="header">{{ unit }}</th>
+          {% else %}
+            <td>&nbsp;</td>
+          {% endif %}
+          <td>{{ unit_utc.unit_test_collection__name }}</td>
+          <td class="">{{ unit_utc.unit_test_collection__name__count }}</td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}
