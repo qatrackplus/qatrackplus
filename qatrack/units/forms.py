@@ -81,7 +81,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
         for f in self.fields:
             if f == 'date_changed':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
-                self.fields[f].input_formats = ['%d-%m-%Y', '%Y-%m-%d']
+                self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
             elif f in ['year_select', 'month_select']:
                 self.fields[f].widget.attrs['class'] = 'form-control'
             else:
@@ -96,7 +96,9 @@ class UnitAvailableTimeForm(forms.ModelForm):
     def clean_date_changed(self):
         date_changed = self.cleaned_data['date_changed']
         unit = self.cleaned_data.get('unit')
-        if unit and date_changed < unit.date_acceptance:
+        if not date_changed:
+            self.add_error('date_changed', 'Date Changed is a required field')
+        elif unit and date_changed < unit.date_acceptance:
             self.add_error('date_changed', 'Date changed cannot be before units acceptance date')
         return date_changed
 
@@ -116,7 +118,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         for f in self.fields:
             if f == 'date':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
-                self.fields[f].input_formats = ['%d-%m-%Y', '%Y-%m-%d']
+                self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
             elif f == 'hours':
                 self.fields[f].widget.attrs['class'] = 'form-control duration'
             elif f == 'units':
