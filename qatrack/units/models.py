@@ -234,7 +234,7 @@ class Unit(models.Model):
 
     def save(self, *args, **kwargs):
         if self.number in ("", None):
-            next_available = Unit.objects.all().aggregate(max_num=Max("number") + 1)['max_num']
+            next_available = Unit.objects.all().aggregate(max_num=Max("number") + 1)['max_num'] or 1
             self.number = next_available
         super().save(*args, **kwargs)
 
