@@ -608,9 +608,17 @@ class UTCReport(BaseReport):
                 [_("Duration") + ":", _("In Progress") if tli.in_progress else as_time_delta(tli.duration())],
                 [_("Modified") + ":", format_as_date(tli.modified)],
                 [_("Mofified By") + ":", format_user(tli.modified_by)],
-                [_("Reviewed") + ":", format_as_date(tli.reviewed)],
-                [_("Reviewed By") + ":", format_user(tli.reviewed_by)],
             ])
+            if tli.all_reviewed and not tli.reviewed_by:
+                rows.extend(
+                    [_("Reviewed") + ":", format_as_date(tli.modified)],
+                    [_("Reviewed By") + ":", _("Auto Reviewed")],
+                )
+            else:
+                rows.extend(
+                    [_("Reviewed") + ":", format_as_date(tli.reviewed)],
+                    [_("Reviewed By") + ":", format_user(tli.reviewed_by)],
+                )
 
             for c in context['comments'].get(tli.pk, []):
                 rows.append([_("Comment") + ":", format_datetime(c[0]), c[1], c[2]])
