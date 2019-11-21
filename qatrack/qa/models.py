@@ -137,8 +137,8 @@ PERMISSIONS = (
             ),
             (
                 'qa.can_choose_frequency',
-                _l("Choose QC by frequency"),
-                _l("Allows user to pre-emptively filter test lists based on frequency."),
+                _l("Choose QC by frequency or category"),
+                _l("Allows user to pre-emptively filter test lists based on frequency or category."),
             ),
             (
                 'qa.can_view_ref_tol',

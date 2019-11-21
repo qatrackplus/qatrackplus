@@ -790,6 +790,7 @@ class ChooseUnit(TemplateView):
                     'slug',
                     'name',
                 )
+                unit['categories'] = get_unit_categories(unit['unit__id'])
 
                 if unit['unit__site__name']:
                     unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
@@ -821,6 +822,7 @@ class ChooseUnit(TemplateView):
                 unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values(
                     'slug', 'name'
                 )
+                unit['categories'] = get_unit_categories(unit['unit__id'])
                 unit_types[unit["unit__type__name"]].append(unit)
 
             ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
@@ -829,6 +831,21 @@ class ChooseUnit(TemplateView):
         context['unit_types'] = ordered
 
         return context
+
+
+def get_unit_categories(unit_id):
+
+    cats = set()
+    qs = models.UnitTestCollection.objects.filter(
+        unit_id=unit_id,
+    ).values_list(
+        "test_list__testlistmembership__test__category__slug",
+        "test_list__testlistmembership__test__category__name",
+        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__slug",
+        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__name",
+    )
+    cats = {(tls, tln) if tls else (tlcs, tlcn) for tls, tln, tlcs, tlcn in qs if tls or tlcs}
+    return sorted(cats, key=lambda c: c[1])
 
 
 class PerformQA(PermissionRequiredMixin, CreateView):
@@ -1510,6 +1527,53 @@ class UnitFrequencyList(FrequencyList):
         title = '%(unit_names)s %(frequency_names)s Test Lists' % {
             'unit_names': ", ".join([x.name for x in self.units]),
             'frequency_names': ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]),
+        }
+        return title
+
+
+class CategoryList(UTCList):
+    """List :model:`qa.UnitTestCollection`s for requested :model:`qa.Frequency`s"""
+
+    def get_queryset(self):
+        """filter queryset by test category"""
+
+        qs = super(CategoryList, self).get_queryset()
+
+        categories = self.kwargs["category"].split("/")
+        self.categories = models.Category.objects.filter(slug__in=categories)
+
+        q = (
+            Q(test_list__testlistmembership__test__category__in=self.categories) | Q(
+                test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__in=self.
+                categories
+            )
+        )
+
+        return qs.filter(q).distinct()
+
+    def get_page_title(self):
+        return _("%(category_names)s Test Lists") % {
+            'category_names': ", ".join([x.name for x in self.categories])
+        }
+
+
+class UnitCategoryList(CategoryList):
+    """
+    List :model:`qa.UnitTestCollection`s for requested :model:`unit.Unit`s
+    and :model:`qa.Category`s.
+    """
+
+    def get_queryset(self):
+        """filter queryset by Unit"""
+
+        qs = super().get_queryset()
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
+        return qs.filter(unit__in=self.units)
+
+    def get_page_title(self):
+        title = '%(unit_names)s %(category_names)s Test Lists' % {
+            'unit_names': ", ".join([x.name for x in self.units]),
+            'category_names': ", ".join([x.name for x in self.categories]),
         }
         return title
 

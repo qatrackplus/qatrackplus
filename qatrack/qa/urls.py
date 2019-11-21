@@ -101,6 +101,12 @@ urlpatterns = [
         name="qa_by_unit_frequency"
     ),
     url(r"^frequency/(?P<frequency>[/\w-]+?)/$", perform.FrequencyList.as_view(), name="qa_by_frequency"),
+    url(
+        r"^category/(?P<category>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$",
+        perform.UnitCategoryList.as_view(),
+        name="qa_by_unit_category"
+    ),
+    url(r"^category/(?P<category>[/\w-]+?)/$", perform.CategoryList.as_view(), name="qa_by_category"),
     url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
     url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 ]

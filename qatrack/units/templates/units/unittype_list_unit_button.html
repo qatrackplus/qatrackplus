@@ -1,0 +1,56 @@
+{% load i18n %}
+
+{% if not perms.qa.can_choose_frequency %}
+  <a class="btn btn-default btn-flat" href="{% url "qa_by_unit" unit_number=unit.unit__number %}">{{unit.unit__name}}</a>
+{% else %}
+
+  <div class="btn-group btn-default btn-flat pull-left margin-bottom-3" style="margin-right: 5px;">
+
+    <a class="btn btn-default btn-flat" href="{% url "qa_by_unit" unit_number=unit.unit__number %}">{{unit.unit__name}}</a>
+
+    <div class="btn-group btn-default btn-flat"{% comment %} style="float:left"{% endcomment %}>
+
+      <button class="btn btn-default btn-flat dropdown-toggle pull-right"
+              data-toggle="dropdown"
+              title="{% blocktrans with unit_name=unit.unit__name %}Choose {{ unit_name }} QC by Frequency{% endblocktrans %}"
+      >
+         <i class="fa fa-clock-o"></i>
+      </button>
+
+      <ul class="dropdown-menu">
+        {% for freq in unit.frequencies %}
+          <li>
+            <a href="{% url "qa_by_frequency_unit" frequency=freq.slug unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; {{freq.name}}</a>
+          </li>
+        {% endfor %}
+        <li>
+          <a href="{% url "qa_by_frequency_unit" frequency="ad-hoc" unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; <em>{% trans "Ad-Hoc" %}</em></a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="btn-group btn-default btn-flat">
+
+      <button class="btn btn-default btn-flat dropdown-toggle pull-right"
+              data-toggle="dropdown"
+              title="{% blocktrans with unit_name=unit.unit__name %}Choose {{ unit_name }} QC by Category{% endblocktrans %}"
+      >
+         <i class="fa fa-tags"> </i>
+      </button>
+
+      <ul class="dropdown-menu">
+        {% for slug, cat in unit.categories %}
+          <li>
+            <a href="{% url "qa_by_unit_category" category=slug unit_number=unit.unit__number %}"
+              title="{% blocktrans with category_name=cat unit_name=unit.unit__name %}Click to view all {{ category_name }} QC for Unit {{ unit_name }}{% endblocktrans %}"
+            >
+              {{ unit.unit__name }} &mdash; {{ cat }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+
+    </div>
+
+  </div>
+{% endif %}

@@ -101,6 +101,9 @@ Details of the v0.3.1 release
   but use a more succinct name when performing a Test List. If left blank, the
   test name will be used.
 
+* New dropdown on Unit selection buttons to allow selecting QC to perform based
+  on Test categories.
+
 
 Deprecations & Discontinuations
 ...............................
