@@ -1,10 +1,11 @@
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 import json
 
 from django.apps import apps
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.urls import reverse
 from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -30,40 +31,62 @@ def homepage(request):
         'categories': categories,
         'sites': sites,
         'units': units,
-        'site_tree': json.dumps(list(site_tree(utcs).values())),
+        'site_tree': json.dumps(list(site_tree(utcs))),
     }
     return render(request, "homepage.html", context)
 
 
-
 def site_tree(utcs):
-    unit_cats = utcs.values_list(
-        "unit__site__name",
-        "unit_id",
-        "unit__name",
-        "test_list__testlistmembership__test__category__slug",
+
+    ordered_fields = ["unit__site__name"]
+
+    if settings.ORDER_UNITS_BY == "number":
+        ordered_fields += ["unit__number", "unit__name"]
+    else:
+        ordered_fields += ["unit__name", "unit__number"]
+
+    root_cats = Category.objects.root_nodes().values_list("name", flat=True)
+    # need to get roots and all children, then when iterating below, get parent nodes
+    # and only add parent node types
+    ordered_fields += [
         "test_list__testlistmembership__test__category__name",
-        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__slug",
         "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__name",
-    )
-    tree = {}
+        "test_list__testlistmembership__test__category__slug",
+        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__slug",
+    ]
+    unit_cats = utcs.order_by(*ordered_fields).values_list(*ordered_fields)
 
-    for uid, un, sn, tls, tln, tlcs, tlcn in unit_cats:
-        if sn not in tree:
-            tree[sn] = {'text': sn, 'nodes': OrderedDict()}
+    tree = []
 
-        if uid not in tree[sn]['nodes']:
-            tree[sn]['nodes'][uid] = {'text': un, 'nodes': []}
+    seen_sites = set()
+    seen_units = set()
+    seen_cats = set()
 
-        cat = (tls, tln) if tls else (tlcs, tlcn)
-        tree[sn]['nodes'][uid]['nodes'] = {'text': cat}
+    for sn, uname, unum, tln, tlcn, tls, tlcs in unit_cats:
+        cat_name = tln or tlcn
+        cat_slug = tls or tlcs
+        if cat_name not in root_cats:
+            continue
 
+        if settings.ORDER_UNITS_BY == "number":
+            unum, uname = uname, unum
+
+        if sn not in seen_sites:
+            seen_units = set()
+            tree.append({'text': sn or "Other", 'nodes': []})
+            seen_sites.add(sn)
+
+        if uname not in seen_units:
+            tree[-1]['nodes'].append({'text': uname, 'nodes': []})
+            seen_units.add(uname)
+            seen_cats = set()
+
+        if cat_name not in seen_cats:
+            seen_cats.add(cat_name)
+            url = reverse("qa_by_unit_category", kwargs={"category": cat_slug, "unit_number": unum})
+            tree[-1]['nodes'][-1]['nodes'].append({'text': cat_name, "href": url})
 
     return tree
-
-
-
-
 
 
 class CustomCommentForm(CommentForm):

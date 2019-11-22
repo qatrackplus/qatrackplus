@@ -41,7 +41,12 @@ require(['jquery', 'treeview'], function($){
     ];
     var catTree = JSON.parse('{{ site_tree | safe}}');
 
-$("#site-qc-tree").treeview({data: catTree});
+    $("#site-qc-tree").treeview({
+      data: catTree,
+      enableLinks: true,
+      highlightSelected: false
+
+    });
 
 });
 {% endblock require_javascript %}
