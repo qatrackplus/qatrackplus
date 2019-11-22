@@ -1,6 +1,11 @@
+from collections import OrderedDict, defaultdict
+import json
+
 from django.apps import apps
+from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -11,9 +16,54 @@ from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
 from django_comments.forms import CommentForm
 
+from qatrack.qa.models import Category, UnitTestCollection
+from qatrack.units.models import Site, Unit
+
 
 def homepage(request):
-    return render(request, "homepage.html", {})
+
+    categories = Category.objects.all()
+    sites = Site.objects.prefetch_related("unit_set")
+    units = Unit.objects.select_related("site").order_by(F("site__name").asc(nulls_last=True))
+    utcs = UnitTestCollection.objects.by_visibility(request.user.groups.all())
+    context = {
+        'categories': categories,
+        'sites': sites,
+        'units': units,
+        'site_tree': json.dumps(list(site_tree(utcs).values())),
+    }
+    return render(request, "homepage.html", context)
+
+
+
+def site_tree(utcs):
+    unit_cats = utcs.values_list(
+        "unit__site__name",
+        "unit_id",
+        "unit__name",
+        "test_list__testlistmembership__test__category__slug",
+        "test_list__testlistmembership__test__category__name",
+        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__slug",
+        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__name",
+    )
+    tree = {}
+
+    for uid, un, sn, tls, tln, tlcs, tlcn in unit_cats:
+        if sn not in tree:
+            tree[sn] = {'text': sn, 'nodes': OrderedDict()}
+
+        if uid not in tree[sn]['nodes']:
+            tree[sn]['nodes'][uid] = {'text': un, 'nodes': []}
+
+        cat = (tls, tln) if tls else (tlcs, tlcn)
+        tree[sn]['nodes'][uid]['nodes'] = {'text': cat}
+
+
+    return tree
+
+
+
+
 
 
 class CustomCommentForm(CommentForm):

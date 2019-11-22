@@ -18,6 +18,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django_comments.models import Comment
+from mptt.managers import TreeManager
+from mptt.models import MPTTModel, TreeForeignKey
 from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
@@ -727,12 +729,12 @@ def get_tolerance_name(tol):
         return "%s(%s on fail)" % (_("Boolean"), tol_ if tol.bool_warning_only else act)
 
 
-class CategoryManager(models.Manager):
+class CategoryManager(TreeManager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
 
 
-class Category(models.Model):
+class Category(MPTTModel):
     """A model used for categorizing :model:`Test`s"""
 
     NK_FIELDS = ['name']
@@ -746,15 +748,24 @@ class Category(models.Model):
         help_text=_l("Give a brief description of what type of tests should be included in this grouping")
     )
 
+    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name="children")
     objects = CategoryManager()
 
     class Meta:
-        verbose_name_plural = "categories"
         ordering = ("name",)
+        verbose_name_plural = "categories"
+
+    def clean(self):
+        if self.level > 1:
+            raise ValidationError({'level': _("Categories can only be nested 1 level deep")})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id"]
+        exclude = ["id", "tree_id", "lft", "rght", "level"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def natural_key(self):

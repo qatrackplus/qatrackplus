@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django import forms
 from django.conf import settings
@@ -15,6 +16,8 @@ from formtools.preview import FormPreview
 
 from qatrack.qa import models
 from qatrack.qa.testpack import add_testpack, create_testpack
+
+logger = logging.getLogger('qatrack')
 
 
 class SetReferencesAndTolerancesForm(forms.Form):
@@ -207,11 +210,10 @@ class ExportTestPack(FormView):
             "name",
             "description"
         )
-        context['tests'] = models.Test.objects.select_related(
-            "category"
-        ).only(
+        context['tests'] = models.Test.objects.select_related("category").only(
             "pk",
             "name",
+            "display_name",
             "type",
             "description",
             "category__name",
@@ -309,6 +311,7 @@ class ImportTestPack(FormView):
             messages.success(self.request, msg)
         except:  # noqa: E722
             msg = _("Sorry, but an error occurred when trying to import your TestPack. Please file a bug report.")
+            logging.exception(msg)
             messages.error(self.request, msg)
 
         return super(ImportTestPack, self).form_valid(form)

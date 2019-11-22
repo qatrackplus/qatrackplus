@@ -239,6 +239,7 @@ INSTALLED_APPS = [
     'recurrence',
     'widget_tweaks',
     'dynamic_raw_id',
+    'mptt',
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',

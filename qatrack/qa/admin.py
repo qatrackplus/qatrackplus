@@ -22,6 +22,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
+from mptt.admin import DraggableMPTTAdmin
 
 from qatrack.attachments.admin import (
     SaveInlineAttachmentUserMixin,
@@ -36,13 +37,20 @@ from qatrack.units.models import Site, Unit
 admin.site.disable_action("delete_selected")
 
 
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(DraggableMPTTAdmin):
     """QC categories admin"""
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
-        "name",
-        "description",
+        "tree_actions",
+        "indented_title",
+        "get_description",
     )
+    list_display_links = ['indented_title']
+
+    def get_description(self, obj):
+        """Just used to disable ordering by description"""
+        return obj.description if obj else ""
+    get_description.short_name = _l("Description")
 
 
 class TestInfoForm(forms.ModelForm):

@@ -1,6 +1,50 @@
 {% extends "site_base.html" %}
 {% load i18n %}
+{% load mptt_tags %}
 
+{% block require_javascript %}
+require(['jquery', 'treeview'], function($){
+
+  var catTree = [
+    {
+      text: "Parent 1",
+      nodes: [
+        {
+          text: "Child 1",
+          nodes: [
+            {
+              text: "Grandchild 1"
+            },
+            {
+              text: "Grandchild 2"
+            }
+          ]
+        },
+        {
+          text: "Child 2"
+        }
+      ]
+    },
+    {
+      text: "Parent 2"
+    },
+    {
+      text: "Parent 3"
+    },
+    {
+      text: "Parent 4"
+    },
+    {
+      text: "Parent 5"
+    }
+
+    ];
+    var catTree = JSON.parse('{{ site_tree | safe}}');
+
+$("#site-qc-tree").treeview({data: catTree});
+
+});
+{% endblock require_javascript %}
 
 {% block head_title %}{% trans "QATrack+ Homepage" %}{% endblock %}
 
@@ -30,7 +74,11 @@
                 <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
             </span>
           </a>
+          <div class="list-group-item">
+            <div id="site-qc-tree"></div>
+          </div>
       </div>
+      <!-- /.box -->
     {% endif %}
 
     {% if perms.qa.can_review or perms.qa.can_view_completed %}

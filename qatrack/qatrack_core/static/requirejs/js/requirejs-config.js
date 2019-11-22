@@ -65,6 +65,7 @@ require.config({
         zxcvbn: siteConfig.STATIC_URL + 'zxcvbn_password/js/zxcvbn',
         password_strength: siteConfig.STATIC_URL + 'zxcvbn_password/js/password_strength',
         vue: siteConfig.STATIC_URL + 'vue/js/vue.min',
+        treeview: siteConfig.STATIC_URL + 'treeview/js/bootstrap-treeview.min',
 
         // Site wide:
         sidebar: siteConfig.STATIC_URL + 'qatrack_core/js/sidebar',
@@ -200,6 +201,9 @@ require.config({
             deps: ['rgbcolor', 'stackblur-canvas']
         },
         slimscroll: {
+            deps: ['jquery']
+        },
+        treeview: {
             deps: ['jquery']
         },
         zxcvbn: {
