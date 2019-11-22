@@ -36,7 +36,7 @@
     </tr>
   </thead>
   <tbody>
-    {% regroup notice.tlis_by_unit_utc by unit_test_collectio__unit__name as unit_groups %}
+    {% regroup notice.tlis_by_unit_utc by unit_test_collection__unit__name as unit_groups %}
     {% for unit, unit_utcs in unit_groups %}
       {% for unit_utc in unit_utcs %}
         <tr>
