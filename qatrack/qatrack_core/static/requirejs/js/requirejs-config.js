@@ -76,6 +76,9 @@ require.config({
         // accounts module:
         groups: siteConfig.STATIC_URL + 'accounts/js/groups',
 
+        // homepage
+        homepage: siteConfig.STATIC_URL + 'qatrack_core/js/homepage',
+
         // reports module:
         reports: siteConfig.STATIC_URL + 'reports/js/reports',
 
@@ -222,6 +225,10 @@ require.config({
         // accounts module:
         groups: {
             deps: ['vue']
+        },
+
+        homepage: {
+            deps: ['jquery', 'treeview']
         },
 
         // reports module:

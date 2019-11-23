@@ -642,3 +642,13 @@ table ul.multiselect-container.dropdown-menu {
     flex: 1 1 auto;
   }
 }
+
+.node-site-qc-tree {
+  padding: 4px;
+}
+#site-qc-tree {
+  margin-top: -6px;
+}
+#site-qc-tree > .list-group {
+  margin-bottom: 0;
+}

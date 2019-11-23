@@ -1,6 +1,4 @@
-
-
-from django.conf.urls import include, url
+from django.conf.urls import url
 
 from qatrack.qatrack_core import views
 

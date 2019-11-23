@@ -2,53 +2,14 @@
 {% load i18n %}
 {% load mptt_tags %}
 
+{% block extra_js %}
+<script type="text/javascript">
+  window.tree = {{ tree | safe }};
+</script>
+{% endblock extra_js %}
+
 {% block require_javascript %}
-require(['jquery', 'treeview'], function($){
-
-  var catTree = [
-    {
-      text: "Parent 1",
-      nodes: [
-        {
-          text: "Child 1",
-          nodes: [
-            {
-              text: "Grandchild 1"
-            },
-            {
-              text: "Grandchild 2"
-            }
-          ]
-        },
-        {
-          text: "Child 2"
-        }
-      ]
-    },
-    {
-      text: "Parent 2"
-    },
-    {
-      text: "Parent 3"
-    },
-    {
-      text: "Parent 4"
-    },
-    {
-      text: "Parent 5"
-    }
-
-    ];
-    var catTree = JSON.parse('{{ site_tree | safe}}');
-
-    $("#site-qc-tree").treeview({
-      data: catTree,
-      enableLinks: true,
-      highlightSelected: false
-
-    });
-
-});
+require(['homepage']);
 {% endblock require_javascript %}
 
 {% block head_title %}{% trans "QATrack+ Homepage" %}{% endblock %}
@@ -80,7 +41,12 @@ require(['jquery', 'treeview'], function($){
             </span>
           </a>
           <div class="list-group-item">
-            <div id="site-qc-tree"></div>
+            <i class="pull-left fa fa-tags fa-lg fa-fw"></i>
+            <div class="pull-left" id="site-qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              {% trans "Loading QC Category Tree" %}...</span>
+            </div>
+            <div class="clearfix"></div>
           </div>
       </div>
       <!-- /.box -->

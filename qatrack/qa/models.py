@@ -755,14 +755,6 @@ class Category(MPTTModel):
         ordering = ("name",)
         verbose_name_plural = "categories"
 
-    def clean(self):
-        if self.level > 1:
-            raise ValidationError({'level': _("Categories can only be nested 1 level deep")})
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
-
     @classmethod
     def get_testpack_fields(cls):
         exclude = ["id", "tree_id", "lft", "rght", "level"]

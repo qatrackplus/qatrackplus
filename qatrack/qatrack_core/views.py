@@ -1,15 +1,14 @@
-from collections import OrderedDict
-import json
+from collections import defaultdict
 
 from django.apps import apps
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.urls import reverse
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.html import escape
 from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_protect
@@ -17,76 +16,108 @@ from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
 from django_comments.forms import CommentForm
 
-from qatrack.qa.models import Category, UnitTestCollection
-from qatrack.units.models import Site, Unit
+from qatrack.qa.models import Category, UnitTestCollection, UnitTestInfo
 
 
 def homepage(request):
 
-    categories = Category.objects.all()
-    sites = Site.objects.prefetch_related("unit_set")
-    units = Unit.objects.select_related("site").order_by(F("site__name").asc(nulls_last=True))
-    utcs = UnitTestCollection.objects.by_visibility(request.user.groups.all())
-    context = {
-        'categories': categories,
-        'sites': sites,
-        'units': units,
-        'site_tree': json.dumps(list(site_tree(utcs))),
-    }
+    context = {'tree': category_tree()}
     return render(request, "homepage.html", context)
 
 
-def site_tree(utcs):
+def category_tree():
 
-    ordered_fields = ["unit__site__name"]
+    cat_units = defaultdict(list)
+    vals = UnitTestInfo.objects.order_by(
+        "unit__site__name",
+        "unit__name",
+        "test__category__name",
+    ).values_list(
+        "test__category__id",
+        "unit__site__name",
+        "unit__name",
+        "unit__number",
+    )
+    for val in vals:
+        cat_units[val[0]].append(val[1:])
 
-    if settings.ORDER_UNITS_BY == "number":
-        ordered_fields += ["unit__number", "unit__name"]
-    else:
-        ordered_fields += ["unit__name", "unit__number"]
+    tree = [{
+        'text': 'QC By Category <i class="fa fa-tags fa-fw"></i>',
+        'nodes': [],
+        'state': {
+            'expanded': 0
+        },
+    }]
 
-    root_cats = Category.objects.root_nodes().values_list("name", flat=True)
-    # need to get roots and all children, then when iterating below, get parent nodes
-    # and only add parent node types
-    ordered_fields += [
-        "test_list__testlistmembership__test__category__name",
-        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__name",
-        "test_list__testlistmembership__test__category__slug",
-        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__slug",
-    ]
-    unit_cats = utcs.order_by(*ordered_fields).values_list(*ordered_fields)
+    tree_root = tree[-1]['nodes']
 
-    tree = []
+    roots = Category.objects.root_nodes().order_by("name")
+
+    for root in roots:
+        root_nodes = []
+
+        if root.is_leaf_node():
+            root_nodes = get_cat_units(root, cat_units, None)
+            if root_nodes['nodes']:
+                tree_root.append(root_nodes)
+        else:
+            root_nodes = get_cat_units(root, cat_units, None, children=False)
+            tree_root.append({
+                'text': '%s <i class="fa fa-tags fa-fw"></i>' % root.name,
+                'nodes': [root_nodes],
+                'state': {
+                    'expanded': 1
+                },
+            })
+            for child in root.get_children():
+                child_nodes = get_cat_units(child, cat_units, None)
+                if child_nodes['nodes']:
+                    tree_root[-1]['nodes'].append(child_nodes)
+                    tree_root[-1]['state'] = {'expanded': 1}
+
+    return tree
+
+
+def get_cat_units(parent, qs, nodes=None, children=True):
 
     seen_sites = set()
     seen_units = set()
-    seen_cats = set()
 
-    for sn, uname, unum, tln, tlcn, tls, tlcs in unit_cats:
-        cat_name = tln or tlcn
-        cat_slug = tls or tlcs
-        if cat_name not in root_cats:
+
+    if nodes is None:
+        href = reverse("qa_by_category", kwargs={"category": parent.slug})
+        title = _("Click to view {test_category} tests on all units").format(test_category=parent.name)
+        link = '<a href="%s" title="%s">%s <i class="fa fa-tag fa-fw"></i></a>' % (href, title, parent.name)
+        nodes = {'text': link, 'nodes': []}
+
+    href_template = reverse("qa_by_unit_category", kwargs={"category": parent.slug, "unit_number": 0xC0DEC0DE})
+    unum_replace = str(0xC0DEC0DE)
+
+    for site, unit, unum in qs[parent.id]:
+
+        if unum is None:
             continue
 
-        if settings.ORDER_UNITS_BY == "number":
-            unum, uname = uname, unum
-
-        if sn not in seen_sites:
+        if site not in seen_sites:
+            seen_sites.add(site)
             seen_units = set()
-            tree.append({'text': sn or "Other", 'nodes': []})
-            seen_sites.add(sn)
+            nodes['nodes'].append({
+                'text': '%s <i class="fa fa-cubes fa-fw"></i>' % (site or _("No Site")),
+                'nodes': [],
+            })
 
-        if uname not in seen_units:
-            tree[-1]['nodes'].append({'text': uname, 'nodes': []})
-            seen_units.add(uname)
-            seen_cats = set()
+        if unit not in seen_units:
+            seen_units.add(unit)
+            href = href_template.replace(unum_replace, str(unum))
+            title = _("Click to view {test_category} tests on Unit {unit}").format(test_category=parent.name, unit= unit)
+            link = '<a href="%s" title="%s">%s <i class="fa fa-cube fa-fw"></i></a>' % (href, title, unit)
+            nodes['nodes'][-1]['nodes'].append({'text': link})
 
-        if cat_name not in seen_cats:
-            seen_cats.add(cat_name)
-            url = reverse("qa_by_unit_category", kwargs={"category": cat_slug, "unit_number": unum})
-            tree[-1]['nodes'][-1]['nodes'].append({'text': cat_name, "href": url})
+    if children:
+        for child in parent.get_children():
+            get_cat_units(child, qs, nodes)
 
-    return tree
+    return nodes
 
 
 class CustomCommentForm(CommentForm):

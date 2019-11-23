@@ -20,6 +20,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
+from django_mptt_admin.admin import DjangoMpttAdmin
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
 from mptt.admin import DraggableMPTTAdmin
@@ -37,15 +38,16 @@ from qatrack.units.models import Site, Unit
 admin.site.disable_action("delete_selected")
 
 
-class CategoryAdmin(DraggableMPTTAdmin):
+class CategoryAdmin(DjangoMpttAdmin):
     """QC categories admin"""
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
-        "tree_actions",
-        "indented_title",
+        "name",
+        #"tree_actions",
+        #"indented_title",
         "get_description",
     )
-    list_display_links = ['indented_title']
+    #list_display_links = ['indented_title']
 
     def get_description(self, obj):
         """Just used to disable ordering by description"""
