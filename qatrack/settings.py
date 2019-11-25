@@ -514,6 +514,7 @@ ICON_SETTINGS = {
 # Only show first display of category when multiple tests are shown
 # sequentially with the same category
 CATEGORY_FIRST_OF_GROUP_ONLY = False
+CHOOSE_UNIT_CATEGORY_DROPDOWN = False
 
 # Display ordering on the "Choose Unit" page. (Use "name" or "number")
 ORDER_UNITS_BY = "number"

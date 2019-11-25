@@ -792,6 +792,7 @@ class ChooseUnit(TemplateView):
                     'slug',
                     'name',
                 )
+
                 unit['categories'] = get_unit_categories(unit['unit__id'])
 
                 if unit['unit__site__name']:
@@ -836,6 +837,9 @@ class ChooseUnit(TemplateView):
 
 
 def get_unit_categories(unit_id):
+
+    if not settings.CHOOSE_UNIT_CATEGORY_DROPDOWN:
+        return []
 
     qs = models.UnitTestInfo.objects.filter(
         unit_id=unit_id,
