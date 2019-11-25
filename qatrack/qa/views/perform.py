@@ -837,17 +837,17 @@ class ChooseUnit(TemplateView):
 
 def get_unit_categories(unit_id):
 
-    cats = set()
-    qs = models.UnitTestCollection.objects.filter(
+    qs = models.UnitTestInfo.objects.filter(
         unit_id=unit_id,
+        test__category__parent=None,
+    ).order_by(
+        "test__category__name",
     ).values_list(
-        "test_list__testlistmembership__test__category__slug",
-        "test_list__testlistmembership__test__category__name",
-        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__slug",
-        "test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__name",
-    )
-    cats = {(tls, tln) if tls else (tlcs, tlcn) for tls, tln, tlcs, tlcn in qs if tls or tlcs}
-    return sorted(cats, key=lambda c: c[1])
+        "test__category__slug",
+        "test__category__name",
+    ).distinct()
+
+    return qs
 
 
 class PerformQA(PermissionRequiredMixin, CreateView):

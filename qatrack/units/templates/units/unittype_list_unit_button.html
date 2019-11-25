@@ -44,7 +44,7 @@
             <a href="{% url "qa_by_unit_category" category=slug unit_number=unit.unit__number %}"
               title="{% blocktrans with category_name=cat unit_name=unit.unit__name %}Click to view all {{ category_name }} QC for Unit {{ unit_name }}{% endblocktrans %}"
             >
-              {{ unit.unit__name }} &mdash; {{ cat }}
+              {{ cat }}
             </a>
           </li>
         {% endfor %}
