@@ -168,6 +168,18 @@
                         </a>
                       </li>
                       <li>
+                        <a href="{% url "qa_by_overdue" %}" title="{% trans "View QC that is currently due and overdue" %}">
+                          <i class="fa fa-clock-o fa-lg fa-fw" aria-hidden="true"></i>
+                          {% trans "Due & Overdue" %}
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url "qa_category_tree" %}" title="{% trans "View QC Organized by Test Category" %}">
+                          <i class="fa fa-tags fa-lg fa-fw" aria-hidden="true"></i>
+                          {% trans "QC By Category" %}
+                        </a>
+                      </li>
+                      <li>
                         <a href="{% url "all_lists" %}" title="{% trans "View all available QC Lists" %}">
                           <i class="fa fa-pencil-square-o fa-lg fa-fw" aria-hidden="true"></i>
                           {% trans "All QC" %}

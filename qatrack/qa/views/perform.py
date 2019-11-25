@@ -21,6 +21,7 @@ from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
 import matplotlib
@@ -40,6 +41,7 @@ from qatrack.qatrack_core.utils import (
     parse_date,
     parse_datetime,
 )
+from qatrack.qatrack_core.views import full_tree
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -1510,6 +1512,16 @@ class FrequencyList(UTCList):
         }
 
 
+class DueAndOverdue(UTCList):
+
+    page_title = _l("Due & Overdue QC")
+
+    def get_queryset(self):
+        today = timezone.now().astimezone(timezone.get_current_timezone()).date()
+        qs = super().get_queryset()
+        return qs.exclude(due_date=None).filter(due_date__lt=today)
+
+
 class UnitFrequencyList(FrequencyList):
     """
     List :model:`qa.UnitTestCollection`s for requested :model:`unit.Unit`s
@@ -1529,6 +1541,26 @@ class UnitFrequencyList(FrequencyList):
             'frequency_names': ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]),
         }
         return title
+
+
+class CategoryTree(PermissionRequiredMixin, TemplateView):
+    """
+    View for users to edit an existing :model:`qa.TestListInstance` and
+    its children :model:`qa.TestInstance`s.
+
+    Note: Some of this code is duplicated in :view:`qa.views.perform.PerformQA`
+    and the common parts may be able to be refactored into a mixin.
+    """
+
+    template_name = 'qa/category_tree.html'
+    permission_required = "qa.add_testlistinstance"
+    raise_exception = True
+
+    def get_context_data(self, *args, **kwargs):
+
+        context = super().get_context_data(*args, **kwargs)
+        context['tree'] = full_tree()
+        return context
 
 
 class CategoryList(UTCList):

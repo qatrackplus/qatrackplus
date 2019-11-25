@@ -1,0 +1,72 @@
+{% extends "site_base.html" %}
+{% block require_javascript %}
+require(['jquery', 'treeview'], function($){
+
+  var treeData = {{ tree|safe }};
+
+  var tree = $("#qc-tree").treeview({
+    data: treeData,
+    enableLinks: true,
+    levels: 3,
+    showBorder: false,
+    collapseIcon: 'fa fa-minus-square-o fa-fw fa-lg',
+    expandIcon: 'fa fa-plus-square-o fa-fw fa-lg'
+  });
+  tree.on("nodeSelected", function(event, data){
+      tree.treeview('toggleNodeExpanded', data.nodeId, true);
+      tree.treeview('unselectNode', data.nodeId, true);
+  });
+
+  tree.treeview('expandAll', { levels: 2, silent: true });
+
+  $("#tree-search").on("keyup", function(){
+    tree.treeview("search", [$(this).val(), {
+      ignoreCase: true,
+      exactMatch: false,
+      revealResults: true
+    }]);
+
+  });
+
+});
+{% endblock require_javascript %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Choose QC By Category" %}{% endblock %}
+
+{% block body %}
+
+<div class="row">
+  <div class="col-sm-12 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
+    <div class="box">
+      <div class="box-header">
+        <i class="fa fa-cube" aria-hidden="true"></i>
+        <h3 class="box-title">{% trans "Choose QC By Category" %}</h3>
+        <p>{% trans "Use the tree below to select QC by Test Category" %}</p>
+      </div>
+      <div class="box-body pad">
+        <div class="row">
+          <div class="col-md-4 col-md-push-8">
+            <form class="form-inline">
+              <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-addon"><i class="fa fa-search"></i></div>
+                  <input type="text" class="form-control" id="tree-search" placeholder="{% trans "Search" %}">
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="col-md-8 col-md-pull-4">
+            <div id="qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              {% trans "Loading QC Category Tree" %}...</span>
+            </div>
+          </div>
+        </div>
+      <div class="box-footer"></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

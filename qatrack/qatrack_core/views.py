@@ -18,8 +18,12 @@ from qatrack.qa.models import Category, UnitTestInfo
 
 
 def homepage(request):
-    context = {'tree': category_tree(units_with_categories())}
+    context = {'tree': full_tree()}
     return render(request, "homepage.html", context)
+
+
+def full_tree():
+    return category_tree(units_with_categories())
 
 
 def units_with_categories():
@@ -77,23 +81,16 @@ def category_tree(category_units):
 
     for root in Category.objects.root_nodes().order_by("name"):
 
-        if root.is_leaf_node():
-            root_nodes = get_cat_units(root, category_units, None)
-            if root_nodes['nodes']:
-                # only include this category if there are sites/units with this category
-                tree_root.append(root_nodes)
-        else:
+        # first include the parent category as it's own child so that test lists
+        # containing only tests with the parent category are included
+        root_nodes = get_cat_units(root, category_units, None, flatten_children=False)
+        tree_root.append(new_node(root.name, "tags", True, [root_nodes]))
 
-            # first include the parent category as it's own child so that test lists
-            # containing only tests with the parent category are included
-            root_nodes = get_cat_units(root, category_units, None, flatten_children=False)
-            tree_root.append(new_node(root.name, "tags", True, [root_nodes]))
-
-            # then add actual children
-            for child in root.get_children():
-                child_nodes = get_cat_units(child, category_units, None)
-                if child_nodes['nodes']:
-                    tree_root[-1]['nodes'].append(child_nodes)
+        # then add actual children
+        for child in root.get_children():
+            child_nodes = get_cat_units(child, category_units, None)
+            if child_nodes['nodes']:
+                tree_root[-1]['nodes'].append(child_nodes)
 
     return tree
 
