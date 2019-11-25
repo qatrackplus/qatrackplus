@@ -557,7 +557,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <button class="btn btn-flat btn-primary service-save pull-right">Save</button>
-                    {% if perms.service_log.delete_service_event and form.instance.id %}
+                    {% if perms.service_log.delete_serviceevent and form.instance.id %}
 {#                        <div href="#" class="btn btn-flat btn-default service-delete pull-left" data-toggle="modal" data-target="#delete-modal">Delete</div>#}
                         <a href="{% url 'se_delete' pk=form.instance.id %}" class="btn btn-flat btn-default service-delete pull-left">Delete</a>
                     {% endif %}
