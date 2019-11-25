@@ -239,6 +239,8 @@ INSTALLED_APPS = [
     'recurrence',
     'widget_tweaks',
     'dynamic_raw_id',
+    'mptt',
+    'django_mptt_admin',
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',

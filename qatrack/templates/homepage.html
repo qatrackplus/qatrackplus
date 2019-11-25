@@ -1,6 +1,16 @@
 {% extends "site_base.html" %}
 {% load i18n %}
+{% load mptt_tags %}
 
+{% block extra_js %}
+<script type="text/javascript">
+  window.tree = {{ tree | safe }};
+</script>
+{% endblock extra_js %}
+
+{% block require_javascript %}
+require(['homepage']);
+{% endblock require_javascript %}
 
 {% block head_title %}{% trans "QATrack+ Homepage" %}{% endblock %}
 
@@ -30,7 +40,16 @@
                 <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
             </span>
           </a>
+          <div class="list-group-item">
+            <i class="pull-left fa fa-tags fa-lg fa-fw"></i>
+            <div class="pull-left" id="site-qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              {% trans "Loading QC Category Tree" %}...</span>
+            </div>
+            <div class="clearfix"></div>
+          </div>
       </div>
+      <!-- /.box -->
     {% endif %}
 
     {% if perms.qa.can_review or perms.qa.can_view_completed %}

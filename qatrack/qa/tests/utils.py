@@ -36,7 +36,7 @@ def create_status(name=None, slug=None, is_default=True, requires_review=True):
     return status
 
 
-def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None, constant_value=None):
+def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None, constant_value=None, category=None):
     user = create_user()
     if name is None or models.Test.objects.filter(name=name).count() > 0:
         name = "test_%d" % models.Test.objects.count()
@@ -45,7 +45,7 @@ def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None
         slug=name,
         description="desc",
         type=test_type,
-        category=create_category(),
+        category=category or create_category(),
         created_by=user,
         modified_by=user,
         choices=choices,

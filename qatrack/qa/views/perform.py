@@ -1541,18 +1541,26 @@ class CategoryList(UTCList):
 
         categories = self.kwargs["category"].split("/")
         self.categories = models.Category.objects.filter(slug__in=categories)
+        all_cat_ids = []
+        for cat in self.categories:
+            for desc in cat.get_descendants(True):
+                all_cat_ids.append(desc.id)
 
         q = (
-            Q(test_list__testlistmembership__test__category__in=self.categories) | Q(
-                test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__in=self.
-                categories
+            Q(test_list__testlistmembership__test__category_id__in=all_cat_ids)
+            | Q(test_list__sublist__child__testlistmembership__test__category_id__in=all_cat_ids) | Q(
+                test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category_id__in=
+                all_cat_ids,
+            ) | Q(
+                test_list_cycle__testlistcyclemembership__test_list__sublist__child__testlistmembership__test__category_id__in
+                =all_cat_ids,
             )
         )
 
         return qs.filter(q).distinct()
 
     def get_page_title(self):
-        return _("%(category_names)s Test Lists") % {
+        return _("Test Lists for Categories: %(category_names)s") % {
             'category_names': ", ".join([x.name for x in self.categories])
         }
 
@@ -1571,7 +1579,7 @@ class UnitCategoryList(CategoryList):
         return qs.filter(unit__in=self.units)
 
     def get_page_title(self):
-        title = '%(unit_names)s %(category_names)s Test Lists' % {
+        title = _('Test Lists for Units: %(unit_names)s and Categories: %(category_names)s') % {
             'unit_names': ", ".join([x.name for x in self.units]),
             'category_names': ", ".join([x.name for x in self.categories]),
         }
