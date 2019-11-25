@@ -20,6 +20,7 @@ django-filter==2.1.0
 django-form-utils==1.0.3
 django-formtools==2.1
 django-mptt==0.10.0
+django-mptt-admin==0.7.2
 django-registration==2.5.2
 djangorestframework==3.9.1
 djangorestframework-filters==1.0.0_dev0
