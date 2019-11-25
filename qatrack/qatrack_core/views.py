@@ -1,10 +1,8 @@
 from collections import defaultdict
 
 from django.apps import apps
-from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db.models import F, Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -16,19 +14,21 @@ from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
 from django_comments.forms import CommentForm
 
-from qatrack.qa.models import Category, UnitTestCollection, UnitTestInfo
+from qatrack.qa.models import Category, UnitTestInfo
 
 
 def homepage(request):
-
-    context = {'tree': category_tree()}
+    context = {'tree': category_tree(units_with_categories())}
     return render(request, "homepage.html", context)
 
 
-def category_tree():
+def units_with_categories():
+    """Return dictionary of categories with the sites/units
+    they're currently assigned to.  Dictionary is of form
+    {category.id: [(site_name, unit_name, unit_number),...]}
+    """
 
-    cat_units = defaultdict(list)
-    vals = UnitTestInfo.objects.order_by(
+    unit_categories = UnitTestInfo.objects.active().order_by(
         "unit__site__name",
         "unit__name",
         "test__category__name",
@@ -37,63 +37,83 @@ def category_tree():
         "unit__site__name",
         "unit__name",
         "unit__number",
-    )
-    for val in vals:
-        cat_units[val[0]].append(val[1:])
+    ).distinct()
 
-    tree = [{
-        'text': 'QC By Category <i class="fa fa-tags fa-fw"></i>',
-        'nodes': [],
-        'state': {
-            'expanded': 0
+    cat_units = defaultdict(list)
+    for unit_cat in unit_categories:
+        cat_units[unit_cat[0]].append(unit_cat[1:])
+
+    return cat_units
+
+
+def category_tree(category_units):
+    """
+    Takes an iterable of (category.id, site.name, unit.name, unit.number,)s and
+    generates a tree of QC, orgainzed by test category, available at all sites/units.
+    Iterable must be sorted by (site.name, unit.name, category.name).
+
+    Tree format is:
+
+    [
+        {
+            'text': "foo",
+            'nodes: [
+                {
+                    'text': "foo",
+                    'nodes: [...],
+                },
+                ...
+            ]
         },
-    }]
 
+        ...
+    ]
+
+    and is suitable for passing to Bootstrap Treeview
+    """
+
+    tree = [new_node("QC by Category", "tags")]
     tree_root = tree[-1]['nodes']
 
-    roots = Category.objects.root_nodes().order_by("name")
-
-    for root in roots:
-        root_nodes = []
+    for root in Category.objects.root_nodes().order_by("name"):
 
         if root.is_leaf_node():
-            root_nodes = get_cat_units(root, cat_units, None)
+            root_nodes = get_cat_units(root, category_units, None)
             if root_nodes['nodes']:
+                # only include this category if there are sites/units with this category
                 tree_root.append(root_nodes)
         else:
-            root_nodes = get_cat_units(root, cat_units, None, children=False)
-            tree_root.append({
-                'text': '%s <i class="fa fa-tags fa-fw"></i>' % root.name,
-                'nodes': [root_nodes],
-                'state': {
-                    'expanded': 1
-                },
-            })
+
+            # first include the parent category as it's own child so that test lists
+            # containing only tests with the parent category are included
+            root_nodes = get_cat_units(root, category_units, None, flatten_children=False)
+            tree_root.append(new_node(root.name, "tags", True, [root_nodes]))
+
+            # then add actual children
             for child in root.get_children():
-                child_nodes = get_cat_units(child, cat_units, None)
+                child_nodes = get_cat_units(child, category_units, None)
                 if child_nodes['nodes']:
                     tree_root[-1]['nodes'].append(child_nodes)
-                    tree_root[-1]['state'] = {'expanded': 1}
 
     return tree
 
 
-def get_cat_units(parent, qs, nodes=None, children=True):
+def get_cat_units(parent, category_units, nodes=None, flatten_children=True):
+    """collect all categories by site/unit. If flatten_children is True,
+    The sites/units will not be nested another level deep, but will
+    instead be appended to existing levels nodes.  This allows limiting
+    to e.g. 2 levels of categories without missing units/sites.
+    """
 
     seen_sites = set()
     seen_units = set()
 
+    nodes = nodes or new_node(parent.name, "tag")
 
-    if nodes is None:
-        href = reverse("qa_by_category", kwargs={"category": parent.slug})
-        title = _("Click to view {test_category} tests on all units").format(test_category=parent.name)
-        link = '<a href="%s" title="%s">%s <i class="fa fa-tag fa-fw"></i></a>' % (href, title, parent.name)
-        nodes = {'text': link, 'nodes': []}
+    if parent.id not in category_units:
+        return nodes
 
-    href_template = reverse("qa_by_unit_category", kwargs={"category": parent.slug, "unit_number": 0xC0DEC0DE})
-    unum_replace = str(0xC0DEC0DE)
-
-    for site, unit, unum in qs[parent.id]:
+    for site, unit, unum in category_units[parent.id]:
 
         if unum is None:
             continue
@@ -101,23 +121,30 @@ def get_cat_units(parent, qs, nodes=None, children=True):
         if site not in seen_sites:
             seen_sites.add(site)
             seen_units = set()
-            nodes['nodes'].append({
-                'text': '%s <i class="fa fa-cubes fa-fw"></i>' % (site or _("No Site")),
-                'nodes': [],
-            })
+            nodes['nodes'].append(new_node(site or _("No Site"), "cubes"))
 
         if unit not in seen_units:
             seen_units.add(unit)
-            href = href_template.replace(unum_replace, str(unum))
-            title = _("Click to view {test_category} tests on Unit {unit}").format(test_category=parent.name, unit= unit)
-            link = '<a href="%s" title="%s">%s <i class="fa fa-cube fa-fw"></i></a>' % (href, title, unit)
-            nodes['nodes'][-1]['nodes'].append({'text': link})
+            href = reverse("qa_by_unit_category", kwargs={"category": parent.slug, "unit_number": unum})
+            title = _("Click to view {test_category} tests on Unit {unit}").format(test_category=parent.name, unit=unit)
+            link = '<a href="%s" title="%s">%s</a>' % (href, title, unit)
+            nodes['nodes'][-1]['nodes'].append(new_node(link, "cube", 1, nodes=False))
 
-    if children:
+    if flatten_children:
         for child in parent.get_children():
-            get_cat_units(child, qs, nodes)
+            get_cat_units(child, category_units, nodes, flatten_children=flatten_children)
 
     return nodes
+
+
+def new_node(text, icon, expanded=False, nodes=None):
+    node = {
+        'text': text + ' <i class="fa fa-%s fa-fw"></i>' % icon,
+        'state': {'expanded': int(bool(expanded))},
+    }
+    if nodes is not False:
+        node['nodes'] = nodes or []
+    return node
 
 
 class CustomCommentForm(CommentForm):

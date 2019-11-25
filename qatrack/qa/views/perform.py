@@ -1547,9 +1547,13 @@ class CategoryList(UTCList):
                 all_cat_ids.append(desc.id)
 
         q = (
-            Q(test_list__testlistmembership__test__category_id__in=all_cat_ids) |
-            Q(
-                test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category_id__in=all_cat_ids,
+            Q(test_list__testlistmembership__test__category_id__in=all_cat_ids)
+            | Q(test_list__sublist__child__testlistmembership__test__category_id__in=all_cat_ids) | Q(
+                test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category_id__in=
+                all_cat_ids,
+            ) | Q(
+                test_list_cycle__testlistcyclemembership__test_list__sublist__child__testlistmembership__test__category_id__in
+                =all_cat_ids,
             )
         )
 
