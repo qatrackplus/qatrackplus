@@ -652,3 +652,7 @@ table ul.multiselect-container.dropdown-menu {
 #site-qc-tree > .list-group {
   margin-bottom: 0;
 }
+
+.fa-stack.narrow {
+  width: 0;
+}
