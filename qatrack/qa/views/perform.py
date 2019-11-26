@@ -1584,9 +1584,9 @@ class CategoryList(UTCList):
 
         q = (
             Q(test_list__testlistmembership__test__category_id__in=all_cat_ids) |
-            Q(test_list__sublist__child__testlistmembership__test__category_id__in=all_cat_ids) |
+            Q(test_list__children__child__testlistmembership__test__category_id__in=all_cat_ids) |
             Q(test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category_id__in=all_cat_ids) |  # noqa: E501
-            Q(test_list_cycle__testlistcyclemembership__test_list__sublist__child__testlistmembership__test__category_id__in=all_cat_ids)  # noqa: E501
+            Q(test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category_id__in=all_cat_ids)  # noqa: E501
         )  # yapf: disable
 
         return qs.filter(q).distinct()
