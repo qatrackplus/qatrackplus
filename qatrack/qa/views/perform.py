@@ -41,7 +41,7 @@ from qatrack.qatrack_core.utils import (
     parse_date,
     parse_datetime,
 )
-from qatrack.qatrack_core.views import full_tree
+from qatrack.qatrack_core.views import category_tree, frequency_tree
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -1516,6 +1516,26 @@ class FrequencyList(UTCList):
         }
 
 
+class FrequencyTree(PermissionRequiredMixin, TemplateView):
+    """
+    View for users to edit an existing :model:`qa.TestListInstance` and
+    its children :model:`qa.TestInstance`s.
+
+    Note: Some of this code is duplicated in :view:`qa.views.perform.PerformQA`
+    and the common parts may be able to be refactored into a mixin.
+    """
+
+    template_name = 'qa/frequency_tree.html'
+    permission_required = "qa.add_testlistinstance"
+    raise_exception = True
+
+    def get_context_data(self, *args, **kwargs):
+
+        context = super().get_context_data(*args, **kwargs)
+        context['tree'] = frequency_tree(self.request.user.groups.all())
+        return context
+
+
 class DueAndOverdue(UTCList):
 
     page_title = _l("Due & Overdue QC")
@@ -1563,12 +1583,11 @@ class CategoryTree(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
 
         context = super().get_context_data(*args, **kwargs)
-        context['tree'] = full_tree()
+        context['tree'] = category_tree(self.request.user.groups.all())
         return context
 
 
 class CategoryList(UTCList):
-    """List :model:`qa.UnitTestCollection`s for requested :model:`qa.Frequency`s"""
 
     def get_queryset(self):
         """filter queryset by test category"""

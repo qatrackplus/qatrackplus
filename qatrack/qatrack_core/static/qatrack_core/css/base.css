@@ -646,10 +646,10 @@ table ul.multiselect-container.dropdown-menu {
 .node-site-qc-tree {
   padding: 4px;
 }
-#site-qc-tree {
+.site-qc-tree {
   margin-top: -6px;
 }
-#site-qc-tree > .list-group {
+.site-qc-tree > .list-group {
   margin-bottom: 0;
 }
 

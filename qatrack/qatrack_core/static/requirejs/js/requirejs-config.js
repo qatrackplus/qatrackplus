@@ -207,7 +207,7 @@ require.config({
             deps: ['jquery']
         },
         treeview: {
-            deps: ['jquery']
+            deps: ['jquery', 'lodash']
         },
         zxcvbn: {
             deps: ['jquery']

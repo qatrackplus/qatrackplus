@@ -168,21 +168,34 @@
                         </a>
                       </li>
                       <li>
+                        <a href="{% url "all_lists" %}" title="{% trans "View all available QC Lists" %}">
+                          <i class="fa fa-pencil-square-o fa-lg fa-fw" aria-hidden="true"></i>
+                          {% trans "All QC" %}
+                        </a>
+                      </li>
+                      <li>
                         <a href="{% url "qa_by_overdue" %}" title="{% trans "View QC that is currently due and overdue" %}">
                           <i class="fa fa-clock-o fa-lg fa-fw" aria-hidden="true"></i>
                           {% trans "Due & Overdue" %}
                         </a>
                       </li>
                       <li>
-                        <a href="{% url "qa_category_tree" %}" title="{% trans "View QC Organized by Test Category" %}">
-                          <i class="fa fa-tags fa-lg fa-fw" aria-hidden="true"></i>
-                          {% trans "QC By Category" %}
+                        <a href="{% url "qa_frequency_tree" %}" title="{% trans "View QC Organized by Unit & Frequency" %}">
+                          <i style="margin-left: 10px" class="fa fa-stack fa-fw">
+                            <i class="fa fa-clock-o fa-stack-custom-sub upper-right"></i>
+                            <i style="left: -2px" class="fa fa-cubes fa-lg fa-stack-custom-sub lower-left"></i>
+                          </i>
+                          {% trans "QC Treeview: Unit, Frequency" %}
                         </a>
                       </li>
                       <li>
-                        <a href="{% url "all_lists" %}" title="{% trans "View all available QC Lists" %}">
-                          <i class="fa fa-pencil-square-o fa-lg fa-fw" aria-hidden="true"></i>
-                          {% trans "All QC" %}
+                        <a href="{% url "qa_category_tree" %}" title="{% trans "View QC Organized by Unit, Frequency, Category" %}">
+                          <i style="margin-left: 10px" class="fa fa-stack fa-fw">
+                            <i style="left: -10px" class="fa fa-clock-o fa-stack-custom-sub upper-left"></i>
+                            <i style="left: -2px" class="fa fa-cubes fa-lg fa-stack-custom-sub lower-left"></i>
+                            <i class="fa fa-tags fa-stack-custom-sub upper-right"></i>
+                          </i>
+                          {% trans "QC Treeview: Unit, Frequency, Category" %}
                         </a>
                       </li>
                       {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}

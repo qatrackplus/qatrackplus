@@ -1,8 +1,8 @@
-from collections import defaultdict
-
 from django.apps import apps
+from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Case, CharField, F, Value, When
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -14,124 +14,196 @@ from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
 from django_comments.forms import CommentForm
 
-from qatrack.qa.models import Category, UnitTestInfo
+from qatrack.qa.models import Category, UnitTestCollection
 
 
 def homepage(request):
-    context = {'tree': full_tree()}
+    context = {
+        'freq_tree': frequency_tree(request.user.groups.all()),
+        'cat_tree': category_tree(request.user.groups.all()),
+    }
     return render(request, "homepage.html", context)
 
 
-def full_tree():
-    return category_tree(units_with_categories())
+def category_tree(groups):
 
+    root_cats = dict(Category.objects.root_nodes().values_list("tree_id", "name"))
+    cats = {}
+    for cat in Category.objects.order_by("tree_id", "level", "name"):
+        cats[cat.name] = cat.tree_id
 
-def units_with_categories():
-    """Return dictionary of categories with the sites/units
-    they're currently assigned to.  Dictionary is of form
-    {category.id: [(site_name, unit_name, unit_number),...]}
-    """
-
-    unit_categories = UnitTestInfo.objects.active().order_by(
+    utcs = UnitTestCollection.objects.filter(
+        unit__active=True,
+        active=True,
+        visible_to__in=groups,
+    ).annotate(
+        cat_tree_id=Case(
+            When(
+                test_list__testlistmembership__test__category__tree_id__isnull=False,
+                then=F("test_list__testlistmembership__test__category__tree_id")
+            ),
+            When(
+                test_list__children__child__testlistmembership__test__category__tree_id__isnull=False,
+                then=F("test_list__children__child__testlistmembership__test__category__tree_id")
+            ),
+            When(
+                test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__tree_id__isnull=False,  # noqa: E501
+                then=F("test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__tree_id")  # noqa: E501
+            ),
+            When(
+                test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__tree_id__isnull=False,  # noqa: E501
+                then=F(
+                    "test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__tree_id"  # noqa: E501
+                )
+            ),
+            default=Value(""),
+            output_field=CharField(),
+        ),
+        cat_name=Case(
+            When(
+                test_list__testlistmembership__test__category__tree_id__isnull=False,
+                then=F("test_list__testlistmembership__test__category__name")
+            ),
+            When(
+                test_list__children__child__testlistmembership__test__category__tree_id__isnull=False,
+                then=F("test_list__children__child__testlistmembership__test__category__name")
+            ),
+            When(
+                test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__tree_id__isnull=False,  # noqa: E501
+                then=F("test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__name")  # noqa: E501
+            ),
+            When(
+                test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__tree_id__isnull=False,  # noqa: E501
+                then=F(
+                    "test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__name"  # noqa: E501
+                )
+            ),
+            default=Value(""),
+            output_field=CharField(),
+        )
+    ).order_by(
         "unit__site__name",
-        "unit__name",
-        "test__category__name",
+        "unit__%s" % settings.ORDER_UNITS_BY,
+        "frequency__nominal_interval",
+        "cat_tree_id",
+        "cat_name",
+        "name",
     ).values_list(
-        "test__category__id",
+        "id",
+        "name",
         "unit__site__name",
-        "unit__name",
         "unit__number",
-    ).distinct()
-
-    cat_units = defaultdict(list)
-    for unit_cat in unit_categories:
-        cat_units[unit_cat[0]].append(unit_cat[1:])
-
-    return cat_units
-
-
-def category_tree(category_units):
-    """
-    Takes an iterable of (category.id, site.name, unit.name, unit.number,)s and
-    generates a tree of QC, orgainzed by test category, available at all sites/units.
-    Iterable must be sorted by (site.name, unit.name, category.name).
-
-    Tree format is:
-
-    [
-        {
-            'text': "foo",
-            'nodes: [
-                {
-                    'text': "foo",
-                    'nodes: [...],
-                },
-                ...
-            ]
-        },
-
-        ...
-    ]
-
-    and is suitable for passing to Bootstrap Treeview
-    """
-
-    tree = [new_node("QC by Category", "tags")]
-    tree_root = tree[-1]['nodes']
-
-    for root in Category.objects.root_nodes().order_by("name"):
-
-        # first include the parent category as it's own child so that test lists
-        # containing only tests with the parent category are included
-        root_nodes = get_cat_units(root, category_units, None, flatten_children=False)
-        tree_root.append(new_node(root.name, "tags", True, [root_nodes]))
-
-        # then add actual children
-        for child in root.get_children():
-            child_nodes = get_cat_units(child, category_units, None)
-            if child_nodes['nodes']:
-                tree_root[-1]['nodes'].append(child_nodes)
-
-    return tree
-
-
-def get_cat_units(parent, category_units, nodes=None, flatten_children=True):
-    """collect all categories by site/unit. If flatten_children is True,
-    The sites/units will not be nested another level deep, but will
-    instead be appended to existing levels nodes.  This allows limiting
-    to e.g. 2 levels of categories without missing units/sites.
-    """
+        "unit__name",
+        "frequency__name",
+        "cat_tree_id",
+        "cat_name",
+    ).distinct()  # yapf: disable
 
     seen_sites = set()
-    seen_units = set()
 
-    nodes = nodes or new_node(parent.name, "tag")
+    tree = [new_node(_("QC by Unit, Frequency, & Category"), "")]
+    root_nodes = tree[-1]['nodes']
 
-    if parent.id not in category_units:
-        return nodes
+    for utc_id, utc_name, site, unum, uname, freq_name, cat_tree_id, cat_name in utcs:
 
-    for site, unit, unum in category_units[parent.id]:
-
-        if unum is None:
-            continue
+        if not freq_name:
+            freq_name = _("Ad-Hoc")
 
         if site not in seen_sites:
             seen_sites.add(site)
             seen_units = set()
-            nodes['nodes'].append(new_node(site or _("No Site"), "cubes"))
+            root_nodes.append(new_node(site or _("No Site"), "cubes"))
+            site_nodes = root_nodes[-1]['nodes']
 
-        if unit not in seen_units:
-            seen_units.add(unit)
-            href = reverse("qa_by_unit_category", kwargs={"category": parent.slug, "unit_number": unum})
-            title = _("Click to view {test_category} tests on Unit {unit}").format(test_category=parent.name, unit=unit)
-            link = '<a href="%s" title="%s">%s</a>' % (href, title, unit)
-            nodes['nodes'][-1]['nodes'].append(new_node(link, "cube", 1, nodes=False))
+        if unum not in seen_units:
+            seen_units.add(unum)
+            seen_freqs = set()
+            site_nodes.append(new_node(uname, "cube", 0))
+            unit_nodes = site_nodes[-1]['nodes']
 
-    if flatten_children:
-        for child in parent.get_children():
-            get_cat_units(child, category_units, nodes, flatten_children=flatten_children)
+        if freq_name not in seen_freqs:
+            seen_freqs.add(freq_name)
+            seen_roots = set()
+            unit_nodes.append(new_node(freq_name, "clock-o", 0))
+            freq_nodes = unit_nodes[-1]['nodes']
 
-    return nodes
+        if cat_tree_id not in seen_roots:
+            seen_roots.add(cat_tree_id)
+            seen_names = set()
+            freq_nodes.append(new_node(root_cats[cat_tree_id], "tag", 1))
+            cat_nodes = freq_nodes[-1]['nodes']
+
+        if utc_name not in seen_names:
+            seen_names.add(utc_name)
+            href = reverse("perform_qa", kwargs={"pk": utc_id})
+            title = _("Click to peform {tests_collection} on Unit {unit}").format(tests_collection=utc_name, unit=uname)
+            link = '<a href="%s" title="%s">%s</a>' % (href, title, utc_name)
+            cat_nodes.append(new_node(link, "list", 1, nodes=False))
+
+    return tree
+
+
+def frequency_tree(groups):
+
+    utcs = UnitTestCollection.objects.filter(
+        visible_to__in=groups,
+        unit__active=True,
+        active=True,
+    ).order_by(
+        "unit__site__name",
+        "unit__%s" % settings.ORDER_UNITS_BY,
+        "frequency__nominal_interval",
+        "name",
+    ).values_list(
+        "id",
+        "name",
+        "frequency__slug",
+        "frequency__name",
+        "unit__site__name",
+        "unit__number",
+        "unit__name",
+    )
+
+    seen_freqs = set()
+    seen_sites = set()
+    seen_units = set()
+    seen_names = set()
+
+    tree = [new_node(_("QC by Unit & Frequency"), "cubes")]
+    root_nodes = tree[-1]['nodes']
+
+    for utc_id, utc_name, fslug, fname, site, unum, uname in utcs:
+
+        if not fslug:
+            fslug = "ad-hoc"
+            fname = _("Ad-Hoc")
+
+        if site not in seen_sites:
+            seen_sites.add(site)
+            seen_units = set()
+            root_nodes.append(new_node(site or _("No Site"), "cubes"))
+            site_nodes = root_nodes[-1]['nodes']
+
+        if unum not in seen_units:
+            seen_units.add(unum)
+            seen_freqs = set()
+            site_nodes.append(new_node(uname, "cube", 0))
+            unit_nodes = site_nodes[-1]['nodes']
+
+        if fname not in seen_freqs:
+            seen_freqs.add(fname)
+            seen_names = set()
+            unit_nodes.append(new_node(fname, "clock-o"))
+            freq_nodes = unit_nodes[-1]['nodes']
+
+        if utc_name not in seen_names:
+            seen_names.add(utc_name)
+            href = reverse("perform_qa", kwargs={"pk": utc_id})
+            title = _("Click to peform {tests_collection} on Unit {unit}").format(tests_collection=utc_name, unit=uname)
+            link = '<a href="%s" title="%s">%s</a>' % (href, title, utc_name)
+            freq_nodes.append(new_node(link, "list", 1, nodes=False))
+
+    return tree
 
 
 def new_node(text, icon, expanded=False, nodes=None):

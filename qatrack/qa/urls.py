@@ -101,7 +101,8 @@ urlpatterns = [
         name="qa_by_unit_frequency"
     ),
     url(r"^frequency/(?P<frequency>[/\w-]+?)/$", perform.FrequencyList.as_view(), name="qa_by_frequency"),
-    url(r"^category/$", perform.CategoryTree.as_view(), name="qa_category_tree"),
+    url(r"^tree/category/$", perform.CategoryTree.as_view(), name="qa_category_tree"),
+    url(r"^tree/frequency/$", perform.FrequencyTree.as_view(), name="qa_frequency_tree"),
     url(
         r"^category/(?P<category>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$",
         perform.UnitCategoryList.as_view(),

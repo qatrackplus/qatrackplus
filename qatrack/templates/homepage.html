@@ -4,7 +4,8 @@
 
 {% block extra_js %}
 <script type="text/javascript">
-  window.tree = {{ tree | safe }};
+  window.catTree = {{ cat_tree | safe }};
+  window.freqTree = {{ freq_tree | safe }};
 </script>
 {% endblock extra_js %}
 
@@ -41,10 +42,25 @@ require(['homepage']);
             </span>
           </a>
           <div class="list-group-item">
-            <i class="pull-left fa fa-tags fa-lg fa-fw"></i>
-            <div class="pull-left" id="site-qc-tree">
+            <i class="pull-left fa fa-stack fa-fw fa-lg">
+              <i class="fa fa-cubes fa-stack-custom-sub lower-left"></i>
+              <i class="fa fa-clock-o fa-stack-custom-sub"></i>
+            </i>
+            <div class="pull-left site-qc-tree" id="site-freq-qc-tree">
               <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
-              {% trans "Loading QC Category Tree" %}...</span>
+              {% trans "Loading QC Unit & Frequency Tree" %}...</span>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+          <div class="list-group-item">
+            <i class="pull-left fa fa-stack fa-fw fa-lg">
+              <i style="left: -10px" class="fa fa-clock-o fa-stack-custom-sub upper-left"></i>
+              <i style="left: -2px" class="fa fa-cubes fa-lg fa-stack-custom-sub lower-left"></i>
+              <i class="fa fa-tags fa-stack-custom-sub upper-right"></i>
+            </i>
+            <div class="pull-left site-qc-tree" id="site-cat-qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              {% trans "Loading QC Unit, Frequency, Category Tree" %}...</span>
             </div>
             <div class="clearfix"></div>
           </div>

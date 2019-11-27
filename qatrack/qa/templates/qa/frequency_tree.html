@@ -39,7 +39,7 @@ require(['jquery', 'lodash', 'treeview'], function($, _){
 
 {% load i18n %}
 
-{% block head_title %}{% trans "Choose QC By Unit, Frequency, Category" %}{% endblock %}
+{% block head_title %}{% trans "Choose QC By Unit, Frequency" %}{% endblock %}
 
 {% block body %}
 
@@ -48,13 +48,12 @@ require(['jquery', 'lodash', 'treeview'], function($, _){
     <div class="box">
       <div class="box-header">
         <i style="margin-left: 10px" class="fa fa-stack fa-fw">
-          <i style="left: -10px" class="fa fa-clock-o fa-stack-custom-sub upper-left"></i>
+          <i style="left: -10px" class="fa fa-clock-o fa-stack-custom-sub upper-right"></i>
           <i style="left: -2px" class="fa fa-cubes fa-stack-custom-sub lower-left"></i>
-          <i class="fa fa-tags fa-stack-custom-sub upper-right"></i>
         </i>
 
-        <h3 class="box-title">{% trans "Choose QC By Unit, Frequency, Category" %}</h3>
-        <p>{% trans "Use the tree below to select QC by Unit, Frequency, & Test Category" %}</p>
+        <h3 class="box-title">{% trans "Choose QC By Unit, Frequency" %}</h3>
+        <p>{% trans "Use the tree below to select QC by Unit & Frequency" %}</p>
       </div>
       <div class="box-body pad">
         <div class="row">
