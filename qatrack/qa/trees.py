@@ -123,12 +123,35 @@ class BootstrapCategoryTree(BaseTree):
                 ),
                 default=Value(""),
                 output_field=CharField(),
-            )
+            ),
+            cat_level=Case(
+                When(
+                    test_list__testlistmembership__test__category__tree_id__isnull=False,
+                    then=F("test_list__testlistmembership__test__category__level")
+                ),
+                When(
+                    test_list__children__child__testlistmembership__test__category__tree_id__isnull=False,
+                    then=F("test_list__children__child__testlistmembership__test__category__level")
+                ),
+                When(
+                    test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__tree_id__isnull=False,  # noqa: E501
+                    then=F("test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category__level")  # noqa: E501
+                ),
+                When(
+                    test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__tree_id__isnull=False,  # noqa: E501
+                    then=F(
+                        "test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__level"  # noqa: E501
+                    )
+                ),
+                default=Value(""),
+                output_field=CharField(),
+            ),
         ).order_by(
             "unit__site__name",
             "unit__%s" % settings.ORDER_UNITS_BY,
             "frequency__nominal_interval",
             "cat_tree_id",
+            "cat_level",
             "cat_name",
             "name",
         ).values_list(
@@ -139,6 +162,7 @@ class BootstrapCategoryTree(BaseTree):
             "unit__name",
             "frequency__slug",
             "cat_tree_id",
+            "cat_name",
         ).distinct()  # yapf: disable
 
     def setup_categories(self):
@@ -146,11 +170,13 @@ class BootstrapCategoryTree(BaseTree):
 
         self.root_cats = {}
         self.all_cats = {}
+        self.cat_name_to_id = {}
         qs = Category.objects.order_by("tree_id", "level", "name").values_list("id", "tree_id", "level", "slug", "name")
         for cat_id, tree_id, level, slug, name in qs:
+            self.cat_name_to_id[name] = cat_id
             self.all_cats[cat_id] = {'tree_id': tree_id, 'level': level, 'slug': slug, 'name': name}
             if level == 0:
-                self.root_cats[tree_id] = (slug, name)
+                self.root_cats[tree_id] = cat_id
 
     def generate(self):
 
@@ -159,7 +185,7 @@ class BootstrapCategoryTree(BaseTree):
         tree = [self.new_node(_("QC by Unit, Frequency, & Category"))]
         root_nodes = tree[-1]['nodes']
 
-        for utc_id, utc_name, site, unum, uname, freq_slug, cat_tree_id in self.qs:
+        for utc_id, utc_name, site, unum, uname, freq_slug, cat_tree_id, cat_name in self.qs:
 
             if site not in seen_sites:
                 seen_sites.add(site)
@@ -177,19 +203,39 @@ class BootstrapCategoryTree(BaseTree):
 
             if freq_slug not in seen_freqs:
                 seen_freqs.add(freq_slug)
-                seen_roots = set()
+                seen_trees = set()
                 text = self.unit_frequency_text(unum, freq_slug)
                 unit_nodes.append(self.new_node(text, 0))
                 freq_nodes = unit_nodes[-1]['nodes']
 
-            root_cat_id = self.root_cats.get(cat_tree_id)
+            try:
+                cat_id = self.cat_name_to_id[cat_name]
+            except KeyError:
+                # handle case where no categories exist
+                continue
 
-            if root_cat_id not in seen_roots:
-                seen_roots.add(root_cat_id)
+            cat_level = self.all_cats[cat_id]['level']
+
+            if cat_tree_id not in seen_trees:
+                # we want to add a new category tree to frequency
+                # note in this case cat_id == root_cat_id
+                seen_trees.add(cat_tree_id)
+                seen_subs = set()
                 seen_names = set()
-                text = self.unit_category_text(unum, cat_tree_id)
+
+                root_id = self.root_cats[cat_tree_id]
+                text = self.unit_category_text(unum, root_id)
                 freq_nodes.append(self.new_node(text, 1))
                 cat_nodes = freq_nodes[-1]['nodes']
+                cur_root = cat_nodes
+
+            if cat_level == 1 and cat_id not in seen_subs:
+                # add a new sub category and start appending to it
+                # we don't reset seen names here since we don't want to add it in multiple categories.
+                seen_subs.add(cat_id)
+                text = self.unit_category_text(unum, cat_id)
+                cur_root.append(self.new_node(text, 1))
+                cat_nodes = cur_root[-1]['nodes']
 
             if utc_name not in seen_names:
                 seen_names.add(utc_name)
