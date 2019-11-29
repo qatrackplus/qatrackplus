@@ -68,6 +68,11 @@ class Site(models.Model):
     Allows for multiple site filtering (different campuses, buildings, hospitals, etc)
     """
     name = models.CharField(max_length=64, unique=True, help_text=_l('Name of this site'))
+    slug = models.SlugField(
+        max_length=50,
+        help_text=_l("Unique identifier made of lowercase characters and underscores for this site"),
+        unique=True,
+    )
 
     class Meta:
         ordering = ("name",)

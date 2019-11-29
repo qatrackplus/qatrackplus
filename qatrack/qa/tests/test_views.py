@@ -57,6 +57,7 @@ class TestURLS(TestCase):
 
     def test_qa_urls(self):
 
+        utils.create_category()
         utils.create_status()
         u1 = utils.create_unit(number=1, name="u1")
         utils.create_unit(

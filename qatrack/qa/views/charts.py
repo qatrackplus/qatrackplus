@@ -118,7 +118,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'service_types': sl_models.ServiceType.objects.all(),
             'sites': [{
                 "pk": "",
-                "name": "No site"
+                "name": "Other"
             }] + list(Site.objects.values('pk', 'name')),
             'units': Unit.objects.values('pk', 'name', 'active', 'site_id'),
             'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),

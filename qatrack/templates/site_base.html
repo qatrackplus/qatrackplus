@@ -161,14 +161,15 @@
                     </a>
 
                     <ul class="dropdown-menu" role="menu">
+                      <li class="nav-header">{% trans "QC Lists" %}</li>
                       <li>
-                        <a href="{% url "choose_unit" %}" title="{% trans "Choose a Unit To Perform QC On" %}">
+                        <a href="{% url "choose_unit" %}" title="{% trans "Choose a specfic Unit To Perform QC On" %}">
                           <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
                           {% trans "Choose Unit" %}
                         </a>
                       </li>
                       <li>
-                        <a href="{% url "all_lists" %}" title="{% trans "View all available QC Lists" %}">
+                        <a href="{% url "all_lists" %}" title="{% trans "View list of all available QC" %}">
                           <i class="fa fa-pencil-square-o fa-lg fa-fw" aria-hidden="true"></i>
                           {% trans "All QC" %}
                         </a>
@@ -179,6 +180,17 @@
                           {% trans "Due & Overdue" %}
                         </a>
                       </li>
+                      <li>
+                        <a href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
+                          <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
+                          <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                            <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
+                          </span>
+                          {% trans "In Progress" %}
+                        </a>
+                      </li>
+                      <li class="divider"></li>
+                      <li class="nav-header">{% trans "Tree Views" %}</li>
                       <li>
                         <a href="{% url "qa_frequency_tree" %}" title="{% trans "View QC Organized by Unit & Frequency" %}">
                           <i style="margin-left: 10px" class="fa fa-stack fa-fw">
@@ -199,6 +211,8 @@
                         </a>
                       </li>
                       {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}
+                        <li class="divider"></li>
+                        <li class="nav-header">{% trans "Service Log" %}</li>
                         <li class="hover-parent">
                           <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service QC" %}">
                             <i class="fa fa-stack fa-lg fa-fw">
@@ -209,16 +223,6 @@
                           </a>
                         </li>
                       {% endif %}
-                      <li class="divider"></li>
-                      <li>
-                        <a href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
-                          <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
-                          <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                            <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
-                          </span>
-                          {% trans "In Progress" %}
-                        </a>
-                      </li>
                     </ul>
                   </li>
                 {% endif %}

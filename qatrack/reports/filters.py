@@ -57,7 +57,7 @@ class TestListInstanceFilter(django_filters.FilterSet):
 
     unit_test_collection__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Site"),
-        null_label=_l("No Site Assigned"),
+        null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
         help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
     )
@@ -140,7 +140,7 @@ class DueAndOverdueFilter(django_filters.FilterSet):
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Site"),
-        null_label=_l("No Site Assigned"),
+        null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
         help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
     )
@@ -178,7 +178,7 @@ class SchedulingFilter(django_filters.FilterSet):
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Site"),
-        null_label=_l("No Site Assigned"),
+        null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
         help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
     )
@@ -215,7 +215,7 @@ class TestDataFilter(django_filters.FilterSet):
 
     unit_test_info__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Site"),
-        null_label=_l("No Site Assigned"),
+        null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
         help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
     )

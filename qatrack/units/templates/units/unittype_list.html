@@ -58,7 +58,12 @@
       <div class="col-md-{{ split_by }} col-equal" style="position: relative">
         <div class="box" style="">
           <div class="box-header">
-            <h3 class="box-title">{% if site == 'zzzNonezzz' %}{% trans "Other" %}{% else %}{{ site }}{% endif %}</h3>
+            <h3 class="box-title">
+              <a href="{% url "qa_by_site" site=site.0 %}" title="{% trans "Click to view all QC at Site: " %}{{ site.1 }}">
+                {% if site.1 == 'zzzNonezzz' %}{% trans "Other" %}{% else %}{{ site.1 }}{% endif %}
+                <i class="fa fa-cubes"></i>
+              </a>
+            </h3>
           </div>
           <div class="box-body pad">
 

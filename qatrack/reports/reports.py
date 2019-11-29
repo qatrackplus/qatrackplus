@@ -357,12 +357,12 @@ class QCSummaryReport(BaseReport):
         return "%s.%s" % (slugify(self.name or "qc-summary-report"), report_format)
 
     def get_unit_test_collection__unit__site_details(self, val):
-        sites = [x.name if x != "null" else "No Site Assigned" for x in val]
+        sites = [x.name if x != "null" else "Other" for x in val]
         return ("Site", ", ".join(sites))
 
     def get_unit_test_collection__unit_details(self, val):
         units = models.Unit.objects.select_related("site").filter(pk__in=val)
-        units = ('%s - %s' % (u.site.name if u.site else _("No Site Assigned"), u.name) for u in units)
+        units = ('%s - %s' % (u.site.name if u.site else _("Other"), u.name) for u in units)
         return ("Unit(s)", ', '.join(units))
 
     def get_unit_test_collection__frequency_details(self, val):
@@ -666,12 +666,12 @@ class DueDatesReportMixin:
         ).exclude(active=False)
 
     def get_unit__site_details(self, val):
-        sites = [x.name if x != "null" else _("No Site Assigned") for x in val]
+        sites = [x.name if x != "null" else _("Other") for x in val]
         return (_("Site(s)"), ", ".join(sites))
 
     def get_unit_details(self, val):
         units = models.Unit.objects.select_related("site").filter(pk__in=val)
-        units = ('%s - %s' % (u.site.name if u.site else _("No Site Assigned"), u.name) for u in units)
+        units = ('%s - %s' % (u.site.name if u.site else _("Other"), u.name) for u in units)
         return (_("Unit(s)"), ', '.join(units))
 
     def get_context(self):
@@ -726,7 +726,7 @@ class DueDatesReportMixin:
             rows.extend([
                 [],
                 [],
-                [site if site else _("No Site Assigned")],
+                [site if site else _("Other")],
                 [
                     _("Unit"),
                     _("Name"),
@@ -938,7 +938,7 @@ class TestDataReport(BaseReport):
         ).distinct()
         units = {}
         for unit_id, site_name, unit_name in unit_qs:
-            units[unit_id] = "%s : %s" % (site_name or _("No Site Assigned"), unit_name)
+            units[unit_id] = "%s : %s" % (site_name or _("Other"), unit_name)
 
         table = [[_("Date")]]
 

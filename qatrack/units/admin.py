@@ -195,7 +195,17 @@ class ModalityAdmin(admin.ModelAdmin):
     list_display = ["name"]
 
 
+class SiteAdmin(admin.ModelAdmin):
+    """QC categories admin"""
+    prepopulated_fields = {'slug': ('name',)}
+    list_display = (
+        "name",
+        "slug"
+    )
+
+
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
 admin.site.register(Modality, ModalityAdmin)
-admin.site.register([Site, UnitClass, Vendor], admin.ModelAdmin)
+admin.site.register(Site, SiteAdmin)
+admin.site.register([UnitClass, Vendor], admin.ModelAdmin)

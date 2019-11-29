@@ -23,7 +23,6 @@ from django.utils.translation import gettext_lazy as _l
 from django_mptt_admin.admin import DjangoMpttAdmin
 from dynamic_raw_id.admin import DynamicRawIDMixin
 from dynamic_raw_id.widgets import DynamicRawIDWidget
-from mptt.admin import DraggableMPTTAdmin
 
 from qatrack.attachments.admin import (
     SaveInlineAttachmentUserMixin,
@@ -43,11 +42,8 @@ class CategoryAdmin(DjangoMpttAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
         "name",
-        #"tree_actions",
-        #"indented_title",
         "get_description",
     )
-    #list_display_links = ['indented_title']
 
     def get_description(self, obj):
         """Just used to disable ordering by description"""
@@ -920,7 +916,7 @@ unit_name.short_description = _l("Unit")
 
 
 def site_name(obj):
-    return obj.unit.site.name if obj.unit.site else _l("No Site Assigned")
+    return obj.unit.site.name if obj.unit.site else _l("Other")
 site_name.admin_order_field = "unit__site__name"  # noqa: E305
 site_name.short_description = _l("Site")
 

@@ -770,9 +770,9 @@ class ChooseUnit(TemplateView):
 
             unit_site_types = {}
             for s in Site.objects.all():
-                unit_site_types[s.name] = collections.defaultdict(list)
+                unit_site_types[(s.slug, s.name)] = collections.defaultdict(list)
             if q.filter(unit__site__isnull=True).exists():
-                unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
+                unit_site_types[('zzzNonezzz', 'zzzNonezzz')] = collections.defaultdict(list)
 
             q = q.values(
                 'unit',
@@ -780,6 +780,7 @@ class ChooseUnit(TemplateView):
                 'unit__name',
                 'unit__number',
                 'unit__id',
+                'unit__site__slug',
                 'unit__site__name',
             ).order_by(units_ordering).distinct()
 
@@ -796,9 +797,10 @@ class ChooseUnit(TemplateView):
                 unit['categories'] = get_unit_categories(unit['unit__id'])
 
                 if unit['unit__site__name']:
-                    unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
+                    key = (unit['unit__site__slug'], unit['unit__site__name'])
+                    unit_site_types[key][unit['unit__type__name']].append(unit)
                 else:
-                    unit_site_types['zzzNonezzz'][unit['unit__type__name']].append(unit)
+                    unit_site_types[('zzzNonezzz', 'zzzNonezzz')][unit['unit__type__name']].append(unit)
 
             ordered = {}
             for s in unit_site_types:
@@ -1656,3 +1658,28 @@ class UnitList(UTCList):
     def get_page_title(self):
         title = '%(unit_names)s Test Lists' % {'unit_names': ", ".join([x.name for x in self.units])}
         return title
+
+
+class SiteList(UTCList):
+    """ List :model:`qa.UnitTestCollection`s for requested :model:`unit.Site`s """
+
+    def get_queryset(self):
+
+        qs = super().get_queryset()
+
+        sites = self.kwargs["site"].split("/")
+        self.sites = Site.objects.filter(slug__in=sites)
+
+        q = Q(unit__site__in=self.sites)
+        self.has_other = False
+        if "other" in sites:
+            self.has_other = True
+            q |= Q(unit__site=None)
+
+        return qs.filter(q).distinct()
+
+    def get_page_title(self):
+        names = ", ".join([x.name if x else "other" for x in self.sites])
+        if self.has_other:
+            names = _("Other") + names.strip()
+        return _("%(site_names)s Test Lists") % {'site_names': names}

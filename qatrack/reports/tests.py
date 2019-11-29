@@ -1,6 +1,5 @@
 import io
 import json
-import time
 from unittest import mock
 
 from django.contrib.admin.sites import AdminSite
@@ -689,7 +688,7 @@ class TestQCSummaryReport(TestCase):
     def test_get_utc_site(self):
         site = USite.objects.create(name="site")
         sites = reports.QCSummaryReport().get_unit_test_collection__unit__site_details([site, 'null'])
-        assert sites == ('Site', 'site, No Site Assigned')
+        assert sites == ('Site', 'site, Other')
 
     def test_get_utc_freq(self):
         freq = Frequency.objects.create(name="freq", window_start=0, window_end=0)

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.utils import timezone
+from django.utils.text import slugify
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
@@ -230,7 +231,8 @@ def create_site(name=None):
     if name is None:
         name = 'site_%04d' % get_next_id(u_models.Site.objects.order_by('id').last())
 
-    s, _ = u_models.Site.objects.get_or_create(name=name)
+    slug = slugify(name)
+    s, _ = u_models.Site.objects.get_or_create(name=name, slug=slug)
 
     return s
 
