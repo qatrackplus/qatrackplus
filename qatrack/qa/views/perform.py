@@ -35,13 +35,13 @@ import scipy
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
+from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.qatrack_core.utils import (
     format_datetime,
     parse_date,
     parse_datetime,
 )
-from qatrack.qatrack_core.views import category_tree, frequency_tree
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -1505,15 +1505,18 @@ class FrequencyList(UTCList):
         self.frequencies = models.Frequency.objects.filter(slug__in=freqs)
 
         q = Q(frequency__in=self.frequencies)
+        self.has_ad_hoc = False
         if "ad-hoc" in freqs:
+            self.has_ad_hoc = True
             q |= Q(frequency=None)
 
         return qs.filter(q).distinct()
 
     def get_page_title(self):
-        return _("%(frequency_names)s Test Lists") % {
-            'frequency_names': ", ".join([x.name if x else "ad-hoc" for x in self.frequencies])
-        }
+        names = ", ".join([x.name if x else "ad-hoc" for x in self.frequencies])
+        if self.has_ad_hoc:
+            names = _("Ad Hoc ") + names.strip()
+        return _("%(frequency_names)s Test Lists") % {'frequency_names': names}
 
 
 class FrequencyTree(PermissionRequiredMixin, TemplateView):
@@ -1532,7 +1535,7 @@ class FrequencyTree(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
 
         context = super().get_context_data(*args, **kwargs)
-        context['tree'] = frequency_tree(self.request.user.groups.all())
+        context['tree'] = BootstrapFrequencyTree(self.request.user.groups.all()).generate()
         return context
 
 
@@ -1560,10 +1563,14 @@ class UnitFrequencyList(FrequencyList):
         return qs.filter(unit__in=self.units)
 
     def get_page_title(self):
+        freq_names = ", ".join([x.name if x else "ad-hoc" for x in self.frequencies])
+        if self.has_ad_hoc:
+            freq_names = _("Ad Hoc ") + freq_names.strip()
         title = '%(unit_names)s %(frequency_names)s Test Lists' % {
             'unit_names': ", ".join([x.name for x in self.units]),
-            'frequency_names': ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]),
+            'frequency_names': freq_names,
         }
+
         return title
 
 
@@ -1583,7 +1590,7 @@ class CategoryTree(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
 
         context = super().get_context_data(*args, **kwargs)
-        context['tree'] = category_tree(self.request.user.groups.all())
+        context['tree'] = BootstrapCategoryTree(self.request.user.groups.all()).generate()
         return context
 
 
