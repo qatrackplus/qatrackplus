@@ -105,7 +105,7 @@
                 <td class="qa-reference">
                     {% reference_tolerance_span test ref tol %}
                     {% if user.is_staff and perms.qa.change_unittestinfo %}
-                      <a style="font-size: 0.7em"
+                      <a class="ref-tol-link" style="font-size: 0.7em"
                         title="{% trans "Update reference & tolerance values" %}"
                         href="{% url "admin:qa_unittestinfo_change" object_id=uti.id %}"
                       >
