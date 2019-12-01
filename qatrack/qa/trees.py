@@ -1,8 +1,7 @@
 from django.conf import settings
-from django.db.models import Case, CharField, F, Value, When
+from django.db.models import Case, CharField, F, IntegerField, Value, When
 from django.urls import reverse
 from django.utils.translation import gettext as _
-
 from qatrack.qa.models import Category, Frequency, UnitTestCollection
 from qatrack.units.models import Site, Unit
 
@@ -99,8 +98,8 @@ class BootstrapCategoryTree(BaseTree):
                         "test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__tree_id"  # noqa: E501
                     )
                 ),
-                default=Value(""),
-                output_field=CharField(),
+                default=Value(0),
+                output_field=IntegerField(),
             ),
             cat_name=Case(
                 When(
@@ -143,8 +142,8 @@ class BootstrapCategoryTree(BaseTree):
                         "test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category__level"  # noqa: E501
                     )
                 ),
-                default=Value(""),
-                output_field=CharField(),
+                default=Value(-1),
+                output_field=IntegerField(),
             ),
         ).order_by(
             "unit__site__name",
