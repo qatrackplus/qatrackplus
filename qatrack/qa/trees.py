@@ -229,13 +229,13 @@ class BootstrapCategoryTree(BaseTree):
                 cat_nodes = freq_nodes[-1]['nodes']
                 cur_root = cat_nodes
 
-            if cat_level == 1 and cat_id not in seen_subs:
-                # add a new sub category and start appending to it
-                # we don't reset seen names here since we don't want to add it in multiple categories.
-                seen_subs.add(cat_id)
-                text = self.unit_category_text(unum, cat_id)
-                cur_root.append(self.new_node(text, 1))
-                cat_nodes = cur_root[-1]['nodes']
+            #if cat_level == 1 and cat_id not in seen_subs:
+            #    # add a new sub category and start appending to it
+            #    seen_subs.add(cat_id)
+            #    seen_names = set()
+            #    text = self.unit_category_text(unum, cat_id)
+            #    cur_root.append(self.new_node(text, 1))
+            #    cat_nodes = cur_root[-1]['nodes']
 
             if utc_name not in seen_names:
                 seen_names.add(utc_name)
