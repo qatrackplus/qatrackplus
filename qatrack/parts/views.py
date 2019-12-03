@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from braces.views import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
@@ -180,6 +182,7 @@ class PartDetails(DetailView):
 
 
 class PartsList(BaseListableView):
+
     model = p_models.Part
     template_name = 'parts/parts_list.html'
     paginate_by = 50
@@ -196,15 +199,18 @@ class PartsList(BaseListableView):
         'quantity_current',
         'quantity_min',
         'part_category__name',
+        'locations',
     )
 
     headers = {
         'actions': _l('Actions'),
         'name': _l('Name'),
         'part_number': _l('Part Number'),
+        'new_or_used': _l('New or Used'),
+        'quantity_current': _l('In Storage'),
         'quantity_min': _l('Min Quantity'),
-        'quantity_current': _l('# In Storage'),
-        'part_category__name': _l('Category')
+        'locations': _l("Locations"),
+        'part_category__name': _l('Category'),
     }
 
     widgets = {
@@ -214,18 +220,21 @@ class PartsList(BaseListableView):
         'new_or_used': SELECT_MULTI,
         'quantity_min': None,
         'quantity_current': None,
-        'part_category__name': SELECT_MULTI
+        'locations': None,
+        'part_category__name': SELECT_MULTI,
     }
 
     search_fields = {
         'actions': False,
         'quantity_current': False,
-        'quantity_min': False
+        'quantity_min': False,
+        'locations': False,
     }
 
     order_fields = {
         'actions': False,
-        'part_category__name': False
+        'part_category__name': False,
+        'locations': "partstoragecollection__storage__room__site__name",
     }
 
     select_related = ('part_category',)
@@ -292,6 +301,41 @@ class PartsList(BaseListableView):
         perms = PermWrapper(self.request.user)
         c = {'p': p, 'request': self.request, 'next': mext, 'perms': perms}
         return template.render(c)
+
+    def locations(self, obj):
+        return self.parts_locations_cache[obj.id]
+
+    @property
+    def parts_locations_cache(self):
+        if not hasattr(self, "_parts_locations_cache"):
+            self._generate_parts_locations()
+        return self._parts_locations_cache
+
+    def _generate_parts_locations(self):
+
+        psc = p_models.PartStorageCollection.objects.order_by(
+            "storage__room__site__name",
+            "storage__room__name",
+            "storage__location",
+        ).values_list(
+            "part_id",
+            "quantity",
+            "storage__location",
+            "storage__room__site__name",
+            "storage__room__name",
+        )
+
+        tmp_cache = defaultdict(list)
+        for part_id, quantity, loc, site_name, room_name in psc:
+            site = "%s:" % site_name if site_name else ""
+            text = '<div style="display: inline-block; white-space: nowrap;">%s%s:%s <span class="badge">%d</span></div>' % (
+                site, room_name, loc or "", quantity
+            )
+            tmp_cache[part_id].append(text)
+
+        self._parts_locations_cache = {}
+        for k, v in tmp_cache.items():
+            self._parts_locations_cache[k] = ', '.join(v)
 
 
 class SuppliersList(BaseListableView):
