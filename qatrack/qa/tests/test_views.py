@@ -92,6 +92,7 @@ class TestURLS(TestCase):
             ("qa_by_unit", {"unit_number": "1"}),
             ("qa_by_frequency", {"frequency": "daily/ad-hoc"}),
             ("qa_by_unit_frequency", {"unit_number": "1", "frequency": "daily/ad-hoc"}),
+            ("groups-app", {}),
         )  # YAPF:disable
 
         for url, kwargs in url_names:
