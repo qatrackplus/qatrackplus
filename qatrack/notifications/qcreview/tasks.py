@@ -12,11 +12,11 @@ from qatrack.qatrack_core.tasks import run_periodic_scheduler
 logger = logging.getLogger('qatrack')
 
 
-def run_scheduling_notices():
+def run_review_notices():
 
     run_periodic_scheduler(
         QCReviewNotice,
-        "run_qcreview_notices",
+        "run_review_notices",
         schedule_qcreview_notice,
         time_field="time",
         recurrence_field="recurrences",
