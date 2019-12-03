@@ -192,9 +192,10 @@ class PartsList(BaseListableView):
         'actions',
         'name',
         'part_number',
+        'new_or_used',
         'quantity_current',
         'quantity_min',
-        'part_category__name'
+        'part_category__name',
     )
 
     headers = {
@@ -202,7 +203,7 @@ class PartsList(BaseListableView):
         'name': _l('Name'),
         'part_number': _l('Part Number'),
         'quantity_min': _l('Min Quantity'),
-        'quantity_current': _l('In Storage'),
+        'quantity_current': _l('# In Storage'),
         'part_category__name': _l('Category')
     }
 
@@ -210,6 +211,7 @@ class PartsList(BaseListableView):
         'actions': None,
         'name': TEXT,
         'part_number': TEXT,
+        'new_or_used': SELECT_MULTI,
         'quantity_min': None,
         'quantity_current': None,
         'part_category__name': SELECT_MULTI

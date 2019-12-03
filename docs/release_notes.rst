@@ -104,6 +104,9 @@ Details of the v0.3.1 release
 * New dropdown on Unit selection buttons to allow selecting QC to perform based
   on Test categories.
 
+* There is a new `New or Used` field on Parts to allow you to track new and
+  used inventories of the same part separately.
+
 
 Deprecations & Discontinuations
 ...............................

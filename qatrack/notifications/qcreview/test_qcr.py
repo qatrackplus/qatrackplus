@@ -237,15 +237,15 @@ class TestQCReviewEmails(TestCase):
         assert self.notice.last_sent is None
         assert len(mail.outbox) == 0
 
-    def test_schedule_notice(self):
+    def test_review_notice(self):
         next_run = timezone.now() + timezone.timedelta(hours=1)
         tasks.schedule_qcreview_notice(self.notice, next_run)
         assert Schedule.objects.count() == 1
 
-    def test_run_scheduling_notices(self):
+    def test_run_review_notices(self):
 
         self.notice.recurrences = recurrence.Recurrence(rrules=[recurrence.Rule(recurrence.DAILY)])
         self.notice.time = (timezone.datetime.now() + timezone.timedelta(minutes=1)).time()
         self.notice.save()
-        tasks.run_scheduling_notices()
+        tasks.run_review_notices()
         assert Schedule.objects.count() == 1

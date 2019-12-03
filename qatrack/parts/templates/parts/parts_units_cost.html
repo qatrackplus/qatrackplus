@@ -1,8 +1,9 @@
 {% extends "site_base.html" %}
 
 {% load qa_tags %}
+{% load i18n %}
 
-{% block head_title %}Units Parts Cost{% endblock %}
+{% block head_title %}{% trans "Units Parts Cost" %}{% endblock %}
 
 {% block extra_css %}
     <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
@@ -20,72 +21,67 @@
 {% block body_class %}layout-top-nav{% endblock body_class %}
 
 {% block body %}
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">
-                        <i class="fa fa-cubes" aria-hidden="true"></i>
-                        Parts Cost For Units
-                    </h3>
-                </div>
-                <div class="box-body">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header">
+          <h3 class="box-title">
+            <i class="fa fa-cubes" aria-hidden="true"></i>
+            {% trans "Parts Cost For Units" %}
+          </h3>
+        </div>
+        <div class="box-body">
 
-                    <form id="unit_area_type" action="{% url 'go_units_parts_cost' %}" method="get">
-                        <div class="row">
-                            <div class="col-md-12 form-horizontal">
-                                <div class="form-group row">
-                                    <div class="col-md-1"></div>
-                                    <div class="col-md-10">
-                                        <div class="row">
-                                            <label for="date_range_selector" class="col-md-2 control-label">Date Range:</label>
-                                            <div class="col-md-10"><input id="date_range_selector" class="form-control" name="date_range"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1"></div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-md-1"></div>
-                                    <div class="col-md-10">
-                                        <select name="units" id="units" multiple class="form-control">
-                                            {% for u in units %}
-                                                <option data-active="{{ u.active }}" value="{{ u.pk }}" selected>{{ u.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <select name="service_areas" id="service_areas" multiple class="form-control">
-                                            {% for sa in service_areas %}
-                                                <option value="{{ sa.pk }}" selected>{{ sa.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <select name="service_types" id="service_types" multiple class="form-control">
-                                            {% for st in service_types %}
-                                                <option value="{{ st.pk }}" selected>{{ st.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-1"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <input id="go_units_parts" class="btn btn-flat btn-info" value="Generate Summary Report" type="submit">
-    {#                            <div id="go_units_parts_detailed" class="btn btn-flat btn-info">Generate Detailed Report(s)</div>#}
-                            </div>
-                        </div>
-                    </form>
-
+          <form id="unit_area_type" action="{% url 'go_units_parts_cost' %}" method="get">
+            <div class="row">
+              <div class="col-md-12 form-horizontal">
+                <div class="form-group row">
+                  <div class="col-md-1"></div>
+                  <div class="col-md-10">
+                    <div class="row">
+                      <label for="date_range_selector" class="col-md-2 control-label">{% trans "Date Range" %}:</label>
+                      <div class="col-md-10"><input id="date_range_selector" class="form-control" name="date_range"></div>
+                    </div>
+                  </div>
+                  <div class="col-md-1"></div>
                 </div>
-                <div class="box-footer">
-
+                <div class="form-group row">
+                  <div class="col-md-1"></div>
+                  <div class="col-md-10">
+                    <select name="units" id="units" multiple class="form-control">
+                      {% for u in units %}
+                        <option data-active="{{ u.active }}" value="{{ u.pk }}" selected>{{ u.name }}</option>
+                      {% endfor %}
+                    </select>
+                    <select name="service_areas" id="service_areas" multiple class="form-control">
+                      {% for sa in service_areas %}
+                        <option value="{{ sa.pk }}" selected>{{ sa.name }}</option>
+                      {% endfor %}
+                    </select>
+                    <select name="service_types" id="service_types" multiple class="form-control">
+                      {% for st in service_types %}
+                        <option value="{{ st.pk }}" selected>{{ st.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-1"></div>
                 </div>
+              </div>
             </div>
-        </div>
-    </div>
+            <div class="row">
+              <div class="col-md-12">
+                <input id="go_units_parts" class="btn btn-flat btn-info" value="{% trans "Generate Summary Report" %}" type="submit">
+              </div>
+            </div>
+          </form>
 
-    <div class="row">
-        <div class="col-md-12">
-
         </div>
+        <div class="box-footer"></div>
+      </div>
     </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12"></div>
+  </div>
 {% endblock body %}

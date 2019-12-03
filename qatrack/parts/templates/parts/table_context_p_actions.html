@@ -1,17 +1,18 @@
 {% load qa_tags %}
+{% load i18n %}
 <div style="min-width: 85px;">
-    {% if perms.parts.change_part %}
-        <a class="btn btn-default btn-xs btn-flat"
-          href="{% url 'part_edit' p.pk %}{% if next %}?next={{ next }}{% endif %}"
-          title="Edit details of {{ p.name }}"
-        >Edit</a>
-    {% endif %}
-    {% if perms.parts.view_part %}
-        <a class="btn btn-default btn-xs btn-flat"
-          href="{% url 'part_details' p.pk %}{% if next %}?next={{ next }}{% endif %}"
-          title="View details of {{ p.name }}"
-          >
-          Details
-        </a>
-    {% endif %}
+  {% if perms.parts.change_part %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'part_edit' p.pk %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% blocktrans with part_name=p.name %}Edit details of {{ part_name }}{% endblocktrans %}"
+    >{% trans "Edit" %}</a>
+  {% endif %}
+  {% if perms.parts.view_part %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'part_details' p.pk %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% blocktrans with part_name=p.name %}View details of {{ part_name }}{% endblocktrans %}"
+    >
+      {% trans "Details" %}
+    </a>
+  {% endif %}
 </div>

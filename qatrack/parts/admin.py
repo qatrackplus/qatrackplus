@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 import django.forms as forms
 
 if settings.USE_PARTS:
+
     from django.contrib import admin
 
     from . import models as p_models
@@ -12,7 +13,15 @@ if settings.USE_PARTS:
 
     class PartAdmin(admin.ModelAdmin):
 
-        list_display = ['name', 'part_number', 'quantity_min', 'quantity_current', 'cost']
+        list_display = [
+            'name',
+            'part_number',
+            'new_or_used',
+            'part_category',
+            'quantity_min',
+            'quantity_current',
+            'cost',
+        ]
         search_fields = ['name', 'part_number', 'alt_part_number']
 
 
@@ -109,7 +118,11 @@ if settings.USE_PARTS:
 
         def get_queryset(self, request):
             if request.method == 'POST':
-                return super().get_queryset(request).prefetch_related('storage_set', 'storage_set__room', 'storage_set__room__site')
+                return super().get_queryset(request).prefetch_related(
+                    'storage_set',
+                    'storage_set__room',
+                    'storage_set__room__site',
+                )
             return super().get_queryset(request).prefetch_related('storage_set')
 
 

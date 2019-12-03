@@ -1,11 +1,11 @@
-from django.urls import reverse
 from django.db.models import Q
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
-from qatrack.qa.tests import utils as qa_utils
-from qatrack.service_log.tests import utils as sl_utils
 from qatrack.parts import models as p_models
 from qatrack.parts import views as p_views
+from qatrack.qa.tests import utils as qa_utils
+from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestCreatePart(TestCase):
@@ -26,6 +26,7 @@ class TestCreatePart(TestCase):
 
         self.data = {
             'part_number': 'p001',
+            'new_or_used': 'both',
             'cost': '1',
             'quantity_min': 0,
             'name': 'description',
@@ -33,7 +34,6 @@ class TestCreatePart(TestCase):
             'part_category': self.pc.id,
             'notes': 'This is a part',
             'is_obsolete': 0,
-
             'storage-MAX_NUM_FORMS': 1000,
             'storage-MIN_NUM_FORMS': 0,
             'storage-TOTAL_FORMS': 0,
@@ -57,7 +57,11 @@ class TestCreatePart(TestCase):
         suppliers = p_models.Supplier.objects.all()
         self.assertEqual(
             list(suppliers.values_list('id', 'name')),
-            list(response.context_data['supplier_formset'].forms[0].fields['supplier'].queryset.values_list('id', 'name'))
+            list(
+                response.context_data['supplier_formset'].forms[0].fields['supplier'].queryset.values_list(
+                    'id', 'name'
+                ),
+            )
         )
 
         room = p_models.Room.objects.all()
@@ -83,7 +87,7 @@ class TestCreatePart(TestCase):
         data['supplier-0-id'] = ''
 
         count = p_models.Part.objects.count()
-        response = self.client.post(self.url, data=data)
+        self.client.post(self.url, data=data)
         self.assertEqual(count + 1, p_models.Part.objects.count())
 
     def test_required(self):
@@ -143,6 +147,7 @@ class TestEditPart(TestCase):
 
         self.data = {
             'part_number': 'p001',
+            'new_or_used': 'both',
             'cost': '1',
             'quantity_min': 0,
             'name': 'description',
@@ -189,7 +194,7 @@ class TestEditPart(TestCase):
         data['storage-0-room'] = self.sto.room.id
 
         count = p_models.PartStorageCollection.objects.filter(part=self.p, storage__location='new_storage').count()
-        response = self.client.post(self.url, data=data)
+        self.client.post(self.url, data=data)
         self.assertEqual(
             count + 1,
             p_models.PartStorageCollection.objects.filter(part=self.p, storage__location='new_storage').count()
@@ -259,4 +264,3 @@ class TestPartViews(TestCase):
     def test_parts_low_title(self):
         response = self.client.get(reverse('parts_list') + '?f=qcqm-lt')
         self.assertContains(response, ' - Low Inventory')
-

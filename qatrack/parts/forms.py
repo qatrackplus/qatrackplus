@@ -1,6 +1,5 @@
-
 from django import forms
-from django.core.exceptions import ValidationError, ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db.models import ObjectDoesNotExist, Q
 from django.utils.encoding import force_text
 from form_utils.forms import BetterModelForm
@@ -156,7 +155,7 @@ class PartForm(BetterModelForm):
             }),
             ('required_fields', {
                 'fields': [
-                    'part_number', 'cost', 'quantity_min'
+                    'part_number', 'new_or_used', 'cost', 'quantity_min'
                 ],
             }),
             ('optional_fields', {
@@ -177,7 +176,7 @@ class PartForm(BetterModelForm):
         self.fields['quantity_min'].widget.attrs.update({'min': 0, 'step': 1})
         self.fields['quantity_min'].label = 'Low inventory count'
 
-        for f in ['part_number', 'cost', 'quantity_min', 'alt_part_number', 'part_category']:
+        for f in ['part_number', 'new_or_used', 'cost', 'quantity_min', 'alt_part_number', 'part_category']:
             self.fields[f].widget.attrs['class'] = 'form-control'
 
         for f in ['name', 'notes']:
