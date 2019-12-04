@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import os
 import time
@@ -6,7 +7,9 @@ import time
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.urls import reverse
+from django.utils import timezone
 import pytest
+import pytz
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -35,6 +38,10 @@ class TestTestListInstanceAPI(APITestCase):
         self.tsc = utils.create_test(name="testsc", test_type=models.STRING_COMPOSITE)
         self.tsc.calculation_procedure = "result = 'hello %s' % test3"
         self.tsc.save()
+
+        self.tdate = utils.create_test(name="testdate", test_type=models.DATE)
+        self.tdatetime = utils.create_test(name="testdatetime", test_type=models.DATETIME)
+
         self.default_tests = [self.t1, self.t2, self.t3, self.t4, self.t5]
         self.ntests = len(self.default_tests)
 
@@ -380,6 +387,34 @@ class TestTestListInstanceAPI(APITestCase):
         self.data['tests']['test2'] = 100
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_with_date(self):
+        """
+        Add a date test. Resulting TestInstance should have date_value != None
+        """
+        utils.create_test_list_membership(self.test_list, self.tdate)
+        today = datetime.date(2019, 11, 11)
+
+        self.data['tests']['testdate'] = {'value': today.strftime("%Y-%m-%d")}
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tdate)
+        assert tic.date_value == today
+
+    def test_create_with_datetime(self):
+        """
+        Add a datetime test. Resulting TestInstance should have datetime_value != None
+        """
+        utils.create_test_list_membership(self.test_list, self.tdatetime)
+        now = timezone.now()
+        self.data['tests']['testdatetime'] = {
+            'value': now.astimezone(pytz.timezone("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S.%f")
+        }
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tdatetime)
+        assert tic.datetime_value == now
 
     def test_create_with_string_composite(self):
         """

@@ -840,6 +840,8 @@ class TestDataReport(BaseReport):
             "unit_test_info__unit__site__name",
             "value",
             "string_value",
+            "date_value",
+            "datetime_value",
             "skipped",
             "created_by__username",
         )

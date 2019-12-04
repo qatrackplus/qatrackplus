@@ -1039,8 +1039,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             attachments.extend(ti_form.attachments_to_process)
 
             ti = models.TestInstance(
-                value=ti_form.cleaned_data.get("value", None),
+                value=ti_form.cleaned_data.get("value"),
                 string_value=ti_form.cleaned_data.get("string_value", ""),
+                date_value=ti_form.cleaned_data.get("date_value"),
+                datetime_value=ti_form.cleaned_data.get("datetime_value"),
                 skipped=ti_form.cleaned_data.get("skipped", False),
                 comment=ti_form.cleaned_data.get("comment", ""),
                 unit_test_info=ti_form.unit_test_info,

@@ -53,12 +53,21 @@ class TestInstanceWidgetsMixin(object):
         comment = cleaned_data.get("comment")
         value = cleaned_data.get("value", None)
         string_value = cleaned_data.get("string_value", None)
+        date_value = cleaned_data.get("date_value", None)
+        datetime_value = cleaned_data.get("datetime_value", None)
+
+        empty = (
+            value is None and
+            string_value in ["", None] and
+            date_value is None and
+            datetime_value is None
+        )
 
         if self.unit_test_info.test.skip_required():
             # force user to enter value unless skipping test
-            if value is None and not string_value and not skipped:
+            if empty and not skipped:
                 self._errors["value"] = self.error_class([_("Value required if not skipping")])
-            elif (value is not None or string_value) and skipped:
+            elif not empty and skipped:
                 self._errors["value"] = self.error_class([_("Clear value if skipping")])
 
             no_comment_required = (
@@ -69,10 +78,10 @@ class TestInstanceWidgetsMixin(object):
                 self._errors["skipped"] = self.error_class([_("Please add comment when skipping")])
                 del cleaned_data["skipped"]
 
-            if (value is None and not string_value) and skipped and "value" in self.errors:
+            if empty and skipped and "value" in self.errors:
                 del self.errors["value"]
         else:
-            cleaned_data['skipped'] = value is None and not string_value
+            cleaned_data['skipped'] = empty
             if "value" in self.errors:
                 del self.errors["value"]
 
@@ -82,10 +91,11 @@ class TestInstanceWidgetsMixin(object):
         """add custom widget for boolean values (after form has been initialized)"""
 
         # temp store attributes so they can be restored to reset widget
-        self.fields["string_value"].widget.attrs["class"] = "qa-input"
-        self.fields["value"].widget.attrs["class"] = "qa-input"
-        attrs = self.fields["value"].widget.attrs
-        str_attrs = self.fields["string_value"].widget.attrs
+        value_fields = ["value", "string_value", "date_value", "datetime_value"]
+        widget_attrs = {}
+        for f in value_fields:
+            self.fields[f].widget.attrs["class"] = "qa-input"
+            widget_attrs[f] = self.fields[f].widget.attrs
 
         test_type = self.unit_test_info.test.type
 
@@ -117,8 +127,8 @@ class TestInstanceWidgetsMixin(object):
             if hasattr(self, "instance") and self.instance.value is not None:
                 self.initial["value"] = int(self.instance.value)
 
-        self.fields["value"].widget.attrs.update(attrs)
-        self.fields["string_value"].widget.attrs.update(str_attrs)
+        for f in value_fields:
+            self.fields[f].widget.attrs.update(widget_attrs[f])
 
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
@@ -145,6 +155,8 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
     string_value = forms.CharField(required=False)
+    date_value = forms.DateField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
+    datetime_value = forms.DateTimeField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
 
     skipped = forms.BooleanField(required=False, help_text=_l("Was this test skipped for some reason (add comment)"))
     comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_l("Show or hide comment field"))
@@ -217,7 +229,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
     class Meta:
         model = models.TestInstance
-        fields = ("value", "string_value", "skipped", "comment", "user_attached",)
+        fields = ("value", "string_value", "date_value", "datetime_value", "skipped", "comment", "user_attached",)
 
     def __init__(self, *args, **kwargs):
 

@@ -227,12 +227,14 @@ class TestTest(TestCase):
             assert test.is_numerical_type()
 
     def test_is_string_type(self):
-        for t in (
-            models.STRING_COMPOSITE,
-            models.STRING,
-        ):
-            test = self.create_test(name="num", type=t)
+        for t in (models.STRING_COMPOSITE, models.STRING):
+            test = self.create_test(name="str", type=t)
             assert test.is_string_type()
+
+    def test_is_date_type(self):
+        for t in (models.DATE, models.DATETIME):
+            test = self.create_test(name="date", type=t)
+            assert test.is_date_type()
 
     def test_valid_check_type(self):
         types = (

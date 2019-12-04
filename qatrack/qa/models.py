@@ -24,7 +24,7 @@ from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
-from qatrack.qatrack_core.utils import format_datetime
+from qatrack.qatrack_core.utils import format_as_date, format_datetime
 from qatrack.units.models import Unit
 
 # All available test types
@@ -41,7 +41,8 @@ DATE = "date"
 DATETIME = "datetime"
 
 NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
-STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE, DATE, DATETIME)
+STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE)
+DATE_TYPES = (DATE, DATETIME)
 COMPOSITE_TYPES = (COMPOSITE, STRING_COMPOSITE,)
 DATE_TYPES = (DATE, DATETIME,)
 CALCULATED_TYPES = (UPLOAD, COMPOSITE, STRING_COMPOSITE, )
@@ -902,6 +903,9 @@ class Test(models.Model, TestPackMixin):
 
     def is_string_type(self):
         return self.type in STRING_TYPES
+
+    def is_date_type(self):
+        return self.type in DATE_TYPES
 
     def is_string(self):
         return self.type == STRING
@@ -1817,6 +1821,8 @@ class TestInstance(models.Model):
         null=True,
     )
     string_value = models.TextField(null=True, blank=True)
+    date_value = models.DateField(null=True, blank=True)
+    datetime_value = models.DateTimeField(null=True, blank=True)
 
     skipped = models.BooleanField(help_text=_l("Was this test skipped for some reason (add comment)"), default=False)
     comment = models.TextField(help_text=_l("Add a comment to this test"), null=True, blank=True)
@@ -1940,7 +1946,13 @@ class TestInstance(models.Model):
     def calculate_pass_fail(self):
         """set pass/fail status of the current value"""
 
-        value_null = self.value is None and self.string_value in (None, '')
+        num_value_null = self.value is None
+        string_value_null = self.string_value in (None, '')
+        date_value_null = self.date_value is None
+        datetime_value_null = self.datetime_value is None
+
+        value_null = num_value_null and string_value_null and date_value_null and datetime_value_null
+
         if ((self.skipped and not self.unit_test_info.test.hidden) or
             (value_null and self.test_list_instance.in_progress)):
             self.pass_fail = NOT_DONE
@@ -1961,6 +1973,10 @@ class TestInstance(models.Model):
             return self.string_value
         elif self.unit_test_info.test.is_boolean():
             return bool(self.value)
+        elif self.unit_test_info.test.is_date():
+            return self.date_value
+        elif self.unit_test_info.test.is_datetime():
+            return self.datetime_value
 
         return self.value
 
@@ -1983,11 +1999,20 @@ class TestInstance(models.Model):
                 self.status = status
                 self.review_date = timezone.now()
 
+    @property
+    def empty(self):
+        null_num = self.value is None
+        null_str = self.string_value in ["", None]
+        null_date = self.date_value is None
+        null_dt = self.datetime_value is None
+        return null_num and null_str and null_date and null_dt
+
     def value_display(self, coerce_numerical=True):
         """If coerce_numerical=False, the actual value will be returned rather than coercing to string representation"""
+
         if self.skipped:
             return _("Skipped")
-        elif self.value is None and self.string_value in (None, ""):
+        elif self.empty:
             return NOT_DONE_DISP
 
         test = self.unit_test_info.test
@@ -1999,6 +2024,10 @@ class TestInstance(models.Model):
             return self.upload_link()
         elif test.is_string_type():
             return self.string_value
+        elif test.is_date():
+            return format_as_date(self.date_value)
+        elif test.is_datetime():
+            return format_datetime(self.datetime_value)
         elif test.is_numerical_type() and not coerce_numerical:
             return self.value
         elif test.formatting:

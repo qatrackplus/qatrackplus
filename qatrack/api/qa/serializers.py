@@ -18,6 +18,7 @@ from qatrack.api.attachments.serializers import AttachmentSerializer
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models, signals
 from qatrack.qa.views.perform import CompositePerformer, UploadHandler
+from qatrack.qatrack_core.utils import parse_date, parse_datetime
 from qatrack.service_log import models as sl_models
 
 BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")
@@ -125,7 +126,7 @@ class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
 class TestInstanceCreator(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.TestInstance
-        fields = ["value", "string_value", "skipped", "comment", "macro"]
+        fields = ["value", "string_value", "date_value", "datetime_value", "skipped", "comment", "macro"]
 
 
 class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
@@ -301,17 +302,18 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             if type_ in auto_types and not self.autovalue_ok(validated_val, provided_val):
                 invalid_autos.append(slug)
 
+            d = validated_data['tests'][slug]
             if type_ in models.STRING_TYPES and slug in validated_data['tests']:
-                d = validated_data['tests'][slug]
                 d['string_value'] = d.pop('value', "")
-                validated_data['tests'][slug] = d
+            elif type_ == models.DATE and slug in validated_data['tests']:
+                d['date_value'] = parse_date(d.pop('value', ""))
+            elif type_ == models.DATETIME and slug in validated_data['tests']:
+                d['datetime_value'] = parse_datetime(d.pop('value', ""))
             elif type_ == models.UPLOAD and slug in validated_data['tests']:
-                d = validated_data['tests'][slug]
                 # remove base64 data
                 d.pop('value', "")
                 # string value needs to be set to attachment id for later editing
                 d['string_value'] = self.ti_attachments[slug][0]
-                validated_data['tests'][slug] = d
 
         if missing:
             msgs.append("Missing data for tests: %s" % ', '.join(missing))
@@ -334,7 +336,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         return validated_data
 
     def type_okay(self, type_, val):
-        if type_ in models.STRING_TYPES and not isinstance(val, str):
+        if type_ in models.STRING_TYPES + models.DATE_TYPES and not isinstance(val, str):
             return False
         elif type_ in models.NUMERICAL_TYPES and not isinstance(val, Number):
             return False
@@ -512,8 +514,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         for order, uti in enumerate(ordered_utis):
             data = test_instance_data[uti.test.slug]
             ti = models.TestInstance(
-                value=data.get("value", None),
+                value=data.get("value"),
                 string_value=data.get("string_value", ""),
+                date_value=data.get("date_value"),
+                datetime_value=data.get("datetime_value"),
                 skipped=data.get("skipped", False),
                 comment=data.get("comment", ""),
                 unit_test_info=uti,
@@ -630,6 +634,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             ti.skipped = tid.get("skipped", ti.skipped)
             ti.value = tid.get("value", ti.value)
             ti.string_value = tid.get("string_value", ti.string_value)
+            ti.date_value = tid.get("date_value", ti.date_value)
+            ti.datetime_value = tid.get("datetime_value", ti.datetime_value)
             ti.skipped = tid.get("skipped", False)
             ti.comment = tid.get("comment", ti.comment)
 
@@ -695,6 +701,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 "url": base_url + "%d/" % ti.pk,
                 "value": ti.value,
                 "string_value": ti.string_value,
+                "date_value": ti.date_value,
+                "datetime_value": ti.datetime_value,
                 "value_display": ti.value_display(),
                 "diff_display": ti.diff_display(),
                 "pass_fail": (ti.pass_fail, ti.get_pass_fail_display()),
