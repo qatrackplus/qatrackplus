@@ -586,6 +586,9 @@ SL_ALLOW_BLANK_SERVICE_TYPE = False
 
 TESTPACK_TIMEOUT = 30
 
+# maximum line length for formatting of calculation procedures
+MAX_LINE_LENGTH = 88
+
 
 # SQL Explorer Settings
 

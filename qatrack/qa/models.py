@@ -1,5 +1,6 @@
 import re
 
+import black
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -964,9 +965,9 @@ class Test(models.Model, TestPackMixin):
         if not (result_line or macro_var_set):
             if not self.calculation_procedure and self.is_upload():
                 # don't require a user defined calc procedure for uploads
-                self.calculation_procedure = _("%(test_name)s = None") % {'test_name': self.slug}
+                self.calculation_procedure = "%s = None" % self.slug
             else:
-                msg = _l(
+                msg = _(
                     'Snippet must set macro name to a value or contain a result line '
                     '(e.g. %(test_name)s = my_var/another_var*2 or result = my_var/another_var*2)'
                 ) % {
@@ -975,9 +976,11 @@ class Test(models.Model, TestPackMixin):
                 errors.append(msg)
 
         try:
-            utils.tokenize_composite_calc(self.calculation_procedure)
-        except utils.tokenize.TokenError:
-            errors.append(_('Calculation procedure invalid: Possible cause is an unbalanced parenthesis'))
+            versions = [black.TargetVersion.PY35, black.TargetVersion.PY36]
+            mode = black.FileMode(target_versions=versions, line_length=settings.MAX_LINE_LENGTH)
+            self.calculation_procedure = black.format_str(self.calculation_procedure, mode=mode)
+        except Exception as err:
+            errors.append(_('Calculation procedure invalid: %(err)s' % {'err': str(err)}))
 
         if errors:
             raise ValidationError({"calculation_procedure": errors})
