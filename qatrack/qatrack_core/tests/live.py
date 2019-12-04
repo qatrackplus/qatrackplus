@@ -10,12 +10,14 @@ from django.test.testcases import LiveServerThread, QuietWSGIRequestHandler
 import pytest
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as e_c
 from selenium.webdriver.support.expected_conditions import staleness_of
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
 
@@ -101,17 +103,17 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
         orig_find_element = cls.driver.find_element
 
-        @retry_if_exception(WebDriverException, 10, sleep_time=1)
+        @retry_if_exception(WebDriverException, 2, sleep_time=1)
         def WebElement_find_element(*args, **kwargs):
             """Monky patch find element to allow retries"""
             return orig_find_element(*args, **kwargs)
         cls.driver.find_element = WebElement_find_element
 
-        cls.driver.set_page_load_timeout(10)
-        cls.driver.implicitly_wait(10)
+        cls.driver.set_page_load_timeout(2)
+        cls.driver.implicitly_wait(2)
 
         cls.maximize()
-        cls.wait = WebDriverWait(cls.driver, 10)
+        cls.wait = WebDriverWait(cls.driver, 2)
 
         super(SeleniumTests, cls).setUpClass()
 
@@ -136,14 +138,14 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         super(SeleniumTests, cls).tearDownClass()
 
     @contextmanager
-    def wait_for_page_load(self, timeout=10):
+    def wait_for_page_load(self, timeout=2):
         old_page = self.driver.find_element_by_tag_name('html')
         yield
         WebDriverWait(self.driver, timeout).until(
             staleness_of(old_page)
         )
 
-    @retry_if_exception(Exception, 5, sleep_time=1)
+    @retry_if_exception(Exception, 2, sleep_time=1)
     def open(self, url):
         with self.wait_for_page_load():
             self.driver.execute_script(
@@ -154,3 +156,76 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         self.wait.until(
             e_c.presence_of_element_located((By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]'))
         )
+
+    def scroll_into_view(self, el_id):
+        self.wait.until(e_c.presence_of_element_located((By.ID, el_id)))
+        actions = ActionChains(self.driver)
+        element = self.driver.find_element_by_id(el_id)
+        actions.move_to_element(element)
+        time.sleep(1)
+        actions.perform()
+        self.driver.execute_script("window.scrollTo(0, -200);")
+
+    def select_by_index(self, el_id, index):
+
+        self.scroll_into_view(el_id)
+        try:
+            select = Select(self.driver.find_element_by_id(el_id))
+            select.select_by_index(1)
+        except:  # noqa: E722
+            # select2?
+            sel2 = self.driver.find_element_by_id("select2-%s-container" % el_id)
+            sel2.click()
+            els = self.driver.find_elements_by_class_name("select2-results__option")
+            els[index].click()
+
+    def select_by_text(self, el_id, text):
+
+        self.scroll_into_view(el_id)
+        try:
+            select = Select(self.driver.find_element_by_id(el_id))
+            select.select_by_visible_text(text)
+        except:  # noqa: E722
+
+            sel2 = self.driver.find_element_by_id("select2-%s-container" % el_id)
+            sel2.click()
+
+            els = self.driver.find_elements_by_class_name("select2-results__option")
+            for el in els:
+                if el.text == text:
+                    el.click()
+                    break
+
+    def select_by_value(self, el_id, val):
+
+        self.scroll_into_view(el_id)
+        try:
+            select = Select(self.driver.find_element_by_id(el_id))
+            select.select_by_value(val)
+        except:  # noqa: E722
+
+            sel2 = self.driver.find_element_by_id("select2-%s-container" % el_id)
+            sel2.click()
+
+            els = self.driver.find_elements_by_class_name("select2-results__option")
+            for el in els:
+                if el.get_attribute('value') == val:
+                    el.click()
+                    break
+
+    def send_keys(self, el_id, text):
+        for i in range(3):
+            try:
+                self.scroll_into_view(el_id)
+                self.driver.find_element_by_id(el_id).send_keys(text)
+                break
+            except:  # noqa: E722
+                if i == 2:
+                    raise
+                else:
+                    time.sleep(1)
+
+    def click(self, el_id):
+        self.scroll_into_view(el_id)
+        element = self.driver.find_element_by_id(el_id)
+        self.driver.execute_script("arguments[0].click();", element)

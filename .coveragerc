@@ -10,6 +10,7 @@ source =
     qatrack.attachments
     qatrack.api
     qatrack.contacts
+    qatrack.issues
     qatrack.notifications
     qatrack.parts
     qatrack.reports
@@ -17,6 +18,8 @@ source =
     qatrack.qatrack_core
     qatrack.service_log
     qatrack.units
+#plugins =
+#    django_coverage_plugin
 
 [html]
 directory = cover

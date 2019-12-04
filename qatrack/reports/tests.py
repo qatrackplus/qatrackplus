@@ -1,5 +1,6 @@
 import io
 import json
+import time
 from unittest import mock
 
 from django.contrib.admin.sites import AdminSite
@@ -14,7 +15,6 @@ from django_q.models import Schedule
 import pytz
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as e_c
-from selenium.webdriver.support.ui import Select
 
 # Create your tests here.
 from qatrack.qa.models import Frequency, Group, TestListInstance, User
@@ -797,21 +797,20 @@ class TestReportInterface(BaseQATests):
         self.login()
         self.open(reverse("reports"))
         self.wait.until(e_c.presence_of_element_located((By.ID, 'select2-id_root-report_type-container')))
-        self.report_type_select = Select(self.driver.find_element_by_id('id_root-report_type'))
 
     def test_report_preview(self):
         """Select report and make sure it previews"""
-        self.report_type_select.select_by_visible_text(reports.QCSummaryReport.name)
+        self.select_by_text('id_root-report_type', reports.QCSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
-        self.driver.find_element_by_id("preview").click()
+        self.click("preview")
         self.driver.find_element_by_css_selector('#report .container-fluid')
 
     def test_save_report(self):
         """Select report and make sure it previews"""
-        self.report_type_select.select_by_visible_text(reports.QCSummaryReport.name)
+        self.select_by_text('id_root-report_type', reports.QCSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
         assert models.SavedReport.objects.count() == 0
-        self.driver.find_element_by_id("save").click()
+        self.click("save")
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
         assert models.SavedReport.objects.count() == 1
         sr = models.SavedReport.objects.first()
@@ -831,7 +830,7 @@ class TestReportInterface(BaseQATests):
         # need to reload page to get report table
         self.driver.refresh()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
-        self.driver.find_element_by_id('report-id-%s' % sr.pk).click()
+        self.click('report-id-%s' % sr.pk)
         wc = self.driver.find_element_by_id('id_work_completed')
         assert wc.get_attribute("value") == "02 Jan 1989 - 04 Jan 1990"
 
@@ -848,20 +847,18 @@ class TestReportInterface(BaseQATests):
         )
         # need to reload page to get report table
         self.driver.refresh()
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
-        self.driver.find_element_by_id('report-id-%s' % sr.pk).click()
 
-        self.driver.find_element_by_id("report-id-%s-schedule" % sr.pk).click()
+        self.click('report-id-%s' % sr.pk)
 
-        self.wait.until(e_c.presence_of_element_located((By.ID, "id_schedule-time")))
-        select = Select(self.driver.find_element_by_id('id_schedule-time'))
-        select.select_by_index(1)
+        self.click('report-id-%s-schedule' % sr.pk)
+
+        self.select_by_index('id_schedule-time', 1)
         self.driver.find_element_by_id("id_schedule-emails").send_keys("a@b.com")
 
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'add-date')))
         self.driver.find_element_by_class_name("add-date").click()
 
-        self.driver.find_element_by_id("schedule").click()
+        self.click("schedule")
 
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
         sched = str(models.ReportSchedule.objects.first().schedule)
@@ -891,10 +888,10 @@ class TestReportInterface(BaseQATests):
         self.driver.refresh()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
 
-        self.driver.find_element_by_id("report-id-%s-schedule" % sr.pk).click()
+        self.click("report-id-%s-schedule" % sr.pk)
+        time.sleep(1)
 
-        self.wait.until(e_c.visibility_of_all_elements_located((By.ID, 'clear-schedule')))
-        self.driver.find_element_by_id("clear-schedule").click()
+        self.click("clear-schedule")
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
         assert models.ReportSchedule.objects.count() == 0
 

@@ -147,8 +147,8 @@ class BaseQATests(SeleniumTests):
 
     def login(self):
         self.open("/accounts/login/")
-        self.driver.find_element_by_id('id_username').send_keys(self.user.username)
-        self.driver.find_element_by_id('id_password').send_keys(self.password)
+        self.send_keys("id_username", self.user.username)
+        self.send_keys("id_password", self.password)
         self.driver.find_element_by_css_selector('button').click()
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
@@ -159,8 +159,8 @@ class BaseQATests(SeleniumTests):
 
     def load_admin(self):
         self.open("/admin/")
-        self.driver.find_element_by_id('id_username').send_keys(self.user.username)
-        self.driver.find_element_by_id('id_password').send_keys(self.password)
+        self.send_keys("id_username", self.user.username)
+        self.send_keys("id_password", self.password)
         self.driver.find_element_by_css_selector('button').click()
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
@@ -206,15 +206,15 @@ class LiveQATests(BaseQATests):
         for i in range(len(objects['Tests'])):
             # the_test = objects['Tests'][i]
             the_test = objects['Tests'][i]
-            self.driver.find_element_by_id('id_name').send_keys(the_test['name'])
-            self.driver.find_element_by_id('id_slug').send_keys(the_test['name'])
-            Select(self.driver.find_element_by_id('id_category')).select_by_index(1)
-            Select(self.driver.find_element_by_id('id_type')).select_by_value(the_test['name'])
+            self.send_keys('id_name', the_test['name'])
+            self.send_keys('id_slug', the_test['name'])
+            self.select_by_index('id_category', 1)
+            self.select_by_value('id_type', the_test['name'])
 
             if the_test['choices']:
-                self.driver.find_element_by_id('id_choices').send_keys('1,2,3,4,5')
+                self.send_keys('id_choices', '1,2,3,4,5')
             if the_test['constant_value']:
-                self.driver.find_element_by_id('id_constant_value').send_keys('23.23')
+                self.send_keys('id_constant_value', '23.23')
             if the_test['procedure']:
                 time.sleep(1)
                 self.driver.find_element_by_css_selector('#calc-procedure-editor > textarea').send_keys(
@@ -228,7 +228,15 @@ class LiveQATests(BaseQATests):
             else:
                 self.driver.execute_script("$('input[name=_addanother]').click();")
 
-            self.wait_for_success()
+            for i in range(3):
+                try:
+                    self.wait_for_success()
+                    break
+                except:  # noqa: E722
+                    if i == 2:
+                        raise
+                    else:
+                        time.sleep(1)
 
     def test_admin_testlist(self):
 

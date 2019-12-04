@@ -57,9 +57,6 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
 
     filter_horizontal = ["service_event_related"]
 
-    def get_queryset(self, request):
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
-        # use our manager, rather than the default one
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
         if db_field.name == "unit_service_area":
