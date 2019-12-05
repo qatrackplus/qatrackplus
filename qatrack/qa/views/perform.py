@@ -540,7 +540,12 @@ class CompositePerformer:
         results = {}
 
         for slug in self.cyclic_tests:
-            results[slug] = {'value': None, 'error': _("Cyclic test dependency")}
+            results[slug] = {
+                'value': None,
+                'error': _("Cyclic test dependency %(tests)s") % {
+                    'tests': ', '.join(self.cyclic_tests)
+                },
+            }
 
         for slug in self.calculation_order:
             raw_procedure = self.composite_tests[slug]
