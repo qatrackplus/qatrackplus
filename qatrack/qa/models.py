@@ -1,6 +1,5 @@
 import re
 
-import black
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -23,6 +22,7 @@ from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 from recurrence.fields import RecurrenceField
 
+import black
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
 from qatrack.qatrack_core.utils import format_datetime
@@ -977,8 +977,10 @@ class Test(models.Model, TestPackMixin):
 
         try:
             versions = [black.TargetVersion.PY35, black.TargetVersion.PY36]
-            mode = black.FileMode(target_versions=versions, line_length=settings.MAX_LINE_LENGTH)
-            self.calculation_procedure = black.format_str(self.calculation_procedure, mode=mode)
+            mode = black.FileMode(target_versions=versions, line_length=settings.COMPOSITE_MAX_LINE_LENGTH)
+            formatted = black.format_str(self.calculation_procedure, mode=mode)
+            if settings.COMPOSITE_AUTO_FORMAT:
+                self.calculation_procedure = formatted
         except Exception as err:
             errors.append(_('Calculation procedure invalid: %(err)s' % {'err': str(err)}))
 
