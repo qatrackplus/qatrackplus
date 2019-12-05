@@ -28,7 +28,6 @@ function toggle_test_type(){
         $(".field-constant_value, .field-choices, .field-skip_without_comment").not(".errors").hide();
         if (val === "scomposite"){
             $(".field-chart_visibility").prop("checked", false).hide();
-            $(".field-chart_visibility").prop("checked", false).hide();
         }else{
             $(".field-chart_visibility").prop("checked", true).show();
         }

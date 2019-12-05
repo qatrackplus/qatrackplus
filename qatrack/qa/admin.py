@@ -846,6 +846,7 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
                     'choices',
                     'constant_value',
                     'calculation_procedure',
+                    'display_image',
                     'hidden',
                     'skip_without_comment',
                     'formatting',
