@@ -1,5 +1,6 @@
 import re
 
+import black
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -22,7 +23,6 @@ from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 from recurrence.fields import RecurrenceField
 
-import black
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
 from qatrack.qatrack_core.utils import format_datetime
@@ -758,7 +758,7 @@ class Category(MPTTModel):
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id", "tree_id", "lft", "rght", "level"]
+        exclude = ["id", "tree_id", "lft", "rght", "level", "parent"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def natural_key(self):
