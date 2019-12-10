@@ -1040,7 +1040,7 @@ class Test(models.Model, TestPackMixin):
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id", "modified", "modified_by", "created", "created_by"]
+        exclude = ["id", "modified", "modified_by", "created", "created_by", "autoreviewruleset"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def get_testpack_dependencies(self):
