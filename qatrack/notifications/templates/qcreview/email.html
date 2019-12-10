@@ -6,9 +6,11 @@
 {% block extra_css %}
   th.header {
     font-weight: bold;
+    text-align: left;
   }
   thead th.header {
-    text-align: center;
+    text-align: left;
+    border-bottom: 1px solid #ccc;
   }
   thead th {
     font-weight: bold;
@@ -17,22 +19,24 @@
   tbody th.header {
     padding-right: 10px;
   }
-  .due-date {
+
+  thead th.header.unreviewed-count,
+  tbody td.unreviewed-count {
     text-align: center;
-    font-size: 0.9em;
+    width: 15%;
   }
 {% endblock %}
 {% block content %}
 <p>Hello,</p>
 <p>
-  The following test list assignments currently have unreviewed instances
+The following test list assignments currently have <a href="{{ domain }}{% url "unreviewed_visible_to" %}">unreviewed instances</a>.
 </p>
 <table style="border: none;" cellspacing="0" cellpadding="0">
   <thead>
     <tr>
-      <th class="header" style="border-bottom: 1px solid #ccc;">Unit</th>
-      <th style="border-bottom: 1px solid #ccc;">Test List (Cycle)</th>
-      <th style="border-bottom: 1px solid #ccc;">Unreviewed Count</th>
+      <th class="header">Unit</th>
+      <th class="header">Test List (Cycle)</th>
+      <th class="header unreviewed-count">Count</th>
     </tr>
   </thead>
   <tbody>
@@ -46,7 +50,8 @@
             <td>&nbsp;</td>
           {% endif %}
           <td>{{ unit_utc.unit_test_collection__name }}</td>
-          <td class="">{{ unit_utc.unit_test_collection__name__count }}</td>
+          <td class="unreviewed-count">
+            {{ unit_utc.unit_test_collection__name__count }}</td>
         </tr>
       {% endfor %}
     {% endfor %}

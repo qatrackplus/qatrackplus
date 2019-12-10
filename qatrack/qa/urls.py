@@ -77,7 +77,7 @@ urlpatterns = [
         name="review_test_list_instance"
     ),
     url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
-    url(r"^session/unreviewedvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
+    url(r"^session/unreviewed/visible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
     url(r"^session/group/$", review.ChooseGroupVisibleTo.as_view(), name="choose_group_visible"),
     url(
         r"^session/unreviewedbygroup/(?P<group>[/\d]+)/$",
