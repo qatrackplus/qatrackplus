@@ -326,7 +326,7 @@ div.sublist-description {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    /*max-width: 0;*/
+    height: 25px;
 }
 
 #perform-qa-table > thead > tr > th.qa-history {
@@ -555,8 +555,8 @@ td.qa-category.bar-container {
 td.qa-category .error-bar,
 td.qa-category .procedure-bar,
 td.qa-category .comment-bar {
-    height: inherit;
+    height: 0px;
 }
 #perform-qa-table tr {
-    height: 1px;
+    height: 0px;
 }
