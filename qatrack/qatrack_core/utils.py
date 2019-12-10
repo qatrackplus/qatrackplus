@@ -26,9 +26,12 @@ def chrometopdf(html, name=""):
         out_file = open(out_path, "wb")
 
         command = [
-            settings.CHROME_PATH, '--headless', '--disable-gpu',
+            settings.CHROME_PATH,
+            '--headless',
+            '--disable-gpu',
+            '--no-sandbox',
             '--print-to-pdf=%s' % out_file.name,
-            "file://%s" % tmp_html.name
+            "file://%s" % tmp_html.name,
         ]
 
         if os.name.lower() == "nt":
