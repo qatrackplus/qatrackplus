@@ -166,6 +166,15 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         actions.perform()
         self.driver.execute_script("window.scrollTo(0, -200);")
 
+    def scroll_into_view_css(self, css_sel):
+        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, css_sel)))
+        actions = ActionChains(self.driver)
+        element = self.driver.find_element_by_css_selector(css_sel)
+        actions.move_to_element(element)
+        time.sleep(1)
+        actions.perform()
+        self.driver.execute_script("window.scrollTo(0, -200);")
+
     def select_by_index(self, el_id, index):
 
         self.scroll_into_view(el_id)
@@ -229,3 +238,11 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         self.scroll_into_view(el_id)
         element = self.driver.find_element_by_id(el_id)
         self.driver.execute_script("arguments[0].click();", element)
+
+    def click_by_css_selector(self, css_sel):
+        self.scroll_into_view_css(css_sel)
+        element = self.driver.find_element_by_css_selector(css_sel)
+        try:
+            element.click()
+        except:
+            self.driver.execute_script("arguments[0].click();", element)

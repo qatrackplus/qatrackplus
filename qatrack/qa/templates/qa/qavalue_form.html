@@ -67,7 +67,7 @@
             {{ form.datetime_value }}
           {% endif %}
           <span class="input-group-btn">
-            <button type="button" class="btn btn-flat btn-xs" title="toggle" data-toggle>
+            <button type="button" class="btn btn-flat btn-xs choose-date{% if test.is_datetime %}time{% endif %}" title="toggle" data-toggle>
               {% if test.is_datetime %}
                 <i class="fa fa-stack fa-fw qa-date-pick">
                   <i class="fa fa-calendar fa-stack-custom-main"></i>

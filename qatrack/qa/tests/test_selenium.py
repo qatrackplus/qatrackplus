@@ -605,13 +605,35 @@ class TestPerformQC(BaseQATests):
             self.group.permissions.add(p)
         self.user.groups.add(self.group)
         self.test_list = utils.create_test_list()
-        self.t1 = utils.create_test(name="test1")
-        self.t2 = utils.create_test(name="test2")
-        self.tc = utils.create_test(name="testc", test_type=models.COMPOSITE)
-        self.tc.calculation_procedure = "result = test1 + test2 + 2"
-        self.tc.save()
-        for t in [self.t1, self.t2, self.tc]:
-            utils.create_test_list_membership(self.test_list, t)
+
+        self.tnum_1 = utils.create_test(name="test1")
+        self.tnum_2 = utils.create_test(name="test2")
+        self.tcomp = utils.create_test(name="testc", test_type=models.COMPOSITE)
+        self.tcomp.calculation_procedure = "result = test1 + test2 + 2"
+        self.tcomp.save()
+
+        self.tdate = utils.create_test(name="testdate", test_type=models.DATE)
+        self.tdatetime = utils.create_test(name="testdatetime", test_type=models.DATETIME)
+
+        self.tmult = utils.create_test(name="testmult", choices="choicea,choiceb", test_type=models.MULTIPLE_CHOICE)
+        self.tstring = utils.create_test(name="teststring", test_type=models.STRING)
+        self.tstringcomp = utils.create_test(name="teststringcomp", test_type=models.STRING_COMPOSITE)
+        self.tstringcomp.calculation_procedure = "teststringcomp = teststring + testmult"
+        self.tstringcomp.save()
+
+        all_tests = [
+            self.tnum_1,
+            self.tnum_2,
+            self.tcomp,
+            self.tdate,
+            self.tdatetime,
+            self.tmult,
+            self.tstring,
+            self.tstringcomp,
+        ]
+
+        for o, t in enumerate(all_tests):
+            utils.create_test_list_membership(self.test_list, t, order=o)
 
         self.utc = utils.create_unit_test_collection(unit=self.unit, test_collection=self.test_list)
 
@@ -638,8 +660,38 @@ class TestPerformQC(BaseQATests):
         inputs[1].send_keys(2)
         inputs[1].send_keys(Keys.TAB)
         time.sleep(0.2)
+
+        self.click_by_css_selector(".choose-date")
+        time.sleep(0.2)
+        self.click_by_css_selector(".open .today")
+
+        self.click_by_css_selector(".choose-datetime")
+        time.sleep(0.2)
+        self.click_by_css_selector(".open .today")
+
+        time.sleep(0.2)
+        self.driver.find_element_by_css_selector("body").click()
+
+        option = self.driver.find_elements_by_css_selector("select.qa-input option")[-1]
+        option.click()
+
+        self.driver.find_element_by_css_selector(".qa-string .qa-input").send_keys("test")
+        self.driver.find_element_by_css_selector("body").click()
+        time.sleep(0.2)
         assert int(float(inputs[2].get_attribute("value"))) == 5
         assert models.TestListInstance.objects.count() == 0
-        self.driver.find_element_by_id("submit-qa").click()
+        self.click("submit-qa")
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+
         assert models.TestListInstance.objects.count() == 1
+
+        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[0].value == 1
+        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[1].value == 2
+        assert models.TestInstance.objects.get(unit_test_info__test__type="composite").value == 5
+        now = timezone.now()
+        assert models.TestInstance.objects.get(unit_test_info__test__type="date").date_value == now.date()
+        dt = now.replace(hour=17, minute=0, second=0, microsecond=0)
+        assert models.TestInstance.objects.get(unit_test_info__test__type="datetime").datetime_value == dt
+        assert models.TestInstance.objects.get(unit_test_info__test__type="string").string_value == "test"
+        assert models.TestInstance.objects.get(unit_test_info__test__type="scomposite").string_value == "testchoiceb"
+        assert models.TestInstance.objects.get(unit_test_info__test__type="multchoice").string_value == "choiceb"
