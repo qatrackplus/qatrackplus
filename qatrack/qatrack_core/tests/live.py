@@ -163,8 +163,11 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         element = self.driver.find_element_by_id(el_id)
         actions.move_to_element(element)
         time.sleep(1)
-        actions.perform()
-        self.driver.execute_script("window.scrollTo(0, -200);")
+        try:
+            actions.perform()
+            self.driver.execute_script("window.scrollTo(0, -200);")
+        except:
+            pass
 
     def scroll_into_view_css(self, css_sel):
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, css_sel)))
