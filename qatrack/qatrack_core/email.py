@@ -10,6 +10,19 @@ import pynliner
 logger = logging.getLogger('qatrack')
 
 
+def email_context(context):
+    context = context or {}
+    site = Site.objects.get_current()
+    domain = site.domain
+    if not domain.startswith("http"):
+        domain = "%s://%s" % (settings.HTTP_OR_HTTPS, domain)
+    context.update({
+        "domain": domain,
+        "site_obj": site,
+    })
+    return context
+
+
 def send_email_to_users(
     recipients, template, context=None, subject_template=None, text_template=None, attachments=None
 ):
@@ -18,12 +31,11 @@ def send_email_to_users(
         return
 
     attachments = attachments or []
-    context = context or {}
+
+    context = email_context(context)
 
     from_address = getattr(settings, "EMAIL_NOTIFICATION_SENDER", '"QATrack+" <notifications@qatrackplus.com>')
     fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
-
-    context["domain"] = Site.objects.get_current().domain
 
     if subject_template:
         subject = render_to_string(subject_template, context).strip()

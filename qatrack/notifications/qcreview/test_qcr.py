@@ -218,6 +218,9 @@ class TestQCReviewEmails(TestCase):
         Schedule.objects.all().delete()
 
     def test_send_notice(self):
+        self.tli1 = utils.create_test_list_instance(unit_test_collection=self.utc1)
+        self.tli1.all_reviewed = False
+        self.tli1.save()
         now = timezone.now()
         tasks.send_qcreview_notice(self.notice.pk)
         self.notice.refresh_from_db()

@@ -1,5 +1,6 @@
 import re
 
+import black
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -758,7 +759,7 @@ class Category(MPTTModel):
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id", "tree_id", "lft", "rght", "level"]
+        exclude = ["id", "tree_id", "lft", "rght", "level", "parent"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def natural_key(self):
@@ -968,9 +969,9 @@ class Test(models.Model, TestPackMixin):
         if not (result_line or macro_var_set):
             if not self.calculation_procedure and self.is_upload():
                 # don't require a user defined calc procedure for uploads
-                self.calculation_procedure = _("%(test_name)s = None") % {'test_name': self.slug}
+                self.calculation_procedure = "%s = None" % self.slug
             else:
-                msg = _l(
+                msg = _(
                     'Snippet must set macro name to a value or contain a result line '
                     '(e.g. %(test_name)s = my_var/another_var*2 or result = my_var/another_var*2)'
                 ) % {
@@ -979,9 +980,13 @@ class Test(models.Model, TestPackMixin):
                 errors.append(msg)
 
         try:
-            utils.tokenize_composite_calc(self.calculation_procedure)
-        except utils.tokenize.TokenError:
-            errors.append(_('Calculation procedure invalid: Possible cause is an unbalanced parenthesis'))
+            versions = [black.TargetVersion.PY35, black.TargetVersion.PY36]
+            mode = black.FileMode(target_versions=versions, line_length=settings.COMPOSITE_MAX_LINE_LENGTH)
+            formatted = black.format_str(self.calculation_procedure, mode=mode)
+            if settings.COMPOSITE_AUTO_FORMAT:
+                self.calculation_procedure = formatted
+        except Exception as err:
+            errors.append(_('Calculation procedure invalid: %(err)s' % {'err': str(err)}))
 
         if errors:
             raise ValidationError({"calculation_procedure": errors})
@@ -1039,7 +1044,7 @@ class Test(models.Model, TestPackMixin):
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id", "modified", "modified_by", "created", "created_by"]
+        exclude = ["id", "modified", "modified_by", "created", "created_by", "autoreviewruleset"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def get_testpack_dependencies(self):

@@ -311,7 +311,7 @@ class ImportTestPack(FormView):
             messages.success(self.request, msg)
         except:  # noqa: E722
             msg = _("Sorry, but an error occurred when trying to import your TestPack. Please file a bug report.")
-            logging.exception(msg)
+            logger.exception(msg)
             messages.error(self.request, msg)
 
         return super(ImportTestPack, self).form_valid(form)

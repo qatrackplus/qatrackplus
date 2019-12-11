@@ -67,7 +67,7 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
             break
         except PermissionError:
             if count == 2:
-                logging.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
+                logger.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
                 break
             count += 1
             time.sleep(0.2)

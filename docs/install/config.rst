@@ -262,6 +262,16 @@ When `CATEGORY_FIRST_OF_GROUP_ONLY = True`, then the category will only be shown
 next to each test line when performing QC.
 
 
+COMPOSITE_AUTO_FORMAT
+.....................
+
+When `COMPOSITE_AUTO_FORMAT = True` (default) calculation procedures will be
+auto formatted with `Black <https://black.readthedocs.io/en/stable/>`_ .  This
+leaves everyones code in a consistent format making stylistic differences when
+reading code a non-issue.  Set to `False` to tell QATrack+ to leave your code
+alone!
+
+
 CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
 ..................................................................
 
