@@ -175,8 +175,11 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         element = self.driver.find_element_by_css_selector(css_sel)
         actions.move_to_element(element)
         time.sleep(1)
-        actions.perform()
-        self.driver.execute_script("window.scrollTo(0, -200);")
+        try:
+            actions.perform()
+            self.driver.execute_script("window.scrollTo(0, -200);")
+        except:
+            pass
 
     def select_by_index(self, el_id, index):
 
@@ -249,3 +252,8 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             element.click()
         except:
             self.driver.execute_script("arguments[0].click();", element)
+
+    def click_by_link_text(self, link_text):
+        time.sleep(0.2)
+        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, link_text)))
+        self.driver.find_element_by_link_text(link_text).click()
