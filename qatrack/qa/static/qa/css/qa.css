@@ -560,3 +560,8 @@ td.qa-category .comment-bar {
 #perform-qa-table tr {
     height: 0px;
 }
+
+.comp-calc-spinner {
+  display: inline-block;
+  margin-left: 10px;
+}

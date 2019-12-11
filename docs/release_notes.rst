@@ -108,7 +108,10 @@ Details of the v0.3.1 release
   used inventories of the same part separately.
 
 * Calculation procedures are now syntax checked, and automatically formatted
-  using `Black <https://black.readthedocs.io>`_. 
+  using `Black <https://black.readthedocs.io>`_.
+
+* A calculation status icon has been added (spins when calculations are being
+  performed).
 
 
 Deprecations & Discontinuations

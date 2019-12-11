@@ -776,6 +776,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.slugs = [];
         this.composites = [];
 
+        this.$spinners = $(".comp-calc-spinner i.fa");
         this.submit = $("#submit-qa");
 
         this.attachInput = $("#id_tli_attachments");
@@ -806,6 +807,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             if (self.composites.length === 0){
                 return;
             }
+            self.$spinners.removeClass("text-info").addClass("fa-spin text-warning").attr("title", "Performing calculations...");
 
             var cur_values = _.map(self.test_instances, function(ti){return ti.value;});
             var qa_values = _.zipObject(self.slugs, cur_values);
@@ -827,6 +829,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (latest_composite_call !== XHR){
                     return;
                 }
+                self.$spinners.removeClass("fa-spin text-warning").addClass("text-info").attr("title", "Calculations complete");
 
                 self.submit.attr("disabled", false);
 
@@ -868,6 +871,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             };
 
             var on_error = function(){
+                self.$spinners.removeClass("fa-spin text-warning").addClass("text-info").attr("title", "Calculations complete");
                 self.submit.attr("disabled", false);
                 $.Topic("qaUpdated").publish();
             };
