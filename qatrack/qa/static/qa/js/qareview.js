@@ -10,7 +10,8 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
             $("#test-list-info").toggle(600);
         });
         $(".bulk-status").on('change', function () {
-            var val = $(".bulk-status").val();
+            var val = $(this).val();
+            $(".bulk-status").not($(this)).val(val);
             if (val !== "") {
                 $("input.test-selected:checked").parents("tr").find("select").val(val);
             }
