@@ -270,7 +270,7 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             del obj[parent_attr]
             del obj[child_attr]
             if tuple(obj.items()) in seen:
-                continue
+                continue  # pragma: no cover
             seen.add(tuple(obj.items()))
 
             # remove any fields that don't exist in this version for backwards compatibility

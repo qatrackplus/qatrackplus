@@ -3,8 +3,13 @@ omit =
     *migrations*
     qatrack/wsgi.py
     qatrack/middleware/profiler.py
+    qatrack/**/management/commands/*
     qatrack/**/tests/*
     qatrack/**/apps.py
+    scripts/*
+    setup.py
+    manage.py
+    qatrack/accel_migration_tool
 source =
     qatrack.accounts
     qatrack.attachments

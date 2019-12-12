@@ -588,7 +588,7 @@
 
 {#                                        <a id="toggle-gen-comment" class="btn btn-default btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests">Add Comment</a>#}
 
-                                        <div class="pull-right margin-r-5">
+                                        <div id="in-progress-container" class="pull-right margin-r-5">
                                             {% if perms.qa.can_save_in_progress %}
                                             <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on" style="display: none;">
                                                 Mark this list as still in progress:
@@ -597,7 +597,7 @@
                                             {% endif %}
                                         </div>
 
-                                        <div class="pull-right margin-r-5">
+                                        <div id="init-se-container" class="pull-right margin-r-5">
                                             {% if perms.service_log.add_serviceevent and unit_test_collection.unit.is_serviceable %}
                                               <label title="{{form.initiate_service.help_text}}" for="id_initiate_service" class="add-on" style="display: none;">
                                                   Initiate service event:

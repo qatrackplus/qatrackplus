@@ -542,7 +542,7 @@ class CompositePerformer:
         for slug in self.cyclic_tests:
             results[slug] = {
                 'value': None,
-                'error': _("Cyclic test dependency %(tests)s") % {
+                'error': _("Cyclic test dependency: %(tests)s") % {
                     'tests': ', '.join(self.cyclic_tests)
                 },
             }
@@ -589,13 +589,14 @@ class CompositePerformer:
                 msg = traceback.format_exc(
                     limit=tb_limit, chain=True
                 ).split("__QAT+COMP_")[-1].replace("<module>", slug)
+
                 results[slug] = {
                     'value': None,
                     'error': _("Invalid Test Procedure: %(traceback)s") % {'traceback': msg},
                     'comment': "",
                     'user_attached': [],
                 }
-                deps_not_complete = any(self.data['tests'][s] is None for s in self.all_dependencies[slug])
+                deps_not_complete = any(self.data['tests'][s] in (None, "") for s in self.all_dependencies[slug])
                 if deps_not_complete:
                     results[slug]['error'] = None
             finally:

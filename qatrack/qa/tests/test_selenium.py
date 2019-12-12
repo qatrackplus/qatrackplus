@@ -2,6 +2,7 @@ import time
 
 from django.conf import settings
 from django.contrib.auth.models import Permission
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 import pytest
@@ -14,7 +15,7 @@ from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.tests.live import SeleniumTests
-from qatrack.qatrack_core.utils import format_as_date
+from qatrack.qatrack_core.utils import format_as_date, format_datetime
 from qatrack.service_log.tests import utils as sl_utils
 
 objects = {
@@ -622,14 +623,16 @@ class TestPerformQC(BaseQATests):
             is_default=True,
         )
 
+        sl_utils.create_service_event_status(is_default=True)
+
     def test_ok_on_load(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
         self.login()
         self.open(self.url)
         assert len(self.driver.find_elements_by_css_selector(".qa-status.btn-danger")) == 0
 
-    def test_perform_ok(self):
-        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+    def fill_testlist(self):
+
         self.login()
         self.open(self.url)
         inputs = self.driver.find_elements_by_class_name("qa-input")[:3]
@@ -646,15 +649,30 @@ class TestPerformQC(BaseQATests):
         time.sleep(0.2)
         self.click_by_css_selector(".open .today")
 
-        time.sleep(0.2)
-        self.driver.find_element_by_css_selector("body").click()
+        self.click_by_css_selector("body")
 
         option = self.driver.find_elements_by_css_selector("select.qa-input option")[-1]
         option.click()
 
         self.driver.find_element_by_css_selector(".qa-string .qa-input").send_keys("test")
-        self.driver.find_element_by_css_selector("body").click()
+        self.click_by_css_selector("body")
         time.sleep(0.2)
+
+    def fill_se(self):
+
+        time.sleep(0.2)
+        self.driver.execute_script("$('#id_datetime_service').focus()")
+        time.sleep(0.3)
+        self.click_by_css_selector(".today")
+        time.sleep(0.2)
+        self.send_keys("id_problem_description", "Problem!")
+
+    def test_perform_ok(self):
+        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+
+        self.fill_testlist()
+        inputs = self.driver.find_elements_by_class_name("qa-input")[:3]
+
         assert int(float(inputs[2].get_attribute("value"))) == 5
         assert models.TestListInstance.objects.count() == 0
         self.click("submit-qa")
@@ -666,9 +684,69 @@ class TestPerformQC(BaseQATests):
         assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[1].value == 2
         assert models.TestInstance.objects.get(unit_test_info__test__type="composite").value == 5
         now = timezone.now()
-        assert models.TestInstance.objects.get(unit_test_info__test__type="date").date_value == now.date()
+        date = timezone.localtime(now).date()
+        assert models.TestInstance.objects.get(unit_test_info__test__type="date").date_value == date
         dt = now.replace(hour=17, minute=0, second=0, microsecond=0)
         assert models.TestInstance.objects.get(unit_test_info__test__type="datetime").datetime_value == dt
         assert models.TestInstance.objects.get(unit_test_info__test__type="string").string_value == "test"
         assert models.TestInstance.objects.get(unit_test_info__test__type="scomposite").string_value == "testchoiceb"
         assert models.TestInstance.objects.get(unit_test_info__test__type="multchoice").string_value == "choiceb"
+
+    def test_comment(self):
+        """ tests present"""
+        self.fill_testlist()
+        self.driver.find_elements_by_css_selector(".revealcomment")[0].click()
+        self.send_keys("id_form-0-comment", "testticomment")
+        self.driver.find_elements_by_css_selector(".revealcomment")[0].click()
+
+        self.click("submit-qa")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        assert models.TestInstance.objects.filter(comment="testticomment").count() == 1
+
+    def test_set_in_progress(self):
+        """ tests present"""
+        self.fill_testlist()
+
+        self.click("in-progress-container")
+        self.click("submit-qa")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        assert models.TestListInstance.objects.in_progress().count() == 1
+
+    def test_perform_and_review(self):
+        """Ensure that we can go through a full perform->review cycle"""
+
+        utils.create_status(name="reviewed", slug="reviewed", is_default=False, requires_review=False)
+        self.fill_testlist()
+        self.click("submit-qa")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+
+        self.open("/qc/session/unreviewed/")
+        time.sleep(0.2)
+
+        self.click_by_link_text("Review")
+        self.select_by_text("bot-status-select", "reviewed")
+
+        self.send_keys("id_comment", "testlistcomment")
+        self.click("post-comment")
+        time.sleep(0.2)
+        assert models.Comment.objects.count() == 1
+
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        self.click("submit-review")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        assert models.TestListInstance.objects.unreviewed().count() == 0
+
+    @override_settings(SL_ALLOW_BLANK_SERVICE_AREA=True, SL_ALLOW_BLANK_SERVICE_TYPE=True)
+    def test_perform_and_initiate_se(self):
+        """Ensure that we can go through a full perform->review cycle"""
+
+        self.fill_testlist()
+        self.click("init-se-container")
+        self.click("submit-qa")
+
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+
+        self.fill_se()
+        self.click("save-se")
+        time.sleep(0.2)
+        assert models.TestListInstance.objects.first().serviceevents_initiated.count() == 1

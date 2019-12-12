@@ -2,6 +2,7 @@ from unittest import mock
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -31,6 +32,11 @@ class TestFrequencyManager(TestCase):
             utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
         self.assertEqual([(x[1], x[0]) for x in intervals], list(models.Frequency.objects.frequency_choices()))
 
+    def test_by_natural_key(self):
+        utils.create_frequency(name="Daily", slug="daily")
+        f = models.Frequency.objects.get_by_natural_key('daily')
+        assert f.name == 'Daily'
+
 
 class TestFrequency(TestCase):
 
@@ -44,6 +50,12 @@ class TestFrequency(TestCase):
         for t, s, nom, due, overdue in intervals:
             f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             assert 1 <= round(f.nominal_interval) <= round(nom)
+
+    def test_natural_key(self):
+        assert models.Frequency(slug="daily").natural_key() == ("daily",)
+
+    def test_classical(self):
+        assert models.Frequency(window_start=None).classical
 
 
 class TestStatus(TestCase):
@@ -76,6 +88,24 @@ class TestStatus(TestCase):
 
         defaults = models.TestInstanceStatus.objects.filter(is_default=True)
         self.assertEqual(list(defaults), [new_status])
+
+    def test_get_by_natural_key(self):
+        new_status = models.TestInstanceStatus(
+            name="bar",
+            slug="bar",
+            is_default=True,
+        )
+        new_status.save()
+        assert models.TestInstanceStatus.objects.get_by_natural_key("bar").name == "bar"
+
+    def test_natural_key(self):
+        new_status = models.TestInstanceStatus(
+            name="bar",
+            slug="bar",
+            is_default=True,
+        )
+        new_status.save()
+        assert new_status.natural_key() == (new_status.slug,)
 
 
 class TestReference(TestCase):
@@ -185,6 +215,14 @@ class TestTolerance(TestCase):
         with self.assertRaises(IntegrityError):
             utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.PERCENT)
 
+    def test_get_by_natural_key(self):
+        t = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        assert models.Tolerance.objects.get_by_natural_key(t.name).id == t.pk
+
+    def test_natural_key(self):
+        t = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        assert t.natural_key() == (t.name,)
+
 
 class TestTestCollectionInterface(TestCase):
 
@@ -220,6 +258,10 @@ class TestTest(TestCase):
     def test_is_upload(self):
         test = self.create_test(name="upload", type=models.UPLOAD)
         assert test.is_upload()
+
+    def test_can_attach(self):
+        for tt in (models.STRING_COMPOSITE, models.COMPOSITE, models.UPLOAD):
+            assert models.Test(type=tt).can_attach()
 
     def test_is_numerical_type(self):
         for t in (models.COMPOSITE, models.CONSTANT, models.SIMPLE):
@@ -548,9 +590,23 @@ class TestUnitTestInfo(TestCase):
         # only utc1 is active now
         self.assertEqual(models.UnitTestInfo.objects.active().count(), 1)
 
+    def test_inactive_only_simple(self):
+
+        utis = models.UnitTestInfo.objects.inactive()
+        self.assertEqual(utis.count(), 0)
+        self.utc.active = False
+        self.utc.save()
+        self.assertEqual(models.UnitTestInfo.objects.inactive().count(), 1)
+
 
 class TestTestListMembership(TestCase):
-    pass
+
+    def test_get_by_natural_key(self):
+        tlm = utils.create_test_list_membership()
+        assert models.TestListMembership.objects.get_by_natural_key(
+            tlm.test_list.slug,
+            tlm.test.name,
+        ).id == tlm.id
 
 
 class TestTestList(TestCase):
@@ -1839,3 +1895,17 @@ class TestAutoReview(TestCase):
         ti.auto_review()
         ti.save()
         assert not ti.status.requires_review
+
+    def test_autoreviewruleset_cache_missing_id(self):
+        """Rule is missing, so cache should be refreshed"""
+        cache.set(settings.CACHE_AUTOREVIEW_RULESETS, {})
+        r = models.AutoReviewRuleSet.objects.first()
+        cached = models.autoreviewruleset_cache(r.id)
+        assert 'ok' in cached and 'tolerance' in cached
+
+    def test_arr_str(self):
+        r = models.AutoReviewRule.objects.get(pass_fail="ok")
+        assert str(r) == "OK => pass"
+
+    def test_arrset_str(self):
+        assert str(self.ruleset) == "default"

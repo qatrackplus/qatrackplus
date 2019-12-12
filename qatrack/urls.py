@@ -69,7 +69,7 @@ handler403 = 'qatrack.qatrack_core.views.handle_403'
 handler404 = 'qatrack.qatrack_core.views.handle_404'
 handler500 = 'qatrack.qatrack_core.views.handle_500'
 
-if settings.DEBUG:
+if settings.DEBUG:  # pragma: nocover
     import debug_toolbar
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),

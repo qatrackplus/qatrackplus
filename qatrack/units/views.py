@@ -122,7 +122,10 @@ def handle_unit_available_time_edit(request):
                     uate.save()
                 except ObjectDoesNotExist:
                     u_models.UnitAvailableTimeEdit.objects.create(
-                        unit=u, date=d, hours=timezone.timedelta(hours=hours, minutes=mins), name=name
+                        unit=u,
+                        date=d,
+                        hours=timezone.timedelta(hours=hours, minutes=mins),
+                        name=name,
                     )
 
     return get_unit_available_time_data(request)

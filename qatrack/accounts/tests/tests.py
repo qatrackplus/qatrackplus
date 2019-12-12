@@ -1,7 +1,11 @@
+from django.contrib.auth.models import User
+from django.test import TestCase
 from django.test.utils import override_settings
 
+from qatrack.accounts.admin import AdminFilter
 from qatrack.accounts.backends import \
     ActiveDirectoryGroupMembershipSSLBackend as ADBack
+from qatrack.qa.tests import utils
 
 
 class TestCleanUsername:
@@ -19,3 +23,23 @@ class TestCleanUsername:
     def test_replace(self):
         backend = ADBack()
         assert backend.clean_username("Foo/bar") == "bar"
+
+
+class TestAdminFilter(TestCase):
+
+    def test_lookups(self):
+        assert AdminFilter.lookups(None, None, None) == (('yes', 'Yes'), ('no', 'No'))
+
+    def test_queryset_yes(self):
+        utils.create_user(uname="admin", is_staff=True, is_superuser=True)
+        utils.create_user(uname="reg", is_staff=False, is_superuser=False)
+        af = AdminFilter(None, [], None, None)
+        af.value = lambda: 'yes'
+        assert af.queryset(None, User.objects.all()).count() == 1
+
+    def test_queryset_no(self):
+        utils.create_user(uname="admin", is_staff=True, is_superuser=True)
+        utils.create_user(uname="reg", is_staff=False, is_superuser=False)
+        af = AdminFilter(None, [], None, None)
+        af.value = lambda: 'no'
+        assert af.queryset(None, User.objects.all()).count() == 1 + 1  # count Internal User

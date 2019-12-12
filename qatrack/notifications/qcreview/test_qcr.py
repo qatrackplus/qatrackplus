@@ -118,14 +118,14 @@ class TestQCReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_test_collection__unit__name': 'unit1',
-                'unit_test_collection__name': 'test_list_0001',
+                'unit_test_collection__unit__name': self.utc1.unit.name,
+                'unit_test_collection__name': self.utc1.name,
                 'unit_test_collection__unit__name__count': 1,
                 'unit_test_collection__name__count': 1,
             },
             {
-                'unit_test_collection__unit__name': 'unit2',
-                'unit_test_collection__name': 'test_list_0002',
+                'unit_test_collection__unit__name': self.utc2.unit.name,
+                'unit_test_collection__name': self.utc2.name,
                 'unit_test_collection__unit__name__count': 1,
                 'unit_test_collection__name__count': 1,
             },
@@ -146,8 +146,8 @@ class TestQCReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_test_collection__unit__name': 'unit1',
-                'unit_test_collection__name': 'test_list_0001',
+                'unit_test_collection__unit__name': self.utc1.unit.name,
+                'unit_test_collection__name': self.utc1.name,
                 'unit_test_collection__unit__name__count': 1,
                 'unit_test_collection__name__count': 1,
             },
@@ -168,8 +168,8 @@ class TestQCReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_test_collection__unit__name': 'unit1',
-                'unit_test_collection__name': 'test_list_0001',
+                'unit_test_collection__unit__name': self.utc1.unit.name,
+                'unit_test_collection__name': self.utc1.name,
                 'unit_test_collection__unit__name__count': 1,
                 'unit_test_collection__name__count': 1,
             },

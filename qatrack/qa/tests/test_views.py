@@ -26,7 +26,6 @@ import qatrack.qa.views.charts
 import qatrack.qa.views.perform
 import qatrack.qa.views.review
 from qatrack.qatrack_core.utils import format_as_date
-from qatrack.units import models as u_models
 
 from . import utils
 
@@ -54,6 +53,10 @@ class TestURLS(TestCase):
 
     def returns_200(self, url, method="get"):
         return getattr(self.client, method)(url).status_code == 200
+
+    def test_qa_redirect(self):
+        resp = self.client.get("/qa/")
+        assert resp.url == '/qc/'
 
     def test_qa_urls(self):
 
@@ -954,11 +957,11 @@ class TestComposite(TestCase):
             'errors': [],
             'results': {
                 'cyclic1': {
-                    'error': 'Cyclic test dependency',
+                    'error': 'Cyclic test dependency: cyclic1, cyclic2',
                     'value': None
                 },
                 'cyclic2': {
-                    'error': 'Cyclic test dependency',
+                    'error': 'Cyclic test dependency: cyclic1, cyclic2',
                     'value': None
                 },
                 'testc': {
@@ -2055,88 +2058,6 @@ class TestPaperForms(TestCase):
         pf.set_utc_all_lists(utcs)
         self.assertEqual(utcs[0].all_lists[0].utis[0].reference, ref1)
         self.assertEqual(utcs[1].all_lists[0].utis[0].reference, ref2)
-
-
-class TestUnitAvailableTime(TestCase):
-
-    def setUp(self):
-        utils.create_user(is_superuser=True, uname='user', pwd='pwd')
-        self.client.login(username='user', password='pwd')
-        self.get_url = reverse('unit_available_time')
-        self.post_url = reverse('handle_unit_available_time')
-        self.delete_url = reverse('delete_schedules')
-        utils.create_unit()
-        utils.create_unit()
-        utils.create_unit()
-
-    def test_unit_available_time_change(self):
-
-        response = self.client.get(self.get_url)
-
-        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
-        unit_ids = [u.id for u in response.context['units']]
-
-        data = {
-            'units[]': unit_ids,
-            'hours_monday': '08:00',
-            'hours_tuesday': '_8:00',
-            'hours_wednesday': '_8:00',
-            'hours_thursday': '08:00',
-            'hours_friday': '08:00',
-            'hours_saturday': '08:00',
-            'hours_sunday': '08:00',
-            'day': timestamp,
-            'days[]': [timestamp],
-            'tz': "utc",
-        }
-        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
-        len_uat_before = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
-
-        self.client.post(self.post_url, data=data)
-        len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
-        self.assertEqual(len(unit_ids), len_uat_after - len_uat_before)
-
-        self.client.post(self.delete_url, data=data)
-        len_uat_after = len(u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
-        self.assertEqual(0, len_uat_after)
-
-
-class TestUnitAvailableTimeEdit(TestCase):
-
-    def setUp(self):
-        utils.create_user(is_superuser=True, uname='user', pwd='pwd')
-        self.client.login(username='user', password='pwd')
-        self.get_url = reverse('unit_available_time')
-        self.post_url = reverse('handle_unit_available_time_edit')
-        self.delete_url = reverse('delete_schedules')
-        utils.create_unit()
-        utils.create_unit()
-        utils.create_unit()
-
-    def test_handle_unit_available_time_edit(self):
-
-        response = self.client.get(self.get_url)
-
-        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
-        unit_ids = [u.id for u in response.context['units']]
-
-        data = {
-            'units[]': unit_ids,
-            'hours_mins': '_8:00',
-            'days[]': [timestamp],
-            'name': 'uate_test',
-            'tz': "utc",
-        }
-
-        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
-        len_uate_before = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
-        self.client.post(self.post_url, data=data)
-        len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
-        self.assertEqual(len(unit_ids), len_uate_after - len_uate_before)
-
-        self.client.post(self.delete_url, data=data)
-        len_uate_after = len(u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
-        self.assertEqual(0, len_uate_after)
 
 
 class TestReviewStatusContext(TestCase):

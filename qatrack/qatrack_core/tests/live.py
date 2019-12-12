@@ -112,7 +112,8 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         cls.driver.set_page_load_timeout(2)
         cls.driver.implicitly_wait(2)
 
-        cls.maximize()
+        cls.driver.set_window_position(0, 0)
+        cls.driver.set_window_size(1920, 1080)
         cls.wait = WebDriverWait(cls.driver, 2)
 
         super(SeleniumTests, cls).setUpClass()
@@ -165,6 +166,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         time.sleep(1)
         try:
             actions.perform()
+            self.driver.find_element_by_css_selector("body").click()
             self.driver.execute_script("window.scrollTo(0, -200);")
         except:
             pass
@@ -240,10 +242,14 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 else:
                     time.sleep(1)
 
-    def click(self, el_id):
-        self.scroll_into_view(el_id)
+    def click(self, el_id, scroll=True):
+        if scroll:
+            self.scroll_into_view(el_id)
         element = self.driver.find_element_by_id(el_id)
-        self.driver.execute_script("arguments[0].click();", element)
+        try:
+            element.click()
+        except:
+            self.driver.execute_script("arguments[0].click();", element)
 
     def click_by_css_selector(self, css_sel):
         self.scroll_into_view_css(css_sel)
@@ -254,6 +260,13 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             self.driver.execute_script("arguments[0].click();", element)
 
     def click_by_link_text(self, link_text):
-        time.sleep(0.2)
-        self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, link_text)))
-        self.driver.find_element_by_link_text(link_text).click()
+        for i in range(3):
+            try:
+                self.wait.until(e_c.presence_of_element_located((By.LINK_TEXT, link_text)))
+                self.driver.find_element_by_link_text(link_text).click()
+                break
+            except:  # noqa: E722
+                if i == 2:
+                    raise
+                else:
+                    time.sleep(1)

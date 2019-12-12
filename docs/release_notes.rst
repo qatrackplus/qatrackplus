@@ -71,7 +71,9 @@ Details of the v0.3.1 release
 * Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group Linker required when submitting a ServiceEvent.
 
 * New :ref:`Date and Date & Time test types <qa_tests>` have been added to
-  allow users to select dates/times with a calendar widget.
+  allow users to select dates/times with a calendar widget.  These test
+  results will be available in calculation contexts as Python date, and
+  datetime values respectively.
 
 * Added :ref:`UTILS.set_skip an UTILS.get_skip <composite_tests>` functions for setting/getting skip status
   of tests.

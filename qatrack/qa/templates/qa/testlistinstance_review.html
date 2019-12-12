@@ -255,7 +255,7 @@
 
                         {% if perms.qa.can_review %}
                           <div class="input-append">
-                            <select name="bulk-status" class="input-medium bulk-status">
+                            <select id="top-status-select" name="bulk-status" class="input-medium bulk-status">
                               <option value="" selected="selected">---</option>
                               {% for status in statuses %}
                                 <option title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}" value="{{status.pk}}">{{status.name}}</option>
@@ -440,7 +440,7 @@
 
                         {% if perms.qa.can_review %}
                         <div class="input-append">
-                          <select name="bulk-status" class="input-medium bulk-status">
+                          <select id="bot-status-select" name="bulk-status" class="input-medium bulk-status">
                             <option value="" selected="selected">---</option>
                             {% for status in statuses %}
                             <option title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}" value="{{status.pk}}">{{status.name}}</option>

@@ -1,5 +1,6 @@
 import io
 import json
+from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
@@ -11,6 +12,14 @@ import recurrence
 from qatrack.qa import models, testpack
 from qatrack.qa import utils as qautils
 from qatrack.qa.tests import utils
+
+delta_time = 0
+
+
+def time():
+    global delta_time
+    delta_time += 10
+    return delta_time
 
 
 class TestUtils(TestCase):
@@ -71,6 +80,7 @@ class TestImportExport(TestCase):
         utils.create_test_list_membership(self.tl1, self.t1)
         utils.create_test_list_membership(self.tl2, self.t2)
         utils.create_test_list_membership(self.tl3, self.t3)
+        utils.create_test_list_membership(self.tl3, self.t1)
 
         self.tlqs = models.TestList.objects.filter(pk=self.tl3.pk)
         self.tlcqs = models.TestListCycle.objects.filter(pk=self.tlc.pk)
@@ -90,7 +100,7 @@ class TestImportExport(TestCase):
 
         assert models.Test.objects.count() == 4
         assert models.TestList.objects.count() == 3
-        assert models.TestListMembership.objects.count() == 3
+        assert models.TestListMembership.objects.count() == 4
         assert models.TestListCycle.objects.count() == 1
         assert models.TestListCycleMembership.objects.count() == 2
 
@@ -116,6 +126,12 @@ class TestImportExport(TestCase):
                     pass
 
         assert list_found and test_found
+
+    def test_timeout(self):
+
+        with self.assertRaises(RuntimeError):
+            with mock.patch('time.time', mock.Mock(side_effect=time)):
+                testpack.create_testpack(self.tlqs, self.tlcqs, timeout=1)
 
     def test_save_pack(self):
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
