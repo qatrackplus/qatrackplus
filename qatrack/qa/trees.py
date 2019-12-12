@@ -2,8 +2,9 @@ from django.conf import settings
 from django.db.models import Case, CharField, F, IntegerField, Value, When
 from django.urls import reverse
 from django.utils.translation import gettext as _
+
 from qatrack.qa.models import Category, Frequency, UnitTestCollection
-from qatrack.units.models import Site, Unit
+from qatrack.units.models import Site, Unit, UnitType
 
 
 class BaseTree:
@@ -18,6 +19,11 @@ class BaseTree:
         self.units = dict(Unit.objects.filter(active=True).values_list("number", "name"))
         self.sites = dict(Site.objects.values_list("slug", "name"))
         self.sites['other'] = _("Other")
+        self.unit_types = {}
+        for ut in UnitType.objects.select_related("vendor", "unit_class"):
+            v = "" if not ut.vendor else "%s:" % ut.vendor.name
+            cl = "" if not ut.unit_class else "%s:" % ut.unit_class.name
+            self.unit_types[ut.id] = "%s %s %s" % (v, cl, str(ut))
 
     def setup_frequencies(self):
         self.freqs = dict(Frequency.objects.values_list("slug", "name"))
@@ -45,9 +51,12 @@ class BaseTree:
     def unit_text(self, unit_number):
         uname = self.units[unit_number]
         href = reverse("qa_by_unit", kwargs={'unit_number': unit_number})
-        title = _("Click to perform QC on Unit {unit}").format(unit=uname)
+        title = _("Click to perform QC on Unit #{unit_number}: {unit}").format(unit_number=unit_number, unit=uname)
         text = '%s <a href="%s" title="%s"><i class="fa fa-cube"></i></a>' % (uname, href, title)
         return text
+
+    def utype_text(self, unittype_id):
+        return self.unit_types[unittype_id]
 
     def unit_frequency_text(self, unit_number, freq_slug):
         freq_slug = freq_slug or "ad-hoc"
@@ -147,6 +156,10 @@ class BootstrapCategoryTree(BaseTree):
             ),
         ).order_by(
             "unit__site__name",
+            "unit__type__vendor__name",
+            "unit__type__unit_class__name",
+            "unit__type__name",
+            "unit__type__model",
             "unit__%s" % settings.ORDER_UNITS_BY,
             "frequency__nominal_interval",
             "cat_tree_id",
@@ -157,6 +170,7 @@ class BootstrapCategoryTree(BaseTree):
             "id",
             "name",
             "unit__site__slug",
+            "unit__type_id",
             "unit__number",
             "unit__name",
             "frequency__slug",
@@ -184,21 +198,28 @@ class BootstrapCategoryTree(BaseTree):
         tree = [self.new_node(_("QC by Unit, Frequency, & Category"))]
         root_nodes = tree[-1]['nodes']
 
-        for utc_id, utc_name, site, unum, uname, freq_slug, cat_tree_id, cat_name in self.qs:
+        for utc_id, utc_name, site, utype, unum, uname, freq_slug, cat_tree_id, cat_name in self.qs:
 
             if site not in seen_sites:
                 seen_sites.add(site)
-                seen_units = set()
+                seen_utypes = set()
                 text = self.site_text(site)
                 root_nodes.append(self.new_node(text))
                 site_nodes = root_nodes[-1]['nodes']
+
+            if utype not in seen_utypes:
+                seen_utypes.add(utype)
+                seen_units = set()
+                text = self.utype_text(utype)
+                site_nodes.append(self.new_node(text, 0))
+                utype_nodes = site_nodes[-1]['nodes']
 
             if unum not in seen_units:
                 seen_units.add(unum)
                 seen_freqs = set()
                 text = self.unit_text(unum)
-                site_nodes.append(self.new_node(text, 0))
-                unit_nodes = site_nodes[-1]['nodes']
+                utype_nodes.append(self.new_node(text, 0))
+                unit_nodes = utype_nodes[-1]['nodes']
 
             if freq_slug not in seen_freqs:
                 seen_freqs.add(freq_slug)
@@ -208,33 +229,21 @@ class BootstrapCategoryTree(BaseTree):
                 freq_nodes = unit_nodes[-1]['nodes']
 
             try:
-                cat_id = self.cat_name_to_id[cat_name]
+                self.cat_name_to_id[cat_name]
             except KeyError:
                 # handle case where no categories exist
                 continue
-
-            cat_level = self.all_cats[cat_id]['level']
 
             if cat_tree_id not in seen_trees:
                 # we want to add a new category tree to frequency
                 # note in this case cat_id == root_cat_id
                 seen_trees.add(cat_tree_id)
-                seen_subs = set()
                 seen_names = set()
 
                 root_id = self.root_cats[cat_tree_id]
                 text = self.unit_category_text(unum, root_id)
                 freq_nodes.append(self.new_node(text, 1))
                 cat_nodes = freq_nodes[-1]['nodes']
-                cur_root = cat_nodes
-
-            #if cat_level == 1 and cat_id not in seen_subs:
-            #    # add a new sub category and start appending to it
-            #    seen_subs.add(cat_id)
-            #    seen_names = set()
-            #    text = self.unit_category_text(unum, cat_id)
-            #    cur_root.append(self.new_node(text, 1))
-            #    cat_nodes = cur_root[-1]['nodes']
 
             if utc_name not in seen_names:
                 seen_names.add(utc_name)
@@ -264,6 +273,10 @@ class BootstrapFrequencyTree(BaseTree):
             active=True,
         ).order_by(
             "unit__site__name",
+            "unit__type__vendor__name",
+            "unit__type__unit_class__name",
+            "unit__type__name",
+            "unit__type__model",
             "unit__%s" % settings.ORDER_UNITS_BY,
             "frequency__nominal_interval",
             "name",
@@ -272,6 +285,7 @@ class BootstrapFrequencyTree(BaseTree):
             "name",
             "frequency__slug",
             "unit__site__slug",
+            "unit__type_id",
             "unit__number",
             "unit__name",
         )
@@ -286,21 +300,28 @@ class BootstrapFrequencyTree(BaseTree):
 
         tree = [self.new_node(_("QC by Unit & Frequency"))]
         root_nodes = tree[-1]['nodes']
-        for utc_id, utc_name, freq_slug, site, unum, uname in self.qs:
+        for utc_id, utc_name, freq_slug, site, utype, unum, uname in self.qs:
 
             if site not in seen_sites:
                 seen_sites.add(site)
-                seen_units = set()
+                seen_utypes = set()
                 text = self.site_text(site)
                 root_nodes.append(self.new_node(text))
                 site_nodes = root_nodes[-1]['nodes']
+
+            if utype not in seen_utypes:
+                seen_utypes.add(utype)
+                seen_units = set()
+                text = self.utype_text(utype)
+                site_nodes.append(self.new_node(text, 0))
+                utype_nodes = site_nodes[-1]['nodes']
 
             if unum not in seen_units:
                 seen_units.add(unum)
                 seen_freqs = set()
                 text = self.unit_text(unum)
-                site_nodes.append(self.new_node(text, 0))
-                unit_nodes = site_nodes[-1]['nodes']
+                utype_nodes.append(self.new_node(text, 0))
+                unit_nodes = utype_nodes[-1]['nodes']
 
             if freq_slug not in seen_freqs:
                 seen_freqs.add(freq_slug)
