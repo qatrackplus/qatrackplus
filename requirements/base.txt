@@ -40,12 +40,12 @@ pylinac==2.1.0.1; python_version < '3.6'
 -e git+https://github.com/qatrackplus/pylinac-qatrackplus.git@master#egg=pylinac ; python_version >= '3.6'
 Pillow<6
 pynliner==0.8.0
-pytest-cov==2.6.1
-pytest-django==3.4.5
-pytest-sugar==0.9.1
-pytest==4.1.1
+pytest-cov==2.8.1
+pytest-django==3.7.0
+pytest-sugar==0.9.2
+pytest==5.3.1
 python-dateutil==2.6.1
-pytz==2018.4
+pytz==2019.3
 reportlab==3.5.8
 requests==2.21.0
 scipy<=1.1.0
