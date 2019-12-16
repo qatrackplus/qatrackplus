@@ -115,6 +115,10 @@ Details of the v0.3.1 release
 * A calculation status icon has been added (spins when calculations are being
   performed).
 
+* Non-calculated test types (e.g. simple numerical, multiple choice, string,
+  etc) may now use the `calculation_procedure` to set default initial values.
+  (Issue #185).
+
 
 Deprecations & Discontinuations
 ...............................

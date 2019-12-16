@@ -982,6 +982,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.user_set_status = False
             return models.TestInstanceStatus.objects.default()
 
+    def form_invalid(self, form):
+        """If the form is invalid, render the invalid form."""
+        context = self.get_context_data(form=form)
+        context['has_errors'] = True
+        return self.render_to_response(context)
+
     @transaction.atomic
     def form_valid(self, form):
         """
@@ -999,6 +1005,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         if not formset.is_valid():
             context["form"] = form
+            context['has_errors'] = True
             return self.render_to_response(context)
 
         status = self.get_test_status(form)

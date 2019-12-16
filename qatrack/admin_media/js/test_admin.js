@@ -35,7 +35,7 @@ function toggle_test_type(){
     }else if (val == "string"){
         $(".field-skip_without_comment").show();
         $(".field-constant_value, .field-hidden").hide();
-        $(".field-calculation_procedure, .field-choices, .field-display_image").not(".errors").hide();
+        $(".field-choices, .field-display_image").not(".errors").hide();
         $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", false).hide();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
@@ -46,18 +46,18 @@ function toggle_test_type(){
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "multchoice"){
         $(".field-choices, .field-skip_without_comment").show();
-        $(".field-constant_value, .field-calculation_procedure, .field-display_image, .field-hidden").not(".errors").hide();
+        $(".field-constant_value, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", false).hide();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "boolean"){
         $(".field-flag_when").show();
         $(".field-skip_without_comment").show();
-        $(".field-calculation_procedure").not(".errors").hide();
+        //$(".field-calculation_procedure").not(".errors").hide();
         $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
     }else{
         $(".field-skip_without_comment").show();
-        $(".field-calculation_procedure").not(".errors").hide();
+        //$(".field-calculation_procedure").not(".errors").hide();
         $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();

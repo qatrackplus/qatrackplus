@@ -191,10 +191,14 @@ forced to add a comment (regardless of their commenting permissions).
 Calculation Procedure
 ~~~~~~~~~~~~~~~~~~~~~
 
-The Python snippet for calculating composite test results and processing uploads (see below).
+This field is used for calculating either test results (for composite, string
+composite, & file upload test types) or default initial (user overrideable)
+values for other test types (simple numerical, string, date/time, multiple
+choice).
 
-Formatting (Composite & Constant Tests Only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Formatting 
+~~~~~~~~~~
 
 Python style string format for displaying numerical results. Leave blank for
 the QATrack+ default, select one of the predefined options, or enter your own
@@ -231,7 +235,7 @@ Composite Tests
 
 .. _composite_tests:
 
-Composite tests allow you to do calculations to produce a numberical
+Composite tests allow you to do calculations to produce a numerical
 test result based on other test values ( e.g. to calculate a dose based
 on a raw electrometer reading and temperature & pressure ). When you
 select *Composite* for the test *Type* field, a *Calculation Procedure*
@@ -600,3 +604,59 @@ DICOM file:
     import pydicom
     f = pydicom.read_file(BIN_FILE)
     mean_value = f.pixel_array.mean()
+
+
+Setting Default Initial Values for Non-Calculated Tests
+-------------------------------------------------------
+
+.. _qa_default_values:
+
+
+Similar to calculated tests, as of version 0.3.1, you can now use the
+calculation procedure field to set an initial default value for a test that can
+be overridden by the user.  When performing a test list, after the initial page
+load, a call will be made to the server to evaluate the default value scripts
+for tests with calculation procedures defined.
+
+For example, to set an initial value for a Simple Numerical test you could use
+a simple calculation procedure like:
+
+::
+
+    your_simple_test = 22
+
+To set an initial value for a Multiple Choice test with choices "A,B,C" you
+could use a simple calculation procedure like:
+
+::
+
+    your_mult_choice_test = "B"
+
+
+To set an initial value for a Boolean (Yes/No) test you would use:
+
+::
+
+    your_bool_test = True  # or False
+
+
+To set an initial value for a String test you would use:
+
+::
+
+    your_string_test = "Some string"
+
+
+To set an initial value for a Date test you could use something like this:
+
+::
+
+    from django.utils import timezone
+    your_date_test = timezone.now().date()  # or some other datetime.date instance
+
+To set an initial value for a Datetime test you could use someting like this:
+
+::
+
+    from django.utils import timezone
+    your_date_test = timezone.now()  # or some other datetime.datetime instance

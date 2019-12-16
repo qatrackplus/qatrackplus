@@ -229,6 +229,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 {
                     element: $test_lists,
                     filter: function(callback) {
+                        debugger;
 
                         var test_lists = $test_lists.val();
                         if (!test_lists || test_lists.length === 0) {

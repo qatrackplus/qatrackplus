@@ -402,7 +402,14 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             }else if (
                 tt === QAUtils.STRING ||
                 tt === QAUtils.MULTIPLE_CHOICE ||
-                tt === QAUtils.STRING_COMPOSITE ||
+                tt === QAUtils.STRING_COMPOSITE
+            ){
+                if (_.isObject(value)){
+                    self.inputs.val(JSON.stringify(value));
+                }else{
+                    self.inputs.val(value);
+                }
+            }else if (
                 tt === QAUtils.DATE ||
                 tt === QAUtils.DATETIME
             ){
@@ -411,6 +418,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 }else{
                     self.inputs.val(value);
                 }
+                this.date_picker.setDate(value);
             }else if (tt === QAUtils.UPLOAD){
                 if (_.isNull(value)){
                     self.inputs.filter(".qa-input:hidden").val("");
@@ -815,6 +823,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var comments = get_comments();
             var skips = get_skips();
 
+            // only set default values if not editing an existing tli
+            var get_defaults = !has_errors && editing_tli === 0 && init;
+
             var data = {
                 tests: qa_values,
                 meta: meta,
@@ -825,6 +836,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             };
 
             var on_success = function(data, status, XHR){
+
+                if (init){
+                    $('body').removeClass("loading");
+                }
 
                 if (latest_composite_call !== XHR){
                     return;
@@ -873,6 +888,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var on_error = function(){
                 self.$spinners.removeClass("fa-spin text-warning").addClass("text-info").attr("title", "Calculations complete");
                 self.submit.attr("disabled", false);
+                if (init){
+                    $.Topic("valueChanged").subscribe(self.calculate_composites);
+                    $('body').removeClass("loading");
+                    self.calculate_composites();
+                }
                 $.Topic("qaUpdated").publish();
             };
 

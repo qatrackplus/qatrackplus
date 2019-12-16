@@ -874,17 +874,28 @@ class Test(models.Model, TestPackMixin):
     )
     constant_value = models.FloatField(help_text=_l("Only required for constant value types"), null=True, blank=True)
 
+    calc_proc_help = _l(
+        "For composite, string composite, and upload tests, enter a Python snippet for evaluation of this test.<br/>"
+        "For other test types, you may enter a Python snippet to set the initial value of this test.  For example,"
+        " if you want to set an initial default value of 123 that a user can override for a numerical test, you would "
+        "set your calculation procedure to:<br/>"
+        "<pre>your_test = 123</pre>"
+        "To set an initial multiple choice value you would use:"
+        "<pre>your_test = 'some choice'</pre>"
+        "To set an initial Boolean value you would use:"
+        "<pre>your_test = True # or False</pre>"
+    )
     calculation_procedure = models.TextField(
         null=True,
         blank=True,
-        help_text=_l("For Composite Tests Only: Enter a Python snippet for evaluation of this test.")
+        help_text=calc_proc_help,
     )
 
     fmt_help = _l(
         "Python style string format for numerical results. Leave blank for the QATrack+ default, "
-        "select one of the predefined options, or enter your own formatting string. <br>"
+        "select one of the predefined options, or enter your own formatting string. <br/>"
         "Use e.g. %.2F to display as fixed precision with 2 decimal places, or %.3E to show as scientific format with "
-        "3 significant figures, or %.4G to use 'general' formatting with up to 4 significant figures.<br>"
+        "3 significant figures, or %.4G to use 'general' formatting with up to 4 significant figures.<br/>"
         "You may also use new style Python string formatting (e.g. {:06.2f})."
     )
 
@@ -961,11 +972,11 @@ class Test(models.Model, TestPackMixin):
         if not self.calculation_procedure and self.type not in CALCULATED_TYPES:
             return
 
-        errors = self.check_test_type(self.calculation_procedure, CALCULATED_TYPES, _("Calculation Procedure"))
         self.calculation_procedure = str(self.calculation_procedure).replace("\r\n", "\n")
 
         macro_var_set = re.findall(r"^\s*%s\s*=.*$" % (self.slug), self.calculation_procedure, re.MULTILINE)
         result_line = self.RESULT_RE.findall(self.calculation_procedure)
+        errors = []
         if not (result_line or macro_var_set):
             if not self.calculation_procedure and self.is_upload():
                 # don't require a user defined calc procedure for uploads

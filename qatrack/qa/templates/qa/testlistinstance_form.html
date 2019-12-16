@@ -33,6 +33,7 @@
     <script type="text/javascript">
         var unit_test_infos = {{unit_test_infos|safe}};
         var editing_tli = {{ test_list_instance.pk|default:"0"}};
+        var has_errors = {% if has_errors %}true{% else %}false{% endif %};
         var override_date = false;
         {% if perms.qa.can_override_date %}
             override_date = true;
@@ -79,11 +80,10 @@
 {% block require_javascript %}
     require(['qa'], function() {
         {{ test_list.javascript.strip|safe }}
-        $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
 
-{% block body_class %}sidebar-mini sidebar-collapse{% endblock body_class %}
+{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}
 
 {% block sidebar_toggle %}
     <a href="#" class="sidebar-toggle pull-left" data-toggle="offcanvas" role="button">
