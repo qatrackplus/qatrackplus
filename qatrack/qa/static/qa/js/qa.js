@@ -805,14 +805,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 }).join("");
                 $("#tli-attachment-names").html(fnames);
             });
-            self.calculate_composites();
+
+            self.calculate_composites(true);
         };
 
 
-        this.calculate_composites = function(){
+        this.calculate_composites = function(init){
 
+            init = init || false;
 
-            if (self.composites.length === 0){
+            if (!init && self.composites.length === 0){
                 return;
             }
             self.$spinners.removeClass("text-info").addClass("fa-spin text-warning").attr("title", "Performing calculations...");
@@ -827,6 +829,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var get_defaults = !has_errors && editing_tli === 0 && init;
 
             var data = {
+                defaults: get_defaults,
                 tests: qa_values,
                 meta: meta,
                 test_list_id: self.test_list_id,
@@ -844,8 +847,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (latest_composite_call !== XHR){
                     return;
                 }
-                self.$spinners.removeClass("fa-spin text-warning").addClass("text-info").attr("title", "Calculations complete");
-
                 self.submit.attr("disabled", false);
 
                 if (data.success){
@@ -882,10 +883,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         set_skips(data.skips);
                     }
                 }
-                $.Topic("qaUpdated").publish();
+
             };
 
-            var on_error = function(){
+            var on_complete = function(){
                 self.$spinners.removeClass("fa-spin text-warning").addClass("text-info").attr("title", "Calculations complete");
                 self.submit.attr("disabled", false);
                 if (init){
@@ -894,7 +895,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     self.calculate_composites();
                 }
                 $.Topic("qaUpdated").publish();
-            };
+            }
 
             self.submit.attr("disabled", true);
 
@@ -906,7 +907,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 dataType: "json",
                 success: on_success,
                 traditional: true,
-                error: on_error
+                complete: on_complete
             });
         };
 
@@ -931,7 +932,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             $.Topic("qaUpdated").publish();
         });
 
-        $.Topic("valueChanged").subscribe(self.calculate_composites);
     }
 
     function set_tab_stops(){

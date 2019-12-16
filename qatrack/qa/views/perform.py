@@ -508,6 +508,7 @@ class CompositePerformer:
     def __init__(self, user, data):
         self.user = user
         self.data = data
+        self.defaults = data.get('defaults')
 
     def calculate(self):
         """calculate and return all composite values"""
@@ -618,8 +619,14 @@ class CompositePerformer:
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
+
+        if self.defaults:
+            filter_ = lambda t: t.type not in models.COMPOSITE_TYPES and t.calculation_procedure  # noqa: E731
+        else:
+            filter_ = lambda t: t.type in models.COMPOSITE_TYPES  # noqa: E731
+
         self.composite_tests = {
-            x.slug: x.calculation_procedure for x in self.all_tests if x.type in models.COMPOSITE_TYPES
+            t.slug: t.calculation_procedure for t in self.all_tests if filter_(t)
         }
 
     def set_test_types(self):
