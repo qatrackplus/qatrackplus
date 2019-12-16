@@ -892,7 +892,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (init){
                     $.Topic("valueChanged").subscribe(self.calculate_composites);
                     $('body').removeClass("loading");
-                    self.calculate_composites();
+                    if (get_defaults){
+                        // if first call was to get default values, then run composites now
+                        self.calculate_composites();
+                    }
                 }
                 $.Topic("qaUpdated").publish();
             }
