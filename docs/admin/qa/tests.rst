@@ -611,6 +611,10 @@ Setting Default Initial Values for Non-Calculated Tests
 
 .. _qa_default_values:
 
+.. warning::
+
+    Defaults are currently only applied for Test Lists performed via the
+    web user interface and not through the API.
 
 Similar to calculated tests, as of version 0.3.1, you can now use the
 calculation procedure field to set an initial default value for a test that can
