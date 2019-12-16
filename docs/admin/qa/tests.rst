@@ -618,9 +618,7 @@ Setting Default Initial Values for Non-Calculated Tests
 
 Similar to calculated tests, as of version 0.3.1, you can now use the
 calculation procedure field to set an initial default value for a test that can
-be overridden by the user.  When performing a test list, after the initial page
-load, a call will be made to the server to evaluate the default value scripts
-for tests with calculation procedures defined.
+be overridden by the user.
 
 For example, to set an initial value for a Simple Numerical test you could use
 a simple calculation procedure like:
