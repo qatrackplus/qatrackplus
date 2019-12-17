@@ -957,16 +957,16 @@ class TestComposite(TestCase):
             'errors': [],
             'results': {
                 'cyclic1': {
-                    'error': 'Cyclic test dependency: cyclic1, cyclic2',
+                    'error': 'Cyclic test dependency',
                     'value': None
                 },
                 'cyclic2': {
-                    'error': 'Cyclic test dependency: cyclic1, cyclic2',
+                    'error': 'Cyclic test dependency',
                     'value': None
                 },
                 'testc': {
                     'error': None,
-                    'value': 3.0,
+                    'value': 3,
                     'formatted': "3.0",
                     "user_attached": [],
                     "comment": None,
