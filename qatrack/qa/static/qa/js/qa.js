@@ -499,6 +499,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         skips: JSON.stringify(get_skips())
                     };
 
+                    window.upload_processing_count += 1;
                     $('body').addClass("loading");
                     $.ajax({
                         type:"POST",
@@ -506,7 +507,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         data: $.param(data),
                         dataType:"json",
                         success: function (result) {
-                            $('body').removeClass("loading");
                             self.status.removeClass("btn-info btn-primary btn-danger btn-success");
                             if (result.errors.length > 0){
                                 self.set_value(null);
@@ -527,10 +527,15 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         },
                         traditional:true,
                         error: function(e, data){
-                            $('body').removeClass("loading");
                             self.set_value(null);
                             self.status.removeClass("btn-primary btn-danger btn-success");
                             self.status.addClass("btn-danger").text("Server Error");
+                        },
+                        complete: function(){
+                            window.upload_processing_count -= 1;
+                            if (window.upload_processing_count <= 0){
+                                $('body').removeClass("loading");
+                            }
                         }
                     });
                 }
@@ -779,6 +784,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function TestListInstance(){
         var self = this;
 
+        window.upload_processing_count = 0;
+
         this.test_instances = [];
         this.tests_by_slug = {};
         this.slugs = [];
@@ -840,10 +847,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var on_success = function(data, status, XHR){
 
-                if (init){
-                    $('body').removeClass("loading");
-                }
-
                 if (latest_composite_call !== XHR){
                     return;
                 }
@@ -890,15 +893,17 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 self.$spinners.removeClass("fa-spin text-warning").addClass("text-info").attr("title", "Calculations complete");
                 self.submit.attr("disabled", false);
                 if (init){
-                    $.Topic("valueChanged").subscribe(self.calculate_composites);
-                    $('body').removeClass("loading");
+
+                    if (window.upload_processing_count <= 0){
+                        $('body').removeClass("loading");
+                    }
                     if (get_defaults){
                         // if first call was to get default values, then run composites now
                         self.calculate_composites();
                     }
                 }
                 $.Topic("qaUpdated").publish();
-            }
+            };
 
             self.submit.attr("disabled", true);
 
@@ -935,6 +940,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             $.Topic("qaUpdated").publish();
         });
 
+        $.Topic("valueChanged").subscribe(self.calculate_composites);
     }
 
     function set_tab_stops(){
@@ -1328,13 +1334,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             );
         });
 
-		$('#id_in_progress').cheekycheck({
+        $('#id_in_progress').cheekycheck({
             right: true,
             check: '<i class="fa fa-check"></i>',
             extra_class: 'warning'
         });
 
-		$('#id_initiate_service').cheekycheck({
+        $('#id_initiate_service').cheekycheck({
             right: true,
             check: '<i class="fa fa-check"></i>',
             extra_class: 'warning'
