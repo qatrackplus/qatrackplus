@@ -60,7 +60,7 @@ def handle_unit_available_time(request):
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
     day = request.POST.get('day')
-    day = timezone.datetime.fromtimestamp(int(day) / 1000, tz).date() if day else None
+    day = timezone.localtime(timezone.datetime.fromtimestamp(int(day) / 1000, tz)).date() if day else None
 
     uats = u_models.UnitAvailableTime.objects.filter(unit__in=units, date_changed=day).select_related('unit')
 
@@ -102,7 +102,7 @@ def handle_unit_available_time_edit(request):
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
-    days = [timezone.datetime.fromtimestamp(int(d) / 1000, tz).date() for d in request.POST.getlist('days[]', [])]
+    days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]
 
     hours_mins = request.POST.get('hours_mins', None)
     if hours_mins:
@@ -138,7 +138,10 @@ def delete_schedules(request):
     unit_ids = request.POST.getlist('units[]', [])
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
-    days = [timezone.datetime.fromtimestamp(int(d) / 1000, tz).date() for d in request.POST.getlist('days[]', [])]
+    days = [
+        timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date()
+        for d in request.POST.getlist('days[]', [])
+    ]
 
     u_models.UnitAvailableTime.objects.filter(
         unit_id__in=unit_ids,

@@ -686,7 +686,7 @@ class TestPerformQC(BaseQATests):
         now = timezone.now()
         date = timezone.localtime(now).date()
         assert models.TestInstance.objects.get(unit_test_info__test__type="date").date_value == date
-        dt = now.replace(hour=17, minute=0, second=0, microsecond=0)
+        dt = timezone.localtime(now).replace(hour=12, minute=0, second=0, microsecond=0)
         assert models.TestInstance.objects.get(unit_test_info__test__type="datetime").datetime_value == dt
         assert models.TestInstance.objects.get(unit_test_info__test__type="string").string_value == "test"
         assert models.TestInstance.objects.get(unit_test_info__test__type="scomposite").string_value == "testchoiceb"

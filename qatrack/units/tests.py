@@ -99,7 +99,7 @@ class TestUnitAvailableTime(TestCase):
     def test_unit_available_time_change(self):
 
         response = self.client.get(self.get_url)
-        dt = timezone.now() + timezone.timedelta(days=7)
+        dt = timezone.localtime(timezone.now()) + timezone.timedelta(days=7)
         timestamp = int((dt).timestamp() * 1000)
         unit_ids = [u.id for u in response.context['units']]
 
@@ -130,7 +130,7 @@ class TestUnitAvailableTime(TestCase):
             hours_sunday=init_hours,
         )
 
-        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
         len_uat_before = len(models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
 
         self.client.post(self.post_url, data=data)
@@ -158,7 +158,7 @@ class TestUnitAvailableTimeEdit(TestCase):
 
         response = self.client.get(self.get_url)
 
-        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
+        timestamp = int((timezone.localtime(timezone.now()) + timezone.timedelta(days=7)).timestamp() * 1000)
         unit_ids = [u.id for u in response.context['units']]
 
         data = {
@@ -169,7 +169,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
         len_uate_before = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         self.client.post(self.post_url, data=data)
         len_uate_after = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
@@ -184,7 +184,7 @@ class TestUnitAvailableTimeEdit(TestCase):
         response = self.client.get(self.get_url)
         models.Unit.objects.all().update(date_acceptance=timezone.now() + timezone.timedelta(days=30))
 
-        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
+        timestamp = int((timezone.localtime(timezone.now()) + timezone.timedelta(days=7)).timestamp() * 1000)
         unit_ids = [u.id for u in response.context['units']]
 
         data = {
@@ -195,7 +195,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
         self.client.post(self.post_url, data=data)
         len_uate_after = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         assert len_uate_after == 0
@@ -204,7 +204,7 @@ class TestUnitAvailableTimeEdit(TestCase):
 
         response = self.client.get(self.get_url)
 
-        timestamp = int((timezone.now() + timezone.timedelta(days=7)).timestamp() * 1000)
+        timestamp = int((timezone.localtime(timezone.now()) + timezone.timedelta(days=7)).timestamp() * 1000)
         unit_ids = [u.id for u in response.context['units']]
 
         data = {
@@ -215,7 +215,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
         len_uate_before = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
 
         self.client.post(self.post_url, data=data)
