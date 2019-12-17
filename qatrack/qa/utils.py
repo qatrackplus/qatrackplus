@@ -103,8 +103,17 @@ def to_precision(x, p):
 
 def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
-    tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
-    return [t[token.NAME] for t in tokens if t[token.NAME]]
+    all_tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
+    tokens = []
+    prev = None
+    for t in all_tokens:
+        val = t[token.NAME]
+        if not val:
+            continue
+        if prev != ".":
+            tokens.append(val)
+        prev = val
+    return tokens
 
 
 def unique(seq, idfun=None):
