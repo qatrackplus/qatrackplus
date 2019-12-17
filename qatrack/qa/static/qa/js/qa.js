@@ -1111,7 +1111,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 var tt = ti.test_info.test.type;
                 if (tt === QAUtils.COMPOSITE || tt === QAUtils.CONSTANT){
                     ti.inputs.val(ti.value);
-                }else if (_.isObject(ti.value)){
+                }else if (tt !== QAUtils.UPLOAD && _.isObject(ti.value)){
                     ti.inputs.val(JSON.stringify(ti.value));
                 }
             });
