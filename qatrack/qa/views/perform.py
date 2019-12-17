@@ -621,7 +621,7 @@ class CompositePerformer:
         """retrieve calculation procs for all composite tests"""
 
         if self.defaults:
-            filter_ = lambda t: t.type not in models.COMPOSITE_TYPES and t.calculation_procedure  # noqa: E731
+            filter_ = lambda t: t.type not in models.CALCULATED_TYPES and t.calculation_procedure  # noqa: E731
         else:
             filter_ = lambda t: t.type in models.COMPOSITE_TYPES  # noqa: E731
 
