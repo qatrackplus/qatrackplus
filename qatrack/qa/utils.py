@@ -109,6 +109,7 @@ def tokenize_composite_calc(calc_procedure):
     for t in all_tokens:
         val = t[token.NAME]
         if not val:
+            prev = val
             continue
         if prev != ".":
             tokens.append(val)

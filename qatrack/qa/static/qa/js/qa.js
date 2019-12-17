@@ -35,6 +35,23 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         }
     });
 
+    var $calcStatus = $(".qa-calc-status");
+    var $calcStatusSpinners = $calcStatus.find("i");
+    var $calcStatusContent = $calcStatus.find("span");
+
+    function processing_on(){
+        $calcStatusSpinners.addClass("fa-spin fa-circle-o-notch").removeClass("fa-check-circle").attr("title", "Calculating");
+        $calcStatusContent.html("Performing calculations...");
+        $calcStatus.removeClass("label-info").addClass("label-warning");
+    }
+
+    function processing_off(){
+        $calcStatusSpinners.removeClass("fa-spin fa-circle-o-notch").addClass("fa-check-circle").attr("title", "Idle");
+        $calcStatusContent.html("Calculations Complete");
+        $calcStatus.removeClass("label-warning").addClass("label-info");
+    }
+
+
     /***************************************************************/
     //Test statuse and Table context used to narrow down jQuery selectors.
     //Improves performance in IE
@@ -488,6 +505,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 self.value = value !== "" ? value : null;
             }else if (tt === QAUtils.UPLOAD){
                 if (self.inputs.val() && !this.initialized){
+                    window.init_task_count += 1;
                     data = {
                         attachment_id: self.inputs.val(),
                         test_id: self.test_info.test.id,
@@ -499,8 +517,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         skips: JSON.stringify(get_skips())
                     };
 
-                    window.upload_processing_count += 1;
-                    $('body').addClass("loading");
                     $.ajax({
                         type:"POST",
                         url: QAURLs.UPLOAD_URL,
@@ -522,7 +538,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                                 if (window.console){
                                     console.log(result);
                                 }
-                                $.Topic("valueChanged").publish();
                             }
                         },
                         traditional:true,
@@ -532,10 +547,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                             self.status.addClass("btn-danger").text("Server Error");
                         },
                         complete: function(){
-                            window.upload_processing_count -= 1;
-                            if (window.upload_processing_count <= 0){
-                                $('body').removeClass("loading");
-                            }
+                            window.init_task_count -= 1;
                         }
                     });
                 }
@@ -652,7 +664,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         self.status.removeClass("btn-primary btn-danger btn-success");
                         done("Filename exceeds 150 characters!");
                     }
-                    else { done(); }
+                    else {
+                        processing_on();
+                        done();
+                    }
                 }
 
             });
@@ -667,6 +682,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
 
             self.dropzone.on('error', function(file, data) {
+                processing_off();
                 var btn_txt, tool_tip;
                 if (!data || !file){
                     btn_txt = "Server Error";
@@ -684,6 +700,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
 
             self.dropzone.on('success', function(file, data) {
+                processing_off();
 
                 var response_data = JSON.parse(data);
                 self.status.removeClass("btn-primary btn-info btn-warning btn-danger btn-success");
@@ -784,6 +801,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function TestListInstance(){
         var self = this;
 
+        processing_on();
         window.upload_processing_count = 0;
 
         this.test_instances = [];
@@ -791,7 +809,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.slugs = [];
         this.composites = [];
 
-        this.$spinners = $(".comp-calc-spinner i.fa");
         this.submit = $("#submit-qa");
 
         this.attachInput = $("#id_tli_attachments");
@@ -813,18 +830,34 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $("#tli-attachment-names").html(fnames);
             });
 
-            self.calculate_composites(true);
+            // only set default values if not editing an existing tli
+            var set_defaults = !(window.editing_tli > 0 || window.has_errors);
+            if (set_defaults){
+                window.init_task_count += 1;
+                self.calculate_composites({set_defaults : true});
+            }
+
+            var init_interval = setInterval(function(){
+                if (window.init_task_count <= 0){
+                    clearInterval(init_interval);
+                    self.calculate_composites();
+                }
+            }, 10);
+
         };
 
+        this.calculate_composites = function(opts){
 
-        this.calculate_composites = function(init){
+            opts = opts || {set_defaults: false};
 
-            init = init || false;
-
-            if (!init && self.composites.length === 0){
+            if (window.init_task_count <= 0 && self.composites.length === 0){
+                // if there is no composites, ensure loading gets disabled
+                $('body').removeClass("loading");
+                processing_off();
                 return;
             }
-            self.$spinners.removeClass("text-info").addClass("fa-spin text-warning").attr("title", "Performing calculations...");
+
+            processing_on();
 
             var cur_values = _.map(self.test_instances, function(ti){return ti.value;});
             var qa_values = _.zipObject(self.slugs, cur_values);
@@ -832,11 +865,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var comments = get_comments();
             var skips = get_skips();
 
-            // only set default values if not editing an existing tli
-            var get_defaults = !has_errors && editing_tli === 0 && init;
-
             var data = {
-                defaults: get_defaults,
+                defaults: opts.set_defaults,
                 tests: qa_values,
                 meta: meta,
                 test_list_id: self.test_list_id,
@@ -890,19 +920,15 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             };
 
             var on_complete = function(){
-                self.$spinners.removeClass("fa-spin text-warning").addClass("text-info").attr("title", "Calculations complete");
+                processing_off();
                 self.submit.attr("disabled", false);
-                if (init){
-
-                    if (window.upload_processing_count <= 0){
-                        $('body').removeClass("loading");
-                    }
-                    if (get_defaults){
-                        // if first call was to get default values, then run composites now
-                        self.calculate_composites();
-                    }
+                if (opts.set_defaults){
+                    window.init_task_count -= 1;
+                    return
+                }else{
+                    $('body').removeClass("loading");
+                    $.Topic("qaUpdated").publish();
                 }
-                $.Topic("qaUpdated").publish();
             };
 
             self.submit.attr("disabled", true);
@@ -914,15 +940,15 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 contentType: "application/json",
                 dataType: "json",
                 success: on_success,
-                traditional: true,
-                complete: on_complete
+                complete: on_complete,
+                traditional: true
             });
         };
 
         this.has_failing = function(){
             return _.filter(self.test_instances, function(ti){
-                    return ti.test_status === QAUtils.ACTION;
-                }).length > 0;
+                return ti.test_status === QAUtils.ACTION;
+            }).length > 0;
         };
 
         $.Topic("categoryFilter").subscribe(function(categories) {
@@ -1003,6 +1029,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
     $(document).ready(function(){
 
+        window.init_task_count = 0;
         tli = new TestListInstance();
         tli.initialize();
 
@@ -1166,10 +1193,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $complete_clear.show();
             }
 
-            var setDuration = function(start_date, complete_date) {
+            var setDuration = function(start_date, complete_date, publish) {
                 if (!start_date || !complete_date) {
                     $duration_picker.val('');
-                    $.Topic("valueChanged").publish();
+                    if (publish){
+                        $.Topic("valueChanged").publish();
+                    }
                     return;
                 }
                 var diff = complete_date - start_date,
@@ -1179,7 +1208,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (mins < 10) mins = '0' + mins; else mins = mins.toString();
                 $duration_picker.val(hours.toString() + mins);
 
-                $.Topic("valueChanged").publish();
+                if (publish){
+                    $.Topic("valueChanged").publish();
+                }
             };
 
             var start_fp = $start_picker.flatpickr({
@@ -1196,7 +1227,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }
 
                     if ($completed_picker.val() !== '') {
-                        setDuration(selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0]);
+                        setDuration(selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0], true);
                     }
                     $completed_picker[0]._flatpickr.set('minDate', selectedDates[0].valueOf());
                     $start_clear.fadeIn('fast');
@@ -1225,7 +1256,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         selectedDates = [];
                     }
 
-                    setDuration($start_picker[0]._flatpickr.selectedDates[0], selectedDates[0]);
+                    setDuration($start_picker[0]._flatpickr.selectedDates[0], selectedDates[0], true);
 
                     if (selectedDates.length > 0) {
                         $start_picker[0]._flatpickr.set('maxDate', _.max([selectedDates[0].valueOf(), moment().valueOf()]));
@@ -1267,7 +1298,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
 
             if ($start_picker[0]._flatpickr.selectedDates && $completed_picker[0]._flatpickr.selectedDates) {
-                setDuration($start_picker[0]._flatpickr.selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0]);
+                setDuration($start_picker[0]._flatpickr.selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0], false);
             }
         }
 
