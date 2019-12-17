@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from qatrack.qa.models import Category, Frequency, UnitTestCollection
-from qatrack.units.models import Site, Unit, UnitType
+from qatrack.units.models import Site, Unit, UnitClass
 
 
 class BaseTree:
@@ -19,11 +19,7 @@ class BaseTree:
         self.units = dict(Unit.objects.filter(active=True).values_list("number", "name"))
         self.sites = dict(Site.objects.values_list("slug", "name"))
         self.sites['other'] = _("Other")
-        self.unit_types = {}
-        for ut in UnitType.objects.select_related("vendor", "unit_class"):
-            v = "" if not ut.vendor else "%s:" % ut.vendor.name
-            cl = "" if not ut.unit_class else "%s:" % ut.unit_class.name
-            self.unit_types[ut.id] = "%s %s %s" % (v, cl, str(ut))
+        self.unit_classes = dict(UnitClass.objects.values_list("id", "name"))
 
     def setup_frequencies(self):
         self.freqs = dict(Frequency.objects.values_list("slug", "name"))
@@ -55,8 +51,8 @@ class BaseTree:
         text = '%s <a href="%s" title="%s"><i class="fa fa-cube"></i></a>' % (uname, href, title)
         return text
 
-    def utype_text(self, unittype_id):
-        return self.unit_types[unittype_id]
+    def uclass_text(self, unitclass_id):
+        return self.unit_classes.get(unitclass_id, _("Unclassified"))
 
     def unit_frequency_text(self, unit_number, freq_slug):
         freq_slug = freq_slug or "ad-hoc"
@@ -170,7 +166,7 @@ class BootstrapCategoryTree(BaseTree):
             "id",
             "name",
             "unit__site__slug",
-            "unit__type_id",
+            "unit__type__unit_class_id",
             "unit__number",
             "unit__name",
             "frequency__slug",
@@ -198,28 +194,28 @@ class BootstrapCategoryTree(BaseTree):
         tree = [self.new_node(_("QC by Unit, Frequency, & Category"))]
         root_nodes = tree[-1]['nodes']
 
-        for utc_id, utc_name, site, utype, unum, uname, freq_slug, cat_tree_id, cat_name in self.qs:
+        for utc_id, utc_name, site, uclass, unum, uname, freq_slug, cat_tree_id, cat_name in self.qs:
 
             if site not in seen_sites:
                 seen_sites.add(site)
-                seen_utypes = set()
+                seen_uclasses = set()
                 text = self.site_text(site)
                 root_nodes.append(self.new_node(text))
                 site_nodes = root_nodes[-1]['nodes']
 
-            if utype not in seen_utypes:
-                seen_utypes.add(utype)
+            if uclass not in seen_uclasses:
+                seen_uclasses.add(uclass)
                 seen_units = set()
-                text = self.utype_text(utype)
+                text = self.uclass_text(uclass)
                 site_nodes.append(self.new_node(text, 0))
-                utype_nodes = site_nodes[-1]['nodes']
+                uclass_nodes = site_nodes[-1]['nodes']
 
             if unum not in seen_units:
                 seen_units.add(unum)
                 seen_freqs = set()
                 text = self.unit_text(unum)
-                utype_nodes.append(self.new_node(text, 0))
-                unit_nodes = utype_nodes[-1]['nodes']
+                uclass_nodes.append(self.new_node(text, 0))
+                unit_nodes = uclass_nodes[-1]['nodes']
 
             if freq_slug not in seen_freqs:
                 seen_freqs.add(freq_slug)
@@ -285,7 +281,7 @@ class BootstrapFrequencyTree(BaseTree):
             "name",
             "frequency__slug",
             "unit__site__slug",
-            "unit__type_id",
+            "unit__type__unit_class_id",
             "unit__number",
             "unit__name",
         )
@@ -300,28 +296,28 @@ class BootstrapFrequencyTree(BaseTree):
 
         tree = [self.new_node(_("QC by Unit & Frequency"))]
         root_nodes = tree[-1]['nodes']
-        for utc_id, utc_name, freq_slug, site, utype, unum, uname in self.qs:
+        for utc_id, utc_name, freq_slug, site, uclass, unum, uname in self.qs:
 
             if site not in seen_sites:
                 seen_sites.add(site)
-                seen_utypes = set()
+                seen_uclasses = set()
                 text = self.site_text(site)
                 root_nodes.append(self.new_node(text))
                 site_nodes = root_nodes[-1]['nodes']
 
-            if utype not in seen_utypes:
-                seen_utypes.add(utype)
+            if uclass not in seen_uclasses:
+                seen_uclasses.add(uclass)
                 seen_units = set()
-                text = self.utype_text(utype)
+                text = self.uclass_text(uclass)
                 site_nodes.append(self.new_node(text, 0))
-                utype_nodes = site_nodes[-1]['nodes']
+                uclass_nodes = site_nodes[-1]['nodes']
 
             if unum not in seen_units:
                 seen_units.add(unum)
                 seen_freqs = set()
                 text = self.unit_text(unum)
-                utype_nodes.append(self.new_node(text, 0))
-                unit_nodes = utype_nodes[-1]['nodes']
+                uclass_nodes.append(self.new_node(text, 0))
+                unit_nodes = uclass_nodes[-1]['nodes']
 
             if freq_slug not in seen_freqs:
                 seen_freqs.add(freq_slug)

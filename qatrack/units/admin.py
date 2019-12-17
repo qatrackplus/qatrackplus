@@ -177,6 +177,7 @@ class UnitTypeAdmin(admin.ModelAdmin):
 
     list_display = ['model_name', 'vendor', 'unit_class']
     list_filter = ['unit_class', 'vendor']
+    list_editable = ['unit_class', 'vendor']
 
     def get_queryset(self, request):
         return super(UnitTypeAdmin, self).get_queryset(request).select_related(
