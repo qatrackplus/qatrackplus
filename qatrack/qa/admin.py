@@ -710,7 +710,13 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
     filter_horizontal = ("tests", )
 
     actions = ['export_test_lists']
-    list_display = ("name", "slug", "modified", "modified_by",)
+    list_display = (
+        "name",
+        "id",
+        "slug",
+        "modified",
+        "modified_by",
+    )
     list_filter = [ActiveTestListFilter, UnitTestListFilter, FrequencyTestListFilter]
 
     form = TestListAdminForm
