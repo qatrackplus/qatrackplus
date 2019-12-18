@@ -303,7 +303,7 @@ class PartsList(BaseListableView):
         return template.render(c)
 
     def locations(self, obj):
-        return self.parts_locations_cache[obj.id]
+        return self.parts_locations_cache.get(obj.id, _("None in storage"))
 
     @property
     def parts_locations_cache(self):
