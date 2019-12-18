@@ -146,7 +146,7 @@ class CompositeUtils:
         except models.TestListInstance.DoesNotExist:
             return None
 
-    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False, exclude_skipped=True):
+    def previous_test_instance(self, test=None, same_list_only=True, include_in_progress=False, exclude_skipped=True):
         try:
             slug = test.slug
         except AttributeError:
@@ -164,6 +164,55 @@ class CompositeUtils:
             qs = qs.exclude(test_list_instance__in_progress=True)
         if exclude_skipped:
             qs = qs.exclude(skipped=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestInstance.DoesNotExist:
+            return None
+
+    def get_test_instance(
+        self,
+        test_id=None,
+        test_name=None,
+        test_list_id=None,
+        include_in_progress=False,
+        exclude_skipped=True,
+        include_invalid=False,
+        unit_number=None,
+        start_window=None,
+        end_window=None,
+    ):
+
+        qs = models.TestInstance.objects.all()
+
+        if test_id is not None:
+            qs = qs.filter(unit_test_info__test_id=test_id)
+
+        if test_name is not None:
+            qs = qs.filter(unit_test_info__test__name=test_name)
+
+        if start_window is not None:
+            qs = qs.filter(test_list_instance__work_completed__gte=start_window)
+
+        if end_window is None:
+            end_window = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+
+        qs = qs.filter(test_list_instance__work_completed__lte=end_window)
+
+        if test_list_id:
+            qs = qs.filter(test_list_instance__test_list_id=test_list_id)
+
+        if not include_in_progress:
+            qs = qs.filter(test_list_instance__in_progress=False)
+
+        if exclude_skipped:
+            qs = qs.filter(skipped=False)
+
+        if not include_invalid:
+            qs = qs.filter(status__valid=True)
+
+        if unit_number is None:
+            unit_number = self.unit.number
 
         try:
             return qs.latest("work_completed")
@@ -315,10 +364,11 @@ class UploadHandler:
         meta_data = self.data["meta"]
         refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
+        utc = timezone.pytz.utc
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = dateutil.parser.parse(meta_data[d])
-            except (KeyError, AttributeError, TypeError):
+                meta_data[d] = utc.localize(parse_datetime(meta_data[d]))
+            except (TypeError, KeyError, AttributeError):
                 pass
 
         comments = self.data["comments"]
@@ -638,9 +688,10 @@ class CompositePerformer:
         values = self.data.get("tests")
         meta_data = self.data.get("meta")
 
+        utc = timezone.pytz.utc
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = dateutil.parser.parse(meta_data[d])
+                meta_data[d] = utc.localize(parse_datetime(meta_data[d]))
             except (TypeError, KeyError, AttributeError):
                 pass
 
@@ -670,15 +721,26 @@ class CompositePerformer:
 
         self.context_keys = list(self.calculation_context.keys())
 
+        tz = timezone.get_current_timezone()
         for slug, val in values.items():
+
             self.context_keys.append(slug)
-            if self.test_types[slug] in models.DATE_TYPES:
-                has_time = self.test_types[slug] == models.DATETIME
-                parser = parse_datetime if has_time else parse_date
+
+            if self.test_types[slug] == models.DATETIME:
+
                 try:
-                    self.calculation_context[slug] = parser(val)
+                    dt = tz.localize(parse_datetime(val))
+                    self.calculation_context[slug] = dt
                 except:  # noqa: E722
                     self.calculation_context[slug] = None
+
+            elif self.test_types[slug] == models.DATE:
+
+                try:
+                    self.calculation_context[slug] = parse_date(val)
+                except:  # noqa: E722
+                    self.calculation_context[slug] = None
+
             elif slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 

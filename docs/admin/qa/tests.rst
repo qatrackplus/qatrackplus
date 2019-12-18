@@ -197,7 +197,7 @@ values for other test types (simple numerical, string, date/time, multiple
 choice).
 
 
-Formatting 
+Formatting
 ~~~~~~~~~~
 
 Python style string format for displaying numerical results. Leave blank for
@@ -339,7 +339,11 @@ When your script (calculation procedure) is executed, it has access to
 #. A META object which is a dictionary of some potentially useful
    information about the test list currently being performed including:
 
+    -  test\_list\_id - ID of current test list
+
     -  test\_list\_name - Name of current test list
+
+    -  unit\_test\_collection\_id - ID of current Unit Test Collection (Unit Test List/Cycle Assignment)
 
     -  unit\_number - Unit number
 

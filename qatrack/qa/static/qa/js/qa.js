@@ -759,6 +759,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function get_meta_data(){
 
         var meta = {
+            test_list_id: $("#test-list-id").val(),
             test_list_name: $("#test-list-name").val(),
             unit_number: parseInt($("#unit-number").val()),
             cycle_day: parseInt($("#cycle-day-number").val()),
