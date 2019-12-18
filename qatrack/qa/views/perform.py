@@ -663,7 +663,11 @@ class CompositePerformer:
 
     def set_formatters(self):
         """Set formatters for tests where applicable"""
-        self.formatters = {x.slug: x.formatting for x in self.all_tests if x.type in models.NUMERICAL_TYPES}
+        if self.defaults:
+            # don't format default values since it can lead to confusion when comparing with old values
+            self.formatters = {}
+        else:
+            self.formatters = {x.slug: x.formatting for x in self.all_tests if x.type in models.NUMERICAL_TYPES}
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
