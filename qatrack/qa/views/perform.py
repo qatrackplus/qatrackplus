@@ -6,7 +6,6 @@ import os
 import traceback
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
-import dateutil
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -364,10 +363,10 @@ class UploadHandler:
         meta_data = self.data["meta"]
         refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
-        utc = timezone.pytz.utc
+        tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = utc.localize(parse_datetime(meta_data[d]))
+                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
             except (TypeError, KeyError, AttributeError):
                 pass
 
@@ -508,9 +507,10 @@ class Upload(JSONResponseMixin, View):
         meta_data = self.get_json_data("meta")
         refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
+        tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = dateutil.parser.parse(meta_data[d])
+                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
             except (KeyError, AttributeError, TypeError):
                 pass
 
@@ -692,10 +692,10 @@ class CompositePerformer:
         values = self.data.get("tests")
         meta_data = self.data.get("meta")
 
-        utc = timezone.pytz.utc
+        tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = utc.localize(parse_datetime(meta_data[d]))
+                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
             except (TypeError, KeyError, AttributeError):
                 pass
 

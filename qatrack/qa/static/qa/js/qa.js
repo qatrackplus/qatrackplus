@@ -763,8 +763,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             test_list_name: $("#test-list-name").val(),
             unit_number: parseInt($("#unit-number").val()),
             cycle_day: parseInt($("#cycle-day-number").val()),
-            work_completed: QAUtils.parse_dd_mmm_yyyy_date($("#id_work_completed").val()),
-            work_started: QAUtils.parse_dd_mmm_yyyy_date($("#id_work_started").val()),
+            work_completed: $("#id_work_completed").val(),
+            work_started: $("#id_work_started").val(),
             username: $("#username").val()
         };
 
