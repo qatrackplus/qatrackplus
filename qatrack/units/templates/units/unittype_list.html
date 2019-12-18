@@ -26,14 +26,9 @@
               <div class="span12">
 
                 <h4 class="header-spacer">{{unit_type}}</h4>
-
-                {% for unit in units %}
-
                   {% for unit in units %}
                     {% include "units/unittype_list_unit_button.html" with unit=unit %}
                   {% endfor %}
-
-                {% endfor %}
               </div>
             </div>
 
