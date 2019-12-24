@@ -213,6 +213,8 @@ class CompositeUtils:
         if unit_number is None:
             unit_number = self.unit.number
 
+        qs = qs.filter(unit_test_info__unit__number=unit_number)
+
         try:
             return qs.latest("work_completed")
         except models.TestInstance.DoesNotExist:
