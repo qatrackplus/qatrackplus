@@ -501,7 +501,7 @@ class TestFilters(TestCase):
         s = utils.create_site()
         u = utils.create_unit(site=s)
         f = filters.DueAndOverdueFilter()
-        choices = [('%s :: %s' % (s.name, u.type.name), [(1, '%s :: %s' % (s.name, u.name))])]
+        choices = [('%s :: %s' % (s.name, u.type.name), [(u.id, '%s :: %s' % (s.name, u.name))])]
         assert list(f.form.fields['unit'].choices) == choices
 
     def test_utcfilter(self):
