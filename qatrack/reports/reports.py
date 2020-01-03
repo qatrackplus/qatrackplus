@@ -27,6 +27,7 @@ from qatrack.qatrack_core.utils import (
     chrometopdf,
     format_as_date,
     format_datetime,
+    relative_dates,
 )
 from qatrack.reports import filters
 from qatrack.units import models as umodels
@@ -220,6 +221,9 @@ class BaseReport(object, metaclass=ReportMeta):
             return "<em>No Filter</em>"
 
         if isinstance(val, str):
+            if val.lower() in relative_dates.ALL_DATE_RANGES:
+                start, end = relative_dates(val).range()
+                return "%s (%s - %s)" % (val, format_as_date(start), format_as_date(end))
             return val
 
         if isinstance(val, timezone.datetime):
