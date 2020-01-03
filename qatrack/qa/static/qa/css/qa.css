@@ -462,6 +462,12 @@ body .box-footer h3.do-not-treat {
 }
 
 /* review testlist */
+a.revealtext {
+  color: white;
+  display: inline-block;
+  width: 100%;
+}
+
 td.review-value,
 th.review-value {
     width:60px;

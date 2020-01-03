@@ -1127,6 +1127,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             ti = models.TestInstance(
                 value=ti_form.cleaned_data.get("value"),
                 string_value=ti_form.cleaned_data.get("string_value", ""),
+                json_value=ti_form.cleaned_data.get("json_value", ""),
                 date_value=ti_form.cleaned_data.get("date_value"),
                 datetime_value=ti_form.cleaned_data.get("datetime_value"),
                 skipped=ti_form.cleaned_data.get("skipped", False),

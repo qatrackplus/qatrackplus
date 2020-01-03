@@ -31,7 +31,7 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
         $('a.revealtext').click(function () {
             var this_row = $(this).parent().parent().parent();
             var comment_row = this_row.nextAll(".qa-text-display").eq(0);
-            comment_row.toggle('fast');
+            comment_row.toggleClass('hidden');
             return false;
         });
 

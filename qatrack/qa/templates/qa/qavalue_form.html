@@ -57,6 +57,7 @@
       {% elif test.is_upload %}
         <span class="upload-button">
           {{form.string_value}}
+          {{form.json_value}}
           <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-xs btn-flat">Upload</a>
         </span>
       {% elif test.is_date or test.is_datetime %}

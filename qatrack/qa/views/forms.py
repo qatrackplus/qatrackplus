@@ -112,6 +112,7 @@ class TestInstanceWidgetsMixin(object):
             self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
+            self.fields["json_value"].widget = HiddenInput()
         elif test_type == models.COMPOSITE:
             self.fields["value"].widget = Input()
             if getattr(self, "instance", None):
@@ -155,6 +156,7 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
     string_value = forms.CharField(required=False)
+    json_value = forms.CharField(widget=forms.HiddenInput, required=False)
     date_value = forms.DateField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
     datetime_value = forms.DateTimeField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
 
@@ -229,7 +231,16 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
     class Meta:
         model = models.TestInstance
-        fields = ("value", "string_value", "date_value", "datetime_value", "skipped", "comment", "user_attached",)
+        fields = (
+            "value",
+            "string_value",
+            "json_value",
+            "date_value",
+            "datetime_value",
+            "skipped",
+            "comment",
+            "user_attached",
+        )
 
     def __init__(self, *args, **kwargs):
 

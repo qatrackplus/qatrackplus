@@ -262,7 +262,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         var tt = this.test_info.test.type;
         this.row = $(row);
         this.prefix = this.row.attr('data-prefix');
-        this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not("[name$=user_attached]");
+        this.json_value = this.row.find("td.qa-value").find("input[name$=json_value]");
+        this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not(
+            "[name$=user_attached]"
+        ).not("[name$=json_value]");
         this.user_attach_input = this.row.find("input[name$=user_attached]");
         this.unit_id = $("#unit-id").val();
         this.test_list_id = $("#test-list-id").val();
@@ -439,10 +442,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             }else if (tt === QAUtils.UPLOAD){
                 if (_.isNull(value)){
                     self.inputs.filter(".qa-input:hidden").val("");
+                    self.json_value.val("");
                     self.upload_data = value;
                 }else{
                     self.inputs.filter(".qa-input:hidden").val(value.attachment_id);
                     self.value = value.result;
+                    self.json_value.val(JSON.stringify(value.result));
                     self.upload_data = value;
                 }
             }else if (tt === QAUtils.COMPOSITE){
@@ -925,7 +930,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 self.submit.attr("disabled", false);
                 if (opts.set_defaults){
                     window.init_task_count -= 1;
-                    return
+                    return;
                 }else{
                     $('body').removeClass("loading");
                     $.Topic("qaUpdated").publish();

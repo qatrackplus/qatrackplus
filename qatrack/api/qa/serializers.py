@@ -1,6 +1,7 @@
 import base64
 from collections import defaultdict
 import copy
+import json
 from numbers import Number
 import re
 
@@ -18,6 +19,7 @@ from qatrack.api.attachments.serializers import AttachmentSerializer
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models, signals
 from qatrack.qa.views.perform import CompositePerformer, UploadHandler
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.qatrack_core.utils import parse_date, parse_datetime
 from qatrack.service_log import models as sl_models
 
@@ -314,6 +316,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 d.pop('value', "")
                 # string value needs to be set to attachment id for later editing
                 d['string_value'] = self.ti_attachments[slug][0]
+                d['json_value'] = json.dumps(self.ti_upload_analysis_data[slug], cls=QATrackJSONEncoder)
 
         if missing:
             msgs.append("Missing data for tests: %s" % ', '.join(missing))
@@ -385,13 +388,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                     validated_data['tests'][slug]['value'] = ""
 
         self.ti_attachments = defaultdict(list)
+        self.ti_upload_analysis_data = {}
 
         user = self.context['request'].user
 
         if has_calculated:
 
             comp_calc_data = self.data_to_composite(validated_data)
-
             for pk, slug, d in uploads:
                 comp_calc_data['test_id'] = pk
                 try:
@@ -415,6 +418,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
                 self.ti_attachments[slug].append(test_data['attachment_id'])
                 self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
+                self.ti_upload_analysis_data[slug] = test_data['result']
 
                 data = validated_data['tests'].get(slug, {})
                 comment_sources = [data.get("comment", ""), test_data.get("comment")]
@@ -516,6 +520,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             ti = models.TestInstance(
                 value=data.get("value"),
                 string_value=data.get("string_value", ""),
+                json_value=data.get("json_value", ""),
                 date_value=data.get("date_value"),
                 datetime_value=data.get("datetime_value"),
                 skipped=data.get("skipped", False),

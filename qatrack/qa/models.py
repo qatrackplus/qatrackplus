@@ -25,6 +25,7 @@ from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
+from qatrack.qatrack_core.fields import JSONField
 from qatrack.qatrack_core.utils import format_as_date, format_datetime
 from qatrack.units.models import Unit
 
@@ -1839,6 +1840,14 @@ class TestInstance(models.Model):
     string_value = models.TextField(null=True, blank=True)
     date_value = models.DateField(null=True, blank=True)
     datetime_value = models.DateTimeField(null=True, blank=True)
+    json_value = JSONField(
+        blank=True,
+        null=True,
+        help_text=_l(
+            "Currently used to store results of upload file analysis. Allows you to retrieve results of "
+            "file upload analysis without having to reanalyze the file"
+        ),
+    )
 
     skipped = models.BooleanField(help_text=_l("Was this test skipped for some reason (add comment)"), default=False)
     comment = models.TextField(help_text=_l("Add a comment to this test"), null=True, blank=True)
