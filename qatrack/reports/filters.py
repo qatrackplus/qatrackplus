@@ -7,15 +7,21 @@ from django.utils.translation import gettext_lazy as _l
 import django_filters
 
 from qatrack.qa import models
-from qatrack.qatrack_core.utils import format_as_date
+from qatrack.qatrack_core.utils import relative_dates
 from qatrack.units import models as umodels
 from qatrack.units.forms import unit_site_unit_type_choices, utc_choices
 
 
-class CustomDateRangeField(forms.fields.CharField):
+class RelativeDateRangeField(forms.fields.CharField):
 
     def clean(self, value):
+
         val = super().clean(value)
+
+        custom = val.lower() not in relative_dates.ALL_DATE_RANGES
+        if not custom:
+            return val
+
         try:
             is_dashed_format = val.count("-") == 5
             if is_dashed_format:
@@ -33,24 +39,30 @@ class CustomDateRangeField(forms.fields.CharField):
         return start, end
 
 
-class CustomDateRangeFilter(django_filters.CharFilter):
+class RelativeDateRangeFilter(django_filters.CharFilter):
     """Date range filter to use in conjunction with bootstrap daterangepicker"""
 
-    field_class = CustomDateRangeField
+    field_class = RelativeDateRangeField
 
     def filter(self, qs, value):
 
         if not value:
             return qs  # pragma: no cover
 
+        try:
+            start_date, end_date = relative_dates(value).range()
+        except:  # noqa: E722
+            # custom period
+            start_date, end_date = value
+
         fn = self.field_name
-        qs = qs.filter(**{"%s__gte" % fn: value[0]}).filter(**{"%s__lte" % fn: value[1]})
+        qs = qs.filter(**{"%s__gte" % fn: start_date}).filter(**{"%s__lte" % fn: end_date})
         return qs.distinct() if self.distinct else qs
 
 
 class TestListInstanceFilter(django_filters.FilterSet):
 
-    work_completed = CustomDateRangeFilter(
+    work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
         help_text=_l("Dates to include QC data from"),
     )
@@ -102,7 +114,7 @@ class TestListInstanceFilter(django_filters.FilterSet):
 
 class UnitTestCollectionFilter(django_filters.FilterSet):
 
-    work_completed = CustomDateRangeFilter(
+    work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
         help_text=_l("Dates to include QC data from"),
     )
@@ -163,7 +175,7 @@ class DueAndOverdueFilter(django_filters.FilterSet):
 
 class SchedulingFilter(django_filters.FilterSet):
 
-    due_date = CustomDateRangeFilter(
+    due_date = RelativeDateRangeFilter(
         label=_l("Time Period"),
         help_text=_l("Dates to include scheduled QC data from"),
     )
@@ -202,7 +214,7 @@ class SchedulingFilter(django_filters.FilterSet):
 
 class TestDataFilter(django_filters.FilterSet):
 
-    test_list_instance__work_completed = CustomDateRangeFilter(
+    test_list_instance__work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
         help_text=_l("Dates to include QC data from"),
     )
@@ -248,11 +260,8 @@ class TestDataFilter(django_filters.FilterSet):
 
         super().__init__(*args, **kwargs)
 
-        now = timezone.now()
-        last_year = now - timezone.timedelta(days=365)
-        wc_range = "%s - %s" % (format_as_date(last_year), format_as_date(now))
         self.form.fields['test_list_instance__work_completed'].widget.attrs['class'] = "pastdate"
-        self.form.fields['test_list_instance__work_completed'].initial = wc_range
+        self.form.fields['test_list_instance__work_completed'].initial = "Last 365 days"
         self.form.fields['unit_test_info__unit'].choices = unit_site_unit_type_choices()
         self.form.fields['unit_test_info__test'].choices = test_category_choices()
 

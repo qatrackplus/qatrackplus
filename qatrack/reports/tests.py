@@ -17,16 +17,17 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as e_c
 
 # Create your tests here.
-from qatrack.qa.models import Frequency, Group, TestListInstance, User
+from qatrack.qa.models import (
+    Frequency,
+    Group,
+    TestInstance,
+    TestListInstance,
+    User,
+)
 from qatrack.qa.tests import utils
 from qatrack.qa.tests.test_selenium import BaseQATests
 from qatrack.reports import admin, filters, forms, models, reports, tasks, views
 from qatrack.units.models import Site as USite
-
-
-def local_852am():
-    tz = timezone.get_current_timezone()
-    return tz.localize(timezone.datetime(2019, 1, 1, 8, 52))
 
 
 class TestReportForm:
@@ -458,7 +459,7 @@ class TestFilters(TestCase):
             views.get_filter(req)
 
     def test_customdaterangefield_dashes(self):
-        cdf = filters.CustomDateRangeField()
+        cdf = filters.RelativeDateRangeField()
         test_inputs = [
             "2019-01-01 - 2019-01-02",
             "2019-01-01-2019-01-02",
@@ -471,6 +472,41 @@ class TestFilters(TestCase):
             expected_start = tz.localize(timezone.datetime(2019, 1, 1))
             expected_end = tz.localize(timezone.datetime(2019, 1, 2, 23, 59, 59))
             assert (start, end) == (expected_start, expected_end)
+
+    def test_category_choices(self):
+        cat1 = utils.create_category("cat 1", slug="cat1")
+        cat2 = utils.create_category("cat 2", slug="cat2")
+        t1 = utils.create_test("cat 1 test", category=cat1)
+        t2 = utils.create_test("cat 2 test", category=cat2)
+        choices = filters.test_category_choices()
+        assert choices == [(cat1.name, [(cat1.pk, t1.name)]), (cat2.name, [(cat2.pk, t2.name)])]
+
+    def test_testdatafilter(self):
+        f = filters.TestDataFilter()
+        assert f.form.fields['test_list_instance__work_completed'].initial == "Last 365 days"
+
+    def test_testdatafilter_qs(self):
+        f = filters.TestDataFilter()
+        f.form.cleaned_data = {'organization': 'foo'}
+        f.filter_queryset(TestInstance.objects.all())
+        assert f.organization == "foo"
+        assert 'organization' not in f.form.cleaned_data
+
+    def test_schedulingfilter_due_date(self):
+        f = filters.SchedulingFilter()
+        assert f.form.fields['due_date'].widget.attrs['class'] == "futuredate"
+
+    def test_dueandoverdue_unit_site_choices(self):
+
+        s = utils.create_site()
+        u = utils.create_unit(site=s)
+        f = filters.DueAndOverdueFilter()
+        choices = [('%s :: %s' % (s.name, u.type.name), [(1, '%s :: %s' % (s.name, u.name))])]
+        assert list(f.form.fields['unit'].choices) == choices
+
+    def test_utcfilter(self):
+        f = filters.UnitTestCollectionFilter()
+        assert f.form.fields['work_completed'].widget.attrs['class'] == "pastdate"
 
 
 class TestInstanceToFormFields(TestCase):

@@ -7,7 +7,7 @@ import recurrence
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
 from qatrack.qatrack_core.tests.utils import get_next_id
-from qatrack.units.models import PHOTON, Modality, Unit, UnitType, Vendor
+from qatrack.units.models import PHOTON, Modality, Site, Unit, UnitType, Vendor
 
 
 def exists(app, model, field, value):
@@ -204,6 +204,14 @@ def create_unit_type(name=None, vendor=None, model="model"):
     ut, _ = UnitType.objects.get_or_create(name=name, vendor=vendor, model=model)
     ut.save()
     return ut
+
+
+def create_site(name=None):
+
+    if name is None:
+        name = 'site_%04d' % get_next_id(Site.objects.order_by('id').last())
+
+    return Site.objects.create(name=name)
 
 
 def create_unit(name=None, number=None, tipe=None, site=None):

@@ -189,6 +189,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     };
 
     var pastRanges = {
+        "Today": [moment(), moment()],
         "Last 7 Days": [
             moment().subtract(7, 'days'),
             moment()
@@ -228,6 +229,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     };
 
     var futureRanges = {
+        "Today": [moment(), moment()],
         "Next 7 Days": [moment(), moment().add(7, 'days')],
         "Next 30 Days": [moment(), moment().add(30, 'days')],
         "Next 365 Days": [moment(), moment().add(365, 'days')],
@@ -260,7 +262,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     function createDateRangePicker($el, ranges, initial){
 
         if ($el.val() === null || $el.val() === ""){
-            $el.val(ranges[initial][0].format(siteConfig.MOMENT_DATE_FMT) + ' - ' + ranges[initial][1].format(siteConfig.MOMENT_DATE_FMT));
+            $el.val(initial);//ranges[initial][0].format(siteConfig.MOMENT_DATE_FMT) + ' - ' + ranges[initial][1].format(siteConfig.MOMENT_DATE_FMT));
         }
 
         $el.daterangepicker({
@@ -272,7 +274,11 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         }, function (start_date, end_date) {
             $(this.element).val(start_date.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + end_date.format(siteConfig.MOMENT_DATE_FMT));
         }).on('apply.daterangepicker', function (ev, picker) {
-            $(picker.element).val(picker.startDate.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + picker.endDate.format(siteConfig.MOMENT_DATE_FMT));
+            if (picker.chosenLabel.toLowerCase() === "custom"){
+                $(picker.element).val(picker.startDate.format(siteConfig.MOMENT_DATE_FMT) + ' - ' + picker.endDate.format(siteConfig.MOMENT_DATE_FMT));
+            }else{
+                $(picker.element).val(picker.chosenLabel);
+            }
             if (!picker.startDate.isSame(picker.oldStartDate) || !picker.endDate.isSame(picker.oldEndDate)) {
                 $(this).trigger('keyup');
             }
