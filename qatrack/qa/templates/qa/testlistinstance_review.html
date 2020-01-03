@@ -384,7 +384,7 @@
                           <tr class="qa-text-display no-hover row-{{ ti_form.prefix }} hidden">
                             <td colspan="{% qa_table_colspan perms %}"  class="">
                             <pre style="">
-                              {% firstof ti.json_value "" %}
+                              {% firstof ti.json_value|pprint "" %}
                             </pre>
                             </td>
                           </tr>
