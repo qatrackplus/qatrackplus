@@ -479,7 +479,7 @@ class TestFilters(TestCase):
         t1 = utils.create_test("cat 1 test", category=cat1)
         t2 = utils.create_test("cat 2 test", category=cat2)
         choices = filters.test_category_choices()
-        assert choices == [(cat1.name, [(cat1.pk, t1.name)]), (cat2.name, [(cat2.pk, t2.name)])]
+        assert choices == [(cat1.name, [(t1.pk, t1.name)]), (cat2.name, [(t2.pk, t2.name)])]
 
     def test_testdatafilter(self):
         f = filters.TestDataFilter()
