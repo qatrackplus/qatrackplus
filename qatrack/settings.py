@@ -455,6 +455,15 @@ LOGGING = {
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
+        'django-q': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "django-q.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 7,  # defaults to 1, only necessary for other values
+            'backupCount': 26,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
@@ -489,6 +498,11 @@ LOGGING = {
         },
         'qatrack.migrations': {
             'handlers': ['console', 'migrate', 'mail_admins'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django-q': {
+            'handlers': ['console', 'django-q'],
             'level': 'DEBUG',
             'propagate': True,
         },
