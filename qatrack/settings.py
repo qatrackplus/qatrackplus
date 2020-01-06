@@ -725,7 +725,7 @@ LOGOUT_REDIRECT_URL = LOGIN_URL
 
 Q_CLUSTER = {
     'name': 'qatrack',
-    'workers': 1,
+    'workers': 2,
     'timeout': 60,
     'catch_up': True,
     'recycle': 20,
