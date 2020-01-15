@@ -867,7 +867,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var cur_values = _.map(self.test_instances, function(ti){
                 var tt = ti.test_info.test.type;
-                if (QAUtils.READ_ONLY_TEST_TYPES.indexOf(tt) < 0){
+                if (QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) < 0){
                     return ti.value;
                 }else{
                     return null;
