@@ -1059,6 +1059,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         """If the form is invalid, render the invalid form."""
         context = self.get_context_data(form=form)
         context['has_errors'] = True
+        messages.error(
+            self.request,
+            _("Data was not submitted succesfully. Please resolve the errors below and try again."),
+        )
         return self.render_to_response(context)
 
     @transaction.atomic
@@ -1079,6 +1083,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if not formset.is_valid():
             context["form"] = form
             context['has_errors'] = True
+            messages.error(
+                self.request,
+                _("Data was not submitted succesfully. Please resolve the errors below and try again."),
+            )
             return self.render_to_response(context)
 
         status = self.get_test_status(form)
