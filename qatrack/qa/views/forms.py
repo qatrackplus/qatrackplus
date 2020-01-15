@@ -258,6 +258,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
             "tolerance": self.instance.tolerance,
             "unit_test_info": self.instance.unit_test_info,
             "test": self.instance.unit_test_info.test,
+            "show_category": self.show_category,
         }
 
 
@@ -271,7 +272,16 @@ BaseUpdateTestInstanceFormSet = inlineformset_factory(
 
 
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
-    pass
+
+    def __init__(self, *args, **kwargs):
+
+        super(UpdateTestInstanceFormSet, self).__init__(*args, **kwargs)
+
+        prev_cat = None
+        for form in self.forms:
+            cur_cat = form.unit_test_info.test.category_id
+            form.show_category = cur_cat != prev_cat
+            prev_cat = cur_cat
 
 
 class ReviewTestInstanceForm(forms.ModelForm):
