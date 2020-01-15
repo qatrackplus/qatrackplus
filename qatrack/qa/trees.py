@@ -66,12 +66,15 @@ class BaseTree:
 
     def utc_text(self, utc_id, utc_name, unit_name):
         href = reverse("perform_qa", kwargs={"pk": utc_id})
+        next_ = reverse("qa_frequency_tree") if self.tree_type == "frequency" else reverse("qa_category_tree")
         title = _("Click to peform {tests_collection} on Unit {unit}").format(tests_collection=utc_name, unit=unit_name)
-        text = '<a href="%s" title="%s">%s <i class="fa fa-list"></i></a>' % (href, title, utc_name)
+        text = '<a href="%s?next=%s" title="%s">%s <i class="fa fa-list"></i></a>' % (href, next_, title, utc_name)
         return text
 
 
 class BootstrapCategoryTree(BaseTree):
+
+    tree_type = "category"
 
     def __init__(self, visible_to):
         super().__init__(visible_to)
@@ -260,6 +263,8 @@ class BootstrapCategoryTree(BaseTree):
 
 
 class BootstrapFrequencyTree(BaseTree):
+
+    tree_type = "frequency"
 
     def setup_qs(self):
 
