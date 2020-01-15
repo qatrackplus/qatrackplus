@@ -865,7 +865,14 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             processing_on();
 
-            var cur_values = _.map(self.test_instances, function(ti){return ti.value;});
+            var cur_values = _.map(self.test_instances, function(ti){
+                var tt = ti.test_info.test.type;
+                if (QAUtils.READ_ONLY_TEST_TYPES.indexOf(tt) < 0){
+                    return ti.value;
+                }else{
+                    return null;
+                }
+            });
             var qa_values = _.zipObject(self.slugs, cur_values);
             var meta = get_meta_data();
             var comments = get_comments();
