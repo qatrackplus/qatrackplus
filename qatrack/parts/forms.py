@@ -131,25 +131,28 @@ class CostInputField(forms.CharField):
 
     def to_python(self, value):
         value = value.replace('$', '').replace(',', '')
-        if value == '':
-            raise ValidationError(self.error_messages['required'], code='required')
-        if float(value) < 0:
+        if value and float(value) < 0:
             raise ValidationError('Ensure this value is greater than or equal to 0.')
+        if not value:
+            value = None
         return value
 
 
 class PartForm(BetterModelForm):
 
-    cost = CostInputField(help_text=p_models.Part._meta.get_field('cost').help_text)
+    cost = CostInputField(
+        help_text=p_models.Part._meta.get_field('cost').help_text,
+        required=False,
+    )
 
     class Meta:
         model = p_models.Part
         if not settings.PARTS_ALLOW_BLANK_PART_NUM:
-            required_fields = ['part_number', 'new_or_used', 'cost', 'quantity_min']
-            optional_fields = ['alt_part_number', 'part_category', 'is_obsolete']
+            required_fields = ['part_number', 'new_or_used', 'quantity_min']
+            optional_fields = ['alt_part_number', 'part_category', 'cost', 'is_obsolete']
         else:
-            required_fields = ['new_or_used', 'cost', 'quantity_min']
-            optional_fields = ['part_number', 'alt_part_number', 'part_category', 'is_obsolete']
+            required_fields = ['new_or_used', 'quantity_min']
+            optional_fields = ['part_number', 'alt_part_number', 'part_category', 'cost', 'is_obsolete']
 
         fieldsets = [
             ('hidden_fields', {

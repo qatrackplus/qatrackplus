@@ -180,7 +180,7 @@ class Part(models.Model):
         choices=[("both", _l("New & Used")), ("new", _l("New")), ("used", _l("Used"))],
         default="both",
         max_length=12,
-        help_text=_l("Select whether this Part is used to track new, used, or both new and used inventory"),
+        help_text=_l("Is this for tracking inventory of new, used, or both"),
     )
 
     alt_part_number = models.CharField(

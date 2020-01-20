@@ -24,8 +24,8 @@
             <div class="row">
               <div class="col-sm-6">
                 <dl class="dl-horizontal">
-                  <dt>{% trans "Part number" %}:</dt><dd><div>{{ part.part_number }}</div></dd>
-                  <dt>{% trans "Cost" %}:</dt><dd><div>{{ part.cost }}</div></dd>
+                  <dt>{% trans "Part number" %}:</dt><dd><div>{% firstof part.part_number "<em>N/A</em>" %}</div></dd>
+                  <dt>{% trans "Cost" %}:</dt><dd><div>{% if part.cost is None %}<em>N/A</em>{% else %}{{ part.cost }}{% endif %}</div></dd>
                   <dt>{% trans "Quantity min" %}:</dt><dd><div>{{ part.quantity_min }}</div></dd>
                   <dt>{% trans "Quantity current" %}:</dt><dd><div>{{ part.quantity_current }}</div></dd>
                 </dl>
