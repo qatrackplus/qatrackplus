@@ -189,7 +189,7 @@ def create_part(part_category=None, part_number=None, name='description', add_st
     if part_category is None:
         part_category = create_part_category()
     if part_number is None:
-        part_number = get_next_id(p_models.PartCategory.objects.order_by('id').last())
+        part_number = str(get_next_id(p_models.PartCategory.objects.order_by('id').last()))
 
     p, _ = p_models.Part.objects.get_or_create(
         part_category=part_category, part_number=part_number, name=name, quantity_min=quantity_min,

@@ -172,6 +172,7 @@ class Part(models.Model):
         verbose_name=_l("part number"),
         max_length=32,
         help_text=_l("Enter the part number for this part."),
+        blank=True,
     )
 
     new_or_used = models.CharField(
@@ -226,9 +227,13 @@ class Part(models.Model):
         ]
 
     def __str__(self):
-        return '%s%s - %s' % (
-            self.part_number, ' (%s)' % self.alt_part_number if self.alt_part_number else '', self.name
-        )
+
+        pn = self.part_number or "N/A"
+
+        if self.alt_part_number:
+            pn += ' (%s)' % self.alt_part_number
+
+        return '%s - %s' % (pn, self.name)
 
     def set_quantity_current(self):
         qs = PartStorageCollection.objects.filter(part=self, storage__isnull=False)

@@ -1,12 +1,12 @@
 from django import forms
-from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.db.models import ObjectDoesNotExist, Q
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db.models import ObjectDoesNotExist
 from django.utils.encoding import force_text
 from form_utils.forms import BetterModelForm
 
 from qatrack.parts import models as p_models
 from qatrack.service_log import models as sl_models
-from qatrack.units import models as u_models
 
 
 class PartChoiceField(forms.ModelChoiceField):
@@ -16,7 +16,7 @@ class PartChoiceField(forms.ModelChoiceField):
             return None
         try:
             part = p_models.Part.objects.get(pk=value)
-        except (ValueError, TypeError, p_models.Part.DoesNotExist) as e:
+        except (ValueError, TypeError, p_models.Part.DoesNotExist):
             raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
         return part
 
@@ -28,7 +28,7 @@ class FromStorageField(forms.ModelChoiceField):
             return None
         try:
             storage = p_models.Storage.objects.get(pk=value)
-        except (ValueError, TypeError, p_models.Part.DoesNotExist) as e:
+        except (ValueError, TypeError, p_models.Part.DoesNotExist):
             raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
         return storage
 
@@ -144,6 +144,13 @@ class PartForm(BetterModelForm):
 
     class Meta:
         model = p_models.Part
+        if not settings.PARTS_ALLOW_BLANK_PART_NUM:
+            required_fields = ['part_number', 'new_or_used', 'cost', 'quantity_min']
+            optional_fields = ['alt_part_number', 'part_category', 'is_obsolete']
+        else:
+            required_fields = ['new_or_used', 'cost', 'quantity_min']
+            optional_fields = ['part_number', 'alt_part_number', 'part_category', 'is_obsolete']
+
         fieldsets = [
             ('hidden_fields', {
                 'fields': [],
@@ -154,14 +161,10 @@ class PartForm(BetterModelForm):
                 ],
             }),
             ('required_fields', {
-                'fields': [
-                    'part_number', 'new_or_used', 'cost', 'quantity_min'
-                ],
+                'fields': required_fields,
             }),
             ('optional_fields', {
-                'fields': [
-                    'alt_part_number', 'part_category', 'is_obsolete'
-                ]
+                'fields': optional_fields,
             }),
             ('notes', {
                 'fields': [
@@ -184,8 +187,14 @@ class PartForm(BetterModelForm):
             self.fields[f].widget.attrs['rows'] = 3
             self.fields[f].widget.attrs['cols'] = 4
 
-        for f in ['part_number', 'cost', 'quantity_min', 'name']:
+        for f in self.Meta.required_fields:
             self.fields[f].widget.attrs['placeholder'] = 'required'
+
+    def clean_part_number(self):
+        pn = self.cleaned_data.get("part_number")
+        if not pn and not settings.PARTS_ALLOW_BLANK_PART_NUM:
+            self.add_error('part_number', 'This field is required')
+        return pn
 
 
 class PartSupplierCollectionForm(forms.ModelForm):

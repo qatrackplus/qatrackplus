@@ -123,9 +123,9 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
         part = form.save(commit=False)
         if not part.pk:
-            message = _('New part %(part_number)s added') % {'part_number': part.part_number}
+            message = _('New part %(description)s added') % {'description': str(part)}
         else:
-            message = _('Part %(part_number)s updated') % {'part_number': part.part_number}
+            message = _('Part %(description)s updated') % {'description': str(part)}
 
         messages.add_message(request=self.request, level=messages.SUCCESS, message=message)
         part.save()
@@ -336,6 +336,9 @@ class PartsList(BaseListableView):
         self._parts_locations_cache = {}
         for k, v in tmp_cache.items():
             self._parts_locations_cache[k] = ', '.join(v)
+
+    def part_number(self, part):
+        return part.part_number or "<em>N/A</em>"
 
 
 class SuppliersList(BaseListableView):

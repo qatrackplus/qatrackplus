@@ -580,7 +580,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                         messages.add_message(
                             request=self.request,
                             level=messages.INFO,
-                            message='Part number %s is low (%s left in stock).' % (current_p.part_number, current_p.quantity_current)
+                            message='Part %s is low (%s left in stock).' % (str(current_p), current_p.quantity_current)
                         )
                     if initial_p:
                         initial_p.set_quantity_current()

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.core.exceptions import ValidationError
 import django.forms as forms
+from django.utils.safestring import mark_safe
 
 if settings.USE_PARTS:
 
@@ -10,12 +11,11 @@ if settings.USE_PARTS:
 
     from . import models as p_models
 
-
     class PartAdmin(admin.ModelAdmin):
 
         list_display = [
             'name',
-            'part_number',
+            'get_part_number',
             'new_or_used',
             'part_category',
             'quantity_min',
@@ -23,6 +23,11 @@ if settings.USE_PARTS:
             'cost',
         ]
         search_fields = ['name', 'part_number', 'alt_part_number']
+
+        def get_part_number(self, obj):
+            return obj.part_number if obj and obj.part_number else mark_safe("<em>N/A</em>")
+        get_part_number.short_description = "Part Number"
+        get_part_number.admin_order_field = "part_number"
 
 
     class StorageInlineFormSet(forms.BaseInlineFormSet):
