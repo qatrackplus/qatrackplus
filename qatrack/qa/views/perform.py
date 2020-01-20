@@ -1582,8 +1582,8 @@ class InProgress(TestListInstances):
     which are marked as being in progress.
     """
 
-    def get_queryset(self):
-        return models.TestListInstance.objects.in_progress()
+    def get_queryset(self, *args, **kwargs):
+        return models.TestListInstance.objects.in_progress(user=self.request.user)
 
     def get_icon(self):
         return 'fa-play'

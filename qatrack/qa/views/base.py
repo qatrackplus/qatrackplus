@@ -452,7 +452,9 @@ class TestListInstances(BaseListableView):
         return filters
 
     def get_queryset(self, *args, **kwargs):
-        return super(TestListInstances, self).get_queryset(*args, **kwargs).order_by("-work_completed")
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.filter(unit_test_collection__visible_to__in=self.request.user.groups.all(),)
+        return qs.order_by("-work_completed")
 
     def unit_test_collection__frequency__name(self, tli):
         freq = tli.unit_test_collection.frequency

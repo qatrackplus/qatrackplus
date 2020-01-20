@@ -2122,8 +2122,11 @@ class TestListInstanceManager(models.Manager):
     def your_unreviewed_count(self, user):
         return self.your_unreviewed(user).count()
 
-    def in_progress(self):
-        return self.get_queryset().filter(in_progress=True).order_by("-work_completed")
+    def in_progress(self, user=None):
+        qs = self.get_queryset().filter(in_progress=True)
+        if user:
+            qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all())
+        return qs.order_by("-work_completed")
 
     def complete(self):
         return self.get_queryset().filter(in_progress=False).order_by("-work_completed")
