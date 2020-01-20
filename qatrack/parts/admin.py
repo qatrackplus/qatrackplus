@@ -29,6 +29,11 @@ if settings.USE_PARTS:
         get_part_number.short_description = "Part Number"
         get_part_number.admin_order_field = "part_number"
 
+        def get_cost(self, obj):
+            return obj.cost if obj and obj.cost else mark_safe("<em>N/A</em>")
+        get_part_number.short_description = "Cost"
+        get_part_number.admin_order_field = "cost"
+
 
     class StorageInlineFormSet(forms.BaseInlineFormSet):
 

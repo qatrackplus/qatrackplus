@@ -109,7 +109,7 @@ class TestCreatePart(TestCase):
 
         response = self.client.post(self.url, data=data)
 
-        for f in ['part_number', 'cost', 'quantity_min', 'name']:
+        for f in ['part_number', 'quantity_min', 'name']:
             self.assertTrue(f in response.context_data['form'].errors)
 
         self.assertTrue('supplier' in response.context_data['supplier_formset'].forms[0].errors)
