@@ -982,6 +982,19 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         $.Topic("valueChanged").subscribe(self.calculate_composites);
     }
 
+    function disable_numeric_scroll(){
+        // Prevent scroll wheel from adjusting numbers
+        $('form').on('focus', 'input[type=number]', function (e) {
+            $(this).on('wheel.disableScroll', function (e) {
+                e.preventDefault();
+            });
+        });
+        $('form').on('blur', 'input[type=number]', function (e) {
+            $(this).off('wheel.disableScroll');
+        });
+
+    }
+
     function set_tab_stops(){
 
         var user_inputs=  $('.qa-input',context).not("[readonly=readonly]").not("[type=hidden]").not(".btn");
@@ -997,6 +1010,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         $.Topic("categoryFilterComplete").subscribe(function(){
             visible_user_inputs = user_inputs.filter(":visible");
         });
+
 
         //allow arrow key and enter navigation
         $(document).on("keydown","input, select", function(e) {
@@ -1348,6 +1362,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             return false;
         });
 
+        disable_numeric_scroll();
         set_tab_stops();
 
         var $service_events = $('.service-event-btn');
