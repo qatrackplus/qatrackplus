@@ -575,7 +575,7 @@
                           </a>
                         </li>
                       {% endif %}
-                      {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                      {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
                       <li>
                         <a href="{% url "reports" %}" title="{% trans "Run QATrack+ Reports" %}">
                           <i class="fa fa-file-text-o fa-fw fa-lg"></i>
@@ -584,7 +584,7 @@
                       </li>
                       {% endif %}
                       {% if USE_SQL_REPORTS %}
-                        {% if perms.qa.can_run_sql_reports or perms.qa.can_create_sql_reports %}
+                        {% if perms.reports.can_run_sql_reports or perms.reports.can_create_sql_reports %}
                           <li>
                             <a href="{% url "explorer_index" %}" title="{% trans "SQL Query Tool" %}">
                               <i class="fa fa-search fa-fw fa-lg"></i>

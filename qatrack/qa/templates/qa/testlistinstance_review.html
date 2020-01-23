@@ -102,7 +102,7 @@
                 </dl>
               </div>
               <div class="col-md-4">
-                {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
                   <div class="row">
                     <div class="col-sm-12">
                       {% include "qa/testlistinstance_pdf_button.html" with tli=tli %}
