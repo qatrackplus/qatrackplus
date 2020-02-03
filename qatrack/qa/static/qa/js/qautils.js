@@ -36,6 +36,7 @@ var QAUtils = new function() {
 
     this.NUMERICAL = "numerical";
     this.SIMPLE = "simple";
+    this.THREESIXTY = "360";
     this.CONSTANT = "constant";
     this.BOOLEAN = "boolean";
     this.MULTIPLE_CHOICE = "multchoice";
@@ -45,7 +46,7 @@ var QAUtils = new function() {
     this.STRING_COMPOSITE = "scomposite";
     this.UPLOAD = "upload";
     this.STRING = "string";
-    this.NUMBER_TEST_TYPES = [this.SIMPLE, this.CONSTANT, this.COMPOSITE];
+    this.NUMBER_TEST_TYPES = [this.SIMPLE, this.THREESIXTY, this.CONSTANT, this.COMPOSITE];
     this.READ_ONLY_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE, this.CONSTANT];
     this.COMPOSITE_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE];
 

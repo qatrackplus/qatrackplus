@@ -283,7 +283,7 @@
                                               <td title="{{ ti.unit_test_info.test.name }}"><strong>{{test}}</strong></td>
                                               <td class="review-value">
                                                 {% with vd=ti.value_display %}
-                                                  <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{vd|slice:"100"}}{% else %}{{ti.diff_display}} diff from reference{% endif %}">
+                                                  <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{vd|slice:"100"}}{% elif ti.diff_display %}{% trans "Diff from ref" %}={{ti.diff_display}}{%else%}{% trans "No ref/tol set" %}{% endif %}">
                                                     {% with ti.pass_fail as status %}
                                                       {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
                                                           {% if status == 'tolerance' %}

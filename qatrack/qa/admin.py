@@ -91,6 +91,9 @@ class TestInfoForm(forms.ModelForm):
                 self.fields["reference_value"].widget = forms.HiddenInput()
                 qs = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
                 self.fields['tolerance'].queryset = qs
+            elif tt == models.THREESIXTY:
+                qs = self.fields['tolerance'].queryset.filter(type=models.ABSOLUTE)
+                self.fields['tolerance'].queryset = qs
             else:
                 qs = self.fields['tolerance'].queryset.exclude(type=models.MULTIPLE_CHOICE)
                 self.fields['tolerance'].queryset = qs
@@ -127,6 +130,9 @@ class TestInfoForm(forms.ModelForm):
                 return self.cleaned_data
 
             ref_value = self.cleaned_data["reference_value"]
+
+            if self.instance.test.type == models.THREESIXTY and ref_value != 0:
+                raise forms.ValidationError(_("0 deg - 360 deg tests must be used with a reference value of 0"))
 
             tol = self.cleaned_data.get("tolerance")
             if tol is not None:

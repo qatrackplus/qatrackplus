@@ -33,6 +33,7 @@ from qatrack.units.models import Unit
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
 SIMPLE = "simple"
+THREESIXTY = "360"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 MULTIPLE_CHOICE = "multchoice"
@@ -42,7 +43,7 @@ STRING_COMPOSITE = "scomposite"
 DATE = "date"
 DATETIME = "datetime"
 
-NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, )
+NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, THREESIXTY)
 STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE)
 DATE_TYPES = (DATE, DATETIME)
 COMPOSITE_TYPES = (COMPOSITE, STRING_COMPOSITE,)
@@ -53,6 +54,7 @@ NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
     (SIMPLE, "Simple Numerical"),
+    (THREESIXTY, "0 deg - 360 deg"),
     (MULTIPLE_CHOICE, "Multiple Choice"),
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
@@ -1905,6 +1907,14 @@ class TestInstance(models.Model):
         """return difference between instance and reference"""
         return self.value - self.reference.value
 
+    def difference_360(self):
+        """return difference between instance and reference"""
+        if self.value > 180.:
+            return self.value - 360.
+        elif self.value < -180.:
+            return 360 + self.value
+        return self.difference()
+
     def percent_difference(self):
         """return percent difference between instance and reference"""
         if self.reference.value == 0:
@@ -1958,6 +1968,8 @@ class TestInstance(models.Model):
         if not (self.tolerance and self.reference and self.unit_test_info.test):
             return
 
+        if self.unit_test_info.test.type == THREESIXTY:
+            diff = self.difference_360()
         if self.tolerance.type == ABSOLUTE:
             diff = self.difference()
         else:
@@ -2061,6 +2073,7 @@ class TestInstance(models.Model):
 
     def diff_display(self):
         display = ""
+
         if self.unit_test_info.test.is_numerical_type() and self.value is not None:
             try:
                 diff = self.calculate_diff()

@@ -122,7 +122,11 @@ class TestInstanceWidgetsMixin(object):
         elif test_type in models.STRING_TYPES:
             self.fields['string_value'].widget = Input({'maxlength': 20000})
         else:
-            self.fields["value"].widget = NumberInput(attrs={"step": "any"})
+            attrs = {"step": "any"}
+            if test_type == models.THREESIXTY:
+                attrs['max'] = 360
+                attrs['min'] = -360
+            self.fields["value"].widget = NumberInput(attrs=attrs)
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if hasattr(self, "instance") and self.instance.value is not None:
@@ -150,6 +154,14 @@ class TestInstanceWidgetsMixin(object):
             to_process.append((uti_pk, Attachment.objects.get(pk=aid)))
 
         return to_process
+
+    def clean_value(self):
+        value = self.cleaned_data.get('value')
+        if value is not None and self.unit_test_info.test.type == models.THREESIXTY:
+            if value > 360 or value < -360:
+                self.add_error('value', "Value for this test must be in range -360 to 360")
+
+        return value
 
 
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):

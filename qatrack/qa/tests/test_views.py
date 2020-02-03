@@ -353,11 +353,51 @@ class TestChartView(TestCase):
         ref = qatrack.qa.models.Reference(value=100)
         tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
         ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=100)
+        ti.unit_test_info = models.UnitTestInfo.objects.first()
         ti.test_list_instance = qatrack.qa.models.TestListInstance()
         ti.value_display = lambda: str(ti.value)
         view = views.charts.BaseChartView()
         point = view.test_instance_to_point(ti, relative=True)
         self.assertIsNone(point['tol_low'])
+
+    def test_instance_to_point_relative_360(self):
+        """Three sixty test, relative to ref with value 359 should result in value of -1"""
+        test = utils.create_test(name="360", test_type=models.THREESIXTY)
+        ref = qatrack.qa.models.Reference(value=0)
+        tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
+        ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=359)
+        ti.unit_test_info = models.UnitTestInfo.objects.create(test=test, unit=self.units[0])
+        ti.test_list_instance = qatrack.qa.models.TestListInstance()
+        ti.value_display = lambda: str(ti.value)
+        view = views.charts.BaseChartView()
+        point = view.test_instance_to_point(ti, relative=True)
+        assert point['value'] == -1
+
+    def test_instance_to_point_relative_m360(self):
+        """Three sixty test, relative to ref with value -359 should result in value of 1"""
+        test = utils.create_test(name="360", test_type=models.THREESIXTY)
+        ref = qatrack.qa.models.Reference(value=0)
+        tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
+        ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=-359)
+        ti.unit_test_info = models.UnitTestInfo.objects.create(test=test, unit=self.units[0])
+        ti.test_list_instance = qatrack.qa.models.TestListInstance()
+        ti.value_display = lambda: str(ti.value)
+        view = views.charts.BaseChartView()
+        point = view.test_instance_to_point(ti, relative=True)
+        assert point['value'] == 1
+
+    def test_instance_to_point_relative_m1(self):
+        """Three sixty test, relative to ref with value -1 should result in value of -1"""
+        test = utils.create_test(name="360", test_type=models.THREESIXTY)
+        ref = qatrack.qa.models.Reference(value=0)
+        tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
+        ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=-1)
+        ti.unit_test_info = models.UnitTestInfo.objects.create(test=test, unit=self.units[0])
+        ti.test_list_instance = qatrack.qa.models.TestListInstance()
+        ti.value_display = lambda: str(ti.value)
+        view = views.charts.BaseChartView()
+        point = view.test_instance_to_point(ti, relative=True)
+        assert point['value'] == -1
 
 
 class TestChartData(TestCase):

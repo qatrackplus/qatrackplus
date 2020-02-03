@@ -735,6 +735,7 @@ class TestUnitTestInfoAdmin(TestCase):
         self.t_4 = qa_utils.create_test(test_type=qa_models.SIMPLE)
         self.t_5 = qa_utils.create_test(test_type=qa_models.BOOLEAN)
         self.t_6 = qa_utils.create_test(test_type=qa_models.MULTIPLE_CHOICE)
+        self.t_360 = qa_utils.create_test(test_type=qa_models.THREESIXTY)
         self.tol_1 = qa_utils.create_tolerance()
         self.tol_2 = qa_utils.create_tolerance(act_low=-10, act_high=10)
 
@@ -747,19 +748,20 @@ class TestUnitTestInfoAdmin(TestCase):
         self.r_2 = qa_utils.create_reference(value=1.61803)
         self.r_3 = qa_utils.create_reference(ref_type=qa_models.BOOLEAN)
 
-        self.tli_1 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_1, ref=self.r_1, tol=self.tol_1)
-        self.tli_2 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_2, ref=self.r_1, tol=self.tol_1)
-        self.tli_3 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_3)
-        self.tli_4 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_4)
-        self.tli_5 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_5, tol=self.tol_3)
-        self.tli_6 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_6, tol=self.tol_4)
+        self.uti_1 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_1, ref=self.r_1, tol=self.tol_1)
+        self.uti_2 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_2, ref=self.r_1, tol=self.tol_1)
+        self.uti_3 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_3)
+        self.uti_4 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_4)
+        self.uti_5 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_5, tol=self.tol_3)
+        self.uti_6 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_6, tol=self.tol_4)
+        self.uti_360 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_360, ref=self.r_1, tol=self.tol_1)
 
         self.url_list = reverse(
             'admin:%s_%s_changelist' % (qa_models.UnitTestInfo._meta.app_label, qa_models.UnitTestInfo._meta.model_name)
         )
         self.url_change = reverse(
             'admin:%s_%s_change' % (qa_models.UnitTestInfo._meta.app_label, qa_models.UnitTestInfo._meta.model_name),
-            args=[self.tli_1.id]
+            args=[self.uti_1.id]
         )
 
         self.data = {
@@ -768,7 +770,7 @@ class TestUnitTestInfoAdmin(TestCase):
             'test_type': self.t_1.type,
             'reference_value': self.r_2.value,
             'tolerance': self.tol_1.id,
-            'id': self.tli_1.id
+            'id': self.uti_1.id
         }
 
     def test_list(self):
@@ -778,7 +780,7 @@ class TestUnitTestInfoAdmin(TestCase):
         data = self.data
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_1, data=data)
+        )(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         self.assertListEqual(
             list(form.fields['tolerance'].queryset),
@@ -789,7 +791,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_2)
+        )(instance=self.uti_2)
 
         self.assertListEqual(
             form.fields['reference_value'].widget.choices,
@@ -803,7 +805,7 @@ class TestUnitTestInfoAdmin(TestCase):
     def test_multi(self):
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_3)
+        )(instance=self.uti_3)
 
         self.assertIsInstance(form.fields['reference_value'].widget, HiddenInput)
         self.assertListEqual(
@@ -818,22 +820,43 @@ class TestUnitTestInfoAdmin(TestCase):
         request.user = self.user
         admin = qa_admin.UnitTestInfoAdmin(qa_models.UnitTestInfo, self.site)
 
-        form = admin.get_form(request)(instance=self.tli_1, data=data)
+        form = admin.get_form(request)(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         admin.save_model(request, admin.save_form(request, form, True), form, True)
-        self.assertEqual(self.tli_1.reference.value, self.r_2.value)
+        self.assertEqual(self.uti_1.reference.value, self.r_2.value)
 
         data['reference_value'] = ''
-        form = admin.get_form(request)(instance=self.tli_1, data=data)
+        form = admin.get_form(request)(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         admin.save_model(request, admin.save_form(request, form, True), form, True)
-        self.assertEqual(self.tli_1.reference, None)
+        self.assertEqual(self.uti_1.reference, None)
 
         data['reference_value'] = '3.14159'
-        form = admin.get_form(request)(instance=self.tli_1, data=data)
+        form = admin.get_form(request)(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         admin.save_model(request, admin.save_form(request, form, True), form, True)
-        self.assertEqual(self.tli_1.reference.value, '3.14159')
+        self.assertEqual(self.uti_1.reference.value, '3.14159')
+
+    def test_submit_360(self):
+
+        data = {
+            'unit': self.u_1.id,
+            'test': self.t_360.id,
+            'test_type': self.t_360.type,
+            'reference_value': 1,
+            'tolerance': self.tol_1.id,
+            'id': self.uti_360.id
+        }
+        request = self.factory.get(self.url_change)
+        request.user = self.user
+        admin = qa_admin.UnitTestInfoAdmin(qa_models.UnitTestInfo, self.site)
+
+        form = admin.get_form(request)(instance=self.uti_360, data=data)
+        assert not form.is_valid()
+
+        data['reference_value'] = 0
+        form = admin.get_form(request)(instance=self.uti_360, data=data)
+        assert form.is_valid()
 
     def test_save_multiple_simple(self):
         # request = self.factory.get(self.url_change)
@@ -846,19 +869,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_1.id, self.tli_4.id],
+            '_selected_action': [self.uti_1.id, self.uti_4.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_1.id, self.tli_4.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_1.id, self.uti_4.id])
         )
 
-        self.tli_1.refresh_from_db()
-        self.tli_4.refresh_from_db()
+        self.uti_1.refresh_from_db()
+        self.uti_4.refresh_from_db()
         self.assertListEqual(
-            [self.tli_1.reference.value, self.tli_4.reference.value],
+            [self.uti_1.reference.value, self.uti_4.reference.value],
             [self.r_2.value, self.r_2.value]
         )
 
@@ -872,19 +895,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_2.id, self.tli_5.id],
+            '_selected_action': [self.uti_2.id, self.uti_5.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_2.id, self.tli_5.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_2.id, self.uti_5.id])
         )
 
-        self.tli_2.refresh_from_db()
-        self.tli_5.refresh_from_db()
+        self.uti_2.refresh_from_db()
+        self.uti_5.refresh_from_db()
         self.assertListEqual(
-            [self.tli_2.reference.value, self.tli_5.reference.value],
+            [self.uti_2.reference.value, self.uti_5.reference.value],
             [self.r_3.value, self.r_3.value]
         )
 
@@ -898,19 +921,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_3.id, self.tli_6.id],
+            '_selected_action': [self.uti_3.id, self.uti_6.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_3.id, self.tli_6.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_3.id, self.uti_6.id])
         )
 
-        self.tli_3.refresh_from_db()
-        self.tli_6.refresh_from_db()
+        self.uti_3.refresh_from_db()
+        self.uti_6.refresh_from_db()
         self.assertListEqual(
-            [self.tli_3.reference, self.tli_6.reference],
+            [self.uti_3.reference, self.uti_6.reference],
             [None, None]
         )
 
@@ -924,19 +947,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_1.id, self.tli_4.id],
+            '_selected_action': [self.uti_1.id, self.uti_4.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_1.id, self.tli_4.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_1.id, self.uti_4.id])
         )
 
-        self.tli_1.refresh_from_db()
-        self.tli_4.refresh_from_db()
+        self.uti_1.refresh_from_db()
+        self.uti_4.refresh_from_db()
         self.assertListEqual(
-            [self.tli_1.reference.value, self.tli_4.reference.value],
+            [self.uti_1.reference.value, self.uti_4.reference.value],
             [2.71828, 2.71828]
         )
 
@@ -954,23 +977,23 @@ class TestUnitTestInfoAdmin(TestCase):
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
         )(
-            instance=self.tli_3
+            instance=self.uti_3
         )
         data = form.initial
         data['tolerance'] = self.tol_1.id
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_3, data=data)
+        )(instance=self.uti_3, data=data)
         self.assertFalse(form.is_valid())
 
     def test_bad_percent_tol(self):
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_4)
+        )(instance=self.uti_4)
         data = form.initial
         data['tolerance'] = self.tol_5.id
         data['reference_value'] = 0
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_4, data=data)
+        )(instance=self.uti_4, data=data)
         self.assertFalse(form.is_valid())

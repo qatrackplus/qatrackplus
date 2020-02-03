@@ -1366,6 +1366,36 @@ class TestTestInstance(TestCase):
         ti.reference = ref
         self.assertEqual(0, ti.difference())
 
+    def test_diff_360_minus(self):
+        ref = utils.create_reference(value=0)
+        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=359)
+        ti.reference = ref
+        assert -1 == ti.difference_360()
+
+    def test_diff_360_plus(self):
+        ref = utils.create_reference(value=0)
+        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=1)
+        ti.reference = ref
+        assert 1 == ti.difference_360()
+
+    def test_diff_360_360_0(self):
+        ref = utils.create_reference(value=0)
+        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=360)
+        ti.reference = ref
+        assert 0 == ti.difference_360()
+
+    def test_diff_360_0_0(self):
+        ref = utils.create_reference(value=0)
+        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=0)
+        ti.reference = ref
+        assert 0 == ti.difference_360()
+
+    def test_diff_360_neg_minus(self):
+        ref = utils.create_reference(value=0)
+        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=-359)
+        ti.reference = ref
+        assert 1 == ti.difference_360()
+
     def test_diff_unavailable(self):
         ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=1)
         self.assertIsNone(ti.calculate_diff())

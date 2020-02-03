@@ -98,9 +98,14 @@ Choose the :ref:`Test Category <qa_categories>` that this test belongs to.
 Type
 ~~~~
 
-QATrack+ currently supports 8 different test types as outlined below.
+QATrack+ currently supports 11 different test types as outlined below.
 
 #. **Simple Numerical** A test with a single numerical result (e.g. *Temperature*)
+
+#. **0 deg - 360 deg** A test that only accepts values in the range -360 to 360.
+   The only possible reference value for this type of test is 0. If a user
+   enters 359 that will be considered as a difference of -1 from the reference
+   value of zero.  Useful for gantry/collimator angle readout tests.
 
 #. **Boolean** A test with a Yes or No answer (e.g. *Door Interlock Functional*)
 
@@ -124,8 +129,9 @@ QATrack+ currently supports 8 different test types as outlined below.
 
 #. **String** Allows the user to enter a short piece of text (e.g. a user ID)
 
-#. **String Composite** A *Composite* test that stores a string (text) rather
-   than a numerical value. Please see the :ref:`Composite Test section
+#. **String Composite/JSON** A *Composite* test that stores a string (text) rather
+   than a numerical value. You may also use this type of field to store a JSON 
+   data structure. Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.
 
 #. **Date** Allows the user to use a date picker to select a calendar date.

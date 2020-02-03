@@ -231,6 +231,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.check_dispatch[QAUtils.MULTIPLE_CHOICE]=this.check_multi;
         this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;
         this.check_dispatch[QAUtils.SIMPLE]=this.check_numerical;
+        this.check_dispatch[QAUtils.THREESIXTY]=this.check_numerical;
         this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
         this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_multi;
         this.check_dispatch[QAUtils.STRING]=this.check_multi;
@@ -239,6 +240,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.check_dispatch[QAUtils.UPLOAD]=this.check_done;
 
         this.calculate_diff = function(value){
+            if (self.test.type === QAUtils.THREESIXTY && value > 180){
+                value = value - 360.0;
+            }else if (self.test.type === QAUtils.THREESIXTY && value < -180){
+                value = 360 + value;
+            }
             if (self.tolerance.type === QAUtils.PERCENT){
                 return 100.0*(value-self.reference.value)/self.reference.value;
             }

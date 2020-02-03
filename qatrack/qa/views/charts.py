@@ -290,7 +290,16 @@ class BaseChartView(View):
 
             use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
 
-            if use_percent:
+            if ti.unit_test_info.test.type == models.THREESIXTY:
+                if ti.value < -180:
+                    value = 360 + ti.value
+                elif ti.value > 180:
+                    value = ti.value - 360
+                else:
+                    value = ti.value
+                ref_value = 0
+
+            elif use_percent:
 
                 value = 100 * (ti.value - ti.reference.value) / ti.reference.value
                 ref_value = 0.

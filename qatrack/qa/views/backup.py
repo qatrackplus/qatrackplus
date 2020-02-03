@@ -124,12 +124,12 @@ class PaperForms(ListView):
             for li in all_lists:
                 utis = models.UnitTestInfo.objects.filter(
                     test__in=li.all_tests,
-                    test__type__in=[models.BOOLEAN, models.SIMPLE, models.MULTIPLE_CHOICE, models.STRING],
+                    test__type__in=[
+                        models.BOOLEAN, models.SIMPLE, models.THREESIXTY, models.MULTIPLE_CHOICE, models.STRING
+                    ],
                     test__category__pk__in=self.categories,
                     unit=utc.unit,
-                ).select_related(
-                    "test", "reference", "tolerance"
-                )
+                ).select_related("test", "reference", "tolerance")
 
                 li.utis = list(sorted(utis, key=lambda uti: li.all_tests.index(uti.test)))
 
