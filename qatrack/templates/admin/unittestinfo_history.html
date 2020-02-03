@@ -23,7 +23,7 @@
           <td>{% if forloop.first %}<strong>{% endif %}{{ new.reference }}{% if forloop.first %}</strong>{% endif %}</td>
           <td>{{ old.tolerance }}</td>
           <td>{% if forloop.first %}<strong>{% endif %}{{ new.tolerance }}{% if forloop.first %}</strong>{% endif %}</td>
-          <td style="max-width: 300px" >{{ new.comment}}</td>
+          <td style="max-width: 300px" >{{ old.comment}}</td>
         </tr>
         {% endif %}
       {% endfor %}
