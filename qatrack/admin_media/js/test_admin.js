@@ -6,7 +6,7 @@ Only show relevant fields for TestListItemAdmin
 
 function toggle_formatting(test_type){
     var $el = $(".field-formatting");
-    if (["constant", "composite", "simple"].indexOf(test_type) >= 0){
+    if (["constant", "composite", "simple", "360"].indexOf(test_type) >= 0){
         $el.show();
     }else{
         $el.hide();
