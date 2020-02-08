@@ -326,6 +326,7 @@ CACHES = {
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
 # needs to be set to True when running behind reverse proxy (normal deploy)
