@@ -16,7 +16,7 @@
       </div>
 
       <div class="margin-bottom-10">
-        {% blocktrans with service_event_id=instance.service_event_id old_status_tak=old_status_tag|safe new_status_tag=new_status_tag|safe %}
+        {% blocktrans with service_event_id=instance.service_event_id old_status_tag=old_status_tag|safe new_status_tag=new_status_tag|safe %}
           {{ user }} changed status of service event {{ service_event_id }} from {{ old_status_tag }} to {{ new_status_tag }}
         {% endblocktrans %}
       </div>
