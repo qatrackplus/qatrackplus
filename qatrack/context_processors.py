@@ -172,6 +172,7 @@ def site(request):
     return {
         'SITE_NAME': cur_site.name,
         'SITE_URL': cur_site.domain,
+        'SELF_REGISTER': settings.ACCOUNTS_SELF_REGISTER,
         'VERSION': settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,

@@ -241,6 +241,11 @@ The meaning of the individual keys is as follows:
 Other Settings
 ~~~~~~~~~~~~~~
 
+ACCOUNTS_SELF_REGISTER
+......................
+
+When `ACCOUNTS_SELF_REGISTER = True` anonymous users are able to register
+themselves for accounts. Default is `False`.
 
 CHROME_PATH
 ...........

@@ -184,7 +184,6 @@ MIDDLEWARE = [
 
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*"]
-ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
 
@@ -365,6 +364,11 @@ AUTHENTICATION_BACKENDS = (
     # 'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
 )
+
+
+ACCOUNT_ACTIVATION_DAYS = 7
+ACCOUNTS_SELF_REGISTER = False
+
 
 # active directory settings (not required if only using ModelBackend
 AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
