@@ -119,6 +119,21 @@ Details of the v0.3.1 release
   etc) may now use the `calculation_procedure` to set default initial values.
   (Issue #185).
 
+* The default authentication backend setting is now:
+
+  .. code-block:: python
+
+    AUTHENTICATION_BACKENDS = (
+        'qatrack.accounts.backends.QATrackAccountBackend',
+    )
+
+  the `QATrackAccountBackend` is a simple wrapper around the Django ModelBackend
+  to allow usernames to be transformed prior to authentication.  The transform
+  is controlled by the :ref:`<clean_username>` settings.
+
+* A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
+  added to control whether users are allowed to register their own accounts.
+
 
 Deprecations & Discontinuations
 ...............................

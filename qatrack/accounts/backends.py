@@ -8,10 +8,28 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 
 
+class QATrackAccountBackend(ModelBackend):
+
+    def authenticate(self, request, username=None, password=None):
+        username = settings.ACCOUNTS_CLEAN_USERNAME(username)
+        return super().authenticate(request, username=username, password=password)
+
+    def clean_username(self, username):
+        """
+        Performs any cleaning on the "username" prior to using it to get or
+        create the user object.  Returns the cleaned username.
+
+        By default, returns the username unchanged.
+        """
+        if settings.ACCOUNTS_CLEAN_USERNAME and callable(settings.ACCOUNTS_CLEAN_USERNAME):
+            return settings.ACCOUNTS_CLEAN_USERNAME(username)
+        return username.replace(settings.CLEAN_USERNAME_STRING, "")
+
+
 # stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
-    def authenticate(self, username=None, password=None):
+    def authenticate(self, request, username=None, password=None):
         username = self.clean_username(username)
 
         debug = None
@@ -134,18 +152,18 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
     # Create a User object if not already in the database?
     create_unknown_user = True
 
-    def authenticate(self, remote_user):
+    def authenticate(self, request, username=None):
         """
-        The username passed as ``remote_user`` is considered trusted.  This
+        The username passed is considered trusted.  This
         method simply returns the ``User`` object with the given username,
         creating a new ``User`` object if ``create_unknown_user`` is ``True``.
 
         Returns None if ``create_unknown_user`` is ``False`` and a ``User``
         object with the given username is not found in the database.
         """
-        if not remote_user:
+        if not username:
             return
-        username = self.clean_username(remote_user)
+        username = self.clean_username(username)
 
         # Note that this could be accomplished in one try-except clause, but
         # instead we use get_or_create when creating unknown users since it has

@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 from qatrack.accounts.admin import AdminFilter
+from qatrack.accounts.backends import QATrackAccountBackend
 from qatrack.accounts.backends import \
     ActiveDirectoryGroupMembershipSSLBackend as ADBack
 from qatrack.qa.tests import utils
@@ -23,6 +24,11 @@ class TestCleanUsername:
     def test_replace(self):
         backend = ADBack()
         assert backend.clean_username("Foo/bar") == "bar"
+
+    @override_settings(ACCOUNTS_CLEAN_USERNAME=lambda u: u.lower())
+    def test_accounts_clean(self):
+        backend = QATrackAccountBackend()
+        assert backend.clean_username("UserName") == "username"
 
 
 class TestAdminFilter(TestCase):

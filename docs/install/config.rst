@@ -241,11 +241,26 @@ The meaning of the individual keys is as follows:
 Other Settings
 ~~~~~~~~~~~~~~
 
+.. _accounts_self_register:
+
 ACCOUNTS_SELF_REGISTER
 ......................
 
 When `ACCOUNTS_SELF_REGISTER = True` anonymous users are able to register
 themselves for accounts. Default is `False`.
+
+.. _accounts_clean_username:
+
+ACCOUNTS_CLEAN_USERNAME
+.......................
+
+When `ACCOUNTS_CLEAN_USERNAME` is set to callable it will be used to transform
+any username that is to be authenticated.  The most common scenario for this
+setting it is for example to set `def ACCOUNTS_CLEAN_USERNAME(username): return
+username.lower()` which makes all logins lowercase.  Note in this case, the
+user can enter `SoMeUsErName` and it will be authenticated as `someusername`.
+Default is `ACCOUNTS_CLEAN_USERNAME = False`.
+
 
 CHROME_PATH
 ...........

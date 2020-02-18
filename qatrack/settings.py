@@ -360,7 +360,7 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 # -----------------------------------------------------------------------------
 # Authentication backend settings
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
+    'qatrack.accounts.backends.QATrackAccountBackend',
     # 'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
 )
@@ -368,6 +368,7 @@ AUTHENTICATION_BACKENDS = (
 
 ACCOUNT_ACTIVATION_DAYS = 7
 ACCOUNTS_SELF_REGISTER = False
+ACCOUNTS_CLEAN_USERNAME = None
 
 
 # active directory settings (not required if only using ModelBackend
