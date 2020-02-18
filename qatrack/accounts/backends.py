@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 class QATrackAccountBackend(ModelBackend):
 
     def authenticate(self, request, username=None, password=None):
-        username = settings.ACCOUNTS_CLEAN_USERNAME(username)
+        username = self.clean_username(username)
         return super().authenticate(request, username=username, password=password)
 
     def clean_username(self, username):
