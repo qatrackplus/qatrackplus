@@ -207,6 +207,8 @@ values for other test types (simple numerical, string, date/time, multiple
 choice).
 
 
+.. _qa_test_formatting:
+
 Formatting
 ~~~~~~~~~~
 
@@ -620,10 +622,10 @@ DICOM file:
     mean_value = f.pixel_array.mean()
 
 
+.. _qa_default_values:
+
 Setting Default Initial Values for Non-Calculated Tests
 -------------------------------------------------------
-
-.. _qa_default_values:
 
 .. warning::
 

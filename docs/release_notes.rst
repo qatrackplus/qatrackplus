@@ -15,92 +15,39 @@ Details of the v0.3.1 release
 .............................
 
 
-* A new :ref:`Reports <reports>` tool has been added for generating and scheduling
-  reports.
+Major Features
+^^^^^^^^^^^^^^
+
+* A new :ref:`Reports <reports>` tool has been added for generating and
+  scheduling PDF & Excel reports.
 
 * A new :ref:`Query Tool <qa_query_tool>` has been added for advanced query and
   reporting.
 
-* QA -> QC:  In most places in the UI the initials QA have been replaced by QC to
-  reflect the fact that data collected in QATrack+ is QC data. This has been an
-  annoyance since I first made the labeling error in the original version of
-  QATrack+.
-
-* A bug in the API which was causing extra information to be returned for
-  list views has been fixed.  This may require you to adjust scripts if you
-  were relying on:
-
-    - permissions or user_set data present in the Groups list view
-    - first_name, last_name, date_joined, permissions in the User List view
-    - Fields other than name, number, or site in the Unit list
-
-* First Name & Last Name have been added to the user-list api view
-
-* Improved the ordering and organization of unit, frequency, and test lists fields
-  when assigning a test list to a unit. Also improve UnitType dropdown for Unit Admin.
-
-* New management commands `review_all_unreviewed` and `clear_in_progress` have
-  been added. `review_all_unreviewed` updates the status of all unreviewed test list instances, while
-  `clear_in_progress` will delete all in progress test lists.
-
-* Composite & Constant Tests now have an optional "Formatting" field to control how their results
-  are displayed.  For example a test with a formatting of "%.2E" will use scientific
-  notation with 2 decimal places (3 sig figures).
-
-* The Unit admin page now has "Save as New" as an option to make it easier to create new
-  units using an existing unit as a template.  You can also now leave the unit number blank
-  to have it assigned automatically.
-
-* Test List notifications have been improved.  (Needs docs before release)
+* :ref:`Notifications <notifications>` have been expanded & improved.
     * You can now send notifications on test lists being completed.
-    *  You can now specify to send notifications to individual users as well as groups.
-    *  You can now specify that a given notifications will only be sent for specific units or test lists.
-
-* New QC Scheduling & Unreviewed Notices. (Needs docs before release)
-
-* **Staff Status** has been renamed to **Admin Status** to reflect the fact that almost all QATrack+ users are "Staff"!
-
-* Test Instance points with comments associated with them will now be highlighed in charts
-
-* A new setting `SL_ALLOW_BLANK_SERVICE_AREA` has been added to optionally
-  allow users to submit ServiceEvents without a ServiceArea set explicitly.
-
-* A new setting `SL_ALLOW_BLANK_SERVICE_TYPE` has been added to optionally
-  allow users to submit ServiceEvents without a ServiceType set explicitly.
-
-* Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group Linker required when submitting a ServiceEvent.
-
-* New :ref:`Date and Date & Time test types <qa_tests>` have been added to
-  allow users to select dates/times with a calendar widget.  These test
-  results will be available in calculation contexts as Python date, and
-  datetime values respectively.
-
-* A new :ref:`Wraparound test type <qa_tests>` has been added.  This test
-  type allows you to define a test that "wraps around" at a minimum and
-  maximum value.  This type of test is useful for example if you have a
-  collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
-  difference from a 0 deg reference.
-
-* Added :ref:`UTILS.set_skip an UTILS.get_skip <composite_tests>` functions for setting/getting skip status
-  of tests.
-
-* Using `UTILS.set_comment` will now open the comment box on the front end.
-
-* Add test type css class to test rows.  Allows you to target different test types in site.css like:
-
-  .. code-block:: css
-
-        .qa-boolean, .qa-numerical {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
+    * You can now specify to send notifications to individual users as well as groups.
+    * You can now specify that a given notifications will only be sent for
+      specific units or test lists.
+    * New QC Scheduling & Unreviewed QC Notices.
+    * Service event creation & update notices.
 
 
-* Setting the `Warning message` field on a `TestList` will now prevent a
-  warning message/banner from being shown when tests are at action level.
+Tests & Test Lists
+^^^^^^^^^^^^^^^^^^
 
-* Test.auto_review has been replaced by new AutoReviewRuleSet's that allow you
-  to apply different AutoReviewRules to different tests. For more information see
-  the :ref:`Auto Review page <qa_auto_review>`.
+* New test types including:
+
+    * :ref:`Date and Date & Time test types <qa_tests>` to allow users to
+      select dates/times with a calendar widget.  These test results will be
+      available in calculation contexts as Python date, and datetime values
+      respectively.
+
+    * :ref:`Wraparound test type <qa_tests>` have been added.  This test type
+      allows you to define a test that "wraps around" at a minimum and maximum
+      value.  This type of test is useful for example if you have a
+      collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
+      difference from a 0 deg reference.
 
 * A new "Display Name" field has been added to tests.  This is an optional
   field where you can add text describing how a test should be displayed when
@@ -109,21 +56,113 @@ Details of the v0.3.1 release
   but use a more succinct name when performing a Test List. If left blank, the
   test name will be used.
 
-* New dropdown on Unit selection buttons to allow selecting QC to perform based
-  on Test categories.
-
-* There is a new `New or Used` field on Parts to allow you to track new and
-  used inventories of the same part separately.
-
 * Calculation procedures are now syntax checked, and automatically formatted
   using `Black <https://black.readthedocs.io>`_.
+
+* Numerical tests now have an optional :ref:`Formatting <qa_test_formatting>`
+  field to control how their results are displayed.  For example a test with a
+  formatting of "%.2E" will use scientific notation with 2 decimal places (3
+  sig figures).
+
+* Non-calculated test types (e.g. simple numerical, multiple choice, string,
+  etc) may now use the `calculation_procedure` to set :ref:`default initial
+  values <qa_default_values>`.
+
+* Added :ref:`UTILS.set_skip and UTILS.get_skip <composite_tests>` functions for
+  setting/getting skip status of tests.
+
+* Using `UTILS.set_comment` in a calculation will now open the comment box on
+  the front end.
+
+* Setting the `Warning message` field to blank on a `TestList` will now prevent
+  a warning message/banner from being shown when tests are at action level.
+
+
+Review & Approval
+^^^^^^^^^^^^^^^^^
+
+* Test.auto_review has been replaced by new AutoReviewRuleSet's that allow you
+  to apply different AutoReviewRules to different tests. For more information
+  see the :ref:`Auto Review page <qa_auto_review>`.
+
+
+* New management commands `review_all_unreviewed` and `clear_in_progress` have
+  been added. `review_all_unreviewed` updates the status of all unreviewed test
+  list instances, while `clear_in_progress` will delete all in progress test
+  lists.
+
+Minor UI Changes
+^^^^^^^^^^^^^^^^
+
+* QA -> QC:  In most places in the UI the initials QA have been replaced by QC.
+  This change was made to reflect that while QATrack+ is a tool for managing
+  the QA program of radiation therapy programs, the data collected in QATrack+
+  is QC data.
+
+* Improved the ordering and organization of unit, frequency, and test lists
+  fields when assigning a test list to a unit. Also improve UnitType dropdown
+  for Unit Admin.
+
+* The Unit admin page now has "Save as New" as an option to make it easier to
+  create new units using an existing unit as a template.  You can also now
+  leave the unit number blank to have it assigned automatically.
+
+* **Staff Status** has been renamed to **Admin Status** to reflect the fact
+  that almost all QATrack+ users are "Staff"!
+
+* Test Instance points with comments associated with them are now highlighed in
+  charts
+
+* New dropdown on Unit selection buttons to allow selecting QC to perform based
+  on Test categories.
 
 * A calculation status icon has been added (spins when calculations are being
   performed).
 
-* Non-calculated test types (e.g. simple numerical, multiple choice, string,
-  etc) may now use the `calculation_procedure` to set default initial values.
-  (Issue #185).
+
+API Changes
+^^^^^^^^^^^
+
+* A number of bug in the API have been fixed including:
+
+  * a bug which was causing extra information to be returned for list views has
+    been fixed.  This may require you to adjust scripts if you were relying on:
+
+    - permissions or user_set data present in the Groups list view
+    - first_name, last_name, date_joined, permissions in the User List view
+    - Fields other than name, number, or site in the Unit list
+  * Bugs with filtering for exact matches of search strings have been resolved.
+
+  * First Name & Last Name have been added to the user-list api view
+
+Service Log & Parts
+^^^^^^^^^^^^^^^^^^^
+
+* Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group
+  Linker required when submitting a ServiceEvent.
+
+* Add test type css class to test rows.  Allows you to target different test
+  types in site.css like:
+
+  .. code-block:: css
+
+        .qa-boolean, .qa-numerical {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+* There is a new `New or Used` field on Parts to allow you to track new and
+  used inventories of the same part separately.
+
+* A new setting :ref:`setting_sl_allow_blank_service_area` has been added to
+  optionally allow users to submit ServiceEvents without a ServiceArea set
+  explicitly.
+
+* A new setting :ref:`setting_sl_allow_blank_service_type` has been added to
+  optionally allow users to submit ServiceEvents without a ServiceType set
+  explicitly.
+
+Authentication
+^^^^^^^^^^^^^^
 
 * The default authentication backend setting is now:
 
@@ -135,7 +174,7 @@ Details of the v0.3.1 release
 
   the `QATrackAccountBackend` is a simple wrapper around the Django ModelBackend
   to allow usernames to be transformed prior to authentication.  The transform
-  is controlled by the :ref:`<clean_username>` settings.
+  is controlled by the :ref:`<accounts_clean_username>` settings.
 
 * A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
   added to control whether users are allowed to register their own accounts.

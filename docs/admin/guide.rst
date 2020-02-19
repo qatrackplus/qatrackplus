@@ -49,6 +49,7 @@ Admin Guide Contents
 
    qa/change_site_name
    qa/auth
+   notifications/guide
    units/guide
    qa/guide
    service_log/guide

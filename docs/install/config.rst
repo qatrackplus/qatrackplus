@@ -372,12 +372,16 @@ list results. This column shows the difference between a test value and its
 reference value.
 
 
+.. _setting_sl_allow_blank_service_area:
+
 SL_ALLOW_BLANK_SERVICE_AREA
 ...........................
 
 Set `SL_ALLOW_BLANK_SERVICE_AREA = True` to allow users to create a ServiceEvent with
 a blank ServiceArea set.  When a Service Event is saved without a ServiceArea explicitly set,
 the ServiceArea will be set to "Not Specified".
+
+.. _setting_sl_allow_blank_service_type:
 
 SL_ALLOW_BLANK_SERVICE_TYPE
 ...........................
