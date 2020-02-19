@@ -362,7 +362,7 @@ class TestChartView(TestCase):
 
     def test_instance_to_point_relative_360(self):
         """Three sixty test, relative to ref with value 359 should result in value of -1"""
-        test = utils.create_test(name="360", test_type=models.THREESIXTY)
+        test = utils.create_test(name="360", test_type=models.WRAPAROUND, wrap_high=360, wrap_low=0)
         ref = qatrack.qa.models.Reference(value=0)
         tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
         ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=359)
@@ -375,7 +375,7 @@ class TestChartView(TestCase):
 
     def test_instance_to_point_relative_m360(self):
         """Three sixty test, relative to ref with value -359 should result in value of 1"""
-        test = utils.create_test(name="360", test_type=models.THREESIXTY)
+        test = utils.create_test(name="360", test_type=models.WRAPAROUND, wrap_high=360, wrap_low=0)
         ref = qatrack.qa.models.Reference(value=0)
         tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
         ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=-359)
@@ -388,7 +388,7 @@ class TestChartView(TestCase):
 
     def test_instance_to_point_relative_m1(self):
         """Three sixty test, relative to ref with value -1 should result in value of -1"""
-        test = utils.create_test(name="360", test_type=models.THREESIXTY)
+        test = utils.create_test(name="360", test_type=models.WRAPAROUND, wrap_high=360, wrap_low=0)
         ref = qatrack.qa.models.Reference(value=0)
         tol = utils.create_tolerance(tol_type=models.PERCENT, tol_low=None, tol_high=None)
         ti = qatrack.qa.models.TestInstance(reference=ref, tolerance=tol, value=-1)

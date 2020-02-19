@@ -75,6 +75,12 @@ Details of the v0.3.1 release
   results will be available in calculation contexts as Python date, and
   datetime values respectively.
 
+* A new :ref:`Wraparound test type <qa_tests>` has been added.  This test
+  type allows you to define a test that "wraps around" at a minimum and
+  maximum value.  This type of test is useful for example if you have a
+  collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
+  difference from a 0 deg reference.
+
 * Added :ref:`UTILS.set_skip an UTILS.get_skip <composite_tests>` functions for setting/getting skip status
   of tests.
 

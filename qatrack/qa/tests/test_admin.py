@@ -4,11 +4,11 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import constants, get_messages
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.db.models import Count, Q
 from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, TransactionTestCase
+from django.urls import reverse
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import admin as qa_admin
@@ -735,7 +735,7 @@ class TestUnitTestInfoAdmin(TestCase):
         self.t_4 = qa_utils.create_test(test_type=qa_models.SIMPLE)
         self.t_5 = qa_utils.create_test(test_type=qa_models.BOOLEAN)
         self.t_6 = qa_utils.create_test(test_type=qa_models.MULTIPLE_CHOICE)
-        self.t_360 = qa_utils.create_test(test_type=qa_models.THREESIXTY)
+        self.t_360 = qa_utils.create_test(test_type=qa_models.WRAPAROUND, wrap_low=0, wrap_high=360)
         self.tol_1 = qa_utils.create_tolerance()
         self.tol_2 = qa_utils.create_tolerance(act_low=-10, act_high=10)
 
@@ -843,7 +843,7 @@ class TestUnitTestInfoAdmin(TestCase):
             'unit': self.u_1.id,
             'test': self.t_360.id,
             'test_type': self.t_360.type,
-            'reference_value': 1,
+            'reference_value': -1,
             'tolerance': self.tol_1.id,
             'id': self.uti_360.id
         }

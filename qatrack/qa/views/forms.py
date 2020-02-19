@@ -123,9 +123,9 @@ class TestInstanceWidgetsMixin(object):
             self.fields['string_value'].widget = Input({'maxlength': 20000})
         else:
             attrs = {"step": "any"}
-            if test_type == models.THREESIXTY:
-                attrs['max'] = 360
-                attrs['min'] = -360
+            if test_type == models.WRAPAROUND:
+                attrs['max'] = self.unit_test_info.test.wrap_high
+                attrs['min'] = self.unit_test_info.test.wrap_low
             self.fields["value"].widget = NumberInput(attrs=attrs)
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
@@ -157,9 +157,11 @@ class TestInstanceWidgetsMixin(object):
 
     def clean_value(self):
         value = self.cleaned_data.get('value')
-        if value is not None and self.unit_test_info.test.type == models.THREESIXTY:
-            if value > 360 or value < -360:
-                self.add_error('value', "Value for this test must be in range -360 to 360")
+        t = self.unit_test_info.test
+        if value is not None and t.type == models.WRAPAROUND:
+            if not (t.wrap_low <= value <= t.wrap_high):
+                msg = _("Value for this test must be in range {low} to {high}").format(high=t.wrap_high, low=t.wrap_low)
+                self.add_error('value', msg)
 
         return value
 

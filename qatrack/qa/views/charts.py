@@ -290,11 +290,21 @@ class BaseChartView(View):
 
             use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
 
-            if ti.unit_test_info.test.type == models.THREESIXTY:
-                if ti.value < -180:
-                    value = 360 + ti.value
-                elif ti.value > 180:
-                    value = ti.value - 360
+            if ti.unit_test_info.test.type == models.WRAPAROUND:
+
+                t = ti.unit_test_info.test
+                ref = ti.reference.value
+
+                if ti.value > ref:
+                    wrap_distance = (t.wrap_high - ti.value) + (ref - t.wrap_low)
+                    direct_distance = ti.value - ref
+                    direct_closer = direct_distance <= wrap_distance
+                    value = direct_distance if direct_closer else -wrap_distance
+                elif ti.value < ref:
+                    wrap_distance = (ti.value - t.wrap_low) + (t.wrap_high - ref)
+                    direct_distance = ref - ti.value
+                    direct_closer = direct_distance <= wrap_distance
+                    value = -direct_distance if direct_closer else wrap_distance
                 else:
                     value = ti.value
                 ref_value = 0

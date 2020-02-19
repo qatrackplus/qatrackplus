@@ -102,10 +102,14 @@ QATrack+ currently supports 11 different test types as outlined below.
 
 #. **Simple Numerical** A test with a single numerical result (e.g. *Temperature*)
 
-#. **0 deg - 360 deg** A test that only accepts values in the range -360 to 360.
-   The only possible reference value for this type of test is 0. If a user
-   enters 359 that will be considered as a difference of -1 from the reference
-   value of zero.  Useful for gantry/collimator angle readout tests.
+#. **Wraparound** A test that accepts values in a predefined range (*Wrap low*
+   to *Wrap high*) and has values that "wrap" from the high to low value and
+   vice versa. This type of test is useful for example if you have a
+   collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
+   difference from a 0 deg reference.
+
+   Only absolute tolerances with reference values between *Wrap low* and *Wrap
+   high* are supported.
 
 #. **Boolean** A test with a Yes or No answer (e.g. *Door Interlock Functional*)
 
@@ -130,7 +134,7 @@ QATrack+ currently supports 11 different test types as outlined below.
 #. **String** Allows the user to enter a short piece of text (e.g. a user ID)
 
 #. **String Composite/JSON** A *Composite* test that stores a string (text) rather
-   than a numerical value. You may also use this type of field to store a JSON 
+   than a numerical value. You may also use this type of field to store a JSON
    data structure. Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.
 

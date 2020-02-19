@@ -91,7 +91,7 @@ class TestInfoForm(forms.ModelForm):
                 self.fields["reference_value"].widget = forms.HiddenInput()
                 qs = self.fields['tolerance'].queryset.filter(type=models.MULTIPLE_CHOICE)
                 self.fields['tolerance'].queryset = qs
-            elif tt == models.THREESIXTY:
+            elif tt == models.WRAPAROUND:
                 qs = self.fields['tolerance'].queryset.filter(type=models.ABSOLUTE)
                 self.fields['tolerance'].queryset = qs
             else:
@@ -131,8 +131,10 @@ class TestInfoForm(forms.ModelForm):
 
             ref_value = self.cleaned_data["reference_value"]
 
-            if self.instance.test.type == models.THREESIXTY and ref_value != 0:
-                raise forms.ValidationError(_("0 deg - 360 deg tests must be used with a reference value of 0"))
+            t = self.instance.test
+            if t.type == models.WRAPAROUND and not (t.wrap_low <= ref_value <= t.wrap_high):
+                msg = _("Referernce values for this Wraparound test must be set between {low} and {high}")
+                raise forms.ValidationError(msg.format(low=t.wrap_low, high=t.wrap_high))
 
             tol = self.cleaned_data.get("tolerance")
             if tol is not None:
@@ -857,6 +859,8 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
                     'flag_when',
                     'choices',
                     'constant_value',
+                    'wrap_low',
+                    'wrap_high',
                     'calculation_procedure',
                     'display_image',
                     'hidden',

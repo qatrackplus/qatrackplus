@@ -1350,6 +1350,7 @@ class TestTestInstance(TestCase):
         self.test_list = utils.create_test_list()
         utils.create_test_list_membership(test=self.test, test_list=self.test_list)
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.unit = self.utc.unit
         self.uti = models.UnitTestInfo.objects.get(test=self.test, unit=self.utc.unit)
         self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
 
@@ -1366,35 +1367,53 @@ class TestTestInstance(TestCase):
         ti.reference = ref
         self.assertEqual(0, ti.difference())
 
-    def test_diff_360_minus(self):
+    def test_diff_wrap_high_inside(self):
         ref = utils.create_reference(value=0)
-        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=359)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=0)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=99)
         ti.reference = ref
-        assert -1 == ti.difference_360()
+        assert -1 == ti.difference_wraparound()
 
-    def test_diff_360_plus(self):
+    def test_diff_wrap_high_outside(self):
         ref = utils.create_reference(value=0)
-        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=1)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=101)
         ti.reference = ref
-        assert 1 == ti.difference_360()
+        assert 101 == ti.difference_wraparound()
 
-    def test_diff_360_360_0(self):
+    def test_diff_wrap_low_inside(self):
         ref = utils.create_reference(value=0)
-        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=360)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=-99)
         ti.reference = ref
-        assert 0 == ti.difference_360()
+        assert -99 == ti.difference_wraparound()
 
-    def test_diff_360_0_0(self):
+    def test_diff_wrap_low_outside(self):
         ref = utils.create_reference(value=0)
-        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=0)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=-101)
         ti.reference = ref
-        assert 0 == ti.difference_360()
+        assert -101 == ti.difference_wraparound()
 
-    def test_diff_360_neg_minus(self):
+    def test_diff_wrap_mid(self):
         ref = utils.create_reference(value=0)
-        ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=-359)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=0)
         ti.reference = ref
-        assert 1 == ti.difference_360()
+        assert 0 == ti.difference_wraparound()
+
+    def test_diff_wrap_mid_not_sym(self):
+        ref = utils.create_reference(value=5)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=10, wrap_low=2)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=6)
+        ti.reference = ref
+        assert 1 == ti.difference_wraparound()
 
     def test_diff_unavailable(self):
         ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=1)

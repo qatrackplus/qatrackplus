@@ -231,7 +231,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.check_dispatch[QAUtils.MULTIPLE_CHOICE]=this.check_multi;
         this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;
         this.check_dispatch[QAUtils.SIMPLE]=this.check_numerical;
-        this.check_dispatch[QAUtils.THREESIXTY]=this.check_numerical;
+        this.check_dispatch[QAUtils.WRAPAROUND]=this.check_numerical;
         this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
         this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_multi;
         this.check_dispatch[QAUtils.STRING]=this.check_multi;
@@ -240,15 +240,28 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.check_dispatch[QAUtils.UPLOAD]=this.check_done;
 
         this.calculate_diff = function(value){
-            if (self.test.type === QAUtils.THREESIXTY && value > 180){
-                value = value - 360.0;
-            }else if (self.test.type === QAUtils.THREESIXTY && value < -180){
-                value = 360 + value;
+            if (self.test.type === QAUtils.WRAPAROUND){
+                var t = self.test;
+                var ref = self.reference.value;
+                var wrap_distance, direct_distance, direct_closer;
+                if (value > ref){
+                    wrap_distance = Math.abs(t.wrap_high - value) + Math.abs(ref - t.wrap_low);
+                    direct_distance = Math.abs(value - ref);
+                    direct_closer = direct_distance <= wrap_distance;
+                    return direct_closer ? direct_distance : -wrap_distance;
+                }else if (value < ref) {
+                    wrap_distance = Math.abs(value - t.wrap_low) + Math.abs(t.wrap_high - ref);
+                    direct_distance = Math.abs(ref - value);
+                    direct_closer = direct_distance <= wrap_distance;
+                    return direct_closer ? -direct_distance : wrap_distance;
+                }
+                return 0;
+            }else{
+                if (self.tolerance.type === QAUtils.PERCENT){
+                    return 100.0*(value-self.reference.value)/self.reference.value;
+                }
+                return value - self.reference.value;
             }
-            if (self.tolerance.type === QAUtils.PERCENT){
-                return 100.0*(value-self.reference.value)/self.reference.value;
-            }
-            return value - self.reference.value;
         };
 
         this.diff_display = function(diff){

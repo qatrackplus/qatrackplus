@@ -23,9 +23,14 @@ function toggle_test_type(){
         $(".field-calculation_procedure, .field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
+    }else if (val == "wraparound"){
+        $(".field-wrap_low, .field-wrap_high, .field-hidden").show();
+        $(".field-constant_value, .field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
+        $(".field-chart_visibility").prop("checked", true).show();
+        $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "composite" || val === "scomposite" ){
         $(".field-calculation_procedure, .field-hidden, .field-display_image").show();
-        $(".field-constant_value, .field-choices, .field-skip_without_comment").not(".errors").hide();
+        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-skip_without_comment").not(".errors").hide();
         if (val === "scomposite"){
             $(".field-chart_visibility").prop("checked", false).hide();
         }else{
@@ -36,29 +41,29 @@ function toggle_test_type(){
         $(".field-skip_without_comment").show();
         $(".field-constant_value, .field-hidden").hide();
         $(".field-choices, .field-display_image").not(".errors").hide();
-        $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
+        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", false).hide();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val === "upload"){
         $(".field-calculation_procedure, .field-display_image, .field-skip_without_comment").show();
-        $(".field-constant_value, .field-choices, .field-hidden").not(".errors").hide();
+        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", false).hide();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "multchoice"){
         $(".field-choices, .field-skip_without_comment").show();
-        $(".field-constant_value, .field-display_image, .field-hidden").not(".errors").hide();
+        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", false).hide();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "boolean"){
         $(".field-flag_when").show();
         $(".field-skip_without_comment").show();
         //$(".field-calculation_procedure").not(".errors").hide();
-        $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
+        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
     }else{
         $(".field-skip_without_comment").show();
         //$(".field-calculation_procedure").not(".errors").hide();
-        $(".field-constant_value, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
+        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }

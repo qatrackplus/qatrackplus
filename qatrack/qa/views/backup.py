@@ -125,7 +125,7 @@ class PaperForms(ListView):
                 utis = models.UnitTestInfo.objects.filter(
                     test__in=li.all_tests,
                     test__type__in=[
-                        models.BOOLEAN, models.SIMPLE, models.THREESIXTY, models.MULTIPLE_CHOICE, models.STRING
+                        models.BOOLEAN, models.SIMPLE, models.WRAPAROUND, models.MULTIPLE_CHOICE, models.STRING
                     ],
                     test__category__pk__in=self.categories,
                     unit=utc.unit,

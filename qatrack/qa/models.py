@@ -33,7 +33,7 @@ from qatrack.units.models import Unit
 BOOLEAN = "boolean"
 NUMERICAL = "numerical"
 SIMPLE = "simple"
-THREESIXTY = "360"
+WRAPAROUND = "wraparound"
 CONSTANT = "constant"
 COMPOSITE = "composite"
 MULTIPLE_CHOICE = "multchoice"
@@ -43,7 +43,7 @@ STRING_COMPOSITE = "scomposite"
 DATE = "date"
 DATETIME = "datetime"
 
-NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, THREESIXTY)
+NUMERICAL_TYPES = (COMPOSITE, CONSTANT, SIMPLE, WRAPAROUND)
 STRING_TYPES = (STRING, STRING_COMPOSITE, MULTIPLE_CHOICE)
 DATE_TYPES = (DATE, DATETIME)
 COMPOSITE_TYPES = (COMPOSITE, STRING_COMPOSITE,)
@@ -54,7 +54,7 @@ NO_SKIP_REQUIRED_TYPES = (COMPOSITE, CONSTANT, STRING_COMPOSITE, )
 TEST_TYPE_CHOICES = (
     (BOOLEAN, "Boolean"),
     (SIMPLE, "Simple Numerical"),
-    (THREESIXTY, "0 deg - 360 deg"),
+    (WRAPAROUND, "Wraparound"),
     (MULTIPLE_CHOICE, "Multiple Choice"),
     (CONSTANT, "Constant"),
     (COMPOSITE, "Composite"),
@@ -874,6 +874,17 @@ class Test(models.Model, TestPackMixin):
     )
     constant_value = models.FloatField(help_text=_l("Only required for constant value types"), null=True, blank=True)
 
+    wrap_low = models.FloatField(
+        help_text=_l("Minimum value at which test wraps around to maximum value"),
+        null=True,
+        blank=True,
+    )
+    wrap_high = models.FloatField(
+        help_text=_l("Maximum value at which test wraps around to minimum value"),
+        null=True,
+        blank=True,
+    )
+
     calc_proc_help = _l(
         "For composite, string composite, and upload tests, enter a Python snippet for evaluation of this test.<br/>"
         "For other test types, you may enter a Python snippet to set the initial value of this test.  For example,"
@@ -1008,6 +1019,24 @@ class Test(models.Model, TestPackMixin):
         if errors:
             raise ValidationError({"constant_value": errors})
 
+    def clean_wrap(self):
+
+        errors = self.check_test_type(self.wrap_high, WRAPAROUND, _("Wraparound"))
+        errors += self.check_test_type(self.wrap_low, WRAPAROUND, _("Wraparound"))
+        if self.type == WRAPAROUND:
+            wrap_high_def = self.wrap_high not in ("", None)
+            wrap_low_def = self.wrap_low not in ("", None)
+            if not wrap_high_def:
+                errors.append(_("Wrap high required for Wraparound test"))
+            if not wrap_low_def:
+                errors.append(_("Wrap low required for Wraparound test"))
+
+            if wrap_high_def and wrap_low_def and self.wrap_high < self.wrap_low:
+                errors.append(_("Wrap High must be less than Wrap Low"))
+
+        if errors:
+            raise ValidationError({"wrap_high": errors})
+
     def clean_choices(self):
         """make sure choices provided if TestType is MultipleChoice"""
         errors = self.check_test_type(self.choices, MULTIPLE_CHOICE, _("Multiple Choice"))
@@ -1044,6 +1073,7 @@ class Test(models.Model, TestPackMixin):
         super(Test, self).clean_fields(exclude)
         self.clean_calculation_procedure()
         self.clean_constant_value()
+        self.clean_wrap()
         self.clean_slug()
         self.clean_choices()
 
@@ -1907,13 +1937,23 @@ class TestInstance(models.Model):
         """return difference between instance and reference"""
         return self.value - self.reference.value
 
-    def difference_360(self):
+    def difference_wraparound(self):
         """return difference between instance and reference"""
-        if self.value > 180.:
-            return self.value - 360.
-        elif self.value < -180.:
-            return 360 + self.value
-        return self.difference()
+
+        t = self.unit_test_info.test
+        ref = self.reference.value
+        if self.value > ref:
+            wrap_distance = abs(t.wrap_high - self.value) + abs(ref - t.wrap_low)
+            direct_distance = abs(self.value - ref)
+            direct_closer = direct_distance <= wrap_distance
+            return direct_distance if direct_closer else -wrap_distance
+        elif self.value < ref:
+            wrap_distance = abs(self.value - t.wrap_low) + abs(t.wrap_high - ref)
+            direct_distance = abs(ref - self.value)
+            direct_closer = direct_distance <= wrap_distance
+            return -direct_distance if direct_closer else wrap_distance
+
+        return 0
 
     def percent_difference(self):
         """return percent difference between instance and reference"""
@@ -1968,9 +2008,9 @@ class TestInstance(models.Model):
         if not (self.tolerance and self.reference and self.unit_test_info.test):
             return
 
-        if self.unit_test_info.test.type == THREESIXTY:
-            diff = self.difference_360()
-        if self.tolerance.type == ABSOLUTE:
+        if self.unit_test_info.test.type == WRAPAROUND:
+            diff = self.difference_wraparound()
+        elif self.tolerance.type == ABSOLUTE:
             diff = self.difference()
         else:
             diff = self.percent_difference()
