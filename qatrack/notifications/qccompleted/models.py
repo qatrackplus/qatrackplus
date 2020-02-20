@@ -21,8 +21,8 @@ class QCCompletedNotice(models.Model):
 
     NOTIFICATION_TYPES = (
         (COMPLETED, _l("Notify when Test List completed")),
-        (TOLERANCE, _l("Notify on %s or %s" % (tol, act))),
-        (ACTION, _l("Notify on Test at %s level only" % (act))),
+        (TOLERANCE, _l("Notify on Test at {tolerance} or {action} level").format(tolerance=tol, action=act)),
+        (ACTION, _l("Notify on Test at {action} level only").format(action=act)),
         (FOLLOW_UP, _l("Follow up notification")),
     )
 

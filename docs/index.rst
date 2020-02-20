@@ -13,13 +13,14 @@ About QATrack+
 
 QATrack+ is a fully configurable, free, and open source (MIT License) web
 application for managing QC data for radiation therapy and medical imaging
-equipment. QATrack+ is used in many hospitals and clinics around the world!
-Visit the QATrack+ homepage at http://qatrackplus.com
+equipment. QATrack+ is used in `many hospitals and clinics around the world
+<http://qatrackplus.com/#whos-using>`!
 
-QATrack+ is deployable on most operating system/server/database platform
-combinations. It was developed in the popular Python programming language using
-the Django web framework so that QC data may be entered, reviewed, and analyzed
-using a web browser.
+QATrack+ is a replacement for error prone spreadsheets and other in-house
+databases. It brings structure and organization to your QA program while
+retaining much of the flexibility of spreadsheets.  Built in scheduling,
+reports, notifications, and charts make keeping on top of your machine QA
+program a breeze!
 
 The main features include:
 
@@ -84,6 +85,15 @@ Screenshots
 -----------
 
 For some example screenshots, please see the :ref:`screenshots` page.
+
+Installation & Deployment
+-------------------------
+
+QATrack+ is deployable on most operating system/server/database platform
+combinations. It was developed in the popular Python programming language using
+the Django web framework so that QC data may be entered, reviewed, and analyzed
+using a web browser.
+
 
 Documentation for QATrack+ v0.2.7-v0.2.9
 ========================================

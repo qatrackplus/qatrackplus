@@ -21,7 +21,7 @@ Major Features
 * A new :ref:`Reports <reports>` tool has been added for generating and
   scheduling PDF & Excel reports.
 
-* A new :ref:`Query Tool <qa_query_tool>` has been added for advanced query and
+* A new :ref:`Query Tool <reports_query_tool>` has been added for advanced query and
   reporting.
 
 * :ref:`Notifications <notifications>` have been expanded & improved.
@@ -119,6 +119,15 @@ Minor UI Changes
 * A calculation status icon has been added (spins when calculations are being
   performed).
 
+* Add test type css class to test rows.  Allows you to target different test
+  types in site.css like:
+
+  .. code-block:: css
+
+        .qa-boolean, .qa-numerical {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
 
 API Changes
 ^^^^^^^^^^^
@@ -140,15 +149,6 @@ Service Log & Parts
 
 * Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group
   Linker required when submitting a ServiceEvent.
-
-* Add test type css class to test rows.  Allows you to target different test
-  types in site.css like:
-
-  .. code-block:: css
-
-        .qa-boolean, .qa-numerical {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
 
 * There is a new `New or Used` field on Parts to allow you to track new and
   used inventories of the same part separately.
@@ -174,7 +174,7 @@ Authentication
 
   the `QATrackAccountBackend` is a simple wrapper around the Django ModelBackend
   to allow usernames to be transformed prior to authentication.  The transform
-  is controlled by the :ref:`<accounts_clean_username>` settings.
+  is controlled by the :ref:`ACCOUNTS_CLEAN_USERNAME <accounts_clean_username>` settings.
 
 * A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
   added to control whether users are allowed to register their own accounts.

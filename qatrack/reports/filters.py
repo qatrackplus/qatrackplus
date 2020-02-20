@@ -164,7 +164,7 @@ class DueAndOverdueFilter(django_filters.FilterSet):
 
     class Meta:
         model = models.UnitTestCollection
-        fields = ["assigned_to", "unit", "unit__site"]
+        fields = ["assigned_to", "unit__site", "unit"]
 
     def __init__(self, *args, **kwargs):
 
@@ -202,7 +202,7 @@ class SchedulingFilter(django_filters.FilterSet):
 
     class Meta:
         model = models.UnitTestCollection
-        fields = ["due_date", "assigned_to", "unit", "unit__site"]
+        fields = ["due_date", "assigned_to", "unit__site", "unit"]
 
     def __init__(self, *args, **kwargs):
 

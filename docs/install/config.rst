@@ -76,6 +76,8 @@ the appropriate protocol.
     HTTP_OR_HTTPS = 'https'  # when using https/ssl for your site
 
 
+.. _databases:
+
 DATABASES Setting
 .................
 

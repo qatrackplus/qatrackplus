@@ -96,10 +96,6 @@ sets for groups are given below:.
    view historical data alongside a test when performing a test list.*
 -  **qa \| test instance \| Can view charts of test history** *Allows a
    user to plot charts of historical data*
--  **qa \| test instance \| Can run SQL Data Reports** *Allows a
-   user to run previously defined SQL queries*
--  **qa \| test instance \| Can run SQL Data Reports** *Gives user the
-   ability to create and run raw SQL queries on your data*
 -  **qa \| test instance \| Can review tests** *Allow a user to perform
    review & approval functions*
 -  **qa \| test instance \| Can review & approve self-performed tests**
@@ -134,6 +130,10 @@ sets for groups are given below:.
 -  **qa \| unit test collection \| Can view TLI and UTC not visible to
    user's groups** *Allows a user to view all Test Lists regardless of
    their groups*
+-  **reports \| saved reports \| Can Create SQL Data Reports** *Gives user the ability to create and run raw SQL queries on your data*
+-  **reports \| saved reports \| Can Run SQL Data Reports** *allows a user to run previously defined SQL queries*
+-  **reports \| saved reports \| Can Create Reports** *Gives user the ability to create and run reports on your data*
+-  **reports \| saved reports \| Can Run Reports** *allows a user to run previously defined reports*
 -  **service_log \| hours \| Can have hours** *Allow tracking of users hours when involved with a Service Event*
 -  **service_log \| return to service qa \| Can perform return to service qa** *Allow user to perform qa linked to service events*
 -  **service_log \| return to service qa \| Can view existing return to service qa** *Allow user to view qa linked to service events*
@@ -215,8 +215,6 @@ typical permission set might look like the following:
 -  qa \| test instance \| Can add test instance
 -  qa \| test instance \| Can review tests
 -  qa \| test instance \| Can chart test history
--  qa \| test instance \| Can Run SQL Reports
--  qa \| test instance \| Can Create SQL Reports
 -  qa \| test instance \| Can view test history
 -  qa \| test instance \| Can change test instance
 -  qa \| test instance \| Can delete test instance
@@ -249,6 +247,10 @@ typical permission set might look like the following:
 -  qa \| unit test info \| Can add unit test info
 -  qa \| unit test info \| Can view Refs and Tols
 -  qa \| unit test info \| Can change unit test info
+-  reports \| saved reports \| Can Create SQL Data Reports
+-  reports \| saved reports \| Can Run SQL Data Reports
+-  reports \| saved reports \| Can Create Reports
+-  reports \| saved reports \| Can Run Reports
 -  service_log \| hours \| Can have hours
 -  service_log \| return to service qa \| Can perform return to service qa
 -  service_log \| return to service qa \| Can view existing return to service qa

@@ -1,19 +1,28 @@
-.. _qa_query_tool:
+.. _reports-query_tool:
 
 Query Tool
 ==========
 
-As of version 0.3.1 QATrack+ has a tool for creating, running, and storing
-SQL database queries/reports.
+.. warning::
+
+    In order to use SQL Reports, your site administrator must have set up a
+    read-only database user, and configured QATrack+ to use this read-only user
+    in it's :ref:`DATABASES <databases>` setting.
+
+
+As of version 0.3.1 QATrack+ has a tool for creating, running, and storing SQL
+database queries/reports. To access the tool, select the **Query Tool** option
+from the `Trends & Analysis` menu.
+
+From this main query tool page, you can select an existing query to run, or
+create a new one using the `New Query` or `Playground` links in the sidebar.
+
+Permissions Required
+--------------------
 
 Currently, to access this tool a user must have the :ref:`"Can Run SQL Reports"
 or "Can Create SQL Reports" <qa_auth>` permission set on their account.
 
-To access the tool, select the **Query Tool** option from the `Trends &
-Analysis` menu.
-
-From this main query tool page, you can select an existing query to run, or
-create a new one using the `New Query` or `Playground` links in the sidebar.
 
 Creating a new Query
 --------------------

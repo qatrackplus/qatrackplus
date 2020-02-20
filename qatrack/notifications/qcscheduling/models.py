@@ -24,10 +24,10 @@ class QCSchedulingNotice(models.Model):
     UPCOMING = 30
 
     NOTIFICATION_TYPES = (
-        (ALL, _l("Notify about all Test Lists Due Dates")),
-        (DUE, _l("Notify about Test Lists currently Due & Overdue")),
-        (UPCOMING_AND_DUE, _l("Notify about Test Lists Upcoming, Due & Overdue")),
-        (UPCOMING, _l("Notify about Upcoming Test Lists Due Dates Only")),
+        (ALL, _l("Notify About All Test Lists Due Dates")),
+        (DUE, _l("Notify About Test Lists Currently Due & Overdue")),
+        (UPCOMING_AND_DUE, _l("Notify About Test Lists Currently Due & Overdue, and Upcoming Due Dates")),
+        (UPCOMING, _l("Notify About Test Lists Upcoming Due Dates Only")),
     )
 
     TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
