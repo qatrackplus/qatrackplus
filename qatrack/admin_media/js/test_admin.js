@@ -6,7 +6,7 @@ Only show relevant fields for TestListItemAdmin
 
 function toggle_formatting(test_type){
     var $el = $(".field-formatting");
-    if (["constant", "composite", "simple", "360"].indexOf(test_type) >= 0){
+    if (["constant", "composite", "simple", "wraparound"].indexOf(test_type) >= 0){
         $el.show();
     }else{
         $el.hide();
@@ -20,7 +20,7 @@ function toggle_test_type(){
 
     if (val == "constant"){
         $(".field-constant_value, .field-hidden").show();
-        $(".field-calculation_procedure, .field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
+        $(".field-calculation_procedure,.field-wrap_low,.field-wrap_high,.field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "wraparound"){
