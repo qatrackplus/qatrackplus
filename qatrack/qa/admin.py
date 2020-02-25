@@ -95,7 +95,7 @@ class TestInfoForm(forms.ModelForm):
                 qs = self.fields['tolerance'].queryset.filter(type=models.ABSOLUTE)
                 self.fields['tolerance'].queryset = qs
             else:
-                qs = self.fields['tolerance'].queryset.exclude(type=models.MULTIPLE_CHOICE)
+                qs = self.fields['tolerance'].queryset.exclude(type=models.MULTIPLE_CHOICE).exclude(type=models.BOOLEAN)
                 self.fields['tolerance'].queryset = qs
 
             if tt != models.MULTIPLE_CHOICE and self.instance.reference:
