@@ -732,7 +732,7 @@ class CompositePerformer:
 
             self.context_keys.append(slug)
 
-            if self.test_types[slug] == models.DATETIME:
+            if self.test_types.get(slug) == models.DATETIME:
 
                 try:
                     dt = tz.localize(parse_datetime(val))
@@ -740,7 +740,7 @@ class CompositePerformer:
                 except:  # noqa: E722
                     self.calculation_context[slug] = None
 
-            elif self.test_types[slug] == models.DATE:
+            elif self.test_types.get(slug) == models.DATE:
 
                 try:
                     self.calculation_context[slug] = parse_date(val)
