@@ -455,6 +455,8 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
         month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        if calendar.isleap(now.year) and now.month == 2:
+            month_end += timezone.timedelta(days=1)
         next_month_start = month_end + timezone.timedelta(days=1)
         next_month_end = tz.localize(
             timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
