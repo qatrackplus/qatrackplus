@@ -265,7 +265,7 @@ Apache and mod_wsgi can be installed with the following commands:
     sudo apt-get install apache2 apache2-dev libapache2-mod-wsgi-py3 python3-dev
 
 
-Next, lets make sure Apache can write to our logs and media directory:
+Next, lets make sure Apache can write to our logs, media and cache directory:
 
 .. code-block:: console
 
@@ -275,6 +275,11 @@ Next, lets make sure Apache can write to our logs and media directory:
     chmod ug+rwx logs
     chmod ug+rwx qatrack/media
     chmod a+rw logs/{migrate,debug}.log
+
+    mkdir -p qatrack/cache
+    sudo chown -R www-data:www-data qatrack/cache/
+    sudo chmod -R g+rwxs qatrack/cache/
+
 
 Now we can remove the default Apache config file and copy over the QATrack+ config
 file:
