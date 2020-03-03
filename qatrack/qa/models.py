@@ -1204,9 +1204,9 @@ class UnitTestInfo(models.Model):
         verbose_name=_l("Current Reference"),
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
     )
-    tolerance = models.ForeignKey(Tolerance, null=True, blank=True, on_delete=models.SET_NULL)
+    tolerance = models.ForeignKey(Tolerance, null=True, blank=True, on_delete=models.PROTECT)
 
     active = models.BooleanField(help_text=_l("Uncheck to disable this test on this unit"), default=True, db_index=True)
 
@@ -1881,8 +1881,8 @@ class TestInstance(models.Model):
     comment = models.TextField(help_text=_l("Add a comment to this test"), null=True, blank=True)
 
     # reference used
-    reference = models.ForeignKey(Reference, null=True, blank=True, editable=False, on_delete=models.SET_NULL)
-    tolerance = models.ForeignKey(Tolerance, null=True, blank=True, editable=False, on_delete=models.SET_NULL)
+    reference = models.ForeignKey(Reference, null=True, blank=True, editable=False, on_delete=models.PROTECT)
+    tolerance = models.ForeignKey(Tolerance, null=True, blank=True, editable=False, on_delete=models.PROTECT)
 
     unit_test_info = models.ForeignKey(UnitTestInfo, on_delete=models.PROTECT, editable=False)
 
