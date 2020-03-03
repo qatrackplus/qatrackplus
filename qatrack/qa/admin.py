@@ -67,6 +67,10 @@ class TestInfoForm(forms.ModelForm):
         super(TestInfoForm, self).__init__(*args, **kwargs)
         readonly = ("test_type", "reference_set_by", "reference_set",)
 
+        self.fields['tolerance'].widget.can_delete_related = False
+        self.fields['tolerance'].widget.can_change_related = False
+        self.fields['tolerance'].empty_label = _("No Tolerance Set")
+
         for f in readonly:
             self.fields[f].widget.attrs['readonly'] = "readonly"
             self.fields[f].widget.attrs['disabled'] = "disabled"
@@ -224,10 +228,25 @@ class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
     )
 
     list_display = [test_name, "unit", test_type, "reference", "tolerance"]
-    list_filter = [ActiveUnitTestInfoFilter, "unit", "test__category", "test__testlistmembership__test_list"]
+    list_filter = [
+        ActiveUnitTestInfoFilter, "unit__site", "unit", "test__category", "test__testlistmembership__test_list"
+    ]
     readonly_fields = ("reference", "test", "unit", "history")
     search_fields = ("test__name", "test__display_name", "test__slug", "unit__name")
     # list_select_related = ['reference', 'tolerance', 'test', 'unit']
+
+    class Media:
+        js = (
+            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
+            settings.STATIC_URL + "select2/js/select2.js",
+            settings.STATIC_URL + "js/unittestinfo_admin.js",
+        )
+        css = {
+            'all': (
+                settings.STATIC_URL + "qatrack_core/css/admin.css",
+                settings.STATIC_URL + "select2/css/select2.css",
+            ),
+        }
 
     def redirect_to(self, *args, **kwargs):
         return redirect(reverse("qa_copy_refs_and_tols"))
@@ -682,6 +701,27 @@ class UnitTestListFilter(admin.SimpleListFilter):
         return qs
 
 
+class SiteTestListFilter(admin.SimpleListFilter):
+
+    title = _l('Assigned to Site')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'assignedtounit'
+
+    def lookups(self, request, model_admin):
+        return Site.objects.values_list("pk", "name")
+
+    def queryset(self, request, qs):
+
+        if self.value():
+            site = Site.objects.get(pk=self.value())
+            units = Unit.objects.filter(site=site)
+            unit_tl_ids = models.get_utc_tl_ids(units=units)
+            return qs.filter(id__in=unit_tl_ids)
+
+        return qs
+
+
 class FrequencyTestListFilter(admin.SimpleListFilter):
 
     title = _l('Assigned To Units by Frequency')
@@ -725,7 +765,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, ad
         "modified",
         "modified_by",
     )
-    list_filter = [ActiveTestListFilter, UnitTestListFilter, FrequencyTestListFilter]
+    list_filter = [ActiveTestListFilter, SiteTestListFilter, UnitTestListFilter, FrequencyTestListFilter]
 
     form = TestListAdminForm
     inlines = [TestListMembershipInline, SublistInline, get_attachment_inline("testlist")]
@@ -752,6 +792,14 @@ class TestForm(forms.ModelForm):
     class Meta:
         model = models.Test
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for f in ['category', 'autoreviewruleset']:
+            field = self.fields[f]
+            field.widget.can_delete_related = False
+            field.widget.can_change_related = False
 
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
@@ -1043,8 +1091,15 @@ class UnitTestCollectionForm(forms.ModelForm):
 
         self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True)
 
+        assigned_to = self.fields['assigned_to']
+        assigned_to.widget.can_delete_related = False
+        assigned_to.widget.can_change_related = False
+
         freq = self.fields['frequency']
         freq.queryset = freq.queryset.order_by("name")
+        freq.widget.can_delete_related = False
+        freq.widget.can_change_related = False
+        freq.empty_label = _("Ad Hoc (Unscheduled)")
 
     def _clean_readonly(self, f):
         data = self.cleaned_data.get(f, None)

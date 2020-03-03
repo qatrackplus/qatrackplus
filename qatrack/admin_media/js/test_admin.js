@@ -131,5 +131,7 @@ $(document).ready(function() {
         $("#id_formatting").val(el.target.value);
     });
 
+    $("#id_category, #id_type, #id_autoreviewruleset").select2();
+
 
 });
