@@ -784,7 +784,7 @@ class TestUnitTestInfoAdmin(TestCase):
         self.assertTrue(form.is_valid())
         self.assertListEqual(
             list(form.fields['tolerance'].queryset),
-            list(qa_models.Tolerance.objects.exclude(type=qa_models.MULTIPLE_CHOICE))
+            list(qa_models.Tolerance.objects.exclude(type=qa_models.MULTIPLE_CHOICE).exclude(type=qa_models.BOOLEAN))
         )
 
     def test_boolean(self):

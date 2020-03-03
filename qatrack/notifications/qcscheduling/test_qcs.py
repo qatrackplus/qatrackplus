@@ -54,7 +54,7 @@ class TestQCSchedulingAdmin(TestCase):
             time="0:00",
             recipients=rg,
         )
-        assert "Upcoming Test Lists Due Dates" in self.admin.get_notification_type(n)
+        assert "Upcoming Due Dates Only" in self.admin.get_notification_type(n)
 
     def test_get_notification_type_upcoming_and_due(self):
         rg = RecipientGroup.objects.create(name="RG")
@@ -64,7 +64,7 @@ class TestQCSchedulingAdmin(TestCase):
             time="0:00",
             recipients=rg,
         )
-        assert "Notify about Test Lists Upcoming, Due & Overdue (next 1 days)" in self.admin.get_notification_type(n)
+        assert "Notify About Test Lists Currently Due & Overdue, and Upcoming" in self.admin.get_notification_type(n)
 
     def test_get_notification_type_due(self):
         rg = RecipientGroup.objects.create(name="RG")

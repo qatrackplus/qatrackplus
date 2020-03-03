@@ -168,7 +168,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             actions.perform()
             self.driver.find_element_by_css_selector("body").click()
             self.driver.execute_script("window.scrollTo(0, -200);")
-        except:
+        except:  # noqa: E722
             pass
 
     def scroll_into_view_css(self, css_sel):
@@ -180,21 +180,23 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         try:
             actions.perform()
             self.driver.execute_script("window.scrollTo(0, -200);")
-        except:
+        except:  # noqa: E722
             pass
 
     def select_by_index(self, el_id, index):
+        """Set force_select2= True when selecting a 0 index for a select2 element"""
 
         self.scroll_into_view(el_id)
         try:
-            select = Select(self.driver.find_element_by_id(el_id))
-            select.select_by_index(1)
-        except:  # noqa: E722
             # select2?
             sel2 = self.driver.find_element_by_id("select2-%s-container" % el_id)
             sel2.click()
+            time.sleep(0.1)
             els = self.driver.find_elements_by_class_name("select2-results__option")
             els[index].click()
+        except:  # noqa: E722
+            select = Select(self.driver.find_element_by_id(el_id))
+            select.select_by_index(index)
 
     def select_by_text(self, el_id, text):
 
@@ -226,7 +228,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
             els = self.driver.find_elements_by_class_name("select2-results__option")
             for el in els:
-                if el.get_attribute('value') == val:
+                if el.get_attribute('id').endswith(val):
                     el.click()
                     break
 
@@ -248,7 +250,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         element = self.driver.find_element_by_id(el_id)
         try:
             element.click()
-        except:
+        except:  # noqa: E722
             self.driver.execute_script("arguments[0].click();", element)
 
     def click_by_css_selector(self, css_sel):
@@ -256,7 +258,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         element = self.driver.find_element_by_css_selector(css_sel)
         try:
             element.click()
-        except:
+        except:  # noqa: E722
             self.driver.execute_script("arguments[0].click();", element)
 
     def click_by_link_text(self, link_text):

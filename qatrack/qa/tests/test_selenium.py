@@ -9,13 +9,12 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as e_c
-from selenium.webdriver.support.ui import Select
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.tests.live import SeleniumTests
-from qatrack.qatrack_core.utils import format_as_date, format_datetime
+from qatrack.qatrack_core.utils import format_as_date
 from qatrack.service_log.tests import utils as sl_utils
 
 objects = {
@@ -209,6 +208,7 @@ class LiveQATests(BaseQATests):
             self.send_keys('id_slug', the_test['name'])
             self.select_by_index('id_category', 1)
             self.select_by_value('id_type', the_test['name'])
+            time.sleep(0.1)
 
             if the_test['choices']:
                 self.send_keys('id_choices', '1,2,3,4,5')
@@ -306,7 +306,7 @@ class LiveQATests(BaseQATests):
         self.driver.find_element_by_id('id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
         if settings.USE_SERVICE_LOG:
             self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
-        Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
+        self.select_by_index("id_type", 1)
         # self.driver.find_element_by_id('id_modalities_add_all_link').click()
         # self.driver.find_element_by_id('id_hours_monday').send_keys('800')
         # self.driver.find_element_by_id('id_hours_tuesday').send_keys('800')
@@ -353,10 +353,10 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text('ADD UNIT TEST COLLECTION')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
 
-        Select(self.driver.find_element_by_id("id_unit")).select_by_index(1)
-        Select(self.driver.find_element_by_id("id_frequency")).select_by_index(1)
-        Select(self.driver.find_element_by_id("id_assigned_to")).select_by_index(1)
-        Select(self.driver.find_element_by_id("id_content_type")).select_by_index(1)
+        self.select_by_index("id_unit", 1)
+        self.select_by_index("id_frequency", 1)
+        self.select_by_index("id_assigned_to", 0)
+        self.select_by_index("id_content_type", 1)
         self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()
         self.driver.find_element_by_css_selector('#id_visible_to_add_link').click()
 
@@ -374,7 +374,7 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text('Tolerances')
         self.click_by_link_text('ADD TOLERANCE')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
+        self.select_by_index("id_type", 1)
         self.driver.find_element_by_id('id_act_low').send_keys(objects['absoluteTolerance']['act_low'])
         self.driver.find_element_by_id('id_tol_low').send_keys(objects['absoluteTolerance']['tol_low'])
         self.driver.find_element_by_id('id_tol_high').send_keys(objects['absoluteTolerance']['tol_high'])
@@ -384,7 +384,7 @@ class LiveQATests(BaseQATests):
 
         # Add percentage tolerance
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        Select(self.driver.find_element_by_id("id_type")).select_by_index(1)
+        self.select_by_index("id_type", 1)
         self.driver.find_element_by_id('id_act_low').send_keys(objects['percentTolerance']['act_low'])
         self.driver.find_element_by_id('id_tol_low').send_keys(objects['percentTolerance']['tol_low'])
         self.driver.find_element_by_id('id_tol_high').send_keys(objects['percentTolerance']['tol_high'])
@@ -394,7 +394,7 @@ class LiveQATests(BaseQATests):
 
         # Add multi tolerance
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        Select(self.driver.find_element_by_id("id_type")).select_by_index(3)
+        self.select_by_index("id_type", 3)
         self.driver.find_element_by_id('id_mc_pass_choices').send_keys(
             objects['multiChoiceTolerance']['mc_pass_choices']
         )
@@ -434,18 +434,18 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text('Set References & Tolerances')
         self.click_by_link_text(mult_test.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_tolerance')))
-        Select(self.driver.find_element_by_id("id_tolerance")).select_by_index(1)
+        self.select_by_index("id_tolerance", 1)
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
         self.driver.find_element_by_link_text('simple').click()
-        Select(self.driver.find_element_by_id("id_tolerance")).select_by_index(1)
+        self.select_by_index("id_tolerance", 1)
         self.driver.find_element_by_id('id_reference_value').send_keys('0')
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
         self.driver.find_element_by_link_text('composite').click()
-        Select(self.driver.find_element_by_id("id_tolerance")).select_by_index(1)
+        self.select_by_index("id_tolerance", 1)
         self.driver.find_element_by_id('id_reference_value').send_keys('23.23')
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()

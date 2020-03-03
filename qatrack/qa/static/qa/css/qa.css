@@ -458,6 +458,7 @@ body .box-header h3.do-not-treat,
 body .box-footer h3.do-not-treat {
     display: none;
     margin: 0;
+    padding-right: 20px;
     color: #fff;
 }
 
