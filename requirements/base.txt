@@ -3,7 +3,7 @@
 -e git+https://github.com/randlet/django-recurrence.git@035ef961483a9ed58ecea6cac5dc8909b1227ef7#egg=django-recurrence
 -e git+https://github.com/randlet/django-sql-explorer.git@196e1f5af2abed61f504878b89a0719ae0901ed8#egg=django-sql-explorer
 black==19.10b0
-Django==2.1.11
+Django==2.1.15
 PyVirtualDisplay==0.2
 beautifulsoup4==4.6.0
 coreapi==2.3.3
