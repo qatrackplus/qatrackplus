@@ -30,7 +30,11 @@ from qatrack.attachments.admin import (
 )
 import qatrack.qa.models as models
 from qatrack.qa.utils import format_qc_value
-from qatrack.qatrack_core.admin import BasicSaveUserAdmin, SaveUserMixin
+from qatrack.qatrack_core.admin import (
+    BaseQATrackAdmin,
+    BasicSaveUserAdmin,
+    SaveUserMixin,
+)
 from qatrack.units.forms import unit_site_unit_type_choices
 from qatrack.units.models import Site, Unit
 
@@ -67,8 +71,6 @@ class TestInfoForm(forms.ModelForm):
         super(TestInfoForm, self).__init__(*args, **kwargs)
         readonly = ("test_type", "reference_set_by", "reference_set",)
 
-        self.fields['tolerance'].widget.can_delete_related = False
-        self.fields['tolerance'].widget.can_change_related = False
         self.fields['tolerance'].empty_label = _("No Tolerance Set")
 
         for f in readonly:
@@ -205,7 +207,7 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
         return qs
 
 
-class UnitTestInfoAdmin(AdminViews, admin.ModelAdmin):
+class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
 
     admin_views = (
         (_l("Copy References & Tolerances"), 'redirect_to'),
@@ -746,7 +748,7 @@ class FrequencyTestListFilter(admin.SimpleListFilter):
         return qs
 
 
-class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
 
     admin_views = (
         (_l("Export Test Pack"), 'export_testpack'),
@@ -792,14 +794,6 @@ class TestForm(forms.ModelForm):
     class Meta:
         model = models.Test
         fields = "__all__"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for f in ['category', 'autoreviewruleset']:
-            field = self.fields[f]
-            field.widget.can_delete_related = False
-            field.widget.can_change_related = False
 
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
@@ -876,7 +870,7 @@ class TestListMembershipFilter(admin.SimpleListFilter):
         return qs
 
 
-class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
 
     inlines = [get_attachment_inline("test")]
     list_display = ["name", "id", "slug", "category", "type", 'obj_created', 'obj_modified']
@@ -1091,14 +1085,8 @@ class UnitTestCollectionForm(forms.ModelForm):
 
         self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True)
 
-        assigned_to = self.fields['assigned_to']
-        assigned_to.widget.can_delete_related = False
-        assigned_to.widget.can_change_related = False
-
         freq = self.fields['frequency']
         freq.queryset = freq.queryset.order_by("name")
-        freq.widget.can_delete_related = False
-        freq.widget.can_change_related = False
         freq.empty_label = _("Ad Hoc (Unscheduled)")
 
     def _clean_readonly(self, f):
@@ -1136,7 +1124,7 @@ class UnitTestCollectionForm(forms.ModelForm):
             return Unit.objects.get(pk=unit)
 
 
-class UnitTestCollectionAdmin(admin.ModelAdmin):
+class UnitTestCollectionAdmin(BaseQATrackAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
     list_display = ['name', site_name, unit_name, freq_name, assigned_to_name, "active"]
@@ -1165,7 +1153,7 @@ class TestListCycleMembershipInline(DynamicRawIDMixin, admin.TabularInline):
     dynamic_raw_id_fields = ("test_list",)
 
 
-class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
     """Admin for daily test list cycles"""
     inlines = [TestListCycleMembershipInline, get_attachment_inline("testlistcycle")]
     prepopulated_fields = {'slug': ('name',)}
@@ -1190,7 +1178,7 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, admin.Mod
         return qs.prefetch_related("test_lists")
 
 
-class FrequencyAdmin(admin.ModelAdmin):
+class FrequencyAdmin(BaseQATrackAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.Frequency
     fields = (
@@ -1247,7 +1235,7 @@ class FrequencyAdmin(admin.ModelAdmin):
     get_recurrences.short_description = _l("Recurrences")
 
 
-class StatusAdmin(admin.ModelAdmin):
+class StatusAdmin(BaseQATrackAdmin):
     prepopulated_fields = {'slug': ('name',)}
     model = models.TestInstanceStatus
 
@@ -1286,7 +1274,7 @@ utc_unit_name.admin_order_field = "unit_test_collection__unit__name"  # noqa: E3
 utc_unit_name.short_description = _l("Unit")
 
 
-class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
     list_display = ["__str__", utc_unit_name, "test_list", "work_completed", "created_by"]
     list_filter = ["unit_test_collection__unit", "test_list", ]
     inlines = [get_attachment_inline("testlistinstance")]
@@ -1314,7 +1302,7 @@ class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
         return False
 
 
-class TestInstanceAdmin(SaveInlineAttachmentUserMixin, admin.ModelAdmin):
+class TestInstanceAdmin(SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
 
     list_display = [
         "__str__",
@@ -1392,7 +1380,7 @@ class ToleranceAdmin(BasicSaveUserAdmin):
         return super(ToleranceAdmin, self).has_change_permission(request, obj)
 
 
-class AutoReviewAdmin(admin.ModelAdmin):
+class AutoReviewAdmin(BaseQATrackAdmin):
     list_display = (str, "pass_fail", "status")
     list_editable = ["pass_fail", "status"]
 
@@ -1414,7 +1402,7 @@ class AutoReviewRuleSetAdminForm(forms.ModelForm):
         return is_default
 
 
-class AutoReviewRuleSetAdmin(admin.ModelAdmin):
+class AutoReviewRuleSetAdmin(BaseQATrackAdmin):
     list_display = ("__str__", "is_default", 'get_rules_display')
 
     filter_horizontal = ("rules",)

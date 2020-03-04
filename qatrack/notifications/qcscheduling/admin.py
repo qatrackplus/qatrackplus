@@ -5,6 +5,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications import models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 class QCSchedulingNoticeAdminForm(forms.ModelForm):
@@ -47,7 +48,7 @@ class QCSchedulingNoticeAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-class QCSchedulingAdmin(admin.ModelAdmin):
+class QCSchedulingAdmin(BaseQATrackAdmin):
 
     list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units"]
     list_filter = ["notification_type", "recipients", "test_lists", "units"]

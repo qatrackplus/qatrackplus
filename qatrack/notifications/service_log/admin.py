@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications.service_log import models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 class ServiceEventNoticeAdminForm(forms.ModelForm):
@@ -25,7 +26,7 @@ class ServiceEventNoticeAdminForm(forms.ModelForm):
         )
 
 
-class ServiceEventNoticeAdmin(admin.ModelAdmin):
+class ServiceEventNoticeAdmin(BaseQATrackAdmin):
 
     list_display = ["get_notification_type", "get_recipients", "get_units"]
     list_filter = ["notification_type", "recipients", "units"]

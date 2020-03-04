@@ -6,6 +6,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ChoiceField, ModelForm, ModelMultipleChoiceField
 from django.utils.translation import gettext_lazy as _l
 
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 from qatrack.service_log.models import (
     ServiceArea,
     ServiceEvent,
@@ -144,7 +145,7 @@ class UnitAvailableTimeInline(admin.TabularInline):
     verbose_name_plural = 'Unit Schedule'
 
 
-class UnitAdmin(admin.ModelAdmin):
+class UnitAdmin(BaseQATrackAdmin):
 
     form = UnitFormAdmin
     list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
@@ -173,7 +174,7 @@ class UnitAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related('site', 'type')
 
 
-class UnitTypeAdmin(admin.ModelAdmin):
+class UnitTypeAdmin(BaseQATrackAdmin):
 
     list_display = ['model_name', 'vendor', 'unit_class']
     list_filter = ['unit_class', 'vendor']
@@ -191,12 +192,12 @@ class UnitTypeAdmin(admin.ModelAdmin):
         return "{}{}{}".format(vendor_name, obj.name, model)
 
 
-class ModalityAdmin(admin.ModelAdmin):
+class ModalityAdmin(BaseQATrackAdmin):
 
     list_display = ["name"]
 
 
-class SiteAdmin(admin.ModelAdmin):
+class SiteAdmin(BaseQATrackAdmin):
     """QC categories admin"""
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
@@ -209,4 +210,4 @@ admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
 admin.site.register(Modality, ModalityAdmin)
 admin.site.register(Site, SiteAdmin)
-admin.site.register([UnitClass, Vendor], admin.ModelAdmin)
+admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)

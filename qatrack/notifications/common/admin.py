@@ -11,6 +11,7 @@ from qatrack.notifications import models
 import qatrack.notifications.qccompleted.admin as qccadmin  # noqa: F401
 import qatrack.notifications.qcscheduling.admin as qcsadmin  # noqa: F401
 import qatrack.notifications.service_log.admin as slsadmin  # noqa: F401
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 def trim(string, length=200):
@@ -55,7 +56,7 @@ class RecipientGroupForm(forms.ModelForm):
         return cleaned_data
 
 
-class RecipientGroupAdmin(admin.ModelAdmin):
+class RecipientGroupAdmin(BaseQATrackAdmin):
 
     list_display = ["name", "get_users", "get_groups", "get_emails"]
     list_filter = ["groups", "users"]
@@ -109,7 +110,7 @@ class TestListGroupForm(forms.ModelForm):
         self.fields['test_lists'].queryset = self.fields['test_lists'].queryset.order_by("name")
 
 
-class TestListGroupAdmin(admin.ModelAdmin):
+class TestListGroupAdmin(BaseQATrackAdmin):
 
     list_display = ["name", "get_test_lists"]
     list_filter = ["test_lists"]
@@ -138,7 +139,7 @@ class TestListGroupAdmin(admin.ModelAdmin):
     get_test_lists.short_description = _l("Test Lists")
 
 
-class UnitGroupAdmin(admin.ModelAdmin):
+class UnitGroupAdmin(BaseQATrackAdmin):
 
     list_display = ["name", "get_units"]
     list_filter = ["units", "units__site"]

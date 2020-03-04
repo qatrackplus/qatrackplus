@@ -5,13 +5,15 @@ from django.core.exceptions import ValidationError
 import django.forms as forms
 from django.utils.safestring import mark_safe
 
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
+
 if settings.USE_PARTS:
 
     from django.contrib import admin
 
     from . import models as p_models
 
-    class PartAdmin(admin.ModelAdmin):
+    class PartAdmin(BaseQATrackAdmin):
 
         list_display = [
             'name',
@@ -114,7 +116,7 @@ if settings.USE_PARTS:
             return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-    class RoomAdmin(admin.ModelAdmin):
+    class RoomAdmin(BaseQATrackAdmin):
 
         list_display = ['name', 'site']
         search_fields = ('name', 'site__name')
@@ -137,6 +139,6 @@ if settings.USE_PARTS:
 
 
     admin.site.register([p_models.Part], PartAdmin)
-    admin.site.register([p_models.PartCategory], admin.ModelAdmin)
-    admin.site.register([p_models.Supplier], admin.ModelAdmin)
+    admin.site.register([p_models.PartCategory], BaseQATrackAdmin)
+    admin.site.register([p_models.Supplier], BaseQATrackAdmin)
     admin.site.register([p_models.Room], RoomAdmin)

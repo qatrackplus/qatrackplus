@@ -1,4 +1,6 @@
 from django.contrib import admin
-from .models import Contact
 
-admin.site.register([Contact], admin.ModelAdmin)
+from qatrack.contacts.models import Contact
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
+
+admin.site.register([Contact], BaseQATrackAdmin)

@@ -4,11 +4,11 @@ import django.forms as forms
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
-from qatrack.qatrack_core.admin import BasicSaveUserAdmin
+from qatrack.qatrack_core.admin import BaseQATrackAdmin, BasicSaveUserAdmin
 from qatrack.reports.models import ReportSchedule, SavedReport
 
 
-class SavedReportAdmin(admin.ModelAdmin):
+class SavedReportAdmin(BaseQATrackAdmin):
 
     list_display = (
         "title",

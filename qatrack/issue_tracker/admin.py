@@ -1,24 +1,26 @@
 from django.conf import settings
 from django.contrib import admin
+
 from qatrack.issue_tracker import models as i_models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
-class IssueAdmin(admin.ModelAdmin):
+class IssueAdmin(BaseQATrackAdmin):
     list_display = ['id', 'issue_status', 'issue_priority', 'issue_type', 'description']
     search_fields = ['description']
 
 
-class IssueTypeAdmin(admin.ModelAdmin):
+class IssueTypeAdmin(BaseQATrackAdmin):
     list_display = ['id', 'name']
     search_fields = ['description']
 
 
-class IssueTagAdmin(admin.ModelAdmin):
+class IssueTagAdmin(BaseQATrackAdmin):
 
     list_display = ['id', 'name', 'description']
 
 
-class IssuePriorityStatusAdmin(admin.ModelAdmin):
+class IssuePriorityStatusAdmin(BaseQATrackAdmin):
     list_display = ['name', 'colour', 'order']
 
     class Media:
@@ -35,6 +37,7 @@ class IssuePriorityStatusAdmin(admin.ModelAdmin):
                 settings.STATIC_URL + 'qatrack_core/css/admin.css',
             ),
         }
+
 
 if settings.USE_ISSUES:
 

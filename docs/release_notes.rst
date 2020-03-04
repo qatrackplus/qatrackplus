@@ -129,6 +129,14 @@ Minor UI Changes
         }
 
 
+Admin Changes
+^^^^^^^^^^^^^
+
+* Inline links to edit and delete foreign key choices have been disabled in all
+  QATrack+ admin models. Editing or deleting a foreign key object here has
+  always been a poor workflow and can be confusing to users.
+
+
 API Changes
 ^^^^^^^^^^^
 

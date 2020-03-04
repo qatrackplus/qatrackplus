@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.db.models import Count, Max
 from django.forms import ModelForm, ValidationError
 
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
+
 from .models import (
     GroupLinker,
     ServiceArea,
@@ -28,7 +30,7 @@ class ServiceEventStatusFormAdmin(ModelForm):
         return is_default
 
 
-class DeleteOnlyFromOwnFormAdmin(admin.ModelAdmin):
+class DeleteOnlyFromOwnFormAdmin(BaseQATrackAdmin):
 
     def has_delete_permission(self, request, obj=None):
         if obj is None:
@@ -72,7 +74,7 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
         qs = self.model.all_objects.get_queryset()
 
         # we need this from the superclass method
-        ordering = self.ordering or () # otherwise we might try to *None, which is bad ;)
+        ordering = self.ordering or ()  # otherwise we might try to *None, which is bad ;)
         if ordering:
             qs = qs.order_by(*ordering)
 
@@ -169,4 +171,4 @@ if settings.USE_SERVICE_LOG:
     admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
     admin.site.register(GroupLinker, GroupLinkerAdmin)
 
-    admin.site.register([ThirdParty], admin.ModelAdmin)
+    admin.site.register([ThirdParty], BaseQATrackAdmin)

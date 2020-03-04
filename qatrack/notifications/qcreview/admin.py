@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications import models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 class QCReviewNoticeAdminForm(forms.ModelForm):
@@ -29,7 +30,7 @@ class QCReviewNoticeAdminForm(forms.ModelForm):
         )
 
 
-class QCReviewAdmin(admin.ModelAdmin):
+class QCReviewAdmin(BaseQATrackAdmin):
 
     list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units"]
     list_filter = ["notification_type", "recipients", "test_lists", "units"]

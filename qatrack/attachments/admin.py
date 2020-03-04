@@ -5,10 +5,10 @@ from django.forms.utils import ErrorList, ValidationError
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
+from qatrack.attachments.models import Attachment
 from qatrack.qa import models as qa_models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 from qatrack.service_log import models as sl_models
-
-from .models import Attachment
 
 
 class AjaxModelChoiceField(forms.ModelChoiceField):
@@ -103,7 +103,7 @@ class TypeFilter(admin.SimpleListFilter):
         return queryset
 
 
-class AttachmentAdmin(admin.ModelAdmin):
+class AttachmentAdmin(BaseQATrackAdmin):
 
     list_display = (
         "get_label",
