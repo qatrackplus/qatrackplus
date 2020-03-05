@@ -429,6 +429,10 @@ result = foo + bar
         test.choices = "a,b"
         assert test.get_choices() == [("a", "a"), ("b", "b")]
 
+    def test_display(self):
+        assert models.Test(display_name="display", name="name").display() == "display"
+        assert models.Test(name="name").display() == "name"
+
 
 class TestOnTestSaveSignal(TestCase):
 

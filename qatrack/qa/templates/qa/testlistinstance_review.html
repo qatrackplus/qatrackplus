@@ -293,7 +293,7 @@
                       {% with ti=ti_form.instance test=ti_form.instance.unit_test_info.test %}
                         <tr class="qa-valuerow" data-prefix="{{ ti_form.prefix }}">
                           <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
-                          <td class="bar-container test-name" title="{{ ti.unit_test_info.test.name }}"><div class="comment-bar"><div class="padding-left-5 padding-bottom-8" >{{ti.unit_test_info.test}}</div></div></td>
+                          <td class="bar-container test-name" title="{{ ti.unit_test_info.test.name }}"><div class="comment-bar"><div class="padding-left-5 padding-bottom-8" >{{ ti.unit_test_info.test.display }}</div></div></td>
                           <td class="review-value">
 
                               {% with vd=ti.value_display %}

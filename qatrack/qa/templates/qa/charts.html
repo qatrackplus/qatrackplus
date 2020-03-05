@@ -69,7 +69,7 @@
 
                                 <select id="tests" multiple class="form-control">
                                     {% for t in tests %}
-                                      <option value="{{ t.pk }}" title="{% firstof t.display_name t.name %}: {{ t.description|striptags }}">{% firstof t.display_name t.name %}</option>
+                                      <option value="{{ t.pk }}" title="{% firstof t.display_name t.name %}: {{ t.description|striptags }}">{{ t.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>

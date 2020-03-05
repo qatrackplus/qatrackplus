@@ -1095,9 +1095,13 @@ class Test(models.Model, TestPackMixin):
         return (self.name,)
     natural_key.dependencies = ['qa.category']
 
+    def display(self):
+        """returns display name if set, otherwise name"""
+        return self.display_name or self.name
+
     def __str__(self):
         """return display representation of object"""
-        return "%s" % (self.display_name or self.name)
+        return self.name
 
 
 def get_utc_tlc_ids(active=None, units=None, frequencies=None):
