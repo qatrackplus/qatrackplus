@@ -61,12 +61,15 @@ class RecipientGroupAdmin(BaseQATrackAdmin):
     list_display = ["name", "get_users", "get_groups", "get_emails"]
     list_filter = ["groups", "users"]
     search_fields = [
-        "units__number",
-        "units__name",
         "groups__name",
-        "users__name",
+        "users__username",
+        "users__first_name",
+        "users__last_name",
         "users__email",
         "groups__user__email",
+        "groups__user__username",
+        "groups__user__first_name",
+        "groups__user__last_name",
     ]
 
     form = RecipientGroupForm
@@ -147,7 +150,6 @@ class UnitGroupAdmin(BaseQATrackAdmin):
         "name",
         "units__name",
         "units__number",
-        "units__slug",
     ]
 
     class Media:

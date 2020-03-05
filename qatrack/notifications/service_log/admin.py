@@ -34,9 +34,14 @@ class ServiceEventNoticeAdmin(BaseQATrackAdmin):
         "units__units__number",
         "units__units__name",
         "recipients__groups__name",
-        "recipients__users__name",
+        "recipients__users__username",
+        "recipients__users__first_name",
+        "recipients__users__last_name",
         "recipients__users__email",
         "recipients__groups__user__email",
+        "recipients__groups__user__username",
+        "recipients__groups__user__first_name",
+        "recipients__groups__user__last_name",
     ]
 
     form = ServiceEventNoticeAdminForm
