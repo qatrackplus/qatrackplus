@@ -54,6 +54,27 @@ class AutoReviewRuleFilter(filters.FilterSet):
         fields = ['status', 'pass_fail']
 
 
+class AutoReviewRuleSetFilter(filters.FilterSet):
+
+    status = filters.RelatedFilter(
+        TestInstanceStatusFilter,
+        field_name="status",
+        queryset=models.TestInstanceStatus.objects.all(),
+    )
+
+    pass_fail = filters.Filter(
+        field_name="pass_fail",
+        widget=widgets.Select(choices=[('', 'Any')] + list(models.PASS_FAIL_CHOICES)),
+    )
+
+    class Meta:
+        model = models.AutoReviewRuleSet
+        fields = {
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "is_default": ['exact'],
+        }
+
+
 class ReferenceFilter(filters.FilterSet):
 
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())

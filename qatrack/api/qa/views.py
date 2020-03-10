@@ -41,6 +41,13 @@ class AutoReviewRuleViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
+class AutoReviewRuleSetViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.AutoReviewRuleSet.objects.all()
+    serializer_class = serializers.AutoReviewRuleSetSerializer
+    filterset_class = filters.AutoReviewRuleSetFilter
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+
+
 class ReferenceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Reference.objects.all()
     serializer_class = serializers.ReferenceSerializer

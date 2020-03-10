@@ -44,6 +44,13 @@ class AutoReviewRuleSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class AutoReviewRuleSetSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.AutoReviewRuleSet
+        fields = "__all__"
+
+
 class ReferenceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Reference
