@@ -71,7 +71,7 @@ class ServiceEventFilter(filters.FilterSet):
     unit_service_area = filters.RelatedFilter(
         UnitServiceAreaFilter,
         field_name='unit_service_area',
-        queryset=models.UnitServiceArea.objects.all(),
+        queryset=models.UnitServiceArea.objects.select_related("unit", "service_area"),
     )
     service_type = filters.RelatedFilter(
         ServiceTypeFilter,
