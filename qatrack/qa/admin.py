@@ -167,8 +167,12 @@ test_type.admin_order_field = "test__type"  # noqa: E305
 class SetMultipleReferencesAndTolerancesForm(forms.Form):
     _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
     contenttype = forms.CharField(widget=forms.HiddenInput, required=False)
-    tolerance = forms.ModelChoiceField(queryset=models.Tolerance.objects.all())
-    reference = forms.CharField(max_length=255)
+    tolerance = forms.ModelChoiceField(
+        queryset=models.Tolerance.objects.all(),
+        required=False,
+        empty_label=_("No Tolerance Set"),
+    )
+    reference = forms.CharField(max_length=255, required=False)
 
 
 # see http://stackoverflow.com/questions/851636/default-filter-in-django-admin
