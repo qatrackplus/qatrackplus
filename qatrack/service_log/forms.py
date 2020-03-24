@@ -338,7 +338,7 @@ class ModelSelectWithOptionTitles(forms.Select):
 class ServiceEventForm(BetterModelForm):
 
     serviceable_units = models.Unit.objects.filter(is_serviceable=True)
-    unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=False)
+    unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=True)
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(
         queryset=models.ServiceArea.objects.all(), label='Service area'
@@ -709,9 +709,10 @@ class ServiceEventForm(BetterModelForm):
     def clean(self):
         super(ServiceEventForm, self).clean()
 
-        if not self.cleaned_data.get('unit_field'):
-            self.add_error('unit_field_fake', ValidationError('This field is required'))
-        elif settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
+        if self.cleaned_data.get("unit_field") and "unit_field_fake" in self.errors:
+            del self.errors['unit_field_fake']
+
+        if settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
             # If SA can be blank, then make sure appropriate SA and USA's exist
             sa, __ = models.ServiceArea.objects.get_or_create(name="Not specified")
             usa, __ = models.UnitServiceArea.objects.get_or_create(
@@ -753,7 +754,6 @@ class ServiceEventForm(BetterModelForm):
         # add the initial unit back to cleaned data since django tries to set it to None and unit is of course requried.
         if self.instance.pk and ('unit_field' not in self.cleaned_data or self.cleaned_data['unit_field'] is None):
             self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
-
 
         if settings.SL_ALLOW_BLANK_SERVICE_TYPE and not self.cleaned_data.get('service_type'):
             # If ST can be blank, then make sure appropriate ST exists
