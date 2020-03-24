@@ -449,7 +449,7 @@
 
                             {% if DEFAULT_SE_STATUS %}
                               <li class="hover-parent">
-                                <a href="{% url 'sl_list_by_status' pk=DEFAULT_SE_STATUS.id %}" title="{% trans "View service events that are {{ DEFAULT_SE_STATUS.name }}" %}">
+                                <a href="{% url 'sl_list_by_status' pk=DEFAULT_SE_STATUS.id %}" title="{% blocktrans with service_event_status=DEFAULT_SE_STATUS.name %}View service events that are {{ service_event_status }}{% endblocktrans %}">
                                   <i class="fa fa-stack fa-lg fa-fw">
                                       <i class="fa fa-wrench fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
                                       <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
