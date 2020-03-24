@@ -207,7 +207,6 @@
 
   <div class="row">
     <div class="col-md-4">
-      {% if hours|length > 0 or g_links|length > 0 or serviceevent.duration_service_time or serviceevent.duration_lost_time %}
         <div class="box">
           <div class="box-header">
             <h3 class="box-title">
@@ -217,21 +216,33 @@
           </div>
           <div class="box-body">
 
-            {% if serviceevent.duration_service_time or serviceevent.duration_lost_time %}
-              <div class="subheading-divider"{% trans ">Service Event Durations" %}</div>
-              <div class="row">
-                <div class="col-md-12">
-                  <dl class="dl-horizontal">
-                    {% if serviceevent.duration_service_time != None %}
-                      <dt>{% trans "Service time (hh:mm)" %}:</dt><dd><div>{{ serviceevent.duration_service_time|hour_min }}</div></dd>
-                    {% endif %}
-                    {% if serviceevent.duration_lost_time != None %}
-                      <dt>{% trans "Lost time (hh:mm)" %}:</dt><dd><div>{{ serviceevent.duration_lost_time|hour_min }}</div></dd>
-                    {% endif %}
-                  </dl>
-                </div>
+            <div class="subheading-divider"{% trans ">Service Event Durations" %}</div>
+            <div class="row">
+              <div class="col-md-12">
+                <dl class="dl-horizontal">
+                  <dt>{% trans "Service time (hh:mm)" %}:</dt>
+                  <dd>
+                    <div>
+                      {% if serviceevent.duration_service_time != None %}
+                        {{ serviceevent.duration_service_time|hour_min }}
+                      {% else %}
+                        <em>{% trans "Not specified" %}</em>
+                      {% endif %}
+                    </div>
+                  </dd>
+                  <dt>{% trans "Lost time (hh:mm)" %}:</dt>
+                  <dd>
+                    <div>
+                      {% if serviceevent.duration_lost_time != None %}
+                        {{ serviceevent.duration_lost_time|hour_min }}
+                      {% else %}
+                        <em>{% trans "Not specified" %}</em>
+                      {% endif %}
+                    </div>
+                  </dd>
+                </dl>
               </div>
-            {% endif %}
+            </div>
 
             {% if g_links|length > 0 %}
               <div class="subheading-divider">{% trans "Group Members Involved" %}</div>
@@ -247,37 +258,38 @@
               </div>
             {% endif %}
 
-            {% if hours|length > 0 %}
               <div class="subheading-divider">{% trans "User and Third Party Work Durations" %}</div>
               <div class="row">
                 <div class="col-md-12">
-                  <table class="table table-hover table-condensed table-valign-middle">
-                    <thead>
-                      <tr>
-                        <th>{% trans "User or Third Party" %}</th>
-                        <th{% trans ">Time (hh:mm)" %}</th>
-                      </tr>
-                    </thead>
-
-                    <tbody id="hours-tbody">
-
-                      {% for h in hours %}
+                  {% if hours|length > 0 %}
+                    <table class="table table-hover table-condensed table-valign-middle">
+                      <thead>
                         <tr>
-                          <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
-                          <td>{{ h.time|hour_min }}</td>
+                          <th>{% trans "User or Third Party" %}</th>
+                          <th{% trans ">Time (hh:mm)" %}</th>
                         </tr>
-                      {% endfor %}
+                      </thead>
 
-                    </tbody>
+                      <tbody id="hours-tbody">
 
-                  </table>
+                        {% for h in hours %}
+                          <tr>
+                            <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
+                            <td>{{ h.time|hour_min }}</td>
+                          </tr>
+                        {% endfor %}
+
+                      </tbody>
+
+                    </table>
+                  {% else %}
+                    <em>{% trans "No work hours specified" %}</em>
+                  {% endif %}
                 </div>
               </div>
-            {% endif %}
 
           </div>
         </div>
-      {% endif %}
 
       {% if serviceevent.attachment_set.all|length > 0 %}
         <div class="box">
