@@ -709,10 +709,11 @@ class ServiceEventForm(BetterModelForm):
     def clean(self):
         super(ServiceEventForm, self).clean()
 
-        if self.cleaned_data.get("unit_field") and "unit_field_fake" in self.errors:
+        unit_field = self.cleaned_data.get("unit_field")
+        if unit_field and "unit_field_fake" in self.errors:
             del self.errors['unit_field_fake']
 
-        if settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
+        if unit_field and settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
             # If SA can be blank, then make sure appropriate SA and USA's exist
             sa, __ = models.ServiceArea.objects.get_or_create(name="Not specified")
             usa, __ = models.UnitServiceArea.objects.get_or_create(
