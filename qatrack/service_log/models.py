@@ -75,7 +75,10 @@ class UnitServiceArea(models.Model):
 class ServiceType(models.Model):
 
     name = models.CharField(max_length=32, unique=True, help_text=_l('Enter a short name for this service type'))
-    is_review_required = models.BooleanField(default=True, help_text=_l('Does this service type require review'))
+    is_review_required = models.BooleanField(
+        default=True,
+        help_text=_l('Enable this flag to disable the "Review Required" checkbox for new Service Events'),
+    )
     is_active = models.BooleanField(default=True, help_text=_l('Set to false if service type is no longer used'))
     description = models.TextField(
         max_length=512, help_text=_l('Give a brief description of this service type'), null=True, blank=True
