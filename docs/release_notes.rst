@@ -158,6 +158,10 @@ API Changes
 
 * The TestList API results now includes a field "test_lists" which is 
   a list of all the sublist test lists for that TestList.
+
+* The banner at the top of the browsable API now says "QATrack+ API" rather
+  than Django Rest Framework and now the link directs to the main site rather
+  than DRFs site.
   
 
 Service Log & Parts

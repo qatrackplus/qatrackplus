@@ -1,0 +1,10 @@
+{% extends "rest_framework/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if name %}{{ name }} – {% endif %}{% trans "QATrack+ API" %}{% endblock %}
+
+{% block branding %}
+  <a class='navbar-brand' rel="nofollow" href='/'>
+    {% trans "QATrack+ API" %}
+  </a>
+{% endblock %}
