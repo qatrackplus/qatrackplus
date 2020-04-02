@@ -1406,6 +1406,12 @@ class TestList(TestCollectionInterface, TestPackMixin):
         through=TestListMembership,
     )
 
+    test_lists = models.ManyToManyField(
+        "TestList",
+        help_text=_l("Which test lists does this list contain"),
+        through="Sublist",
+    )
+
     warning_message = models.CharField(
         max_length=255,
         help_text=_l(

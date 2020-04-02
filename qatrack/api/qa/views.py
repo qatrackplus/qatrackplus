@@ -77,7 +77,10 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TestListViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.TestList.objects.all()
+    queryset = models.TestList.objects.prefetch_related(
+        "test_lists",
+        "tests",
+    )
     serializer_class = serializers.TestListSerializer
     filterset_class = filters.TestListFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
@@ -105,7 +108,10 @@ class SublistViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.UnitTestCollection.objects.select_related().prefetch_related(
+    queryset = models.UnitTestCollection.objects.select_related(
+        "last_instance",
+        "content_type",
+    ).prefetch_related(
         "visible_to",
         "tests_object",
     )

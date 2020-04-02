@@ -75,6 +75,13 @@ class TestSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class SublistSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.Sublist
+        fields = "__all__"
+
+
 class TestListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
@@ -94,13 +101,6 @@ class TestListMembershipSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
-class SublistSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = models.Sublist
-        fields = "__all__"
-
-
 class UTCTestsObjectRelatedField(serializers.RelatedField):
     """
     A custom field to use for the `tests_object` generic relationship.
@@ -115,6 +115,8 @@ class UTCTestsObjectRelatedField(serializers.RelatedField):
 class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
 
     tests_object = UTCTestsObjectRelatedField(read_only=True)
+    next_test_list = serializers.SerializerMethodField(read_only=True)
+    next_day = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.UnitTestCollection
@@ -124,6 +126,16 @@ class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
         if isinstance(obj, models.TestList):
             return reverse("testlist-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
         return reverse("testlistcycle-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
+
+    def get_next_test_list(self, obj):
+        next_day, next_list = obj.next_list()
+        if isinstance(next_list, models.TestList):
+            return reverse("testlist-detail", kwargs={'pk': next_list.pk}, request=self.context['request'])
+        return None
+
+    def get_next_day(self, obj):
+        next_day, next_list = obj.next_list()
+        return next_day
 
 
 class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):

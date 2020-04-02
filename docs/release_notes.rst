@@ -152,6 +152,14 @@ API Changes
 
   * First Name & Last Name have been added to the user-list api view
 
+* The UnitTestCollection API results now include "next_day" and "next_test_list"
+  parameters to make it simple to determine which test list is to be performed
+  next in a test list cycle.
+
+* The TestList API results now includes a field "test_lists" which is 
+  a list of all the sublist test lists for that TestList.
+  
+
 Service Log & Parts
 ^^^^^^^^^^^^^^^^^^^
 
