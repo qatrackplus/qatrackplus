@@ -2,6 +2,7 @@
 
 {% load qa_tags %}
 {% load listable %}
+{% load i18n %}
 
 {% block head_title %}{{page_title}}{% endblock %}
 
@@ -21,25 +22,102 @@
 {% endblock %}
 
 {% block require_javascript %}
-    require(['listable']);
+  require(['listable'], function(){
+    {% if bulk_review %}
+      $(".test-selected-toggle").eq(0).hide();
+      $(".bulk-status").eq(0).parent().html("Bulk Review");
+      $(".bulk-status").eq(0).parent().parent().css("color", "black");
+      $(".bulk-review-all").eq(0).hide();
+
+      //(de)select checkboxes for child tests when user clicks on header checkbox
+      $("input.test-selected-toggle").on("change", function (e) {
+          $(this).closest("table").find("input.test-selected").prop("checked", $(this).is(":checked"));
+      });
+
+      $(".bulk-status").on('change', function () {
+          var val = $(this).val();
+          $(".bulk-status").not($(this)).val(val);
+          $("input.test-selected:checked").parents("tr").find("select").val(val);
+          return false;
+      });
+    {% endif %}
+  });
 {% endblock require_javascript %}
 
 {% block body %}
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <div class="box-header">
-                    <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
-                    <h3 class="box-title">{{page_title}}</h3>
+<div class="row">
+  <div class="col-md-12">
+    <div class="box">
+      <div class="box-header">
+        <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
+        <h3 class="box-title">{{page_title}}</h3>
+      </div>
+      <div class="box-body pad">
+        {{ listable_table }}
 
-                </div>
-                <div class="box-body pad">
-                    {{ listable_table }}
-                </div>
+        {% if perms.qa.can_review %}
+          <div class="row pad"></div>
+          <div class="row">
+            <div class="col-sm-12">
+
+              <button id="submit-review"
+                      type="button"
+                      class="btn btn-primary btn-flat pull-right margin-r-5"
+                      title="{% trans "Click to update the test instance statuses for all of the selected test list instances" %}"
+                      data-toggle="modal"
+                      data-target="#bulk-review-modal"
+
+              >
+                <i class="fa fa-save"></i>
+                {% trans "Update Review Statuses" %}
+              </button>
             </div>
-        </div>
+          </div>
+        {% endif %}
+
+      </div>
     </div>
+  </div>
+</div>
+
+<div id="bulk-review-modal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{% trans "Confirm Bulk Review" %}</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-sm-12">
+            <form class="form">
+              <div class="form-group">
+                <table id="instance-summary" class="table table-bordered table-striped table-condensed fixed">
+                  <thead>
+                    <tr>
+                      <th>{% trans "Username" %}</th>
+                      <th>{% trans "First Name" %}</th>
+                      <th>{% trans "Last Name" %}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p id="group-add-msg"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Cancel" %}</button>
+        <button id="confirm-update" type="button" class="btn btn-primary">{% trans "Confirm" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock body %}
 

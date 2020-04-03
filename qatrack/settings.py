@@ -549,6 +549,9 @@ ORDER_UNITS_BY = "number"
 # Enable or disable the "Difference" column when reviewing test lists
 REVIEW_DIFF_COL = False
 
+# Enable bulk review on Unreviewed pages
+BULK_REVIEW = False
+
 # default display settings for test statuses
 TEST_STATUS_DISPLAY = {
     'fail': "Fail",

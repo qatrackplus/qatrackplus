@@ -8,8 +8,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import (
@@ -347,15 +349,79 @@ class YourInactiveReview(UTCYourReview):
         return 'fa-file'
 
 
+def test():
+    return _("Bulk Review Status")
+
+
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
-    # queryset = models.TestListInstance.objects.unreviewed()
+    fields = (
+        "actions",
+        "unit_test_collection__unit__name",
+        "unit_test_collection__frequency__name",
+        "test_list__name",
+        "work_completed",
+        "created_by__username",
+        "review_status",
+        "pass_fail",
+        "bulk_review_status",
+        "selected",
+    )
+
+    headers = {
+        "selected": mark_safe('<input type="checkbox" class="test-selected-toggle" checked title="%s"/>' % _("Select All")),
+        "bulk_review_status": lambda: Unreviewed._status_select(header=True),
+        "unit_test_collection__unit__name": _("Unit"),
+        "unit_test_collection__frequency__name": _("Frequency"),
+        "created_by__username": _("Created By"),
+    }
+
+    search_fields = {
+        "actions": False,
+        "pass_fail": False,
+        "review_status": False,
+        "bulk_review_status": False,
+        "selected": False,
+    }
+
+    order_fields = {
+        "actions": False,
+        "unit_test_collection__unit__name": "unit_test_collection__unit__number",
+        "unit_test_collection__frequency__name": "unit_test_collection__frequency__nominal_interval",
+        "review_status": False,
+        "pass_fail": False,
+        "bulk_review_status": False,
+        "selected": False,
+    }
+
     permission_required = "qa.can_review"
     raise_exception = True
 
+    @classmethod
+    def _status_select(cls, header=False):
+        return get_template("qa/_testinstancestatus_select.html").render({
+            'name': 'bulk-status' if header else '',
+            'statuses': models.TestInstanceStatus.objects.all(),
+            'class': 'input-medium' + (' bulk-status' if header else ''),
+        })
+
+    def selected(self, obj):
+        return '<input type="checkbox" class="test-selected" checked />'
+
+    def bulk_review_status(self, obj):
+        if not hasattr(self, "_bulk_review"):
+            self._bulk_review = self._status_select()
+
+        return self._bulk_review
+
     def get_queryset(self):
         return models.TestListInstance.objects.unreviewed()
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['bulk_review'] = settings.BULK_REVIEW
+        return context
 
     def get_page_title(self):
         return _("Unreviewed Test List Instances")

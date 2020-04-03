@@ -1,0 +1,10 @@
+{% load i18n %}
+<div class="review-status">
+  <select id="{{ id }}" name="{{ name }}" class="{{ class }}">
+    <option value="" selected="selected">---</option>
+    {% for status in statuses %}
+      <option title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}" value="{{status.pk}}">{{status.name}}</option>
+    {% endfor %}
+  </select>
+
+</div>
