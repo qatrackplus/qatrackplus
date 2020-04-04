@@ -22,26 +22,7 @@
 {% endblock %}
 
 {% block require_javascript %}
-  require(['listable'], function(){
-    {% if bulk_review %}
-      $(".test-selected-toggle").eq(0).hide();
-      $(".bulk-status").eq(0).parent().html("Bulk Review");
-      $(".bulk-status").eq(0).parent().parent().css("color", "black");
-      $(".bulk-review-all").eq(0).hide();
-
-      //(de)select checkboxes for child tests when user clicks on header checkbox
-      $("input.test-selected-toggle").on("change", function (e) {
-          $(this).closest("table").find("input.test-selected").prop("checked", $(this).is(":checked"));
-      });
-
-      $(".bulk-status").on('change', function () {
-          var val = $(this).val();
-          $(".bulk-status").not($(this)).val(val);
-          $("input.test-selected:checked").parents("tr").find("select").val(val);
-          return false;
-      });
-    {% endif %}
-  });
+  require(['listable'{% if bulk_review %}, 'qabulkreview'{% endif %}]);
 {% endblock require_javascript %}
 
 {% block body %}
@@ -91,29 +72,31 @@
       <div class="modal-body">
         <div class="row">
           <div class="col-sm-12">
+            <p>{% trans "You are about to update the review status for all test instances in the following test list instances:" %}</p>
             <form class="form">
               <div class="form-group">
                 <table id="instance-summary" class="table table-bordered table-striped table-condensed fixed">
                   <thead>
                     <tr>
-                      <th>{% trans "Username" %}</th>
-                      <th>{% trans "First Name" %}</th>
-                      <th>{% trans "Last Name" %}</th>
+                      <th>{% trans "Test List" %}</th>
+                      <th>{% trans "Unit" %}</th>
+                      <th>{% trans "# of Test List Instances" %}</th>
+                      <th>{% trans "Status" %}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr></tr>
                   </tbody>
                 </table>
               </div>
-              <p id="group-add-msg"></p>
+              <p id="bulk-review-msg"></p>
             </form>
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Cancel" %}</button>
-        <button id="confirm-update" type="button" class="btn btn-primary">{% trans "Confirm" %}</button>
+        <a id="confirm-update" type="button" class="btn btn-primary">{% trans "Confirm" %}</a>
+        {% csrf_token %}
       </div>
     </div>
   </div>

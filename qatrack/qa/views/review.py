@@ -6,12 +6,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.db.transaction import atomic
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import (
@@ -212,6 +212,58 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         return context
 
 
+def review_test_list_instance(test_list_instance, test_instances, statuses, review_user):
+
+    review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
+
+    initially_requires_reviewed = not test_list_instance.all_reviewed
+    test_list_instance.reviewed = review_time
+    test_list_instance.reviewed_by = review_user
+    test_list_instance.all_reviewed = True
+    test_list_instance.save()
+
+    # note we are not calling if formset.is_valid() here since we assume
+    # validity given we are only changing the status of the test_instances.
+    # Also, we are not cleaning the data since a 500 will be raised if
+    # something other than a valid int is passed for the status.
+    #
+    # If you add something here be very careful to check that the data
+    # is clean before updating the db
+
+    # for efficiency update statuses in bulk rather than test by test basis
+    status_groups = collections.defaultdict(list)
+    for instance, status_pk in zip(test_instances, statuses):
+        status_groups[status_pk].append(instance.pk)
+
+    still_requires_review = False
+    for status_pk, test_instance_pks in list(status_groups.items()):
+        status = models.TestInstanceStatus.objects.get(pk=status_pk)
+        if status.requires_review:
+            still_requires_review = True
+        models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
+
+    # Handle Service Log items:
+    #
+    #    Change status of service events with status__requires_review = False to have default status if this
+    #    test_list still requires approval.
+    #
+    #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
+
+    if still_requires_review:
+        test_list_instance.all_reviewed = False
+        test_list_instance.save()
+
+        if settings.USE_SERVICE_LOG:
+            test_list_instance.update_service_event_statuses()
+
+    if settings.USE_SERVICE_LOG and initially_requires_reviewed != still_requires_review:
+        for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
+            ServiceLog.objects.log_rtsqa_changes(review_user, se)
+
+    # Set utc due dates
+    test_list_instance.unit_test_collection.set_due_date()
+
+
 class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
     """
     This view is for deleting a :model:`qa.TestListInstance`
@@ -366,11 +418,13 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "review_status",
         "pass_fail",
         "bulk_review_status",
-        "selected",
+        # "selected",
     )
 
     headers = {
-        "selected": mark_safe('<input type="checkbox" class="test-selected-toggle" checked title="%s"/>' % _("Select All")),
+        # "selected": mark_safe(
+        #    '<input type="checkbox" class="test-selected-toggle" checked title="%s"/>' % _("Select All")
+        # ),
         "bulk_review_status": lambda: Unreviewed._status_select(header=True),
         "unit_test_collection__unit__name": _("Unit"),
         "unit_test_collection__frequency__name": _("Frequency"),
@@ -382,7 +436,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "pass_fail": False,
         "review_status": False,
         "bulk_review_status": False,
-        "selected": False,
+        # "selected": False,
     }
 
     order_fields = {
@@ -392,7 +446,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "review_status": False,
         "pass_fail": False,
         "bulk_review_status": False,
-        "selected": False,
+        # "selected": False,
     }
 
     permission_required = "qa.can_review"
@@ -413,7 +467,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         if not hasattr(self, "_bulk_review"):
             self._bulk_review = self._status_select()
 
-        return self._bulk_review
+        return self._bulk_review.replace(":TLI_ID:", str(obj.pk))
 
     def get_queryset(self):
         return models.TestListInstance.objects.unreviewed()
@@ -425,6 +479,23 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
     def get_page_title(self):
         return _("Unreviewed Test List Instances")
+
+
+@atomic
+def bulk_review(request):
+
+    count = 0
+    for pairs in request.POST.getlist('tlis'):
+        status, tli = pairs.split(",")
+        tli = models.TestListInstance.objects.get(pk=tli)
+        test_instances = tli.testinstance_set.all()
+        statuses = [status] * len(test_instances)
+        review_test_list_instance(tli, test_instances, statuses, request.user)
+        count += 1
+
+    msg = _("Successfully reviewed %(count)s test list instances") % {'count': count}
+    messages.add_message(request=request, message=msg, level=messages.SUCCESS)
+    return JsonResponse({"ok": True})
 
 
 class UnreviewedVisibleTo(Unreviewed):

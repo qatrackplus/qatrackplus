@@ -87,6 +87,7 @@ require.config({
         qacharts: siteConfig.STATIC_URL + 'qa/js/qacharts',
         qautils: siteConfig.STATIC_URL + 'qa/js/qautils',
         qareview: siteConfig.STATIC_URL + 'qa/js/qareview',
+        qabulkreview: siteConfig.STATIC_URL + 'qa/js/qabulkreview',
         qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview',
 
         // unit module:
