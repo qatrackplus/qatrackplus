@@ -114,7 +114,7 @@ require(['jquery', 'lodash'], function ($, _) {
 
         $.ajax({
             type:"POST",
-            url: '{% url "qa-bulk-review" %}',
+            url: '/qc/session/review/bulk/',
             data: data,
             dataType:"json",
             success: function (result) {

@@ -750,3 +750,30 @@ class TestPerformQC(BaseQATests):
         self.click("save-se")
         time.sleep(0.2)
         assert models.TestListInstance.objects.first().serviceevents_initiated.count() == 1
+
+
+@pytest.mark.selenium
+class TestReviewQC(BaseQATests):
+
+    def setUp(self):
+
+        super().setUp()
+
+        self.unreviewed = utils.create_status(name="Unreviewed", slug="unreviewed")
+        self.reviewed = utils.create_status(name="Approved", slug="approved", is_default=False, requires_review=False)
+        utils.create_test_instance()
+
+        self.url = "/qc/session/unreviewed/"
+
+    @override_settings(BULK_REVIEW=True)
+    def test_review_ok(self):
+        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        self.login()
+        self.open(self.url)
+        self.select_by_text("bulk-status", "Approved")
+        self.click("submit-review")
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+
+        self.click("confirm-update")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        assert models.TestListInstance.objects.unreviewed().count() == 0

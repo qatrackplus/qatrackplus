@@ -456,6 +456,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
     def _status_select(cls, header=False):
         return get_template("qa/_testinstancestatus_select.html").render({
             'name': 'bulk-status' if header else '',
+            'id': 'bulk-status' if header else '',
             'statuses': models.TestInstanceStatus.objects.all(),
             'class': 'input-medium' + (' bulk-status' if header else ''),
         })
