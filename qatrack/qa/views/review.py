@@ -423,16 +423,11 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
     )
 
     headers = {
-        "selected":
-            mark_safe('<input type="checkbox" class="test-selected-toggle" checked title="%s"/>' % _("Select All")),
-        "bulk_review_status":
-            lambda: Unreviewed._status_select(header=True),
-        "unit_test_collection__unit__name":
-            _("Unit"),
-        "unit_test_collection__frequency__name":
-            _("Frequency"),
-        "created_by__username":
-            _("Created By"),
+        "selected": mark_safe('<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")),
+        "bulk_review_status": lambda: Unreviewed._status_select(header=True),
+        "unit_test_collection__unit__name": _("Unit"),
+        "unit_test_collection__frequency__name": _("Frequency"),
+        "created_by__username": _("Created By"),
     }
 
     search_fields = {
@@ -472,7 +467,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         })
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" checked title="%s"/>' % _(
+        return '<input type="checkbox" class="test-selected" title="%s"/>' % _(
             "Check to include this test list instance when bulk setting approval statuses"
         )
 
