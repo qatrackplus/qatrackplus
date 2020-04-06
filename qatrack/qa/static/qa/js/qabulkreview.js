@@ -41,21 +41,18 @@ require(['jquery', 'lodash'], function ($, _) {
     $(".bulk-status").eq(0).parent().parent().css("color", "black");
     $(".bulk-review-all").eq(0).hide();
 
-    /*
     $("input.test-selected-toggle").on("change", function (e) {
         $(this).closest("table").find("input.test-selected").prop("checked", $(this).is(":checked"));
     });
-    */
 
     $(".bulk-status").on('change', function () {
         var val = $(this).val();
         $(".bulk-status").not($(this)).val(val);
-        $("#listable-table-unreviewed tbody tr td select").val(val);
-        /*
+
         if (val !== ""){
             $("input.test-selected:checked").parents("tr").find("select").val(val);
         }
-        */
+
         return false;
     });
 

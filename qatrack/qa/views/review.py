@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import (
@@ -418,17 +419,20 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "review_status",
         "pass_fail",
         "bulk_review_status",
-        # "selected",
+        "selected",
     )
 
     headers = {
-        # "selected": mark_safe(
-        #    '<input type="checkbox" class="test-selected-toggle" checked title="%s"/>' % _("Select All")
-        # ),
-        "bulk_review_status": lambda: Unreviewed._status_select(header=True),
-        "unit_test_collection__unit__name": _("Unit"),
-        "unit_test_collection__frequency__name": _("Frequency"),
-        "created_by__username": _("Created By"),
+        "selected":
+            mark_safe('<input type="checkbox" class="test-selected-toggle" checked title="%s"/>' % _("Select All")),
+        "bulk_review_status":
+            lambda: Unreviewed._status_select(header=True),
+        "unit_test_collection__unit__name":
+            _("Unit"),
+        "unit_test_collection__frequency__name":
+            _("Frequency"),
+        "created_by__username":
+            _("Created By"),
     }
 
     search_fields = {
@@ -436,7 +440,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "pass_fail": False,
         "review_status": False,
         "bulk_review_status": False,
-        # "selected": False,
+        "selected": False,
     }
 
     order_fields = {
@@ -446,7 +450,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "review_status": False,
         "pass_fail": False,
         "bulk_review_status": False,
-        # "selected": False,
+        "selected": False,
     }
 
     permission_required = "qa.can_review"
@@ -454,15 +458,23 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
     @classmethod
     def _status_select(cls, header=False):
+        if header:
+            title = _("Select the review status to apply to all currently selected test instance rows")
+        else:
+            title = _("Select the review status to apply to this row")
+
         return get_template("qa/_testinstancestatus_select.html").render({
             'name': 'bulk-status' if header else '',
             'id': 'bulk-status' if header else '',
             'statuses': models.TestInstanceStatus.objects.all(),
             'class': 'input-medium' + (' bulk-status' if header else ''),
+            'title': title,
         })
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" checked />'
+        return '<input type="checkbox" class="test-selected" checked title="%s"/>' % _(
+            "Check to include this test list instance when bulk setting approval statuses"
+        )
 
     def bulk_review_status(self, obj):
         if not hasattr(self, "_bulk_review"):
