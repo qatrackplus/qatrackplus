@@ -3,6 +3,7 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
 
         //(de)select checkboxes for child tests when user clicks on header checkbox
         $("input.test-selected-toggle").on("change", function (e) {
+            $("input.test-selected-toggle").not($(this)).prop("checked", $(this).is(":checked"));
             $(this).closest("table").find("input.test-selected").prop("checked", $(this).is(":checked"));
         });
 

@@ -42,6 +42,7 @@ require(['jquery', 'lodash'], function ($, _) {
     $(".bulk-review-all").eq(0).hide();
 
     $("input.test-selected-toggle").on("change", function (e) {
+        $("input.test-selected-toggle").not($(this)).prop("checked", $(this).is(":checked"));
         $(this).closest("table").find("input.test-selected").prop("checked", $(this).is(":checked"));
     });
 
