@@ -765,7 +765,7 @@ class TestReviewQC(BaseQATests):
 
         self.url = "/qc/session/unreviewed/"
 
-    @override_settings(BULK_REVIEW=True)
+    @override_settings(REVIEW_BULK=True)
     def test_review_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
         self.login()

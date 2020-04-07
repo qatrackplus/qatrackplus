@@ -373,6 +373,15 @@ Set `REVIEW_DIFF_COL = True` to include a difference column when reviewing test
 list results. This column shows the difference between a test value and its
 reference value.
 
+.. _review_bulk:
+
+REVIEW_BULK
+...........
+
+Set `REVIEW_BULK = True` to enable the :ref:`Bulk Review <qa_perform_bulk_review>` 
+feature which allows users to update the review and approval status of multiple
+test list instances at the same time.
+
 
 .. _setting_sl_allow_blank_service_area:
 

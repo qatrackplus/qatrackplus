@@ -418,13 +418,9 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "created_by__username",
         "review_status",
         "pass_fail",
-        "bulk_review_status",
-        "selected",
     )
 
     headers = {
-        "selected": mark_safe('<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")),
-        "bulk_review_status": lambda: Unreviewed._status_select(header=True),
         "unit_test_collection__unit__name": _("Unit"),
         "unit_test_collection__frequency__name": _("Frequency"),
         "created_by__username": _("Created By"),
@@ -435,7 +431,6 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "pass_fail": False,
         "review_status": False,
         "bulk_review_status": False,
-        "selected": False,
     }
 
     order_fields = {
@@ -447,6 +442,15 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "bulk_review_status": False,
         "selected": False,
     }
+
+    if settings.REVIEW_BULK:
+        fields = fields + ("bulk_review_status", "selected")
+        headers["selected"] = mark_safe(
+            '<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")
+        )
+        headers["bulk_review_status"] = lambda: Unreviewed._status_select(header=True)
+        search_fields["selected"] = False
+        order_fields["selected"] = False
 
     permission_required = "qa.can_review"
     raise_exception = True
@@ -482,7 +486,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['bulk_review'] = settings.BULK_REVIEW
+        context['bulk_review'] = settings.REVIEW_BULK
         return context
 
     def get_page_title(self):
