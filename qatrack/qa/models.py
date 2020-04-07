@@ -1410,6 +1410,7 @@ class TestList(TestCollectionInterface, TestPackMixin):
         "TestList",
         help_text=_l("Which test lists does this list contain"),
         through="Sublist",
+        blank=True,
     )
 
     warning_message = models.CharField(

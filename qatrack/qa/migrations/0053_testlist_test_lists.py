@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='testlist',
             name='test_lists',
-            field=models.ManyToManyField(help_text='Which test lists does this list contain', through='qa.Sublist', to='qa.TestList'),
+            field=models.ManyToManyField(blank=True, help_text='Which test lists does this list contain', through='qa.Sublist', to='qa.TestList'),
         ),
     ]
