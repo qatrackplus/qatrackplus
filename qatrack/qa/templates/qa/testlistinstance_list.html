@@ -37,7 +37,7 @@
       <div class="box-body pad">
         {{ listable_table }}
 
-        {% if perms.qa.can_review %}
+        {% if perms.qa.can_review and bulk_review %}
           <div class="row pad"></div>
           <div class="row">
             <div class="col-sm-12">
@@ -61,7 +61,7 @@
     </div>
   </div>
 </div>
-
+{% if bulk_review %}
 <div id="bulk-review-modal" class="modal fade" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -101,6 +101,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 {% endblock body %}
 
