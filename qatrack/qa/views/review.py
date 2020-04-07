@@ -124,15 +124,9 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context = self.get_context_data()
         formset = context["formset"]
 
-        review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
-        review_user = self.request.user
-
         test_list_instance = form.save(commit=False)
-        initially_requires_reviewed = not test_list_instance.all_reviewed
-        test_list_instance.reviewed = review_time
-        test_list_instance.reviewed_by = review_user
-        test_list_instance.all_reviewed = True
-        test_list_instance.save()
+        statuses = []
+        test_instances = []
 
         # note we are not calling if formset.is_valid() here since we assume
         # validity given we are only changing the status of the test_instances.
@@ -141,47 +135,22 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         #
         # If you add something here be very careful to check that the data
         # is clean before updating the db
-
-        # for efficiency update statuses in bulk rather than test by test basis
-        status_groups = collections.defaultdict(list)
         for ti_form in formset:
             status_pk = int(ti_form["status"].value())
-            status_groups[status_pk].append(ti_form.instance.pk)
+            statuses.append(status_pk)
+            test_instances.append(ti_form.instance)
 
-        still_requires_review = False
-        for status_pk, test_instance_pks in list(status_groups.items()):
-            status = models.TestInstanceStatus.objects.get(pk=status_pk)
-            if status.requires_review:
-                still_requires_review = True
-            models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
+        changed_se = review_test_list_instance(test_list_instance, test_instances, statuses, self.request.user)
 
-        # Handle Service Log items:
-        #
-        #    Change status of service events with status__requires_review = False to have default status if this
-        #    test_list still requires approval.
-        #
-        #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
-
-        if still_requires_review:
-            test_list_instance.all_reviewed = False
-            test_list_instance.save()
-
-            if settings.USE_SERVICE_LOG:
-                changed_se = test_list_instance.update_service_event_statuses()
-                if len(changed_se) > 0 and self.from_se:
-                    msg = _(
-                        'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-                    ) % {
-                        'service_event_ids': ', '.join(str(x) for x in changed_se),
-                        'serviceeventstatus_name': ServiceEventStatus.get_default().name,
-                    }
-                    messages.add_message(request=self.request, level=messages.INFO, message=msg)
-        if settings.USE_SERVICE_LOG and initially_requires_reviewed != still_requires_review:
-            for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
-                ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
-
-        # Set utc due dates
-        test_list_instance.unit_test_collection.set_due_date()
+        if settings.USE_SERVICE_LOG:
+            if len(changed_se) > 0 and self.from_se:
+                msg = _(
+                    'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+                ) % {
+                    'service_event_ids': ', '.join(str(x) for x in changed_se),
+                    'serviceeventstatus_name': ServiceEventStatus.get_default().name,
+                }
+                messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
         if self.from_se:
             return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
@@ -213,7 +182,19 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         return context
 
 
-def review_test_list_instance(test_list_instance, test_instances, statuses, review_user):
+@atomic
+def review_test_list_instance(test_list_instance, test_instances, status_pks, review_user):
+    """Common code for reviewing test list instances from the ReviewTestListInstance and
+    bulk_review views.
+
+    test_list_instance is the TLI to be reviewed
+
+    test_instances is the set of test_instances belonging to test_list_instance
+    status_pks is a list of status ids, the same length as test_instances, to be applied to each
+    of the corresponding test instances (i.e. the Nth status id will be applied to the Nth test instance.
+
+    review_user is the user who performed the review
+    """
 
     review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
 
@@ -223,17 +204,9 @@ def review_test_list_instance(test_list_instance, test_instances, statuses, revi
     test_list_instance.all_reviewed = True
     test_list_instance.save()
 
-    # note we are not calling if formset.is_valid() here since we assume
-    # validity given we are only changing the status of the test_instances.
-    # Also, we are not cleaning the data since a 500 will be raised if
-    # something other than a valid int is passed for the status.
-    #
-    # If you add something here be very careful to check that the data
-    # is clean before updating the db
-
     # for efficiency update statuses in bulk rather than test by test basis
     status_groups = collections.defaultdict(list)
-    for instance, status_pk in zip(test_instances, statuses):
+    for instance, status_pk in zip(test_instances, status_pks):
         status_groups[status_pk].append(instance.pk)
 
     still_requires_review = False
@@ -249,13 +222,13 @@ def review_test_list_instance(test_list_instance, test_instances, statuses, revi
     #    test_list still requires approval.
     #
     #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
-
+    changed_se = []
     if still_requires_review:
         test_list_instance.all_reviewed = False
         test_list_instance.save()
 
         if settings.USE_SERVICE_LOG:
-            test_list_instance.update_service_event_statuses()
+            changed_se = test_list_instance.update_service_event_statuses()
 
     if settings.USE_SERVICE_LOG and initially_requires_reviewed != still_requires_review:
         for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
@@ -263,6 +236,8 @@ def review_test_list_instance(test_list_instance, test_instances, statuses, revi
 
     # Set utc due dates
     test_list_instance.unit_test_collection.set_due_date()
+
+    return changed_se
 
 
 class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
@@ -402,10 +377,6 @@ class YourInactiveReview(UTCYourReview):
         return 'fa-file'
 
 
-def test():
-    return _("Bulk Review Status")
-
-
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
@@ -493,7 +464,6 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         return _("Unreviewed Test List Instances")
 
 
-@atomic
 def bulk_review(request):
 
     count = 0
