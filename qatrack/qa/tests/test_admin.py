@@ -779,7 +779,7 @@ class TestUnitTestInfoAdmin(TestCase):
     def test_form_valid(self):
         data = self.data
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         self.assertListEqual(
@@ -790,7 +790,7 @@ class TestUnitTestInfoAdmin(TestCase):
     def test_boolean(self):
 
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_2)
 
         self.assertListEqual(
@@ -804,7 +804,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
     def test_multi(self):
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_3)
 
         self.assertIsInstance(form.fields['reference_value'].widget, HiddenInput)
@@ -975,25 +975,25 @@ class TestUnitTestInfoAdmin(TestCase):
 
     def test_bad_multiple(self):
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(
             instance=self.uti_3
         )
         data = form.initial
         data['tolerance'] = self.tol_1.id
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_3, data=data)
         self.assertFalse(form.is_valid())
 
     def test_bad_percent_tol(self):
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_4)
         data = form.initial
         data['tolerance'] = self.tol_5.id
         data['reference_value'] = 0
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_4, data=data)
         self.assertFalse(form.is_valid())

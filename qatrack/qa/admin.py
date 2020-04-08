@@ -55,20 +55,24 @@ class CategoryAdmin(DjangoMpttAdmin):
     get_description.short_name = _l("Description")
 
 
-class TestInfoForm(forms.ModelForm):
+class UnitTestInfoForm(forms.ModelForm):
 
     reference_value = forms.FloatField(label=_("New reference value"), required=False,)
     reference_set_by = forms.CharField(label=_("Set by"), required=False)
     reference_set = forms.CharField(label=_("Date"), required=False)
     test_type = forms.CharField(required=False)
-    comment = forms.CharField(widget=forms.Textarea, required=False)
+    comment = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        help_text=_("Include an optional comment about why this reference/tolerance is being updated")
+    )
 
     class Meta:
         model = models.UnitTestInfo
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        super(TestInfoForm, self).__init__(*args, **kwargs)
+        super(UnitTestInfoForm, self).__init__(*args, **kwargs)
         readonly = ("test_type", "reference_set_by", "reference_set",)
 
         self.fields['tolerance'].empty_label = _("No Tolerance Set")
@@ -173,6 +177,11 @@ class SetMultipleReferencesAndTolerancesForm(forms.Form):
         empty_label=_("No Tolerance Set"),
     )
     reference = forms.CharField(max_length=255, required=False)
+    comment = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        help_text=_("Include an optional comment about why these references/tolerances are being updated")
+    )
 
 
 # see http://stackoverflow.com/questions/851636/default-filter-in-django-admin
@@ -218,7 +227,7 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
     )
 
     actions = ['set_multiple_references_and_tolerances']
-    form = TestInfoForm
+    form = UnitTestInfoForm
     # model = models.UnitTestInfo
     fields = (
         "unit",
@@ -283,6 +292,7 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
             # Save the uti with the new references and tolerance
             # TODO: Combine with save method: save_model ?
             for uti in queryset:
+                old = models.UnitTestInfo.objects.get(pk=uti.pk)
                 if uti.test.type != models.MULTIPLE_CHOICE:
                     if uti.test.type == models.BOOLEAN:
                         ref_type = models.BOOLEAN
@@ -309,6 +319,17 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
                     else:
                         uti.reference = None
                 uti.tolerance = tolerance
+
+                models.UnitTestInfoChange.objects.create(
+                    unit_test_info=old,
+                    comment=form.cleaned_data["comment"],
+                    reference=old.reference,
+                    reference_changed=old.reference != uti.reference,
+                    tolerance=old.tolerance,
+                    tolerance_changed=old.tolerance != uti.tolerance,
+                    changed_by=request.user,
+                )
+
                 uti.save()
 
             messages.success(request, "%s tolerances and references have been saved successfully." % queryset.count())
@@ -368,6 +389,13 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
                 'queryset': queryset,
                 'form': form,
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+                'opts': models.UnitTestInfo._meta,
+                'change': True,
+                'is_popup': False,
+                'save_as': False,
+                'has_delete_permission': False,
+                'has_add_permission': False,
+                'has_change_permission': False,
             }
             return render(request, 'admin/qa/unittestinfo/set_multiple_refs_and_tols.html', context)
     set_multiple_references_and_tolerances.short_description = _l("Set multiple references and tolerances")

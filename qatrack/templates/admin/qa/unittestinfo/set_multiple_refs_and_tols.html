@@ -1,4 +1,4 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/change_form.html" %}
 
 {% block content %}
 
@@ -6,7 +6,19 @@
 
 <form action="" method="post">{% csrf_token %}
 
-    {{ form.as_p }}
+    {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+    {% endfor %}
+
+    {% for field in form.visible_fields %}
+      <div class="fieldWrapper">
+          {{ field.errors }}
+          {{ field.label_tag }} {{ field }}
+          {% if field.help_text %}
+            <p class="help">{{ field.help_text|safe }}</p>
+          {% endif %}
+      </div>
+    {% endfor %}
 
     {% for obj in queryset %}
     <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}" />
