@@ -845,6 +845,9 @@ class ChooseUnit(TemplateView):
 
         units_ordering = 'unit__%s' % (settings.ORDER_UNITS_BY,)
 
+        units_with_adhoc = set(q.filter(frequency=None).values_list("unit__number", flat=True).distinct())
+        context['units_with_adhoc'] = units_with_adhoc
+
         if Site.objects.all().exists() and self.split_sites:
 
             unit_site_types = {}
