@@ -183,9 +183,10 @@ class ReturnToServiceQAForm(forms.ModelForm):
             if not uf_cache:
                 uf_cache = qa_models.UnitTestCollection.objects.filter(
                     unit=self.unit_field,
-                    active=True
+                    active=True,
                 ).order_by('name')
                 cache.set('active_unit_test_collections_for_unit_%s' % self.unit_field.id, uf_cache)
+
             self.fields['unit_test_collection'].queryset = uf_cache
 
             self.fields['unit_test_collection'].widget.attrs.update({
@@ -197,6 +198,16 @@ class ReturnToServiceQAForm(forms.ModelForm):
         if self.instance.test_list_instance:
             self.fields['unit_test_collection'].widget.attrs.update({'disabled': True})
             self.fields['unit_test_collection'].disabled = True
+            if not self.instance.test_list_instance.unit_test_collection.active:
+                # since our cached values only include  active test lists, we
+                # need to check if this completed returntoserviceqa object already
+                # refers to an inactive UTC. If so then we want to include the
+                # inactive UTC so it is actually displayed in the RTS QC
+                # section. We do that by ensuring the queryset includes both active/inactive test lists.
+                # See issue #427
+                utc_qs = self.fields['unit_test_collection'].queryset
+                self.fields['unit_test_collection'].queryset = utc_qs.filter(Q(active=True) | Q(active=False))
+
             self.initial['test_list_instance'] = self.instance.test_list_instance.id
             self.initial['all_reviewed'] = int(self.instance.test_list_instance.all_reviewed)
         else:
