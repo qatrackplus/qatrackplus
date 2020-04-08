@@ -85,6 +85,9 @@ Review & Approval
   to apply different AutoReviewRules to different tests. For more information
   see the :ref:`Auto Review page <qa_auto_review>`.
 
+* A new :ref:`Bulk Review `qa_perform_bulk_review>` feature has been added to
+  allow setting review & approval status for multiple test list instances at
+  the same time.
 
 * New management commands `review_all_unreviewed` and `clear_in_progress` have
   been added. `review_all_unreviewed` updates the status of all unreviewed test
