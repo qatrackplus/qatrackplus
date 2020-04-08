@@ -644,7 +644,12 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
+        context['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object).select_related(
+            "user",
+            "service_event",
+            "service_event__unit_service_area",
+            "service_event__unit_service_area__unit",
+        )
         return context
 
     def form_valid(self, form):
@@ -699,7 +704,12 @@ class DetailsServiceEvent(DetailView):
         context_data['request'] = self.request
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
 
-        context_data['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
+        context_data['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object).select_related(
+            "user",
+            "service_event",
+            "service_event__unit_service_area",
+            "service_event__unit_service_area__unit",
+        )
 
         return context_data
 
