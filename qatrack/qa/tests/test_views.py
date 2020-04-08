@@ -2095,7 +2095,7 @@ class TestPaperForms(TestCase):
         utcs = [self.utc, utc2]
         pf = qatrack.qa.views.backup.PaperForms()
         pf.categories = models.Category.objects.values_list("pk", flat=True)
-        pf.set_utc_all_lists(utcs)
+        pf.set_utc_all_lists(utcs, False)
         self.assertEqual(utcs[0].all_lists[0].utis[0].reference, ref1)
         self.assertEqual(utcs[1].all_lists[0].utis[0].reference, ref2)
 

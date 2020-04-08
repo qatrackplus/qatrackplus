@@ -53,6 +53,13 @@ class PaperBackupRequestForm(forms.Form):
         required=False,
     )
 
+    include_composites = forms.BooleanField(
+        label=_l("Include Calculations"),
+        help_text=_l("Include Calculated Test Types"),
+        initial=True,
+        required=False,
+    )
+
 
 class PaperFormRequest(FormView):
     """View for displaying paper backup options form"""
@@ -87,6 +94,7 @@ class PaperFormRequest(FormView):
             "assigned_to": form.cleaned_data["assigned_to"].values_list("pk", flat=True),
             "include_refs": form.cleaned_data["include_refs"],
             "include_inactive": form.cleaned_data["include_inactive"],
+            "include_composites": form.cleaned_data["include_composites"],
         }, doseq=True)
 
         return HttpResponseRedirect("%s?%s" % (reverse("qa_paper_forms"), q))
@@ -113,7 +121,7 @@ class PaperForms(ListView):
 
         return qs.select_related("unit").prefetch_related("tests_object")
 
-    def set_utc_all_lists(self, utcs):
+    def set_utc_all_lists(self, utcs, include_composites):
 
         for utc in utcs:
 
@@ -124,12 +132,12 @@ class PaperForms(ListView):
             for li in all_lists:
                 utis = models.UnitTestInfo.objects.filter(
                     test__in=li.all_tests,
-                    test__type__in=[
-                        models.BOOLEAN, models.SIMPLE, models.WRAPAROUND, models.MULTIPLE_CHOICE, models.STRING
-                    ],
                     test__category__pk__in=self.categories,
                     unit=utc.unit,
                 ).select_related("test", "reference", "tolerance")
+
+                if not include_composites:
+                    utis = utis.exclude(test__type__in=models.CALCULATED_TYPES)
 
                 li.utis = list(sorted(utis, key=lambda uti: li.all_tests.index(uti.test)))
 
@@ -144,5 +152,6 @@ class PaperForms(ListView):
         context = super(PaperForms, self).get_context_data(*args, **kwargs)
         context["include_refs"] = self.request.GET.get("include_refs", "True") != "False"
         self.categories = self.request.GET.getlist("category")
-        self.set_utc_all_lists(context['object_list'])
+        include_composites = self.request.GET.get("include_composites", "True") != "False"
+        self.set_utc_all_lists(context['object_list'], include_composites)
         return context
