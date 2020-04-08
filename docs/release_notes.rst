@@ -77,6 +77,13 @@ Tests & Test Lists
 * Setting the `Warning message` field to blank on a `TestList` will now prevent
   a warning message/banner from being shown when tests are at action level.
 
+* Calculated tests are now included in Paper Backup Forms by default
+
+* Frequency dropdown lists when choosing a unit to perform QC on will now only
+  show *Ad Hoc* if that unit has ad hoc test lists assigned
+
+* There are new Tree Views available (under the Perform QC menu) for
+  viewing/selecting QC assigned to units.  
 
 Review & Approval
 ^^^^^^^^^^^^^^^^^
@@ -138,6 +145,12 @@ Admin Changes
 * Inline links to edit and delete foreign key choices have been disabled in all
   QATrack+ admin models. Editing or deleting a foreign key object here has
   always been a poor workflow and can be confusing to users.
+
+* Setting multiple references & tolerances now allows removing tolerances.
+
+* Setting multiple references & tolerances will now include an entry in that
+  UnitTestInfo's change log
+
 
 
 API Changes
