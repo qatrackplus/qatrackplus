@@ -101,7 +101,7 @@ class UnitFormAdmin(ModelForm):
             unit = self.instance
 
             for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
-                if ServiceEvent.objects.filter(unit_service_area=usa).exists():
+                if ServiceEvent.all_objects.filter(unit_service_area=usa).exists():
                     data_copy = self.data.copy()
                     data_copy.setlist(
                         'service_areas',
