@@ -2,6 +2,8 @@
 {% load qa_tags %}
 {% load i18n %}
 
+{% block head_title %}{% trans "Paper Backup Forms" %}{% endblock %}
+
 {% block extra_css %}
     <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
     <link href="{{ STATIC_URL }}qa/css/backup.css?v={{VERSION}}" rel="stylesheet">
