@@ -740,7 +740,7 @@ class SiteTestListFilter(admin.SimpleListFilter):
     title = _l('Assigned to Site')
 
     # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'assignedtounit'
+    parameter_name = 'assignedtosite'
 
     def lookups(self, request, model_admin):
         return Site.objects.values_list("pk", "name")
