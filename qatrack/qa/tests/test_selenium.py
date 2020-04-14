@@ -770,6 +770,7 @@ class TestReviewQC(BaseQATests):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
         self.login()
         self.open(self.url)
+        time.sleep(0.1)
         self.driver.find_elements_by_class_name("test-selected-toggle")[0].click()
         self.select_by_text("bulk-status", "Approved")
         self.click("submit-review")
