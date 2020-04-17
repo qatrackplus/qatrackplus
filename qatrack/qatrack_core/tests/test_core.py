@@ -1,3 +1,4 @@
+import datetime
 import re
 
 from django.contrib.sites.models import Site
@@ -62,6 +63,17 @@ class TestJSONEncoder:
         df = pd.DataFrame(data=d)
         expected = {'col1': {0: 1, 1: 2}, 'col2': {0: 3, 1: 4}}
         assert enc.default(df) == expected
+
+    def test_datetime(self):
+        enc = QATrackJSONEncoder()
+        tz = pytz.timezone("America/Toronto")
+        dt = timezone.datetime(2020, 2, 29, 12, 34, 56, tzinfo=tz)
+        assert enc.default(dt) == "29 Feb 2020 12:34:56"
+
+    def test_date(self):
+        enc = QATrackJSONEncoder()
+        dt = datetime.date(2020, 2, 29)
+        assert enc.default(dt) == "29 Feb 2020"
 
 
 class TestRelativeDates:

@@ -1,3 +1,6 @@
+import datetime
+
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 import numpy as np
 
@@ -44,5 +47,15 @@ class QATrackJSONEncoder(DjangoJSONEncoder):
             method = getattr(o, m, None)
             if callable(method):
                 return method()
+
+        if isinstance(o, datetime.datetime):
+            r = o.strftime(settings.DATETIME_INPUT_FORMATS[1])
+            if o.microsecond:
+                r = r[:23] + r[26:]
+            if r.endswith('+00:00'):
+                r = r[:-6] + 'Z'
+            return r
+        elif isinstance(o, datetime.date):
+            return o.strftime(settings.DATE_INPUT_FORMATS[0])
 
         return super().default(o)
