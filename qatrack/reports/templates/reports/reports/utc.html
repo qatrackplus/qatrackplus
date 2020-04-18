@@ -124,7 +124,7 @@
 
     <div class="row">
       <div class="col-xs-12">
-        {% with borders=test_list_borders|lookup:tli.test_list.pk %}
+        {% with borders=tli.sublist_borders %}
           <table id="review-table" class="table table-bordered table-striped table-condensed" >
             <thead>
               <tr>

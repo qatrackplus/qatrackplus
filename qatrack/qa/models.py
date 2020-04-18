@@ -1470,47 +1470,11 @@ class TestList(TestCollectionInterface, TestPackMixin):
 
         return [t[1] for t in sorted(members.items())]
 
-    def sublist_borders(self, tests=None):
+    def sublist_borders(self):
         """Return indexes where visible marks should be shown for sublists
         with visibility enabled"""
 
-        if tests is None:
-            tests = self.ordered_tests()
-
-        n_total_tests = len(tests)
-        borders = {
-            'starts': {
-                0: {'class': 'first'},
-            },
-            'ends': {
-                (n_total_tests - 1): "__end__"
-            },
-        }
-        test_sub = {}
-        sub_test_count = {}
-        for sublist in self.get_children():
-            if not sublist.outline:
-                continue
-            stests = sublist.child.ordered_tests()
-            sub_test_count[sublist.pk] = len(stests)
-            for t in stests:
-                test_sub[t.pk] = sublist
-
-        processed_subs = set()
-        for i, test in enumerate(tests):
-            if test.pk in test_sub:
-                sublist = test_sub[test.pk]
-                if sublist.pk not in processed_subs:
-                    processed_subs.add(sublist.pk)
-                    borders['starts'][i] = {
-                        'class': 'sublist',
-                        'name': sublist.child.name,
-                        'description': sublist.child.description,
-                    }
-                    ntests = sub_test_count[sublist.pk]
-                    borders['ends'][i + ntests - 1] = True
-
-        return borders
+        return construct_sublist_borders(self, self.ordered_tests())
 
     @classmethod
     def get_testpack_fields(cls):
@@ -2399,6 +2363,12 @@ class TestListInstance(models.Model):
 
         return instances, dates
 
+    def sublist_borders(self):
+        tis = self.testinstance_set.select_related("unit_test_info__test").order_by("order")
+        tests = [ti.unit_test_info.test for ti in tis]
+        borders = construct_sublist_borders(self.test_list, tests)
+        return borders
+
     def get_absolute_url(self):
         return reverse("view_test_list_instance", kwargs={"pk": self.pk})
 
@@ -2597,3 +2567,67 @@ class TestListCycleMembership(models.Model):
 
     def __str__(self):
         return "TestListCycleMembership(pk=%s)" % self.pk
+
+
+def construct_sublist_borders(test_list, tests=None):
+    """
+
+    Return indexes where visible marks should be shown for sublists
+    with visibility enabled.
+
+    Note this is pretty hacky since the tests belonging to the test list
+    and sublists may have changed in the meantime.
+
+    """
+
+    borders = {
+        'starts': {
+            0: {'class': 'first'},
+        },
+        'ends': {
+            (len(tests) - 1): "__end__"
+        },
+    }
+
+    test_sublist = {}
+    for sublist in test_list.get_children():
+        test_sublist.update({t.pk: sublist for t in sublist.child.ordered_tests()})
+
+    current_sub_being_outlined = None
+
+    for i, test in enumerate(tests):
+        test_part_of_sublist = test.pk in test_sublist
+        if test_part_of_sublist:
+            sublist = test_sublist[test.pk]
+            if current_sub_being_outlined:
+                same_sublist = sublist == current_sub_being_outlined
+                if not same_sublist:
+                    borders['ends'][i - 1] = True
+                    if sublist.outline:
+                        current_sub_being_outlined = sublist
+                        borders['starts'][i] = {
+                            'class': 'sublist',
+                            'sublist': sublist.pk,
+                            'name': sublist.child.name,
+                            'description': sublist.child.description,
+                        }
+                    else:
+                        current_sub_being_outlined = False
+            else:
+                if sublist.outline:
+                    current_sub_being_outlined = sublist
+                    borders['starts'][i] = {
+                        'class': 'sublist',
+                        'sublist': sublist.pk,
+                        'name': sublist.child.name,
+                        'description': sublist.child.description,
+                    }
+                else:
+                    current_sub_being_outlined = None
+        elif current_sub_being_outlined:
+            borders['ends'][i-1] = True
+            current_sub_being_outlined = None
+
+    if current_sub_being_outlined:
+        borders['ends'][i] = True
+    return borders

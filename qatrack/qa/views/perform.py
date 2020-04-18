@@ -1262,7 +1262,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
-        context['borders'] = self.test_list.sublist_borders(self.all_tests)
+        context['borders'] = self.test_list.sublist_borders()
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:

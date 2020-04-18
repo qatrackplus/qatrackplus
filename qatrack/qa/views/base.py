@@ -77,6 +77,7 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
         "testinstance_set__reference",
         "testinstance_set__tolerance",
         "testinstance_set__status",
+        "testinstance_set__attachment_set",
     ]
     select_related = [
         "unit_test_collection",
@@ -115,6 +116,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             "unit_test_info__unit",
         ).prefetch_related(
             "unit_test_info__test__attachment_set",
+            "attachment_set",
         )
 
         if self.request.method == "POST":
@@ -142,8 +144,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
 
-        tests = [t.unit_test_info.test for t in test_instances]
-        context['borders'] = self.object.test_list.sublist_borders(tests)
+        context['borders'] = self.object.test_list.sublist_borders()
 
         context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
 

@@ -532,7 +532,7 @@ class UTCReport(BaseReport):
             "unit_test_collection__content_type",
         ).prefetch_related(
             "comments",
-            Prefetch("testinstance_set", queryset=models.TestInstance.objects.order_by("created")),
+            Prefetch("testinstance_set", queryset=models.TestInstance.objects.order_by("order")),
             "testinstance_set__unit_test_info__test",
             "testinstance_set__reference",
             "testinstance_set__tolerance",

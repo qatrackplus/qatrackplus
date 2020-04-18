@@ -63,7 +63,7 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
         se_ib = ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
         context['service_events_ib'] = se_ib
         self.all_tests = self.object.test_list.ordered_tests()
-        context['borders'] = self.object.test_list.sublist_borders(self.all_tests)
+        context['borders'] = self.object.sublist_borders()
 
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
@@ -170,8 +170,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 se.append(f.service_event)
 
         context['service_events'] = se
-        tests = [f.instance.unit_test_info.test for f in context['formset']]
-        context['borders'] = self.object.test_list.sublist_borders(tests)
+        context['borders'] = self.object.sublist_borders()
         context['cycle_ct'] = ContentType.objects.get_for_model(models.TestListCycle).id
 
         self.rtsqa_form = self.kwargs.get('rtsqa_form')
