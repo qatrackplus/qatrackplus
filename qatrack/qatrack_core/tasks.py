@@ -2,9 +2,8 @@ from functools import wraps
 import logging
 import os
 
-
 from django.conf import settings
-from django.db import connection, ProgrammingError
+from django.db import ProgrammingError, connection
 from django.utils import timezone
 from django_q.models import Schedule
 from django_q.tasks import schedule
@@ -12,6 +11,7 @@ from django_q.tasks import schedule
 from qatrack.qatrack_core.utils import today_start_end
 
 logger = logging.getLogger('qatrack')
+
 
 def qatrack_task_wrapper(func):
     @wraps(func)
@@ -23,6 +23,7 @@ def qatrack_task_wrapper(func):
                 connection.connect()
         return func(*args, **kwargs)
     return wrapped
+
 
 def _schedule_periodic_task(function, task_name, interval_min=15):
     """Create a periodic schedule calling input function.  Default interval is 15min"""

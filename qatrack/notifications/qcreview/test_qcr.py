@@ -248,7 +248,7 @@ class TestQCReviewEmails(TestCase):
     def test_run_review_notices(self):
 
         self.notice.recurrences = recurrence.Recurrence(rrules=[recurrence.Rule(recurrence.DAILY)])
-        self.notice.time = (timezone.datetime.now() + timezone.timedelta(minutes=1)).time()
+        self.notice.time = (timezone.localtime(timezone.now()) + timezone.timedelta(minutes=1)).time()
         self.notice.save()
         tasks.run_review_notices()
         assert Schedule.objects.count() == 1
