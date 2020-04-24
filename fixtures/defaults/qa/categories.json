@@ -4,7 +4,12 @@
     "fields": {
         "name": "Dosimetry",
         "slug": "dosimetry",
-        "description": "Dosimetry"
+        "description": "Dosimetry",
+        "parent": null,
+        "lft": 1,
+        "rght": 2,
+        "tree_id": 1,
+        "level": 0
     }
 },
 {
@@ -12,7 +17,12 @@
     "fields": {
         "name": "Mechanical and safety",
         "slug": "mechanical-and-safety",
-        "description": "Mechanical & Safety"
+        "description": "Mechanical & Safety",
+        "parent": null,
+        "lft": 1,
+        "rght": 2,
+        "tree_id": 2,
+        "level": 0
     }
 }
 ]
