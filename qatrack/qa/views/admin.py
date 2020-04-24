@@ -20,7 +20,7 @@ from qatrack.qa.testpack import add_testpack, create_testpack
 logger = logging.getLogger('qatrack')
 
 
-class SetReferencesAndTolerancesForm(forms.Form):
+class CopyReferencesAndTolerancesForm(forms.Form):
     """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
 
     source_unit = forms.ModelChoiceField(
@@ -49,7 +49,7 @@ class SetReferencesAndTolerancesForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
 
-        super(SetReferencesAndTolerancesForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
         testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
@@ -72,15 +72,15 @@ class SetReferencesAndTolerancesForm(forms.Form):
         source_utc.copy_references(dest_unit)
 
 
-class SetReferencesAndTolerances(FormPreview):
+class CopyReferencesAndTolerances(FormPreview):
 
-    form_template = 'admin/unittestinfo_copy_refs_and_tols.html'
-    preview_template = 'admin/unittestinfo_copy_refs_and_tols_preview.html'
+    form_template = 'admin/qa/unittestinfo/copy_refs_and_tols.html'
+    preview_template = 'admin/qa/unittestinfo/copy_refs_and_tols_preview.html'
 
     def get_context(self, request, form):
 
-        context = super(SetReferencesAndTolerances, self).get_context(request, form)
-        context['title'] = _("Set References & Tolerances")
+        context = super().get_context(request, form)
+        context['title'] = _("Copy References & Tolerances")
         if not request.POST:
             return context
 
@@ -121,7 +121,7 @@ class SetReferencesAndTolerances(FormPreview):
         if 'cancel' in request.POST:
             messages.warning(request, _("Copy references & tolerances cancelled"))
         else:
-            form = SetReferencesAndTolerancesForm(request.POST)
+            form = CopyReferencesAndTolerancesForm(request.POST)
             form.full_clean()
             form.save()
 
@@ -201,7 +201,7 @@ class ExportTestPack(FormView):
 
     def get_context_data(self, **kwargs):
 
-        context = super(ExportTestPack, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['title'] = _("Export Test Pack")
 
         context['cycles'] = models.TestListCycle.objects.all()
@@ -263,7 +263,7 @@ class ImportTestPack(FormView):
 
     def get_context_data(self, **kwargs):
 
-        context = super(ImportTestPack, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['title'] = _("Import Test Pack")
         context['test_types'] = json.dumps(dict(models.TEST_TYPE_CHOICES))
 
@@ -314,7 +314,7 @@ class ImportTestPack(FormView):
             logger.exception(msg)
             messages.error(self.request, msg)
 
-        return super(ImportTestPack, self).form_valid(form)
+        return super().form_valid(form)
 
 
 def recurrence_examples(request):

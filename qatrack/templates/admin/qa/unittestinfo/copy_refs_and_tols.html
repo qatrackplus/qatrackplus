@@ -1,12 +1,21 @@
 {% extends "admin/base_site.html" %}
 {% load static %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='qa' %}">{% trans "QC" %}</a> &rsaquo;
+    {% trans "Copy References & Tolerances" %}
+  </div>
+{% endblock %}
 
 {% block content %}
-<p>Select the source unit and test list (or test list cycle) and destination units.</p>
+<p>{% trans "Select the source unit and test list (or test list cycle) and destination units." %}</p>
 
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}
-    <input type="submit" value="Copy references and tolerances" />
+    <input type="submit" value="{% trans "Copy references and tolerances" %}" />
 </form>
 
 <script type="text/javascript">

@@ -9,7 +9,7 @@ urlpatterns = [
     # Copy references and tolerances between testlists
     url(
         r'^admin/copy_refs_and_tols/$',
-        admin.SetReferencesAndTolerances(admin.SetReferencesAndTolerancesForm),
+        admin.CopyReferencesAndTolerances(admin.CopyReferencesAndTolerancesForm),
         name="qa_copy_refs_and_tols"
     ),
     url(
