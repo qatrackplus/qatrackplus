@@ -71,6 +71,9 @@ class BaseTree:
         text = '<a href="%s?next=%s" title="%s">%s <i class="fa fa-list"></i></a>' % (href, next_, title, utc_name)
         return text
 
+    def setup_qs(self):
+        raise NotImplementedError("setup_qs must be defined in your subclass")
+
 
 class BootstrapCategoryTree(BaseTree):
 
@@ -155,10 +158,7 @@ class BootstrapCategoryTree(BaseTree):
             ),
         ).order_by(
             "unit__site__name",
-            "unit__type__vendor__name",
             "unit__type__unit_class__name",
-            "unit__type__name",
-            "unit__type__model",
             "unit__%s" % settings.ORDER_UNITS_BY,
             "frequency__nominal_interval",
             "cat_tree_id",
@@ -229,7 +229,7 @@ class BootstrapCategoryTree(BaseTree):
 
             try:
                 self.cat_name_to_id[cat_name]
-            except KeyError:
+            except KeyError:  # pragma: nocov
                 # handle case where no categories exist
                 continue
 
@@ -252,7 +252,7 @@ class BootstrapCategoryTree(BaseTree):
         return tree
 
     def unit_category_text(self, unit_number, category_id):
-        if not category_id:
+        if not category_id:  # pragma: nocov
             return _("No categories defined")
 
         cat = self.all_cats[category_id]
@@ -274,10 +274,7 @@ class BootstrapFrequencyTree(BaseTree):
             active=True,
         ).order_by(
             "unit__site__name",
-            "unit__type__vendor__name",
             "unit__type__unit_class__name",
-            "unit__type__name",
-            "unit__type__model",
             "unit__%s" % settings.ORDER_UNITS_BY,
             "frequency__nominal_interval",
             "name",

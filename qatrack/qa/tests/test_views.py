@@ -18,7 +18,7 @@ from django_comments.models import Comment
 from freezegun import freeze_time
 
 from qatrack.attachments.models import Attachment
-from qatrack.qa import models, views
+from qatrack.qa import models, trees, views
 from qatrack.qa.views import forms
 import qatrack.qa.views.backup
 import qatrack.qa.views.base
@@ -26,6 +26,7 @@ import qatrack.qa.views.charts
 import qatrack.qa.views.perform
 import qatrack.qa.views.review
 from qatrack.qatrack_core.utils import format_as_date
+import qatrack.units.models as umodels
 
 from . import utils
 
@@ -2154,3 +2155,71 @@ class TestReviewStatusContext(TestCase):
             )
             self.assertEqual(ti.status.valid, context['statuses'][ti.status.name]['valid'])
             self.assertEqual(ti.status.requires_review, context['statuses'][ti.status.name]['requires_review'])
+
+
+class TestTrees(TestCase):
+
+    def setUp(self):
+        ge = umodels.Vendor.objects.create(name="ge")
+        ve = umodels.Vendor.objects.create(name="ve")
+        cap = umodels.Vendor.objects.create(name="cap")
+        rad = umodels.UnitClass.objects.create(name="Rad")
+        pet = umodels.UnitClass.objects.create(name="PET/CT")
+
+        vdc = umodels.UnitType.objects.create(vendor=ve, unit_class=rad, name="VDC 405")
+        crc = umodels.UnitType.objects.create(vendor=cap, unit_class=rad, name="CRC-15R")
+        d690 = umodels.UnitType.objects.create(vendor=ge, unit_class=pet, name="Discovery 690")
+
+        u1 = umodels.Unit.objects.create(type=vdc, number=1, date_acceptance=timezone.now().date())
+        u2 = umodels.Unit.objects.create(type=crc, number=2, date_acceptance=timezone.now().date())
+        u3 = umodels.Unit.objects.create(type=d690, number=3, date_acceptance=timezone.now().date())
+
+        t = utils.create_test()
+        tl = utils.create_test_list()
+        utils.create_test_list_membership(tl, t)
+        self.utc1 = utils.create_unit_test_collection(unit=u1, test_collection=tl)
+        self.utc2 = utils.create_unit_test_collection(unit=u2, test_collection=tl)
+        self.utc3 = utils.create_unit_test_collection(unit=u3, test_collection=tl)
+
+    def test_freq_tree(self):
+
+        tree = trees.BootstrapFrequencyTree([self.utc1.assigned_to]).generate()[0]
+
+        # no site, so should be Other site
+        site_nodes = tree['nodes']
+        assert len(site_nodes) == 1
+        site_node = site_nodes[0]
+        assert site_node['text'].startswith("Other")
+
+        # two unit classes
+        class_nodes = site_node['nodes']
+        assert len(class_nodes) == 2
+        class1_node = class_nodes[0]
+        first_class = umodels.UnitClass.objects.order_by("name").first().name
+        assert class1_node['text'] == first_class
+        class1_unit_nodes = class1_node['nodes']
+        assert len(class1_unit_nodes) == umodels.Unit.objects.filter(type__unit_class__name=first_class).count()
+
+    def test_cat_tree(self):
+
+        tree = trees.BootstrapCategoryTree([self.utc1.assigned_to]).generate()[0]
+
+        # no site, so should be Other site
+        site_nodes = tree['nodes']
+        assert len(site_nodes) == 1
+        site_node = site_nodes[0]
+        assert site_node['text'].startswith("Other")
+
+        # two unit classes
+        class_nodes = site_node['nodes']
+        assert len(class_nodes) == 2
+        class1_node = class_nodes[0]
+        first_class = umodels.UnitClass.objects.order_by("name").first().name
+        assert class1_node['text'] == first_class
+        class1_unit_nodes = class1_node['nodes']
+        assert len(class1_unit_nodes) == umodels.Unit.objects.filter(type__unit_class__name=first_class).count()
+
+    def test_base_setup_qs(self):
+
+        with self.assertRaises(NotImplementedError):
+            trees.BaseTree([])
