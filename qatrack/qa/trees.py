@@ -85,6 +85,8 @@ class BootstrapCategoryTree(BaseTree):
 
     def setup_qs(self):
 
+        # note because we are using distinct, all order_by fields
+        # must appear in values_list (see issue #492)
         self.qs = UnitTestCollection.objects.filter(
             unit__active=True,
             active=True,
@@ -169,11 +171,15 @@ class BootstrapCategoryTree(BaseTree):
             "id",
             "name",
             "unit__site__slug",
+            "unit__site__name",
             "unit__type__unit_class_id",
+            "unit__type__unit_class__name",
             "unit__number",
             "unit__name",
             "frequency__slug",
+            "frequency__nominal_interval",
             "cat_tree_id",
+            "cat_level",
             "cat_name",
         ).distinct()  # yapf: disable
 
@@ -197,7 +203,10 @@ class BootstrapCategoryTree(BaseTree):
         tree = [self.new_node(_("QC by Unit, Frequency, & Category"))]
         root_nodes = tree[-1]['nodes']
 
-        for utc_id, utc_name, site, uclass, unum, uname, freq_slug, cat_tree_id, cat_name in self.qs:
+        for (
+            utc_id, utc_name, site, site_name, uclass, uclass_name, unum, uname, freq_slug, freq_int, cat_tree_id,
+            cat_level, cat_name
+        ) in self.qs:
 
             if site not in seen_sites:
                 seen_sites.add(site)
@@ -268,6 +277,8 @@ class BootstrapFrequencyTree(BaseTree):
 
     def setup_qs(self):
 
+        # note because we are using distinct, all order_by fields
+        # must appear in values_list (see issue #492)
         self.qs = UnitTestCollection.objects.filter(
             visible_to__in=self.groups,
             unit__active=True,
@@ -282,11 +293,14 @@ class BootstrapFrequencyTree(BaseTree):
             "id",
             "name",
             "frequency__slug",
+            "frequency__nominal_interval",
             "unit__site__slug",
+            "unit__site__name",
             "unit__type__unit_class_id",
+            "unit__type__unit_class__name",
             "unit__number",
             "unit__name",
-        )
+        ).distinct()
 
     def generate(self):
 
@@ -298,7 +312,7 @@ class BootstrapFrequencyTree(BaseTree):
 
         tree = [self.new_node(_("QC by Unit & Frequency"))]
         root_nodes = tree[-1]['nodes']
-        for utc_id, utc_name, freq_slug, site, uclass, unum, uname in self.qs:
+        for utc_id, utc_name, freq_slug, freq_int, site, site_name, uclass, uclass_name, unum, uname in self.qs:
 
             if site not in seen_sites:
                 seen_sites.add(site)
