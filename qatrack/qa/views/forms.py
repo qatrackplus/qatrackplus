@@ -82,7 +82,11 @@ class TestInstanceWidgetsMixin(object):
                 del self.errors["value"]
         else:
             cleaned_data['skipped'] = empty
-            if "value" in self.errors:
+
+            # check if composite test calculated value that is not in (numerical, None)
+            is_comp = self.unit_test_info.test.type == models.COMPOSITE
+            invalid_composite = is_comp and self.errors.get('value') and self['value'].value() is not None
+            if "value" in self.errors and not invalid_composite:
                 del self.errors["value"]
 
         return cleaned_data

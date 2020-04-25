@@ -14,6 +14,15 @@ Acknowledgements
 Details of the v0.3.1 release
 .............................
 
+Non backwards compatible changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Composite Tests will now raise an error if they return anything other than a
+  numerical value, None, or an empty string ("").  Previously it was possible
+  to return e.g.a string which would have resulted in the test being skipped.
+  If you were relying on this behaviour, you need to switch to using a
+  :ref:`String Composite/JSON <qa_string_comp_json>` test type instead.
+
 
 Major Features
 ^^^^^^^^^^^^^^
@@ -48,6 +57,8 @@ Tests & Test Lists
       value.  This type of test is useful for example if you have a
       collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
       difference from a 0 deg reference.
+
+    * St
 
 * A new "Display Name" field has been added to tests.  This is an optional
   field where you can add text describing how a test should be displayed when

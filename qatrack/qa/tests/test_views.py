@@ -1196,6 +1196,23 @@ class TestPerformQA(TestCase):
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
 
+    def test_perform_composite_json_warning(self):
+        """ensure returing JSON from composites no longer works"""
+        data = {
+            "work_started": "2012-11-07 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        self.set_form_data(data)
+        data['form-2-value'] = json.dumps({'foo': 'bar'})
+
+        response = self.client.post(self.url, data=data)
+
+        self.assertEqual(response.status_code, 200)
+
     def test_flag_with_bool(self):
         self.t_bool.flag_when = True
         self.t_bool.save()
@@ -1406,7 +1423,7 @@ class TestPerformQA(TestCase):
         }
 
         for test_idx, test in enumerate(self.tests):
-            data["form-%d-value" % test_idx] = None
+            data["form-%d-value" % test_idx] = ""
             data["form-%d-test" % test_idx] = test.pk
             data["form-%d-skipped" % test_idx] = "true"
             data["form-%d-comment" % test_idx] = ""
@@ -1439,7 +1456,7 @@ class TestPerformQA(TestCase):
             if test.type == models.CONSTANT or test not in not_required:
                 data["form-%d-value" % test_idx] = 1
             else:
-                data["form-%d-value" % test_idx] = None
+                data["form-%d-value" % test_idx] = ""
 
         response = self.client.post(self.url, data=data)
 

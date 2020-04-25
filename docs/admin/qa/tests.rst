@@ -240,7 +240,7 @@ Tests with Calculated Results
 
 There are currently three test types that allow you to calculate test
 results using snippets of Python code. These tests include *Composite*,
-*String Composite* & *Upload*.
+*String Composite/JSON* & *Upload*.
 
 Composite Tests
 ---------------
@@ -503,18 +503,27 @@ by default.  The calculationn `a = 1/2` will result in `a = 0.5` rather than `a
 `//` operator like `a = 1//2 # a == 0`.
 
 
-String Composite Tests
-----------------------
+.. _qa_string_comp_json:
+
+String Composite/JSON Tests
+---------------------------
 
 The String Composite test type are the same as the Composite test type
 described above with the exception that the calculated value should be a
 string rather than a number. An example Composite String test is shown
 below.
 
+As of v0.3.1 you may now also return a `JSON serializable Python dictionary
+<https://pythontic.com/serialization/json/introduction>`__.  This allows you to
+e.g. pre-calculate values for other composite tests, or store more complex
+datatypes in the database.
+
+
 .. figure:: images/string_composite_procedure.png
    :alt: Example String Composite procedure
 
    Example String Composite procedure
+
 
 
 Upload Tests
