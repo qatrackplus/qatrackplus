@@ -17,7 +17,6 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-import pandas as pd
 import xlsxwriter
 
 from qatrack.qa import models
@@ -801,7 +800,7 @@ class TestDataReport(BaseReport):
     MAX_TIS = getattr(settings, "REPORT_TESTDATAREPORT_MAX_TIS", 365 * 3)
 
     template = "reports/reports/test_data.html"
-    formats = [CSV, XLS]
+    formats = [PDF, CSV, XLS]
 
     def filter_form_valid(self, filter_form):
 
@@ -839,21 +838,17 @@ class TestDataReport(BaseReport):
 
         context = super().get_context()
         context['qs'] = self.filter_set.qs
-
-        qs = self.filter_set.qs.values(
-            "test_list_instance__work_completed",
-            "unit_test_info__test__name",
-            "unit_test_info__test__display_name",
-            "unit_test_info__test__type",
-            "unit_test_info__unit__name",
-            "unit_test_info__unit__site__name",
-            "value",
-            "string_value",
-            "date_value",
-            "datetime_value",
-            "skipped",
-            "created_by__username",
-        )
+        org = self.filter_set.form.cleaned_data['organization']
+        if org == "group_by_unit_test_date":
+            org = self.get_organization_details(org)[1]
+            context['test_data'] = [[
+                _(
+                    "Sorry, '{organization}' is not supported for Preview or PDF reports. "
+                    "Switch to Excel or CSV format, or use 'One Test Instance Per Row'"
+                ).format(organization=org)
+            ]]
+        else:
+            context['test_data'] = self.data_rows()
 
         return context
 
@@ -863,18 +858,22 @@ class TestDataReport(BaseReport):
 
         rows.append([])
 
-        org = self.filter_set.form.cleaned_data['organization']
-        if org == "one_per_row":
-            test_data = self.organize_one_per_row(context)
-        elif org == "group_by_unit_test_date":
-            test_data = self.organize_by_unit_test_date(context)
-
+        test_data = self.data_rows()
         rows.extend(test_data)
         return rows
 
-    def organize_one_per_row(self, context):
+    def data_rows(self):
+        org = self.filter_set.form.cleaned_data['organization']
+        if org == "one_per_row":
+            test_data = self.organize_one_per_row()
+        elif org == "group_by_unit_test_date":
+            test_data = self.organize_by_unit_test_date()
 
-        qs = context['qs'].select_related(
+        return test_data
+
+    def organize_one_per_row(self):
+
+        qs = self.filter_set.qs.select_related(
             "test_list_instance",
             "unit_test_info__test",
             "unit_test_info__unit",
@@ -917,9 +916,9 @@ class TestDataReport(BaseReport):
 
         return table
 
-    def organize_by_unit_test_date(self, context):
+    def organize_by_unit_test_date(self):
 
-        qs = context['qs']
+        qs = self.filter_set.qs
         unit_test_combos = list(qs.values_list(
             "unit_test_info__unit",
             "unit_test_info__test",
@@ -939,7 +938,7 @@ class TestDataReport(BaseReport):
         date_rows = {d: i for i, d in enumerate(unique_dates)}
         ut_cols = {ut: i * cells_per_ti for i, ut in enumerate(unit_test_combos)}
 
-        tests = dict(qs.values_list("unit_test_info__test_id", "unit_test_info__test__display_name").distinct())
+        tests = dict(qs.values_list("unit_test_info__test_id", "unit_test_info__test__name").distinct())
 
         unit_qs = qs.values_list(
             "unit_test_info__unit_id",

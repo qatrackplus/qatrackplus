@@ -489,8 +489,8 @@ class TestFilters(TestCase):
         f = filters.TestDataFilter()
         f.form.cleaned_data = {'organization': 'foo'}
         f.filter_queryset(TestInstance.objects.all())
-        assert f.organization == "foo"
-        assert 'organization' not in f.form.cleaned_data
+        assert f.form.cleaned_data['organization'] == "foo"
+        assert 'organization' in f.form.cleaned_data
 
     def test_schedulingfilter_due_date(self):
         f = filters.SchedulingFilter()
@@ -654,7 +654,9 @@ class TestBaseReport(TestCase):
         assert url == 'http://example.com/foo/bar'
 
     def test_default_detail_value_format_none(self):
-        assert reports.BaseReport().default_detail_value_format(None) == "<em>No Filter</em>"
+        rep = reports.BaseReport()
+        rep.report_format = "html"
+        assert rep.default_detail_value_format(None) == "<em>No Filter</em>"
 
     def test_default_detail_value_format_str(self):
         assert reports.BaseReport().default_detail_value_format("foo") == "foo"
