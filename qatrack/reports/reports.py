@@ -218,7 +218,8 @@ class BaseReport(object, metaclass=ReportMeta):
         """Take a value and return as a formatted string based on its type"""
 
         if val is None:
-            return "<em>No Filter</em>"
+            msg = "No Filter"
+            return "<em>%s</em>" % msg if self.report_format not in [XLS, CSV] else msg
 
         if isinstance(val, str):
             if val.lower() in relative_dates.ALL_DATE_RANGES:
@@ -830,6 +831,10 @@ class TestDataReport(BaseReport):
             ', '.join(models.Test.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
         )
 
+    def get_organization_details(self, val):
+        field = self.filter_class().form.fields['organization']
+        return (field.label, str(dict(field.choices).get(val, "")))
+
     def get_context(self):
 
         context = super().get_context()
@@ -849,8 +854,6 @@ class TestDataReport(BaseReport):
             "skipped",
             "created_by__username",
         )
-        df = pd.DataFrame.from_records(qs)
-        context['df'] = df
 
         return context
 
@@ -860,9 +863,10 @@ class TestDataReport(BaseReport):
 
         rows.append([])
 
-        if self.filter_set.organization == "one_per_row":
+        org = self.filter_set.form.cleaned_data['organization']
+        if org == "one_per_row":
             test_data = self.organize_one_per_row(context)
-        elif self.filter_set.organization == "group_by_unit_test_date":
+        elif org == "group_by_unit_test_date":
             test_data = self.organize_by_unit_test_date(context)
 
         rows.extend(test_data)

@@ -60,7 +60,24 @@ class RelativeDateRangeFilter(django_filters.CharFilter):
         return qs.distinct() if self.distinct else qs
 
 
-class TestListInstanceFilter(django_filters.FilterSet):
+class BaseReportFilterSet(django_filters.FilterSet):
+
+    def filter_queryset(self, queryset):
+        """
+        Remove non model field filters before filtering then add them back so
+        they get passed to report/saved to DB.
+        """
+        non_model_fields = {}
+        for field in list(self.form.cleaned_data.keys()):
+            if field not in self.Meta.fields:
+                non_model_fields[field] = self.form.cleaned_data.pop(field)
+
+        qs = super().filter_queryset(queryset)
+        self.form.cleaned_data.update(non_model_fields)
+        return qs
+
+
+class TestListInstanceFilter(BaseReportFilterSet):
 
     work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
@@ -112,7 +129,7 @@ class TestListInstanceFilter(django_filters.FilterSet):
         self.form.fields['unit_test_collection__unit'].choices = unit_site_unit_type_choices()
 
 
-class UnitTestCollectionFilter(django_filters.FilterSet):
+class UnitTestCollectionFilter(BaseReportFilterSet):
 
     work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
@@ -140,7 +157,7 @@ class UnitTestCollectionFilter(django_filters.FilterSet):
         self.form.fields['unit_test_collection'].choices = utc_choices()
 
 
-class DueAndOverdueFilter(django_filters.FilterSet):
+class DueAndOverdueFilter(BaseReportFilterSet):
 
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
@@ -173,7 +190,7 @@ class DueAndOverdueFilter(django_filters.FilterSet):
         self.form.fields['unit'].choices = unit_site_unit_type_choices()
 
 
-class SchedulingFilter(django_filters.FilterSet):
+class SchedulingFilter(BaseReportFilterSet):
 
     due_date = RelativeDateRangeFilter(
         label=_l("Time Period"),
@@ -212,7 +229,7 @@ class SchedulingFilter(django_filters.FilterSet):
         self.form.fields['unit'].choices = unit_site_unit_type_choices()
 
 
-class TestDataFilter(django_filters.FilterSet):
+class TestDataFilter(BaseReportFilterSet):
 
     test_list_instance__work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
@@ -264,13 +281,6 @@ class TestDataFilter(django_filters.FilterSet):
         self.form.fields['test_list_instance__work_completed'].initial = "Last 365 days"
         self.form.fields['unit_test_info__unit'].choices = unit_site_unit_type_choices()
         self.form.fields['unit_test_info__test'].choices = test_category_choices()
-
-    def filter_queryset(self, queryset):
-        """
-        Remove extra organization field before filtering
-        """
-        self.organization = self.form.cleaned_data.pop("organization")
-        return super().filter_queryset(queryset)
 
 
 def test_category_choices():
