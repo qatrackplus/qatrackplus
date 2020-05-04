@@ -1159,8 +1159,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         // });
 
         //set link for cycle when user changes cycle day dropdown
-        $(".radio-days").on('ifChecked', function(){
-            var day = $(this).attr('id').replace('day-', '');
+        $("#days-list a").on('click', function(){
+            var day = $(this).find("input").attr('id').replace('day-', '');
             var cur = document.location.href;
             document.location.href = cur.replace(/day=(next|[0-9]+)/,"day="+day);
         });
