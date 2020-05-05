@@ -1162,7 +1162,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         $("#days-list a").on('click', function(){
             var day = $(this).find("input").attr('id').replace('day-', '');
             var cur = document.location.href;
-            document.location.href = cur.replace(/day=(next|[0-9]+)/,"day="+day);
+            var re = /day=(next|[0-9]+)/;
+            if (cur.match(re)){
+                document.location.href = cur.replace(re, "day=" + day);
+            }else{
+                document.location.href = cur + "&day=" + day;
+            }
         });
 
         ////////// Submit button

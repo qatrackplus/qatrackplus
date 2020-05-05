@@ -426,7 +426,7 @@
                                     <h3 class="box-title">Perform {{unit_test_collection.unit.name}} : {{test_list.name}}</h3>
                                 {% endif %}
                                 {% if days %}
-                                    <div><em>From cycle : {{ unit_test_collection.name }}</em></div>
+                                    <div><em>Day {{ current_day }} from cycle : {{ unit_test_collection.name }}</em></div>
                                     {% if last_instance %}
                                         <div><em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em></div>
                                     {% endif %}
