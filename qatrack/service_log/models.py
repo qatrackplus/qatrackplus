@@ -343,8 +343,8 @@ class ReturnToServiceQA(models.Model):
 
     class Meta:
         permissions = (
-            ('view_returntoserviceqa', 'Can view return to service qa'),
-            ('perform_returntoserviceqa', 'Can perform return to service qa'),
+            ('view_returntoserviceqa', 'Can view Return To Service QC'),
+            ('perform_returntoserviceqa', 'Can perform Return To Service QC'),
         )
         ordering = ['-datetime_assigned']
         default_permissions = ('add', 'change', 'delete',)
