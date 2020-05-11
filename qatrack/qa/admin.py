@@ -938,6 +938,7 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
                     'calculation_procedure',
                     'display_image',
                     'hidden',
+                    'chart_visibility',
                     'skip_without_comment',
                     'formatting',
                 ],
