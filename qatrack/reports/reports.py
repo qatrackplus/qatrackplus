@@ -9,7 +9,7 @@ from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.db.models import Prefetch, Q
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import reverse
 from django.template.loader import get_template
 from django.utils import timezone
@@ -121,7 +121,10 @@ class BaseReport(object, metaclass=ReportMeta):
 
     def render(self, report_format):
         self.report_format = report_format
-        content = getattr(self, "to_%s" % report_format)()
+        try:
+            content = getattr(self, "to_%s" % report_format)()
+        except AttributeError:
+            raise Http404("Unknown report format %s" % report_format)
         return self.get_filename(report_format), content
 
     def render_to_response(self, report_format):
@@ -614,15 +617,15 @@ class UTCReport(BaseReport):
                 [_("Mofified By") + ":", format_user(tli.modified_by)],
             ])
             if tli.all_reviewed and not tli.reviewed_by:
-                rows.extend(
+                rows.extend([
                     [_("Reviewed") + ":", format_as_date(tli.modified)],
                     [_("Reviewed By") + ":", _("Auto Reviewed")],
-                )
+                ])
             else:
-                rows.extend(
+                rows.extend([
                     [_("Reviewed") + ":", format_as_date(tli.reviewed)],
                     [_("Reviewed By") + ":", format_user(tli.reviewed_by)],
-                )
+                ])
 
             for c in context['comments'].get(tli.pk, []):
                 rows.append([_("Comment") + ":", format_datetime(c[0]), c[1], c[2]])
