@@ -8,8 +8,13 @@ import django_filters
 
 from qatrack.qa import models
 from qatrack.qatrack_core.utils import relative_dates
+from qatrack.service_log import models as sl_models
 from qatrack.units import models as umodels
 from qatrack.units.forms import unit_site_unit_type_choices, utc_choices
+
+
+class NonNullBooleanFilter(django_filters.filters.BooleanFilter):
+    field_class = forms.BooleanField
 
 
 class RelativeDateRangeField(forms.fields.CharField):
@@ -289,3 +294,47 @@ def test_category_choices():
     for g, ts in groupby(qs, lambda v: v['category__name']):
         tests.append((g, [(t['pk'], t['name']) for t in ts]))
     return tests
+
+
+class ServiceEventFilter(BaseReportFilterSet):
+
+    datetime_service = RelativeDateRangeFilter(
+        label=_l("Service Date"),
+        help_text=_l("Dates to include Service Events from"),
+    )
+
+    unit_service_area__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Site"),
+        null_label=_l("Other"),
+        queryset=umodels.Site.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all)"),
+    )
+
+    unit_service_area__unit = django_filters.filters.MultipleChoiceFilter(
+        label=_l("Unit"),
+        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all)"),
+    )
+
+    unit_service_area__service_area = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Service Area"),
+        queryset=sl_models.ServiceArea.objects.order_by("name").all(),
+        help_text=_l("Use this filter to limit report to one or more service areas (leave blank to include all)"),
+    )
+
+    include_description = NonNullBooleanFilter(
+        label=_l("Include Description"),
+        help_text=_l("Uncheck if you don't want to include Problem & Work descriptions in this report"),
+        initial=True,
+    )
+
+    class Meta:
+        model = models.UnitTestCollection
+        fields = ["datetime_service", "unit_service_area__unit__site", "unit_service_area__unit"]
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices()
+        self.form.fields['datetime_service'].widget.attrs['class'] = "pastdate"
+        self.form.fields['datetime_service'].initial = "Last 365 days"

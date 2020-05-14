@@ -25,7 +25,7 @@ from django.views.generic import (
 import pytz
 
 from qatrack.qatrack_core.utils import format_datetime
-from qatrack.reports.reports import UTCReport
+from qatrack.reports.qc.utc import UTCReport
 from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,

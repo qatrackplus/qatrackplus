@@ -26,7 +26,16 @@ from qatrack.qa.models import (
 )
 from qatrack.qa.tests import utils
 from qatrack.qa.tests.test_selenium import BaseQATests
-from qatrack.reports import admin, filters, forms, models, reports, tasks, views
+from qatrack.reports import (
+    admin,
+    filters,
+    forms,
+    models,
+    qc,
+    reports,
+    tasks,
+    views,
+)
 from qatrack.units.models import Site as USite
 
 
@@ -36,7 +45,7 @@ class TestReportForm:
         """ensure title attribute added to each choice"""
         form = forms.ReportForm()
         widget = form.fields['report_type'].widget
-        assert 'title="%s"' % reports.QCSummaryReport.description in widget.render("name", [])
+        assert 'title="%s"' % qc.QCSummaryReport.description in widget.render("name", [])
 
 
 class TestSelectReport(TestCase):
@@ -258,7 +267,7 @@ class TestLoadReport(TestCase):
     def test_report_loaded(self):
         """Invalid base form so should get errors"""
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -293,7 +302,7 @@ class TestDeleteReport(TestCase):
     def test_report_deleted(self):
         """Invalid base form so should get errors"""
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -321,7 +330,7 @@ class TestScheduleReport(TestCase):
     def test_report_scheduled(self):
         """Report scheduled"""
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -348,7 +357,7 @@ class TestScheduleReport(TestCase):
     def test_missing_recipients(self):
         """Report scheduled"""
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -374,7 +383,7 @@ class TestScheduleReport(TestCase):
     def test_not_editable(self):
         user = User.objects.create_user("reg_user", "a@b.com", "password")
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -398,7 +407,7 @@ class TestDeleteSchedule(TestCase):
         self.user = User.objects.create_superuser("user", "a@b.com", "password")
         self.client.force_login(self.user)
         self.sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -516,7 +525,7 @@ class TestInstanceToFormFields(TestCase):
         u = User.objects.create_superuser("super", "a@b.com", "password")
         self.saved_report = models.SavedReport.objects.create(
             title="test report",
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format='csv',
             filters={},
             created_by=u,
@@ -526,7 +535,7 @@ class TestInstanceToFormFields(TestCase):
 
     def test_root_report_type(self):
         res = forms.serialize_savedreport(self.saved_report)
-        assert res['root-report_type'] == ['select', reports.QCSummaryReport.report_type]
+        assert res['root-report_type'] == ['select', qc.QCSummaryReport.report_type]
 
     def test_root_report_title(self):
         res = forms.serialize_savedreport(self.saved_report)
@@ -547,7 +556,7 @@ class TestInstanceToFormFields(TestCase):
         assert res['root-visible_to'] == ['select', [g.pk]]
 
     def test_daterange(self):
-        sr = models.SavedReport(report_type=reports.QCSummaryReport.report_type)
+        sr = models.SavedReport(report_type=qc.QCSummaryReport.report_type)
         sr.filters = {'work_completed': ["1 Jan 2019", "2 Jan 2019"]}
         res = forms.serialize_savedreport(sr)
         assert res['work_completed'] == ['text', '01 Jan 2019 - 02 Jan 2019']
@@ -557,23 +566,23 @@ class TestReportToFormFields(TestCase):
 
     def setUp(self):
 
-        self.report = reports.QCSummaryReport()
+        self.report = qc.QCSummaryReport()
 
     def test_daterange(self):
-        report = reports.QCSummaryReport(report_opts={'work_completed': ["1 Jan 2019", "2 Jan 2019"]})
+        report = qc.QCSummaryReport(report_opts={'work_completed': ["1 Jan 2019", "2 Jan 2019"]})
         res = forms.serialize_report(report)
         assert res['work_completed'] == ['text', '01 Jan 2019 - 02 Jan 2019']
 
     def test_visible_to(self):
         g = Group.objects.create(name="group")
         base_opts = {'visible_to': Group.objects.all()}
-        report = reports.QCSummaryReport(base_opts=base_opts)
+        report = qc.QCSummaryReport(base_opts=base_opts)
         res = forms.serialize_report(report)
         assert res['root-visible_to'] == ['select', [g.pk]]
 
     def test_root_include_sig(self):
         base_opts = {'include_signature': False}
-        report = reports.QCSummaryReport(base_opts=base_opts)
+        report = qc.QCSummaryReport(base_opts=base_opts)
         res = forms.serialize_report(report)
         assert res['root-include_signature'] == ['checkbox', False]
 
@@ -718,24 +727,24 @@ class TestBaseReport(TestCase):
 class TestQCSummaryReport(TestCase):
 
     def test_get_queryset(self):
-        assert reports.QCSummaryReport().get_queryset().model._meta.model_name == "testlistinstance"
+        assert qc.QCSummaryReport().get_queryset().model._meta.model_name == "testlistinstance"
 
     def test_get_filename(self):
-        assert reports.QCSummaryReport().get_filename('pdf') == 'qc-summary.pdf'
+        assert qc.QCSummaryReport().get_filename('pdf') == 'qc-summary.pdf'
 
     def test_get_utc_site(self):
         site = USite.objects.create(name="site")
-        sites = reports.QCSummaryReport().get_unit_test_collection__unit__site_details([site, 'null'])
+        sites = qc.QCSummaryReport().get_unit_test_collection__unit__site_details([site, 'null'])
         assert sites == ('Site', 'site, Other')
 
     def test_get_utc_freq(self):
         freq = Frequency.objects.create(name="freq", window_start=0, window_end=0)
-        freqs = reports.QCSummaryReport().get_unit_test_collection__frequency_details([freq, 'null'])
+        freqs = qc.QCSummaryReport().get_unit_test_collection__frequency_details([freq, 'null'])
         assert freqs == ('Frequencies', 'freq, Ad Hoc')
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_work_completed_html(self):
-        rep = reports.QCSummaryReport()
+        rep = qc.QCSummaryReport()
         rep.report_format = "html"
         tz = pytz.timezone("America/Toronto")
         work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
@@ -746,7 +755,7 @@ class TestQCSummaryReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_work_completed_plain(self):
-        rep = reports.QCSummaryReport()
+        rep = qc.QCSummaryReport()
         rep.report_format = "csv"
         tz = pytz.timezone("America/Toronto")
         work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
@@ -757,7 +766,7 @@ class TestQCSummaryReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_pass_fail_html(self):
-        rep = reports.QCSummaryReport()
+        rep = qc.QCSummaryReport()
         rep.report_format = "html"
         tli = utils.create_test_list_instance()
         pf = rep.get_pass_fail_status(tli)
@@ -765,7 +774,7 @@ class TestQCSummaryReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_pass_fail_plain(self):
-        rep = reports.QCSummaryReport()
+        rep = qc.QCSummaryReport()
         rep.report_format = "csv"
         tli = utils.create_test_list_instance()
         pf = rep.get_pass_fail_status(tli)
@@ -782,7 +791,7 @@ class TestQCSummaryReport(TestCase):
         utils.create_test_list_instance(unit_test_collection=utc2)
 
         qs = TestListInstance.objects.all()
-        tlis = reports.QCSummaryReport().get_tlis_for_site(qs, site)
+        tlis = qc.QCSummaryReport().get_tlis_for_site(qs, site)
         assert list([x.pk for x in tlis]) == [tli.pk]
 
     def test_get_tlis_for_null_site(self):
@@ -796,7 +805,7 @@ class TestQCSummaryReport(TestCase):
         tli2 = utils.create_test_list_instance(unit_test_collection=utc2)
 
         qs = TestListInstance.objects.all()
-        tlis = reports.QCSummaryReport().get_tlis_for_site(qs, None)
+        tlis = qc.QCSummaryReport().get_tlis_for_site(qs, None)
         assert list([x.pk for x in tlis]) == [tli2.pk]
 
     def test_to_table(self):
@@ -810,7 +819,7 @@ class TestQCSummaryReport(TestCase):
         utc2 = utils.create_unit_test_collection(unit=unit2)
         utils.create_test_list_instance(unit_test_collection=utc2)
 
-        rep = reports.QCSummaryReport()
+        rep = qc.QCSummaryReport()
         rep.report_format = "csv"
         context = rep.get_context()
         table = rep.to_table(context)
@@ -838,14 +847,14 @@ class TestReportInterface(BaseQATests):
 
     def test_report_preview(self):
         """Select report and make sure it previews"""
-        self.select_by_text('id_root-report_type', reports.QCSummaryReport.name)
+        self.select_by_text('id_root-report_type', qc.QCSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
         self.click("preview")
         self.driver.find_element_by_css_selector('#report .container-fluid')
 
     def test_save_report(self):
         """Select report and make sure it previews"""
-        self.select_by_text('id_root-report_type', reports.QCSummaryReport.name)
+        self.select_by_text('id_root-report_type', qc.QCSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
         assert models.SavedReport.objects.count() == 0
         self.click("save")
@@ -858,7 +867,7 @@ class TestReportInterface(BaseQATests):
         """Select report from table and make sure it loads"""
 
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -876,7 +885,7 @@ class TestReportInterface(BaseQATests):
         """Select report from table and make sure it loads"""
 
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -906,7 +915,7 @@ class TestReportInterface(BaseQATests):
         """Select report from table and make sure it loads"""
 
         sr = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -953,11 +962,11 @@ class TestReportScheduleAdmin(TestCase):
     def setUp(self):
         site = AdminSite()
         self.admin = admin.ReportScheduleAdmin(models.ReportSchedule, site)
-        r = models.SavedReport(report_type=reports.QCSummaryReport.report_type, report_format="pdf", title="title")
+        r = models.SavedReport(report_type=qc.QCSummaryReport.report_type, report_format="pdf", title="title")
         self.rs = models.ReportSchedule(report=r)
 
     def test_get_report_type(self):
-        assert self.admin.get_report_type(self.rs) == reports.QCSummaryReport.name
+        assert self.admin.get_report_type(self.rs) == qc.QCSummaryReport.name
 
     def test_get_report_format(self):
         assert self.admin.get_report_format(self.rs) == "PDF"
@@ -972,7 +981,7 @@ class TestReportModels(TestCase):
 
         self.user = User.objects.create_superuser("user", "a@b.com", "password")
         self.report = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -990,7 +999,7 @@ class TestReportTasks(TestCase):
 
         self.user = User.objects.create_superuser("user", "a@b.com", "password")
         self.report = models.SavedReport.objects.create(
-            report_type=reports.QCSummaryReport.report_type,
+            report_type=qc.QCSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},

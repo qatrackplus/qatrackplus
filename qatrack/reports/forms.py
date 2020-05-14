@@ -26,7 +26,8 @@ class ReportForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         f = self.fields['report_type']
-        f.widget = ToolTipSelect(titles=reports.REPORT_DESCRIPTIONS, choices=f.choices)
+        choices = [('', '------------')] + reports.report_type_choices()
+        f.widget = ToolTipSelect(titles=reports.report_descriptions(), choices=choices)
 
 
 def value_to_serializable(val, val_type=None):

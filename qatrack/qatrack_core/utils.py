@@ -71,12 +71,15 @@ def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
 
 def format_as_date(dt, fmt=settings.DATE_INPUT_FORMATS[0]):
     """Take a date time and return as string formatted date after converting to localtime"""
-
     return format_datetime(dt, fmt=fmt)
 
 
 def format_as_time(dt, fmt=settings.TIME_INPUT_FORMATS[0]):
     return format_datetime(dt, fmt=fmt)
+
+
+def format_timedelta(td):
+    return "" if td is None else str(td)
 
 
 def parse_datetime(dt_str):

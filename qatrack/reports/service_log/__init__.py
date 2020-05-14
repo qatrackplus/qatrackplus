@@ -1,0 +1,1 @@
+from qatrack.reports.service_log.summary import ServiceEventSummaryReport

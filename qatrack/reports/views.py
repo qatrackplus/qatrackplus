@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from qatrack.qatrack_core.utils import format_as_date
-from qatrack.reports import models, reports
+from qatrack.reports import models, qc, reports, service_log
 from qatrack.reports.forms import (
     ReportForm,
     ReportScheduleForm,
@@ -28,12 +28,12 @@ def process_form_post(request, instance):
     if not form.is_valid() and "report_type" not in form.errors:
         # something wrong with base form, but we know what report_type we're trying to produce
         # so validate that form too
-        ReportClass = reports.REPORT_TYPE_LOOKUP[form.cleaned_data['report_type']]
+        ReportClass = reports.report_class(form.cleaned_data['report_type'])
         report = ReportClass(base_opts=base_opts, report_opts=request.POST, user=request.user)
         filter_form = report.get_filter_form()
         filter_form.is_valid()
     elif form.is_valid():
-        ReportClass = reports.REPORT_TYPE_LOOKUP[form.cleaned_data['report_type']]
+        ReportClass = reports.report_class(form.cleaned_data['report_type'])
         report = ReportClass(base_opts=base_opts, report_opts=request.POST, user=request.user)
         filter_form = report.get_filter_form()
         if filter_form.is_valid():
@@ -69,8 +69,8 @@ def get_filter(request):
     render it as an html fragment to display for user"""
 
     try:
-        report = reports.REPORT_TYPE_LOOKUP[request.GET.get("report_type")]
-    except KeyError:
+        report = reports.report_class(request.GET.get("report_type"))
+    except ValueError:
         raise Http404("Unknown report type")
 
     template = get_template("_form_horizontal.html")

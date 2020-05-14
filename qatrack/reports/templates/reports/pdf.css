@@ -12,6 +12,11 @@
     padding: 0;
   }
 
+  .page {
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+
   .table-striped > tbody > tr:nth-of-type(odd) {
     background-color: #efefef;
   }

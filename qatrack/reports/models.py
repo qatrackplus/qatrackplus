@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.qatrack_core.fields import JSONField
-from qatrack.reports.reports import REPORT_TYPE_CHOICES, REPORT_TYPE_LOOKUP
+from qatrack.reports.reports import report_class
 
 
 class SavedReport(models.Model):
@@ -15,10 +15,7 @@ class SavedReport(models.Model):
 
     title = models.CharField(max_length=255,)
 
-    report_type = models.CharField(
-        max_length=128,
-        choices=REPORT_TYPE_CHOICES,
-    )
+    report_type = models.CharField(max_length=128)
 
     report_format = models.CharField(
         max_length=8,
@@ -66,7 +63,7 @@ class SavedReport(models.Model):
         ordering = ("title", "created",)
 
     def get_filter_class(self):
-        return REPORT_TYPE_LOOKUP[self.report_type].filter_class
+        return report_class(self.report_type).filter_class
 
     @property
     def base_opts(self):
@@ -77,8 +74,11 @@ class SavedReport(models.Model):
         }
 
     def get_report(self, user=None):
-        ReportClass = REPORT_TYPE_LOOKUP[self.report_type]
+        ReportClass = report_class(self.report_type)
         return ReportClass(base_opts=self.base_opts, report_opts=self.filters)
+
+    def get_report_type_display(self):
+        return report_class(self.report_type).name
 
     def render(self, user=None):
         """create in memory file containing rendering of report"""
