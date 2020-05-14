@@ -1,26 +1,53 @@
 from django.conf import settings
-from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.contenttypes.models import ContentType
-from django.db.models import Prefetch
-from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
-from qatrack.qa.templatetags.qa_tags import as_time_delta
-from qatrack.qatrack_core.utils import (
-    format_as_date,
-    format_as_time,
-    format_timedelta,
-)
+from qatrack.qatrack_core.utils import format_as_date, format_timedelta
 from qatrack.reports import filters
-from qatrack.reports.reports import BaseReport, format_user
+from qatrack.reports.reports import BaseReport
 from qatrack.service_log import models
 from qatrack.units import models as umodels
 
 
-class ServiceEventSummaryReport(BaseReport):
+class BaseServiceEventReport(BaseReport):
+
+    def get_queryset(self):
+        return models.ServiceEvent.objects.select_related(
+            "unit_service_area__unit",
+            "unit_service_area__unit__site",
+        )
+
+    def get_unit_service_area__unit_details(self, val):
+        units = umodels.Unit.objects.filter(pk__in=val).select_related("site")
+        return (
+            "Site/Units",
+            ', '.join("%s%s" % ("%s - " % unit.site.name if unit.site else "", unit.name) for unit in units)
+        )
+
+    def get_unit_service_area__unit__site_details(self, sites):
+        return ("Sites", (', '.join(s.name if s != 'null' else "" for s in sites)).strip(", "))
+
+    def get_ses_for_site(self, qs, site):
+        """Get Test List Instances from filtered queryset for input site"""
+
+        ses = qs.filter(unit_service_area__unit__site=site)
+
+        ses = ses.order_by(
+            "unit_service_area__unit__%s" % settings.ORDER_UNITS_BY,
+            "datetime_service",
+        ).select_related(
+            "service_status",
+            "unit_service_area",
+            "unit_service_area__unit",
+            "unit_service_area__service_area",
+        )
+
+        return ses
+
+
+class ServiceEventSummaryReport(BaseServiceEventReport):
 
     report_type = "service_event_summary"
     name = "Service Event Summary"
@@ -35,24 +62,8 @@ class ServiceEventSummaryReport(BaseReport):
 
     template = "reports/service_log/summary.html"
 
-    def get_queryset(self):
-        return models.ServiceEvent.objects.select_related(
-            "unit_service_area__unit",
-            "unit_service_area__unit__site",
-        )
-
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or "service-event-summary"), report_format)
-
-    def get_unit_service_area__unit_details(self, val):
-        units = umodels.Unit.objects.filter(pk__in=val).select_related("site")
-        return (
-            "Site/Units",
-            ', '.join("%s%s" % ("%s - " % unit.site.name if unit.site else "", unit.name) for unit in units)
-        )
-
-    def get_unit_service_area__unit__site_details(self, sites):
-        return ("Sites", (', '.join(s.name if s != 'null' else "" for s in sites)).strip(", "))
 
     def get_include_description_details(self, val):
         return (_("Include Desciption"), [_("No"), _("Yes")][val])
@@ -96,49 +107,46 @@ class ServiceEventSummaryReport(BaseReport):
 
         return context
 
-    def get_ses_for_site(self, qs, site):
-        """Get Test List Instances from filtered queryset for input site"""
-
-        ses = qs.filter(unit_service_area__unit__site=site)
-
-        ses = ses.order_by(
-            "unit_service_area__unit__%s" % settings.ORDER_UNITS_BY,
-            "datetime_service",
-        ).select_related(
-            "service_status",
-            "unit_service_area",
-            "unit_service_area__unit",
-            "unit_service_area__service_area",
-        )
-
-        return ses
-
     def to_table(self, context):
 
         rows = super().to_table(context)
 
         rows.append([])
 
-        rows.append([
+        header = [
+            _("Service Date"),
             _("Site"),
             _("Unit"),
-            ("Test list"),
-            _("Due Date"),
-            _("Work Completed"),
-            _("Pass/Fail Status"),
-            _("Link"),
-        ])
+            _("Service Area"),
+            _("Status"),
+            _("Service Time"),
+            _("Lost Time"),
+        ]
+        if context['include_description']:
+            header.extend([_("Problem Description"), _("Work Description")])
 
-        for site, tlis in context['sites_data']:
-            for tli in tlis:
-                rows.append([
+        header.append(_("Link"))
+
+        rows.append(header)
+
+        for site, ses in context['sites_data']:
+            for se in ses:
+                row = [
+                    se['service_date'],
                     site,
-                    tli['unit_name'],
-                    tli['test_list_name'],
-                    tli['due_date'],
-                    tli['work_completed'],
-                    tli['pass_fail'],
-                    tli['link'],
-                ])
+                    se['unit_name'],
+                    se['service_area'],
+                    se['status'],
+                    se['service_time'],
+                    se['lost_time'],
+                    se['link'],
+                ]
+
+                if context['include_description']:
+                    row.extend([
+                        se['problem'],
+                        se['work'],
+                    ])
+                rows.append(row)
 
         return rows
