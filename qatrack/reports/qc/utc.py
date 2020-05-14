@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.contenttypes.models import ContentType
@@ -112,13 +114,16 @@ class UTCReport(BaseReport):
         ).order_by(
             "-submit_date",
         ).values_list(
-            "pk",
+            "object_pk",
             "submit_date",
             "user__username",
             "comment",
         )
 
-        comments = dict((c[0], c[1:]) for c in comments_qs)
+        comments = defaultdict(list)
+        for c in comments_qs:
+            comments[int(c[0])].append(c[1:])
+
         return comments
 
     def to_table(self, context):

@@ -12,18 +12,11 @@ from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django_q.models import Schedule
-import pytz
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as e_c
 
 # Create your tests here.
-from qatrack.qa.models import (
-    Frequency,
-    Group,
-    TestInstance,
-    TestListInstance,
-    User,
-)
+from qatrack.qa.models import Group, TestInstance, User
 from qatrack.qa.tests import utils
 from qatrack.qa.tests.test_selenium import BaseQATests
 from qatrack.reports import (
@@ -36,7 +29,6 @@ from qatrack.reports import (
     tasks,
     views,
 )
-from qatrack.units.models import Site as USite
 
 
 class TestReportForm:
@@ -722,119 +714,6 @@ class TestBaseReport(TestCase):
         xls = rep.to_xlsx()
         assert isinstance(xls, io.BytesIO)
         assert xls.tell() == 0
-
-
-class TestQCSummaryReport(TestCase):
-
-    def test_get_queryset(self):
-        assert qc.QCSummaryReport().get_queryset().model._meta.model_name == "testlistinstance"
-
-    def test_get_filename(self):
-        assert qc.QCSummaryReport().get_filename('pdf') == 'qc-summary.pdf'
-
-    def test_get_utc_site(self):
-        site = USite.objects.create(name="site")
-        sites = qc.QCSummaryReport().get_unit_test_collection__unit__site_details([site, 'null'])
-        assert sites == ('Site', 'site, Other')
-
-    def test_get_utc_freq(self):
-        freq = Frequency.objects.create(name="freq", window_start=0, window_end=0)
-        freqs = qc.QCSummaryReport().get_unit_test_collection__frequency_details([freq, 'null'])
-        assert freqs == ('Frequencies', 'freq, Ad Hoc')
-
-    @override_settings(TIME_ZONE="America/Toronto")
-    def test_get_work_completed_html(self):
-        rep = qc.QCSummaryReport()
-        rep.report_format = "html"
-        tz = pytz.timezone("America/Toronto")
-        work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
-        tli = utils.create_test_list_instance(work_completed=work_completed)
-        wc = rep.get_work_completed(tli)
-        assert "01 Jan 2019" in wc
-        assert "href" in wc
-
-    @override_settings(TIME_ZONE="America/Toronto")
-    def test_get_work_completed_plain(self):
-        rep = qc.QCSummaryReport()
-        rep.report_format = "csv"
-        tz = pytz.timezone("America/Toronto")
-        work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
-        tli = utils.create_test_list_instance(work_completed=work_completed)
-        wc = rep.get_work_completed(tli)
-        assert "01 Jan 2019" in wc
-        assert "href" not in wc
-
-    @override_settings(TIME_ZONE="America/Toronto")
-    def test_get_pass_fail_html(self):
-        rep = qc.QCSummaryReport()
-        rep.report_format = "html"
-        tli = utils.create_test_list_instance()
-        pf = rep.get_pass_fail_status(tli)
-        assert "<span" in pf
-
-    @override_settings(TIME_ZONE="America/Toronto")
-    def test_get_pass_fail_plain(self):
-        rep = qc.QCSummaryReport()
-        rep.report_format = "csv"
-        tli = utils.create_test_list_instance()
-        pf = rep.get_pass_fail_status(tli)
-        assert pf == ''  # no test instances, just want to make sure no html tags in status for plain text report
-
-    def test_get_tlis_for_site(self):
-        site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
-        utc = utils.create_unit_test_collection(unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-
-        unit2 = utils.create_unit(site=None)
-        utc2 = utils.create_unit_test_collection(unit=unit2)
-        utils.create_test_list_instance(unit_test_collection=utc2)
-
-        qs = TestListInstance.objects.all()
-        tlis = qc.QCSummaryReport().get_tlis_for_site(qs, site)
-        assert list([x.pk for x in tlis]) == [tli.pk]
-
-    def test_get_tlis_for_null_site(self):
-        site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
-        utc = utils.create_unit_test_collection(unit=unit)
-        utils.create_test_list_instance(unit_test_collection=utc)
-
-        unit2 = utils.create_unit(site=None)
-        utc2 = utils.create_unit_test_collection(unit=unit2)
-        tli2 = utils.create_test_list_instance(unit_test_collection=utc2)
-
-        qs = TestListInstance.objects.all()
-        tlis = qc.QCSummaryReport().get_tlis_for_site(qs, None)
-        assert list([x.pk for x in tlis]) == [tli2.pk]
-
-    def test_to_table(self):
-
-        site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
-        utc = utils.create_unit_test_collection(unit=unit)
-        utils.create_test_list_instance(unit_test_collection=utc)
-
-        unit2 = utils.create_unit(site=None)
-        utc2 = utils.create_unit_test_collection(unit=unit2)
-        utils.create_test_list_instance(unit_test_collection=utc2)
-
-        rep = qc.QCSummaryReport()
-        rep.report_format = "csv"
-        context = rep.get_context()
-        table = rep.to_table(context)
-
-        header_row = table.index([
-            'Site',
-            'Unit',
-            'Test list',
-            'Due Date',
-            'Work Completed',
-            'Pass/Fail Status',
-            'Link',
-        ])
-        # should be two tlis after header
-        assert len(table[header_row + 1:]) == 2
 
 
 class TestReportInterface(BaseQATests):

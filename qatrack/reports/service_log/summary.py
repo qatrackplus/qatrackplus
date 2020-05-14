@@ -22,12 +22,11 @@ class BaseServiceEventReport(BaseReport):
     def get_unit_service_area__unit_details(self, val):
         units = umodels.Unit.objects.filter(pk__in=val).select_related("site")
         return (
-            "Site/Units",
-            ', '.join("%s%s" % ("%s - " % unit.site.name if unit.site else "", unit.name) for unit in units)
+            "Unit(s)", ', '.join("%s%s" % ("%s - " % unit.site.name if unit.site else "", unit.name) for unit in units)
         )
 
     def get_unit_service_area__unit__site_details(self, sites):
-        return ("Sites", (', '.join(s.name if s != 'null' else "" for s in sites)).strip(", "))
+        return ("Site(s)", (', '.join(s.name if s != 'null' else _("Other") for s in sites)).strip(", "))
 
     def get_ses_for_site(self, qs, site):
         """Get Test List Instances from filtered queryset for input site"""
@@ -50,7 +49,7 @@ class BaseServiceEventReport(BaseReport):
 class ServiceEventSummaryReport(BaseServiceEventReport):
 
     report_type = "service_event_summary"
-    name = "Service Event Summary"
+    name = _l("Service Event Summary")
     filter_class = filters.ServiceEventFilter
     description = mark_safe(
         _l(
@@ -66,7 +65,7 @@ class ServiceEventSummaryReport(BaseServiceEventReport):
         return "%s.%s" % (slugify(self.name or "service-event-summary"), report_format)
 
     def get_include_description_details(self, val):
-        return (_("Include Desciption"), [_("No"), _("Yes")][val])
+        return (_("Include Description"), [_("No"), _("Yes")][val])
 
     def get_context(self):
 
