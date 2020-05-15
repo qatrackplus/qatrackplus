@@ -149,6 +149,8 @@ Minor UI Changes
             background-color: rgba(0, 0, 0, 0.05);
         }
 
+* The *In Progress* label will now only display the count of in progress test lists
+  visible to the users rather than the total count.
 
 Admin Changes
 ^^^^^^^^^^^^^

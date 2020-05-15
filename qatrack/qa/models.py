@@ -2154,6 +2154,9 @@ class TestListInstanceManager(models.Manager):
             qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all())
         return qs.order_by("-work_completed")
 
+    def your_in_progress_count(self, user):
+        return self.in_progress(user).count()
+
     def complete(self):
         return self.get_queryset().filter(in_progress=False).order_by("-work_completed")
 

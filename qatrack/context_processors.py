@@ -1,6 +1,7 @@
 import json
 
 from django.conf import settings
+from django.contrib.auth.models import Group, User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
@@ -23,7 +24,7 @@ cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
 cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
 cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
-cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
 cache.delete(settings.CACHE_SERVICE_STATUS_COLOURS)
 
 
@@ -53,13 +54,15 @@ def update_part_quantity(*args, **kwargs):
 
 @receiver(post_save, sender=TestListInstance)
 @receiver(post_delete, sender=TestListInstance)
+@receiver(post_save, sender=User)
+@receiver(post_save, sender=Group)
 def update_unreviewed_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
     cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
-    cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+    cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
@@ -164,10 +167,20 @@ def site(request):
         ).count()
         cache.set(settings.CACHE_SE_NEEDING_REVIEW_COUNT, se_needing_review_count)
 
-    in_progress_count = cache.get(settings.CACHE_IN_PROGRESS_COUNT)
-    if in_progress_count is None:
-        in_progress_count = TestListInstance.objects.in_progress().count()
-        cache.set(settings.CACHE_IN_PROGRESS_COUNT, in_progress_count)
+    in_progress_user_counts = cache.get(settings.CACHE_IN_PROGRESS_COUNT_USER)
+    if in_progress_user_counts is None and hasattr(request, "user"):
+        your_in_progress = TestListInstance.objects.your_in_progress_count(request.user)
+        in_progress_user_counts = {request.user.pk: your_in_progress}
+        cache.set(settings.CACHE_IN_PROGRESS_COUNT_USER, in_progress_user_counts)
+    else:
+        try:
+            your_in_progress = in_progress_user_counts[request.user.pk]
+        except KeyError:
+            your_in_progress = TestListInstance.objects.your_in_progress_count(request.user)
+            in_progress_user_counts[request.user.pk] = your_in_progress
+            cache.set(settings.CACHE_IN_PROGRESS_COUNT_USER, in_progress_user_counts)
+        except Exception:
+            your_in_progress = 0
 
     return {
         'SITE_NAME': cur_site.name,
@@ -191,7 +204,7 @@ def site(request):
         'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
         'SE_RTS_INCOMPLETE_QA_COUNT': se_incomplete_rts,
         'SE_RTS_UNREVIEWED_QA_COUNT': se_unreviewed_rts,
-        'IN_PROGRESS': in_progress_count,
+        'USERS_IN_PROGRESS': your_in_progress,
 
         # JavaScript Date Formats
         'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
