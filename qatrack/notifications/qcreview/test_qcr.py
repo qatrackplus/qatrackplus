@@ -227,6 +227,20 @@ class TestQCReviewEmails(TestCase):
         assert self.notice.last_sent >= now
         assert "QATrack+ Unreviewed QC Notice:" in mail.outbox[0].subject
 
+    def test_send_notice_empty(self):
+        self.notice.send_empty = True
+        self.notice.save()
+        now = timezone.now()
+        tasks.send_qcreview_notice(self.notice.pk)
+        self.notice.refresh_from_db()
+        assert self.notice.last_sent >= now
+        assert "QATrack+ Unreviewed QC Notice:" in mail.outbox[0].subject
+
+    def test_send_notice_not_empty(self):
+        tasks.send_qcreview_notice(self.notice.pk)
+        self.notice.refresh_from_db()
+        assert len(mail.outbox) == 0
+
     def test_send_notice_non_existent(self):
         tasks.send_qcreview_notice(self.notice.pk + 1)
         self.notice.refresh_from_db()
@@ -234,6 +248,7 @@ class TestQCReviewEmails(TestCase):
         assert len(mail.outbox) == 0
 
     def test_send_notice_no_recipients(self):
+        utils.create_test_list_instance()
         self.recipients.groups.clear()
         tasks.send_qcreview_notice(self.notice.pk)
         self.notice.refresh_from_db()

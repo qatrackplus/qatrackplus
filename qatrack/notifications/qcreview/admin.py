@@ -14,6 +14,7 @@ class QCReviewNoticeAdminForm(forms.ModelForm):
         model = models.QCReviewNotice
         fields = (
             "notification_type",
+            "send_empty",
             "recurrences",
             "time",
             "recipients",
@@ -32,7 +33,7 @@ class QCReviewNoticeAdminForm(forms.ModelForm):
 
 class QCReviewAdmin(BaseQATrackAdmin):
 
-    list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units"]
+    list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units", "send_empty"]
     list_filter = ["notification_type", "recipients", "test_lists", "units"]
     search_fields = [
         "units__units__number",
@@ -53,7 +54,7 @@ class QCReviewAdmin(BaseQATrackAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ["notification_type", "recurrences", "time"],
+            'fields': ["notification_type", "send_empty", "recurrences", "time"],
         }),
         (
             "Recipients", {

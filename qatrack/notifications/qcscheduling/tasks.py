@@ -45,6 +45,11 @@ def send_scheduling_notice(notice_id, task_name=""):
     notice = QCSchedulingNotice.objects.filter(id=notice_id).first()
 
     if notice:
+
+        if not notice.send_required():
+            logger.info("Send of QCReviewNotice %s requested, but no QC to notify about" % notice_id)
+            return
+
         recipients = notice.recipients.recipient_emails()
         if not recipients:
             logger.info("Send of QCSchedulingNotice %s requested, but no recipients" % notice_id)
