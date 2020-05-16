@@ -185,6 +185,9 @@ QC Review Notice` and then fill out the fields:
 Notification Type (required):
     Select the notification type you want to create
 
+Send Empty (required):
+    Should this notice be sent even if there is no QC to currently notify about?
+
 Recurrences (required):
     Create a recurrence rule to define the days you want this notice sent.
 
@@ -240,6 +243,9 @@ QC Scheduling Notice` and then fill out the fields:
 
 Notification Type (required):
     Select the notification type you want to create
+
+Send Empty (required):
+    Should this notice be sent even if there is no QC to currently notify about?
 
 Recurrences (required):
     Create a recurrence rule to define the days you want this notice sent.
