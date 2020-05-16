@@ -26,6 +26,7 @@ cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
 cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
 cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
 cache.delete(settings.CACHE_SERVICE_STATUS_COLOURS)
+cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(pre_delete, sender=PartUsed)
@@ -63,6 +64,7 @@ def update_unreviewed_cache(*args, **kwargs):
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
     cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
@@ -71,6 +73,7 @@ def update_rts_cache(*args, **kwargs):
     """When a RTS is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(post_save, sender=ServiceEventStatus)
@@ -80,6 +83,7 @@ def update_se_cache(*args, **kwargs):
     """When a service status is changed invalidate the default and review count"""
     cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
     cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(post_save, sender=UnitTestCollection)
@@ -169,6 +173,18 @@ def site(request):
         ReturnToServiceQA.objects.unreviewed_count,
     )
 
+    context['SL_NOTIFICATION_TOTAL'] = cache.get_or_set(
+        settings.CACHE_SL_NOTIFICATION_TOTAL,
+        lambda: (
+            get_sl_notification_total(
+                request,
+                context['SE_NEEDING_REVIEW_COUNT'],
+                context['SE_RTS_INCOMPLETE_QA_COUNT'],
+                context['SE_RTS_UNREVIEWED_QA_COUNT'],
+            )
+        ),
+    )
+
     context['USERS_IN_PROGRESS'] = get_user_count(
         request,
         settings.CACHE_IN_PROGRESS_COUNT_USER,
@@ -201,3 +217,12 @@ def get_user_count(request, key, manager_method):
             user_count = 0
 
     return user_count
+
+
+def get_sl_notification_total(request, se_unreviewed, rts_incomplete, rts_unreviewed):
+    perms = [
+        ('service_log.review_serviceevent', se_unreviewed),
+        ('service_log.perform_returntoserviceqa', rts_incomplete),
+        ('qa.can_review', rts_unreviewed),
+    ]
+    return sum(count for perm, count in perms if request.user.has_perm(perm))

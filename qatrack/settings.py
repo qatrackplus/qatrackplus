@@ -305,6 +305,7 @@ CACHE_IN_PROGRESS_COUNT_USER = 'in-progress-count-users'
 CACHE_UNREVIEWED_COUNT_USER_DICT = 'unreviewed-count-users'
 CACHE_DEFAULT_SE_STATUS = 'default-se-status'
 CACHE_SE_NEEDING_REVIEW_COUNT = 'se_needing_review_count'
+CACHE_SL_NOTIFICATION_TOTAL = 'sl-notification-total'
 CACHE_SERVICE_STATUS_COLOURS = 'service-status-colours'
 CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
 CACHE_AUTOREVIEW_RULESETS = "autoreviewrulesets"
