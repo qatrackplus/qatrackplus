@@ -345,7 +345,6 @@ def report_class(report_type):
 
 def report_categories():
     """return list of all available report categories"""
-
     return list(sorted(set([rt.category for rt in report_types()])))
 
 

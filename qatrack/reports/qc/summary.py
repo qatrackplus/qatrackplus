@@ -16,7 +16,7 @@ from qatrack.units import models as umodels
 class QCSummaryReport(BaseReport):
 
     report_type = "qc-summary-by-date"
-    name = _l("QC Summary")
+    name = _l("QC Performed Summary")
     filter_class = filters.TestListInstanceFilter
     description = mark_safe(_l(
         "This report lists all Test List Instances from a given time period for "
@@ -24,6 +24,8 @@ class QCSummaryReport(BaseReport):
     ))
 
     MAX_TLIS = getattr(settings, "REPORT_QCSUMMARYREPORT_MAX_TLIS", 5000)
+
+    category = _l("QC")
 
     template = "reports/qc/qc_summary.html"
 
@@ -48,7 +50,7 @@ class QCSummaryReport(BaseReport):
 
     def get_unit_test_collection__unit__site_details(self, val):
         sites = [x.name if x != "null" else "Other" for x in val]
-        return ("Site", ", ".join(sites))
+        return ("Site(s)", ", ".join(sites))
 
     def get_unit_test_collection__unit_details(self, val):
         units = models.Unit.objects.select_related("site").filter(pk__in=val)
@@ -143,7 +145,7 @@ class QCSummaryReport(BaseReport):
         rows.append([
             _("Site"),
             _("Unit"),
-            ("Test list"),
+            _("Test list"),
             _("Due Date"),
             _("Work Completed"),
             _("Pass/Fail Status"),

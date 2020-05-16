@@ -501,12 +501,12 @@ class TestFilters(TestCase):
 
         s = utils.create_site()
         u = utils.create_unit(site=s)
-        f = filters.DueAndOverdueFilter()
+        f = filters.UnitTestCollectionFilter()
         choices = [('%s :: %s' % (s.name, u.type.name), [(u.id, '%s :: %s' % (s.name, u.name))])]
         assert list(f.form.fields['unit'].choices) == choices
 
     def test_utcfilter(self):
-        f = filters.UnitTestCollectionFilter()
+        f = filters.TestListInstanceByUTFilter()
         assert f.form.fields['work_completed'].widget.attrs['class'] == "pastdate"
 
 

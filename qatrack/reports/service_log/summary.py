@@ -11,7 +11,9 @@ from qatrack.service_log import models
 from qatrack.units import models as umodels
 
 
-class BaseServiceEventReport(BaseReport):
+class ServiceEventReportMixin:
+
+    category = _l("Service Log")
 
     def get_queryset(self):
         return models.ServiceEvent.objects.select_related(
@@ -46,7 +48,7 @@ class BaseServiceEventReport(BaseReport):
         return ses
 
 
-class ServiceEventSummaryReport(BaseServiceEventReport):
+class ServiceEventSummaryReport(ServiceEventReportMixin, BaseReport):
 
     report_type = "service_event_summary"
     name = _l("Service Event Summary")
@@ -57,7 +59,6 @@ class ServiceEventSummaryReport(BaseServiceEventReport):
             "time period for selected units"
         )
     )
-    category = _l("Service Log")
 
     template = "reports/service_log/summary.html"
 

@@ -17,11 +17,11 @@ from qatrack.reports import filters
 from qatrack.reports.reports import BaseReport, format_user
 
 
-class UTCReport(BaseReport):
+class TestListInstanceDetailsReport(BaseReport):
 
-    report_type = "utc"
+    report_type = "test-list-instance-details"
     name = _l("Test List Instances")
-    filter_class = filters.UnitTestCollectionFilter
+    filter_class = filters.TestListInstanceByUTCFilter
     description = mark_safe(
         _l(
             "This report includes details for all Test List Instances from a given time period for "
@@ -31,7 +31,9 @@ class UTCReport(BaseReport):
 
     MAX_TLIS = getattr(settings, "REPORT_UTCREPORT_MAX_TLIS", 365)
 
-    template = "reports/qc/utc.html"
+    category = _l("QC")
+
+    template = "reports/qc/test_list_instance_details.html"
 
     def filter_form_valid(self, filter_form):
 

@@ -34,7 +34,7 @@ class TestQCSummaryReport(TestCase):
     def test_get_utc_site(self):
         site = USite.objects.create(name="site")
         sites = qc.QCSummaryReport().get_unit_test_collection__unit__site_details([site, 'null'])
-        assert sites == ('Site', 'site, Other')
+        assert sites == ('Site(s)', 'site, Other')
 
     def test_get_utc_freq(self):
         freq = Frequency.objects.create(name="freq", window_start=0, window_end=0)
@@ -437,12 +437,64 @@ class TestDueDateReport(TestCase):
         table = rep.to_table(context)
 
         header_count = table.count([
-            _("Unit"),
-            _("Name"),
+            _("Unit"), _("Name"),
             _("Frequency"),
             _("Due Date"),
             _("Window"),
-            _("Assinged To"),
+            _("Assigned To"),
             _("Perform")
         ])
         assert header_count == 2
+
+
+class TestAssignedQCReport(TestCase):
+
+    def test_get_queryset(self):
+        assert qc.AssignedQCReport().get_queryset().model._meta.model_name == "unittestcollection"
+
+    def test_get_filename(self):
+        assert qc.AssignedQCReport().get_filename('pdf') == 'qc-assignment-summary.pdf'
+
+    def test_get_unit__site_details(self):
+        site = USite.objects.create(name="site")
+        sites = qc.AssignedQCReport().get_unit__site_details([site, 'null'])
+        assert sites == ('Site(s)', 'site, Other')
+
+    def test_get_unit_details(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        units = qc.AssignedQCReport().get_unit_details([unit.pk])
+        assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
+
+    def test_generate_summary_html(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        utils.create_unit_test_collection(unit=unit)
+
+        rep = qc.AssignedQCReport()
+        rep.report_format = "pdf"
+        rep.to_html()
+
+    def test_to_table(self):
+
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        utils.create_unit_test_collection(unit=unit)
+
+        unit2 = utils.create_unit(site=None)
+        utils.create_unit_test_collection(unit=unit2)
+
+        rep = qc.AssignedQCReport(report_opts={'active': True})
+        rep.report_format = "csv"
+        context = rep.get_context()
+        table = rep.to_table(context)
+
+        header_row = table.index([
+            _("Site"),
+            _("Unit"),
+            _("Test list (Cycle)"),
+            _("Frequency"),
+            _("Assigned To"),
+            _("Link"),
+        ])
+        assert len(table[header_row + 1:]) == 2

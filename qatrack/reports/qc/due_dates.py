@@ -13,7 +13,9 @@ from qatrack.reports.reports import BaseReport
 from qatrack.units import models as umodels
 
 
-class DueDatesReportMixin:
+class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
+
+    category = _l("QC")
 
     def get_queryset(self):
         return models.UnitTestCollection.objects.select_related(
@@ -21,15 +23,6 @@ class DueDatesReportMixin:
             "unit",
             "frequency",
         ).exclude(active=False)
-
-    def get_unit__site_details(self, val):
-        sites = [x.name if x != "null" else _("Other") for x in val]
-        return (_("Site(s)"), ", ".join(sites))
-
-    def get_unit_details(self, val):
-        units = models.Unit.objects.select_related("site").filter(pk__in=val)
-        units = ('%s - %s' % (u.site.name if u.site else _("Other"), u.name) for u in units)
-        return (_("Unit(s)"), ', '.join(units))
 
     def get_context(self):
 
@@ -84,15 +77,13 @@ class DueDatesReportMixin:
                 [],
                 [],
                 [site if site else _("Other")],
-                [
-                    _("Unit"),
-                    _("Name"),
-                    _("Frequency"),
-                    _("Due Date"),
-                    _("Window"),
-                    _("Assinged To"),
-                    _("Perform")
-                ],
+                [_("Unit"),
+                 _("Name"),
+                 _("Frequency"),
+                 _("Due Date"),
+                 _("Window"),
+                 _("Assigned To"),
+                 _("Perform")],
             ])
 
             for row in site_rows:
@@ -126,7 +117,7 @@ class DueAndOverdueQCReport(DueDatesReportMixin, BaseReport):
 
     report_type = "due_and_overdue"
     name = _l("Due and Overdue QC")
-    filter_class = filters.DueAndOverdueFilter
+    filter_class = filters.UnitTestCollectionFilter
     description = mark_safe(_l("This report shows QC tests which are currently due or overdue"))
 
     category = _l("Scheduling")

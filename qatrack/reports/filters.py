@@ -3,6 +3,7 @@ from itertools import groupby
 import dateutil.parser
 from django import forms
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 import django_filters
 
@@ -134,7 +135,7 @@ class TestListInstanceFilter(BaseReportFilterSet):
         self.form.fields['unit_test_collection__unit'].choices = unit_site_unit_type_choices()
 
 
-class UnitTestCollectionFilter(BaseReportFilterSet):
+class TestListInstanceByUTCFilter(BaseReportFilterSet):
 
     work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
@@ -162,7 +163,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         self.form.fields['unit_test_collection'].choices = utc_choices()
 
 
-class DueAndOverdueFilter(BaseReportFilterSet):
+class UnitTestCollectionFilter(BaseReportFilterSet):
 
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
@@ -184,15 +185,56 @@ class DueAndOverdueFilter(BaseReportFilterSet):
         help_text=_l("Use this filter to limit report to one or more units (leave blank to include all units)"),
     )
 
+    frequency = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Frequency"),
+        queryset=models.Frequency.objects.all(),
+        null_label=_l("Ad Hoc"),
+        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all units)"),
+    )
+
+    active = django_filters.filters.BooleanFilter(
+        label=_l("Active"),
+        help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
+        initial='2',
+    )
+
     class Meta:
         model = models.UnitTestCollection
-        fields = ["assigned_to", "unit__site", "unit"]
+        fields = ["assigned_to", "unit__site", "unit", "frequency", "active"]
 
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 
         self.form.fields['unit'].choices = unit_site_unit_type_choices()
+        self.form.fields['active'].widget.choices = (
+            ('1', _('Both')),
+            ('2', _('Yes')),
+            ('3', _('No')),
+        )
+
+
+class UnitTestCollectionFilterDetailsMixin:
+
+    def get_unit__site_details(self, val):
+        sites = [x.name if x != "null" else "Other" for x in val]
+        return ("Site(s)", ", ".join(sites))
+
+    def get_unit_details(self, val):
+        units = models.Unit.objects.select_related("site").filter(pk__in=val)
+        units = ('%s - %s' % (u.site.name if u.site else _("Other"), u.name) for u in units)
+        return ("Unit(s)", ', '.join(units))
+
+    def get_frequency_details(self, val):
+        freqs = [x.name if x != "null" else "Ad Hoc" for x in val]
+        return ("Frequencies", ", ".join(freqs))
+
+    def get_active_details(self, val):
+        if val is None:
+            det = _("Either")
+        else:
+            det = [_("No"), _("Yes")][val]
+        return (_("Active Only"), det)
 
 
 class SchedulingFilter(BaseReportFilterSet):
@@ -222,6 +264,19 @@ class SchedulingFilter(BaseReportFilterSet):
         help_text=_l("Use this filter to limit report to one or more units (leave blank to include all units)"),
     )
 
+    frequency = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Frequency"),
+        queryset=models.Frequency.objects.all(),
+        null_label=_l("Ad Hoc"),
+        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all units)"),
+    )
+
+    active = django_filters.filters.BooleanFilter(
+        label=_l("Active Only"),
+        help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
+        initial='2',
+    )
+
     class Meta:
         model = models.UnitTestCollection
         fields = ["due_date", "assigned_to", "unit__site", "unit"]
@@ -232,6 +287,11 @@ class SchedulingFilter(BaseReportFilterSet):
 
         self.form.fields['due_date'].widget.attrs['class'] = "futuredate"
         self.form.fields['unit'].choices = unit_site_unit_type_choices()
+        self.form.fields['active'].widget.choices = (
+            ('1', _('Both')),
+            ('2', _('Yes')),
+            ('3', _('No')),
+        )
 
 
 class TestDataFilter(BaseReportFilterSet):
@@ -328,7 +388,7 @@ class ServiceEventFilter(BaseReportFilterSet):
     )
 
     class Meta:
-        model = models.UnitTestCollection
+        model = sl_models.ServiceEvent
         fields = ["datetime_service", "unit_service_area__unit__site", "unit_service_area__unit"]
 
     def __init__(self, *args, **kwargs):

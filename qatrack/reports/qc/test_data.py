@@ -20,7 +20,7 @@ class TestDataReport(BaseReport):
     filter_class = filters.TestDataFilter
     description = mark_safe(_l("This report shows QC test values for select units"))
 
-    category = _l("General")
+    category = _l("QC")
 
     MAX_TIS = getattr(settings, "REPORT_TESTDATAREPORT_MAX_TIS", 365 * 3)
 
