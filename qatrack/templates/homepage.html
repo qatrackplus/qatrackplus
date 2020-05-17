@@ -37,8 +37,8 @@ require(['homepage']);
           <a class="list-group-item" href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
             <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
             {% trans "Continue an In Progress Test List Instance" %}
-            <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
+            <span title="{% blocktrans %}There are currently {{ USERS_IN_PROGRESS }} QC Sessions saved in progress{% endblocktrans %}" class="label {% if USERS_IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-in-progress-count">{{ USERS_IN_PROGRESS }}</span>
             </span>
           </a>
           <div class="list-group-item">
