@@ -229,6 +229,13 @@ Authentication
   added to control whether users are allowed to register their own accounts.
 
 
+Other Minor Features & Bugs Fixed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fixed bug with control charts and null valued / skipped tests. #506
+
+
+
 Deprecations & Discontinuations
 ...............................
 
