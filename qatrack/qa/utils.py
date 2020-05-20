@@ -7,7 +7,6 @@ import token
 import tokenize
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.db.transaction import atomic
 from django.utils import timezone
 
@@ -18,27 +17,6 @@ class SetEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
         return json.JSONEncoder.default(self, obj)  # pragma: nocover
-
-
-def qs_extra_for_utc_name():
-
-    from qatrack.qa import models
-
-    ct_tl = ContentType.objects.get_for_model(models.TestList)
-    ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
-
-    extraq = """
-         CASE
-            WHEN content_type_id = {0}
-                THEN (SELECT name AS utc_name from qa_testlist WHERE object_id = qa_testlist.id )
-            WHEN content_type_id = {1}
-                THEN (SELECT name AS utc_name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
-         END
-         """.format(ct_tl.pk, ct_tlc.pk)
-
-    return {
-        "select": {'utc_name': extraq}
-    }
 
 
 def to_precision(x, p):

@@ -23,8 +23,8 @@ class BaseTree:
 
     def setup_frequencies(self):
         self.freqs = dict(Frequency.objects.values_list("slug", "name"))
-        self.freqs[None] = _("Ad-Hoc")
-        self.freqs["ad-hoc"] = _("Ad-Hoc")
+        self.freqs[None] = _("Ad Hoc")
+        self.freqs["ad-hoc"] = _("Ad Hoc")
 
     def new_node(self, text, expanded=False, nodes=None):
 

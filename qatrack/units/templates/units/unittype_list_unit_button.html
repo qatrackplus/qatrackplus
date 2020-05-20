@@ -28,7 +28,7 @@
         {% endfor %}
         {% if unit.unit__number in units_with_adhoc %}
           <li>
-            <a href="{% url "qa_by_frequency_unit" frequency="ad-hoc" unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; <em>{% trans "Ad-Hoc" %}</em></a>
+            <a href="{% url "qa_by_frequency_unit" frequency="ad-hoc" unit_number=unit.unit__number %}">{{unit.unit__name}} &mdash; <em>{% trans "Ad Hoc" %}</em></a>
           </li>
         {% endif %}
       </ul>

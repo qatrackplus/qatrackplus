@@ -25,7 +25,9 @@ from django.views.generic import (
 import pytz
 
 from qatrack.qatrack_core.utils import format_datetime
-from qatrack.reports.qc.utc import UTCReport
+from qatrack.reports.qc.test_list_instance_details import (
+    TestListInstanceDetailsReport,
+)
 from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,
@@ -77,7 +79,7 @@ def test_list_instance_report(request, pk):
     wc = format_datetime(tli.work_completed)
 
     base_opts = {
-        'report_type': UTCReport.report_type,
+        'report_type': TestListInstanceDetailsReport.report_type,
         'report_format': request.GET.get("type", "pdf"),
         'title': "%s - %s - %s" % (utc.unit.name, tli.test_list.name, wc),
         'include_signature': False,
@@ -88,7 +90,7 @@ def test_list_instance_report(request, pk):
         'work_completed': "%s - %s" % (wc, wc),
         'unit_test_collection': [utc.id],
     }
-    report = UTCReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
+    report = TestListInstanceDetailsReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
 
     return report.render_to_response(base_opts['report_format'])
 
@@ -601,7 +603,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
                 due["next_month"].append(utc)
 
             units.add(str(utc.unit))
-            freqs.add(str(utc.frequency or _("Ad-Hoc")))
+            freqs.add(str(utc.frequency or _("Ad Hoc")))
             groups.add(str(utc.assigned_to))
 
         ordered_due_lists = []
