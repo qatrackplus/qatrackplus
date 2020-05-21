@@ -9,43 +9,52 @@
   <div class="col-xs-12">
     {% for site, ses in sites_data %}
       <h2>{% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
-      <table class="table table-condensed table-bordered {% if not include_description %}table-striped{% endif %}" >
-        <thead>
-          <tr>
-            <th>{% trans "Service Date" %}</th>
-            <th>{% trans "Unit" %}<div></div></th>
-            <th>{% trans "Service Area" %}</th>
-            <th>{% trans "Service Time" %}</th>
-            <th>{% trans "Lost Time" %}</th>
-            <th>{% trans "Status" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for se in ses %}
-            <tr class="page{% if include_description %} active{% endif %}">
-              <td>
-                <a href="{{ se.link }}" title="{% trans "Click to view this service event" %}" target="_blank">
-                  {{ se.service_date }}
-                </a>
-              </td>
-              <td>{{ se.unit_name }}</td>
-              <td>{{ se.service_area }}</td>
-              <td>{{ se.service_time }}</td>
-              <td>{{ se.lost_time }}</td>
-              <td>{{ se.status }}</td>
+      {% for se in ses %}
+
+        {% if include_description or forloop.first %}
+          <table class="table table-condensed table-bordered {% if not include_description %}table-striped{% endif %}" >
+          <thead>
+            <tr>
+              <th>{% trans "Service Date" %}</th>
+              <th>{% trans "Unit" %}<div></div></th>
+              <th>{% trans "Service Area" %}</th>
+              <th>{% trans "Service Time" %}</th>
+              <th>{% trans "Lost Time" %}</th>
+              <th>{% trans "Status" %}</th>
             </tr>
-            {% if include_description %}
-              <tr>
-                <td colspan="6">
-                  <b>{% trans "Problem Description" %}:</b> {{ se.problem }}
-                  <br/>
-                  <b>{% trans "Work Description" %}:</b> {{ se.work }}
-                </td>
-              </tr>
-            {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+        {% endif %}
+
+        <tr class="page{% if include_description %} active{% endif %}">
+          <td>
+            <a href="{{ se.link }}" title="{% trans "Click to view this service event" %}" target="_blank">
+              {{ se.service_date }}
+            </a>
+          </td>
+          <td>{{ se.unit_name }}</td>
+          <td>{{ se.service_area }}</td>
+          <td>{{ se.service_time }}</td>
+          <td>{{ se.lost_time }}</td>
+          <td>{{ se.status }}</td>
+        </tr>
+
+        {% if include_description %}
+          <tr>
+            <td colspan="6">
+              <b>{% trans "Problem Description" %}:</b> {{ se.problem }}
+              <br/>
+              <b>{% trans "Work Description" %}:</b> {{ se.work }}
+            </td>
+          </tr>
+        {% endif %}
+
+        {% if include_description or forloop.last %}
+          </tbody>
+        </table>
+        {% endif %}
+
+      {% endfor %}
     {% endfor %}
   </div>
 </div>

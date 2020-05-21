@@ -139,7 +139,6 @@ class ServiceEventSummaryReport(ServiceEventReportMixin, BaseReport):
                     se['status'],
                     se['service_time'],
                     se['lost_time'],
-                    se['link'],
                 ]
 
                 if context['include_description']:
@@ -147,6 +146,8 @@ class ServiceEventSummaryReport(ServiceEventReportMixin, BaseReport):
                         se['problem'],
                         se['work'],
                     ])
+
+                row.append(se['link'])
                 rows.append(row)
 
         return rows

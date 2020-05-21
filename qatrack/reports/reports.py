@@ -278,7 +278,10 @@ class BaseReport(object, metaclass=ReportMeta):
                 elif isinstance(data, datetime.date):
                     ws.write_string(row, col, format_as_date(data))
                 else:
-                    ws.write(row, col, data)
+                    try:
+                        ws.write(row, col, data)
+                    except TypeError:
+                        ws.write(row, col, str(data))
 
                 col += 1
             row += 1
