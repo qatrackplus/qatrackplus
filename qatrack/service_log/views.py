@@ -325,7 +325,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         return context_data
 
     def form_invalid(self, form):
-        messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        messages.add_message(self.request, messages.ERROR, _('Please correct the Service Event Details error below.'))
         return super().form_invalid(form)
 
     def reset_status(self, form):
@@ -364,13 +364,18 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         if settings.USE_PARTS:
             parts_formset = context['part_used_formset']
             if not parts_formset or not parts_formset.is_valid():
-                messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+                messages.add_message(self.request, messages.ERROR, _('Please correct the Parts error below.'))
                 return self.render_to_response(context)
         else:
             parts_formset = None
 
-        if not hours_formset.is_valid() or not rtsqa_formset.is_valid():
-            messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        hours_valid = hours_formset.is_valid()
+        rtsqa_valid = rtsqa_formset.is_valid()
+        if not hours_valid:
+            messages.add_message(self.request, messages.ERROR, _('Please correct the User Hours error below.'))
+        if not rtsqa_valid:
+            messages.add_message(self.request, messages.ERROR, _('Please correct the Return to Service QC error below.'))
+        if not (rtsqa_valid and hours_valid):
             return self.render_to_response(context)
 
         new = form.instance.pk is None

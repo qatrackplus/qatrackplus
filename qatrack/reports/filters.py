@@ -356,7 +356,7 @@ def test_category_choices():
     return tests
 
 
-class ServiceEventFilter(BaseReportFilterSet):
+class BaseServiceEventFilter(BaseReportFilterSet):
 
     datetime_service = RelativeDateRangeFilter(
         label=_l("Service Date"),
@@ -381,15 +381,15 @@ class ServiceEventFilter(BaseReportFilterSet):
         help_text=_l("Use this filter to limit report to one or more service areas (leave blank to include all)"),
     )
 
-    include_description = NonNullBooleanFilter(
-        label=_l("Include Description"),
-        help_text=_l("Uncheck if you don't want to include Problem & Work descriptions in this report"),
-        initial=True,
+    service_type = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Service Type"),
+        queryset=sl_models.ServiceType.objects.order_by("name").all(),
+        help_text=_l("Use this filter to limit report to one or more service types (leave blank to include all)"),
     )
 
     class Meta:
         model = sl_models.ServiceEvent
-        fields = ["datetime_service", "unit_service_area__unit__site", "unit_service_area__unit"]
+        fields = ["datetime_service", "unit_service_area__unit__site", "unit_service_area__unit", "service_type"]
 
     def __init__(self, *args, **kwargs):
 
@@ -398,3 +398,16 @@ class ServiceEventFilter(BaseReportFilterSet):
         self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices()
         self.form.fields['datetime_service'].widget.attrs['class'] = "pastdate"
         self.form.fields['datetime_service'].initial = "Last 365 days"
+
+
+class ServiceEventSummaryFilter(BaseServiceEventFilter):
+
+    include_description = NonNullBooleanFilter(
+        label=_l("Include Description"),
+        help_text=_l("Uncheck if you don't want to include Problem & Work descriptions in this report"),
+        initial=True,
+    )
+
+
+class ServiceEventDetailsFilter(BaseServiceEventFilter):
+    pass

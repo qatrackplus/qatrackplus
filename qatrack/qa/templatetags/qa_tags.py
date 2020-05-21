@@ -212,6 +212,8 @@ def as_data_attributes(unit_test_collection):
 
 @register.filter
 def hour_min(duration):
+    if duration in (None, ""):
+        return ""
     total_seconds = int(duration.total_seconds())
     hours = total_seconds // 3600
     minutes = (total_seconds % 3600) // 60

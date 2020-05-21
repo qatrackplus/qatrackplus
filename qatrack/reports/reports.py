@@ -44,7 +44,9 @@ def format_user(user):
     if not user:
         return ""
 
-    return user.username if not user.email else "%s (%s)" % (user.username, user.email)
+    return user.username if not user.email else mark_safe(
+        '%s (<a href="mailto:%s">%s</a>)' % (user.username, user.email, user.email)
+    )
 
 
 class ReportMeta(type):

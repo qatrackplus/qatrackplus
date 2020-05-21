@@ -7,7 +7,15 @@
 {% load attach_tags %}
 {% load comments %}
 
-{% block head_title %}Service Event{% endblock %}
+{% block head_title %}
+  {% if form.instance.id %}
+    {% blocktrans with service_event_id=form.instance.id %}
+      Edit Service Event #{{ service_event_id }}
+    {% endblocktrans %}
+  {% else %}
+    {% trans "Enter New Service Event" %}
+  {% endif %}
+{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
@@ -284,6 +292,9 @@
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
 
+                                                            {% for e in h_form.non_field_errors %}
+                                                                <div class="help-block">{{ e }}</div>
+                                                            {% endfor %}
                                                         </td>
                                                         <td class="{% if h_form.time.errors %} has-error{% endif %}" title="{{ h_form.time.help_text }}">
                                                             {{ h_form.time }}
