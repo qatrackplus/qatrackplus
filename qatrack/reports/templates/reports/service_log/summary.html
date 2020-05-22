@@ -8,7 +8,7 @@
 <div class="row">
   <div class="col-xs-12">
     {% for site, ses in sites_data %}
-      <h2>{% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
+      <h2>{% trans "Site" %} :: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
       {% for se in ses %}
 
         {% if include_description or forloop.first %}
@@ -36,8 +36,20 @@
           <td>{{ se.unit_name }}</td>
           <td>{{ se.service_area }}</td>
           <td>{{ se.service_type }}</td>
-          <td>{{ se.service_time|hour_min }}</td>
-          <td>{{ se.lost_time|hour_min }}</td>
+          <td>
+            {% if se.service_time is not None and service_time != "" %}
+              {{ se.service_time|hour_min }}
+            {% else %}
+              <em>{% trans "Not Set" %}</em>
+            {% endif %}
+          </td>
+          <td>
+            {% if se.lost_time is not None and lost_time != "" %}
+              {{ se.lost_time|hour_min }}
+            {% else %}
+              <em>{% trans "Not Set" %}</em>
+            {% endif %}
+          </td>
           <td>{{ se.status }}</td>
         </tr>
 

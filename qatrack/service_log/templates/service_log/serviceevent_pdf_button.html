@@ -6,17 +6,17 @@
   </button>
   <ul class="dropdown-menu">
     <li>
-      <a href="{% url 'test_list_instance_report' pk=tli.pk %}?type=pdf" target="_blank">
+      <a href="{% url 'sl_service_event_report' pk=se.pk %}?type=pdf" target="_blank">
         <i class="fa fa-file-pdf-o"></i> {% trans "PDF" %}
       </a>
     </li>
     <li>
-      <a href="{% url 'test_list_instance_report' pk=tli.pk %}?type=csv" target="_blank">
+      <a href="{% url 'sl_service_event_report' pk=se.pk %}?type=csv" target="_blank">
         <i class="fa fa-table"></i> {% trans "CSV" %}
       </a>
     </li>
     <li>
-      <a href="{% url 'test_list_instance_report' pk=tli.pk %}?type=xlsx" target="_blank">
+      <a href="{% url 'sl_service_event_report' pk=se.pk %}?type=xlsx" target="_blank">
         <i class="fa fa-file-excel-o"></i> {% trans "Excel" %}
       </a>
     </li>

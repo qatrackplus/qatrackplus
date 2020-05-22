@@ -59,6 +59,7 @@ from qatrack.qatrack_core.utils import (
     format_datetime,
     parse_date,
 )
+from qatrack.reports.service_log import ServiceEventDetailsReport
 from qatrack.service_log import forms, models
 from qatrack.units import models as u_models
 
@@ -1478,3 +1479,27 @@ def handle_unit_down_time(request):
         writer.writerow(r)
 
     return response
+
+
+def service_log_report(request, pk):
+
+    se = get_object_or_404(models.ServiceEvent, id=pk)
+
+    se_date = format_datetime(se.datetime_service)
+    base_opts = {
+        'report_type': ServiceEventDetailsReport.report_type,
+        'report_format': request.GET.get("type", "pdf"),
+        'title': "Service Event %s - %s" % (se.pk, se_date),
+        'include_signature': False,
+        'visible_to': [],
+    }
+
+    report_opts = {
+        'datetime_service': "%s - %s" % (se_date, se_date),
+        'unit_service_area__unit': [se.unit_service_area.unit.id],
+        'unit_service_area__service_area': [se.unit_service_area],
+        'unit_service_area__service_type': [se.service_type],
+    }
+    report = ServiceEventDetailsReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
+
+    return report.render_to_response(base_opts['report_format'])

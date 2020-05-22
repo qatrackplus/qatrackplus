@@ -122,6 +122,9 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
 
     template = "reports/qc/assigned_qc_details.html"
 
+    def get_queryset(self):
+        return models.UnitTestCollection.objects.all()
+
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or "qc-assignment-details-report"), report_format)
 

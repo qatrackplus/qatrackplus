@@ -1,9 +1,12 @@
 from django.conf import settings
+from django.db.models import Prefetch
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
+from qatrack.parts import models as part_models
+from qatrack.qa import models as qa_models
 from qatrack.qatrack_core.utils import format_as_date
 from qatrack.reports import filters
 from qatrack.reports.reports import BaseReport
@@ -21,6 +24,18 @@ class ServiceEventReportMixin:
             "unit_service_area__unit",
             "unit_service_area__unit__site",
         )
+
+    def filter_form_valid(self, filter_form):
+
+        nse = self.filter_set.qs.count()
+        if nse > self.MAX_SES:
+            filter_form.add_error(
+                "__all__", "This report can only be generated with %d or fewer Service Events"
+                " Your filters are including %d. Please reduce the "
+                "number of Service Events." % (self.MAX_SES, nse)
+            )
+
+        return filter_form.is_valid()
 
     def get_unit_service_area__unit_details(self, val):
         units = umodels.Unit.objects.filter(pk__in=val).select_related("site")
@@ -40,10 +55,38 @@ class ServiceEventReportMixin:
             "unit_service_area__unit__%s" % settings.ORDER_UNITS_BY,
             "datetime_service",
         ).select_related(
-            "service_status",
-            "unit_service_area",
-            "unit_service_area__unit",
             "unit_service_area__service_area",
+            "test_list_instance_initiated_by",
+            "test_list_instance_initiated_by__test_list",
+            "user_created_by",
+            "service_status",
+            "service_type",
+        ).prefetch_related(
+            "attachment_set",
+            "returntoserviceqa_set__test_list_instance",
+            Prefetch(
+                "returntoserviceqa_set__test_list_instance__unit_test_collection",
+                queryset=qa_models.UnitTestCollection.objects.order_by("name"),
+            ),
+            Prefetch(
+                "partused_set__part",
+                queryset=part_models.Part.objects.order_by("name"),
+            ),
+            "partused_set__from_storage",
+            Prefetch(
+                "grouplinkerinstance_set",
+                queryset=models.GroupLinkerInstance.objects.order_by(
+                    "group_linker__name",
+                    "user__username",
+                ).select_related(
+                    "group_linker",
+                    "user",
+                ),
+            ),
+            "hours_set",
+            "hours_set__user",
+            "hours_set__third_party",
+            "hours_set__third_party__vendor",
         )
 
         return ses
@@ -62,6 +105,8 @@ class ServiceEventSummaryReport(ServiceEventReportMixin, BaseReport):
     )
 
     template = "reports/service_log/summary.html"
+
+    MAX_SES = 300
 
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or "service-event-summary"), report_format)
@@ -92,6 +137,7 @@ class ServiceEventSummaryReport(ServiceEventReportMixin, BaseReport):
 
             for se in self.get_ses_for_site(self.filter_set.qs, site):
                 sites_data[-1][-1].append({
+                    'id': se.id,
                     'problem': se.problem_description,
                     'work': se.work_description,
                     'unit_name': se.unit_service_area.unit.name,
@@ -116,10 +162,12 @@ class ServiceEventSummaryReport(ServiceEventReportMixin, BaseReport):
         rows.append([])
 
         header = [
+            _("Service Event ID"),
             _("Service Date"),
             _("Site"),
             _("Unit"),
             _("Service Area"),
+            _("Service Type"),
             _("Status"),
             _("Service Time"),
             _("Lost Time"),
@@ -134,10 +182,12 @@ class ServiceEventSummaryReport(ServiceEventReportMixin, BaseReport):
         for site, ses in context['sites_data']:
             for se in ses:
                 row = [
+                    se['id'],
                     se['service_date'],
                     site,
                     se['unit_name'],
                     se['service_area'],
+                    se['service_type'],
                     se['status'],
                     se['service_time'],
                     se['lost_time'],

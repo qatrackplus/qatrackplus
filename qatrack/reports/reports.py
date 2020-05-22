@@ -199,7 +199,7 @@ class BaseReport(object, metaclass=ReportMeta):
             if getter:
                 try:
                     label, field_details = getter(val)
-                except ValueError:
+                except ValueError:  # pragma: no cover
                     raise ValueError("get_%s_details should return a 2-tuple of form (label:str, details:str)" % name)
 
                 details.append((label, field_details))

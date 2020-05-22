@@ -32,56 +32,61 @@
       </h4>
       {% service_status_label serviceevent.service_status size="14" %}
     </div>
-    <div class="col-md-8">
-      <div class="col-sm-4">
-        <dl>
-          <dt>{% trans "Created" %}:</dt>
-          <dd>
-            <div>{{ serviceevent.datetime_created }}</div>
-            <div>
-              {% blocktrans with username=serviceevent.user_created_by|get_user_name %}
-                by {{ username }}
-              {% endblocktrans %}
-            </div>
-          </dd>
-        </dl>
-      </div>
-      {% if serviceevent.datetime_modified %}
+    <div class="col-md-7">
+      <div class="row">
         <div class="col-sm-4">
           <dl>
-            <dt>{% trans "Modified" %}:</dt>
+            <dt>{% trans "Created" %}:</dt>
             <dd>
-              <div>{{ serviceevent.datetime_modified }}</div>
+              <div>{{ serviceevent.datetime_created }}</div>
               <div>
-                {% blocktrans with username=serviceevent.user_modified_by|get_user_name %}
+                {% blocktrans with username=serviceevent.user_created_by|get_user_name %}
                   by {{ username }}
                 {% endblocktrans %}
               </div>
             </dd>
           </dl>
         </div>
-      {% endif %}
-      {% if serviceevent.datetime_status_changed %}
-        <div class="col-sm-4">
-          <dl>
-            <dt>{% trans "Status Changed" %}:</dt>
-            <dd>
-              <div>{{ serviceevent.datetime_status_changed }}</div>
-              <div>
-                {% if serviceevent.user_status_changed_by %}
-                  {% blocktrans with username=serviceevent.user_status_changed_by|get_user_name %}
+        {% if serviceevent.datetime_modified %}
+          <div class="col-sm-4">
+            <dl>
+              <dt>{% trans "Modified" %}:</dt>
+              <dd>
+                <div>{{ serviceevent.datetime_modified }}</div>
+                <div>
+                  {% blocktrans with username=serviceevent.user_modified_by|get_user_name %}
                     by {{ username }}
                   {% endblocktrans %}
-                {% else %}
-                  {% trans "by System" %}
-                {% endif %}
-              </div>
-            </dd>
-          </dl>
-        </div>
-      {% endif %}
+                </div>
+              </dd>
+            </dl>
+          </div>
+        {% endif %}
+        {% if serviceevent.datetime_status_changed %}
+          <div class="col-sm-4">
+            <dl>
+              <dt>{% trans "Status Changed" %}:</dt>
+              <dd>
+                <div>{{ serviceevent.datetime_status_changed }}</div>
+                <div>
+                  {% if serviceevent.user_status_changed_by %}
+                    {% blocktrans with username=serviceevent.user_status_changed_by|get_user_name %}
+                      by {{ username }}
+                    {% endblocktrans %}
+                  {% else %}
+                    {% trans "by System" %}
+                  {% endif %}
+                </div>
+              </dd>
+            </dl>
+          </div>
+        {% endif %}
+      </div>
     </div>
-    <div class="col-md-1">
+    <div class="col-md-2">
+      {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
+        {% include "service_log/serviceevent_pdf_button.html" with se=serviceevent %}
+      {% endif %}
       {% if perms.service_log.change_serviceevent %}
         <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">{% trans "Edit" %}</a>
       {% endif %}
@@ -98,7 +103,7 @@
           <div class="row">
             <div id="required-fields" class="col-md-6 form-horizontal">
               <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-6">
                   <dl class="dl-horizontal">
 
                     <dt>{% trans "Service date" %}:</dt>

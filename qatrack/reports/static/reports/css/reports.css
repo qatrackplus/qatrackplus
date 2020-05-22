@@ -119,3 +119,20 @@ table.recurrence-calendar .body td.header {
     font-weight: bold;
     color: #555;
 }
+
+#report-content .table-bordered,
+#report-content .table-bordered > thead > tr > th,
+#report-content .table-bordered > tbody > tr > th,
+#report-content .table-bordered > tfoot > tr > th,
+#report-content .table-bordered > thead > tr > td,
+#report-content .table-bordered > tbody > tr > td,
+#report-content .table-bordered > tfoot > tr > td {
+	border: 1px solid #dfdfdf;
+}
+#report-content .table {
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-bottom: 10px;
+  width: 98%;
+  max-width: 98%;
+}

@@ -506,7 +506,7 @@ class TestFilters(TestCase):
         assert list(f.form.fields['unit'].choices) == choices
 
     def test_utcfilter(self):
-        f = filters.TestListInstanceByUTFilter()
+        f = filters.TestListInstanceByUTCFilter()
         assert f.form.fields['work_completed'].widget.attrs['class'] == "pastdate"
 
 
@@ -603,6 +603,21 @@ class TestSerializeFormData(TestCase):
 
 
 class TestBaseReport(TestCase):
+
+    def test_meta_missing(self):
+        with self.assertRaises(TypeError):
+
+            class InvalidReport(metaclass=reports.ReportMeta):
+                filter_class = None
+                category = "General"
+                description = "Generic QATrack+ Report"
+                name = ""
+                report_type = ""
+                extra_form = None
+                formats = []
+
+    def test_base_filter_form_valid(self):
+        assert reports.BaseReport().filter_form_valid(None)
 
     def test_get_queryset(self):
         """get_queryset should return null for BaseReport"""
@@ -869,7 +884,7 @@ class TestReportModels(TestCase):
         )
 
     def test_savedreport_str(self):
-        assert str(self.report) == "#%d. title - QC Summary - PDF" % self.report.pk
+        assert str(self.report) == "#%d. title - QC Performed Summary - PDF" % self.report.pk
 
 
 class TestReportTasks(TestCase):

@@ -29,7 +29,7 @@ class TestQCSummaryReport(TestCase):
         assert qc.QCSummaryReport().get_queryset().model._meta.model_name == "testlistinstance"
 
     def test_get_filename(self):
-        assert qc.QCSummaryReport().get_filename('pdf') == 'qc-summary.pdf'
+        assert qc.QCSummaryReport().get_filename('pdf') == 'qc-performed-summary.pdf'
 
     def test_get_utc_site(self):
         site = USite.objects.create(name="site")
@@ -136,11 +136,11 @@ class TestQCSummaryReport(TestCase):
         assert len(table[header_row + 1:]) == 2
 
 
-class TestUTCReport(TestCase):
+class TestTestListInstanceDetailsReport(TestCase):
 
     def test_filter_form_valid(self):
         """If queryset.count() > MAX_TLIS then filter_form should get an error added"""
-        rep = qc.UTCReport()
+        rep = qc.TestListInstanceDetailsReport()
         rep.MAX_TLIS = -1
         ff = rep.get_filter_form()
         resp = rep.filter_form_valid(ff)
@@ -148,15 +148,15 @@ class TestUTCReport(TestCase):
         assert '__all__' in ff.errors and "Please reduce" in ff.errors['__all__'][0]
 
     def test_get_queryset(self):
-        assert qc.UTCReport().get_queryset().model._meta.model_name == "testlistinstance"
+        assert qc.TestListInstanceDetailsReport().get_queryset().model._meta.model_name == "testlistinstance"
 
     def test_get_filename(self):
-        fname = qc.UTCReport().get_filename('pdf')
+        fname = qc.TestListInstanceDetailsReport().get_filename('pdf')
         assert fname == 'test-list-instances.pdf'
 
     def test_get_unit_test_collection_details(self):
         utc = utils.create_unit_test_collection()
-        det = qc.UTCReport().get_unit_test_collection_details([utc.pk])
+        det = qc.TestListInstanceDetailsReport().get_unit_test_collection_details([utc.pk])
         assert det == ('Unit / Test List', '%s - %s' % (utc.unit.name, utc.name))
 
     def test_generate_html(self):
@@ -177,7 +177,7 @@ class TestUTCReport(TestCase):
         )
         comment.save()
 
-        rep = qc.UTCReport(report_opts={'unit_test_collection': [utc.pk]})
+        rep = qc.TestListInstanceDetailsReport(report_opts={'unit_test_collection': [utc.pk]})
         rep.report_format = "pdf"
         rep.to_html()
 
@@ -227,7 +227,7 @@ class TestUTCReport(TestCase):
         )
         attachment.save()
 
-        rep = qc.UTCReport(report_opts={'unit_test_collection': [utc.pk, utc2.pk]})
+        rep = qc.TestListInstanceDetailsReport(report_opts={'unit_test_collection': [utc.pk, utc2.pk]})
         rep.report_format = "csv"
         context = rep.get_context()
         table = rep.to_table(context)
@@ -485,6 +485,48 @@ class TestAssignedQCReport(TestCase):
         utils.create_unit_test_collection(unit=unit2)
 
         rep = qc.AssignedQCReport(report_opts={'active': True})
+        rep.report_format = "csv"
+        context = rep.get_context()
+        table = rep.to_table(context)
+
+        header_row = table.index([
+            _("Site"),
+            _("Unit"),
+            _("Test list (Cycle)"),
+            _("Frequency"),
+            _("Assigned To"),
+            _("Link"),
+        ])
+        assert len(table[header_row + 1:]) == 2
+
+
+class TestAssignedQCDetailsReport(TestCase):
+
+    def test_get_queryset(self):
+        assert qc.AssignedQCDetailsReport().get_queryset().model._meta.model_name == "unittestcollection"
+
+    def test_get_filename(self):
+        assert qc.AssignedQCDetailsReport().get_filename('pdf') == 'qc-assignment-details.pdf'
+
+    def test_generate_summary_html(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        utils.create_unit_test_collection(unit=unit)
+
+        rep = qc.AssignedQCDetailsReport()
+        rep.report_format = "pdf"
+        rep.to_html()
+
+    def test_to_table(self):
+
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        utils.create_unit_test_collection(unit=unit)
+
+        unit2 = utils.create_unit(site=None)
+        utils.create_unit_test_collection(unit=unit2)
+
+        rep = qc.AssignedQCDetailsReport(report_opts={'active': True})
         rep.report_format = "csv"
         context = rep.get_context()
         table = rep.to_table(context)
