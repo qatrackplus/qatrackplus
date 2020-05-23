@@ -97,7 +97,7 @@ def tolerance_for_reference(tol, ref):
     for key in tols:
         tols[key] = "-" if tols[key] is None else "%.4g" % tols[key]
     tols["ok_disp"] = tsd['ok']
-    tols["tol_disp"] = tsd['ok']
+    tols["tol_disp"] = tsd['tolerance']
     tols["act_disp"] = tsd['action']
     return mark_safe(
         '<span>%(ok_disp)s: Between %(tol_low)s &amp; %(tol_high)s</br> '

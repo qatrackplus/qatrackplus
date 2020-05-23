@@ -7,6 +7,9 @@
 {% load qa_tags %}
 {% load qatrack_tags %}
 
+{% block extra_report_css %}
+{% endblock extra_report_css %}
+
 <div class="container-fluid" style="overflow-x: hidden">
 
   {% include "reports/_header.html" with for_pdf=0 %}

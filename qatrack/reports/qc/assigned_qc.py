@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qa import models
 from qatrack.reports import filters
-from qatrack.reports.reports import BaseReport
+from qatrack.reports.reports import PDF, BaseReport
 from qatrack.units import models as umodels
 
 
@@ -161,8 +161,8 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
         sites_data = []
 
         cat_cache = dict(models.Test.objects.values_list("id", "category__name"))
-        ref_cache = dict((r.pk, str(r)) for r in models.Reference.objects.all())
-        tol_cache = dict((t.pk, str(t)) for t in models.Tolerance.objects.all())
+        ref_cache = dict((r.pk, r) for r in models.Reference.objects.all())
+        tol_cache = dict((t.pk, t) for t in models.Tolerance.objects.all())
 
         units = self.filter_set.form.cleaned_data['unit']
         utis = models.UnitTestInfo.objects.all()
@@ -191,10 +191,10 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
                     li.utis = []
                     for test in li.ordered_tests():
                         uti = uti_cache[utc.unit_id, test.id]
-                        ref = ref_cache[uti['reference']] if uti['reference'] else ""
-                        tol = tol_cache[uti['tolerance']] if uti['tolerance'] else ""
+                        ref = ref_cache[uti['reference']] if uti['reference'] else None
+                        tol = tol_cache[uti['tolerance']] if uti['tolerance'] else None
                         cat = cat_cache[test.id]
-                        li.utis.append((test.name, cat, ref, tol))
+                        li.utis.append((test, cat, ref, tol))
 
                 sites_data[-1][-1].append({
                     'unit_name': utc.unit.name,
@@ -218,6 +218,7 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
 
         utcs = utcs.order_by(
             "unit__%s" % settings.ORDER_UNITS_BY,
+            "frequency__nominal_interval",
             "name",
         ).select_related(
             "assigned_to",
@@ -257,3 +258,18 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
                 rows.append([])
 
         return rows
+
+
+class PaperBackupForms(AssignedQCDetailsReport):
+
+    report_type = "qc-paper-backup-forms"
+    name = _l("QC Paper Backup Forms")
+    filter_class = filters.UnitTestCollectionFilter
+    description = mark_safe(_l(
+        "This report generates pdf backup forms which can be used in place of QATrack+ "
+        "in case your QATrack+ installation is offline for some reason."
+    ))
+    category = _l("QC Backup Forms")
+
+    template = "reports/qc/backup_forms.html"
+    formats = [PDF]

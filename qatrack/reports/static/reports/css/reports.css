@@ -136,3 +136,60 @@ table.recurrence-calendar .body td.header {
   width: 98%;
   max-width: 98%;
 }
+
+
+#backup-content table {
+    page-break-inside: auto
+}
+#backup-content tr {
+    page-break-inside: avoid;
+    page-break-after: auto
+}
+#backup-content thead {
+    display: table-header-group
+}
+#backup-content tfoot {
+    display: table-footer-group
+}
+#backup-content .test-list-form-container {
+    width: 670px !important;
+    page-break-after: always;
+    font-size: 0.9em;
+}
+#backup-content th.test-name {
+    width: 230px;
+}
+#backup-content th.test-value {
+    width: 85px;
+}
+#backup-content .table-condensed td {
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+#backup-content th.test-ref {
+    width: 85px;
+}
+#backup-content th.test-tol {
+    width: 245px;
+}
+#backup-content div.comment {
+    height: 50px;
+}
+#backup-content h3 {
+    padding-bottom: 10px;
+}
+#backup-content hr {
+    margin-bottom: 5px;
+}
+#backup-content .margin-l-20 {
+    margin-left: 20px;
+}
+#backup-content td span {
+    height: 100%;
+}
+
+#backup-content .radio,
+#backup-content .checkbox {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}

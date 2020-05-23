@@ -8,7 +8,7 @@
 {% block content %}
 
 {% for site, utcs in sites_data %}
-  <h3>{% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h3>
+  <h3>{% trans "Site" %}: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h3>
   {% for utc in utcs %}
     <div class="row">
       <div class="col-xs-12">
