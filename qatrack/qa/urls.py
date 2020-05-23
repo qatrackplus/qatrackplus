@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 import qatrack.qa.views.admin
 
-from .views import admin, backup, base, charts, perform, review
+from .views import admin, base, charts, perform, review
 
 urlpatterns = [
     # CUSTOM ADMIN PAGES
@@ -112,6 +112,4 @@ urlpatterns = [
     ),
     url(r"^category/(?P<category>[/\w-]+?)/$", perform.CategoryList.as_view(), name="qa_by_category"),
     url(r"^due-and-overdue/$", perform.DueAndOverdue.as_view(), name="qa_by_overdue"),
-    url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
-    url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
 ]

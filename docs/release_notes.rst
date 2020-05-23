@@ -28,7 +28,10 @@ Major Features
 ^^^^^^^^^^^^^^
 
 * A new :ref:`Reports <reports>` tool has been added for generating and
-  scheduling PDF & Excel reports.
+  scheduling PDF & Excel reports.  As part of this move the following
+  features have now been moved to a report rather than a standalone page:
+
+    * Paper Backup Forms
 
 * A new :ref:`Query Tool <reports_query_tool>` has been added for advanced query and
   reporting.
@@ -112,8 +115,8 @@ Review & Approval
   list instances, while `clear_in_progress` will delete all in progress test
   lists.
 
-Minor UI Changes
-^^^^^^^^^^^^^^^^
+UI Changes
+^^^^^^^^^^
 
 * QA -> QC:  In most places in the UI the initials QA have been replaced by QC.
   This change was made to reflect that while QATrack+ is a tool for managing
