@@ -45,25 +45,25 @@
               <tr>
                 <th colspan="2">{% trans "Test List" %} :: {{ test_list.name }}</th>
                 <th colspan="2">
-                  {% if is_cycle %}
+                  {% if utc.all_lists|length > 1 %}
                     {% trans "Cycle Day" %} :: {{ forloop.counter }}</th>
                   {% endif %}
                 </th>
               </tr>
               <tr>
-                <th style="width: 30%">{% trans "Test" %}</th>
-                <th style="width: 30%">{% trans "Category" %}</th>
-                <th style="width: 15%">{% trans "Reference" %}</th>
-                <th style="width: 25%">{% trans "Tolerance" %}</th>
+                <th style="">{% trans "Test" %}</th>
+                <th style="width: 25%">{% trans "Category" %}</th>
+                <th style="width: 10%">{% trans "Reference" %}</th>
+                <th style="width: 30%">{% trans "Tolerance" %}</th>
               </tr>
             </thead>
             <tbody>
-              {% for uti in test_list.utis %}
+              {% for test, category, reference, tolerance in test_list.utis %}
                 <tr>
-                  <td>{{ uti.test.name }}</td>
-                  <td>{{ uti.test.category.name }}</td>
-                  <td>{% if uti.reference %}{{ uti.reference }}{% endif %}</td>
-                  <td>{% if uti.tolerance %}{{ uti.tolerance }}{% endif %}</td>
+                  <td>{{ test }}</td>
+                  <td>{{ category }}</td>
+                  <td>{% if reference %}{{ reference }}{% endif %}</td>
+                  <td>{% if tolerance %}{{ tolerance }}{% endif %}</td>
                 </tr>
               {% endfor %}
             </tbody>

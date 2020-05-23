@@ -122,6 +122,24 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
 
     template = "reports/qc/assigned_qc_details.html"
 
+    MAX_UTCS = 125
+
+    def filter_form_valid(self, filter_form):
+
+        nutc = self.filter_set.qs.count()
+        if nutc > self.MAX_UTCS:
+            msg = _(
+                "This report can only be generated with %(max_num_unit_assignments)d or fewer Test List "
+                "Assignments.  Your filters are including %(num_unit_assignments)d. Please reduce the "
+                "number of Sites, Units, Frequencies, or Assigned To Groups."
+            ) % {
+                'max_num_unit_assignments': self.MAX_UTCS,
+                'num_unit_assignments': nutc
+            }
+            filter_form.add_error("__all__", msg)
+
+        return filter_form.is_valid()
+
     def get_queryset(self):
         return models.UnitTestCollection.objects.all()
 
@@ -142,26 +160,41 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
 
         sites_data = []
 
+        cat_cache = dict(models.Test.objects.values_list("id", "category__name"))
+        ref_cache = dict((r.pk, str(r)) for r in models.Reference.objects.all())
+        tol_cache = dict((t.pk, str(t)) for t in models.Tolerance.objects.all())
+
+        units = self.filter_set.form.cleaned_data['unit']
+        utis = models.UnitTestInfo.objects.all()
+        if units:
+            utis = utis.filter(unit__in=units)
+
+        uti_cache = {}
+        for uti in utis:
+            uti_cache[(uti.unit_id, uti.test_id)] = {
+                'reference': uti.reference_id,
+                'tolerance': uti.tolerance_id,
+                'test': uti.test_id,
+            }
+
         for site in sites:
 
             if site:  # site can be None here since not all units may have a site
                 site = umodels.Site.objects.get(pk=site)
 
             sites_data.append((site.name if site else "", []))
-
             for utc in self.get_utcs_for_site(self.filter_set.qs, site):
 
                 all_lists = utc.tests_object.test_list_members().prefetch_related("testlistmembership_set__test",)
                 for li in all_lists:
-                    li.all_tests = li.ordered_tests()
 
-                for li in all_lists:
-                    utis = models.UnitTestInfo.objects.filter(
-                        test__in=li.all_tests,
-                        unit=utc.unit,
-                    ).select_related("test", "test__category", "reference", "tolerance")
-
-                    li.utis = list(sorted(utis, key=lambda uti: li.all_tests.index(uti.test)))
+                    li.utis = []
+                    for test in li.ordered_tests():
+                        uti = uti_cache[utc.unit_id, test.id]
+                        ref = ref_cache[uti['reference']] if uti['reference'] else ""
+                        tol = tol_cache[uti['tolerance']] if uti['tolerance'] else ""
+                        cat = cat_cache[test.id]
+                        li.utis.append((test.name, cat, ref, tol))
 
                 sites_data[-1][-1].append({
                     'unit_name': utc.unit.name,
@@ -201,24 +234,26 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
 
         rows.append([])
 
-        rows.append([
-            _("Site"),
-            _("Unit"),
-            _("Test list (Cycle)"),
-            _("Frequency"),
-            _("Assigned To"),
-            _("Link"),
-        ])
-
         for site, utcs in context['sites_data']:
             for utc in utcs:
-                rows.append([
-                    site,
-                    utc['unit_name'],
-                    utc['name'],
-                    utc['frequency'],
-                    utc['assigned_to'],
-                    utc['link'],
+                rows.extend([
+                    (_("Site"), site or _("Other")),
+                    (_("Unit"), utc['unit_name']),
+                    (_("Test list (Cycle)"), utc['name']),
+                    (_("Frequency"), utc['frequency']),
+                    (_("Assigned To"), utc['assigned_to']),
+                    (_("Link"), utc['link']),
                 ])
+                is_cycle = len(utc['all_lists']) > 0
+                for idx, test_list in enumerate(utc['all_lists']):
+                    rows.append((_("Test List"), test_list.name))
+                    if is_cycle:
+                        rows.append((_("Cycle Day"), idx + 1))
+
+                    rows.append((_("Test"), _("Category"), _("Reference"), _("Tolerance")))
+                    rows.extend(test_list.utis)
+                    rows.append([])
+
+                rows.append([])
 
         return rows
