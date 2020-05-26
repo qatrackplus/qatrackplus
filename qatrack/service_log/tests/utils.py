@@ -166,6 +166,8 @@ def create_group_linker_instance(group_linker=None, user=None, service_event=Non
     if service_event is None:
         service_event = create_service_event()
 
+    user.groups.add(group_linker.group)
+
     gli, _ = models.GroupLinkerInstance.objects.get_or_create(
         group_linker=group_linker, user=user, service_event=service_event, datetime_linked=datetime_linked
     )

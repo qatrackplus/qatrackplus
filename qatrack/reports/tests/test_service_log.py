@@ -197,3 +197,63 @@ class TestServiceEventDetailsReport(TestCase):
         ])
         # should be three ses after header
         assert len(table[header_row + 1:]) == 3
+
+
+class TestServiceEventPersonnelSummaryReport(TestCase):
+
+    def test_get_filename(self):
+        assert sl.ServiceEventPersonnelSummaryReport().get_filename('pdf') == 'service-event-personnel-summary.pdf'
+
+    def test_generate_html(self):
+
+        site = USite.objects.create(name="site")
+        unit1 = utils.create_unit(site=site)
+        usa1 = sl_utils.create_unit_service_area(unit=unit1)
+        sl_utils.create_service_event(unit_service_area=usa1)
+
+        unit2 = utils.create_unit()
+        usa2 = sl_utils.create_unit_service_area(unit=unit2)
+        sl_utils.create_service_event(unit_service_area=usa2)
+
+        rep = sl.ServiceEventPersonnelSummaryReport()
+        rep.report_format = "pdf"
+        rep.to_html()
+
+    def test_to_table(self):
+
+        site = USite.objects.create(name="site")
+        unit1 = utils.create_unit(site=site)
+        usa1 = sl_utils.create_unit_service_area(unit=unit1)
+        sl_utils.create_service_event(unit_service_area=usa1)
+
+        unit2 = utils.create_unit()
+        usa2 = sl_utils.create_unit_service_area(unit=unit2)
+        se = sl_utils.create_service_event(unit_service_area=usa2)
+        se2 = sl_utils.create_service_event(unit_service_area=usa2)
+        se.service_event_related.add(se2)
+
+        sl_utils.create_hours(service_event=se)
+        tp = sl_utils.create_third_party()
+        sl_utils.create_hours(service_event=se, third_party=tp)
+        sl_utils.create_group_linker_instance(service_event=se)
+        part = sl_utils.create_part()
+
+        parts_models.PartUsed.objects.create(service_event=se, part=part, quantity=1)
+
+        attachment = Attachment(
+            attachment=ContentFile("content", "content.pdf"),
+            created_by=se.user_created_by,
+            serviceevent=se,
+        )
+        attachment.save()
+
+        rep = sl.ServiceEventPersonnelSummaryReport()
+        rep.report_format = "xlsx"
+        context = rep.get_context()
+        rep.to_table(context)
+
+    def test_format(self):
+        assert sl.ServiceEventPersonnelSummaryReport().format_user("foo", "bar", "baz") == "foo (baz, bar)"
+
+    def test_format_no_fname(self):
+        assert sl.ServiceEventPersonnelSummaryReport().format_user("foo", "", "baz") == "foo (baz)"
