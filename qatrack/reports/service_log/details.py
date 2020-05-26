@@ -71,7 +71,7 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
 
                 hours = []
                 for h in se.hours_set.all():
-                    u = h.user.username if h.user else "%s (%s)" % (h.third_party.name, h.third_party.vendor.name)
+                    u = h.user.username if h.user else "%s (%s)" % (str(h.third_party), h.third_party.vendor.name)
                     hours.append((u, h.time))
 
                 rts_qc = []

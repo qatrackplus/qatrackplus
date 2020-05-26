@@ -41,7 +41,10 @@
             {% endfor %}
 
           {% endwith %}
-
+        {% empty %}
+          <tr class="page">
+            <td colspan="3"><em>{% trans "No Group Members Involved found" %}</em></td>
+          </tr>
         {% endfor %}
 
       </tbody>
