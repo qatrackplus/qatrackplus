@@ -89,7 +89,11 @@ class ServiceEventPersonnelSummaryReport(BaseReport):
 
             se_gli_counts = {gl.name: 0 for gl in group_linkers}
             for ugli in user_glis:
-                se_gli_counts[ugli.group_linker.name] += 1
+                try:
+                    se_gli_counts[ugli.group_linker.name] += 1
+                except KeyError:
+                    # handle case where user is no longer part of group
+                    se_gli_counts[ugli.group_linker.name] = 1
 
             u = self.format_user(uname, fname, lname)
             user_counts.append((u, len(se_gli_counts), sorted(se_gli_counts.items())))
