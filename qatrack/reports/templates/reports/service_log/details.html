@@ -53,7 +53,14 @@
 
             <tr>
               <th class="text-right" colspan="2">{% trans "Created By" %}:</th>
-              <td colspan="5">{{ se.created_by }}</td>
+              <td colspan="3">{{ se.created_by }}</td>
+              <td colspan="2">{{ se.created_date }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Last Modified By" %}:</th>
+              <td colspan="3">{{ se.modified_by }}</td>
+              <td colspan="2">{{ se.modified_date }}</td>
             </tr>
 
             <tr>
@@ -162,6 +169,24 @@
               <tr>
                 <th class="text-right" colspan="2">{% trans "Return To Service QC" %}:</th>
                 <td colspan="5"><em>{% trans "No Return To Service QC assigned" %}</em></td>
+              </tr>
+            {% endfor %}
+
+            {% for user, dt, comment in se.rts_comments %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ se.rts_comments|length }}" colspan="2">
+                    {% trans "Return To Service Comments" %}:
+                  </th>
+                {% endif %}
+                <td colspan="1">{{ dt }}</td>
+                <td colspan="1">{{ user }}</td>
+                <td colspan="3">{{ comment }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="2">{% trans "Return To Service Comments" %}:</th>
+                <td colspan="5"><em>{% trans "No Return To Service Comments" %}</em></td>
               </tr>
             {% endfor %}
 

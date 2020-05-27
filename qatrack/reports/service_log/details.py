@@ -5,6 +5,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
+from django_comments.models import Comment
 
 from qatrack.qatrack_core.utils import format_as_date, format_datetime
 from qatrack.reports import filters
@@ -55,7 +56,7 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
 
             for se in self.get_ses_for_site(self.filter_set.qs, site):
                 initiated_by_link = (
-                    self.make_url(se.test_list_instance_initiated_by.get_absolute_url())
+                    self.make_url(se.test_list_instance_initiated_by.get_absolute_url(), plain=True)
                     if se.test_list_instance_initiated_by else None
                 )
 
@@ -81,6 +82,15 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     link = self.make_url(tli.get_absolute_url(), plain=True) if tli else ""
                     rts_qc.append((rts.unit_test_collection.name, wc, link))
 
+                rts_comments = []
+                comment_qs = Comment.objects.for_model(se).values_list(
+                    "user__username",
+                    "submit_date",
+                    "comment",
+                )
+                for user, dt, comment in comment_qs:
+                    rts_comments.append((user, format_datetime(dt), comment))
+
                 parts = []
                 if settings.USE_PARTS:
                     for part_used in se.partused_set.all():
@@ -88,7 +98,7 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
 
                 attachments = []
                 for a in se.attachment_set.all():
-                    attachments.append((a.label, self.make_url(a.attachment.url)))
+                    attachments.append((a.label, self.make_url(a.attachment.url, plain=True)))
 
                 sites_data[-1][-1].append({
                     'id': se.id,
@@ -101,6 +111,9 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     'lost_time': se.duration_lost_time,
                     'status': se.service_status.name,
                     'created_by': format_user(se.user_created_by),
+                    'created_date': format_datetime(se.datetime_created),
+                    'modified_by': format_user(se.user_modified_by),
+                    'modified_date': format_datetime(se.datetime_modified),
                     'problem': se.problem_description,
                     'work': se.work_description,
                     'safety': se.safety_precautions,
@@ -110,6 +123,7 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     'group_linkers': sorted(group_linkers.items()),
                     'hours': hours,
                     'rts_qc': rts_qc,
+                    'rts_comments': rts_comments,
                     'parts': parts,
                     'attachments': attachments,
                     'link': self.make_url(se.get_absolute_url(), plain=True),
@@ -137,6 +151,9 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
             _("Lost Time"),
             _("Status"),
             _("Created By"),
+            _("Created Date"),
+            _("Modified By"),
+            _("Modified Date"),
             _("Problem Description"),
             _("Work Description"),
             _("Safety Precautions"),
@@ -145,6 +162,7 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
             _("Group Members Involved"),
             _("Work Durations"),
             _("Return To Service QC"),
+            _("Return To Service Comments"),
             _("Parts Used"),
             _("Attachments"),
             _("Link"),
@@ -171,6 +189,11 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     rts_qc.append("%s,%s,%s" % (utc, wc or _("Not completed"), link or _("Not completed")))
                 rts_qc = '\n'.join(rts_qc)
 
+                rts_comments = []
+                for comments in se['rts_comments']:
+                    rts_comments.append("%s,%s,%s" % comments)
+                rts_comments = '\n'.join(rts_comments)
+
                 parts = ','.join("%s=%s=%s" % p for p in se['parts'])
 
                 attachments = ','.join(link for __, link in se['attachments'])
@@ -186,6 +209,9 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     se['lost_time'],
                     se['status'],
                     se['created_by'].split("(")[0],
+                    se['created_date'],
+                    se['modified_by'].split("(")[0],
+                    se['modified_date'],
                     se['problem'],
                     se['work'],
                     se['safety'],
@@ -194,8 +220,10 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     group_members,
                     hours,
                     rts_qc,
+                    rts_comments,
                     parts,
                     attachments,
+                    comments,
                     se['link'],
                 ]
 

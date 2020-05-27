@@ -59,6 +59,7 @@ class ServiceEventReportMixin:
             "test_list_instance_initiated_by",
             "test_list_instance_initiated_by__test_list",
             "user_created_by",
+            "user_modified_by",
             "service_status",
             "service_type",
         ).prefetch_related(
