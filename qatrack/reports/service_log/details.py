@@ -223,7 +223,6 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     rts_comments,
                     parts,
                     attachments,
-                    comments,
                     se['link'],
                 ]
 
