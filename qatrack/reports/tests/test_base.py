@@ -37,7 +37,7 @@ class TestReportForm:
         """ensure title attribute added to each choice"""
         form = forms.ReportForm()
         widget = form.fields['report_type'].widget
-        assert 'title="%s"' % qc.QCSummaryReport.description in widget.render("name", [])
+        assert 'title="%s"' % qc.TestListInstanceSummaryReport.description in widget.render("name", [])
 
 
 class TestSelectReport(TestCase):
@@ -62,7 +62,7 @@ class TestSelectReport(TestCase):
 
     def test_invalid_report_valid_filter(self):
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-report_format': None,
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
         }
@@ -72,7 +72,7 @@ class TestSelectReport(TestCase):
 
     def test_invalid_report_invalid_filter(self):
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-report_format': None,
             'work_completed': '',
         }
@@ -82,7 +82,7 @@ class TestSelectReport(TestCase):
 
     def test_valid_report_valid_filter(self):
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
@@ -109,7 +109,7 @@ class TestReportPreview(TestCase):
     def test_form_invalid_with_report_type(self):
         """Invalid base form so should get errors"""
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
         }
         payload = self.client.post(self.url, data).json()
@@ -120,7 +120,7 @@ class TestReportPreview(TestCase):
     def test_form_valid_with_invalid_report_form(self):
         """Invalid base form so should get errors"""
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
@@ -134,7 +134,7 @@ class TestReportPreview(TestCase):
     def test_form_valid_with_valid_report_form(self):
         """Invalid base form so should get errors"""
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
@@ -161,7 +161,7 @@ class TestSaveReport(TestCase):
     def test_form_invalid_with_report_type(self):
         """Invalid base form so should get errors"""
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
         }
         payload = self.client.post(self.url, data).json()
@@ -171,7 +171,7 @@ class TestSaveReport(TestCase):
     def test_form_valid_with_invalid_report_form(self):
         """Invalid base form so should get errors"""
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
@@ -185,7 +185,7 @@ class TestSaveReport(TestCase):
     def test_form_valid_with_valid_report_form(self):
         """Invalid base form so should get errors"""
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
@@ -201,7 +201,7 @@ class TestSaveReport(TestCase):
     def test_update_report(self):
         """Invalid base form so should get errors"""
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
@@ -226,7 +226,7 @@ class TestSaveReport(TestCase):
     def test_no_edit_perms(self):
         user = User.objects.create_user("reg_user", "a@b.com", "password")
         data = {
-            'root-report_type': 'qc-summary-by-date',
+            'root-report_type': 'testlistinstance_summary',
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
@@ -259,7 +259,7 @@ class TestLoadReport(TestCase):
     def test_report_loaded(self):
         """Invalid base form so should get errors"""
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -294,7 +294,7 @@ class TestDeleteReport(TestCase):
     def test_report_deleted(self):
         """Invalid base form so should get errors"""
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -322,7 +322,7 @@ class TestScheduleReport(TestCase):
     def test_report_scheduled(self):
         """Report scheduled"""
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -349,7 +349,7 @@ class TestScheduleReport(TestCase):
     def test_missing_recipients(self):
         """Report scheduled"""
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -375,7 +375,7 @@ class TestScheduleReport(TestCase):
     def test_not_editable(self):
         user = User.objects.create_user("reg_user", "a@b.com", "password")
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -399,7 +399,7 @@ class TestDeleteSchedule(TestCase):
         self.user = User.objects.create_superuser("user", "a@b.com", "password")
         self.client.force_login(self.user)
         self.sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={},
@@ -450,7 +450,7 @@ class TestFilters(TestCase):
         self.url = reverse("reports-filter")
 
     def test_valid_get_filter(self):
-        req = self.factory.get(self.url, data={'report_type': 'qc-summary-by-date'})
+        req = self.factory.get(self.url, data={'report_type': 'testlistinstance_summary'})
         resp = views.get_filter(req)
         assert json.loads(resp.content.decode())
 
@@ -517,7 +517,7 @@ class TestInstanceToFormFields(TestCase):
         u = User.objects.create_superuser("super", "a@b.com", "password")
         self.saved_report = models.SavedReport.objects.create(
             title="test report",
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format='csv',
             filters={},
             created_by=u,
@@ -527,7 +527,7 @@ class TestInstanceToFormFields(TestCase):
 
     def test_root_report_type(self):
         res = forms.serialize_savedreport(self.saved_report)
-        assert res['root-report_type'] == ['select', qc.QCSummaryReport.report_type]
+        assert res['root-report_type'] == ['select', qc.TestListInstanceSummaryReport.report_type]
 
     def test_root_report_title(self):
         res = forms.serialize_savedreport(self.saved_report)
@@ -548,7 +548,7 @@ class TestInstanceToFormFields(TestCase):
         assert res['root-visible_to'] == ['select', [g.pk]]
 
     def test_daterange(self):
-        sr = models.SavedReport(report_type=qc.QCSummaryReport.report_type)
+        sr = models.SavedReport(report_type=qc.TestListInstanceSummaryReport.report_type)
         sr.filters = {'work_completed': ["1 Jan 2019", "2 Jan 2019"]}
         res = forms.serialize_savedreport(sr)
         assert res['work_completed'] == ['text', '01 Jan 2019 - 02 Jan 2019']
@@ -558,23 +558,23 @@ class TestReportToFormFields(TestCase):
 
     def setUp(self):
 
-        self.report = qc.QCSummaryReport()
+        self.report = qc.TestListInstanceSummaryReport()
 
     def test_daterange(self):
-        report = qc.QCSummaryReport(report_opts={'work_completed': ["1 Jan 2019", "2 Jan 2019"]})
+        report = qc.TestListInstanceSummaryReport(report_opts={'work_completed': ["1 Jan 2019", "2 Jan 2019"]})
         res = forms.serialize_report(report)
         assert res['work_completed'] == ['text', '01 Jan 2019 - 02 Jan 2019']
 
     def test_visible_to(self):
         g = Group.objects.create(name="group")
         base_opts = {'visible_to': Group.objects.all()}
-        report = qc.QCSummaryReport(base_opts=base_opts)
+        report = qc.TestListInstanceSummaryReport(base_opts=base_opts)
         res = forms.serialize_report(report)
         assert res['root-visible_to'] == ['select', [g.pk]]
 
     def test_root_include_sig(self):
         base_opts = {'include_signature': False}
-        report = qc.QCSummaryReport(base_opts=base_opts)
+        report = qc.TestListInstanceSummaryReport(base_opts=base_opts)
         res = forms.serialize_report(report)
         assert res['root-include_signature'] == ['checkbox', False]
 
@@ -741,14 +741,14 @@ class TestReportInterface(BaseQATests):
 
     def test_report_preview(self):
         """Select report and make sure it previews"""
-        self.select_by_text('id_root-report_type', qc.QCSummaryReport.name)
+        self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
         self.click("preview")
         self.driver.find_element_by_css_selector('#report .container-fluid')
 
     def test_save_report(self):
         """Select report and make sure it previews"""
-        self.select_by_text('id_root-report_type', qc.QCSummaryReport.name)
+        self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
         assert models.SavedReport.objects.count() == 0
         self.click("save")
@@ -761,7 +761,7 @@ class TestReportInterface(BaseQATests):
         """Select report from table and make sure it loads"""
 
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -779,7 +779,7 @@ class TestReportInterface(BaseQATests):
         """Select report from table and make sure it loads"""
 
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -809,7 +809,7 @@ class TestReportInterface(BaseQATests):
         """Select report from table and make sure it loads"""
 
         sr = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -856,11 +856,15 @@ class TestReportScheduleAdmin(TestCase):
     def setUp(self):
         site = AdminSite()
         self.admin = admin.ReportScheduleAdmin(models.ReportSchedule, site)
-        r = models.SavedReport(report_type=qc.QCSummaryReport.report_type, report_format="pdf", title="title")
+        r = models.SavedReport(
+            report_type=qc.TestListInstanceSummaryReport.report_type,
+            report_format="pdf",
+            title="title",
+        )
         self.rs = models.ReportSchedule(report=r)
 
     def test_get_report_type(self):
-        assert self.admin.get_report_type(self.rs) == qc.QCSummaryReport.name
+        assert self.admin.get_report_type(self.rs) == qc.TestListInstanceSummaryReport.name
 
     def test_get_report_format(self):
         assert self.admin.get_report_format(self.rs) == "PDF"
@@ -875,7 +879,7 @@ class TestReportModels(TestCase):
 
         self.user = User.objects.create_superuser("user", "a@b.com", "password")
         self.report = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
@@ -884,7 +888,7 @@ class TestReportModels(TestCase):
         )
 
     def test_savedreport_str(self):
-        assert str(self.report) == "#%d. title - QC Performed Summary - PDF" % self.report.pk
+        assert str(self.report) == "#%d. title - Test List Instance Summary - PDF" % self.report.pk
 
 
 class TestReportTasks(TestCase):
@@ -893,7 +897,7 @@ class TestReportTasks(TestCase):
 
         self.user = User.objects.create_superuser("user", "a@b.com", "password")
         self.report = models.SavedReport.objects.create(
-            report_type=qc.QCSummaryReport.report_type,
+            report_type=qc.TestListInstanceSummaryReport.report_type,
             report_format="pdf",
             title="title",
             filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},

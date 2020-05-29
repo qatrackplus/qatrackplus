@@ -14,11 +14,11 @@ from qatrack.reports import qc
 from qatrack.units.models import Site as USite
 
 
-class TestQCSummaryReport(TestCase):
+class TestTestListInstanceSummaryReport(TestCase):
 
     def test_filter_form_valid(self):
         """If queryset.count() > MAX_TLIS then filter_form should get an error added"""
-        rep = qc.QCSummaryReport()
+        rep = qc.TestListInstanceSummaryReport()
         rep.MAX_TLIS = -1
         ff = rep.get_filter_form()
         resp = rep.filter_form_valid(ff)
@@ -26,24 +26,24 @@ class TestQCSummaryReport(TestCase):
         assert '__all__' in ff.errors and "Please reduce" in ff.errors['__all__'][0]
 
     def test_get_queryset(self):
-        assert qc.QCSummaryReport().get_queryset().model._meta.model_name == "testlistinstance"
+        assert qc.TestListInstanceSummaryReport().get_queryset().model._meta.model_name == "testlistinstance"
 
     def test_get_filename(self):
-        assert qc.QCSummaryReport().get_filename('pdf') == 'qc-performed-summary.pdf'
+        assert qc.TestListInstanceSummaryReport().get_filename('pdf') == 'test-list-instance-summary.pdf'
 
     def test_get_utc_site(self):
         site = USite.objects.create(name="site")
-        sites = qc.QCSummaryReport().get_unit_test_collection__unit__site_details([site, 'null'])
+        sites = qc.TestListInstanceSummaryReport().get_unit_test_collection__unit__site_details([site, 'null'])
         assert sites == ('Site(s)', 'site, Other')
 
     def test_get_utc_freq(self):
         freq = Frequency.objects.create(name="freq", window_start=0, window_end=0)
-        freqs = qc.QCSummaryReport().get_unit_test_collection__frequency_details([freq, 'null'])
+        freqs = qc.TestListInstanceSummaryReport().get_unit_test_collection__frequency_details([freq, 'null'])
         assert freqs == ('Frequencies', 'freq, Ad Hoc')
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_work_completed_html(self):
-        rep = qc.QCSummaryReport()
+        rep = qc.TestListInstanceSummaryReport()
         rep.report_format = "html"
         tz = pytz.timezone("America/Toronto")
         work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
@@ -54,7 +54,7 @@ class TestQCSummaryReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_work_completed_plain(self):
-        rep = qc.QCSummaryReport()
+        rep = qc.TestListInstanceSummaryReport()
         rep.report_format = "csv"
         tz = pytz.timezone("America/Toronto")
         work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
@@ -65,7 +65,7 @@ class TestQCSummaryReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_pass_fail_html(self):
-        rep = qc.QCSummaryReport()
+        rep = qc.TestListInstanceSummaryReport()
         rep.report_format = "html"
         tli = utils.create_test_list_instance()
         pf = rep.get_pass_fail_status(tli)
@@ -73,7 +73,7 @@ class TestQCSummaryReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_get_pass_fail_plain(self):
-        rep = qc.QCSummaryReport()
+        rep = qc.TestListInstanceSummaryReport()
         rep.report_format = "csv"
         tli = utils.create_test_list_instance()
         pf = rep.get_pass_fail_status(tli)
@@ -90,7 +90,7 @@ class TestQCSummaryReport(TestCase):
         utils.create_test_list_instance(unit_test_collection=utc2)
 
         qs = TestListInstance.objects.all()
-        tlis = qc.QCSummaryReport().get_tlis_for_site(qs, site)
+        tlis = qc.TestListInstanceSummaryReport().get_tlis_for_site(qs, site)
         assert list([x.pk for x in tlis]) == [tli.pk]
 
     def test_get_tlis_for_null_site(self):
@@ -104,7 +104,7 @@ class TestQCSummaryReport(TestCase):
         tli2 = utils.create_test_list_instance(unit_test_collection=utc2)
 
         qs = TestListInstance.objects.all()
-        tlis = qc.QCSummaryReport().get_tlis_for_site(qs, None)
+        tlis = qc.TestListInstanceSummaryReport().get_tlis_for_site(qs, None)
         assert list([x.pk for x in tlis]) == [tli2.pk]
 
     def test_to_table(self):
@@ -118,7 +118,7 @@ class TestQCSummaryReport(TestCase):
         utc2 = utils.create_unit_test_collection(unit=unit2)
         utils.create_test_list_instance(unit_test_collection=utc2)
 
-        rep = qc.QCSummaryReport()
+        rep = qc.TestListInstanceSummaryReport()
         rep.report_format = "csv"
         context = rep.get_context()
         table = rep.to_table(context)
@@ -152,7 +152,7 @@ class TestTestListInstanceDetailsReport(TestCase):
 
     def test_get_filename(self):
         fname = qc.TestListInstanceDetailsReport().get_filename('pdf')
-        assert fname == 'test-list-instances.pdf'
+        assert fname == 'test-list-instance-details.pdf'
 
     def test_get_unit_test_collection_details(self):
         utc = utils.create_unit_test_collection()
@@ -247,11 +247,11 @@ class TestTestListInstanceDetailsReport(TestCase):
         assert ntlis == 3
 
 
-class TestTestDataReport(TestCase):
+class TestTestInstanceDetailsReport(TestCase):
 
     def test_filter_form_valid(self):
         """If queryset.count() > MAX_TLIS then filter_form should get an error added"""
-        rep = qc.TestDataReport()
+        rep = qc.TestInstanceDetailsReport()
         rep.MAX_TIS = -1
         ff = rep.get_filter_form()
         resp = rep.filter_form_valid(ff)
@@ -259,18 +259,18 @@ class TestTestDataReport(TestCase):
         assert '__all__' in ff.errors and "Please reduce" in ff.errors['__all__'][0]
 
     def test_get_queryset(self):
-        assert qc.TestDataReport().get_queryset().model._meta.model_name == "testinstance"
+        assert qc.TestInstanceDetailsReport().get_queryset().model._meta.model_name == "testinstance"
 
     def test_get_filename(self):
-        assert qc.TestDataReport().get_filename('pdf') == 'test-instance-values.pdf'
+        assert qc.TestInstanceDetailsReport().get_filename('pdf') == 'test-instance-details.pdf'
 
     def test_get_unit_test_info__test_details(self):
         test = utils.create_test()
-        tests = qc.TestDataReport().get_unit_test_info__test_details([test.pk])
+        tests = qc.TestInstanceDetailsReport().get_unit_test_info__test_details([test.pk])
         assert tests == ('Test', test.name)
 
     def test_get_organization_details(self):
-        org = qc.TestDataReport().get_organization_details('one_per_row')
+        org = qc.TestInstanceDetailsReport().get_organization_details('one_per_row')
         assert org == ('Organization', 'One Test Instance Per Row')
 
     def test_generate_html_group_by_unit_test_date(self):
@@ -280,7 +280,7 @@ class TestTestDataReport(TestCase):
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(test_list_instance=tli)
 
-        rep = qc.TestDataReport(
+        rep = qc.TestInstanceDetailsReport(
             report_opts={
                 'unit_test_info__test': [ti.unit_test_info.test.pk],
                 'organization': 'group_by_unit_test_date'
@@ -296,7 +296,7 @@ class TestTestDataReport(TestCase):
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(test_list_instance=tli)
 
-        rep = qc.TestDataReport(
+        rep = qc.TestInstanceDetailsReport(
             report_opts={
                 'unit_test_info__test': [ti.unit_test_info.test.pk],
                 'organization': 'one_per_row'
@@ -318,7 +318,7 @@ class TestTestDataReport(TestCase):
             work_completed=tli.work_completed - timezone.timedelta(days=1),
         )
 
-        rep = qc.TestDataReport(
+        rep = qc.TestInstanceDetailsReport(
             report_opts={
                 'unit_test_info__test': [ti.unit_test_info.test.pk],
                 'organization': 'one_per_row'
@@ -359,7 +359,7 @@ class TestTestDataReport(TestCase):
             work_completed=tli.work_completed - timezone.timedelta(days=1),
         )
 
-        rep = qc.TestDataReport(
+        rep = qc.TestInstanceDetailsReport(
             report_opts={
                 'unit_test_info__test': [ti.unit_test_info.test.pk, ti3.unit_test_info.test.pk],
                 'organization': 'group_by_unit_test_date'

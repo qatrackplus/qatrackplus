@@ -23,8 +23,7 @@
         <div class="checkbox-inline">
           <label for="{{ field.id_for_label }}">
             {% render_field field %}
-            {{ field.label }}
-
+            {{ field.label }}{% if field.field.required %}*{% endif %}
             {% if field.help_text %}
               <small class="form-text text-muted">{{ field.help_text }}</small>
             {% endif %}
@@ -40,7 +39,7 @@
     {% else %}
 
       <label class="col-sm-4 control-label" for="{{ field.id_for_label }}">
-        {{ field.label }}
+        {{ field.label }}{% if field.field.required %}*{% endif %}
       </label>
       <div class="col-sm-8">
         {% render_field field class+="form-control input-sm" %}

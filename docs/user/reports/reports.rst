@@ -20,18 +20,34 @@ Available Report Types
 
 The report types currently available in QATrack+ are:
 
-* General:
+* QC:
 
-    * :ref:`QC Summary <reports-qc_summary>`: This report lists all Test List
-      Instances from a given time period for selected sites, units,
-      frequencies, and groups.
+    * :ref:`QC Assignment Summary <reports-qc_assignment_summary>` This report
+      lists all test lists (cycles) currently assigned for the selected sites, units,
+      frequencies and groups.
 
-    * :ref:`Test List Instances <reports-tlis>`: This report includes details for all Test List
-      Instances from a given time period for a given Unit Test List (Cycle)
-      assignment.
+    * :ref:`QC Assignment Details <reports-qc_assignment_details>` This report
+      includes details for all test lists (cycles) currently assigned for the
+      selected sites, units, frequencies and groups. Details include tests, &
+      current references, and tolerances.
 
-    * :ref:`Test Instance Values <reports-tis>`: This report shows QC test
+    * :ref:`Test List Instance Summary <reports-qc_summary>`: This report lists
+      all Test List Instances from a given time period for selected sites,
+      units, frequencies, and groups.
+
+    * :ref:`Test List Instance Details <reports-tlis>`: This report includes
+      details for all Test List Instances from a given time period for a given
+      Unit Test List (Cycle) assignment.
+
+    * :ref:`Test Instance Details <reports-tis>`: This report shows QC test
       values for select tests/units.
+
+* QC Backup Forms:
+
+    * :ref:`QC Paper Backup Forms <reports-qc_paper_backups>` This report
+      generates a PDF containing paper backup forms that can be used
+      to record QC values in the case that your QATrack+ installation is 
+      unavailable.
 
 * Scheduling:
 
@@ -40,6 +56,24 @@ The report types currently available in QATrack+ are:
 
     * :ref:`Due and Overdue QC <reports-due_overdue>`: This report shows QC
       tests which are currently due or overdue
+
+* Service Log:
+
+    * :ref:`Service Event Summary <reports-service_event_summary>`: This report
+      summarizes the Service Events logged for selected Sites & Units in a
+      given time period.
+
+    * :ref:`Service Event Details <reports-service_event_details>`: This report
+      provides details for the Service Events logged for selected Sites & Units
+      in a given time period.
+
+    * :ref:`Service Event Personnel Summary <reports-service_event_personnel>`:
+      This report summarizes the people involved in Service Events logged for
+      selected Sites & Units over a given time period.
+
+    * :ref:`Service Event Personnel Summary <reports-service_event_times>`:
+      This report summarizes the service time, lost time, and uptime 
+      percentages for selected Sites & Units over a given time period.
 
 
 If there are other reports you would like to see please file an issue For
@@ -223,13 +257,79 @@ report then click the trash can icon next to the `Currently Editing` field:
 Report Type Descriptions & Options
 ----------------------------------
 
-General
-.......
+QC
+..
+
+
+.. _reports-qc_assignment_summary:
+
+QC Assignment Summary
+^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: images/qcassignmentsummary.png
+   :alt: An example QC Assignment Summary report
+
+   An example QC Assignment Summary report
+
+This report lists all test lists (cycles) currently assigned for the selected
+sites, units, frequencies and groups.
+
+The filters available for this report are:
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Frequency (optional)
+    Filter your results to those scheduled with a specific :ref:`frequency
+    <qa_frequencies>` (e.g. Monthly).
+
+Assigned To (optional)
+    Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
+
+Active (optional)
+    Select whether you want to include assignments which are active, inactive or both.
+
+
+.. _reports-qc_assignment_details:
+
+QC Assignment Details
+^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: images/qcassignmentdetails.png
+   :alt: An example QC Assignment Details report
+
+   An example QC Assignment Details report
+
+This report includes details for all test lists (cycles) currently assigned for
+the selected sites, units, frequencies and groups. Details include tests, &
+current references, and tolerances.
+
+The filters available for this report are:
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Frequency (optional)
+    Filter your results to those scheduled with a specific :ref:`frequency
+    <qa_frequencies>` (e.g. Monthly).
+
+Assigned To (optional)
+    Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
+
+Active (optional)
+    Select whether you want to include assignments which are active, inactive or both.
+
 
 .. _reports-qc_summary:
 
-QC Summary
-^^^^^^^^^^
+Test List Instance Summary (formerly QC Performed Summary)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: images/qcsummary.png
    :alt: An example QC Summary report
@@ -245,12 +345,10 @@ Work Completed (required)
     Select the period you want to include Test List Instances from.
 
 Site (optional)
-    Filter your results to one or more :ref:`Site <unit_site>`'s, you can
-    select them here.
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
 
 Unit (optional)
-    Filter your results to one or more :ref:`Unit <units_admin>`'s, you can
-    select them here.
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
 
 Frequency (optional)
     Filter your results to those scheduled with a specific :ref:`frequency
@@ -262,13 +360,13 @@ Assigned To (optional)
 
 .. _reports-tlis:
 
-Test List Instances
-^^^^^^^^^^^^^^^^^^^
+Test List Instance Details
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: images/tlis.png
-   :alt: An example Test List Instance report
+   :alt: An example Test List Instance Details report
 
-   An example Test List Instance report
+   An example Test List Instance Details report
 
 This report includes details for all Test List Instances from a given time
 period for a given Unit Test List (Cycle) assignment.
@@ -284,13 +382,13 @@ Test List (Cycle) Assignment (required)
 
 .. _reports-tis:
 
-Test Instance Values (Excel/CSV only)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Test Instance Details
+^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: images/tis.png
-   :alt: An example Test Instance Value report
+   :alt: An example Test Instance Details report
 
-   An example Test Instance Value report
+   An example Test Instance Details report
 
 This report shows QC test values for selected tests/units.
 
@@ -303,12 +401,10 @@ Test (required)
     Select the test you want to generate a report for
 
 Site (optional)
-    Filter your results to one or more :ref:`Site <unit_site>`'s, you can
-    select them here.
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
 
 Unit (optional)
-    Filter your results to one or more :ref:`Unit <units_admin>`'s, you can
-    select them here.
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
 
 Organization (required)
     Select how you want your results organized.
@@ -318,6 +414,41 @@ Organization (required)
     * Group rows by tests that are performed on the same unit, on the same
       date.
 
+
+QC Backup Forms
+...............
+
+
+.. _reports-qc_paper_backups:
+
+QC Paper Backup Forms
+^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: images/qcpaperbackups.png
+   :alt: An example QC Paper Backup Forms Report
+
+   An example QC Paper Backup Forms Report
+
+This report generates a PDF containing paper backup forms that can be used to
+record QC values in the case that your QATrack+ installation is unavailable.
+
+The filters available for this report are:
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Frequency (optional)
+    Filter your results to those scheduled with a specific :ref:`frequency
+    <qa_frequencies>` (e.g. Monthly).
+
+Assigned To (optional)
+    Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
+
+Active (optional)
+    Select whether you want to include assignments which are active, inactive or both.
 
 
 Scheduling
@@ -345,12 +476,10 @@ Assigned To (optional)
     Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
 
 Site (optional)
-    Filter your results to one or more :ref:`Site <unit_site>`'s, you can
-    select them here.
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
 
 Unit (optional)
-    Filter your results to one or more :ref:`Unit <units_admin>`'s, you can
-    select them here.
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
 
 
 .. _reports-due_overdue:
@@ -371,10 +500,141 @@ Assigned To (optional)
     Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
 
 Site (optional)
-    Filter your results to one or more :ref:`Site <unit_site>`'s, you can
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
     select them here.
 
 Unit (optional)
-    Filter your results to one or more :ref:`Unit <units_admin>`'s, you can
-    select them here.
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+
+Service Log
+...........
+
+
+.. _reports-service_event_summary:
+
+Service Event Summary 
+^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: images/serviceeventsummary.png
+   :alt: An example Service Event Summary report
+
+   An example Service Event Summary report
+
+This report summarizes the Service Events logged for selected Sites & Units in
+a given time period.
+
+
+The filters available for this report are:
+
+Service Date (required)
+    Select the period you want to include Service Events from.
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Service Type (optional)
+    Filter your results to one or more :ref:`Service Types <sl_service_type>`'s.
+
+Service Area (optional)
+    Filter your results to one or more :ref:`Service Areas <sl_service_areas>`'s.
+
+
+.. _reports-service_event_details:
+
+Service Event Details
+^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: images/serviceeventdetails.png
+   :alt: An example Service Event Details report
+
+   An example Service Event Details report
+
+This report provides details for the Service Events logged for selected Sites &
+Units in a given time period.
+
+The filters available for this report are:
+
+Service Date (required)
+    Select the period you want to include Service Events from.
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Service Type (optional)
+    Filter your results to one or more :ref:`Service Types <sl_service_type>`'s.
+
+Service Area (optional)
+    Filter your results to one or more :ref:`Service Areas <sl_service_areas>`'s.
+
+
+.. _reports-service_event_personnel:
+
+Service Event Personnel Summary 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: images/serviceeventpersonnel.png
+   :alt: An example Service Event Personnel report
+
+   An example Service Event Personnel report
+
+This report summarizes the people involved in Service Events logged for
+selected Sites & Units over a given time period.
+
+The filters available for this report are:
+
+Service Date (required)
+    Select the period you want to include Service Events from.
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Service Type (optional)
+    Filter your results to one or more :ref:`Service Types <sl_service_type>`'s.
+
+Service Area (optional)
+    Filter your results to one or more :ref:`Service Areas <sl_service_areas>`'s.
+
+
+.. _reports-service_event_times:
+
+Service Event Times
+^^^^^^^^^^^^^^^^^^^
+
+.. figure:: images/serviceeventtimes.png
+   :alt: An example Service Event Times report
+
+   An example Service Event Times report
+
+
+This report summarizes the service time, lost time, and uptime percentages for
+selected Sites & Units over a given time period.
+
+The filters available for this report are:
+
+Service Date (required)
+    Select the period you want to include Service Events from.
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Service Type (optional)
+    Filter your results to one or more :ref:`Service Types <sl_service_type>`'s.
+    (Note if you filter by Service Type, overall uptime percentages can not be calculated)
+
+Service Area (optional)
+    Filter your results to one or more :ref:`Service Areas <sl_service_areas>`'s.
+    (Note if you filter by Service Areas, overall uptime percentages can not be calculated)
 

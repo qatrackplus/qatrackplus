@@ -473,6 +473,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     function setFilterForm(reportType, callback){
 
         clearTooltips();
+        clearErrors();
 
         if (reportType  === ""){
             $form.find("button").prop("disabled", true);

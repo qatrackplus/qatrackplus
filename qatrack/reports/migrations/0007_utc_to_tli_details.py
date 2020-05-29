@@ -2,23 +2,23 @@
 
 from django.db import migrations
 
-
-def change_utc_report_type(apps, schema):
-
-    apps.get_model("reports", "SavedReport").objects.filter(
-        report_type="utc",
-    ).update(
-        report_type="test-list-instance-details",
-    )
+to_rename = [
+    ("utc", "testlistinstance_details"),
+    ("qc-summary-by-date", "testlistinstance_summary"),
+    ("test_data", "testinstance_details"),
+]
 
 
-def change_tlid_report_type(apps, schema):
+def change_report_types(apps, schema):
 
-    apps.get_model("reports", "SavedReport").objects.filter(
-        report_type="test-list-instance-details",
-    ).update(
-        report_type="utc",
-    )
+    for from_, to in to_rename:
+        apps.get_model("reports", "SavedReport").objects.filter(report_type=from_).update(report_type=to)
+
+
+def unchange_report_types(apps, schema):
+
+    for to, from_ in to_rename:
+        apps.get_model("reports", "SavedReport").objects.filter(report_type=from_).update(report_type=to)
 
 
 class Migration(migrations.Migration):
@@ -28,5 +28,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(change_utc_report_type, change_tlid_report_type)
+        migrations.RunPython(change_report_types, unchange_report_types)
     ]

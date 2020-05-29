@@ -98,7 +98,6 @@
             <dd>
               {% for se in tli.serviceevents_initiated.all %}
                 <a href="{% url 'sl_details' pk=se.id %}"
-                  style="color: {{ se.service_status.colour }}"
                   title="{% trans "View service event" %}"
                   >{% trans "Service Event" %} {{ se.id }}</a>{% if not forloop.last %},{% endif %}
               {% empty %}

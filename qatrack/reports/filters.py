@@ -111,7 +111,7 @@ class TestListInstanceFilter(BaseReportFilterSet):
 
     unit_test_collection__assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
-        queryset=models.Group.objects.all(),
+        queryset=models.Group.objects.order_by("name"),
         help_text=_l(
             "Use this filter to limit report to one or more QC performing groups (leave blank to include all units)"
         ),
@@ -167,7 +167,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
 
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
-        queryset=models.Group.objects.all(),
+        queryset=models.Group.objects.order_by("name"),
         help_text=_l(
             "Use this filter to limit report to one or more groups (leave blank to include all units)"
         ),
@@ -200,7 +200,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
 
     class Meta:
         model = models.UnitTestCollection
-        fields = ["assigned_to", "unit__site", "unit", "frequency", "active"]
+        fields = ["unit__site", "unit", "frequency", "assigned_to", "active"]
 
     def __init__(self, *args, **kwargs):
 
@@ -246,7 +246,7 @@ class SchedulingFilter(BaseReportFilterSet):
 
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
-        queryset=models.Group.objects.all(),
+        queryset=models.Group.objects.order_by("name"),
         help_text=_l(
             "Use this filter to limit report to one or more groups (leave blank to include all units)"
         ),
@@ -272,7 +272,7 @@ class SchedulingFilter(BaseReportFilterSet):
     )
 
     active = django_filters.filters.BooleanFilter(
-        label=_l("Active Only"),
+        label=_l("Active"),
         help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
         initial='2',
     )

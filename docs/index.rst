@@ -1,8 +1,9 @@
 .. danger::
 
-   This document is for version 0.3.1 which has not been released yet!  See
-   https://docs.qatrackplus.com/en/latest/ for documentation of the latest
-   release.
+   This document is for version 0.3.1 which has not been released for general
+   use yet!  See https://docs.qatrackplus.com/en/latest/ for documentation of
+   the latest release.
+
 
 Welcome to QATrack+'s documentation!
 ====================================

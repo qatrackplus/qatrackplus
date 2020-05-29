@@ -13,10 +13,10 @@ from qatrack.reports.reports import (
 )
 
 
-class TestDataReport(BaseReport):
+class TestInstanceDetailsReport(BaseReport):
 
-    report_type = "test_data"
-    name = _l("Test Instance Values")
+    report_type = "testinstance_details"
+    name = _l("Test Instance Details")
     filter_class = filters.TestDataFilter
     description = mark_safe(_l("This report shows QC test values for select units"))
 
@@ -24,7 +24,7 @@ class TestDataReport(BaseReport):
 
     MAX_TIS = getattr(settings, "REPORT_TESTDATAREPORT_MAX_TIS", 365 * 3)
 
-    template = "reports/qc/test_data.html"
+    template = "reports/qc/testinstance_details.html"
     formats = ORDERED_CONTENT_TYPES
 
     def filter_form_valid(self, filter_form):
@@ -47,7 +47,7 @@ class TestDataReport(BaseReport):
         return models.TestInstance.objects.order_by("work_completed")
 
     def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or _("test-instance-values-report")), report_format)
+        return "%s.%s" % (slugify(self.name or _("test-instance-details")), report_format)
 
     def get_unit_test_info__test_details(self, val):
         return (

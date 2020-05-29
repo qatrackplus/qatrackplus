@@ -33,7 +33,7 @@ Major Features
 
     * Paper Backup Forms
 
-* A new :ref:`Query Tool <reports_query_tool>` has been added for advanced query and
+* A new :ref:`Query Tool <reports-query_tool>` has been added for advanced query and
   reporting.
 
 * :ref:`Notifications <notifications>` have been expanded & improved.
@@ -106,7 +106,7 @@ Review & Approval
   to apply different AutoReviewRules to different tests. For more information
   see the :ref:`Auto Review page <qa_auto_review>`.
 
-* A new :ref:`Bulk Review `qa_perform_bulk_review>` feature has been added to
+* A new :ref:`Bulk Review <qa_perform_bulk_review>` feature has been added to
   allow setting review & approval status for multiple test list instances at
   the same time.
 
