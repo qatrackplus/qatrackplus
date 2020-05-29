@@ -246,12 +246,12 @@ if settings.USE_SERVICE_LOG:
             (
                 (
                     'service_log.perform_returntoserviceqa',
-                    _l("Can perform return to service qa"),
+                    _l("Can perform Return To Service QC"),
                     _l("Allow user to perform qa linked to service events."),
                 ),
                 (
                     'service_log.view_returntoserviceqa',
-                    _l("Can view existing return to service qa"),
+                    _l("Can view existing Return To Service QC"),
                     _l("Allow user to view qa linked to service events."),
                 ),
                 (
@@ -267,7 +267,9 @@ if settings.USE_SERVICE_LOG:
                 (
                     'service_log.review_serviceevent',
                     _l("Can review service events"),
-                    _l("Allows user to change status of service events to statuses with \'is review required = false\'."),  # noqa: E501
+                    _l(
+                        "Allows user to change status of service events to statuses with \'is review required = false\'."
+                    ),  # noqa: E501
                 ),
                 (
                     'parts.add_part',
@@ -2151,6 +2153,9 @@ class TestListInstanceManager(models.Manager):
         if user:
             qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all())
         return qs.order_by("-work_completed")
+
+    def your_in_progress_count(self, user):
+        return self.in_progress(user).count()
 
     def complete(self):
         return self.get_queryset().filter(in_progress=False).order_by("-work_completed")

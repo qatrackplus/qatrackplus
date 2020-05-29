@@ -15,6 +15,7 @@ class QCSchedulingNoticeAdminForm(forms.ModelForm):
         model = models.QCSchedulingNotice
         fields = (
             "notification_type",
+            "send_empty",
             "recurrences",
             "time",
             "future_days",
@@ -50,7 +51,7 @@ class QCSchedulingNoticeAdminForm(forms.ModelForm):
 
 class QCSchedulingAdmin(BaseQATrackAdmin):
 
-    list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units"]
+    list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units", "send_empty"]
     list_filter = ["notification_type", "recipients", "test_lists", "units"]
     search_fields = [
         "units__units__number",
@@ -71,7 +72,7 @@ class QCSchedulingAdmin(BaseQATrackAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ["notification_type", "recurrences", "time", "future_days"],
+            'fields': ["notification_type", "send_empty", "recurrences", "time", "future_days"],
         }),
         (
             "Recipients", {

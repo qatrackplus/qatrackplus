@@ -166,7 +166,16 @@ class ServiceEventManager(models.Manager):
         return super().get_queryset(*args, **kwargs).filter(is_active=True)
 
     def get_deleted(self):
-        return super().get_queryset().filter(is_active=False)
+        return self.get_queryset().filter(is_active=False)
+
+    def review_required(self):
+        return self.get_queryset().filter(
+            service_status__in=ServiceEventStatus.objects.filter(is_review_required=True),
+            is_review_required=True,
+        )
+
+    def review_required_count(self):
+        return self.review_required().count()
 
 
 class ServiceEvent(models.Model):
@@ -325,6 +334,21 @@ class ReturnToServiceQAManager(models.Manager):
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).filter(service_event__is_active=True)
 
+    def unreviewed(self):
+        return self.get_queryset().filter(
+            test_list_instance__isnull=False,
+            test_list_instance__all_reviewed=False,
+        )
+
+    def unreviewed_count(self):
+        return self.unreviewed().count()
+
+    def incomplete(self):
+        return self.get_queryset().filter(test_list_instance__isnull=True)
+
+    def incomplete_count(self):
+        return self.incomplete().count()
+
 
 class ReturnToServiceQA(models.Model):
 
@@ -343,8 +367,8 @@ class ReturnToServiceQA(models.Model):
 
     class Meta:
         permissions = (
-            ('view_returntoserviceqa', 'Can view return to service qa'),
-            ('perform_returntoserviceqa', 'Can perform return to service qa'),
+            ('view_returntoserviceqa', 'Can view Return To Service QC'),
+            ('perform_returntoserviceqa', 'Can perform Return To Service QC'),
         )
         ordering = ['-datetime_assigned']
         default_permissions = ('add', 'change', 'delete',)

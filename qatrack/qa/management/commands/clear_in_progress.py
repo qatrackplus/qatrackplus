@@ -27,5 +27,5 @@ class Command(BaseCommand):
             return
 
         objs.delete()
-        cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+        cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
         print("Deleted %d In Progress TestListInstances" % counts)

@@ -182,8 +182,8 @@
                       <li>
                         <a href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
                           <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
-                          <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                            <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
+                          <span title="{% blocktrans %}There are currently {{ USERS_IN_PROGRESS}} QC Sessions saved in progress for your groups{% endblocktrans %}" class="label {% if USERS_IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                            <span class="total-in-progress-count">{{ USERS_IN_PROGRESS }}</span>
                           </span>
                           {% trans "In Progress" %}
                         </a>
@@ -233,10 +233,10 @@
                       {% if perms.qa.can_review %}
                         {% if perms.qa.can_review_non_visible_tli %}
                           <span
-                            title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed{% endblocktrans %}"
-                            class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
+                            title="{% blocktrans %}There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed{% endblocktrans %}"
+                            class="label {% if UNREVIEWED == 0 %}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
                           >
-                            <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                            <span class="total-unreviewed-count">{{ UNREVIEWED }}</span>
                           </span>
                         {% else %}
                           <span
@@ -245,7 +245,7 @@
                           >
                             <span class="total-unreviewed-count">{{ USERS_UNREVIEWED }}</span>
                           </span>
-                          {% endif %}
+                        {% endif %}
                       {% endif %}
                       <b class="caret"></b>
                     </a>
@@ -293,14 +293,14 @@
 
                         <li class="divider"></li>
 
-                        <li class="nav-header">QC Sessions</li>
+                        <li class="nav-header">{% trans "QC Sessions" %}</li>
 
                         {% if perms.qa.can_review_non_visible_tli %}
                           <li>
-                            <a href="{% url  "unreviewed" %}" title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed {% endblocktrans %}">
+                            <a href="{% url  "unreviewed" %}" title="{% blocktrans %}There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed {% endblocktrans %}">
                               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                              <span title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed {% endblocktrans %}" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                  <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                              <span title="{% blocktrans %}There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed {% endblocktrans %}" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                  <span class="total-unreviewed-count">{{ UNREVIEWED }}</span>
                               </span>
                               {% trans "Unreviewed - All Groups" %}
                             </a>
@@ -322,10 +322,10 @@
                           <a href="{% url 'rtsqa_list_unreviewed' %}" title="">
                             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                             <span
-                              title="{% blocktrans %}There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions{% endblocktrans %}"
+                              title="{% blocktrans %}There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to service sessions{% endblocktrans %}"
                               class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
                             >
-                              <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>
+                              <span class="total-unreviewed-count">{{ SE_RTS_UNREVIEWED_QA_COUNT }}</span>
                             </span>
                             {% trans "Unreviewed Return To Service" %}
                           </a>
@@ -403,6 +403,13 @@
                     <li class="dropdown">
                       <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         {% trans "Service Log" %}
+
+                        <span
+                          title="{% blocktrans %}There are currently {{ SL_NOTIFICATION_TOTAL }} Service Log Action Items {% endblocktrans %}"
+                          class="label {% if SL_NOTIFICATION_TOTAL == 0%}label-success{% else %}label-warning{% endif %} unreviewed-count-wrapper"
+                        >
+                          {{ SL_NOTIFICATION_TOTAL }}
+                        </span>
                         <b class="caret"></b>
                       </a>
                       <ul class="dropdown-menu" role="menu">
@@ -466,8 +473,8 @@
                                   <i class="fa fa-wrench fa-stack-custom-main"></i>
                                   <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
                                 </i>
-                                <span title="{% trans "There are currently {{SE_NEEDING_REVIEW_COUNT}} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{SE_NEEDING_REVIEW_COUNT}}</span>
+                                <span title="{% trans "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                    <span class="total-unreviewed-count">{{ SE_NEEDING_REVIEW_COUNT }}</span>
                                 </span>
                                 {% trans "Service Events Needing Review" %}
                               </a>
@@ -498,8 +505,8 @@
                                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                     <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                   </i>
-                                  <span title="{% trans "There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{SE_RTS_INCOMPLETE_QA_COUNT}}</span>
+                                  <span title="{% trans "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                    <span class="total-unreviewed-count">{{ SE_RTS_INCOMPLETE_QA_COUNT }}</span>
                                   </span>
                                   {% trans "View All Incomplete Return To Service" %}
                                 </a>
@@ -510,8 +517,8 @@
                               <li>
                                 <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
                                   <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                  <span title="{% trans "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>
+                                  <span title="{% trans "There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                    <span class="total-unreviewed-count">{{ SE_RTS_UNREVIEWED_QA_COUNT }}</span>
                                   </span>
                                   {% trans "Unreviewed Return To Service" %}
                                 </a>

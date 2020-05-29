@@ -337,12 +337,19 @@ class TestQCSchedulingEmails(TestCase):
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
 
-    def test_send_notice(self):
+    def test_send_notice_send_empty(self):
         now = timezone.now()
+        self.notice.send_empty = True
+        self.notice.save()
         tasks.send_scheduling_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
         assert "QATrack+ QC Scheduling Notice:" in mail.outbox[0].subject
+
+    def test_send_notice_no_send_empty(self):
+        tasks.send_scheduling_notice(self.notice.pk)
+        self.notice.refresh_from_db()
+        assert len(mail.outbox) == 0
 
     def test_send_notice_non_existent(self):
         tasks.send_scheduling_notice(self.notice.pk + 1)
@@ -351,6 +358,7 @@ class TestQCSchedulingEmails(TestCase):
         assert len(mail.outbox) == 0
 
     def test_send_notice_no_recipients(self):
+        utils.create_test_list_instance()
         self.recipients.groups.clear()
         tasks.send_scheduling_notice(self.notice.pk)
         self.notice.refresh_from_db()

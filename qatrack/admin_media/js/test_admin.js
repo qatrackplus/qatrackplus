@@ -18,14 +18,15 @@ function toggle_test_type(){
 
     toggle_formatting(val);
 
+    // this is ugly and error prone. Should be refactored
     if (val == "constant"){
         $(".field-constant_value, .field-hidden").show();
         $(".field-calculation_procedure,.field-wrap_low,.field-wrap_high,.field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "wraparound"){
-        $(".field-wrap_low, .field-wrap_high, .field-hidden").show();
-        $(".field-constant_value, .field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
+        $(".field-wrap_low, .field-wrap_high").show();
+        $(".field-constant_value, .field-choices, .field-display_image, .field-skip_without_comment, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "composite" || val === "scomposite" ){
@@ -37,7 +38,7 @@ function toggle_test_type(){
             $(".field-chart_visibility").prop("checked", true).show();
         }
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
-    }else if (val == "string"){
+    }else if (val == "string" || val == "date" || val == "datetime"){
         $(".field-skip_without_comment").show();
         $(".field-constant_value, .field-hidden").hide();
         $(".field-choices, .field-display_image").not(".errors").hide();

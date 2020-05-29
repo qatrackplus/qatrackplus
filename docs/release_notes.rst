@@ -152,6 +152,8 @@ UI Changes
             background-color: rgba(0, 0, 0, 0.05);
         }
 
+* The *In Progress* label will now only display the count of in progress test lists
+  visible to the users rather than the total count.
 
 Admin Changes
 ^^^^^^^^^^^^^
@@ -228,6 +230,13 @@ Authentication
 
 * A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
   added to control whether users are allowed to register their own accounts.
+
+
+Other Minor Features & Bugs Fixed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fixed bug with control charts and null valued / skipped tests. #506
+
 
 
 Deprecations & Discontinuations

@@ -759,7 +759,7 @@ class ServiceEventForm(BetterModelForm):
 
             if raize:
                 self._errors['service_status'] = ValidationError(
-                    'Cannot select status: Return to service qa must be performed and reviewed.'
+                    'Cannot select status: Return to service QC must be performed and reviewed.'
                 )
 
         # If unit field was disabled due to initiated by or rtsqa existing for already saved service event,

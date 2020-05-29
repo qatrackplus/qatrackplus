@@ -37,6 +37,12 @@ class QCSchedulingNotice(models.Model):
         choices=NOTIFICATION_TYPES,
     )
 
+    send_empty = models.BooleanField(
+        verbose_name=_l("Send Empty Notices"),
+        help_text=_l("Check to send notices even if there's no QC to currently notify about"),
+        default=False,
+    )
+
     recurrences = RecurrenceField(
         verbose_name=_l("Recurrences"),
         help_text=_l("Define the schedule this notification should be sent on."),
@@ -162,3 +168,6 @@ class QCSchedulingNotice(models.Model):
             self.UPCOMING: self.upcoming,
         }
         return dispatch[self.notification_type]()
+
+    def send_required(self):
+        return self.send_empty or self.utcs_to_notify().count() > 0

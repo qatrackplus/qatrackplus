@@ -30,6 +30,12 @@ class QCReviewNotice(models.Model):
         default=UNREVIEWED,
     )
 
+    send_empty = models.BooleanField(
+        verbose_name=_l("Send Empty Notices"),
+        help_text=_l("Check to send notices even if there's no unreviewed QC to currently notify about"),
+        default=False,
+    )
+
     recurrences = RecurrenceField(
         verbose_name=_l("Recurrences"),
         help_text=_l("Define the schedule this notification should be sent on."),
@@ -110,3 +116,6 @@ class QCReviewNotice(models.Model):
             Count("unit_test_collection__unit__name"),
             Count("unit_test_collection__name"),
         )
+
+    def send_required(self):
+        return self.send_empty or self.tlis().count() > 0

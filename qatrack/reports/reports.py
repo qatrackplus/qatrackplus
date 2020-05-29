@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import reverse
 from django.template.loader import get_template
 from django.utils import timezone
@@ -116,7 +116,10 @@ class BaseReport(object, metaclass=ReportMeta):
 
     def render(self, report_format):
         self.report_format = report_format
-        content = getattr(self, "to_%s" % report_format)()
+        try:
+            content = getattr(self, "to_%s" % report_format)()
+        except AttributeError:
+            raise Http404("Unknown report format %s" % report_format)
         return self.get_filename(report_format), content
 
     def render_to_response(self, report_format):

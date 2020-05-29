@@ -560,8 +560,9 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         if context["plot_data"]['series'] and list(context["plot_data"]['series'].values()):
             name, series = list(context["plot_data"]['series'].items())[0]
             points = series['series_data']
-            if points:
-                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]))
+            non_null_points = [(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]
+            if non_null_points:
+                dates, data = list(zip(*non_null_points))
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)

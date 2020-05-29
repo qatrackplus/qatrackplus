@@ -2,6 +2,7 @@ import json
 import re
 
 from django import template
+from django.conf import settings
 from django.core.cache import cache
 from django.template.loader import get_template
 from django.utils import timezone
@@ -112,12 +113,12 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
             extra_info = service_log.extra_info
 
         context['extra_info'] = extra_info
-        status_old_colour = cache.get('service-status-colours').get(extra_info['status_change']['old'])
+        status_old_colour = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS).get(extra_info['status_change']['old'])
         context['old_status_tag'] = '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
             status_old_colour, extra_info['status_change']['old']
         ) if status_old_colour is not None else extra_info['status_change']['old']
 
-        status_new_colour = cache.get('service-status-colours').get(extra_info['status_change']['new'])
+        status_new_colour = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS).get(extra_info['status_change']['new'])
         context['new_status_tag'] = '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
             status_new_colour, extra_info['status_change']['new']
         ) if status_new_colour is not None else extra_info['status_change']['new']

@@ -220,7 +220,18 @@ def calc_due_date(completed, due_date, frequency):
         return calc_initial_due_date(completed, frequency)
 
     if should_update_schedule(completed, due_date, frequency):
-        return frequency.recurrences.after(due_date, dtstart=due_date)
+
+        # ok, we're inside or beyond QC window so get next due date
+        next_due_date = frequency.recurrences.after(completed, dtstart=due_date)
+
+        # now, it's possible that we performed the test long after the due
+        # date and now we're inside the next QC window so we have to check
+        # if we should move the next one!
+        # See TestCalcDueDate.test_first_of_month_performed_long_after_inside_next_window
+        if should_update_schedule(completed, next_due_date, frequency):
+            next_due_date = frequency.recurrences.after(next_due_date, dtstart=next_due_date)
+
+        return next_due_date
 
     return due_date
 

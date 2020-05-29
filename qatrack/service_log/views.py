@@ -949,7 +949,7 @@ class ServiceEventsInitiatedByList(ServiceEventsBaseList):
 
 class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
     """View to show Service Events where a TestListInstance was performed as
-    return to service qa."""
+    Return To Service QC."""
 
     def get_page_title(self, *args):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])

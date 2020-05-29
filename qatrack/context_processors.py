@@ -1,6 +1,7 @@
 import json
 
 from django.conf import settings
+from django.contrib.auth.models import Group, User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.db.models import ObjectDoesNotExist
@@ -23,8 +24,9 @@ cache.delete(settings.CACHE_RTS_QA_COUNT)
 cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
 cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
 cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
-cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
 cache.delete(settings.CACHE_SERVICE_STATUS_COLOURS)
+cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(pre_delete, sender=PartUsed)
@@ -53,13 +55,16 @@ def update_part_quantity(*args, **kwargs):
 
 @receiver(post_save, sender=TestListInstance)
 @receiver(post_delete, sender=TestListInstance)
+@receiver(post_save, sender=User)
+@receiver(post_save, sender=Group)
 def update_unreviewed_cache(*args, **kwargs):
     """When a test list is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
     cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
-    cache.delete(settings.CACHE_IN_PROGRESS_COUNT)
+    cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(post_save, sender=ReturnToServiceQA)
@@ -68,6 +73,7 @@ def update_rts_cache(*args, **kwargs):
     """When a RTS is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(post_save, sender=ServiceEventStatus)
@@ -77,6 +83,7 @@ def update_se_cache(*args, **kwargs):
     """When a service status is changed invalidate the default and review count"""
     cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
     cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
 @receiver(post_save, sender=UnitTestCollection)
@@ -109,75 +116,12 @@ def update_colours(*args, **kwargs):
 
 
 def site(request):
-    cur_site = get_current_site(request)
 
-    unreviewed = cache.get(settings.CACHE_UNREVIEWED_COUNT)
-    if unreviewed is None:
-        unreviewed = TestListInstance.objects.unreviewed_count()
-        cache.set(settings.CACHE_UNREVIEWED_COUNT, unreviewed)
-
-    se_unreviewed_rts = cache.get(settings.CACHE_RTS_QA_COUNT)
-    if se_unreviewed_rts is None:
-        se_unreviewed_rts = ReturnToServiceQA.objects.filter(
-            test_list_instance__isnull=False,
-            test_list_instance__all_reviewed=False
-        ).count()
-        cache.set(settings.CACHE_RTS_QA_COUNT, se_unreviewed_rts)
-
-    se_incomplete_rts = cache.get(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
-    if se_incomplete_rts is None:
-        se_incomplete_rts = ReturnToServiceQA.objects.filter(
-            test_list_instance__isnull=True,
-        ).count()
-        cache.set(settings.CACHE_RTS_INCOMPLETE_QA_COUNT, se_incomplete_rts)
-
-    unreviewed_user_counts = cache.get(settings.CACHE_UNREVIEWED_COUNT_USER)
-    if unreviewed_user_counts is None and hasattr(request, "user"):
-        your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
-        unreviewed_user_counts = {request.user.pk: your_unreviewed}
-        cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
-    else:
-        try:
-            your_unreviewed = unreviewed_user_counts[request.user.pk]
-        except KeyError:
-            your_unreviewed = TestListInstance.objects.your_unreviewed_count(request.user)
-            unreviewed_user_counts[request.user.pk] = your_unreviewed
-            cache.set(settings.CACHE_UNREVIEWED_COUNT_USER, unreviewed_user_counts)
-        except Exception:
-            your_unreviewed = 0
-
-    default_se_status = cache.get(settings.CACHE_DEFAULT_SE_STATUS)
-    if default_se_status is None:
-        default_se_status = ServiceEventStatus.get_default()
-        cache.set(settings.CACHE_DEFAULT_SE_STATUS, default_se_status)
-
-    service_status_colours = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS)
-    if service_status_colours is None:
-        service_status_colours = {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
-        cache.set(settings.CACHE_SERVICE_STATUS_COLOURS, service_status_colours)
-
-    se_needing_review_count = cache.get(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
-    if se_needing_review_count is None:
-        se_needing_review_count = ServiceEvent.objects.filter(
-            service_status__in=ServiceEventStatus.objects.filter(is_review_required=True),
-            is_review_required=True,
-        ).count()
-        cache.set(settings.CACHE_SE_NEEDING_REVIEW_COUNT, se_needing_review_count)
-
-    in_progress_count = cache.get(settings.CACHE_IN_PROGRESS_COUNT)
-    if in_progress_count is None:
-        in_progress_count = TestListInstance.objects.in_progress().count()
-        cache.set(settings.CACHE_IN_PROGRESS_COUNT, in_progress_count)
-
-    return {
-        'SITE_NAME': cur_site.name,
-        'SITE_URL': cur_site.domain,
+    context = {
         'SELF_REGISTER': settings.ACCOUNTS_SELF_REGISTER,
         'VERSION': settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
-        'UNREVIEWED': unreviewed,
-        'USERS_UNREVIEWED': your_unreviewed,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
@@ -187,11 +131,6 @@ def site(request):
         'USE_SERVICE_LOG': settings.USE_SERVICE_LOG,
         'USE_PARTS': settings.USE_PARTS,
         'USE_ISSUES': settings.USE_ISSUES,
-        'DEFAULT_SE_STATUS': default_se_status,
-        'SE_NEEDING_REVIEW_COUNT': se_needing_review_count,
-        'SE_RTS_INCOMPLETE_QA_COUNT': se_incomplete_rts,
-        'SE_RTS_UNREVIEWED_QA_COUNT': se_unreviewed_rts,
-        'IN_PROGRESS': in_progress_count,
 
         # JavaScript Date Formats
         'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
@@ -200,3 +139,90 @@ def site(request):
         'FLATPICKR_DATETIME_FMT': get_format("FLATPICKR_DATETIME_FMT"),
         'DATERANGEPICKER_DATE_FMT': get_format("DATERANGEPICKER_DATE_FMT"),
     }
+    cur_site = get_current_site(request)
+    context.update({'SITE_NAME': cur_site.name, 'SITE_URL': cur_site.domain})
+
+    context['UNREVIEWED'] = cache.get_or_set(
+        settings.CACHE_UNREVIEWED_COUNT,
+        TestListInstance.objects.unreviewed_count,
+    )
+
+    context['USERS_UNREVIEWED'] = get_user_count(
+        request,
+        settings.CACHE_UNREVIEWED_COUNT_USER,
+        TestListInstance.objects.your_unreviewed_count,
+    )
+
+    context['DEFAULT_SE_STATUS'] = cache.get_or_set(
+        settings.CACHE_DEFAULT_SE_STATUS,
+        ServiceEventStatus.get_default,
+    )
+
+    context['SE_NEEDING_REVIEW_COUNT'] = cache.get_or_set(
+        settings.CACHE_SE_NEEDING_REVIEW_COUNT,
+        ServiceEvent.objects.review_required_count,
+    )
+
+    context['SE_RTS_INCOMPLETE_QA_COUNT'] = cache.get_or_set(
+        settings.CACHE_RTS_INCOMPLETE_QA_COUNT,
+        ReturnToServiceQA.objects.incomplete_count,
+    )
+
+    context['SE_RTS_UNREVIEWED_QA_COUNT'] = cache.get_or_set(
+        settings.CACHE_RTS_QA_COUNT,
+        ReturnToServiceQA.objects.unreviewed_count,
+    )
+
+    context['SL_NOTIFICATION_TOTAL'] = cache.get_or_set(
+        settings.CACHE_SL_NOTIFICATION_TOTAL,
+        lambda: (
+            get_sl_notification_total(
+                request,
+                context['SE_NEEDING_REVIEW_COUNT'],
+                context['SE_RTS_INCOMPLETE_QA_COUNT'],
+                context['SE_RTS_UNREVIEWED_QA_COUNT'],
+            )
+        ),
+    )
+
+    context['USERS_IN_PROGRESS'] = get_user_count(
+        request,
+        settings.CACHE_IN_PROGRESS_COUNT_USER,
+        TestListInstance.objects.your_in_progress_count,
+    )
+
+    cache.get_or_set(
+        settings.CACHE_SERVICE_STATUS_COLOURS,
+        lambda: {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
+    )
+
+    return context
+
+
+def get_user_count(request, key, manager_method):
+
+    counts = cache.get(key)
+    if counts is None and hasattr(request, "user"):
+        user_count = manager_method(request.user)
+        counts = {request.user.pk: user_count}
+        cache.set(key, counts)
+    else:
+        try:
+            user_count = counts[request.user.pk]
+        except KeyError:
+            user_count = manager_method(request.user)
+            counts[request.user.pk] = user_count
+            cache.set(key, counts)
+        except Exception:
+            user_count = 0
+
+    return user_count
+
+
+def get_sl_notification_total(request, se_unreviewed, rts_incomplete, rts_unreviewed):
+    perms = [
+        ('service_log.review_serviceevent', se_unreviewed),
+        ('service_log.perform_returntoserviceqa', rts_incomplete),
+        ('qa.can_review', rts_unreviewed),
+    ]
+    return sum(count for perm, count in perms if request.user.has_perm(perm))

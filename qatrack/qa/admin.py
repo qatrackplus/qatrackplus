@@ -176,7 +176,7 @@ class SetMultipleReferencesAndTolerancesForm(forms.Form):
         required=False,
         empty_label=_("No Tolerance Set"),
     )
-    reference = forms.CharField(max_length=255, required=False)
+    reference = forms.FloatField(required=False)
     comment = forms.CharField(
         widget=forms.Textarea,
         required=False,
@@ -938,6 +938,7 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
                     'calculation_procedure',
                     'display_image',
                     'hidden',
+                    'chart_visibility',
                     'skip_without_comment',
                     'formatting',
                 ],
