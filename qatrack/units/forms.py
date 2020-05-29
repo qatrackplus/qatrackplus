@@ -133,7 +133,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         return cleaned
 
 
-def unit_site_unit_type_choices(include_empty=False):
+def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
     """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
 
     def site_unit_type(u):
@@ -143,8 +143,13 @@ def unit_site_unit_type_choices(include_empty=False):
         return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
 
     units = u_models.Unit.objects.select_related(
-        "site", "type",
+        "site",
+        "type",
     ).order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
+
+    if serviceable_only:
+        units = units.filter(is_serviceable=True)
+
     choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
     choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
     if include_empty:

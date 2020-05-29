@@ -395,7 +395,7 @@ class BaseServiceEventFilter(BaseReportFilterSet):
 
         super().__init__(*args, **kwargs)
 
-        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices()
+        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices(serviceable_only=True)
         self.form.fields['datetime_service'].widget.attrs['class'] = "pastdate"
         self.form.fields['datetime_service'].initial = "Last 365 days"
 

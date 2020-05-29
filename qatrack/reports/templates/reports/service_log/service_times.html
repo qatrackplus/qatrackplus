@@ -1,0 +1,81 @@
+{% extends base_template %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-12">
+    {% for site, unit_infos in sites_data %}
+      <h2>{% trans "Site" %} :: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
+
+      <table class="table table-condensed table-bordered">
+        <thead>
+          <tr class="">
+            <th>{% trans "Unit" %}<div></div></th>
+            <th>{% trans "Service Type" %}</th>
+            <th>{% trans "# of Service Events" %}</th>
+            <th>{% trans "Service Time (HH:MM)" %}</th>
+            <th>{% trans "Lost Time (HH:MM)" %}</th>
+            <th>{% trans "Down Time (%)" %}</th>
+            <th>{% trans "Available Time (HH:MM)" %}</th>
+            <th>{% trans "Uptime (%)" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          {% for unit_info in unit_infos %}
+
+            {% with even=forloop.counter|divisibleby:"2" %}
+
+              {% for service_type in unit_info.service_types|slice:":1" %}
+                <tr {% if not even %}class="active"{% endif %}>
+                  <th class="text-right" rowspan="{{ n_service_types|add:"1"  }}">{{ unit_info.unit }}</th>
+                  <td>{{ service_type.name }}</td>
+                  <td>{{ service_type.n_service_events }}</td>
+                  <td>{{ service_type.service_time }}</td>
+                  <td>{{ service_type.lost_time }}</td>
+                  <td>{{ service_type.downtime|floatformat:"1" }}</td>
+                  <td rowspan="{{ n_service_types|add:"1" }}">{{ unit_info.available_time }}</td>
+                  <td rowspan="{{ n_service_types|add:"1" }}">
+                    {% if unit_info.uptime is not None %}
+                      {{ unit_info.uptime|floatformat:"1" }}
+                    {% else %}
+                      <em>{% trans "N/A" %}</em>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr class="page">
+                  <td colspan="7"><em>{% trans "No Service Events" %}</em></td>
+                </tr>
+              {% endfor %}
+
+              {% for service_type in unit_info.service_types|slice:"1:" %}
+                <tr {% if not even %}class="active"{% endif %}>
+                  <td>{{ service_type.name }}</td>
+                  <td>{{ service_type.n_service_events }}</td>
+                  <td>{{ service_type.service_time }}</td>
+                  <td>{{ service_type.lost_time }}</td>
+                  <td>{{ service_type.downtime|floatformat:"1" }}</td>
+                </tr>
+              {% endfor %}
+
+              <tr {% if not even %}class="active"{% endif %}>
+                <th class="text-right">{% trans "Totals" %}:</th>
+                <th>{{ unit_info.n_service_events }}</th>
+                <th>{{ unit_info.service_time }}</th>
+                <th>{{ unit_info.lost_time }}</th>
+                <th>{{ unit_info.downtime|floatformat:"1" }}</th>
+              </tr>
+
+            {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

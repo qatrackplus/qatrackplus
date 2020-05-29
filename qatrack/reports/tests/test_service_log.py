@@ -1,5 +1,6 @@
 from django.core.files.base import ContentFile
 from django.test import TestCase
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from qatrack.attachments.models import Attachment
@@ -261,3 +262,48 @@ class TestServiceEventPersonnelSummaryReport(TestCase):
 
     def test_format_no_fname(self):
         assert sl.ServiceEventPersonnelSummaryReport().format_user("foo", "", "baz") == "foo (baz)"
+
+
+class TestServiceTimesReport(TestCase):
+
+    def test_get_filename(self):
+        assert sl.ServiceTimesReport().get_filename('pdf') == 'service-times.pdf'
+
+    def test_generate_html(self):
+
+        site = USite.objects.create(name="site")
+        unit1 = utils.create_unit(site=site)
+        usa1 = sl_utils.create_unit_service_area(unit=unit1)
+        sl_utils.create_service_event(
+            unit_service_area=usa1,
+            service_time=timezone.timedelta(hours=1, minutes=23),
+            lost_time=timezone.timedelta(hours=1, minutes=23),
+        )
+
+        unit2 = utils.create_unit()
+        usa2 = sl_utils.create_unit_service_area(unit=unit2)
+        sl_utils.create_service_event(unit_service_area=usa2)
+
+        rep = sl.ServiceTimesReport()
+        rep.report_format = "pdf"
+        rep.to_html()
+
+    def test_to_table(self):
+
+        site = USite.objects.create(name="site")
+        unit1 = utils.create_unit(site=site)
+        usa1 = sl_utils.create_unit_service_area(unit=unit1)
+        sl_utils.create_service_event(
+            unit_service_area=usa1,
+            service_time=timezone.timedelta(hours=1, minutes=23),
+            lost_time=timezone.timedelta(hours=1, minutes=23),
+        )
+
+        unit2 = utils.create_unit()
+        usa2 = sl_utils.create_unit_service_area(unit=unit2)
+        sl_utils.create_service_event(unit_service_area=usa2)
+
+        rep = sl.ServiceTimesReport()
+        rep.report_format = "xlsx"
+        context = rep.get_context()
+        rep.to_table(context)
