@@ -16,7 +16,7 @@ logger = logging.getLogger('qatrack')
 def on_serviceevent_saved(sender, instance, created, **kwargs):
 
     service_log = instance
-    recipients = get_notification_recipients(service_log.service_event)
+    recipients = get_notification_recipients(service_log.service_event, service_log.log_type)
 
     if not recipients:
         return
@@ -48,7 +48,7 @@ def on_serviceevent_saved(sender, instance, created, **kwargs):
             raise
 
 
-def get_notification_recipients(service_event):
+def get_notification_recipients(service_event, log_type):
 
     from qatrack.notifications.service_log import models
 
@@ -57,6 +57,8 @@ def get_notification_recipients(service_event):
     subs = models.ServiceEventNotice.objects.filter(
         (Q(units=None) | Q(units__units=unit))
     ).select_related("recipients")  # yapf: disable
+
+    subs = subs.filter(notification_type__in=[log_type, models.ServiceEventNotice.UPDATED_OR_CREATED])
 
     recipients = set()
     for sub in subs:

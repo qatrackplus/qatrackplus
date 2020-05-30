@@ -42,7 +42,7 @@ class TestServiceLogEmails(TestCase):
 
         self.notice = ServiceEventNotice.objects.create(
             recipients=self.recipients,
-            notification_type=ServiceEventNotice.UPDATED,
+            notification_type=ServiceEventNotice.UPDATED_OR_CREATED,
         )
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
@@ -79,7 +79,7 @@ class TestServiceLogAdmin(TestCase):
     def test_get_notification_type_updated(self):
         rg = RecipientGroup.objects.create(name="RG")
         n = ServiceEventNotice.objects.create(
-            notification_type=ServiceEventNotice.UPDATED,
+            notification_type=ServiceEventNotice.UPDATED_OR_CREATED,
             recipients=rg,
         )
         assert "Notify when a Service Event is created or modified" in self.admin.get_notification_type(n)
@@ -90,7 +90,7 @@ class TestServiceLogAdmin(TestCase):
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")
         n = ServiceEventNotice.objects.create(
-            notification_type=ServiceEventNotice.UPDATED,
+            notification_type=ServiceEventNotice.UPDATED_OR_CREATED,
             units=ug,
             recipients=rg,
         )
@@ -99,7 +99,7 @@ class TestServiceLogAdmin(TestCase):
     def test_get_recipients(self):
         rg = RecipientGroup.objects.create(name="RG")
         n = ServiceEventNotice.objects.create(
-            notification_type=ServiceEventNotice.UPDATED,
+            notification_type=ServiceEventNotice.UPDATED_OR_CREATED,
             recipients=rg,
         )
         assert rg.name in self.admin.get_recipients(n)
