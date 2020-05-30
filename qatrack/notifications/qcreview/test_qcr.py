@@ -135,8 +135,8 @@ class TestQCReviewModel(TestCase):
     def test_upcoming_both_unreviewed_unit_group(self):
         self.tli1.all_reviewed = False
         self.tli1.save()
-        self.tli1.all_reviewed = False
-        self.tli1.save()
+        self.tli2.all_reviewed = False
+        self.tli2.save()
 
         notice = QCReviewNotice.objects.create(
             recipients=self.recipients,
