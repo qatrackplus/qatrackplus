@@ -15,6 +15,11 @@ def do_scheduling(sender, **kwargs):
         "QATrack+ Review Notices",
     )
 
+    _schedule_periodic_task(
+        "qatrack.notifications.service_log_review.tasks.run_service_event_review_notices",
+        "QATrack+ Service Event Review Notices",
+    )
+
 
 class NotificationsConfig(AppConfig):
 
