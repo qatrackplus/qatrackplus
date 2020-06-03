@@ -93,6 +93,24 @@
                     {% endif %}
                   </dd>
 
+                  <dt>Previous Due Date:</dt>
+                  <dd>
+                    {% if tli.due_date %}
+                      <abbr title="Due date when this test list was performed">{{ tli.due_date }}</abbr>
+                    {% else %}
+                      <em>No due date set</em>
+                    {% endif %}
+                  </dd>
+
+                  <dt>Scheduled:</dt>
+                  <dd>
+                    {% if tli.include_for_scheduling %}
+                      <abbr title="This instance is included when calculating due dates">Yes</abbr>
+                    {% else %}
+                      <abbr title="This instance is not considered when calculating due dates">No</abbr>
+                    {% endif %}
+                  </dd>
+
                   <dt>{% trans "Last Modification" %}:</dt>
                   <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
 
