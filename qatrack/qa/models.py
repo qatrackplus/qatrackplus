@@ -268,8 +268,9 @@ if settings.USE_SERVICE_LOG:
                     'service_log.review_serviceevent',
                     _l("Can review service events"),
                     _l(
-                        "Allows user to change status of service events to statuses with \'is review required = false\'."
-                    ),  # noqa: E501
+                        "Allows user to change status of service events "
+                        "to statuses with \'is review required = false\'."
+                    ),
                 ),
                 (
                     'parts.add_part',
@@ -1640,7 +1641,7 @@ class UnitTestCollection(models.Model):
         """return the next due date of this Unit/TestList pair """
 
         if self.auto_schedule and self.frequency:
-            last_valid = self.last_valid_instance()
+            last_valid = self.last_instance_for_scheduling()
             if not last_valid and self.last_instance:
                 # Done before but no valid lists
                 return timezone.now()
@@ -1681,12 +1682,13 @@ class UnitTestCollection(models.Model):
             return DUE
         return OVERDUE
 
-    def last_valid_instance(self):
+    def last_instance_for_scheduling(self):
         """ return last test_list_instance with all valid tests """
 
         try:
             return self.testlistinstance_set.filter(
                 in_progress=False,
+                include_for_scheduling=True,
             ).exclude(testinstance__status__valid=False).latest("work_completed")
         except TestListInstance.DoesNotExist:
             pass
@@ -2203,6 +2205,11 @@ class TestListInstance(models.Model):
         editable=False,
         help_text=_l("Used in cooperation with Boolean Tests to highligh this TestListInstance"),
         default=False,
+    )
+
+    include_for_scheduling = models.BooleanField(
+        help_text=_l("Should this instance be considered when calculating due dates?"),
+        default=True,
     )
 
     reviewed = models.DateTimeField(null=True, blank=True)

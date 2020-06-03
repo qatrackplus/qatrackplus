@@ -1069,7 +1069,11 @@ class TestPerformQA(TestCase):
         group = Group(name="foo")
         group.save()
 
-        self.unit_test_list = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.frequency = utils.create_frequency(name="daily")
+        self.unit_test_list = utils.create_unit_test_collection(
+            test_collection=self.test_list,
+            frequency=self.frequency,
+        )
 
         self.unit_test_infos = []
         for test in self.tests:
@@ -1193,6 +1197,34 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
+
+    def test_perform_unscheduled(self):
+        data = {
+            "work_started": "2012-11-07 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        utils.create_test_list_instance(
+            unit_test_collection=self.unit_test_list,
+            work_completed=timezone.now() - timezone.timedelta(days=10)
+        )
+
+        self.unit_test_list.refresh_from_db()
+        expected_due_date = self.unit_test_list.due_date
+
+        data['work_started'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        data['include_for_scheduling'] = False
+        self.set_form_data(data)
+
+        response = self.client.post(self.url, data=data)
+        assert response.status_code == 302
+
+        # not scheduled so due date should remain same
+        self.unit_test_list.refresh_from_db()
+        assert self.unit_test_list.due_date.date() == expected_due_date.date()
 
     def test_perform_composite_json_warning(self):
         """ensure returing JSON from composites no longer works"""

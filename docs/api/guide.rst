@@ -294,6 +294,7 @@ A script that will find the above test list, and submit the data is shown here:
     data = {
         'unit_test_collection': utc_url,
         'in_progress': False,  # optional, default is False
+        'include_for_scheduling': True,
         'work_started': "2018-07-6 10:00",
         'work_completed': "2018-07-6 11:00",  # optional
         'comment': "test list comment",  # optional
@@ -314,6 +315,7 @@ A script that will find the above test list, and submit the data is shown here:
         'day': 0,
         'due_date': None,
         'in_progress': False,
+        'include_for_scheduling': True,
         'reviewed': None,
         'reviewed_by': None,
         'site_url': 'http://127.0.0.1:8081/qa/session/details/2991/',
@@ -371,7 +373,7 @@ A script that will find the above test list, and submit the data is shown here:
 
 A few things to note:
 
-* Some fields like `comment`, `in_progress`, and `attachments` are optional
+* Some fields like `comment`, `in_progress`, `include_for_scheduling`, and `attachments` are optional
 * The `tests` key is a dictionary of the form (`skipped` and `comment` keys are optional):
 
   .. code-block:: python

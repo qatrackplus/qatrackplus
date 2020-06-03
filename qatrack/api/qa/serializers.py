@@ -287,7 +287,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                     'skipped': True,
                 }
 
-        for key in ["work_completed", "work_started", "in_progress"]:
+        for key in ["work_completed", "work_started", "in_progress", "include_for_scheduling"]:
             data[key] = data.get(key, getattr(self.instance, key))
 
     def validate(self, data):
@@ -620,6 +620,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         instance.work_completed = validated_data['work_completed']
         instance.work_started = validated_data['work_started']
         instance.in_progress = validated_data['in_progress']
+        instance.include_for_scheduling = validated_data['include_for_scheduling']
 
         instance.modified_by = user
         instance.modified = timezone.now()

@@ -48,7 +48,10 @@ class TestTestListInstanceAPI(APITestCase):
         for order, t in enumerate(self.default_tests):
             utils.create_test_list_membership(self.test_list, t, order=order)
 
-        self.utc = utils.create_unit_test_collection(test_collection=self.test_list, unit=self.unit)
+        frequency = utils.create_frequency(name="daily")
+        self.utc = utils.create_unit_test_collection(
+            test_collection=self.test_list, unit=self.unit, frequency=frequency
+        )
 
         self.create_url = reverse('testlistinstance-list')
         self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
@@ -768,6 +771,30 @@ class TestTestListInstanceAPI(APITestCase):
         new_data = {'in_progress': False}
         self.client.patch(resp.data['url'], new_data)
         assert not models.TestListInstance.objects.all().first().in_progress
+
+    def test_complete_unscheduled(self):
+        self.data['include_for_scheduling'] = True
+        resp = self.client.post(self.create_url, self.data)
+        assert models.TestListInstance.objects.all().first().include_for_scheduling
+        new_data = {'include_for_scheduling': False}
+        self.client.patch(resp.data['url'], new_data)
+        assert not models.TestListInstance.objects.all().first().include_for_scheduling
+
+    def test_complete_unscheduled_due_dates(self):
+        utils.create_test_list_instance(
+            unit_test_collection=self.utc, work_completed=timezone.now() - timezone.timedelta(days=10)
+        )
+        self.utc.refresh_from_db()
+        expected_due_date = self.utc.due_date
+
+        self.data['include_for_scheduling'] = False
+        self.data['work_completed'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        self.data['work_started'] = self.data['work_completed']
+        self.client.post(self.create_url, self.data)
+
+        # unscheduled so should be same due date
+        self.utc.refresh_from_db()
+        assert self.utc.due_date.date() == expected_due_date.date()
 
     def test_no_put(self):
         """All updates should be via patch"""

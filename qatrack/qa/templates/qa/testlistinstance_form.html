@@ -1,5 +1,6 @@
 {% extends "site_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
@@ -236,6 +237,21 @@
                                                 <div class="col-sm-12 help-block text-center">{{ e }}</div>
                                             {% endfor %}
                                         </div>
+
+                                        <div class="row{% if form.include_for_scheduling.errors %} has-error{% endif %}">
+                                            <label for="id_include_for_scheduling" class="col-md-5">
+                                                {{ form.include_for_scheduling.label}}:
+                                            </label>
+                                            <div class="col-md-1">
+                                                {{ form.include_for_scheduling }}
+                                            </div>
+                                            <div class="col-md-6 help-block">
+                                              {% trans "Uncheck if you don't want to advance the due date for this test list instance" %}
+                                            </div>
+                                            {% for e in form.include_for_scheduling.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
+                                        </div>
                                     {% endif %}
                                     {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                         <div class="row" id="status">
@@ -257,32 +273,30 @@
                 <div class="display-none">{{ form.work_started }}</div>
             {% endif %}
 
-            {% if attachments|length > 0 %}
-                <div class="col-sm-{{ top_divs_span }}">
-                    <div id="box-attachments">
-                        <div class="box">
-                            <div class="box-header">
-                                <h5 class="box-title">
-                                    <i class="fa fa-paperclip" aria-hidden="true"></i>
-                                    {{ test_list.name }} Test List Attachments
-                                </h5>
-                            </div>
-                            <div class="box-body">
-                                <div class="row">
-                                    <div class="col-sm-12 border-default">
-                                        <ul>
-                                            {% for attach in attachments %}
-                                                <li>{{ attach|attachment_link }}</li>
-                                            {% endfor %}
-                                        </ul>
+            <div class="col-sm-{{ top_divs_span }}">
+                <div id="box-attachments">
+                    <div class="box">
+                        <div class="box-header">
+                            <h5 class="box-title">
+                                <i class="fa fa-paperclip" aria-hidden="true"></i>
+                                {{ test_list.name }} Test List Attachments
+                            </h5>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12 border-default">
+                                    <ul>
+                                        {% for attach in attachments %}
+                                            <li>{{ attach|attachment_link }}</li>
+                                        {% endfor %}
+                                    </ul>
 
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            {% endif %}
+            </div>
 
             {% if USE_SERVICE_LOG and form.instance.pk %}
                 {% if perms.service_log.add_serviceevent or service_events_ib|length > 0 %}

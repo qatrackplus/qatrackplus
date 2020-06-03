@@ -286,6 +286,7 @@ class TestListInstanceFilter(filters.FilterSet):
         fields = {
             "due_date": ['exact'],
             "in_progress": ['exact'],
+            "include_for_scheduling": ['exact'],
             "reviewed": ['exact'],
             "all_reviewed": ['exact'],
             "day": ['exact', 'in'],

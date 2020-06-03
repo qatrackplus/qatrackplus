@@ -61,14 +61,15 @@ Tests & Test Lists
       collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
       difference from a 0 deg reference.
 
-    * St
-
 * A new "Display Name" field has been added to tests.  This is an optional
   field where you can add text describing how a test should be displayed when
   performing or reviewing. Having a separate name & display name allows you to
   create tests with descriptive names that are easy to find in the admin aread,
   but use a more succinct name when performing a Test List. If left blank, the
   test name will be used.
+
+* It is now possible to perform a test and not have the due date advanced
+  by de-selecting the "Include for Scheduling" option.
 
 * Calculation procedures are now syntax checked, and automatically formatted
   using `Black <https://black.readthedocs.io>`_.
@@ -194,6 +195,9 @@ API Changes
 * The banner at the top of the browsable API now says "QATrack+ API" rather
   than Django Rest Framework and now the link directs to the main site rather
   than DRFs site.
+
+* It is now possible to perform a test and not have the due date advanced by
+  setting `"include_for_scheduling": False,` in your API post data.
   
 
 Service Log & Parts

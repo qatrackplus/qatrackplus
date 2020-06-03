@@ -1294,15 +1294,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.unit_test_col.tests_object.attachment_set.all()
         )
 
-        context['top_divs_span'] = 0
+        context['top_divs_span'] = 1
         has_perms = (
             self.request.user.has_perm('qa.can_review') or
             self.request.user.has_perm('qa.can_review_own_tests') or
             self.request.user.has_perm('qa.can_override_date')
         )
         if has_perms:
-            context['top_divs_span'] += 1
-        if len(context['attachments']) > 0:
             context['top_divs_span'] += 1
         if settings.USE_SERVICE_LOG and rtsqa_id is not None:
             context['top_divs_span'] += 1

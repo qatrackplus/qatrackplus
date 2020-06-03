@@ -909,6 +909,26 @@ class TestUTCDueDates(TestCase):
         self.utc_hist.refresh_from_db()
         self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + timezone.timedelta(days=1)).date())
 
+    def test_due_date_not_updated_for_unscheduled(self):
+
+        # first create valid history
+        now = timezone.now()
+        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
+        utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli1.save()
+
+        # now create 2nd unscheduled
+        now = timezone.now()
+        tli2 = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=now + timezone.timedelta(days=1)
+        )
+        utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli2.include_for_scheduling = False
+        tli2.save()
+
+        self.utc_hist.refresh_from_db()
+        self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + timezone.timedelta(days=1)).date())
+
     def test_cycle_due_date(self):
 
         test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
