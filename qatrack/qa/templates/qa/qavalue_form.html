@@ -18,7 +18,7 @@
   {% endif %}
 {% endfor %}
 
-<tr class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
+<tr id="test-row-{{ test_info.test.slug }}" class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
   {% for hidden in form.hidden_fields %}
       {{ hidden }}
@@ -41,7 +41,7 @@
     </td>
     <td class="qa-name qa-showproc" title="{{ test.name }}">
       {%if test.procedure or test.description or test.attachment_set.count %}
-      <a href="#" class="revealprocedure" title="{% trans "Show/hide procedure & attachments for this test" %}">{{ test.display }}</a>
+      <a id="procedure-toggle-{{ test_info.test.slug }}" href="#" class="revealprocedure" title="{% trans "Show/hide procedure & attachments for this test" %}">{{ test.display }}</a>
       {% else %}
         {{ test.display }}
       {% endif %}
@@ -93,7 +93,7 @@
         {% if test.skip_required %}{{form.skipped}}{% endif %}
     </td>
     <td class="qa-status">{% trans "Not Done" %}</td>
-    <td class="qa-showcmt"><a href="#" class="revealcomment" title="{% trans "Add comment for this test" %}"><i class="fa fa-commenting-o"></i></a></td>
+    <td class="qa-showcmt"><a id="comment-toggle-{{ test_info.test.slug }}" href="#" class="revealcomment" title="{% trans "Add comment for this test" %}"><i class="fa fa-commenting-o"></i></a></td>
 
       {% if perms.qa.can_view_history or perms.qa.can_view_ref_tol %}
         {% if perms.qa.can_view_ref_tol %}
@@ -119,7 +119,7 @@
   {% endwith %}
 </tr>
 
-<tr class="qa-comment no-hover row-{{ form.prefix }}">
+<tr id="comment-row-{{ test_info.test.slug }}" class="qa-comment no-hover row-{{ form.prefix }}">
   <td colspan="{% qa_table_colspan perms %}" class="">
     <div class="error-bar {% if form.errors %}in{% endif %}">
       <div class="procedure-bar">
@@ -133,7 +133,7 @@
   </td>
 </tr>
 
-<tr class="qa-procedure no-hover row-{{ form.prefix }} {%if test_info.test.hidden %}hidden-procedure{% endif %}">
+<tr id="procedure-row-{{ test_info.test.slug }}" class="qa-procedure no-hover row-{{ form.prefix }} {%if test_info.test.hidden %}hidden-procedure{% endif %}">
   <td colspan="{% qa_table_colspan perms %}"  class="">
     {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description or form.unit_test_info.test.attachment_set.count %}
       <div class="error-bar {% if form.errors %}in{% endif %}">
