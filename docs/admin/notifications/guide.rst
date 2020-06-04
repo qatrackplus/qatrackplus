@@ -282,12 +282,31 @@ Click `Save` once you have configured the notification the way you want.
 Service Event Notices
 ---------------------
 
-Service Event notices allows users to be alerted to Service Event creation &
-modification. There is currently one Service Event Notification subtype:
+Service Event notices allows users to be alerted when a service event is
+created or modified.  There are currently seven Service Event Notification
+subtypes:
 
     * *Notify when a Service Event is created or modified*  Use these alerts to
-      get an email whenever a Service Event is created or modified (e.g. the
-      status is updated).
+      get an email whenever a Service Event is created or modified any way.
+
+    * *Notify when a Service Event is created* Use these alerts to 
+      get an email whenever a Service Event is created.
+
+    * *Notify when a Service Event is modified in any way* Use these alerts to
+      get an email when a Service Event is modified in any way.
+
+    * *Notify when a Service Event Status is changed* Use these alerts to 
+      get an email when the Status of Service Event is modified.
+
+    * *Notify when Return To Service QC is changed* Use these alerts to get
+      an email when Return to Service QC for a Service Event is added or changed.
+
+    * *Notify when Return To Service QC is performed*  Use these alerts to get
+      an email when Return to Service QC for a Service Event is performed.
+
+    * *Notify when Return To Service QC is approved*  Use these alerts to get
+      an email when Return to Service QC has its status updated to an approved
+      status.
 
 To create a new `Service Event Notice` click through the `Service Event
 Notices` section of the Notification admin section and then on the next page
@@ -310,6 +329,49 @@ Click `Save` once you have configured the notification the way you want.
     :alt: Filling out the fields for a Service Event notice.
 
     Filling out the fields for a Service Event notice.
+
+
+Service Event Review Notices
+----------------------------
+
+Service Event Review notices allow users to be alerted when Service Events 
+are awaiting review.  There is currently one Service Event Review Notification
+subtypes:
+
+    * *Notify about Service Events awaiting review*  This is a scheduled
+      notification that can be sent to remind staff that there are Service 
+      Events awaiting review.
+
+To create a new `Service Event Review Notice` click through the `Service Event
+Review Notices` section of the Notification admin section and then on the next
+page click `Add Service Event Review Notice` and then fill out the fields:
+
+Notification Type (required):
+    Select the notification type you want to create
+
+Send Empty (required):
+    Should this notice be sent even if there are no Service Events to currently notify about?
+
+Recurrences (required):
+    Create a recurrence rule to define the days you want this notice sent.
+
+Time of day (required):
+    Select the time of day you want the notice sent.
+
+Recipients (required):
+    Select the recipient group you want this notification sent to.
+
+Unit Group filter (optional):
+    If you want this notification to only pertain to specific units, select a
+    Unit Group filter.
+
+
+Click `Save` once you have configured the notification the way you want.
+
+.. figure:: images/serviceeventreview.png
+    :alt: Filling out the fields for a Service Event Review notice.
+
+    Filling out the fields for a Service Event Review notice.
 
 
 .. _notifications_edit:
