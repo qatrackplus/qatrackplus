@@ -185,6 +185,19 @@ class TestQCCompletedEmails(TestCase):
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         self.assertEqual(len(mail.outbox), 1)
 
+    def test_email_sent_action_only_test(self):
+        """If a test list instance has only a failing test, but an alert is
+        configured for tolerance or action level, a notice should be sent"""
+
+        notification = QCCompletedNotice.objects.create(
+            notification_type=QCCompletedNotice.TOLERANCE,
+            recipients=self.recipients,
+        )
+        notification.save()
+        self.test_list_instance.testinstance_set.exclude(pass_fail="action").delete()
+        signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_inactive_not_included(self):
 
         QCCompletedNotice.objects.create(
