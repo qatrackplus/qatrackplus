@@ -214,6 +214,25 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         )
 
 
+class AssignedQCDetailsFilter(UnitTestCollectionFilter):
+
+    refs_tols = django_filters.filters.ChoiceFilter(
+        label=_l("References & Tolerances"),
+        choices=[
+            ("both", _l("Both")),
+            ("refs_tols_set", _l("Only Tests with Refs/Tols")),
+            ("refs_tols_not_set", _l("Only Tests without Refs/Tols")),
+        ],
+        required=True,
+        initial="both",
+        help_text=_l("Select whether you want to include tests with a Reference or Tolerance Set, Not Set, or Both"),
+    )
+
+    class Meta:
+        model = models.UnitTestCollection
+        fields = ["unit__site", "unit", "frequency", "assigned_to", "active"]
+
+
 class UnitTestCollectionFilterDetailsMixin:
 
     def get_unit__site_details(self, val):

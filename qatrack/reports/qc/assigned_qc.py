@@ -113,7 +113,7 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
 
     report_type = "qc-assignment-details"
     name = _l("QC Assignment Details")
-    filter_class = filters.UnitTestCollectionFilter
+    filter_class = filters.AssignedQCDetailsFilter
     description = mark_safe(_l(
         "This report includes details of all Test Lists (Cycles) assigned to "
         "selected sites, units, frequencies, and groups."
@@ -177,6 +177,8 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
                 'test': uti.test_id,
             }
 
+        include_ref_tols = self.filter_set.form.cleaned_data.get("refs_tols")
+
         for site in sites:
 
             if site:  # site can be None here since not all units may have a site
@@ -194,7 +196,12 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
                         ref = ref_cache[uti['reference']] if uti['reference'] else None
                         tol = tol_cache[uti['tolerance']] if uti['tolerance'] else None
                         cat = cat_cache[test.id]
-                        li.utis.append((test, cat, ref, tol))
+                        has_ref_or_tol = ref is not None or tol is not None
+                        include = ((has_ref_or_tol and include_ref_tols == 'refs_tols_set') or
+                                   (not has_ref_or_tol and include_ref_tols == 'refs_tols_not_set') or
+                                   include_ref_tols == 'both')
+                        if include:
+                            li.utis.append((test, cat, ref, tol))
 
                 sites_data[-1][-1].append({
                     'unit_name': utc.unit.name,
