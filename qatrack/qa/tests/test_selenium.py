@@ -679,6 +679,37 @@ class TestPerformQC(BaseQATests):
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
         assert models.TestListInstance.objects.count() == 1
+        assert models.TestListInstance.objects.latest("pk").include_for_scheduling
+
+        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[0].value == 1
+        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[1].value == 2
+        assert models.TestInstance.objects.get(unit_test_info__test__type="composite").value == 5
+        now = timezone.now()
+        date = timezone.localtime(now).date()
+        assert models.TestInstance.objects.get(unit_test_info__test__type="date").date_value == date
+        dt = timezone.localtime(now).replace(hour=12, minute=0, second=0, microsecond=0)
+        assert models.TestInstance.objects.get(unit_test_info__test__type="datetime").datetime_value == dt
+        assert models.TestInstance.objects.get(unit_test_info__test__type="string").string_value == "test"
+        assert models.TestInstance.objects.get(unit_test_info__test__type="scomposite").string_value == "testchoiceb"
+        assert models.TestInstance.objects.get(unit_test_info__test__type="multchoice").string_value == "choiceb"
+
+    def test_perform_ok_therapist(self):
+        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+
+        self.group.permissions.clear()
+        self.user.is_superuser = False
+        self.user.save()
+        self.group.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
+        self.fill_testlist()
+        inputs = self.driver.find_elements_by_class_name("qa-input")[:3]
+
+        assert int(float(inputs[2].get_attribute("value"))) == 5
+        assert models.TestListInstance.objects.count() == 0
+        self.click("submit-qa")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestListInstance.objects.latest("pk").include_for_scheduling
 
         assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[0].value == 1
         assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[1].value == 2
