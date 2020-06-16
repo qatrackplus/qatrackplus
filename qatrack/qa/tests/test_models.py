@@ -1691,6 +1691,13 @@ class TestTestInstance(TestCase):
         ti = models.TestInstance(unit_test_info=uti, string_value="c")
         self.assertEqual("c", ti.value_display())
 
+    def test_invalid_display_value(self):
+        t = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti, string_value="Invalid")
+        self.assertEqual("Invalid", ti.value_display())
+
     def test_reg_display_value(self):
         t = models.Test(type=models.SIMPLE)
         uti = models.UnitTestInfo(test=t)

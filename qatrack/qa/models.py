@@ -2088,7 +2088,14 @@ class TestInstance(models.Model):
             except:  # noqa: E722
                 pass
 
-        return "%.4g" % self.value
+        try:
+            return "%.4g" % self.value
+        except TypeError:
+            # value stored as wrong type? e.g. Test started as string type and then was
+            # modified directly to be a numerical type. Rare but possible and causes
+            # 500's wherever that value is displayed. Instead try to fall back on
+            # first truthy value
+            return str(self.date_value or self.datetime_value or self.value or self.string_value)
 
     def diff_display(self):
         display = ""

@@ -322,6 +322,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             if type_ in auto_types and not self.autovalue_ok(validated_val, provided_val):
                 invalid_autos.append(slug)
+            elif type_ in auto_types and not self.type_okay(type_, validated_val):
+                wrong_types.append(slug)
 
             d = validated_data['tests'][slug]
             if type_ in models.STRING_TYPES and slug in validated_data['tests']:
