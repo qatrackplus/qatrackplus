@@ -235,7 +235,7 @@ we want to perform:
 
     unit_name = "TB1"
     test_list_name = "Picket Fence"
-    url = root + '/qa/unittestcollections/?unit__name=%s&test_list__name=%s' % (unit_name, test_list_name)
+    url = root + '/qa/unittestcollections/?unit__name__icontains=%s&test_list__name__icontains=%s' % (unit_name, test_list_name)
 
     # find the UnitTestCollection we want to perform
     resp = requests.get(url, headers=headers)

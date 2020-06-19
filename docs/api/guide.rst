@@ -239,7 +239,7 @@ UnitTestCollections whose Unit name is "Unit 1":
 
 .. code-block:: python
 
-    resp = requests.get(root + '/qa/unittestcollections/?unit__name=Unit 1', headers=headers)
+    resp = requests.get(root + '/qa/unittestcollections/?unit__name__icontains=Unit 1', headers=headers)
 
 Here's an example of getting :term:`Test Instance` data for a specific Test and Unit:
 
@@ -247,8 +247,8 @@ Here's an example of getting :term:`Test Instance` data for a specific Test and 
 
     url = root + '/qa/testinstances/'
     params = {
-        "unit_test_info__unit__name": "Unit Name",
-        "unit_test_info__test__name": "Test Name",
+        "unit_test_info__unit__name__icontains": "Unit Name",
+        "unit_test_info__test__name__icontains": "Test Name",
         "ordering": "-work_completed",
     }
 
@@ -286,7 +286,7 @@ A script that will find the above test list, and submit the data is shown here:
     headers = {"Authorization": "Token %s" % token}
 
     # first find the UnitTestCollection we want to perform
-    resp = requests.get(root + '/qa/unittestcollections/?unit__name=Unit 1&test_list__name=Simple API Example', headers=headers)
+    resp = requests.get(root + '/qa/unittestcollections/?unit__name__icontains=Unit 1&test_list__name__icontains=Simple API Example', headers=headers)
     utc_url = resp.json()['results'][0]['url']
 
     # prepare the data to submit to the API. Notice you don't need to submit a value for
