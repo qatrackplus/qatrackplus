@@ -203,6 +203,9 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
             "show_category": self.show_category,
         }
 
+    def clean_comment(self):
+        raise ValidationError("Comment required for this test!")
+
 
 BaseTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm, extra=0)
 

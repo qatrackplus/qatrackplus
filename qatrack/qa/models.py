@@ -864,6 +864,11 @@ class Test(models.Model, TestPackMixin):
         help_text=_l("Allow users to skip this test without a comment"),
         default=False,
     )
+    require_comment = models.BooleanField(
+        _l("Require Comment"),
+        help_text=_l("Require users to enter a comment when submitting this test."),
+        default=False,
+    )
     display_image = models.BooleanField(
         "Display image",
         help_text=_l("Image uploads only: Show uploaded images under the testlist"),

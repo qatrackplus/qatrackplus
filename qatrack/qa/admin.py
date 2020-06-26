@@ -940,6 +940,7 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
                     'hidden',
                     'chart_visibility',
                     'skip_without_comment',
+                    'require_comment',
                     'formatting',
                 ],
             },
