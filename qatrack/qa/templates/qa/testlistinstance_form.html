@@ -505,8 +505,10 @@
                                                 {% endif %}
                                                 {% if perms.qa.can_view_history %}
                                                     <th class="qa-history">History<br/>
-                                                        {% for d in history_dates %}
-                                                            <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                                        {% for tli_url, d in history_dates %}
+                                                          <a href="{{ tli_url}}" title="{% blocktrans %}Click to view this test list instance performed at {{ d }}{% endblocktrans %}">
+                                                            <span class="label history-label">{{d|date:"dMy"}}</span>
+                                                          </a>
                                                         {% endfor %}
                                                     <div></div></th>
                                                 {% endif %}

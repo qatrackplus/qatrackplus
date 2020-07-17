@@ -185,7 +185,7 @@ th.qa-history div{
     overflow: hidden;
     padding: 3px 4px;
     vertical-align: middle;
-    font-size: 12px;
+    font-size: 11px;
 }
 .history-value > i, .pass-fail > i {
     margin-top:2px;

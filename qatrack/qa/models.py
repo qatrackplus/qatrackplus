@@ -1735,14 +1735,16 @@ class UnitTestCollection(models.Model):
             "testinstance_set__created_by",
         )[:settings.NHIST]
 
-        dates = tlis.values_list("work_completed", flat=True)
+        dates = []
+        for tli in tlis:
+            dates.append((tli.get_absolute_url(), tli.work_completed))
 
         instances = []
         for test in self.tests_object.ordered_tests():
             test_history = []
             for tli in tlis:
                 match = [x for x in tli.testinstance_set.all() if x.unit_test_info.test == test]
-                test_history.append(match[0] if match else None)
+                test_history.append((tli, match[0]) if match else (tli, None))
 
             instances.append((test, test_history))
 
@@ -2363,7 +2365,9 @@ class TestListInstance(models.Model):
             "testinstance_set__test_list_instance"
         )[:settings.NHIST]
 
-        dates = tlis.values_list("work_completed", flat=True)
+        dates = []
+        for tli in tlis:
+            dates.append((tli.get_absolute_url(), tli.work_completed))
 
         instances = []
         # note sort  here rather than using self.testinstance_set.order_by(("order", "created")
@@ -2376,7 +2380,7 @@ class TestListInstance(models.Model):
             for tli in tlis:
                 q = tli.testinstance_set.all()
                 match = [x for x in q if x.unit_test_info_id == ti.unit_test_info_id]
-                test_history.append(match[0] if match else None)
+                test_history.append((tli, match[0]) if match else (tli, None))
 
             instances.append((ti, test_history))
 

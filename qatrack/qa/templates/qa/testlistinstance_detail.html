@@ -269,8 +269,10 @@
                                         <th class="review-ref">Reference</th>
                                         <th>Comment</th>
                                         <th class="qa-history">History<br/>
-                                            {% for d in instances_and_dates.1 %}
-                                                <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                            {% for tli_url, d in instances_and_dates.1 %}
+                                              <a href="{{ tli_url}}" title="{% blocktrans %}Click to view this test list instance performed at {{ d }}{% endblocktrans %}">
+                                                <span class="label history-label">{{d|date:"dMy"}}</span>
+                                              </a>
                                             {% endfor %}
                                             <div></div>
                                         </th>

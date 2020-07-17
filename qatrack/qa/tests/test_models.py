@@ -1146,14 +1146,14 @@ class TestUnitTestCollection(TestCase):
 
         test_hist, dates = utc.history(before=now)
 
-        dates = [x.replace(second=0, microsecond=0) for x in dates]
+        dates = [d.replace(second=0, microsecond=0) for (tli_url, d) in dates]
         wcs = [x.work_completed.replace(second=0, microsecond=0) for x in tlis]
 
         self.assertEqual(sorted_hist, dates)
         self.assertEqual(sorted_hist, wcs)
 
         # test returns correct number of results
-        self.assertEqual([(test, tis)], test_hist)
+        self.assertEqual([(test, list(zip(tlis, tis)))], test_hist)
 
     def test_test_list_next_list(self):
 
