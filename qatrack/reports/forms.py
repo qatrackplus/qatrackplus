@@ -30,6 +30,45 @@ class ReportForm(forms.ModelForm):
         f.widget = ToolTipSelect(titles=reports.report_descriptions(), choices=choices)
 
 
+class ReportNoteForm(forms.ModelForm):
+
+    prefix = "report-note-N"
+
+    class Meta:
+        model = models.ReportNote
+        fields = ("heading", "content",)
+        widgets = {
+            'heading': forms.TextInput(),
+            'content': forms.Textarea(attrs={'rows': 3}),
+            'DELETE': forms.HiddenInput(),
+        }
+
+
+class ReportNoteFormSetBase(forms.BaseFormSet):
+
+    def add_fields(self, form, index):
+        """ hide ordering and deletion fields """
+        super().add_fields(form, index)
+        if 'DELETE' in form.fields:
+            form.fields['DELETE'].widget = forms.HiddenInput()
+
+
+ReportNoteFormSet = forms.inlineformset_factory(
+    models.SavedReport,
+    models.ReportNote,
+    extra=0,
+    fields=(
+        "heading",
+        "content",
+    ),
+    widgets={
+        'heading': forms.TextInput(),
+        'content': forms.Textarea(attrs={'rows': 3}),
+    },
+    formset=ReportNoteFormSetBase,
+)
+
+
 def value_to_serializable(val, val_type=None):
     """Convert input report form value to something serializable TODO:: handle
     other input types (single date or datetime) """

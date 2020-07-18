@@ -9,6 +9,8 @@ from qatrack.qatrack_core.utils import format_as_date
 from qatrack.reports import models, qc, reports, service_log
 from qatrack.reports.forms import (
     ReportForm,
+    ReportNoteForm,
+    ReportNoteFormSet,
     ReportScheduleForm,
     serialize_form_data,
     serialize_savedreport,
@@ -20,12 +22,14 @@ def process_form_post(request, instance):
 
     form = ReportForm(request.POST, instance=instance)
     form.is_valid()
+    notes_formset = ReportNoteFormSet(request.POST, instance=instance)
+    notes_formset.is_valid()
     base_opts = {'report_id': request.POST.get("report_id")}
     base_opts.update(form.cleaned_data)
     filter_form = None
     all_valid = False
     report = None
-    if not form.is_valid() and "report_type" not in form.errors:
+    if not (form.is_valid() and notes_formset.is_valid()) and "report_type" not in form.errors:
         # something wrong with base form, but we know what report_type we're trying to produce
         # so validate that form too
         ReportClass = reports.report_class(form.cleaned_data['report_type'])
@@ -36,10 +40,10 @@ def process_form_post(request, instance):
         ReportClass = reports.report_class(form.cleaned_data['report_type'])
         report = ReportClass(base_opts=base_opts, report_opts=request.POST, user=request.user)
         filter_form = report.get_filter_form()
-        if filter_form.is_valid():
+        if filter_form.is_valid() and notes_formset.is_valid():
             all_valid = report.filter_form_valid(filter_form)
 
-    return all_valid, report, form, filter_form
+    return all_valid, report, form, filter_form, notes_formset
 
 
 def select_report(request):
@@ -52,13 +56,15 @@ def select_report(request):
     if request.method == "GET":
         filter_form = None  # filter form is loaded dynamically by client
         form = ReportForm()
+        notes_formset = ReportNoteFormSet()
     else:
-        all_valid, report, form, filter_form = process_form_post(request, None)
+        all_valid, report, form, filter_form, notes_formset = process_form_post(request, None)
         if all_valid:
             return report.render_to_response(form.cleaned_data['report_format'])
 
     context = {
         "report_form": form,
+        "notes_formset": notes_formset,
         "filter_form": filter_form,
     }
     return render(request, "reports/reports.html", context)
@@ -87,9 +93,15 @@ def report_preview(request):
     if not request.user.has_perm("reports.can_run_reports"):
         return HttpResponseForbidden()
 
-    resp = {'errors': False, 'base_errors': {}, 'report_errors': {}, 'preview': ''}
+    resp = {
+        'errors': False,
+        'base_errors': {},
+        'report_errors': {},
+        'notes_formset_errors': [],
+        'preview': '',
+    }
 
-    all_valid, report, form, filter_form = process_form_post(request, None)
+    all_valid, report, form, filter_form, notes_formset = process_form_post(request, None)
     if all_valid:
         resp['preview'] = report.to_html()
         return JsonResponse(resp)
@@ -97,6 +109,7 @@ def report_preview(request):
     resp['errors'] = True
     resp['base_errors'] = form.errors
     resp['report_errors'] = filter_form.errors if filter_form else {}
+    resp['notes_formset_errors'] = notes_formset.errors
 
     return JsonResponse(resp)
 
@@ -117,7 +130,7 @@ def save_report(request):
     else:
         instance = None
 
-    all_valid, report, form, filter_form = process_form_post(request, instance)
+    all_valid, report, form, filter_form, notes_formset = process_form_post(request, instance)
     if all_valid:
         saved_report = form.save(commit=False)
         saved_report.filters = serialize_form_data(filter_form.cleaned_data)

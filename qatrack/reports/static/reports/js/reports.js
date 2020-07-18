@@ -153,6 +153,8 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     var $scheduleModalTitle = $scheduleModal.find(".modal-title");
     var $updateSchedule = $("#schedule");
 
+    var $addNote = $("#add-note");
+
     var date_range_locale = {
         "format": siteConfig.DATERANGEPICKER_DATE_FMT,
         "separator": " - ",
@@ -360,6 +362,14 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
             var $parent = $("#id_root-" + k).parents("[class^='col-sm']");
             $parent.addClass("has-error");
             $parent.append('<div class="help-block error-message">'+ v.join(", ") + '</div>');
+        });
+
+        _.each(data.notes_formset_errors, function(errs, err_num){
+            _.each(errs, function(v, k){
+                var $parent = $("#id_reportnote_set-" + err_num + "-"+ k).parents("[class^='col-sm']");
+                $parent.addClass("has-error");
+                $parent.append('<div class="help-block error-message">'+ v.join(", ") + '</div>');
+            });
         });
 
         _.each(data.save_errors, function(v, k){
@@ -590,6 +600,20 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         $scheduleForm.find("select").select2();
     }
 
+    function addNote(){
+        var form_idx = $('#id_form-TOTAL_FORMS').val();
+        $('#notes-formset').append($('#notes-empty-form').html().replace(/__prefix__/g, form_idx));
+        $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+        $("#id_form-remove-" + form_idx).click(remNote);
+    }
+
+    function remNote(event){
+        var form_idx = $('#id_form-TOTAL_FORMS').val();
+        var note_id = _.last($(this).attr("id").split("-"));
+        $('#notes-form-' + note_id).remove();
+        $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) - 1);
+    }
+
     $(document).ready(function(){
 
 
@@ -744,6 +768,8 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         $("#schedule").click(scheduleReport);
 
         $("#clear-schedule").click(clearSchedule);
+
+        $addNote.click(addNote);
 
         prepareForm();
         setupToolTips();
