@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+QATrack+ v0.3.0.16 Release Notes
+--------------------------------
+
+- Allow disabling warning message by setting TestList.warning_message blank
+- Add test type to html class for qa-valuerows so they can more
+  easily be targeted in JavaScript code.
+
 QATrack+ v0.3.0.15 Release Notes
 --------------------------------
 

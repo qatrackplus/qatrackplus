@@ -528,7 +528,7 @@ First we must check out the code for version 0.3.0:
 .. code-block:: console
 
     git fetch origin
-    git checkout v0.3.0.15
+    git checkout v0.3.0.16
 
 
 Create and activate your new virtual environment
@@ -558,6 +558,7 @@ We're now ready to install all the libraries QATrack+ depends on.
     cd C:\deploy\qatrackplus\
     python -m pip install --upgrade pip
     pip install -r requirements\win.txt
+    python ..\venvs\qatrack3\Scripts\pywin32_postinstall.py -install
     python manage.py collectstatic
 
 .. warning::
