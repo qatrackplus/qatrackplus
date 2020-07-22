@@ -16,7 +16,6 @@ import shutil
 import sys
 
 import cherrypy
-
 from qatrack import wsgi
 import win32service
 import win32serviceutil
@@ -40,7 +39,8 @@ def setup():
 
     if not glob.glob(os.path.join("C:/Windows/System32/pywintypes*dll")):
         import pywin32_postinstall
-        pywin32_postinstall.install()
+        lib_dir = distutils.sysconfig.get_python_lib(plat_specific=1)
+        pywin32_postinstall.install(lib_dir)
 
     sitepackages = distutils.sysconfig.get_python_lib()
     orig_path = os.path.join(sitepackages, "win32", "pythonservice.exe")

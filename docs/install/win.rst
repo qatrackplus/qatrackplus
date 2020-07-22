@@ -105,6 +105,7 @@ We're now ready to install all the libraries QATrack+ depends on.
     python -m pip install --upgrade pip
     cd qatrackplus
     pip install -r requirements\win.txt
+    python C:\deploy\venvs\qatrack3\Scripts\pywin32_postinstall.py -install
     python manage.py collectstatic
 
 .. warning::
