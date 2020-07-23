@@ -57,6 +57,69 @@
           </em>
         </p>
         <div id="report-config">
+          <div id="notes-empty-form" class="hidden">
+            <div id="notes-form-__prefix__" class="__empty__">
+
+              {% with notes_formset.empty_form as f %}
+
+                {% for hidden_field in f.hidden_fields %}
+                  {{ hidden_field.errors }}
+                  {{ hidden_field }}
+                {% endfor %}
+
+                <div class="form-group">
+                  <label class="col-sm-4 control-label" for="current">
+                    {{ f.heading.label }}*
+                  </label>
+                  <div class="col-sm-8">
+                    <div class="input-group">
+                      {% render_field f.heading class+="form-control input-sm" %}
+                      <div class="input-group-btn">
+                        <button id="id_reportnote_set-remove-__prefix__" type="button" class="btn btn-primary btn-sm" title="{% trans "Remove Comment" %}">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted">{{ f.content.help_text }}</small>
+                    {% for error in f.content.errors %}
+                      <div class="help-block error-message">
+                        {{ error }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-group {% if f.content.errors %}has-error{% endif %}">
+                  <label class="col-sm-4 control-label" for="{{ f.content.id_for_label }}">
+                    {{ f.content.label }}
+                  </label>
+                  <div class="col-sm-8">
+                    {% render_field f.content class+="form-control input-sm" %}
+                    <small class="form-text text-muted">{{ f.content.help_text }}</small>
+                    {% for error in f.content.errors %}
+                      <div class="help-block error-message">
+                        {{ error }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="hidden form-group {% if f.DELETE.errors %}has-error{% endif %}">
+                  <div class="col-sm-offset-4 col-sm-8">
+                    <div class="checkbox-inline">
+                      <label for="{{ f.DELETE.id_for_label }}">
+                        {% render_field f.DELETE %}
+                        {{ f.DELETE.label }}
+                      </label>
+                    </div>
+                    {% for error in f.DELETE.errors %}
+                      <div class="help-block error-message">
+                        {{ error }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endwith %}
+            </div>
+          </div>
           <form id="report-form"
             action=""
             method="post"
@@ -116,48 +179,6 @@
 
               {{ notes_formset.management_form }}
 
-              <div id="notes-empty-form" class="hidden">
-                <div id="notes-form-__prefix__">
-
-                  {% with notes_formset.empty_form as f %}
-                    <div class="form-group">
-                      <label class="col-sm-4 control-label" for="current">
-                        {{ f.heading.label }}*
-                      </label>
-                      <div class="col-sm-8">
-                        <div class="input-group">
-                          {% render_field f.heading class+="form-control input-sm" %}
-                          <div class="input-group-btn">
-                            <button id="id_form-remove-__prefix__" type="button" class="btn btn-primary btn-sm" title="{% trans "Remove Comment" %}">
-                              <i class="fa fa-trash"></i>
-                            </button>
-                          </div>
-                        </div>
-                        <small class="form-text text-muted">{{ f.content.help_text }}</small>
-                        {% for error in f.content.errors %}
-                          <div class="help-block error-message">
-                            {{ error }}
-                          </div>
-                        {% endfor %}
-                      </div>
-                    </div>
-                    <div class="form-group {% if f.content.errors %}has-error{% endif %}">
-                      <label class="col-sm-4 control-label" for="{{ f.content.id_for_label }}">
-                        {{ f.content.label }}
-                      </label>
-                      <div class="col-sm-8">
-                        {% render_field f.content class+="form-control input-sm" %}
-                        <small class="form-text text-muted">{{ f.content.help_text }}</small>
-                        {% for error in f.content.errors %}
-                          <div class="help-block error-message">
-                            {{ error }}
-                          </div>
-                        {% endfor %}
-                      </div>
-                    </div>
-                  {% endwith %}
-                </div>
-              </div>
 
             </fieldset>
 

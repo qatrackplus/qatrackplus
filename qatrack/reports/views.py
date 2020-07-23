@@ -9,22 +9,22 @@ from qatrack.qatrack_core.utils import format_as_date
 from qatrack.reports import models, qc, reports, service_log
 from qatrack.reports.forms import (
     ReportForm,
-    ReportNoteForm,
     ReportNoteFormSet,
     ReportScheduleForm,
     serialize_form_data,
     serialize_savedreport,
+    serialize_savedreport_notes,
 )
 
 
-def process_form_post(request, instance):
+def process_form_post(post_data, user, instance):
     """Handle validing form and filter form for views"""
 
-    form = ReportForm(request.POST, instance=instance)
+    form = ReportForm(post_data, instance=instance)
     form.is_valid()
-    notes_formset = ReportNoteFormSet(request.POST, instance=instance)
+    notes_formset = ReportNoteFormSet(post_data, instance=instance)
     notes_formset.is_valid()
-    base_opts = {'report_id': request.POST.get("report_id")}
+    base_opts = {'report_id': post_data.get("report_id")}
     base_opts.update(form.cleaned_data)
     filter_form = None
     all_valid = False
@@ -32,13 +32,15 @@ def process_form_post(request, instance):
     if not (form.is_valid() and notes_formset.is_valid()) and "report_type" not in form.errors:
         # something wrong with base form, but we know what report_type we're trying to produce
         # so validate that form too
+        notes = notes_formset.cleaned_data if notes_formset.is_valid() else []
         ReportClass = reports.report_class(form.cleaned_data['report_type'])
-        report = ReportClass(base_opts=base_opts, report_opts=request.POST, user=request.user)
+        report = ReportClass(base_opts=base_opts, report_opts=post_data, notes=notes, user=user)
         filter_form = report.get_filter_form()
         filter_form.is_valid()
     elif form.is_valid():
         ReportClass = reports.report_class(form.cleaned_data['report_type'])
-        report = ReportClass(base_opts=base_opts, report_opts=request.POST, user=request.user)
+        notes = notes_formset.cleaned_data if notes_formset.is_valid() else []
+        report = ReportClass(base_opts=base_opts, report_opts=post_data, notes=notes, user=user)
         filter_form = report.get_filter_form()
         if filter_form.is_valid() and notes_formset.is_valid():
             all_valid = report.filter_form_valid(filter_form)
@@ -58,7 +60,20 @@ def select_report(request):
         form = ReportForm()
         notes_formset = ReportNoteFormSet()
     else:
-        all_valid, report, form, filter_form, notes_formset = process_form_post(request, None)
+        # need to filter out any report note meta data so the formset
+        # can be treated like a new report rather than a saved report
+        data = {}
+        for k, v in request.POST.items():
+            dont_include = ((k.startswith("reportnote_set-") and k.endswith("-report")) or
+                            (k.startswith("reportnote_set-") and k.endswith("-id")))
+
+            if dont_include:
+                data[k] = ""
+            else:
+                data[k] = v
+        data['reportnote_set-INITIAL_FORMS'] = 0
+
+        all_valid, report, form, filter_form, notes_formset = process_form_post(data, request.user, None)
         if all_valid:
             return report.render_to_response(form.cleaned_data['report_format'])
 
@@ -101,7 +116,7 @@ def report_preview(request):
         'preview': '',
     }
 
-    all_valid, report, form, filter_form, notes_formset = process_form_post(request, None)
+    all_valid, report, form, filter_form, notes_formset = process_form_post(request.POST, request.user, None)
     if all_valid:
         resp['preview'] = report.to_html()
         return JsonResponse(resp)
@@ -130,7 +145,7 @@ def save_report(request):
     else:
         instance = None
 
-    all_valid, report, form, filter_form, notes_formset = process_form_post(request, instance)
+    all_valid, report, form, filter_form, notes_formset = process_form_post(request.POST, request.user, instance)
     if all_valid:
         saved_report = form.save(commit=False)
         saved_report.filters = serialize_form_data(filter_form.cleaned_data)
@@ -138,13 +153,18 @@ def save_report(request):
         saved_report.modified_by = request.user
         saved_report.save()
         form.save_m2m()
-        resp['report_id'] = saved_report.pk
-        resp['success_message'] = _("Your report was saved")
-        return JsonResponse(resp)
+        notes_formset = ReportNoteFormSet(request.POST, instance=saved_report)
+        if notes_formset.is_valid():
+            notes_formset.save()
+            resp['report_id'] = saved_report.pk
+            resp['notes'] = serialize_savedreport_notes(saved_report)
+            resp['success_message'] = _("Your report was saved")
+            return JsonResponse(resp)
 
     resp['errors'] = True
     resp['base_errors'] = form.errors
     resp['report_errors'] = filter_form.errors if filter_form else {}
+    resp['notes_formset_errors'] = notes_formset.errors
     return JsonResponse(resp)
 
 
@@ -188,6 +208,7 @@ def load_report(request):
         rep = visible_user_reports(request.user).get(pk=report_id)
         resp['id'] = report_id
         resp['fields'] = serialize_savedreport(rep)
+        resp['notes'] = serialize_savedreport_notes(rep)
         resp['editable'] = rep.created_by_id == request.user.id
     except models.SavedReport.DoesNotExist:
         resp['errors'].append(_('Report does not exist'))

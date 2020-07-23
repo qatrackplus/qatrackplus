@@ -78,13 +78,14 @@ class BaseReport(object, metaclass=ReportMeta):
     extra_form = None
     formats = [PDF, XLS, CSV]
 
-    def __init__(self, base_opts=None, report_opts=None, user=None):
+    def __init__(self, base_opts=None, report_opts=None, notes=None, user=None):
         """base_opts is dict of form:
             {'report_id': <rid|None>, 'include_signature': <bool>, 'title': str} """
 
         self.user = user
         self.base_opts = base_opts or {}
         self.report_opts = report_opts or {}
+        self.notes = notes or []
         if self.filter_class:
             self.filter_set = self.filter_class(self.report_opts, queryset=self.get_queryset())
         else:
@@ -152,6 +153,7 @@ class BaseReport(object, metaclass=ReportMeta):
             'report_title': self.base_opts.get("title", name),
             'report_url': self.get_report_url(),
             'report_details': self.get_report_details(),
+            'notes': self.notes,
             'queryset': self.filter_set.qs if self.filter_set else None,
             'include_signature': self.base_opts.get("include_signature", False),
         }

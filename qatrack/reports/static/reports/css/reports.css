@@ -193,3 +193,19 @@ table.recurrence-calendar .body td.header {
   margin-top: 0px;
   margin-bottom: 0px;
 }
+
+.dl-horizontal dt.report-note-heading {
+  word-wrap: break-word;
+  overflow: auto;
+  white-space: normal;
+}
+
+.report-note-content{
+  border: 1px solid #eee;
+  background-color: #fbfbfb;
+  padding: 5px;
+}
+
+.report-note-content.empty{
+  min-height: 100px;
+}

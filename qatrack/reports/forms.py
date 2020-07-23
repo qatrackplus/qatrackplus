@@ -30,34 +30,12 @@ class ReportForm(forms.ModelForm):
         f.widget = ToolTipSelect(titles=reports.report_descriptions(), choices=choices)
 
 
-class ReportNoteForm(forms.ModelForm):
-
-    prefix = "report-note-N"
-
-    class Meta:
-        model = models.ReportNote
-        fields = ("heading", "content",)
-        widgets = {
-            'heading': forms.TextInput(),
-            'content': forms.Textarea(attrs={'rows': 3}),
-            'DELETE': forms.HiddenInput(),
-        }
-
-
-class ReportNoteFormSetBase(forms.BaseFormSet):
-
-    def add_fields(self, form, index):
-        """ hide ordering and deletion fields """
-        super().add_fields(form, index)
-        if 'DELETE' in form.fields:
-            form.fields['DELETE'].widget = forms.HiddenInput()
-
-
 ReportNoteFormSet = forms.inlineformset_factory(
     models.SavedReport,
     models.ReportNote,
     extra=0,
     fields=(
+        "id",
         "heading",
         "content",
     ),
@@ -65,7 +43,6 @@ ReportNoteFormSet = forms.inlineformset_factory(
         'heading': forms.TextInput(),
         'content': forms.Textarea(attrs={'rows': 3}),
     },
-    formset=ReportNoteFormSetBase,
 )
 
 
@@ -107,6 +84,8 @@ def serialize_forms(forms, data_attr="initial"):
             field = form.fields[k]
             if type(field.widget).__name__ == "RecurrenceWidget":
                 inp_type = "recurrence"
+            if type(field.widget).__name__ == "Textarea":
+                inp_type = "textarea"
             else:
                 inp_type = form.fields[k].widget.input_type
 
@@ -131,6 +110,15 @@ def serialize_savedreport(instance):
     form_data = serialize_forms(forms)
 
     return form_data
+
+
+def serialize_savedreport_notes(instance):
+
+    notes_formset = ReportNoteFormSet(instance=instance)
+    return {
+        'notes': serialize_forms(notes_formset.forms),
+        'count': instance.reportnote_set.count(),
+    }
 
 
 def serialize_report(report):

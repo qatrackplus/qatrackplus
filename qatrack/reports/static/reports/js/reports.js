@@ -423,23 +423,24 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         }
     }
 
+    function setFieldVal(field, type_val){
+        var field_type = type_val[0];
+        var field_val = type_val[1];
+        var $field = $("#id_" + field);
+        if (field_type === "checkbox"){
+            $field.prop('checked', field_val);
+        }else if (field_type === "select"){
+            $field.val(field_val);
+            $field.trigger("change.select2");
+        }else if (field_type === "date"){
+            $field.val(field_val);
+        }else {
+            $field.val(field_val);
+        }
+    }
+
     function loadReport(data){
 
-        function setFieldVal(field, type_val){
-            var field_type = type_val[0];
-            var field_val = type_val[1];
-            var $field = $("#id_" + field);
-            if (field_type === "checkbox"){
-                $field.prop('checked', field_val);
-            }else if (field_type === "select"){
-                $field.val(field_val);
-                $field.trigger("change.select2");
-            }else if (field_type === "date"){
-                $field.val(field_val);
-            }else {
-                $field.val(field_val);
-            }
-        }
 
         setFilterForm(data.fields['root-report_type'][1], function(){
             $reportId.val(data.id);
@@ -450,6 +451,8 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
             _.each(data.fields, function(vals, field){
                 setFieldVal(field, vals);
             });
+
+            initializeNotes(data.notes);
 
             if (!data.editable){
                 $reportId.val("");
@@ -519,6 +522,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     // reset to new report state
     function clearReport(){
         clearErrors();
+        clearNotes();
         $reportId.val("");
         $reportType.val("").trigger("change");
         $deleteModalTitle.html("");
@@ -534,7 +538,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         $.ajax({
             type: "POST",
             url: $form.data("delete"),
-            data: $form.find("input[type=hidden]").serialize(),
+            data: $form.find("#report_id,input[name=csrfmiddlewaretoken]").serialize(),
             success: function(data){
                 if (data.errors){
                     formErrors(data);
@@ -601,17 +605,44 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
     }
 
     function addNote(){
-        var form_idx = $('#id_form-TOTAL_FORMS').val();
-        $('#notes-formset').append($('#notes-empty-form').html().replace(/__prefix__/g, form_idx));
-        $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
-        $("#id_form-remove-" + form_idx).click(remNote);
+        var form_idx = $('#id_reportnote_set-TOTAL_FORMS').val();
+        $('#notes-formset').append(
+            $('#notes-empty-form').html().replace(
+                /__prefix__/g, form_idx
+            ).replace(
+                /__empty__/g, "dynamic-note"
+            )
+        );
+        $('#id_reportnote_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+        $("#id_reportnote_set-remove-" + form_idx).click(deleteNote);
     }
 
-    function remNote(event){
-        var form_idx = $('#id_form-TOTAL_FORMS').val();
-        var note_id = _.last($(this).attr("id").split("-"));
-        $('#notes-form-' + note_id).remove();
-        $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) - 1);
+    function deleteNote(event){
+        var note_id = _.last($(event.currentTarget).attr("id").split("-"));
+        if ($reportId.val() === ""){
+            var form_idx = $('#id_reportnote_set-TOTAL_FORMS').val();
+            $('#notes-form-' + note_id).remove();
+            $('#id_reportnote_set-TOTAL_FORMS').val(parseInt(form_idx) - 1);
+        }else{
+            $("#id_reportnote_set-" + note_id + "-DELETE").prop("checked", true);
+            $('#notes-form-' + note_id).addClass("hidden");
+        }
+    }
+
+    function clearNotes(){
+        $(".dynamic-note").remove();
+        $('#id_reportnote_set-TOTAL_FORMS').val(0);
+    }
+
+    function initializeNotes(notes){
+        clearNotes();
+        for (var i=0; i < notes.count; i++){
+            addNote();
+        }
+        $("#id_reportnote_set-INITIAL_FORMS").val(notes.count);
+        _.each(notes.notes, function(vals, field){
+            setFieldVal(field, vals);
+        });
     }
 
     $(document).ready(function(){
@@ -665,10 +696,16 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
 
             var url = $form.data("preview");
 
+            var form_data = $form.find(':input').not(
+                "[name^=reportnote_set-][name$=-report]"
+            ).not(
+                "[name^=reportnote_set-][name$=-id]"
+            ).serialize().replace(/INITIAL_FORMS=\d+/,"INITIAL_FORMS=0");
+
             $.ajax({
                 type: "POST",
                 url: url,
-                data: $form.serialize(), // serializes the form's elements.
+                data: form_data, // serializes the form's elements.
                 success: function(data){
                     if (data.errors){
                         formErrors(data);
@@ -700,6 +737,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
                         formErrors(data);
                     }else{
                         $reportId.val(data.report_id);
+                        initializeNotes(data.notes);
                         savedReportsTable.ajax.reload(function(){
                             selectReport(data.report_id);
                             formSuccess(data.success_message);
