@@ -481,8 +481,9 @@ class TestAssignedQCReport(TestCase):
         unit = utils.create_unit(site=site)
         utils.create_unit_test_collection(unit=unit)
 
+        tlm = utils.create_test_list_membership()
         unit2 = utils.create_unit(site=None)
-        utils.create_unit_test_collection(unit=unit2)
+        utils.create_unit_test_collection(unit=unit2, test_collection=tlm.test_list)
 
         rep = qc.AssignedQCReport(report_opts={'active': True})
         rep.report_format = "csv"
@@ -501,6 +502,15 @@ class TestAssignedQCReport(TestCase):
 
 
 class TestAssignedQCDetailsReport(TestCase):
+
+    def test_filter_form_valid(self):
+        """If queryset.count() > MAX_TLIS then filter_form should get an error added"""
+        rep = qc.AssignedQCDetailsReport()
+        rep.MAX_UTCS = -1
+        ff = rep.get_filter_form()
+        resp = rep.filter_form_valid(ff)
+        assert resp is False
+        assert '__all__' in ff.errors and "Please reduce" in ff.errors['__all__'][0]
 
     def test_get_queryset(self):
         assert qc.AssignedQCDetailsReport().get_queryset().model._meta.model_name == "unittestcollection"
@@ -521,10 +531,12 @@ class TestAssignedQCDetailsReport(TestCase):
 
         site = USite.objects.create(name="site")
         unit = utils.create_unit(site=site)
-        utils.create_unit_test_collection(unit=unit)
+
+        tlm = utils.create_test_list_membership()
+        utils.create_unit_test_collection(unit=unit, test_collection=tlm.test_list)
 
         unit2 = utils.create_unit(site=None)
-        utils.create_unit_test_collection(unit=unit2)
+        utils.create_unit_test_collection(unit=unit2, test_collection=tlm.test_list)
 
         rep = qc.AssignedQCDetailsReport(report_opts={'active': True})
         rep.report_format = "csv"
