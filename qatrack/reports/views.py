@@ -60,18 +60,21 @@ def select_report(request):
         form = ReportForm()
         notes_formset = ReportNoteFormSet()
     else:
+
         # need to filter out any report note meta data so the formset
         # can be treated like a new report rather than a saved report
-        data = {}
-        for k, v in request.POST.items():
-            dont_include = ((k.startswith("reportnote_set-") and k.endswith("-report")) or
-                            (k.startswith("reportnote_set-") and k.endswith("-id")))
+        def dont_include(k):
+            return (
+                (k.startswith("reportnote_set-") and k.endswith("-report")) or
+                (k.startswith("reportnote_set-") and k.endswith("-id"))
+            )
 
-            if dont_include:
-                data[k] = ""
-            else:
-                data[k] = v
-        data['reportnote_set-INITIAL_FORMS'] = 0
+        delete = [k for k in request.POST if dont_include(k)]
+
+        data = request.POST.copy()
+        for k in delete:
+            del data[k]
+        data['reportnote_set-INITIAL_FORMS'] = '0'
 
         all_valid, report, form, filter_form, notes_formset = process_form_post(data, request.user, None)
         if all_valid:
