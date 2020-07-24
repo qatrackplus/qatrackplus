@@ -327,6 +327,11 @@ class BaseReport(object, metaclass=ReportMeta):
         for label, criteria in context['report_details']:
             rows.append([label + ":", criteria])
 
+        if context.get("notes"):
+            rows.append(["Notes:"])
+            for note in context['notes']:
+                rows.append([note['heading'], note['content']])
+
         return rows
 
 
