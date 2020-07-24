@@ -138,6 +138,31 @@ individual :ref:`report descriptions <reports-descriptions>` for explanations
 about what filters are available on each report.
 
 
+.. _reports-notes:
+
+Adding Notes to Reports
+-----------------------
+
+Users can add include zero or more custom notes in their reports by clicking the 
+'Add Note' button.
+
+.. figure:: images/add-note.png
+   :alt: Button for adding notes to reports
+
+   Buttons for adding notes to reports
+
+
+Once a note is added you must specify a heading for the note, and you can
+optionally add some content to the note.  If you leave the note content blank a
+space will be left in the report so that users can add notes later using
+external PDF tools.  Notes are added at the bottom of the report.
+
+.. figure:: images/example-notes.png
+   :alt: Example report with notes included
+
+   Example report with notes included
+
+
 .. _reports-saving:
 
 Previewing, Saving, or Downloading a Report
