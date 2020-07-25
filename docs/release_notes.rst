@@ -162,6 +162,9 @@ UI Changes
 * History & Unreviewed listing pages will now show a paperclip icon if the test list instance
   has at least one attachment.
 
+* ID attributes have been added to many elements on the pages for performing/editing test lists
+  to make them easier to target with JavaScript.
+
 Admin Changes
 ^^^^^^^^^^^^^
 
