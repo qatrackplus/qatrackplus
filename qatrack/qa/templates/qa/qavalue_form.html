@@ -18,15 +18,15 @@
   {% endif %}
 {% endfor %}
 
-<tr id="test-row-{{ test_info.test.slug }}" class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
+{% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info slug=test_info.test.slug %}
+<tr id="{{ test_info.test.slug }}-row" class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
   {% for hidden in form.hidden_fields %}
       {{ hidden }}
   {% endfor %}
 
-  {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info %}
 
-    <td class="qa-category bar-container">
+    <td id="{{slug }}-category" class="qa-category bar-container">
       <div class="error-bar {% if form.errors %}in{% endif %}">
         <div class="procedure-bar">
           <div class="comment-bar">
@@ -39,14 +39,14 @@
         </div>
       </div>
     </td>
-    <td class="qa-name qa-showproc" title="{{ test.name }}">
+    <td id="{{ slug }}-procedure" class="qa-name qa-showproc" title="{{ test.name }}">
       {%if test.procedure or test.description or test.attachment_set.count %}
       <a id="procedure-toggle-{{ test_info.test.slug }}" href="#" class="revealprocedure" title="{% trans "Show/hide procedure & attachments for this test" %}">{{ test.display }}</a>
       {% else %}
         {{ test.display }}
       {% endif %}
     </td>
-    <td class="qa-value" title="{{form.value.help_text|safe}}" >
+    <td id="{{ slug }}-value" class="qa-value" title="{{form.value.help_text|safe}}" >
       {% if test.is_boolean %}
         <div class="row">
           <div class="col-xs-12 boolean-wrapper">
@@ -89,11 +89,11 @@
           <div>{{form.value}}</div>
       {% endif %}
     </td>
-    <td class="qa-skip" title="{{form.skipped.help_text|safe}}">
+    <td id="{{ slug }}-skip" class="qa-skip" title="{{form.skipped.help_text|safe}}">
         {% if test.skip_required %}{{form.skipped}}{% endif %}
     </td>
-    <td class="qa-status">{% trans "Not Done" %}</td>
-    <td class="qa-showcmt"><a id="comment-toggle-{{ test_info.test.slug }}" href="#" class="revealcomment" title="{% trans "Add comment for this test" %}"><i class="fa fa-commenting-o"></i></a></td>
+    <td id="{{ slug }}-status" class="qa-status">{% trans "Not Done" %}</td>
+    <td id="{{ slug }}-showcmt" class="qa-showcmt"><a id="comment-toggle-{{ test_info.test.slug }}" href="#" class="revealcomment" title="{% trans "Add comment for this test" %}"><i class="fa fa-commenting-o"></i></a></td>
 
       {% if perms.qa.can_view_history or perms.qa.can_view_ref_tol %}
         {% if perms.qa.can_view_ref_tol %}
@@ -110,17 +110,16 @@
           </td>
         {% endif %}
         {% if perms.qa.can_view_history %}
-          <td class="qa-history">
+          <td id="{{ slug }}-history" class="qa-history">
             {% history_display form.history uti.unit test_list test unit_test_collection.frequency %}
           </td>
         {% endif %}
       {% endif %}
 
-  {% endwith %}
 </tr>
 
-<tr id="comment-row-{{ test_info.test.slug }}" class="qa-comment no-hover row-{{ form.prefix }}">
-  <td colspan="{% qa_table_colspan perms %}" class="">
+<tr id="{{ slug }}-comment-row" class="qa-comment no-hover row-{{ form.prefix }}">
+  <td id="{{ slug }}-comment" colspan="{% qa_table_colspan perms %}" class="">
     <div class="error-bar {% if form.errors %}in{% endif %}">
       <div class="procedure-bar">
         <div class="comment-container comment-bar">
@@ -133,8 +132,8 @@
   </td>
 </tr>
 
-<tr id="procedure-row-{{ test_info.test.slug }}" class="qa-procedure no-hover row-{{ form.prefix }} {%if test_info.test.hidden %}hidden-procedure{% endif %}">
-  <td colspan="{% qa_table_colspan perms %}"  class="">
+<tr id="{{ slug }}-procedure-row" class="qa-procedure no-hover row-{{ form.prefix }} {%if test_info.test.hidden %}hidden-procedure{% endif %}">
+  <td id="{{ slug }}-procedure" colspan="{% qa_table_colspan perms %}"  class="">
     {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description or form.unit_test_info.test.attachment_set.count %}
       <div class="error-bar {% if form.errors %}in{% endif %}">
         <div class="procedure-container procedure-bar">
@@ -170,3 +169,4 @@
   </td>
 </tr>
 
+{% endwith %}
