@@ -1493,6 +1493,44 @@ class TestPerformQA(TestCase):
         # not skipped but composite, or constant so there should be no form errors and a 302 status
         self.assertEqual(response.status_code, 302)
 
+    def test_comment_required_missing(self):
+
+        self.t_simple.require_comment = True
+        self.t_simple.save()
+
+        data = {
+            "work_started": "2012-11-07 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+        self.set_form_data(data)
+        response = self.client.post(self.url, data=data)
+
+        # missing comment so should be form error and a 200 status
+        self.assertEqual(response.status_code, 200)
+        assert 'requires a comment' in response.context['formset'].errors[0]['comment'][0]
+
+    def test_comment_required_ok(self):
+
+        self.t_simple.require_comment = True
+        self.t_simple.save()
+
+        data = {
+            "work_started": "2012-11-07 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+        self.set_form_data(data)
+        data["form-0-comment"] = "comment"
+        response = self.client.post(self.url, data=data)
+
+        # has comment so should be no form errors and a 302 status
+        self.assertEqual(response.status_code, 302)
+
     def test_cycle(self):
         tl1 = utils.create_test_list(name="tl1")
         tl2 = utils.create_test_list(name="tl2")

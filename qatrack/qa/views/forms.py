@@ -204,7 +204,10 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
         }
 
     def clean_comment(self):
-        raise ValidationError("Comment required for this test!")
+        comment = self.cleaned_data.get("comment")
+        if self.unit_test_info.test.require_comment and not comment:
+            raise ValidationError("This test requires a comment before submission.")
+        return comment
 
 
 BaseTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm, extra=0)
