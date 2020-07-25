@@ -68,6 +68,9 @@ Tests & Test Lists
   but use a more succinct name when performing a Test List. If left blank, the
   test name will be used.
 
+* A new "Require Comment" option has been added to force users to enter
+  a comment before submitting a test.
+
 * It is now possible to perform a test and not have the due date advanced
   by de-selecting the "Include for Scheduling" option.
 

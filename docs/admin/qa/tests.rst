@@ -198,6 +198,12 @@ Skip Without Comment
 Check this option if you want users to be able to skip this test without being
 forced to add a comment (regardless of their commenting permissions).
 
+Require Comment
+~~~~~~~~~~~~~~~
+
+Check this option if you want users to be forced to enter a comment when
+submitting this test.
+
 Calculation Procedure
 ~~~~~~~~~~~~~~~~~~~~~
 

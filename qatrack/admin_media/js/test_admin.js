@@ -39,7 +39,7 @@ function toggle_test_type(){
         }
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "string" || val == "date" || val == "datetime"){
-        $(".field-skip_without_comment").show();
+        $(".field-skip_without_comment, .field-require_comment").show();
         $(".field-constant_value, .field-hidden").hide();
         $(".field-choices, .field-display_image").not(".errors").hide();
         $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
@@ -51,18 +51,18 @@ function toggle_test_type(){
         $(".field-chart_visibility").prop("checked", false).hide();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "multchoice"){
-        $(".field-choices, .field-skip_without_comment").show();
+        $(".field-choices, .field-skip_without_comment, .field-require_comment").show();
         $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", false).hide();
         $("#id_flag_when").val("").parents(".field-flag_when").hide();
     }else if (val == "boolean"){
         $(".field-flag_when").show();
-        $(".field-skip_without_comment").show();
+        $(".field-skip_without_comment, .field-require_comment").show();
         //$(".field-calculation_procedure").not(".errors").hide();
         $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
     }else{
-        $(".field-skip_without_comment").show();
+        $(".field-skip_without_comment, .field-require_comment").show();
         //$(".field-calculation_procedure").not(".errors").hide();
         $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
         $(".field-chart_visibility").prop("checked", true).show();
