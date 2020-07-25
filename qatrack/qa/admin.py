@@ -788,7 +788,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
     )
 
     prepopulated_fields = {'slug': ('name',)}
-    search_fields = ("name", "description", "slug",)
+    search_fields = ("name", "description", "slug", "sublist__parent__name", "sublist__child__name")
     readonly_fields = ("id",)
 
     filter_horizontal = ("tests",)
@@ -798,6 +798,8 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
         "name",
         "id",
         "slug",
+        "parent_of",
+        "child_of",
         "modified",
         "modified_by",
     )
@@ -836,6 +838,37 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
 
     def import_testpack(self, *args, **kwargs):
         return redirect(reverse("qa_import_testpack"))
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        return qs.prefetch_related(
+            "sublist_set",
+            "sublist_set__parent",
+            "children",
+            "children__child",
+        )
+
+    @mark_safe
+    def child_of(self, obj):
+
+        title = _("Click to view parent test list")
+        links = [(sl.parent.name, reverse("admin:qa_testlist_change", args=(sl.parent.pk,)))
+                 for sl in obj.sublist_set.all()]
+        html_links = format_html_join(
+            ", ", '<a href="{}" title="{}" target="_blank">{}</a>', ((url, title, name) for (name, url) in links)
+        )
+        return html_links
+
+    @mark_safe
+    def parent_of(self, obj):
+
+        title = _("Click to view child test list")
+        links = [(sl.child.name, reverse("admin:qa_testlist_change", args=(sl.parent.pk,)))
+                 for sl in obj.children.all()]
+        html_links = format_html_join(
+            ", ", '<a href="{}" title="{}" target="_blank">{}</a>', ((url, title, name) for (name, url) in links)
+        )
+        return html_links
 
 
 class TestForm(forms.ModelForm):
