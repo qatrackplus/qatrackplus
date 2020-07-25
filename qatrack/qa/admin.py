@@ -789,7 +789,9 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
 
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ("name", "description", "slug",)
-    filter_horizontal = ("tests", )
+    readonly_fields = ("id",)
+
+    filter_horizontal = ("tests",)
 
     actions = ['export_test_lists']
     list_display = (
@@ -804,6 +806,21 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
     form = TestListAdminForm
     inlines = [TestListMembershipInline, SublistInline, get_attachment_inline("testlist")]
     save_as = True
+
+    fieldsets = [
+        (
+            "Test List",
+            {
+                'fields': ['id', 'name', 'slug', 'description', 'javascript', 'warning_message']
+            },
+        ),
+        (
+            "Sublist Memberships",
+            {
+                'fields': [],
+            },
+        ),
+    ]
 
     class Media:
         js = (
@@ -949,6 +966,12 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
             "Autoreview Rules",
             {
                 'fields': ['autoreviewruleset'],
+            },
+        ),
+        (
+            "Memberships & Assignments",
+            {
+                'fields': [],
             },
         ),
     ]

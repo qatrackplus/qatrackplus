@@ -1,0 +1,15 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+{% block after_field_sets %}{{ block.super }}
+
+{% if original.sublist_set.all %}
+<h3>{% trans "This Test List is a Sublist of the following Test Lists" %}:</h3>
+<ul>
+    {% for sublist in original.sublist_set.all %}
+        <li><a href="{% url 'admin:qa_testlist_change' sublist.parent.pk %}">{{ sublist.parent.name }}</a></li>
+    {% endfor %}
+</ul>
+{% else %}
+  <p>{% trans "This Test List is not a sublist of any other Test Lists" %}.</p>
+{% endif %}
+{% endblock %}
