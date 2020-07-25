@@ -159,6 +159,9 @@ UI Changes
 * The *In Progress* label will now only display the count of in progress test lists
   visible to the users rather than the total count.
 
+* History & Unreviewed listing pages will now show a paperclip icon if the test list instance
+  has at least one attachment.
+
 Admin Changes
 ^^^^^^^^^^^^^
 

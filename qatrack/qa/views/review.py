@@ -5,7 +5,7 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.db.transaction import atomic
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -388,12 +388,14 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "created_by__username",
         "review_status",
         "pass_fail",
+        "attachments",
     )
 
     headers = {
         "unit_test_collection__unit__name": _("Unit"),
         "unit_test_collection__frequency__name": _("Frequency"),
         "created_by__username": _("Created By"),
+        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
     }
 
     search_fields = {
@@ -401,6 +403,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "pass_fail": False,
         "review_status": False,
         "bulk_review_status": False,
+        "attachments": False,
     }
 
     order_fields = {
@@ -411,6 +414,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "pass_fail": False,
         "bulk_review_status": False,
         "selected": False,
+        "attachments": "attachment_count",
     }
 
     if settings.REVIEW_BULK:
@@ -452,7 +456,9 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         return self._bulk_review.replace(":TLI_ID:", str(obj.pk))
 
     def get_queryset(self):
-        return models.TestListInstance.objects.unreviewed()
+        qs = models.TestListInstance.objects.unreviewed()
+        qs = qs.annotate(attachment_count=Count("attachment"))
+        return qs
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)

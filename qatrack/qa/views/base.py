@@ -4,9 +4,10 @@ import logging
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.template.loader import get_template
 from django.urls import resolve, reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import UpdateView
@@ -370,12 +371,14 @@ class TestListInstances(BaseListableView):
         "created_by__username",
         "review_status",
         "pass_fail",
+        "attachments",
     )
 
     headers = {
         "unit_test_collection__unit__name": _("Unit"),
         "unit_test_collection__frequency__name": _("Frequency"),
         "created_by__username": _("Created By"),
+        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
     }
 
     widgets = {
@@ -391,6 +394,7 @@ class TestListInstances(BaseListableView):
         "actions": False,
         "pass_fail": False,
         "review_status": False,
+        "attachments": False,
     }
 
     order_fields = {
@@ -399,6 +403,7 @@ class TestListInstances(BaseListableView):
         "unit_test_collection__frequency__name": "unit_test_collection__frequency__nominal_interval",
         "review_status": False,
         "pass_fail": False,
+        "attachments": "attachment_count",
     }
 
     select_related = (
@@ -417,6 +422,7 @@ class TestListInstances(BaseListableView):
         'rtsqa_for_tli__service_event',
         'serviceevents_initiated',
         'comments',
+        'attachment_set',
     )
 
     def __init__(self, *args, **kwargs):
@@ -455,6 +461,7 @@ class TestListInstances(BaseListableView):
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset(*args, **kwargs)
         qs = qs.filter(unit_test_collection__visible_to__in=self.request.user.groups.all()).distinct()
+        qs = qs.annotate(attachment_count=Count("attachment"))
         return qs.order_by("-work_completed")
 
     def unit_test_collection__frequency__name(self, tli):
@@ -515,3 +522,6 @@ class TestListInstances(BaseListableView):
             "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
         }
         return template.render(c)
+
+    def attachments(self, tli):
+        return '<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' if tli.attachment_count else ""
