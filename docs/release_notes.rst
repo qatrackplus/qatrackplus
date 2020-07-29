@@ -254,7 +254,7 @@ Other Minor Features & Bugs Fixed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fixed bug with control charts and null valued / skipped tests. #506
-
+* Fixed bug with selecting Test List Cycle days from sidebar menu
 
 
 Deprecations & Discontinuations

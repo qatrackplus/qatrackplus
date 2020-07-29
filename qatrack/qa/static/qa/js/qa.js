@@ -1163,6 +1163,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var day = $(this).find("input").attr('id').replace('day-', '');
             var cur = document.location.href;
             var re = /day=(next|[0-9]+)/;
+            if (!document.location.search){
+                cur += "?";
+            }
             if (cur.match(re)){
                 document.location.href = cur.replace(re, "day=" + day);
             }else{
