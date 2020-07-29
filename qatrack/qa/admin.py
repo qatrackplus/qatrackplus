@@ -1217,7 +1217,7 @@ class UnitTestCollectionForm(forms.ModelForm):
 class UnitTestCollectionAdmin(BaseQATrackAdmin):
     # readonly_fields = ("unit","frequency",)
     filter_horizontal = ("visible_to",)
-    list_display = ['name', site_name, unit_name, freq_name, assigned_to_name, "active"]
+    list_display = ['name', site_name, unit_name, freq_name, assigned_to_name, 'get_content_type', "active"]
     list_filter = [SiteFilter, UnitFilter, FrequencyFilter, AssignedToFilter, ActiveFilter]
     search_fields = ['name', "unit__name", "frequency__name"]
     change_form_template = "admin/treenav/menuitem/change_form.html"
@@ -1234,7 +1234,14 @@ class UnitTestCollectionAdmin(BaseQATrackAdmin):
 
     def get_queryset(self, *args, **kwargs):
         qs = super(UnitTestCollectionAdmin, self).get_queryset(*args, **kwargs)
-        return qs.select_related("unit", "unit__site", "frequency", "assigned_to")
+        return qs.select_related("unit", "unit__site", "frequency", "assigned_to", "content_type")
+
+    def get_content_type(self, obj):
+        if obj:
+            return obj.content_type.model_class().__name__
+        return _("Unknown")
+    get_content_type.short_description = _l("Content Type")
+    get_content_type.admin_order_field = "content_type__model"
 
 
 class TestListCycleMembershipInline(DynamicRawIDMixin, admin.TabularInline):
