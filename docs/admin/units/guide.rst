@@ -58,6 +58,7 @@ etc).
 
    Defining a new unit class
 
+.. _unit_type:
 
 Defining a new unit type
 ------------------------
@@ -66,8 +67,11 @@ From the main administrators page click the **Unit Types** link from the
 **Units** section and then on the next page click the **Add unit type**
 link in the top right hand corner.
 
-Fill in the **Name**, **Vendor**, and optionally **Unit class* and **Model**
-fields and click **Save** when you are finished.
+Fill in the **Name**, **Vendor**, and optionally **Unit class*,  **Model**, and
+**Collapse** fields and click **Save** when you are finished.
+
+Checking the **Collapse** option will hide units of this unit type by default
+on pages where you select units (e.g. the Choose Unit to Perform QC On page).
 
 .. figure:: images/unit_type.png
    :alt: Defining a new unit type

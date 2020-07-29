@@ -24,13 +24,26 @@ class Vendor(models.Model):
     Stores information (just name for now) of unit vendor.
     """
 
-    name = models.CharField(max_length=64, unique=True, help_text=_l('Name of this vendor'))
-    notes = models.TextField(max_length=255, blank=True, null=True, help_text=_l('Additional notes about this vendor'))
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=64,
+        unique=True,
+        help_text=_l('Name of this vendor'),
+    )
+    notes = models.TextField(
+        verbose_name=_l("notes"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_l('Additional notes about this vendor')
+    )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
         ordering = ("name",)
+        verbose_name = _l("Vendor")
+        verbose_name_plural = _l("Vendor")
 
     def natural_key(self):
         return (self.name,)
@@ -46,12 +59,18 @@ class UnitClass(models.Model):
     Unit class, ie. linac, CT, MR, etc.
     """
 
-    name = models.CharField(max_length=64, unique=True, help_text=_l('Name of this unit class'))
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=64,
+        unique=True,
+        help_text=_l('Name of this unit class'),
+    )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
-        verbose_name_plural = "Unit classes"
+        verbose_name = _l("unit class")
+        verbose_name_plural = _l("unit classes")
         ordering = ("name",)
 
     def natural_key(self):
@@ -67,8 +86,14 @@ class Site(models.Model):
 
     Allows for multiple site filtering (different campuses, buildings, hospitals, etc)
     """
-    name = models.CharField(max_length=64, unique=True, help_text=_l('Name of this site'))
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=64,
+        unique=True,
+        help_text=_l('Name of this site'),
+    )
     slug = models.SlugField(
+        verbose_name=_l("slug"),
         max_length=50,
         help_text=_l("Unique identifier made of lowercase characters and underscores for this site"),
         unique=True,
@@ -76,6 +101,8 @@ class Site(models.Model):
 
     class Meta:
         ordering = ("name",)
+        verbose_name = _l("site")
+        verbose_name_plural = _l("sites")
 
     def __str__(self):
         return self.name
@@ -95,17 +122,48 @@ class UnitType(models.Model):
     another.
 
     """
-    vendor = models.ForeignKey(Vendor, null=True, blank=True, on_delete=models.PROTECT)
-    unit_class = models.ForeignKey(UnitClass, null=True, blank=True, on_delete=models.PROTECT)
+    vendor = models.ForeignKey(
+        Vendor,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        verbose_name=_l("vendor"),
+    )
 
-    name = models.CharField(max_length=50, help_text=_l('Name for this unit type'))
-    model = models.CharField(max_length=50, null=True, blank=True, help_text=_l('Optional model name for this group'))
+    unit_class = models.ForeignKey(
+        UnitClass,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        verbose_name=_l("unit class"),
+    )
+
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=50,
+        help_text=_l('Name for this unit type'),
+    )
+    model = models.CharField(
+        verbose_name=_l("model"),
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text=_l('Optional model name for this group'),
+    )
+
+    collapse = models.BooleanField(
+        verbose_name=_l("Collapse"),
+        help_text=_l("Collapse this unit type in the user interface by default"),
+        default=False,
+    )
 
     objects = UnitTypeManager()
 
     class Meta:
         unique_together = [('name', 'model', 'vendor', 'unit_class',)]
         ordering = ("vendor__name", "name",)
+        verbose_name = _l("unit type")
+        verbose_name_plural = _l("unit types")
 
     def natural_key(self):
         vendor = self.vendor.natural_key() if self.vendor else ()
@@ -135,7 +193,8 @@ class Modality(models.Model):
     objects = NameNaturalKeyManager()
 
     class Meta:
-        verbose_name_plural = _l('Modalities')
+        verbose_name = _l("modality")
+        verbose_name_plural = _l('modalities')
 
     def natural_key(self):
         return (self.name,)
@@ -185,6 +244,8 @@ class Unit(models.Model):
 
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
+        verbose_name = _l("unit")
+        verbose_name_plural = _l('units')
 
     def __str__(self):
         return self.name
@@ -257,6 +318,8 @@ class UnitAvailableTimeEdit(models.Model):
         get_latest_by = 'date'
         unique_together = [('unit', 'date')]
         default_permissions = ()
+        verbose_name = _l("unit available time edit")
+        verbose_name_plural = _l('unit available time edits')
 
     def __str__(self):
         return '%s (%s)' % (self.name, fmt_date(self.date))
@@ -280,6 +343,8 @@ class UnitAvailableTime(models.Model):
         default_permissions = ('change',)
         get_latest_by = 'date_changed'
         unique_together = [('unit', 'date_changed')]
+        verbose_name = _l("unit available time")
+        verbose_name_plural = _l('unit available times')
 
     def __str__(self):
         return 'Available time schedule change'

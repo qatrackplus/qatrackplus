@@ -93,6 +93,7 @@ require.config({
         // unit module:
         unit_avail: siteConfig.STATIC_URL + 'units/js/unit_available_time',
         unit_list: siteConfig.STATIC_URL + 'units/js/unit_list',
+        unit_choose: siteConfig.STATIC_URL + 'units/js/unit_choose',
 
         // service log module
         sl_dash: siteConfig.STATIC_URL + 'service_log/js/sl_dash',

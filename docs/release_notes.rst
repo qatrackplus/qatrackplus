@@ -121,6 +121,13 @@ Review & Approval
   list instances, while `clear_in_progress` will delete all in progress test
   lists.
 
+
+Units & Unit Types
+^^^^^^^^^^^^^^^^^^
+
+* A new :ref:`Collapse <unit_type>` option has been added to the Unit Type model
+  to allow collapsing less frequency used unit types in user interface.
+
 UI Changes
 ^^^^^^^^^^
 

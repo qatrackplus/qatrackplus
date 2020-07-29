@@ -176,9 +176,9 @@ class UnitAdmin(BaseQATrackAdmin):
 
 class UnitTypeAdmin(BaseQATrackAdmin):
 
-    list_display = ['model_name', 'vendor', 'unit_class']
+    list_display = ['model_name', 'vendor', 'unit_class', 'collapse']
     list_filter = ['unit_class', 'vendor']
-    list_editable = ['unit_class', 'vendor']
+    list_editable = ['unit_class', 'vendor', 'collapse']
 
     def get_queryset(self, request):
         return super(UnitTypeAdmin, self).get_queryset(request).select_related(

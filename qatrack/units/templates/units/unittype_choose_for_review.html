@@ -3,6 +3,7 @@
 {% load i18n %}
 
 {% block require_javascript %}
+require(['unit_choose']);
 {% endblock require_javascript %}
 
 {% block head_title %}{% trans "Choose Unit for Review" %}{% endblock %}
@@ -20,18 +21,31 @@
           </div>
           <div class="box-body unit-btns">
 
-            {% for unit_type, units in unit_types %}
+            {% for type, units in unit_types %}
               <div class="row">
                 <div class="col-sm-12">
-                  <h4 class="header-spacer">{{unit_type}}</h4>
-                  <div class="btn-group btn-default btn-flat">
-                    {% if units|length > 1 %}
-                      <a class="btn btn-default btn-flat" href="{% url 'choose_review_unit' %}{% for unit in units %}{{unit.unit__number}}/{%endfor%}">{% trans "All" %}</a>
-                    {% endif %}
+                  <h4 class="header-spacer">
+                    {{ type.0 }}
+                    {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                    {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                    <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                      title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                      data-title-shown="{{ title_shown }}"
+                      data-title-hidden="{{ title_hidden }}"
+                    >
+                      <i class="fa fa-fw fa-caret-down"></i>
+                    </a>
+                  </h4>
+                  <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
+                    <div class="btn-group btn-default btn-flat">
+                      {% if units|length > 1 %}
+                        <a class="btn btn-default btn-flat" href="{% url 'choose_review_unit' %}{% for unit in units %}{{unit.unit__number}}/{%endfor%}">{% trans "All" %}</a>
+                      {% endif %}
 
-                    {% for unit in units %}
-                      <a class="btn btn-default btn-flat" href="{% url 'review_by_unit' unit_number=unit.unit__number %}">{{unit.unit__name}}</a></button>
-                    {% endfor %}
+                      {% for unit in units %}
+                        <a class="btn btn-default btn-flat" href="{% url 'review_by_unit' unit_number=unit.unit__number %}">{{unit.unit__name}}</a></button>
+                      {% endfor %}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -62,13 +76,26 @@
                 <div class="row">
                   <div class="col-sm-12">
 
-                    <h4 class="header-spacer">{{ type }}</h4>
-                    {% if units|length > 1 %}
-                      <a class="btn btn-default btn-flat" href="{% url 'choose_review_unit' %}{% for unit in units %}{{unit.unit__number}}/{%endfor%}">{% trans "All" %}</a>
-                    {% endif %}
-                    {% for unit in units %}
-                      <a class="btn btn-default btn-flat" href="{% url 'review_by_unit' unit_number=unit.unit__number %}">{{unit.unit__name}}</a>
-                    {% endfor %}
+                    <h4 class="header-spacer">
+                      {{ type.0 }}
+                      {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                      {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                      <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                        title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                        data-title-shown="{{ title_shown }}"
+                        data-title-hidden="{{ title_hidden }}"
+                      >
+                        <i class="fa fa-fw fa-caret-down"></i>
+                      </a>
+                    </h4>
+                    <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
+                      {% if units|length > 1 %}
+                        <a class="btn btn-default btn-flat" href="{% url 'choose_review_unit' %}{% for unit in units %}{{unit.unit__number}}/{%endfor%}">{% trans "All" %}</a>
+                      {% endif %}
+                      {% for unit in units %}
+                        <a class="btn btn-default btn-flat" href="{% url 'review_by_unit' unit_number=unit.unit__number %}">{{unit.unit__name}}</a>
+                      {% endfor %}
+                    </div>
                   </div>
                 </div>
 

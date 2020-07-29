@@ -1,6 +1,6 @@
 {% extends "service_log/sl_base.html" %}
 {% block require_javascript %}
-{#    require(['report']);#}
+require(['unit_choose']);
 {% endblock require_javascript %}
 
 {% load i18n %}
@@ -31,17 +31,30 @@
             </p>
           </div>
           <div class="box-body unit-btns">
-            {% for unit_type, units in unit_types%}
+            {% for type, units in unit_types%}
               <div class="row">
                 <div class="col-sm-12">
-                  <h4 class="header-spacer">{{unit_type}}</h4>
-                  {% for unit in units %}
-                    <a class="btn btn-default btn-flat"
-                       href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}"
+                  <h4 class="header-spacer">
+                    {{ type.0 }}
+                    {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                    {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                    <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                      title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                      data-title-shown="{{ title_shown }}"
+                      data-title-hidden="{{ title_hidden }}"
                     >
-                      {{unit.unit__name}}
+                      <i class="fa fa-fw fa-caret-down"></i>
                     </a>
-                  {% endfor %}
+                  </h4>
+                  <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
+                    {% for unit in units %}
+                      <a class="btn btn-default btn-flat"
+                        href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}"
+                      >
+                        {{unit.unit__name}}
+                      </a>
+                    {% endfor %}
+                  </div>
                 </div>
               </div>
             {% endfor %}
@@ -81,19 +94,32 @@
               {% for type, units in types %}
                 <div class="row">
                   <div class="col-sm-12">
-                      <h4 class="header-spacer">{{ type }}</h4>
-                      {% for unit in units %}
-                        <a class="btn btn-default btn-flat"
-                          href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}"
+                      <h4 class="header-spacer">
+                        {{ type.0 }}
+                        {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                        {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                        <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                          title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                          data-title-shown="{{ title_shown }}"
+                          data-title-hidden="{{ title_hidden }}"
                         >
-                          {{unit.unit__name}}
+                          <i class="fa fa-fw fa-caret-down"></i>
                         </a>
-                      {% endfor %}
+                      </h4>
+                      <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
+                        {% for unit in units %}
+                          <a class="btn btn-default btn-flat"
+                            href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}"
+                          >
+                            {{unit.unit__name}}
+                          </a>
+                        {% endfor %}
+                      </div>
                   </div>
                 </div>
               {% endfor %}
             </div>
-              <div class="box-footer"></div>
+            <div class="box-footer"></div>
           </div>
         </div>
 

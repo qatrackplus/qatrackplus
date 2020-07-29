@@ -1,6 +1,6 @@
 {% extends "site_base.html" %}
 {% block require_javascript %}
-{#    require(['report']);#}
+require(['unit_choose']);
 {% endblock require_javascript %}
 
 {% load i18n %}
@@ -20,15 +20,35 @@
           <p>{% trans "Click a button to perform QC for one of the units below." %}</p>
         </div>
         <div class="box-body pad">
-          {% for unit_type, units in unit_types %}
+          {% for type, units in unit_types %}
 
             <div class="row margin">
-              <div class="span12">
+              <div class="col-md-12">
 
-                <h4 class="header-spacer">{{unit_type}}</h4>
+                <h4 class="header-spacer">
+                  {{ type.0 }}
+                  {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                  {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                  <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                    title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                    data-title-shown="{{ title_shown }}"
+                    data-title-hidden="{{ title_hidden }}"
+                  >
+                    <i class="fa fa-fw fa-caret-down"></i>
+                  </a>
+                </h4>
+                <div id="collapse-{{ forloop.counter }}"
+                    {% if type.1 %}
+                      class="collapse"
+                    {% else %}
+                      class="collapse in"
+                      title="{% blocktrans with unit_type=type.o %}Click to hid {{ unit_type }} units{% endblocktrans %}"
+                    {% endif %}
+                  >
                   {% for unit in units %}
                     {% include "units/unittype_list_unit_button.html" with unit=unit %}
                   {% endfor %}
+                </div>
               </div>
             </div>
 
@@ -64,12 +84,25 @@
 
             {% for type, units in types %}
               <div class="row margin">
-                <div class="span12">
+                <div class="col-sm-12">
 
-                  <h4 class="header-spacer">{{ type }}</h4>
+                  <h4 class="header-spacer">
+                    {{ type.0 }}
+                    {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                    {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                    <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                      title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                      data-title-shown="{{ title_shown }}"
+                      data-title-hidden="{{ title_hidden }}"
+                    >
+                      <i class="fa fa-fw fa-caret-down"></i>
+                    </a>
+                  </h4>
+                  <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
                     {% for unit in units %}
                       {% include "units/unittype_list_unit_button.html" with unit=unit %}
                     {% endfor %}
+                  </div>
                 </div>
               </div>
             {% endfor %}
