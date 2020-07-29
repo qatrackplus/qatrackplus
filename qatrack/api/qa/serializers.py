@@ -379,7 +379,26 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             self.tl = self.instance.test_list
         else:
             self.utc = validated_data['unit_test_collection']
-            self.day = validated_data.get('day', 0)
+
+            self.day = validated_data.get('day')
+
+            if self.utc.content_type.model == "testlist" and self.day is None:
+                self.day = 0
+            elif self.utc.content_type.model == "testlistcycle" and self.day is None:
+                raise serializers.ValidationError("You must include the 'day' key when performing a Test List Cycle")
+
+            try:
+                self.day = int(self.day)
+            except TypeError:
+                raise serializers.ValidationError("The 'day' key must be an integer")
+
+            min_day, max_day = 0, len(self.utc.tests_object) - 1
+            if not (min_day <= self.day <= max_day):
+                raise serializers.ValidationError(
+                    "'%s' is not a valid day for this Test Collection.  "
+                    "Day must be between %s & %s" % (self.day, min_day, max_day)
+                )
+
             self.day, self.tl = self.utc.get_list(day=self.day)
 
         test_qs = self.tl.all_tests().values_list("id", "slug", "type", "constant_value")

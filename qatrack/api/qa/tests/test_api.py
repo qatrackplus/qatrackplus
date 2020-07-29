@@ -951,3 +951,80 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.patch(resp.data['url'], new_data)
         tli.refresh_from_db()
         assert tli.attachment_set.count() == 2
+
+
+class TestPerformTestListCycleAPI(APITestCase):
+
+    def setUp(self):
+
+        self.unit = utils.create_unit()
+        self.test_list1 = utils.create_test_list("test list 1")
+        self.test_list2 = utils.create_test_list("test list 2")
+        self.test_list_cycle = utils.create_cycle([self.test_list1, self.test_list2], "test list cycle")
+
+        self.t1 = utils.create_test(name="test1")
+        self.t2 = utils.create_test(name="test2")
+
+        utils.create_test_list_membership(self.test_list1, self.t1)
+        utils.create_test_list_membership(self.test_list2, self.t2)
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list_cycle, unit=self.unit)
+
+        self.create_url = reverse('testlistinstance-list')
+        self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
+
+        self.day1_data = {
+            'unit_test_collection': self.utc_url,
+            'work_completed': '2019-07-25 10:49:47',
+            'work_started': '2019-07-25 10:49:00',
+            'tests': {'test1': {'value': 1}},
+            'day': 0,
+        }
+        self.day2_data = self.day1_data.copy()
+        self.day2_data['day'] = 1
+        self.day2_data['tests'] = {'test2': {'value': 2}}
+
+        self.client.login(username="user", password="password")
+        self.status = utils.create_status()
+
+    def test_create_day_2(self):
+        response = self.client.post(self.create_url, self.day2_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        tli = models.TestListInstance.objects.first()
+        assert tli.testinstance_set.values_list('value', flat=True)[0] == 2
+        assert tli.test_list_id == self.test_list2.id
+        assert tli.day == self.day2_data['day']
+
+    def test_create_day_1(self):
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        tli = models.TestListInstance.objects.first()
+        assert tli.testinstance_set.values_list('value', flat=True)[0] == 1
+        assert tli.test_list_id == self.test_list1.id
+        assert tli.day == 0
+
+    def test_create_no_day(self):
+        """If no day is supplied, an error should be returned"""
+        del self.day1_data['day']
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_invalid_day(self):
+        """If incorrect day is supplied, an error should be returned"""
+        self.day1_data['day'] = 'foo'
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_over_range_day(self):
+        """If day is supplied but out of range, an error should be returned"""
+        self.day1_data['day'] = 2
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_under_range_day(self):
+        """If day is supplied but out of range, an error should be returned"""
+        self.day1_data['day'] = -1
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -293,6 +293,7 @@ A script that will find the above test list, and submit the data is shown here:
     # sum_of_two since it is calculated from number_1 and number_2
     data = {
         'unit_test_collection': utc_url,
+        'day': 0, # optional day=0, for TestLists, required for Test List Cycles (where 0 <= day < # of test lists in cycle)
         'in_progress': False,  # optional, default is False
         'include_for_scheduling': True,
         'work_started': "2018-07-6 10:00",
@@ -385,6 +386,29 @@ A few things to note:
 
 * You don't need to submit data for `sum_of_two` since it is a composite test and calculated automatically.
 * The `url` key contains the hyperlink where you can view the completed TestListInstance online.
+
+Performing A Test List Cycle
+............................
+
+In order to perform a Test List Cycle you must include a `day` key in your
+upload data.  The `day` key is a 0-indexed integer indicating which day of the
+test list cycle you want to perform (e.g. if you want to perform day 1, you
+would use `'day': 0`, and if you want to perform day 2, you would use `'day':
+1`).
+
+Example data to perform day 2 of a test list cycle would look something like:
+
+.. code-block:: python
+
+    data = {
+        'unit_test_collection': utc_url,
+        'day': 1,  # note 0-indexed days so we use 1 for day 2
+        'work_started': "2018-07-6 10:00",
+        'work_completed': "2018-07-6 11:00",  # optional
+        'tests': {
+            ...
+        },
+    }
 
 
 Upload test types

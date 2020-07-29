@@ -23,6 +23,8 @@ Non backwards compatible changes
   If you were relying on this behaviour, you need to switch to using a
   :ref:`String Composite/JSON <qa_string_comp_json>` test type instead.
 
+* The `day` key is now required when performing a Test List Cycle via the API
+
 
 Major Features
 ^^^^^^^^^^^^^^
@@ -208,6 +210,9 @@ API Changes
 * It is now possible to perform a test and not have the due date advanced by
   setting `"include_for_scheduling": False,` in your API post data.
   
+
+* The `day` key is now required when performing a Test List Cycle via the API
+
 
 Service Log & Parts
 ^^^^^^^^^^^^^^^^^^^
