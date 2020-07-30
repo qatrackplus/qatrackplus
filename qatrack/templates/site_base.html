@@ -16,23 +16,23 @@
     {% endblock favicon %}
 
     {% block style_base %}
-      <link href="{{ STATIC_URL }}fontawsome/css/font-awesome.min.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/custom-adminlte.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/custom-fontawesome.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/base.css?v={{VERSION}}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/print.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "fontawsome/css/font-awesome.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "bootstrap/css/bootstrap.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "adminlte/css/admin-lte.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "adminlte/css/skins/skin-black-dark.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-adminlte.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-fontawesome.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/base.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/print.css" %}?v={{VERSION}}" rel="stylesheet">
       {% block extra_css %}{% endblock extra_css %}
-      <link href="{{ STATIC_URL }}qatrack_core/css/site.css?v={{VERSION}}" rel="stylesheet">
+      <link href="{% static "qatrack_core/css/site.css" %}?v={{VERSION}}" rel="stylesheet">
     {% endblock style_base %}
 
     <script type="text/javascript">
 
         var siteConfig = {
             VERSION: '{{ VERSION }}',
-            STATIC_URL: '{{ STATIC_URL }}',
+            STATIC_URL: '{% static "" %}',
             DEBUG: '{{ DEBUG }}',
             USE_SERVICE_LOG: '{{ USE_SERVICE_LOG }}',
             USE_PARTS: '{{ USE_PARTS }}',
@@ -108,9 +108,9 @@
 
     </script>
 
-    <script src="{{ STATIC_URL }}requirejs/js/require.min.js?v={{ VERSION }}"></script>
+    <script src="{% static "requirejs/js/require.min.js" %}?v={{ VERSION }}"></script>
     <script type="text/javascript">
-        require(['{{ STATIC_URL }}requirejs/js/requirejs-config.js?v={{ VERSION }}'], function () {
+        require(['{% static "requirejs/js/requirejs-config.js" %}?v={{ VERSION }}'], function () {
             {% block require_javascript %}
             {% endblock require_javascript %}
         });
@@ -787,7 +787,6 @@
 
     {% block loading_modal %}{% endblock loading_modal %}
 
-    {# <script src="{{ STATIC_URL }}instant/js/instant-1.0.0.js" type="module"></script> #}
   </body>
 
 </html>

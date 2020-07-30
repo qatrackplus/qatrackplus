@@ -2,11 +2,12 @@
 
 {% load i18n %}
 {% load qatrack_tags %}
+{% load static %}
 
 {#{% block body_class %}account{% endblock %}#}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "icheck/css/blue.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}

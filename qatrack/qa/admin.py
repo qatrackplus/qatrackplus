@@ -252,14 +252,14 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
-            settings.STATIC_URL + "select2/js/select2.js",
-            settings.STATIC_URL + "js/unittestinfo_admin.js",
+            "js/jquery-1.7.1.min.js",
+            "select2/js/select2.js",
+            "js/unittestinfo_admin.js",
         )
         css = {
             'all': (
-                settings.STATIC_URL + "qatrack_core/css/admin.css",
-                settings.STATIC_URL + "select2/css/select2.css",
+                "qatrack_core/css/admin.css",
+                "select2/css/select2.css",
             ),
         }
 
@@ -826,11 +826,11 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-ui.init.js",
-            settings.STATIC_URL + "js/jquery-ui.min.js",
-            settings.STATIC_URL + "js/m2m_drag_admin_testlist.js",
-            settings.STATIC_URL + "js/admin_description_editor.js",
-            settings.STATIC_URL + "ace/ace.js",
+            "js/jquery-ui.init.js",
+            "js/jquery-ui.min.js",
+            "js/m2m_drag_admin_testlist.js",
+            "js/admin_description_editor.js",
+            "ace/ace.js",
         )
 
     def export_testpack(self, *args, **kwargs):
@@ -1011,16 +1011,16 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
-            settings.STATIC_URL + "js/test_admin.js",
-            settings.STATIC_URL + "js/admin_description_editor.js",
-            settings.STATIC_URL + "ace/ace.js",
-            settings.STATIC_URL + "select2/js/select2.js",
+            "js/jquery-1.7.1.min.js",
+            "js/test_admin.js",
+            "js/admin_description_editor.js",
+            "ace/ace.js",
+            "select2/js/select2.js",
         )
         css = {
             'all': (
-                settings.STATIC_URL + "qatrack_core/css/admin.css",
-                settings.STATIC_URL + "select2/css/select2.css",
+                "qatrack_core/css/admin.css",
+                "select2/css/select2.css",
             ),
         }
 
@@ -1227,9 +1227,9 @@ class UnitTestCollectionAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-ui.init.js",
-            settings.STATIC_URL + "js/jquery-ui.min.js",
-            settings.STATIC_URL + "js/select2.min.js",
+            "js/jquery-ui.init.js",
+            "js/jquery-ui.min.js",
+            "js/select2.min.js",
         )
 
     def get_queryset(self, *args, **kwargs):
@@ -1259,12 +1259,12 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATra
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-ui.init.js",
-            settings.STATIC_URL + "js/jquery-ui.min.js",
-            settings.STATIC_URL + "js/collapsed_stacked_inlines.js",
-            settings.STATIC_URL + "js/m2m_drag_admin.js",
-            settings.STATIC_URL + "js/admin_description_editor.js",
-            settings.STATIC_URL + "ace/ace.js",
+            "js/jquery-ui.init.js",
+            "js/jquery-ui.min.js",
+            "js/collapsed_stacked_inlines.js",
+            "js/m2m_drag_admin.js",
+            "js/admin_description_editor.js",
+            "ace/ace.js",
         )
 
     def all_lists(self, obj):
@@ -1295,17 +1295,17 @@ class FrequencyAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "js/jquery-1.7.1.min.js",
-            settings.STATIC_URL + "js/jquery-ui.min.js",
-            settings.STATIC_URL + "moment/js/moment.min.js",
-            settings.STATIC_URL + "moment/js/moment-timezone-with-data.min.js",
-            settings.STATIC_URL + "rrule/js/rrule-tz.min.js",
-            settings.STATIC_URL + "d3/js/d3-3.5.6.min.js",
-            settings.STATIC_URL + "cal-heatmap/js/cal-heatmap.min.js",
-            settings.STATIC_URL + "js/frequency_admin.js",
+            "js/jquery-1.7.1.min.js",
+            "js/jquery-ui.min.js",
+            "moment/js/moment.min.js",
+            "moment/js/moment-timezone-with-data.min.js",
+            "rrule/js/rrule-tz.min.js",
+            "d3/js/d3-3.5.6.min.js",
+            "cal-heatmap/js/cal-heatmap.min.js",
+            "js/frequency_admin.js",
         )
         css = {
-            'all': [settings.STATIC_URL + "cal-heatmap/css/cal-heatmap.css"],
+            'all': ["cal-heatmap/css/cal-heatmap.css"],
         }
 
     def save_model(self, request, obj, form, change):
@@ -1346,16 +1346,16 @@ class StatusAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "colorpicker/js/bootstrap-colorpicker.min.js",
-            settings.STATIC_URL + "qatrack_core/js/admin_colourpicker.js",
+            "jquery/js/jquery.min.js",
+            "colorpicker/js/bootstrap-colorpicker.min.js",
+            "qatrack_core/js/admin_colourpicker.js",
 
         )
         css = {
             'all': (
-                settings.STATIC_URL + "bootstrap/css/bootstrap.min.css",
-                settings.STATIC_URL + "colorpicker/css/bootstrap-colorpicker.min.css",
-                settings.STATIC_URL + "qatrack_core/css/admin.css",
+                "bootstrap/css/bootstrap.min.css",
+                "colorpicker/css/bootstrap-colorpicker.min.css",
+                "qatrack_core/css/admin.css",
             ),
         }
 
@@ -1462,8 +1462,8 @@ class ToleranceAdmin(BasicSaveUserAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "js/tolerance_admin.js",
+            "jquery/js/jquery.min.js",
+            "js/tolerance_admin.js",
         )
 
     def get_queryset(self, *args, **kwargs):

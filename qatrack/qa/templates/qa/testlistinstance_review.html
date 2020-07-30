@@ -5,10 +5,11 @@
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block head_title %}{{tli.work_completed|date}} {{tli.test_list.name}} Details{% endblock %}

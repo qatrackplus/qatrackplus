@@ -5,14 +5,15 @@
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load comments %}
+{% load static %}
 
 {% block head_title %}Service Event{% endblock %}
 
 {% block extra_css %}
   {{ block.super }}
-  <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}

@@ -2,16 +2,17 @@
 
 {% load qa_tags %}
 {% load i18n %}
+{% load static %}
 
 {% block head_title %}{% trans "Units Parts Cost" %}{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "felter/css/felter.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}

@@ -124,9 +124,7 @@ if settings.USE_PARTS:
         del_storage_response = None
 
         class Media:
-            js = (
-                settings.STATIC_URL + 'autosize/js/autosize.min.js',
-            )
+            js = ('autosize/js/autosize.min.js',)
 
         def get_queryset(self, request):
             if request.method == 'POST':

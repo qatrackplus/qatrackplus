@@ -1,5 +1,4 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.forms.utils import ErrorList, ValidationError
 from django.utils.translation import gettext as _
@@ -43,14 +42,14 @@ class AttachmentAdminForm(forms.ModelForm):
 
     class Media:
         js = (
-            settings.STATIC_URL + 'jquery/js/jquery.min.js',
-            settings.STATIC_URL + 'select2/js/select2.js',
-            settings.STATIC_URL + 'js/attachment_admin.js'
+            'jquery/js/jquery.min.js',
+            'select2/js/select2.js',
+            'js/attachment_admin.js'
         )
         css = {
             'all': (
-                settings.STATIC_URL + "qatrack_core/css/admin.css",
-                settings.STATIC_URL + "select2/css/select2.css",
+                "qatrack_core/css/admin.css",
+                "select2/css/select2.css",
             ),
         }
 

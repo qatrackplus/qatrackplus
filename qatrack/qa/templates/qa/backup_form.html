@@ -1,5 +1,6 @@
 {% extends "site_base.html" %}
 {% load i18n %}
+{% load static %}
 
 {% load qatrack_tags %}
 {% load qa_tags %}
@@ -7,9 +8,9 @@
 {% block head_title %}{% trans "Create Paper Backup Forms" %}{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "felter/css/felter.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock %}
 {% block require_javascript %}
 require(['jquery', 'select2', 'felter'], function($){

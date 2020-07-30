@@ -25,16 +25,16 @@ class IssuePriorityStatusAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + 'jquery/js/jquery.min.js',
-            settings.STATIC_URL + 'colorpicker/js/bootstrap-colorpicker.min.js',
-            settings.STATIC_URL + 'qatrack_core/js/admin_colourpicker.js',
+            'jquery/js/jquery.min.js',
+            'colorpicker/js/bootstrap-colorpicker.min.js',
+            'qatrack_core/js/admin_colourpicker.js',
 
         )
         css = {
             'all': (
-                settings.STATIC_URL + 'bootstrap/css/bootstrap.min.css',
-                settings.STATIC_URL + 'colorpicker/css/bootstrap-colorpicker.min.css',
-                settings.STATIC_URL + 'qatrack_core/css/admin.css',
+                'bootstrap/css/bootstrap.min.css',
+                'colorpicker/css/bootstrap-colorpicker.min.css',
+                'qatrack_core/css/admin.css',
             ),
         }
 

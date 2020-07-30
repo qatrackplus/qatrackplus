@@ -161,12 +161,12 @@ class UnitAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + 'jquery/js/jquery.min.js',
-            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min.js',
+            'jquery/js/jquery.min.js',
+            'inputmask/js/jquery.inputmask.bundle.min.js',
         )
         css = {
             'all': (
-                settings.STATIC_URL + 'units/css/admin.css',
+                'units/css/admin.css',
             ),
         }
 

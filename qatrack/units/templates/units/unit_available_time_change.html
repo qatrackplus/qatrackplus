@@ -3,19 +3,21 @@
 {% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
+{% load static %}
+
 
 {% block head_title %}{% trans "Change Units Available Time" %}{% endblock %}
 
 {% block extra_css %}
-  <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}units/css/unit_available_time.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
-  <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "felter/css/felter.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "units/css/unit_available_time.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "flatpickr/css/flatpickr.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/flatpickr-custom.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}

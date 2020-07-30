@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import admin
 import django.forms as forms
 from django.utils.translation import gettext as _
@@ -87,14 +86,12 @@ class ReportScheduleAdmin(BasicSaveUserAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "select2/js/select2.js",
-            settings.STATIC_URL + "js/reportschedule_admin.js",
+            "jquery/js/jquery.min.js",
+            "select2/js/select2.js",
+            "js/reportschedule_admin.js",
         )
         css = {
-            'all': (
-                settings.STATIC_URL + "select2/css/select2.css",
-            ),
+            'all': ("select2/css/select2.css",),
         }
 
     def get_queryset(self, request):  # pragma: nocover

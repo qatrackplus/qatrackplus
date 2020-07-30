@@ -5,6 +5,7 @@
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -16,17 +17,15 @@
 
 {% block extra_css %}
 
-{#    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
-{#    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}cheekycheck/css/cheekycheck.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "icheck/css/blue.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/sidebar.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "flatpickr/css/flatpickr.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/flatpickr-custom.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "cheekycheck/css/cheekycheck.css" %}?v={{ VERSION }}" rel="stylesheet">
 
 {% endblock extra_css %}
 
