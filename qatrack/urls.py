@@ -22,7 +22,7 @@ class QAToQC(RedirectView):
     query_string = True
 
     def get_redirect_url(self, *args, **kwargs):
-        return "/qc/%s" % kwargs['terms']
+        return "%s/qc/%s" % (settings.FORCE_SCRIPT_NAME or "", kwargs['terms'])
 
 
 urlpatterns = [
