@@ -94,6 +94,19 @@ class SavedReport(models.Model):
         )
 
 
+class ReportNote(models.Model):
+
+    report = models.ForeignKey(SavedReport, on_delete=models.CASCADE)
+
+    heading = models.TextField(
+        help_text=_l("Add a heading for this note"),
+    )
+    content = models.TextField(
+        help_text=_l("Add the content of this note"),
+        blank=True,
+    )
+
+
 class ReportSchedule(models.Model):
 
     TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]

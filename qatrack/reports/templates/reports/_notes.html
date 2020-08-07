@@ -1,0 +1,26 @@
+{% load i18n %}
+
+{% block notes_block %}
+
+  {% if notes %}
+
+    <div class="row">
+      <div class="col-xs-12">
+        <hr style="padding-top: 0; margin-top: 5px;" class="tight"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12">
+        <strong>{% trans "Notes" %} ::</strong>
+        <dl class="dl-horizontal">
+          {% for note in notes %}
+            <dt class="report-note-heading">{{ note.heading }}:</dt>
+            <dd class="report-note-content {% if not note.content %}empty{% endif %}">{{ note.content }}</dd>
+          {% endfor %}
+        </dl>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock notes_block %}

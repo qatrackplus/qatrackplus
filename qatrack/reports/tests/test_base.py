@@ -55,6 +55,8 @@ class TestSelectReport(TestCase):
     def test_invalid_report_no_report_type(self):
         data = {
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         resp = self.client.post(self.url, data)
         assert 'report_format' in resp.context['report_form'].errors
@@ -65,6 +67,8 @@ class TestSelectReport(TestCase):
             'root-report_type': 'testlistinstance_summary',
             'root-report_format': None,
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         resp = self.client.post(self.url, data)
         assert 'report_format' in resp.context['report_form'].errors
@@ -75,6 +79,8 @@ class TestSelectReport(TestCase):
             'root-report_type': 'testlistinstance_summary',
             'root-report_format': None,
             'work_completed': '',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         resp = self.client.post(self.url, data)
         assert 'report_format' in resp.context['report_form'].errors
@@ -87,6 +93,10 @@ class TestSelectReport(TestCase):
             'root-report_format': 'pdf',
             'root-include_signature': True,
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 1,
+            'reportnote_set-0-report': None,
+            'reportnote_set-0-id': None,
         }
         resp = self.client.post(self.url, data)
         # everything valid, so this should be report rendering context now, rather than forms
@@ -111,6 +121,8 @@ class TestReportPreview(TestCase):
         data = {
             'root-report_type': 'testlistinstance_summary',
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         payload = self.client.post(self.url, data).json()
         assert payload['errors']
@@ -125,6 +137,8 @@ class TestReportPreview(TestCase):
             'root-report_format': 'pdf',
             'root-include_signature': True,
             'work_completed': '01 Jan 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         payload = self.client.post(self.url, data).json()
         assert payload['errors']
@@ -139,6 +153,8 @@ class TestReportPreview(TestCase):
             'root-report_format': 'pdf',
             'root-include_signature': True,
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         payload = self.client.post(self.url, data).json()
         assert not payload['errors']
@@ -163,6 +179,8 @@ class TestSaveReport(TestCase):
         data = {
             'root-report_type': 'testlistinstance_summary',
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         payload = self.client.post(self.url, data).json()
         assert payload['errors']
@@ -176,6 +194,8 @@ class TestSaveReport(TestCase):
             'root-report_format': 'pdf',
             'root-include_signature': True,
             'work_completed': '01 Jan 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         payload = self.client.post(self.url, data).json()
         assert payload['errors']
@@ -190,6 +210,8 @@ class TestSaveReport(TestCase):
             'root-report_format': 'pdf',
             'root-include_signature': True,
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         assert models.SavedReport.objects.count() == 0
         payload = self.client.post(self.url, data).json()
@@ -206,6 +228,8 @@ class TestSaveReport(TestCase):
             'root-report_format': 'pdf',
             'root-include_signature': True,
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         self.client.post(self.url, data).json()
         sr = models.SavedReport.objects.first()
@@ -231,6 +255,8 @@ class TestSaveReport(TestCase):
             'root-report_format': 'pdf',
             'root-include_signature': True,
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         self.client.post(self.url, data).json()
         sr = models.SavedReport.objects.first()
@@ -239,6 +265,8 @@ class TestSaveReport(TestCase):
         data = {
             'root-title': 'Title 2',
             'report_id': sr.id,
+            'reportnote_set-INITIAL_FORMS': 0,
+            'reportnote_set-TOTAL_FORMS': 0,
         }
         resp = self.client.post(self.url, data)
         assert resp.status_code == 403
@@ -725,7 +753,17 @@ class TestBaseReport(TestCase):
 
     def test_to_xslx(self):
         rep = reports.BaseReport()
-        rep.to_table = lambda x: [[1]]
+
+        def to_table(self):
+            return [
+                [1, "http://www.example.com/" + "a" * 255,
+                 timezone.now(), timezone.now().date()],
+                [2, {
+                    'foo': 'bar'
+                }],
+            ]
+
+        rep.to_table = to_table
         xls = rep.to_xlsx()
         assert isinstance(xls, io.BytesIO)
         assert xls.tell() == 0
@@ -747,7 +785,7 @@ class TestReportInterface(BaseQATests):
         self.driver.find_element_by_css_selector('#report .container-fluid')
 
     def test_save_report(self):
-        """Select report and make sure it previews"""
+        """Ensure filling and saving a report results in a SavedReport in the db"""
         self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
         assert models.SavedReport.objects.count() == 0
@@ -756,6 +794,37 @@ class TestReportInterface(BaseQATests):
         assert models.SavedReport.objects.count() == 1
         sr = models.SavedReport.objects.first()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+
+    def test_save_report_with_note(self):
+        """Ensure adding notes to saved reports works"""
+        self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
+        self.click("add-note")
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_reportnote_set-0-heading')))
+        self.send_keys("id_reportnote_set-0-heading", "heading")
+        self.send_keys("id_reportnote_set-0-content", "content")
+
+        assert models.ReportNote.objects.count() == 0
+        self.click("save")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        expected_notes = [{"heading": "heading", "content": "content"}]
+        assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
+
+    def test_save_report_with_note_repeated_saves(self):
+        """Ensure repeated saves only create one note"""
+        self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
+        self.click("add-note")
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_reportnote_set-0-heading')))
+        self.send_keys("id_reportnote_set-0-heading", "heading")
+        self.send_keys("id_reportnote_set-0-content", "content")
+
+        assert models.ReportNote.objects.count() == 0
+        for i in range(3):
+            self.click("save")
+            self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        expected_notes = [{"heading": "heading", "content": "content"}]
+        assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
 
     def test_load_report(self):
         """Select report from table and make sure it loads"""
@@ -768,15 +837,110 @@ class TestReportInterface(BaseQATests):
             created_by=self.user,
             modified_by=self.user,
         )
+        models.ReportNote.objects.create(
+            report=sr,
+            heading="heading",
+            content="content",
+        )
+
         # need to reload page to get report table
         self.driver.refresh()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
         self.click('report-id-%s' % sr.pk)
         wc = self.driver.find_element_by_id('id_work_completed')
         assert wc.get_attribute("value") == "02 Jan 1989 - 04 Jan 1990"
+        heading = self.driver.find_element_by_id("id_reportnote_set-0-heading")
+        assert heading.get_attribute("value") == "heading"
+        content = self.driver.find_element_by_id("id_reportnote_set-0-content")
+        assert content.get_attribute("value") == "content"
+
+    def test_load_report_edit_note(self):
+        """Select report from table, edit its note and resave it"""
+
+        sr = models.SavedReport.objects.create(
+            report_type=qc.TestListInstanceSummaryReport.report_type,
+            report_format="pdf",
+            title="title",
+            filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
+            created_by=self.user,
+            modified_by=self.user,
+        )
+        models.ReportNote.objects.create(
+            report=sr,
+            heading="heading",
+            content="content",
+        )
+
+        # need to reload page to get report table
+        self.driver.refresh()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.click('report-id-%s' % sr.pk)
+        heading = self.driver.find_element_by_id("id_reportnote_set-0-heading")
+        heading.send_keys(" add some new text")
+        self.click("save")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        expected_notes = [{"heading": "heading add some new text", "content": "content"}]
+        assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
+
+    def test_load_report_delete_note(self):
+        """Select report from table, delete a note and then save it """
+
+        sr = models.SavedReport.objects.create(
+            report_type=qc.TestListInstanceSummaryReport.report_type,
+            report_format="pdf",
+            title="title",
+            filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
+            created_by=self.user,
+            modified_by=self.user,
+        )
+        models.ReportNote.objects.create(
+            report=sr,
+            heading="heading",
+            content="content",
+        )
+
+        # need to reload page to get report table
+        self.driver.refresh()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.click('report-id-%s' % sr.pk)
+        self.click("id_reportnote_set-remove-0")
+        self.click("save")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        assert models.ReportNote.objects.count() == 0
+
+    def test_load_report_add_new_note_delete_old_note(self):
+        """Ensure we can both add and delete notes in a single save"""
+
+        sr = models.SavedReport.objects.create(
+            report_type=qc.TestListInstanceSummaryReport.report_type,
+            report_format="pdf",
+            title="title",
+            filters={'work_completed': ['2 Jan 1989', '4 Jan 1990']},
+            created_by=self.user,
+            modified_by=self.user,
+        )
+        models.ReportNote.objects.create(
+            report=sr,
+            heading="heading",
+            content="content",
+        )
+
+        # need to reload page to get report table
+        self.driver.refresh()
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.click('report-id-%s' % sr.pk)
+        self.click("add-note")
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_reportnote_set-1-heading')))
+        self.send_keys("id_reportnote_set-1-heading", "heading new")
+        self.send_keys("id_reportnote_set-1-content", "content new")
+        self.click("id_reportnote_set-remove-0")
+        self.click("save")
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        expected_notes = [{"heading": "heading new", "content": "content new"}]
+        assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
 
     def test_schedule_report(self):
-        """Select report from table and make sure it loads"""
+        """Ensure scheduling a savedreport works"""
 
         sr = models.SavedReport.objects.create(
             report_type=qc.TestListInstanceSummaryReport.report_type,
@@ -806,7 +970,7 @@ class TestReportInterface(BaseQATests):
         assert timezone.localtime(timezone.now()).strftime("%Y%m%d") in sched
 
     def test_clear_schedule(self):
-        """Select report from table and make sure it loads"""
+        """Test clearing the schedule from a saved report"""
 
         sr = models.SavedReport.objects.create(
             report_type=qc.TestListInstanceSummaryReport.report_type,
