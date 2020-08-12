@@ -33,7 +33,7 @@ require(['unit_choose']);
                       data-title-shown="{{ title_shown }}"
                       data-title-hidden="{{ title_hidden }}"
                     >
-                      <i class="fa fa-fw fa-caret-down"></i>
+                    <i class="fa fa-fw {% if type.1 %}fa-caret-right{% else %}fa-caret-down{% endif %}"></i>
                     </a>
                   </h4>
                   <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
@@ -85,7 +85,7 @@ require(['unit_choose']);
                         data-title-shown="{{ title_shown }}"
                         data-title-hidden="{{ title_hidden }}"
                       >
-                        <i class="fa fa-fw fa-caret-down"></i>
+                      <i class="fa fa-fw {% if type.1 %}fa-caret-right{% else %}fa-caret-down{% endif %}"></i>
                       </a>
                     </h4>
                     <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
