@@ -29,6 +29,7 @@ from listable.views import (
 
 from qatrack.qa import models
 from qatrack.service_log import models as sl_models
+from qatrack.units.models import Unit
 
 # signals import  needs to be here so signals get registered
 from .. import signals  # NOQA
@@ -187,18 +188,6 @@ class UTCList(BaseListableView):
     visible_only = True
     paginate_by = 50
 
-    fields = (
-        "actions",
-        "name",
-        "due_date",
-        "unit__name",
-        "frequency__name",
-        "assigned_to__name",
-        "last_instance__work_completed",
-        "last_instance_pass_fail",
-        "last_instance_review_status",
-    )
-
     search_fields = {
         "actions": False,
         "name": "name",
@@ -218,6 +207,7 @@ class UTCList(BaseListableView):
 
     widgets = {
         "unit__name": SELECT_MULTI,
+        "unit__site__name": SELECT_MULTI,
         "frequency__name": SELECT_MULTI,
         "assigned_to__name": SELECT_MULTI,
         "last_instance__work_completed": DATE_RANGE,
@@ -233,12 +223,14 @@ class UTCList(BaseListableView):
         "last_instance",
         "frequency",
         "unit",
+        "unit__site",
         "assigned_to",
     )
 
     headers = {
         "name": _l("Test List/Cycle"),
         "unit__name": _l("Unit"),
+        "unit__site__name": _l("Site"),
         "frequency__name": _l("Frequency"),
         "assigned_to__name": _l("Assigned To"),
         "last_instance__work_completed": _l("Completed"),
@@ -273,6 +265,29 @@ class UTCList(BaseListableView):
             'pass_fail': get_template("qa/pass_fail_status.html"),
             'due_date': get_template("qa/due_date.html"),
         }
+
+    @classmethod
+    def get_fields(cls):
+
+        fields = (
+            "actions",
+            "name",
+            "due_date",
+        )
+
+        multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
+        if multiple_sites:
+            fields += ("unit__site__name",)
+
+        fields += (
+            "unit__name",
+            "frequency__name",
+            "assigned_to__name",
+            "last_instance__work_completed",
+            "last_instance_pass_fail",
+            "last_instance_review_status",
+        )
+        return fields
 
     def get_icon(self):
         return 'fa-pencil-square-o'
@@ -311,7 +326,9 @@ class UTCList(BaseListableView):
         filters = super(UTCList, self).get_filters(field, queryset=queryset)
 
         if field == 'frequency__name':
-            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+            filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
+        elif field == 'unit__site__name':
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 
@@ -362,19 +379,8 @@ class TestListInstances(BaseListableView):
 
     order_by = ["unit_test_collection__unit__name", "-work_completed"]
 
-    fields = (
-        "actions",
-        "unit_test_collection__unit__name",
-        "unit_test_collection__frequency__name",
-        "test_list__name",
-        "work_completed",
-        "created_by__username",
-        "review_status",
-        "pass_fail",
-        "attachments",
-    )
-
     headers = {
+        "unit_test_collection__unit__site__name": _("Site"),
         "unit_test_collection__unit__name": _("Unit"),
         "unit_test_collection__frequency__name": _("Frequency"),
         "created_by__username": _("Created By"),
@@ -383,6 +389,7 @@ class TestListInstances(BaseListableView):
 
     widgets = {
         "unit_test_collection__frequency__name": SELECT_MULTI,
+        "unit_test_collection__unit__site__name": SELECT_MULTI,
         "unit_test_collection__unit__name": SELECT_MULTI,
         "created_by__username": SELECT_MULTI,
         "work_completed": DATE_RANGE
@@ -409,6 +416,7 @@ class TestListInstances(BaseListableView):
     select_related = (
         "test_list",
         "unit_test_collection__unit",
+        "unit_test_collection__unit__site",
         "unit_test_collection__frequency",
         "created_by",
         "modified_by",
@@ -441,6 +449,28 @@ class TestListInstances(BaseListableView):
     def get_page_title(self):
         return "All Test Collections"
 
+    @classmethod
+    def get_fields(cls):
+
+        fields = ("actions",)
+
+        multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
+        if multiple_sites:
+            fields += ("unit_test_collection__unit__site__name",)
+
+        fields += (
+            "unit_test_collection__unit__name",
+            "unit_test_collection__frequency__name",
+            "test_list__name",
+            "work_completed",
+            "created_by__username",
+            "review_status",
+            "pass_fail",
+            "attachments",
+        )
+
+        return fields
+
     def get_context_data(self, *args, **kwargs):
         context = super(TestListInstances, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
@@ -454,7 +484,9 @@ class TestListInstances(BaseListableView):
         filters = super(TestListInstances, self).get_filters(field, queryset=queryset)
 
         if field == 'unit_test_collection__frequency__name':
-            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+            filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
+        elif field == "unit_test_collection__unit__site__name":
+            filters = [(NONEORNULL, _('Other')) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 

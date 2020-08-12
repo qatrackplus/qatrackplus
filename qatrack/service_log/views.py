@@ -36,6 +36,7 @@ from listable.views import (
     LAST_MONTH,
     LAST_WEEK,
     LAST_YEAR,
+    NONEORNULL,
     SELECT,
     SELECT_MULTI,
     THIS_MONTH,
@@ -790,22 +791,10 @@ class ServiceEventsBaseList(BaseListableView):
     order_by = ['-datetime_service']
     kwarg_filters = None
 
-    fields = (
-        'actions',
-        'pk',
-        'datetime_service',
-        'unit_service_area__unit__name',
-        'unit_service_area__service_area__name',
-        'service_type__name',
-        # 'problem_type__name',
-        'problem_description',
-        'work_description',
-        'service_status__name'
-    )
-
     headers = {
         'pk': _l('ID'),
         'datetime_service': _l('Service Date'),
+        'unit_service_area__unit__site__name': _l('Site'),
         'unit_service_area__unit__name': _l('Unit'),
         'unit_service_area__service_area__name': _l('Service Area'),
         'service_type__name': _l('Service Type'),
@@ -815,6 +804,7 @@ class ServiceEventsBaseList(BaseListableView):
 
     widgets = {
         'datetime_service': DATE_RANGE,
+        'unit_service_area__unit__site__name': SELECT_MULTI,
         'unit_service_area__unit__name': SELECT_MULTI,
         'unit_service_area__service_area__name': SELECT_MULTI,
         'service_type__name': SELECT_MULTI,
@@ -838,6 +828,7 @@ class ServiceEventsBaseList(BaseListableView):
 
     select_related = (
         'unit_service_area__unit',
+        'unit_service_area__unit__site',
         'unit_service_area__service_area',
         'service_type',
         'service_status'
@@ -859,6 +850,39 @@ class ServiceEventsBaseList(BaseListableView):
 
     def get_page_title(self, f=None):
         return 'All Service Events'
+
+    @classmethod
+    def get_fields(cls):
+
+        fields = (
+            'actions',
+            'pk',
+            'datetime_service',
+        )
+
+        multiple_sites = len(set(models.Unit.objects.values_list("site_id"))) > 1
+        if multiple_sites:
+            fields += ('unit_service_area__unit__site__name',)
+
+        fields += (
+            'unit_service_area__unit__name',
+            'unit_service_area__service_area__name',
+            'service_type__name',
+            'problem_description',
+            'work_description',
+            'service_status__name'
+        )
+
+        return fields
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super().get_filters(field, queryset=queryset)
+
+        if field == 'unit_service_area__unit__site__name':
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
 
     def get_context_data(self, *args, **kwargs):
         context = super(ServiceEventsBaseList, self).get_context_data(*args, **kwargs)

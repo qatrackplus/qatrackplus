@@ -379,23 +379,13 @@ class YourInactiveReview(UTCYourReview):
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
-    fields = (
-        "actions",
-        "unit_test_collection__unit__name",
-        "unit_test_collection__frequency__name",
-        "test_list__name",
-        "work_completed",
-        "created_by__username",
-        "review_status",
-        "pass_fail",
-        "attachments",
-    )
-
     headers = {
+        "unit_test_collection__unit__site__name": _("Site"),
         "unit_test_collection__unit__name": _("Unit"),
         "unit_test_collection__frequency__name": _("Frequency"),
         "created_by__username": _("Created By"),
         "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
+        "selected": mark_safe('<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")),
     }
 
     search_fields = {
@@ -404,6 +394,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "review_status": False,
         "bulk_review_status": False,
         "attachments": False,
+        "selected": False,
     }
 
     order_fields = {
@@ -415,19 +406,25 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "bulk_review_status": False,
         "selected": False,
         "attachments": "attachment_count",
+        "selected": False,
     }
-
-    if settings.REVIEW_BULK:
-        fields = fields + ("bulk_review_status", "selected")
-        headers["selected"] = mark_safe(
-            '<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")
-        )
-        headers["bulk_review_status"] = lambda: Unreviewed._status_select(header=True)
-        search_fields["selected"] = False
-        order_fields["selected"] = False
 
     permission_required = "qa.can_review"
     raise_exception = True
+
+    @classmethod
+    def get_fields(cls):
+        fields = super().get_fields()
+        if settings.REVIEW_BULK:
+            fields += ("bulk_review_status", "selected")
+
+        return fields
+
+    def get_header_for_field(self, field):
+        if settings.REVIEW_BULK and field == "bulk_review_status":
+            return Unreviewed._status_select(header=True)
+
+        return super().get_header_for_field(field)
 
     @classmethod
     def _status_select(cls, header=False):

@@ -150,6 +150,8 @@ UI Changes
 * Test Instance points with comments associated with them are now highlighed in
   charts
 
+* Listing for selectin
+
 * New dropdown on Unit selection buttons to allow selecting QC to perform based
   on Test categories.
 
@@ -173,6 +175,10 @@ UI Changes
 
 * ID attributes have been added to many elements on the pages for performing/editing test lists
   to make them easier to target with JavaScript.
+
+* For installations with Units assigned to multiple 'Sites', a new 'Site'
+  column has been added to many of the views used for selecting TestList
+  assignments and TestListInstances.
 
 Admin Changes
 ^^^^^^^^^^^^^
