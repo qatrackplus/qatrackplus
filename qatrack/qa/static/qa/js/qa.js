@@ -51,6 +51,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         $calcStatus.removeClass("label-warning").addClass("label-info");
     }
 
+    function autosaving_on(){
+        console.log("Autosaving on");
+    }
+
+    function autosaving_off(){
+        console.log("Autosaving off");
+    }
 
     /***************************************************************/
     //Test statuse and Table context used to narrow down jQuery selectors.
@@ -61,9 +68,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     var comment_on_skip;
 
 
-    // keeps track of latest composite call so we can
+    // keeps track of latest composite/autosave calls so we can
     // ignore older ones f they comlete after the latest one
     var latest_composite_call;
+    var latest_autosave_call;
 
     /***************************************************************/
     //minimal Pub/Sub functionality
@@ -783,6 +791,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function get_meta_data(){
 
         var meta = {
+            unit_test_collection_id: $("#unit-test-collection-id").val(),
             test_list_id: $("#test-list-id").val(),
             test_list_name: $("#test-list-name").val(),
             unit_number: parseInt($("#unit-number").val()),
@@ -842,7 +851,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         //set the intitial values, tolerances & refs for all of our tests
         this.initialize = function(){
             var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e);});
+            self.$autosave_id = $("#autosave-id");
             self.test_list_id = $("#test-list-id").val();
+            self.unit_test_collection_id = $("#unit-test-collection-id").val();
             self.unit_id = $("#unit-id").val();
             self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1]);});
             self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug;});
@@ -977,6 +988,71 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
         };
 
+        this.autosave = function(opts){
+
+            opts = opts || {set_defaults: false};
+
+            /* don't autosave until initialization done */
+            if (window.init_task_count > 0){
+                return;
+            }
+
+            autosaving_on();
+
+            var cur_values = _.map(self.test_instances, function(ti){
+                var tt = ti.test_info.test.type;
+                if (QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) < 0){
+                    return ti.value;
+                }else{
+                    return null;
+                }
+            });
+            var qa_values = _.zipObject(self.slugs, cur_values);
+            var meta = get_meta_data();
+            var comments = get_comments();
+            var skips = get_skips();
+
+            var data = {
+                autosave_id: self.$autosave_id.val(),
+                tests: qa_values,
+                meta: meta,
+                test_list_id: self.test_list_id,
+                unit_id: self.unit_id,
+                comments: comments,
+                skips: skips
+            };
+
+            var on_success = function(data, status, XHR){
+                console.log("autosaved", data);
+
+                if (latest_autosave_call !== XHR){
+                    return;
+                }
+
+                self.$autosave_id.val(data.autosave_id);
+
+                self.submit.attr("disabled", false);
+
+            };
+
+            var on_complete = function(){
+                autosaving_off();
+                self.submit.attr("disabled", false);
+            };
+
+            self.submit.attr("disabled", true);
+
+            latest_autosave_call = $.ajax({
+                type: "POST",
+                url: QAURLs.AUTOSAVE_URL,
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: on_success,
+                complete: on_complete
+            });
+        };
+
         this.has_failing = function(){
             return _.filter(self.test_instances, function(ti){
                 return ti.test_status === QAUtils.ACTION;
@@ -999,6 +1075,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         });
 
         $.Topic("valueChanged").subscribe(self.calculate_composites);
+        $.Topic("valueChanged").subscribe(self.autosave);
     }
 
     function disable_numeric_scroll(){

@@ -2417,6 +2417,41 @@ class TestListInstance(models.Model):
         super().save(*args, **kwargs)
 
 
+class AutoSave(models.Model):
+
+    unit_test_collection = models.ForeignKey(UnitTestCollection, on_delete=models.PROTECT, editable=False)
+    test_list = models.ForeignKey(TestList, on_delete=models.PROTECT, editable=False)
+
+    work_started = models.DateTimeField(null=True)
+    work_completed = models.DateTimeField(null=True)
+
+    day = models.IntegerField(default=0)
+
+    created = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        related_name="autosave_creator",
+    )
+
+    modified = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        related_name="autosave_modifier",
+    )
+
+    data = JSONField(
+        blank=True,
+        help_text=_l(
+            "Currently used to store results of upload file analysis. Allows you to retrieve results of "
+            "file upload analysis without having to reanalyze the file"
+        ),
+    )
+
+
 class TestListCycleManager(models.Manager):
 
     def get_by_natural_key(self, slug):

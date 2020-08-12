@@ -14,7 +14,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.forms.models import model_to_dict
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
@@ -1594,6 +1594,46 @@ class InProgress(TestListInstances):
 
     def get_page_title(self):
         return _("In Progress Test Lists")
+
+
+def autosave(request):
+
+    data = json.loads(request.body)
+
+    tz = timezone.get_current_timezone()
+    for d in ("work_completed", "work_started"):
+        try:
+            data['meta'][d] = tz.localize(parse_datetime(data['meta'][d]))
+        except (TypeError, KeyError, AttributeError):
+            data['meta'][d] = None
+
+    try:
+        saved = models.AutoSave.objects.get(pk=data['autosave_id'] or None)
+    except models.AutoSave.DoesNotExist:
+        saved = models.AutoSave.objects.create(
+            unit_test_collection_id=data['meta']['unit_test_collection_id'],
+            created_by=request.user,
+            modified_by=request.user,
+            test_list_id=data['meta']['test_list_id'],
+            data={},
+        )
+
+    saved.work_started = data['meta']['work_started'] or timezone.now()
+    saved.work_completed = data['meta']['work_completed']
+    try:
+        saved.day = int(data['meta']['cycle_day']) - 1
+    except (ValueError, TypeError):
+        pass
+
+    saved.modified_by = request.user
+    saved.data = {
+        'tests': data['tests'],
+        'comments': data['comments'],
+        'skips': data['skips'],
+    }
+    saved.save()
+
+    return JsonResponse({'ok': True, 'autosave_id': saved.pk})
 
 
 class FrequencyList(UTCList):
