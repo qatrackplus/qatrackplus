@@ -151,6 +151,7 @@ class UnitAdmin(BaseQATrackAdmin):
     list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
     list_editable = ['site', 'is_serviceable']
+    list_select_related = ["site", "type"]
     ordering = ['number']
     search_fields = ['number', 'name']
 
@@ -171,7 +172,18 @@ class UnitAdmin(BaseQATrackAdmin):
         }
 
     def get_queryset(self, request):
+        self.formfield_for_dbfield
         return super().get_queryset(request).select_related('site', 'type')
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "site":
+            choices = getattr(request, '_site_choices_cache', None)
+            if choices is None:
+                request._site_choices_cache = choices = list(formfield.choices)
+            formfield.choices = request._site_choices_cache
+
+        return formfield
 
 
 class UnitTypeAdmin(BaseQATrackAdmin):
