@@ -12,7 +12,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -1587,7 +1587,9 @@ class InProgress(TestListInstances):
     """
 
     def get_queryset(self, *args, **kwargs):
-        return models.TestListInstance.objects.in_progress(user=self.request.user)
+        qs = models.TestListInstance.objects.in_progress(user=self.request.user)
+        qs = qs.annotate(attachment_count=Count("attachment"))
+        return qs
 
     def get_icon(self):
         return 'fa-play'
