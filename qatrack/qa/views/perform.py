@@ -1646,8 +1646,8 @@ def autosave_load(request):
     auto = get_object_or_404(models.AutoSave, pk=autosave_id)
     data = {
         'meta': {
-            'work_started': auto.work_started,
-            'work_completed': auto.work_completed,
+            'work_started': timezone.localtime(auto.work_started),
+            'work_completed': timezone.localtime(auto.work_completed),
         },
         'data': auto.data,
     }

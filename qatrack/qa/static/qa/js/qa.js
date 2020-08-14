@@ -1023,31 +1023,40 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var on_success = function(data, status, XHR){
 
-                if (data.meta.work_started){
-                    $("#id_work_started").val(data.meta.work_started);
-                }
-                if (data.meta.work_completed){
-                    $("#id_work_completed").val(data.meta.work_completed);
+                if (data.meta.work_started || data.meta.work_completed){
+                    /* temporarily unsubscribe to prevent extra composite calls. Ugly :( */
+                    $.Topic("valueChanged").unsubscribe(self.calculate_composites);
+                    $.Topic("valueChanged").unsubscribe(self.autosave);
+
+
+                    if (data.meta.work_started){
+                        $("#id_work_started").get(0)._flatpickr.setDate(data.meta.work_started, true);
+                    }
+                    if (data.meta.work_completed){
+                        $("#id_work_completed").get(0)._flatpickr.setDate(data.meta.work_completed, true);
+                    }
+
+                    $.Topic("valueChanged").subscribe(self.calculate_composites);
+                    $.Topic("valueChanged").subscribe(self.autosave);
                 }
 
                 _.each(data.data.tests, function(idx, test){
 
                     var ti = self.tests_by_slug[test];
-                    var tt = ti.test_info.test.type;
-                    var isComp = QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) >= 0;
-                    var isUpload = tt == QAUtils.UPLOAD;
-                    var val = data.data.tests[test];
-                    var skipped = data.data.skips[test];
-                    var comment = data.data.comments[test];
 
+                    var comment = data.data.comments[test];
                     if (comment){
                         ti.set_comment(comment);
                         ti.set_comment_icon();
                     }
-
                     if (data.data.tli_comment){
                         $("#id_comment").val(data.data.tli_comment);
                     }
+
+                    var val = data.data.tests[test];
+                    var tt = ti.test_info.test.type;
+                    var isComp = QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) >= 0;
+                    var isUpload = tt == QAUtils.UPLOAD;
                     if (isUpload){
                         ti.set_value({'attachment_id': val, 'result': ""});
                         ti.initialized = false;
@@ -1055,6 +1064,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }else if (!isComp){
                         ti.set_value(val);
                     }
+
+                    if (data.data.skips[test]){
+                        ti.set_skip(true);
+                    }
+
                 });
 
             };
