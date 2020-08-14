@@ -6,11 +6,15 @@ from django_q.models import Schedule
 from django_q.tasks import schedule
 
 from qatrack.qatrack_core.email import send_email_to_users
-from qatrack.qatrack_core.tasks import run_periodic_scheduler, qatrack_task_wrapper
+from qatrack.qatrack_core.tasks import (
+    qatrack_task_wrapper,
+    run_periodic_scheduler,
+)
 from qatrack.reports.models import ReportSchedule
 from qatrack.reports.reports import CONTENT_TYPES
 
 logger = logging.getLogger('qatrack')
+
 
 @qatrack_task_wrapper
 def run_reports():
@@ -19,6 +23,7 @@ def run_reports():
     run_periodic_scheduler(
         ReportSchedule, "run_reports", schedule_report, time_field="time", recurrence_field="schedule"
     )
+
 
 @qatrack_task_wrapper
 def schedule_report(s, send_time):
@@ -35,6 +40,7 @@ def schedule_report(s, send_time):
         next_run=send_time,
         task_name=name,
     )
+
 
 @qatrack_task_wrapper
 def send_report(schedule_id, task_name=""):
