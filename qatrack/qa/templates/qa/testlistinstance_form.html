@@ -455,6 +455,11 @@
                                   <i class="fa fa-check-circle fa-fw fa-lg" title="Calculations complete"></i>
                                   <span>Calculations Complete</span>
                                 </span>
+                                <span class="label label-warning qa-autosave-status pull-right">
+                                    <i class="fa fa-save fa-fw fa-lg"></i>
+                                  </i>
+                                  <span>Not Saved</span>
+                                </span>
                                 {% if test_list.warning_message %}
                                     <h3 class="do-not-treat box-title pull-right">
                                         <strong>{{test_list.warning_message}}</strong>
@@ -853,6 +858,26 @@
                         <li>
                           <a title="Resume session saved by {{ ip.created_by }}" class="row" href="{% url 'continue_tli' pk=ip.pk %}?{{ request.GET.urlencode }}">
                             {{ ip.created }}
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endif %}
+
+                {% if autosaves %}
+                  <li class="divider"></li>
+                  <li class="treeview">
+                    <a id="menu-days" href="#!">
+                      <i style="color: #f39c12;" class="fa fa-save fa-fw" aria-hidden="true"></i>
+                      <span>Auto Saved Sessions</span>
+                      <i class="fa fa-angle-left pull-right"></i>
+                    </a>
+                    <ul id="autosave-list" class="treeview-menu" style="display: none;">
+                      {% for auto in autosaves %}
+                        <li>
+                          <a title="Resume session auto-saved for {{ auto.modified_by }} on {{ auto.modified }}" class="row" href="?autosave_id={{ auto.id }}&day={{ auto.day | add:"1" }}&next={{ request.GET.next }}">
+                            {{ auto.modified }}
                           </a>
                         </li>
                       {% endfor %}

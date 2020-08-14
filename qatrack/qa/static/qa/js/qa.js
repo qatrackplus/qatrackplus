@@ -35,9 +35,23 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         }
     });
 
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
     var $calcStatus = $(".qa-calc-status");
     var $calcStatusSpinners = $calcStatus.find("i");
     var $calcStatusContent = $calcStatus.find("span");
+
+    var $autoSaveStatus = $(".qa-autosave-status");
+    var $autoSaveStatusSpinners = $autoSaveStatus.find("i");
+    var $autoSaveStatusContent = $autoSaveStatus.find("span");
 
     function processing_on(){
         $calcStatusSpinners.addClass("fa-spin fa-circle-o-notch").removeClass("fa-check-circle").attr("title", "Calculating");
@@ -52,11 +66,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     }
 
     function autosaving_on(){
-        console.log("Autosaving on");
+        $autoSaveStatusSpinners.addClass("fa-spin fa-circle-o-notch").removeClass("fa-save").attr("title", "Saving");
+        $autoSaveStatusContent.html("Auto-saving...");
+        $autoSaveStatus.removeClass("label-info").addClass("label-warning");
     }
 
     function autosaving_off(){
-        console.log("Autosaving off");
+        var saved = moment().format(siteConfig.MOMENT_DATETIME_FMT);
+        $autoSaveStatusSpinners.removeClass("fa-spin fa-circle-o-notch").addClass("fa-save").attr("title", "Last auto saved at " + saved);
+        $autoSaveStatusContent.html(saved);
+        $autoSaveStatus.removeClass("label-warning").addClass("label-info");
     }
 
     /***************************************************************/
@@ -851,7 +870,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         //set the intitial values, tolerances & refs for all of our tests
         this.initialize = function(){
             var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e);});
+
             self.$autosave_id = $("#autosave-id");
+            self.autosave_id = getParameterByName("autosave_id");
+
             self.test_list_id = $("#test-list-id").val();
             self.unit_test_collection_id = $("#unit-test-collection-id").val();
             self.unit_id = $("#unit-id").val();
@@ -866,11 +888,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $("#tli-attachment-names").html(fnames);
             });
 
-            // only set default values if not editing an existing tli
-            var set_defaults = !(window.editing_tli > 0 || window.has_errors);
+            // only set default values if not editing an existing tli and not loading an autosave
+            var set_defaults = !(window.editing_tli > 0 || window.has_errors || self.autosave_id);
             if (set_defaults){
                 window.init_task_count += 1;
                 self.calculate_composites({set_defaults : true});
+            }
+
+            if (!_.isNull(self.autosave_id)){
+                self.autosave_id = parseInt(self.autosave_id);
+                self.load_autosave();
             }
 
             var init_interval = setInterval(function(){
@@ -988,9 +1015,71 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
         };
 
-        this.autosave = function(opts){
+        this.load_autosave = function(){
 
-            opts = opts || {set_defaults: false};
+            self.$autosave_id.val(self.autosave_id);
+
+            processing_on();
+
+            var on_success = function(data, status, XHR){
+
+                if (data.meta.work_started){
+                    $("#id_work_started").val(data.meta.work_started);
+                }
+                if (data.meta.work_completed){
+                    $("#id_work_completed").val(data.meta.work_completed);
+                }
+
+                _.each(data.data.tests, function(idx, test){
+
+                    var ti = self.tests_by_slug[test];
+                    var tt = ti.test_info.test.type;
+                    var isComp = QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) >= 0;
+                    var isUpload = tt == QAUtils.UPLOAD;
+                    var val = data.data.tests[test];
+                    var skipped = data.data.skips[test];
+                    var comment = data.data.comments[test];
+
+                    if (comment){
+                        ti.set_comment(comment);
+                        ti.set_comment_icon();
+                    }
+
+                    if (data.data.tli_comment){
+                        $("#id_comment").val(data.data.tli_comment);
+                    }
+                    if (isUpload){
+                        ti.set_value({'attachment_id': val, 'result': ""});
+                        ti.initialized = false;
+                        ti.update_value_from_input();
+                    }else if (!isComp){
+                        ti.set_value(val);
+                    }
+                });
+
+            };
+
+            var on_complete = function(){
+                processing_off();
+                self.submit.attr("disabled", false);
+                window.init_task_count -= 1;
+            };
+
+            self.submit.attr("disabled", true);
+
+            window.init_task_count += 1;
+
+            $.ajax({
+                type: "GET",
+                url: QAURLs.AUTOSAVE_LOAD_URL + "?autosave_id="+self.autosave_id,
+                contentType: "application/json",
+                dataType: "json",
+                success: on_success,
+                complete: on_complete
+            });
+        };
+
+        this.autosave = function(){
 
             /* don't autosave until initialization done */
             if (window.init_task_count > 0){
@@ -1001,11 +1090,18 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var cur_values = _.map(self.test_instances, function(ti){
                 var tt = ti.test_info.test.type;
-                if (QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) < 0){
+                var file_uploaded = (
+                    ti.test_info.test.type == QAUtils.UPLOAD &&
+                    ti.upload_data &&
+                    ti.upload_data.attachment_id
+                );
+                if (file_uploaded){
+                    return ti.upload_data.attachment_id;
+                }else if (QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) < 0){
                     return ti.value;
-                }else{
-                    return null;
                 }
+
+                return null;
             });
             var qa_values = _.zipObject(self.slugs, cur_values);
             var meta = get_meta_data();
@@ -1014,16 +1110,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var data = {
                 autosave_id: self.$autosave_id.val(),
-                tests: qa_values,
                 meta: meta,
                 test_list_id: self.test_list_id,
                 unit_id: self.unit_id,
+                tests: qa_values,
                 comments: comments,
-                skips: skips
+                skips: skips,
+                tli_comment: $("#id_comment").val()
             };
 
             var on_success = function(data, status, XHR){
-                console.log("autosaved", data);
 
                 if (latest_autosave_call !== XHR){
                     return;

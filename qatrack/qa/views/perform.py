@@ -1266,6 +1266,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
         context['borders'] = self.test_list.sublist_borders()
+        context["autosaves"] = list(self.unit_test_col.autosave_set.order_by("-created").select_related("modified_by"))
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
@@ -1598,7 +1599,10 @@ class InProgress(TestListInstances):
 
 def autosave(request):
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'autosave_id': None})
 
     tz = timezone.get_current_timezone()
     for d in ("work_completed", "work_started"):
@@ -1630,10 +1634,25 @@ def autosave(request):
         'tests': data['tests'],
         'comments': data['comments'],
         'skips': data['skips'],
+        'tli_comment': data['tli_comment'],
     }
     saved.save()
 
     return JsonResponse({'ok': True, 'autosave_id': saved.pk})
+
+
+def autosave_load(request):
+    autosave_id = request.GET.get("autosave_id")
+    auto = get_object_or_404(models.AutoSave, pk=autosave_id)
+    data = {
+        'meta': {
+            'work_started': auto.work_started,
+            'work_completed': auto.work_completed,
+        },
+        'data': auto.data,
+    }
+
+    return JsonResponse(data, encoder=QATrackJSONEncoder)
 
 
 class FrequencyList(UTCList):

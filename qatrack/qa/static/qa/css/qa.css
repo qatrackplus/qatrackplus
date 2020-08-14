@@ -25,7 +25,8 @@
     /*width:150px;*/
 }
 
-span.qa-calc-status {
+span.qa-calc-status,
+span.qa-autosave-status {
 
  /* Safari 3-4, iOS 1-3.2, Android 1.6- */
   -webkit-border-radius: 6px;
@@ -39,6 +40,9 @@ span.qa-calc-status {
   padding: 6px;
   color: white;
 
+}
+span.qa-autosave-status {
+  margin-right: 10px;
 }
 /* perform table */
 tr.qa-valuerow,
