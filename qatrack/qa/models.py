@@ -2419,36 +2419,62 @@ class TestListInstance(models.Model):
 
 class AutoSave(models.Model):
 
-    unit_test_collection = models.ForeignKey(UnitTestCollection, on_delete=models.PROTECT, editable=False)
-    test_list = models.ForeignKey(TestList, on_delete=models.PROTECT, editable=False)
+    unit_test_collection = models.ForeignKey(
+        UnitTestCollection,
+        on_delete=models.PROTECT,
+        editable=False,
+        verbose_name=_l("Unit Test Collection"),
+    )
 
-    work_started = models.DateTimeField(null=True)
-    work_completed = models.DateTimeField(null=True)
+    test_list = models.ForeignKey(
+        TestList,
+        on_delete=models.PROTECT,
+        editable=False,
+        verbose_name=_l("Test List"),
+    )
 
-    day = models.IntegerField(default=0)
+    work_started = models.DateTimeField(
+        _l("Work Started"),
+        null=True,
+    )
+    work_completed = models.DateTimeField(
+        _l("Work completed"),
+        null=True,
+    )
 
-    created = models.DateTimeField(auto_now_add=True)
+    day = models.IntegerField(
+        _l("Day"),
+        default=0,
+    )
+
+    created = models.DateTimeField(
+        _l("Created"),
+        auto_now_add=True,
+    )
     created_by = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         editable=False,
+        verbose_name=_l("Created By"),
         related_name="autosave_creator",
     )
 
-    modified = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField(
+        _l("Modified"),
+        auto_now=True,
+    )
     modified_by = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         editable=False,
+        verbose_name=_l("Modified By"),
         related_name="autosave_modifier",
     )
 
     data = JSONField(
+        _l("Data"),
         blank=True,
-        help_text=_l(
-            "Currently used to store results of upload file analysis. Allows you to retrieve results of "
-            "file upload analysis without having to reanalyze the file"
-        ),
+        help_text=_l("Autosaved data"),
     )
 
 
