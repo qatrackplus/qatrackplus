@@ -844,6 +844,49 @@ class TestPerformQC(BaseQATests):
         assert self.driver.find_element_by_id("id_form-0-comment").get_attribute("value") == "test comment"
         assert self.driver.find_element_by_id("id_comment").get_attribute("value") == "test list instance comment"
 
+    def test_submit_autosave(self):
+        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+
+        tl2 = utils.create_test_list(name="day 2")
+        utils.create_test_list_membership(tl2, test=self.tnum_1)
+        cycle = utils.create_cycle([self.test_list, tl2])
+        utc = utils.create_unit_test_collection(
+            unit=self.utc.unit, test_collection=cycle, assigned_to=self.utc.assigned_to
+        )
+
+        tz = timezone.get_current_timezone()
+        auto = models.AutoSave.objects.create(
+            unit_test_collection=utc,
+            test_list=tl2,
+            day=1,
+            work_started=tz.localize(timezone.datetime(1980, 5, 12, 12)),
+            work_completed=tz.localize(timezone.datetime(1980, 5, 12, 12, 1)),
+            created_by=self.user,
+            modified_by=self.user,
+            data={
+                'tests': {
+                    'test1': 1,
+                },
+                'comments': {
+                    'test1': 'test comment',
+                },
+                'skips': {
+                    'test1': False,
+                },
+                'tli_comment': 'test list instance comment'
+            }
+        )
+
+        self.login()
+
+        url = reverse("perform_qa", kwargs={'pk': utc.pk})
+        self.open(url + "?autosave_id=%d&day=%d" % (auto.pk, auto.day + 1))
+        time.sleep(0.2)
+
+        self.click("submit-qa")
+
+        assert models.AutoSave.objects.filter(pk=auto.pk).count() == 0
+
 
 @pytest.mark.selenium
 class TestReviewQC(BaseQATests):

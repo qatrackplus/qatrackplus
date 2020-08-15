@@ -1198,6 +1198,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 }
                 messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
+        auto = self.request.POST.get("autosave-id")
+        if auto:
+            models.AutoSave.objects.filter(pk=auto).delete()
+
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
@@ -1422,6 +1426,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 except:  # noqa: E722
                     msg = _('Error sending notification email.')
                     messages.add_message(request=self.request, message=msg, level=messages.ERROR)
+
+            auto = self.request.POST.get("autosave-id")
+            if auto:
+                models.AutoSave.objects.filter(pk=auto).delete()
 
             # let user know request succeeded and return to unit list
             messages.success(
