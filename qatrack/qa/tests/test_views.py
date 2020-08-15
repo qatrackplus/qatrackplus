@@ -2171,3 +2171,121 @@ class TestTrees(TestCase):
 
         with self.assertRaises(NotImplementedError):
             trees.BaseTree([])
+
+
+class TestAutoSave(TestCase):
+
+    def setUp(self):
+
+        self.url = reverse("autosave")
+        self.load_url = reverse("autosave_load")
+        user = User.objects.create_superuser("user", "a@b.com", "password")
+        self.client.force_login(user)
+        self.utc = utils.create_unit_test_collection()
+
+    def test_invalid_payload(self):
+        resp = self.client.post(self.url, content_type="application/json", data="[{]")
+        assert resp.json() == {'ok': False, 'autosave_id': None}
+
+    def test_new_autosave(self):
+        data = {
+            'autosave_id': None,
+            'meta': {
+                'work_started': "12 May 1980",
+                'work_completed': None,
+                'unit_test_collection_id': self.utc.id,
+                'test_list_id': self.utc.tests_object.id,
+                'cycle_day': 1,
+            },
+            'tests': {},
+            'comments': {},
+            'skips': {},
+            'tli_comment': "",
+        }
+
+        resp = self.client.post(self.url, content_type="application/json", data=json.dumps(data))
+        assert resp.json() == {'ok': True, 'autosave_id': models.AutoSave.objects.latest("pk").pk}
+
+    def test_update_autosave(self):
+
+        auto = models.AutoSave.objects.create(
+            unit_test_collection=self.utc,
+            test_list=self.utc.tests_object,
+            created_by=self.utc.tests_object.created_by,
+            modified_by=self.utc.tests_object.created_by,
+            data={},
+        )
+
+        data = {
+            'autosave_id': auto.id,
+            'meta': {
+                'work_started': "12 May 1980 12:00",
+                'work_completed': None,
+                'unit_test_collection_id': self.utc.id,
+                'test_list_id': self.utc.tests_object.id,
+                'cycle_day': 1,
+            },
+            'tests': {
+                'foo': 'bar'
+            },
+            'comments': {},
+            'skips': {},
+            'tli_comment': "",
+        }
+
+        self.client.post(self.url, content_type="application/json", data=json.dumps(data))
+
+        auto.refresh_from_db()
+        assert auto.work_started == timezone.get_current_timezone().localize(timezone.datetime(1980, 5, 12, 12, 0))
+        assert auto.data == {
+            'tests': {
+                'foo': 'bar'
+            },
+            'comments': {},
+            'skips': {},
+            'tli_comment': "",
+        }
+
+    def test_invalid_day(self):
+        data = {
+            'autosave_id': None,
+            'meta': {
+                'work_started': "12 May 1980",
+                'work_completed': None,
+                'unit_test_collection_id': self.utc.id,
+                'test_list_id': self.utc.tests_object.id,
+                'cycle_day': "a1",
+            },
+            'tests': {},
+            'comments': {},
+            'skips': {},
+            'tli_comment': "",
+        }
+
+        resp = self.client.post(self.url, content_type="application/json", data=json.dumps(data))
+        auto = models.AutoSave.objects.latest("pk")
+        assert resp.json() == {'ok': True, 'autosave_id': auto.pk}
+        assert auto.day == 0
+
+    def test_load(self):
+        auto = models.AutoSave.objects.create(
+            unit_test_collection=self.utc,
+            test_list=self.utc.tests_object,
+            created_by=self.utc.tests_object.created_by,
+            modified_by=self.utc.tests_object.created_by,
+            data={},
+        )
+        resp = self.client.get(self.load_url + "?autosave_id=%d" % auto.id)
+
+        assert resp.status_code == 200
+        assert resp.json() == {
+            'meta': {
+                'work_started': None,
+                'work_completed': None,
+            },
+            'data': {},
+        }
+
+    def test_load_404(self):
+        resp = self.client.get(self.load_url + "?autosave_id=123")
+        assert resp.status_code == 404
