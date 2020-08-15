@@ -1644,10 +1644,11 @@ def autosave(request):
 def autosave_load(request):
     autosave_id = request.GET.get("autosave_id")
     auto = get_object_or_404(models.AutoSave, pk=autosave_id)
+
     data = {
         'meta': {
-            'work_started': timezone.localtime(auto.work_started),
-            'work_completed': timezone.localtime(auto.work_completed),
+            'work_started': timezone.localtime(auto.work_started) if auto.work_started else None,
+            'work_completed': timezone.localtime(auto.work_completed) if auto.work_completed else None,
         },
         'data': auto.data,
     }
