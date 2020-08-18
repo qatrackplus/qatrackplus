@@ -29,7 +29,7 @@ require(['unit_choose']);
                   {{ type.0 }}
                   {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
                   {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
-                  <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                  <a role="button" data-toggle="collapse" data-target="#collapse-{{ site.0 }}-{{ forloop.counter }}"
                     title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
                     data-title-shown="{{ title_shown }}"
                     data-title-hidden="{{ title_hidden }}"
@@ -37,7 +37,7 @@ require(['unit_choose']);
                     <i class="fa fa-fw {% if type.1 %}fa-caret-right{% else %}fa-caret-down{% endif %}"></i>
                   </a>
                 </h4>
-                <div id="collapse-{{ forloop.counter }}"
+                <div id="collapse-{{ site.0 }}-{{ forloop.counter }}"
                     {% if type.1 %}
                       class="collapse"
                     {% else %}
@@ -90,7 +90,7 @@ require(['unit_choose']);
                     {{ type.0 }}
                     {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
                     {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
-                    <a role="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}"
+                    <a role="button" data-toggle="collapse" data-target="#collapse-{{ site.0 }}-{{ forloop.counter }}"
                       title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
                       data-title-shown="{{ title_shown }}"
                       data-title-hidden="{{ title_hidden }}"
@@ -98,7 +98,7 @@ require(['unit_choose']);
                       <i class="fa fa-fw {% if type.1 %}fa-caret-right{% else %}fa-caret-down{% endif %}"></i>
                     </a>
                   </h4>
-                  <div id="collapse-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
+                  <div id="collapse-{{ site.0 }}-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
                     {% for unit in units %}
                       {% include "units/unittype_list_unit_button.html" with unit=unit %}
                     {% endfor %}

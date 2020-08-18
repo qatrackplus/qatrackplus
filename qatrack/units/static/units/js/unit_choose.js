@@ -8,7 +8,7 @@ require(['jquery'], function ($) {
             link.attr('title', link.data('title-shown'));
         });
 
-        $('.collapse').on('hidden.bs.collapse', function (e)
+        $('.collapse').on('hide.bs.collapse', function (e)
         {
             e.stopPropagation();
             $(this).prev().find('i').addClass('fa-caret-right').removeClass('fa-caret-down');
