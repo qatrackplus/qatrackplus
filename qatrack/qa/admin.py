@@ -1053,7 +1053,8 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
     def obj_modified(self, obj):
         link_title = _("Modified by %(username)s") % {'username': obj.modified_by}
         dt = date_formatter(timezone.localtime(obj.modified), "DATETIME_FORMAT")
-        return '<abbr title="Modified by %s">%s</abbr>' % (link_title, dt)
+        return '<abbr title="%s">%s</abbr>' % (link_title, dt)
+
     obj_modified.admin_order_field = "modified"
     obj_modified.short_description = _l("Modified")
 
