@@ -200,6 +200,7 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         except models.Category.DoesNotExist:
             cat = models.Category.objects.create(**obj)
             models.Category.objects.filter(pk=cat.pk).update(tree_id=cat.pk)
+            categories[nk_vals] = cat
     models.Category.objects.rebuild()
 
     # we cann= now create the actual primary records (m2m relationships done below
