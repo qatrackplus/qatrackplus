@@ -24,6 +24,8 @@ urlpatterns = [
 
     # view for composite calculations via ajax
     url(r"^composite/$", perform.CompositeCalculation.as_view(), name="composite"),
+    url(r"^autosave/$", perform.autosave, name="autosave"),
+    url(r"^autosave/load/$", perform.autosave_load, name="autosave_load"),
 
     # view for uploads via ajax
     url(r"^upload/$", perform.Upload.as_view(), name="upload"),

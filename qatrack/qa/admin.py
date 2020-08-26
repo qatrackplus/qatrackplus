@@ -3,7 +3,6 @@ import re
 from admin_views.admin import AdminViews
 from django import VERSION
 from django.apps import apps
-from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import options, widgets
 from django.contrib.admin.models import CHANGE, LogEntry
@@ -1513,9 +1512,31 @@ class AutoReviewRuleSetAdmin(BaseQATrackAdmin):
     get_rules_display.short_description = _l("Rules")
 
 
+class AutoSaveAdmin(BaseQATrackAdmin):
+    list_display = (
+        "created", "created_by", 'modified', 'modified_by', 'unit', 'unit_test_collection', 'test_list', 'recover'
+    )
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        return qs.select_related(
+            "created_by", "modified_by", "unit_test_collection", "unit_test_collection__unit", "test_list"
+        )
+
+    def unit(self, obj):
+        return obj.unit_test_collection.unit.name
+
+    @mark_safe
+    def recover(self, obj):
+        href = reverse("perform_qa", kwargs={'pk': obj.unit_test_collection_id}) + "?autosave_id=%d" % obj.pk
+        title = _("Click to continue this auto saved session")
+        return '<a href="%s" title="%s">%s</a>' % (href, title, _("Recover"))
+
+
 admin.site.register([models.Tolerance], ToleranceAdmin)
 admin.site.register([models.AutoReviewRule], AutoReviewAdmin)
 admin.site.register([models.AutoReviewRuleSet], AutoReviewRuleSetAdmin)
+admin.site.register([models.AutoSave], AutoSaveAdmin)
 admin.site.register([models.Category], CategoryAdmin)
 admin.site.register([models.TestList], TestListAdmin)
 admin.site.register([models.Test], TestAdmin)

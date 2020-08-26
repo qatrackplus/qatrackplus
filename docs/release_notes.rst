@@ -46,6 +46,10 @@ Major Features
     * New QC Scheduling & Unreviewed QC Notices.
     * Service event creation & update notices.
 
+* A new :ref:`Autosave <auto_save>` feature has been implemented to
+  automatically save test list instance data temporarily to prevent data loss
+  when a user mistakingly navigates away from the page while entering QC data.
+
 
 Tests & Test Lists
 ^^^^^^^^^^^^^^^^^^

@@ -355,6 +355,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
         })
     )
 
+    autosave_id = forms.IntegerField(required=False, widget=HiddenInput())
+
     class Meta:
         model = models.TestListInstance
         exclude = ("day",)

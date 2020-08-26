@@ -25,17 +25,23 @@ def qatrack_task_wrapper(func):
     return wrapped
 
 
-def _schedule_periodic_task(function, task_name, interval_min=15):
+def _schedule_periodic_task(function, task_name, interval_min=None, next_run=None, schedule_type=Schedule.MINUTES):
     """Create a periodic schedule calling input function.  Default interval is 15min"""
+
+    if schedule_type == Schedule.MINUTES and interval_min is None:
+        interval_min = 15
 
     now = timezone.now()
 
-    # set initial schedule to 7.5 minutes after then next quarter hour
-    # the schedule will then run every 15 minutes at HH:07:30, HH:22:30, HH:37:30, HH:52:30
-    next_run = now.replace(minute=0, second=0, microsecond=0) + timezone.timedelta(seconds=int(interval_min * 60 / 2.))
+    if next_run is None:
+        # set initial schedule to 7.5 minutes after then next quarter hour
+        # the schedule will then run every 15 minutes at HH:07:30, HH:22:30, HH:37:30, HH:52:30
+        next_run = now.replace(
+            minute=0, second=0, microsecond=0
+        ) + timezone.timedelta(seconds=int(interval_min * 60 / 2.))
 
-    while next_run < now:
-        next_run += timezone.timedelta(minutes=interval_min)
+        while next_run < now:
+            next_run += timezone.timedelta(minutes=interval_min)
 
     try:
 
@@ -51,7 +57,7 @@ def _schedule_periodic_task(function, task_name, interval_min=15):
         schedule(
             function,
             name=task_name,
-            schedule_type=Schedule.MINUTES,
+            schedule_type=schedule_type,
             minutes=interval_min,
             repeats=-1,
             next_run=next_run,

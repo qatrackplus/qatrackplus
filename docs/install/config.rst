@@ -264,6 +264,12 @@ user can enter `SoMeUsErName` and it will be authenticated as `someusername`.
 Default is `ACCOUNTS_CLEAN_USERNAME = False`.
 
 
+.. _autosave_days_to_keep:
+
+Set `AUTOSAVE_DAYS_TO_KEEP` to control the maximum number of days that auto-saved
+QC data will be kept for.  The default settings is 30 days.
+
+
 CHROME_PATH
 ...........
 

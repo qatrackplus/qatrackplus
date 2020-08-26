@@ -2417,6 +2417,75 @@ class TestListInstance(models.Model):
         super().save(*args, **kwargs)
 
 
+class AutoSave(models.Model):
+
+    unit_test_collection = models.ForeignKey(
+        UnitTestCollection,
+        on_delete=models.PROTECT,
+        editable=False,
+        verbose_name=_l("Unit Test Collection"),
+    )
+
+    test_list = models.ForeignKey(
+        TestList,
+        on_delete=models.CASCADE,
+        editable=False,
+        verbose_name=_l("Test List"),
+    )
+
+    test_list_instance = models.ForeignKey(
+        TestListInstance,
+        on_delete=models.CASCADE,
+        editable=False,
+        verbose_name=_l("Test List Instance"),
+        null=True,
+    )
+
+    work_started = models.DateTimeField(
+        _l("Work Started"),
+        null=True,
+    )
+    work_completed = models.DateTimeField(
+        _l("Work completed"),
+        null=True,
+    )
+
+    day = models.IntegerField(
+        _l("Day"),
+        default=0,
+    )
+
+    created = models.DateTimeField(
+        _l("Created"),
+        auto_now_add=True,
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        verbose_name=_l("Created By"),
+        related_name="autosave_creator",
+    )
+
+    modified = models.DateTimeField(
+        _l("Modified"),
+        auto_now=True,
+    )
+    modified_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        verbose_name=_l("Modified By"),
+        related_name="autosave_modifier",
+    )
+
+    data = JSONField(
+        _l("Data"),
+        blank=True,
+        help_text=_l("Autosaved data"),
+    )
+
+
 class TestListCycleManager(models.Manager):
 
     def get_by_natural_key(self, slug):

@@ -14,7 +14,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Count, Q, QuerySet
 from django.forms.models import model_to_dict
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
@@ -1198,6 +1198,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 }
                 messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
+        auto = form.cleaned_data.get("autosave_id")
+        if auto:
+            models.AutoSave.objects.filter(pk=auto).delete()
+
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
             # to inform any listeners (e.g notifications.handlers.email_no_testlist_save)
@@ -1266,6 +1270,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
         context['borders'] = self.test_list.sublist_borders()
+        context["autosaves"] = list(self.unit_test_col.autosave_set.order_by("-created").select_related("modified_by"))
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
@@ -1422,6 +1427,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                     msg = _('Error sending notification email.')
                     messages.add_message(request=self.request, message=msg, level=messages.ERROR)
 
+            auto = form.cleaned_data.get("autosave_id")
+            if auto:
+                models.AutoSave.objects.filter(pk=auto).delete()
+
             # let user know request succeeded and return to unit list
             messages.success(
                 self.request,
@@ -1567,6 +1576,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
 
+        context["autosaves"] = list(
+            self.object.unit_test_collection.autosave_set.order_by("-created").select_related("modified_by")
+        )
+
         return context
 
 
@@ -1596,6 +1609,66 @@ class InProgress(TestListInstances):
 
     def get_page_title(self):
         return _("In Progress Test Lists")
+
+
+def autosave(request):
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'autosave_id': None})
+
+    tz = timezone.get_current_timezone()
+    for d in ("work_completed", "work_started"):
+        try:
+            data['meta'][d] = tz.localize(parse_datetime(data['meta'][d]))
+        except (TypeError, KeyError, AttributeError):
+            data['meta'][d] = None
+
+    try:
+        saved = models.AutoSave.objects.get(pk=data['autosave_id'] or None)
+    except models.AutoSave.DoesNotExist:
+        saved = models.AutoSave.objects.create(
+            unit_test_collection_id=data['meta']['unit_test_collection_id'],
+            test_list_instance_id=data.get('test_list_instance') or None,
+            created_by=request.user,
+            modified_by=request.user,
+            test_list_id=data['meta']['test_list_id'],
+            data={},
+        )
+
+    saved.work_started = data['meta']['work_started'] or timezone.now()
+    saved.work_completed = data['meta']['work_completed']
+    try:
+        saved.day = int(data['meta']['cycle_day']) - 1
+    except (ValueError, TypeError):
+        pass
+
+    saved.modified_by = request.user
+    saved.data = {
+        'tests': data['tests'],
+        'comments': data['comments'],
+        'skips': data['skips'],
+        'tli_comment': data['tli_comment'],
+    }
+    saved.save()
+
+    return JsonResponse({'ok': True, 'autosave_id': saved.pk})
+
+
+def autosave_load(request):
+    autosave_id = request.GET.get("autosave_id")
+    auto = get_object_or_404(models.AutoSave, pk=autosave_id)
+
+    data = {
+        'meta': {
+            'work_started': timezone.localtime(auto.work_started) if auto.work_started else None,
+            'work_completed': timezone.localtime(auto.work_completed) if auto.work_completed else None,
+        },
+        'data': auto.data,
+    }
+
+    return JsonResponse(data, encoder=QATrackJSONEncoder)
 
 
 class FrequencyList(UTCList):
