@@ -928,6 +928,33 @@ class Test(models.Model, TestPackMixin):
 
     objects = TestManager()
 
+    @classmethod
+    def allow_type_transition(self, from_, to):
+
+        # for now we will limit test type changes from calculated to
+        # non-calculated so that editing a test list instance won't overwrite
+        # manually entered results with calculated results.
+
+        allowed_from_to = [
+            (COMPOSITE, SIMPLE),
+            (COMPOSITE, CONSTANT),
+            (COMPOSITE, WRAPAROUND),
+
+            (SIMPLE, WRAPAROUND),
+            (SIMPLE, CONSTANT),
+
+            (WRAPAROUND, SIMPLE),
+            (WRAPAROUND, CONSTANT),
+
+            (CONSTANT, SIMPLE),
+            (CONSTANT, WRAPAROUND),
+
+            (STRING_COMPOSITE, STRING),
+
+            (MULTIPLE_CHOICE, STRING)
+        ]
+        return (from_, to) in allowed_from_to
+
     def is_numerical_type(self):
         """return whether or not this is a numerical test"""
         return self.type in NUMERICAL_TYPES

@@ -884,14 +884,23 @@ class TestForm(forms.ModelForm):
         test_type = cleaned_data.get("type")
         user_changing_type = self.instance.type != test_type
         has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
-        if user_changing_type and has_history:
+        if user_changing_type and has_history and not models.Test.allow_type_transition(self.instance.type, test_type):
             msg = _(
-                "You can't change the test type of a test that has already been performed. "
-                "Revert to '%(test_type)s' before saving."
+                "You can't change the test type from %(old_test_type)s to %(new_test_type)s for a test that "
+                "has already been performed. Revert to '%(old_test_type)s' before saving or create a new test with "
+                "'Save as New'."
             )
-            ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
-            ttype_label = models.TEST_TYPE_CHOICES[ttype_index][1]
-            self.add_error('type', forms.ValidationError(msg % {'test_type': ttype_label}))
+            old_ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(self.instance.type)
+            old_ttype_label = models.TEST_TYPE_CHOICES[old_ttype_index][1]
+            new_ttype_index = [ttype for ttype, label in models.TEST_TYPE_CHOICES].index(test_type)
+            new_ttype_label = models.TEST_TYPE_CHOICES[new_ttype_index][1]
+            self.add_error(
+                'type',
+                forms.ValidationError(msg % {
+                    'old_test_type': old_ttype_label,
+                    'new_test_type': new_ttype_label,
+                })
+            )
 
         if test_type not in models.NUMERICAL_TYPES:
             cleaned_data['formatting'] = ''
