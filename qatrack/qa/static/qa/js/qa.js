@@ -871,7 +871,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.initialize = function(){
             var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e);});
 
-            self.$autosave_id = $("#autosave-id");
+            self.$autosave_id = $("#id_autosave_id");
             self.autosave_id = getParameterByName("autosave_id");
 
             self.test_list_id = $("#test-list-id").val();
@@ -1126,6 +1126,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 autosave_id: self.$autosave_id.val(),
                 meta: meta,
                 test_list_id: self.test_list_id,
+                test_list_instance: editing_tli,
                 unit_id: self.unit_id,
                 tests: qa_values,
                 comments: comments,

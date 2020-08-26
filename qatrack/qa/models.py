@@ -2428,9 +2428,17 @@ class AutoSave(models.Model):
 
     test_list = models.ForeignKey(
         TestList,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         editable=False,
         verbose_name=_l("Test List"),
+    )
+
+    test_list_instance = models.ForeignKey(
+        TestListInstance,
+        on_delete=models.CASCADE,
+        editable=False,
+        verbose_name=_l("Test List Instance"),
+        null=True,
     )
 
     work_started = models.DateTimeField(

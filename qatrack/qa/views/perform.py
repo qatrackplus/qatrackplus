@@ -1198,7 +1198,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 }
                 messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
-        auto = self.request.POST.get("autosave-id")
+        auto = form.cleaned_data.get("autosave_id")
         if auto:
             models.AutoSave.objects.filter(pk=auto).delete()
 
@@ -1427,7 +1427,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                     msg = _('Error sending notification email.')
                     messages.add_message(request=self.request, message=msg, level=messages.ERROR)
 
-            auto = self.request.POST.get("autosave-id")
+            auto = form.cleaned_data.get("autosave_id")
             if auto:
                 models.AutoSave.objects.filter(pk=auto).delete()
 
@@ -1576,6 +1576,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
 
+        context["autosaves"] = list(
+            self.object.unit_test_collection.autosave_set.order_by("-created").select_related("modified_by")
+        )
+
         return context
 
 
@@ -1624,6 +1628,7 @@ def autosave(request):
     except models.AutoSave.DoesNotExist:
         saved = models.AutoSave.objects.create(
             unit_test_collection_id=data['meta']['unit_test_collection_id'],
+            test_list_instance_id=data.get('test_list_instance') or None,
             created_by=request.user,
             modified_by=request.user,
             test_list_id=data['meta']['test_list_id'],

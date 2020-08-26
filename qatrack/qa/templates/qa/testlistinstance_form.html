@@ -474,7 +474,8 @@
                         <div class="row">
                             <div class="col-sm-12">
 
-                                <input type="hidden" name="autosave-id" id="autosave-id" value=""/>
+                                <!--input type="hidden" name="autosave-id" id="autosave-id" value=""/-->
+                                {{ form.autosave_id }}
                                 <input type="hidden" id="unit-test-collection-id" value="{{ unit_test_collection.pk }}"/>
                                 <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
                                 <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
@@ -876,7 +877,10 @@
                     <ul id="autosave-list" class="treeview-menu" style="display: none;">
                       {% for auto in autosaves %}
                         <li>
-                          <a title="Resume session auto-saved for {{ auto.modified_by }} on {{ auto.modified }}" class="row" href="?autosave_id={{ auto.id }}&day={{ auto.day | add:"1" }}&next={{ request.GET.next }}">
+                          <a title="Resume session auto-saved for {{ auto.modified_by }} on {{ auto.modified }}"
+                             class="row"
+                             href="{% if auto.test_list_instance_id %}{% url "continue_tli" pk=auto.test_list_instance_id %}{% endif %}?autosave_id={{ auto.id }}&day={{ auto.day | add:"1" }}&next={{ request.GET.next }}"
+                          >
                             {{ auto.modified }}
                           </a>
                         </li>
