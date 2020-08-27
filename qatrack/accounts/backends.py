@@ -152,9 +152,9 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         self.logger.info("Updating user info for %s" % user.username)
 
         # get personal info
-        user.email = user_attrs['email']
-        user.last_name = user_attrs['last_name']
-        user.first_name = user_attrs['first_name']
+        user.email = user_attrs['email'] or user.email
+        user.last_name = user_attrs['last_name'] or user.last_name
+        user.first_name = user_attrs['first_name'] or user.first_name
 
         user_groups = user.groups.all()
         for ad_group in user_attrs['member_of']:

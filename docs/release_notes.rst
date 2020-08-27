@@ -270,7 +270,11 @@ Authentication
 
 * A new :ref:`AD_GROUP_MAP <settings_ad>` setting has been added so 
   that users can automatically be added to QATrack+ groups based
-  on their AD group memberships.
+  on their AD group memberships. 
+
+* When a user logs in through the AD backend, their email address, first name,
+  and lastname will be updated to match the values found in Active Directory.
+
 
 
 Other Minor Features & Bugs Fixed
