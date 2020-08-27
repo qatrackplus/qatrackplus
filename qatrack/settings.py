@@ -378,8 +378,8 @@ AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
 # If using non-SSL use these
 AD_LDAP_PORT = 389
 AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
-AD_LDAP_USER = ''
-AD_LDAP_PW = ''
+AD_LDAP_USER = ''  # only used for WindowsIntegratedAuthenticationBackend
+AD_LDAP_PW = ''  # only used for WindowsIntegratedAuthenticationBackend
 
 AD_LU_ACCOUNT_NAME = "sAMAccountName"
 AD_LU_MAIL = "mail"
@@ -395,11 +395,22 @@ AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
 AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
 AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_NAME, AD_LU_MEMBER_OF]
-AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
-AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
-AD_DEBUG_FILE = None
-AD_DEBUG = False
+# If AD_MEMBERSHIP_REQ is not empty, when a user logs in the AD groups
+# they belong to will be compared with AD_MEMBERSHIP_REQ and if the
+# user does not belong to at least one of those AD groups, they will
+# not be allowed to log in
+AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
+
+# AD_GROUP_MAP is a map from AD Group names to QATrack+ group names in form
+# of {'AD group name': 'QATrack+ Group Name',}
+# e.g. {'Your Hospital - Physics': "Physics"}.
+# When a user logs in to QATrack+, their AD groups will be
+# checked and they will automatically be added to the
+# corresponding QATrack+ group based on this map.
+AD_GROUP_MAP = {}
+
+AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
 CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
 
@@ -471,6 +482,15 @@ LOGGING = {
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
+        'auth': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "auth.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 1,  # defaults to 1, only necessary for other values
+            'backupCount': 1,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
@@ -510,6 +530,16 @@ LOGGING = {
         },
         'django-q': {
             'handlers': ['console', 'django-q'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'auth.QATrackAccountBackend': {
+            'handlers': ['console', 'auth'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'auth.ActiveDirectoryGroupMembershipSSLBackend': {
+            'handlers': ['console', 'auth'],
             'level': 'DEBUG',
             'propagate': True,
         },

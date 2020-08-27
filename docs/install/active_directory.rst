@@ -12,16 +12,19 @@ an Active Directory backend and it's configuration will be described below.
 Installation of python-ldap
 ---------------------------
 
+Windows
+.......
+
 If you happen to be on a Windows system with Visual Studio installed, you
-should just be able to do `pip install pyldap` and have the latest version of
+should just be able to do `pip install python-ldap` and have the latest version of
 the pyldap package installed.  Otherwise,  there are binaries available on this
-page: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyldap.  Download the binary
+page: https://www.lfd.uci.edu/~gohlke/pythonlibs/#python-ldap.  Download the binary
 relevant to your Python 3 installation (e.g.
-pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl) and then pip install it:
+python_ldap‑3.3.1‑cp36‑cp36m‑win_amd64.whl) and then pip install it:
 
 .. code-block:: console
 
-    pip install C:\path\to\pyldap‑2.4.45‑cp36‑cp36m‑win_amd64.whl
+    pip install C:\path\to\python_ldap‑3.3.1‑cp36‑cp36m‑win_amd64.whl
 
 
 To confirm your installation is working, activate your virtual env
@@ -33,6 +36,23 @@ To confirm your installation is working, activate your virtual env
     python -c "import ldap; print(ldap.__version__)"
 
 If that commands prints the ldap version then ldap is installed correctly.
+
+Linux
+.....
+
+There are some pre-requisistes that need to be installed before python-ldap. 
+
+At the time of writing on Ubuntu this looks like:
+
+.. code-block:: console
+
+    sudo apt-get install build-essential python3-dev python2.7-dev \
+        libldap2-dev libsasl2-dev slapd ldap-utils
+
+    source ~/venvs/qatrack3/bin/activate
+    pip install python-ldap
+
+See https://www.python-ldap.org/en/latest/installing.html for more details.
 
 
 Configuring QATrack+ to use your Active Directory Server

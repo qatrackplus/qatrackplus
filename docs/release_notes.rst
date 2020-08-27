@@ -266,6 +266,12 @@ Authentication
 * A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
   added to control whether users are allowed to register their own accounts.
 
+* The :ref:`AD_MEMBERSHIP_REQ <settings_ad>` setting is now honoured.
+
+* A new :ref:`AD_GROUP_MAP <settings_ad>` setting has been added so 
+  that users can automatically be added to QATrack+ groups based
+  on their AD group memberships.
+
 
 Other Minor Features & Bugs Fixed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -280,6 +286,8 @@ Deprecations & Discontinuations
 * Python 3.4: As of March 2019, Python 3.4 is no longer receiving updates and
   therefore QATrack+ will no longer be supporting Python 3.4 installations.
 
+* The settings `AD_DEBUG` & `AD_DEBUG_FILE` are no longer used.  Instead,
+  information is now logged to an 'auth.log' file.
 
 
 QATrack+ v0.3.0.15 Release Notes
