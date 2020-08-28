@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^contenttypes/', include('qatrack.api.contenttypes.urls')),
     url(r'^parts/', include('qatrack.api.parts.urls')),
     url(r'^qa/', include('qatrack.api.qa.urls')),
+    url(r'^qc/', include('qatrack.api.qa.urls')),
     url(r'^servicelog/', include('qatrack.api.service_log.urls')),
     url(r'^units/', include('qatrack.api.units.urls')),
     url(r'^schema/$', schema_view),
