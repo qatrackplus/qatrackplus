@@ -16,6 +16,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from qatrack.api.attachments.serializers import AttachmentSerializer
+from qatrack.api.comments.serializers import CommentSerializer
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models, signals
 from qatrack.qa.views.perform import CompositePerformer, UploadHandler
@@ -153,6 +154,7 @@ class TestInstanceCreator(serializers.HyperlinkedModelSerializer):
 class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
     attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
+    comments = CommentSerializer(many=True, required=False)
 
     site_url = serializers.SerializerMethodField(read_only=True)
 
