@@ -25,6 +25,9 @@ Non backwards compatible changes
 
 * The `day` key is now required when performing a Test List Cycle via the API
 
+* Upload tests can not have reference/tolerance values set.  Allowing this originally
+  was an implementation oversight.
+
 
 Major Features
 ^^^^^^^^^^^^^^

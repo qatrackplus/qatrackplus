@@ -134,6 +134,12 @@ class UnitTestInfoForm(forms.ModelForm):
                 raise forms.ValidationError(
                     _("You can't use a non-multiple choice tolerance with a multiple choice or string test")
                 )
+        elif self.instance.test.type == models.UPLOAD and (
+            self.cleaned_data.get("tolerance") or self.cleaned_data.get("reference_value") not in ("", None)
+        ):
+            raise forms.ValidationError(
+                _("Upload test types should not have reference or tolerance set. Please clear them before saving.")
+            )
         else:
             if "reference_value" not in self.cleaned_data:
                 return self.cleaned_data
