@@ -37,32 +37,6 @@ if settings.USE_PARTS:
         get_part_number.admin_order_field = "cost"
 
 
-    class StorageInlineFormSet(forms.BaseInlineFormSet):
-
-        model = p_models.Storage
-
-        def clean(self):
-
-            forms_to_delete = self.deleted_forms
-            valid_forms = []
-            changed_forms = []
-            for form in self.forms:
-                if form not in forms_to_delete and not form.empty_permitted:
-                    if form.is_valid():
-                        valid_forms.append(form)
-                    if form.has_changed():
-                        changed_forms.append(form)
-
-            seen_locations = set()
-            for form in valid_forms:
-                if form.cleaned_data.get('location', None) in seen_locations:
-                    for changed_form in changed_forms:
-                        if changed_form.cleaned_data.get('location', None) == form.cleaned_data.get('location', None):
-                            changed_form.add_error('location', ValidationError('Location already exists'))
-
-                seen_locations.add(form.cleaned_data.get('location', None))
-
-
     class StorageInlineForm(forms.ModelForm):
 
         class Meta:
@@ -76,16 +50,11 @@ if settings.USE_PARTS:
                 self.fields['location'].widget.attrs.update({'placeholder': '<no specific location>'})
                 self.fields['location'].disabled = 'disabled'
 
-        def validate_unique(self):
-            """validate unique moved to formset because it was very inefficient here"""
-            pass
-
 
     class StorageInline(admin.TabularInline):
 
         model = p_models.Storage
         form = StorageInlineForm
-        formset = StorageInlineFormSet
         parent_instance = None
         template = 'admin/parts/storage/edit_inline/tabular_paginated.html'
 
