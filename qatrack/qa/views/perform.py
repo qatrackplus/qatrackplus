@@ -647,7 +647,15 @@ class CompositePerformer:
                     'comment': "",
                     'user_attached': [],
                 }
-                deps_not_complete = any(self.data['tests'][s] in (None, "") for s in self.all_dependencies[slug])
+                deps_not_complete = False
+                for s in self.all_dependencies[slug]:
+                    incomplete_composite = (
+                        s in self.composite_tests and
+                        (results.get(s) is None or results[s]['value'] is None or results[s]['error'])
+                    )
+                    incomplete_simple = s not in self.composite_tests and self.data['tests'][s] in (None, "")
+                    deps_not_complete = incomplete_composite or incomplete_simple
+
                 if deps_not_complete:
                     results[slug]['error'] = None
             finally:
