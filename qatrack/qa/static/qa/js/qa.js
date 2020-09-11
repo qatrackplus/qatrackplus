@@ -1043,6 +1043,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 _.each(data.data.tests, function(idx, test){
 
                     var ti = self.tests_by_slug[test];
+                    if (!ti){
+                        // Test was removed since autosave data was created
+                        return;
+                    }
 
                     var comment = data.data.comments[test];
                     if (comment){
