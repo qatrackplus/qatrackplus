@@ -826,6 +826,7 @@ class TestUnitTestInfoAdmin(TestCase):
         self.assertEqual(self.uti_1.reference.value, self.r_2.value)
 
         data['reference_value'] = ''
+        data['tolerance'] = ''
         form = admin.get_form(request)(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         admin.save_model(request, admin.save_form(request, form, True), form, True)
@@ -993,6 +994,30 @@ class TestUnitTestInfoAdmin(TestCase):
         data = form.initial
         data['tolerance'] = self.tol_5.id
         data['reference_value'] = 0
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4, data=data)
+        self.assertFalse(form.is_valid())
+
+    def test_bad_percent_tol_blank_ref(self):
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4)
+        data = form.initial
+        data['tolerance'] = self.tol_5.id
+        data['reference_value'] = ''
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4, data=data)
+        self.assertFalse(form.is_valid())
+
+    def test_bad_percent_tol_non_numerical_ref(self):
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4)
+        data = form.initial
+        data['tolerance'] = self.tol_5.id
+        data['reference_value'] = 'asdf'
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_4, data=data)

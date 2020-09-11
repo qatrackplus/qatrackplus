@@ -129,7 +129,7 @@ class UnitTestInfoForm(forms.ModelForm):
         """make sure valid numbers are entered for boolean data"""
 
         if (self.instance.test.type == models.MULTIPLE_CHOICE or
-                self.instance.test.is_string_type()) and self.cleaned_data.get("tolerance"):
+            self.instance.test.is_string_type()) and self.cleaned_data.get("tolerance"):
             if self.cleaned_data["tolerance"].type != models.MULTIPLE_CHOICE:
                 raise forms.ValidationError(
                     _("You can't use a non-multiple choice tolerance with a multiple choice or string test")
@@ -148,7 +148,7 @@ class UnitTestInfoForm(forms.ModelForm):
 
             t = self.instance.test
             if t.type == models.WRAPAROUND and not (t.wrap_low <= ref_value <= t.wrap_high):
-                msg = _("Referernce values for this Wraparound test must be set between {low} and {high}")
+                msg = _("Reference values for this Wraparound test must be set between {low} and {high}")
                 raise forms.ValidationError(msg.format(low=t.wrap_low, high=t.wrap_high))
 
             tol = self.cleaned_data.get("tolerance")
@@ -156,6 +156,10 @@ class UnitTestInfoForm(forms.ModelForm):
                 if ref_value == 0 and tol.type == models.PERCENT:
                     raise forms.ValidationError(
                         _("Percentage based tolerances can not be used with reference value of zero (0)")
+                    )
+                elif ref_value in ('', None):
+                    raise forms.ValidationError(
+                        _("You must set a reference value when using a numerical tolerance")
                     )
 
         return self.cleaned_data
