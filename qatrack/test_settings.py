@@ -9,6 +9,7 @@ USE_SERVICE_LOG = True
 USE_PARTS = True
 HTTP_OR_HTTPS = "http"
 REVIEW_BULK = True
+TIME_ZONE = 'America/Toronto'
 
 
 class SimplePasswordHasher(BasePasswordHasher):
