@@ -438,7 +438,12 @@ class Upload(JSONResponseMixin, View):
         Generally people should use the OO interface to MPL rather than
         pyplot, because pyplot is not threadsafe.
         """
-        plt.clf()
+        try:
+            plt.clf()
+        except KeyError:
+            # Occasionnaly this can fail with a key error when multiple uploads
+            # are being analyzed at same time. Not 100% sure why...
+            pass
         return resp
 
     def reprocess(self):

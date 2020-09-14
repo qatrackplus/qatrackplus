@@ -89,8 +89,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
     // keeps track of latest composite/autosave calls so we can
     // ignore older ones f they comlete after the latest one
-    var latest_composite_call;
-    var latest_autosave_call;
+    var latest_composite_call = null;
+    var composite_update_required = false;
+    var latest_autosave_call = null;
 
     /***************************************************************/
     //minimal Pub/Sub functionality
@@ -909,7 +910,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
         };
 
-        this.calculate_composites = function(opts){
+        this.calculate_composites_ = function(opts){
+
+            if (latest_composite_call !== null){
+                composite_update_required = true;
+                return;
+            }
 
             opts = opts || {set_defaults: false};
 
@@ -947,9 +953,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var on_success = function(data, status, XHR){
 
-                if (latest_composite_call !== XHR){
+                if (latest_composite_call !== null && latest_composite_call !== XHR){
                     return;
                 }
+
                 self.submit.attr("disabled", false);
 
                 if (data.success){
@@ -989,20 +996,26 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             };
 
-            var on_complete = function(){
+            var on_complete = function(data, status, XHR){
+                latest_composite_call = null;
                 processing_off();
                 self.submit.attr("disabled", false);
+
                 if (opts.set_defaults){
                     window.init_task_count -= 1;
-                    return;
                 }else{
                     $('body').removeClass("loading");
                     $.Topic("qaUpdated").publish();
+                }
+
+                if (composite_update_required){
+                    setTimeout(self.calculate_composites, 100);
                 }
             };
 
             self.submit.attr("disabled", true);
 
+            composite_update_required = false;
             latest_composite_call = $.ajax({
                 type: "POST",
                 url: QAURLs.COMPOSITE_URL,
@@ -1014,6 +1027,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 traditional: true
             });
         };
+
+        this.calculate_composites = _.debounce(this.calculate_composites_, 4);
 
         this.load_autosave = function(){
 
@@ -1097,7 +1112,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
         };
 
-        this.autosave = function(){
+        this.autosave_ = function(){
 
             /* don't autosave until initialization done */
             if (window.init_task_count > 0){
@@ -1167,6 +1182,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 complete: on_complete
             });
         };
+        this.autosave = _.throttle(this.autosave_, 2000, {'trailing': true});
 
         this.has_failing = function(){
             return _.filter(self.test_instances, function(ti){
