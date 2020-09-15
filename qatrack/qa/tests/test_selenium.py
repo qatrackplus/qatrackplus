@@ -787,12 +787,13 @@ class TestPerformQC(BaseQATests):
 
         self.login()
         self.open(self.url)
+        time.sleep(0.2)
         inputs = self.driver.find_elements_by_class_name("qa-input")[:3]
         inputs[0].send_keys(1)
-        time.sleep(0.2)
         assert models.AutoSave.objects.count() == 0
-        inputs[0].send_keys(Keys.TAB)
-        time.sleep(0.2)
+        time.sleep(1)
+        inputs[0].send_keys(Keys.ENTER)
+        time.sleep(2.1)  # auto save is debounced with a 2s interval
         assert models.AutoSave.objects.count() == 1
 
     def test_load_autosave(self):
