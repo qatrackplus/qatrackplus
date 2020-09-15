@@ -259,6 +259,25 @@ def get_context_refs_tols(unit, tests):
     return refs, tols
 
 
+def cleanup_matplotlib():
+
+    """
+    At the end of any view which may use mpl.pyplot to generate a plot
+    we need to clean the figure, to attempt to  prevent any crosstalk
+    between plots.
+
+    Generally people should use the OO interface to MPL rather than
+    pyplot, because pyplot is not threadsafe.
+    """
+    try:
+        plt.clf()
+        plt.close('all')
+    except KeyError:
+        # Occasionaly this can fail with a key error when multiple uploads
+        # are being analyzed at same time. Not 100% sure why...
+        pass
+
+
 class UploadHandler:
 
     def __init__(self, user, data, fp):
@@ -430,20 +449,9 @@ class Upload(JSONResponseMixin, View):
                 "user_attached": [],
             }
             resp = self.render_json_response(results)
-        """
-        At the end of any view which may use mpl.pyplot to generate a plot
-        we need to clean the figure, to attempt to  prevent any crosstalk
-        between plots.
 
-        Generally people should use the OO interface to MPL rather than
-        pyplot, because pyplot is not threadsafe.
-        """
-        try:
-            plt.clf()
-        except KeyError:
-            # Occasionnaly this can fail with a key error when multiple uploads
-            # are being analyzed at same time. Not 100% sure why...
-            pass
+        cleanup_matplotlib()
+
         return resp
 
     def reprocess(self):
@@ -673,6 +681,8 @@ class CompositePerformer:
                 del self.calculation_context['__user_attached__'][:]
 
         skips = self.calculation_context['UTILS'].skips
+
+        cleanup_matplotlib()
 
         return {"success": True, "errors": [], "results": results, "skips": skips}
 
