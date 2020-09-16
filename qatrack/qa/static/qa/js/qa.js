@@ -1179,7 +1179,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var on_complete = function(){
                 autosaving_off();
-                if (_.isNull(self.latest_composite_call)){
+                if (_.isNull(latest_composite_call)){
                     enable_submit();
                 }
             };
