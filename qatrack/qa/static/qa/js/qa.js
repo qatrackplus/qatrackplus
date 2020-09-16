@@ -53,6 +53,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     var $autoSaveStatusSpinners = $autoSaveStatus.find("i");
     var $autoSaveStatusContent = $autoSaveStatus.find("span");
 
+    var $submit = $("#submit-qa");
+
     function processing_on(){
         $calcStatusSpinners.addClass("fa-spin fa-circle-o-notch").removeClass("fa-check-circle").attr("title", "Calculating");
         $calcStatusContent.html("Performing calculations...");
@@ -76,6 +78,20 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         $autoSaveStatusSpinners.removeClass("fa-spin fa-circle-o-notch").addClass("fa-save").attr("title", "Last auto saved at " + saved);
         $autoSaveStatusContent.html(saved);
         $autoSaveStatus.removeClass("label-warning").addClass("label-info");
+    }
+
+    function disable_submit(){
+        $submit.attr({
+            "disabled": true,
+            "title": "Please wait until the calculations complete before submitting"
+        });
+    }
+
+    function enable_submit(){
+        $submit.attr({
+            "disabled": false,
+            "title": "Click to submit your QC data"
+        });
     }
 
     /***************************************************************/
@@ -957,8 +973,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     return;
                 }
 
-                self.submit.attr("disabled", false);
-
                 if (data.success){
                     _.each(data.results,function(result, name){
                         var ti = self.tests_by_slug[name];
@@ -999,7 +1013,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             var on_complete = function(data, status, XHR){
                 latest_composite_call = null;
                 processing_off();
-                self.submit.attr("disabled", false);
+                enable_submit();
 
                 if (opts.set_defaults){
                     window.init_task_count -= 1;
@@ -1013,7 +1027,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 }
             };
 
-            self.submit.attr("disabled", true);
+            disable_submit();
 
             composite_update_required = false;
             latest_composite_call = $.ajax({
@@ -1094,11 +1108,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var on_complete = function(){
                 processing_off();
-                self.submit.attr("disabled", false);
+                enable_submit();
                 window.init_task_count -= 1;
             };
 
-            self.submit.attr("disabled", true);
+            disable_submit();
 
             window.init_task_count += 1;
 
@@ -1161,16 +1175,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
                 self.$autosave_id.val(data.autosave_id);
 
-                self.submit.attr("disabled", false);
-
             };
 
             var on_complete = function(){
                 autosaving_off();
-                self.submit.attr("disabled", false);
+                if (_.isNull(self.latest_composite_call)){
+                    enable_submit();
+                }
             };
 
-            self.submit.attr("disabled", true);
+            disable_submit();
 
             latest_autosave_call = $.ajax({
                 type: "POST",
