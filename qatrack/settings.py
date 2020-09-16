@@ -23,7 +23,7 @@ SEND_BROKEN_LINK_EMAILS = False
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 
-VERSION = "0.3.0.17"
+VERSION = "0.3.0.18"
 BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 

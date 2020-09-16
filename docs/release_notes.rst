@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+QATrack+ v0.3.0.18 Release Notes
+--------------------------------
+
+- Fixed a bug where Test Lists from Test List Cycles with Ad-Hoc frequency
+  would not show up when charting
+
 QATrack+ v0.3.0.16 Release Notes
 --------------------------------
 
