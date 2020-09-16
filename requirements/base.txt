@@ -38,7 +38,7 @@ pydicom==1.1.0
 scikit-image<0.14.0; python_version == '3.4'
 scikit-learn<1.0; python_version == '3.4'
 pylinac==2.1.0.1; python_version < '3.6'
-pylinac-qatrackplus==2.3.1.4 ; python_version >= '3.6'
+pylinac-qatrackplus==2.3.1.5 ; python_version >= '3.6'
 Pillow<6
 pynliner==0.8.0
 pytest-cov==2.8.1
