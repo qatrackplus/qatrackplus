@@ -47,7 +47,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             slimscroll: true,
             selectAll: true,
             selectNone: true,
-            initially_displayed: true
+            initially_displayed: true,
+            renderOption: function(opt_data){
+                var div_id = 'felter-option-site-div-' + opt_data.value;
+                return $('<div id="' + div_id + '" class="felter-option' + (opt_data.selected ? ' felter-selected' : '') + '" title="' + $(opt_data.$option).attr('title') + '">'  + opt_data.text + '</div>');
+            }
         });
         $units.felter({
             mainDivClass: 'col-sm-2',
@@ -88,7 +92,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     },
                     is_ajax: false
                 }
-            ]
+            ],
+            renderOption: function(opt_data){
+                var div_id = 'felter-option-unit-div-' + opt_data.value;
+                return $('<div id="' + div_id + '" class="felter-option' + (opt_data.selected ? ' felter-selected' : '') + '" title="' + $(opt_data.$option).attr('title') + '">'  + opt_data.text + '</div>');
+            }
         });
 
         $frequencies.felter({
@@ -113,7 +121,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     },
                     is_ajax: false
                 }
-            ]
+            ],
+            renderOption: function(opt_data){
+                var div_id = 'felter-option-freq-div-' + opt_data.value;
+                return $('<div id="' + div_id + '" class="felter-option' + (opt_data.selected ? ' felter-selected' : '') + '" title="' + $(opt_data.$option).attr('title') + '">'  + opt_data.text + '</div>');
+            }
         });
 
         $test_lists.felter({
@@ -213,7 +225,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     },
                     is_ajax: true
                 }
-            ]
+            ],
+            renderOption: function(opt_data){
+                var div_id = 'felter-option-tl-div-' + opt_data.value;
+                return $('<div id="' + div_id + '" class="felter-option' + (opt_data.selected ? ' felter-selected' : '') + '" title="' + $(opt_data.$option).attr('title') + '">'  + opt_data.text + '</div>');
+            }
         });
 
         $tests.felter({
@@ -256,7 +272,11 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     },
                     is_ajax: true
                 }
-            ]
+            ],
+            renderOption: function(opt_data){
+                var div_id = 'felter-option-test-div-' + opt_data.value;
+                return $('<div id="' + div_id + '" class="felter-option' + (opt_data.selected ? ' felter-selected' : '') + '" title="' + $(opt_data.$option).attr('title') + '">'  + opt_data.text + '</div>');
+            }
         });
 
         $tests.change(function() {

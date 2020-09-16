@@ -297,6 +297,20 @@ Deprecations & Discontinuations
   information is now logged to an 'auth.log' file.
 
 
+QATrack+ v0.3.0.18 Release Notes
+--------------------------------
+
+- Fixed a bug where Test Lists from Test List Cycles with Ad-Hoc frequency
+  would not show up when charting
+
+QATrack+ v0.3.0.16 Release Notes
+--------------------------------
+
+- Allow disabling warning message by setting TestList.warning_message blank
+- Add test type to html class for qa-valuerows so they can more
+  easily be targeted in JavaScript code.
+
+
 QATrack+ v0.3.0.15 Release Notes
 --------------------------------
 

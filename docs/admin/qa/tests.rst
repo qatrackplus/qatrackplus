@@ -398,14 +398,16 @@ When your script (calculation procedure) is executed, it has access to
       is found, `None` will be returned.
 
     - **UTILS.previous_test_instance(test, same_list_only=True,
-      include_in_progress=False)** retrieves the most recent :term:`Test
-      Instance` performed on this unit for the input `test`.  If
-      `same_list_only=True` then only Test Instances's which were created as
+      include_in_progress=False, exclude_skipped=True)** retrieves the most
+      recent :term:`Test Instance` performed on this unit for the input `test`.
+      If `same_list_only=True` then only Test Instances's which were created as
       part of the current Test List being performed will be included,
       otherwise, any Test Instance for this Test & Unit will be returned.  If
       `include_in_progress=True` than Test List Instances which are marked as
-      `In Progress` will be included, otherwise they will be excluded. If no
-      previous Test Instance is found, `None` will be returned.
+      `In Progress` will be included, otherwise they will be excluded. If
+      `exclude_skipped=False`, then skipped results will be included, otherwise
+      only non-skipped results will be searched. If no previous Test Instance
+      is found, `None` will be returned.
 
     - **UTILS.get_figure()** will get you a `matplotlib Figure instance
       <https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html>`__

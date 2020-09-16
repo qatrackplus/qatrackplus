@@ -1152,7 +1152,13 @@ def get_utc_tlc_ids(active=None, units=None, frequencies=None):
         tlcs = tlcs.filter(unit__in=units)
 
     if frequencies is not None:
-        tlcs = tlcs.filter(frequency__in=frequencies)
+        if None in frequencies:
+            q = Q(frequency=None)
+            if frequencies:
+                q |= Q(frequency__in=[f for f in frequencies if f is not None])
+        else:
+            q = Q(frequency__in=frequencies)
+        tlcs = tlcs.filter(q)
 
     tlcs = tlcs.values(
         'object_id'
@@ -1179,10 +1185,9 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
 
     if frequencies is not None:
         if None in frequencies:
-            frequencies.remove(None)
             q = Q(frequency=None)
             if frequencies:
-                q |= Q(frequency__in=frequencies)
+                q |= Q(frequency__in=[f for f in frequencies if f is not None])
         else:
             q = Q(frequency__in=frequencies)
         tls = tls.filter(q)
