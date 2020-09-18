@@ -36,6 +36,7 @@ var QAUtils = new function() {
 
     this.NUMERICAL = "numerical";
     this.SIMPLE = "simple";
+    this.WRAPAROUND = "wraparound";
     this.CONSTANT = "constant";
     this.BOOLEAN = "boolean";
     this.MULTIPLE_CHOICE = "multchoice";
@@ -45,8 +46,9 @@ var QAUtils = new function() {
     this.STRING_COMPOSITE = "scomposite";
     this.UPLOAD = "upload";
     this.STRING = "string";
-    this.NUMBER_TEST_TYPES = [this.SIMPLE, this.CONSTANT, this.COMPOSITE];
+    this.NUMBER_TEST_TYPES = [this.SIMPLE, this.WRAPAROUND, this.CONSTANT, this.COMPOSITE];
     this.READ_ONLY_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE, this.CONSTANT];
+    this.COMPOSITE_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE];
 
     this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
     this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -194,6 +196,27 @@ var QAUtils = new function() {
             var dd = parseInt(date[0]);
             var mm = parseInt(date[1])-1;
             var yy = parseInt(date[2]);
+            var hh = parseInt(time[0]);
+            var nn = parseInt(time[1]);
+            return new Date(yy, mm, dd, hh, nn);
+        }catch(err){
+            return null;
+        }
+
+    };
+
+   //parse a date in dd-mmm-yyyy hh:mm format (24 hour clock) e..g 01 Oct 2019
+    this.parse_dd_mmm_yyyy_date= function(s){
+        var months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+        try {
+            var dt = s.split(" ");
+
+            var dd = parseInt(dt[0]);
+            var mm = months.indexOf(dt[1].toLowerCase());
+            var yy = parseInt(dt[2]);
+
+            var time = dt[3].split(':');
             var hh = parseInt(time[0]);
             var nn = parseInt(time[1]);
             return new Date(yy, mm, dd, hh, nn);

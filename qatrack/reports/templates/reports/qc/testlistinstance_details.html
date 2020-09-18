@@ -1,0 +1,271 @@
+{% extends base_template %}
+{% load i18n %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load attach_tags %}
+{% load comments %}
+
+{% block content %}
+
+{% for tli in queryset %}
+
+  {% if not forloop.first and report_format != "pdf" %}
+    <hr/>
+  {% endif %}
+
+  <div {% if not forloop.first %}style="page-break-before: always; padding-top:20px;" {% endif %}>
+
+    <div class="row" >
+      <div class="col-xs-12">
+        <strong>{% trans "Test List Instance Details" %} ::</strong>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-6">
+        <dl class="dl-horizontal">
+          <dt>{% trans "Unit"%}:</dt>
+          <dd>{{tli.unit_test_collection.unit.name}}</dd>
+
+          <dt>{% trans "Test List" %}:</dt>
+          <dd>
+              {{tli.test_list.name}}
+          </dd>
+
+          {% if "cycle" in tli.unit_test_collection.content_type.name %}
+            <dt>{% trans "Test List Cycle" %}:</dt>
+            <dd>{{ tli.unit_test_collection.name }}</dd>
+          {% endif %}
+
+          <dt>{% trans "Performed By" %}:</dt>
+          <dd>{{ tli.created_by }} {% if tli.created_by.email %} ({{ tli.created_by.email }}){% endif %}</dd>
+
+          <dt>{% trans "Reviewed by" %}:</dt>
+          <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}} {% else %}<em>Not reviewed</em>{% endif %}</dd>
+        </dl>
+      </div>
+      <div class="col-xs-6">
+        <dl class="dl-horizontal">
+
+          <dt>{% trans "Work Started" %}:</dt>
+          <dd>{{tli.work_started}}</dd>
+
+          <dt>{% trans "Work Completed" %}:</dt>
+          <dd>
+              {% if tli.in_progress %}
+              <em>{% trans "In Progress" %}</em>
+              {% else %}
+                {{tli.work_completed}}
+              {% endif %}
+          </dd>
+
+          <dt>{% trans "Duration" %}:</dt>
+          <dd>
+              {% if not tli.in_progress%}
+                  {{tli.duration|as_time_delta}}
+              {% else %}
+              <em>{% trans "In Progress" %}</em>
+              {% endif %}
+          </dd>
+
+          <dt>{% trans "Last Modification" %}:</dt>
+          <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
+
+        </dl>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        {% if tli.test_list.description %}
+          <div class="row">
+            <div class="col-md-12">
+              <dl class="dl-horizontal">
+                <dt>{% trans "Description" %}:</dt>
+                <dd>{{tli.test_list.description.strip|safe}}</dd>
+              </dl>
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+    {% if perms.service_log.view_serviceevent %}
+      <div class="row">
+        <div class="col-xs-12">
+          <strong>{% trans "Service Log Details" %}::</strong>
+          <dl class="dl-horizontal">
+            <dt>{% trans "Events Initiated" %}:</dt>
+            <dd>
+              {% for se in tli.serviceevents_initiated.all %}
+                <a href="{% url 'sl_details' pk=se.id %}"
+                  title="{% trans "View service event" %}"
+                  >{% trans "Service Event" %} {{ se.id }}</a>{% if not forloop.last %},{% endif %}
+              {% empty %}
+              <em>{% trans "None" %}</em>
+              {% endfor %}
+            </dd>
+
+            <dt>{% trans "RtS for Events" %}:</dt>
+            <dd>
+              {% for se in tli.rtsqa_for_tli.all %}
+              <a href="{% url 'sl_details' pk=se.id %}"
+                  style="color: {{ se.service_status.colour }}"
+                  title="{% trans "View service event" %}"
+                  >{% trans "Service Event" %}{{ se.id }}</a>{% if not forloop.last %},{% endif %}
+                {% empty %}
+                <em>{% trans "None" %}</em>
+                {% endfor %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="row">
+      <div class="col-xs-12">
+        {% with borders=tli.sublist_borders %}
+          <table id="review-table" class="table table-bordered table-striped table-condensed" >
+            <thead>
+              <tr>
+                <th style="">{% trans "Test" %}<div></div></th>
+                <th style="width: 10%"  class="review-value">{% trans "Value" %}</th>
+                <th style="width: 8%" class="review-ref">{% trans "Reference" %}</th>
+                <th style="width: 25%">{% trans "Tolerance" %}</th>
+                <th style="width: 10%" class="review-status">{% trans "Pass/Fail" %}</th>
+                <th style="width: 10%" class="review-status">{% trans "Status" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ti in tli.testinstance_set.all %}
+
+                {% with test=ti.unit_test_info.test %}
+                  {% with borders.starts|lookup:forloop.counter0 as delim %}
+                    {% if delim and delim.class == "sublist" %}
+                      <tr class="{{delim.class }}">
+                        <td colspan="2">
+                          {% if delim.description %}
+                            <a class="show-sublist-details" href="#">
+                              {{ delim.name }}
+                            </a>
+                          {% else %}
+                              {{ delim.name }}
+                          {% endif %}
+                        </td>
+                        <td colspan="{% qa_table_colspan perms offset=2 %}">&nbsp;</td>
+                      </tr>
+                    {% endif %}
+                  {% endwith %}
+                  <tr>
+                    <td>{{test}}</td>
+                    <td class="review-value">
+                      <span
+                        class="label pass-fail {{ ti.pass_fail }}"
+                        title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}"
+                      >
+                        {% with ti.pass_fail as status %}
+                          {% if status == 'tolerance' %}
+                              <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
+                          {% elif status == 'action' %}
+                              <i class="pull-left fa fa-ban" aria-hidden="true"></i>
+                          {% elif status == 'ok' %}
+                              <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
+                          {% elif status == 'not_done' %}
+                              <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
+                          {% endif %}
+                        {% endwith %}
+                        {{ ti.value_display | safe}}
+                      </span>
+                    </td>
+                    <td class="review-ref">
+                      {% if ti.reference %}
+                        {{ ti.reference.value_display }}
+                      {% endif %}
+                    </td>
+                    <td style="font-size: 0.8em; padding-top: 8px;">
+                      {% if ti.tolerance %}
+                          {{ ti.tolerance.name }}
+                      {% endif %}
+                    </td>
+                    <td class="review-status">
+                      {{ti.get_pass_fail_display}}
+                    </td>
+                    <td class="review-status">
+                      {{ti.status.name}}
+                    </td>
+                  </tr>
+
+                  {% if ti.comment %}
+                  <tr>
+                    <td colspan="6" style="padding-left: 20px;"><em>Comment: {{ ti.comment }}</em></td>
+                  </tr>
+                  {% endif %}
+
+                  {% if ti.attachment_set.exists %}
+                    <tr class="qa-attach no-hover">
+                      <td colspan="6" style="padding-left: 20px"><em>{% trans "Attachments" %}:
+                          {% for attach in ti.attachment_set.all %}
+                            {{ attach|attachment_link:True }}
+                            {% if not forloop.last %}, {% endif %}
+                          {% endfor %}
+                      </td>
+                    </tr>
+                  {% endif %}
+                {%endwith%}
+
+                {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
+                  {% with borders.starts|lookup:forloop.counter as delim %}
+                    {% if not delim or delim.class != "sublist" %}
+                    <tr class="end-sublist">
+                        <td colspan="{% qa_table_colspan perms %}"></td>
+                    </tr>
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+
+              {% endfor %}
+
+              {% if tli.attachment_set.exists %}
+                <tr>
+                  <td><strong>{% trans "Attachments" %}</strong></td>
+
+                  <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
+                    {% for attach in tli.attachment_set.all %}
+                      <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link:True }}
+                    {% endfor %}
+                  </td>
+                </tr>
+              {% endif %}
+
+            </tbody>
+          </table>
+
+          {% if tli.comments.exists %}
+            <table class="table table-bordered table-striped table-condensed" >
+              <thead>
+                <tr>
+                  <th colspan="3" style="text-align: center">{% trans "Comments" %}</th>
+                </tr>
+                <tr>
+                  <th>{% trans "User" %}</th>
+                  <th>{% trans "Date" %}</th>
+                  <th style="width: 70%">{% trans "Comment" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in tli.comments.all %}
+                  <tr>
+                    <td>{{ c.user }}</td>
+                    <td>{{ c.submit_date|date:"Y-m-d H:i:s" }}</dt>
+                    <td style="width: 70%">{{ c.comment }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+{% endblock %}

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.notifications.common.models import (
@@ -24,10 +24,10 @@ class QCSchedulingNotice(models.Model):
     UPCOMING = 30
 
     NOTIFICATION_TYPES = (
-        (ALL, _l("Notify about all Test Lists Due Dates")),
-        (DUE, _l("Notify about Test Lists currently Due & Overdue")),
-        (UPCOMING_AND_DUE, _l("Notify about Test Lists Upcoming, Due & Overdue")),
-        (UPCOMING, _l("Notify about Upcoming Test Lists Due Dates Only")),
+        (ALL, _l("Notify About All Test Lists Due Dates")),
+        (DUE, _l("Notify About Test Lists Currently Due & Overdue")),
+        (UPCOMING_AND_DUE, _l("Notify About Test Lists Currently Due & Overdue, and Upcoming Due Dates")),
+        (UPCOMING, _l("Notify About Test Lists Upcoming Due Dates Only")),
     )
 
     TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
@@ -35,6 +35,12 @@ class QCSchedulingNotice(models.Model):
     notification_type = models.IntegerField(
         verbose_name=_l("Notification Type"),
         choices=NOTIFICATION_TYPES,
+    )
+
+    send_empty = models.BooleanField(
+        verbose_name=_l("Send Empty Notices"),
+        help_text=_l("Check to send notices even if there's no QC to currently notify about"),
+        default=False,
     )
 
     recurrences = RecurrenceField(
@@ -162,3 +168,6 @@ class QCSchedulingNotice(models.Model):
             self.UPCOMING: self.upcoming,
         }
         return dispatch[self.notification_type]()
+
+    def send_required(self):
+        return self.send_empty or self.utcs_to_notify().count() > 0

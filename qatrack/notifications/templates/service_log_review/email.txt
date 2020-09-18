@@ -1,0 +1,12 @@
+Hello,
+{% spaceless %}
+The following Units currently have unreviewed Service Events:
+{% endspaceless %}
+{% regroup notice.ses_by_unit_usa by unit_service_area__unit__name as unit_groups %}
+{% for unit, unit_sas in unit_groups %}
+
+Unit: {{ unit }}
+===================================
+{% for unit_sa in unit_sas %}{{ unit_sa.unit_service_area__service_area__name }} : {{ unit_sa.unit_service_area__service_area__name__count }} Unreviewed
+{% endfor %}
+{% endfor %}

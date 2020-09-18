@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
 
 from qatrack.attachments.models import Attachment
@@ -182,9 +183,10 @@ class ReturnToServiceQAForm(forms.ModelForm):
             if not uf_cache:
                 uf_cache = qa_models.UnitTestCollection.objects.filter(
                     unit=self.unit_field,
-                    active=True
+                    active=True,
                 ).order_by('name')
                 cache.set('active_unit_test_collections_for_unit_%s' % self.unit_field.id, uf_cache)
+
             self.fields['unit_test_collection'].queryset = uf_cache
 
             self.fields['unit_test_collection'].widget.attrs.update({
@@ -196,6 +198,16 @@ class ReturnToServiceQAForm(forms.ModelForm):
         if self.instance.test_list_instance:
             self.fields['unit_test_collection'].widget.attrs.update({'disabled': True})
             self.fields['unit_test_collection'].disabled = True
+            if not self.instance.test_list_instance.unit_test_collection.active:
+                # since our cached values only include  active test lists, we
+                # need to check if this completed returntoserviceqa object already
+                # refers to an inactive UTC. If so then we want to include the
+                # inactive UTC so it is actually displayed in the RTS QC
+                # section. We do that by ensuring the queryset includes both active/inactive test lists.
+                # See issue #427
+                utc_qs = self.fields['unit_test_collection'].queryset
+                self.fields['unit_test_collection'].queryset = utc_qs.filter(Q(active=True) | Q(active=False))
+
             self.initial['test_list_instance'] = self.instance.test_list_instance.id
             self.initial['all_reviewed'] = int(self.instance.test_list_instance.all_reviewed)
         else:
@@ -337,39 +349,39 @@ class ModelSelectWithOptionTitles(forms.Select):
 class ServiceEventForm(BetterModelForm):
 
     serviceable_units = models.Unit.objects.filter(is_serviceable=True)
-    unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=False)
+    unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=True)
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(
         queryset=models.ServiceArea.objects.all(), label='Service area'
     )
     duration_service_time = HoursMinDurationField(
-        label=_('Service time'), required=False,
+        label=_l('Service time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_service_time').help_text
     )
     duration_lost_time = HoursMinDurationField(
-        label=_('Lost time'), required=False,
+        label=_l('Lost time'), required=False,
         help_text=models.ServiceEvent._meta.get_field('duration_lost_time').help_text
     )
     service_event_related_field = ServiceEventMultipleField(
-        required=False, queryset=models.ServiceEvent.objects.none(), label=_('Related Service Events'),
+        required=False, queryset=models.ServiceEvent.objects.none(), label=_l('Related Service Events'),
         help_text=models.ServiceEvent._meta.get_field('service_event_related').help_text
     )
-    is_review_required = forms.BooleanField(required=False, label=_('Review required'))
+    is_review_required = forms.BooleanField(required=False, label=_l('Review required'))
     is_review_required_fake = forms.BooleanField(
-        required=False, widget=forms.CheckboxInput(), label=_('Review required'), initial=True,
+        required=False, widget=forms.CheckboxInput(), label=_l('Review required'), initial=True,
         help_text=models.ServiceEvent._meta.get_field('is_review_required').help_text
     )
 
     test_list_instance_initiated_by = TLIInitiatedField(
-        required=False, label=_('Initiated By'), queryset=qa_models.TestListInstance.objects.none()
+        required=False, label=_l('Initiated By'), queryset=qa_models.TestListInstance.objects.none()
     )
 
     initiated_utc_field = forms.ModelChoiceField(
         required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated By',
-        help_text=_('Was there a QC session that initiated this service event?')
+        help_text=_l('Was there a QC session that initiated this service event?')
     )
     service_type = forms.ModelChoiceField(
-        queryset=models.ServiceType.objects.filter(is_active=True), label=_('Service type'),
+        queryset=models.ServiceType.objects.filter(is_active=True), label=_l('Service type'),
         widget=ModelSelectWithOptionTitles(model=models.ServiceType, title_variable='description')
     )
     service_status = forms.ModelChoiceField(
@@ -377,8 +389,8 @@ class ServiceEventForm(BetterModelForm):
         queryset=models.ServiceEventStatus.objects.none()
     )
     qafollowup_comments = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 3}), required=False, label=_('Add Comment'),
-        help_text=_('Comments related to return to service')
+        widget=forms.Textarea(attrs={'rows': 3}), required=False, label=_l('Add Comment'),
+        help_text=_l('Comments related to return to service')
     )
 
     se_attachments = forms.FileField(
@@ -480,7 +492,7 @@ class ServiceEventForm(BetterModelForm):
                 queryset=queryset,
                 help_text=g_link.help_text,
                 label=g_link.name,
-                required=False,
+                required=g_link.required,
             )
             self.fields[field_name].widget.attrs.update({'class': 'select2'})
             if not g_link.multiple:
@@ -642,6 +654,7 @@ class ServiceEventForm(BetterModelForm):
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
         self.fields['service_area_field'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
+        self.fields['service_type'].required = not settings.SL_ALLOW_BLANK_SERVICE_TYPE
 
     def strigify_form_item(self, item):
 
@@ -658,7 +671,7 @@ class ServiceEventForm(BetterModelForm):
 
         new = item_val_to_string(new)
         old = item_val_to_string(old)
-        name = self.fields[item].label
+        name = str(self.fields[item].label)
 
         return name, new, old
 
@@ -707,9 +720,11 @@ class ServiceEventForm(BetterModelForm):
     def clean(self):
         super(ServiceEventForm, self).clean()
 
-        if not self.cleaned_data.get('unit_field'):
-            self.add_error('unit_field_fake', ValidationError('This field is required'))
-        elif settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
+        unit_field = self.cleaned_data.get("unit_field")
+        if unit_field and "unit_field_fake" in self.errors:
+            del self.errors['unit_field_fake']
+
+        if unit_field and settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
             # If SA can be blank, then make sure appropriate SA and USA's exist
             sa, __ = models.ServiceArea.objects.get_or_create(name="Not specified")
             usa, __ = models.UnitServiceArea.objects.get_or_create(
@@ -744,13 +759,25 @@ class ServiceEventForm(BetterModelForm):
 
             if raize:
                 self._errors['service_status'] = ValidationError(
-                    'Cannot select status: Return to service qa must be performed and reviewed.'
+                    'Cannot select status: Return to service QC must be performed and reviewed.'
                 )
 
         # If unit field was disabled due to initiated by or rtsqa existing for already saved service event,
         # add the initial unit back to cleaned data since django tries to set it to None and unit is of course requried.
         if self.instance.pk and ('unit_field' not in self.cleaned_data or self.cleaned_data['unit_field'] is None):
             self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
+
+        if settings.SL_ALLOW_BLANK_SERVICE_TYPE and not self.cleaned_data.get('service_type'):
+            # If ST can be blank, then make sure appropriate ST exists
+            st, __ = models.ServiceType.objects.get_or_create(
+                name="Not specified",
+                defaults={
+                    'is_review_required': False,
+                    'is_active': True,
+                    'description': _("Unspecified service type"),
+                }
+            )
+            self.cleaned_data['service_type'] = st
 
         return self.cleaned_data
 

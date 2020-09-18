@@ -1,9 +1,11 @@
 {% extends "site_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -15,17 +17,15 @@
 
 {% block extra_css %}
 
-{#    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
-{#    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">#}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/sidebar.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}cheekycheck/css/cheekycheck.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "icheck/css/blue.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/sidebar.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "flatpickr/css/flatpickr.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/flatpickr-custom.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "cheekycheck/css/cheekycheck.css" %}?v={{ VERSION }}" rel="stylesheet">
 
 {% endblock extra_css %}
 
@@ -33,6 +33,7 @@
     <script type="text/javascript">
         var unit_test_infos = {{unit_test_infos|safe}};
         var editing_tli = {{ test_list_instance.pk|default:"0"}};
+        var has_errors = {% if has_errors %}true{% else %}false{% endif %};
         var override_date = false;
         {% if perms.qa.can_override_date %}
             override_date = true;
@@ -79,14 +80,13 @@
 {% block require_javascript %}
     require(['qa'], function() {
         {{ test_list.javascript.strip|safe }}
-        $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
 
-{% block body_class %}sidebar-mini sidebar-collapse{% endblock body_class %}
+{% block body_class %}sidebar-mini sidebar-collapse loading{% endblock body_class %}
 
 {% block sidebar_toggle %}
-    <a href="#" class="sidebar-toggle pull-left" data-toggle="offcanvas" role="button">
+    <a id="sidebar-toggle" href="#" class="sidebar-toggle pull-left" data-toggle="offcanvas" role="button">
         <i id="toggle-icon" class="fa fa-chevron-right fa-lg rotates" aria-hidden="true"></i>
     </a>
 {% endblock sidebar_toggle %}
@@ -236,6 +236,21 @@
                                                 <div class="col-sm-12 help-block text-center">{{ e }}</div>
                                             {% endfor %}
                                         </div>
+
+                                        <div class="row{% if form.include_for_scheduling.errors %} has-error{% endif %}">
+                                            <label for="id_include_for_scheduling" class="col-md-5">
+                                                {{ form.include_for_scheduling.label}}:
+                                            </label>
+                                            <div class="col-md-1">
+                                                {{ form.include_for_scheduling }}
+                                            </div>
+                                            <div class="col-md-6 help-block">
+                                              {% trans "Uncheck if you don't want to advance the due date for this test list instance" %}
+                                            </div>
+                                            {% for e in form.include_for_scheduling.errors %}
+                                                <div class="col-sm-12 help-block text-center">{{ e }}</div>
+                                            {% endfor %}
+                                        </div>
                                     {% endif %}
                                     {% if perms.qa.can_review and perms.qa.can_review_own_tests %}
                                         <div class="row" id="status">
@@ -254,35 +269,34 @@
                     </div>
                 </div>
             {% else %}
+                <div class="display-none">{{ form.include_for_scheduling }}</div>
                 <div class="display-none">{{ form.work_started }}</div>
             {% endif %}
 
-            {% if attachments|length > 0 %}
-                <div class="col-sm-{{ top_divs_span }}">
-                    <div id="box-attachments">
-                        <div class="box">
-                            <div class="box-header">
-                                <h5 class="box-title">
-                                    <i class="fa fa-paperclip" aria-hidden="true"></i>
-                                    {{ test_list.name }} Test List Attachments
-                                </h5>
-                            </div>
-                            <div class="box-body">
-                                <div class="row">
-                                    <div class="col-sm-12 border-default">
-                                        <ul>
-                                            {% for attach in attachments %}
-                                                <li>{{ attach|attachment_link }}</li>
-                                            {% endfor %}
-                                        </ul>
+            <div class="col-sm-{{ top_divs_span }}">
+                <div id="box-attachments">
+                    <div class="box">
+                        <div class="box-header">
+                            <h5 class="box-title">
+                                <i class="fa fa-paperclip" aria-hidden="true"></i>
+                                {{ test_list.name }} Test List Attachments
+                            </h5>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-sm-12 border-default">
+                                    <ul>
+                                        {% for attach in attachments %}
+                                            <li>{{ attach|attachment_link }}</li>
+                                        {% endfor %}
+                                    </ul>
 
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            {% endif %}
+            </div>
 
             {% if USE_SERVICE_LOG and form.instance.pk %}
                 {% if perms.service_log.add_serviceevent or service_events_ib|length > 0 %}
@@ -426,19 +440,28 @@
                                     <h3 class="box-title">Perform {{unit_test_collection.unit.name}} : {{test_list.name}}</h3>
                                 {% endif %}
                                 {% if days %}
-                                    <div><em>From cycle : {{ unit_test_collection.name }}</em></div>
+                                    <div><em>Day {{ current_day }} from cycle : {{ unit_test_collection.name }}</em></div>
                                     {% if last_instance %}
                                         <div><em>Last done: {% if last_day %}Day {{last_day}} ({{last_instance.test_list.name}}){% else %}New list{%endif%}</em></div>
                                     {% endif %}
                                 {% elif cycle_name %}
                                     <div><em>From cycle : {{ cycle_name }}</em></div>
                                 {% endif %}
+
                             </div>
 
                             <div class="col-sm-6">
+                                <span class="label label-info qa-calc-status pull-right">
+                                  <i class="fa fa-check-circle fa-fw fa-lg" title="Calculations complete"></i>
+                                  <span>Calculations Complete</span>
+                                </span>
+                                <span class="label label-warning qa-autosave-status pull-right">
+                                    <i class="fa fa-save fa-fw fa-lg"></i>
+                                  </i>
+                                  <span>Not Saved</span>
+                                </span>
                                 {% if test_list.warning_message %}
                                     <h3 class="do-not-treat box-title pull-right">
-                                        <i class="fa fa-exclamation"></i>
                                         <strong>{{test_list.warning_message}}</strong>
                                     </h3>
                                 {% endif %}
@@ -451,6 +474,9 @@
                         <div class="row">
                             <div class="col-sm-12">
 
+                                <!--input type="hidden" name="autosave-id" id="autosave-id" value=""/-->
+                                {{ form.autosave_id }}
+                                <input type="hidden" id="unit-test-collection-id" value="{{ unit_test_collection.pk }}"/>
                                 <input type="hidden" id="test-list-id" value="{{test_list.pk}}"/>
                                 <input type="hidden" id="test-list-name" value="{{test_list.name}}"/>
                                 <input type="hidden" id="unit-id" value="{{unit_test_collection.unit.pk}}"/>
@@ -485,8 +511,10 @@
                                                 {% endif %}
                                                 {% if perms.qa.can_view_history %}
                                                     <th class="qa-history">History<br/>
-                                                        {% for d in history_dates %}
-                                                            <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                                        {% for tli_url, d in history_dates %}
+                                                          <a href="{{ tli_url}}" title="{% blocktrans %}Click to view this test list instance performed at {{ d }}{% endblocktrans %}">
+                                                            <span class="label history-label">{{d|date:"dMy"}}</span>
+                                                          </a>
                                                         {% endfor %}
                                                     <div></div></th>
                                                 {% endif %}
@@ -525,8 +553,15 @@
                                                   </td>
                                               </tr>
                                             {% endif %}
+
+                                            {% if delim.class == "sublist" or test_form.get_test_info.show_category %}
+                                              {% qa_value_form test_form test_list perms user test_info=test_form.get_test_info unit_test_collection=unit_test_collection show_category=1 %}
+                                            {% else %}
+                                              {% qa_value_form test_form test_list perms user test_info=test_form.get_test_info unit_test_collection=unit_test_collection show_category=0 %}
+                                            {% endif %}
+
                                         {% endwith %}
-                                        {% qa_value_form test_form test_list perms test_info=test_form.get_test_info unit_test_collection=unit_test_collection %}
+
 
                                         {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
                                           {% with borders.starts|lookup:forloop.counter as delim %}
@@ -576,7 +611,7 @@
 
 {#                                        <a id="toggle-gen-comment" class="btn btn-default btn-flat pull-right margin-r-5" href="#!" title="Click here to add a general comment about this set of tests">Add Comment</a>#}
 
-                                        <div class="pull-right margin-r-5">
+                                        <div id="in-progress-container" class="pull-right margin-r-5">
                                             {% if perms.qa.can_save_in_progress %}
                                             <label title="{{form.in_progress.help_text}}" for="id_in_progress" class="add-on" style="display: none;">
                                                 Mark this list as still in progress:
@@ -585,7 +620,7 @@
                                             {% endif %}
                                         </div>
 
-                                        <div class="pull-right margin-r-5">
+                                        <div id="init-se-container" class="pull-right margin-r-5">
                                             {% if perms.service_log.add_serviceevent and unit_test_collection.unit.is_serviceable %}
                                               <label title="{{form.initiate_service.help_text}}" for="id_initiate_service" class="add-on" style="display: none;">
                                                   Initiate service event:
@@ -622,7 +657,6 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <h3 class="do-not-treat box-title pull-right">
-                                        <i class="fa fa-exclamation"></i>
                                         <strong>{{test_list.warning_message}}</strong>
                                     </h3>
                                 </div>
@@ -825,6 +859,29 @@
                         <li>
                           <a title="Resume session saved by {{ ip.created_by }}" class="row" href="{% url 'continue_tli' pk=ip.pk %}?{{ request.GET.urlencode }}">
                             {{ ip.created }}
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endif %}
+
+                {% if autosaves %}
+                  <li class="divider"></li>
+                  <li class="treeview">
+                    <a id="menu-days" href="#!">
+                      <i style="color: #f39c12;" class="fa fa-save fa-fw" aria-hidden="true"></i>
+                      <span>Auto Saved Sessions</span>
+                      <i class="fa fa-angle-left pull-right"></i>
+                    </a>
+                    <ul id="autosave-list" class="treeview-menu" style="display: none;">
+                      {% for auto in autosaves %}
+                        <li>
+                          <a title="Resume session auto-saved for {{ auto.modified_by }} on {{ auto.modified }}"
+                             class="row"
+                             href="{% if auto.test_list_instance_id %}{% url "continue_tli" pk=auto.test_list_instance_id %}{% endif %}?autosave_id={{ auto.id }}&day={{ auto.day | add:"1" }}&next={{ request.GET.next }}"
+                          >
+                            {{ auto.modified }}
                           </a>
                         </li>
                       {% endfor %}

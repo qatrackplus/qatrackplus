@@ -1,3 +1,5 @@
+.. _screenshots:
+
 Screenshots
 ===========
 
@@ -32,6 +34,12 @@ Screenshots
    :alt: Screenshot of data plotting interface
 
    Demonstration of QATrack+'s plotting capabilities.
+
+.. figure:: images/report.png
+   :alt: Screenshot of report generating interface
+
+   Demonstration of QATrack+'s reporting capabilities.
+
 
 .. figure:: images/overview.png
    :alt: Screenshot of the QC Program Overview

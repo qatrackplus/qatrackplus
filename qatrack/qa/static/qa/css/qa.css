@@ -25,6 +25,25 @@
     /*width:150px;*/
 }
 
+span.qa-calc-status,
+span.qa-autosave-status {
+
+ /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+  -webkit-border-radius: 6px;
+
+  /* Firefox 1-3.6 */
+  -moz-border-radius: 6px;
+
+  /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+  border-radius: 6px;
+
+  padding: 6px;
+  color: white;
+
+}
+span.qa-autosave-status {
+  margin-right: 10px;
+}
 /* perform table */
 tr.qa-valuerow,
 tr.qa-valuerow td {
@@ -142,6 +161,12 @@ td.qa-status {
     width:80px;
     text-align: right;
 }
+.qa-reference a.ref-tol-link{
+  visibility: hidden;
+}
+.qa-reference:hover a.ref-tol-link{
+  visibility: visible;
+}
 .qa-history{
     min-width: 325px;
 }
@@ -164,7 +189,7 @@ th.qa-history div{
     overflow: hidden;
     padding: 3px 4px;
     vertical-align: middle;
-    font-size: 12px;
+    font-size: 11px;
 }
 .history-value > i, .pass-fail > i {
     margin-top:2px;
@@ -303,7 +328,9 @@ div.sublist-description {
 }
 
 #perform-qa-table > thead > tr > th.qa-category {
-    width: 120px;
+    min-width: 120px;
+    width: 200px;
+    max-width: 200px;
     padding-left: 15px;
 }
 
@@ -318,7 +345,7 @@ div.sublist-description {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    /*max-width: 0;*/
+    height: 25px;
 }
 
 #perform-qa-table > thead > tr > th.qa-history {
@@ -435,10 +462,17 @@ body .box-header h3.do-not-treat,
 body .box-footer h3.do-not-treat {
     display: none;
     margin: 0;
+    padding-right: 20px;
     color: #fff;
 }
 
 /* review testlist */
+a.revealtext {
+  color: white;
+  display: inline-block;
+  width: 100%;
+}
+
 td.review-value,
 th.review-value {
     width:60px;
@@ -547,8 +581,13 @@ td.qa-category.bar-container {
 td.qa-category .error-bar,
 td.qa-category .procedure-bar,
 td.qa-category .comment-bar {
-    height: inherit;
+    height: 0px;
 }
 #perform-qa-table tr {
-    height: 1px;
+    height: 0px;
+}
+
+.comp-calc-spinner {
+  display: inline-block;
+  margin-left: 10px;
 }

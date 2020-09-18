@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 import json
+import logging
 import time
 import uuid
 
@@ -12,6 +13,7 @@ import pytest
 from qatrack.qa.utils import get_internal_user
 
 pytestmark = pytest.mark.skip("This file doesn't actually have tests")
+logger = logging.getLogger('qatrack')
 
 
 def get_model_map():
@@ -196,7 +198,10 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         try:
             categories[nk_vals] = models.Category.objects.get_by_natural_key(*nk_vals)
         except models.Category.DoesNotExist:
-            categories[nk_vals] = models.Category.objects.create(**obj)
+            cat = models.Category.objects.create(**obj)
+            models.Category.objects.filter(pk=cat.pk).update(tree_id=cat.pk)
+            categories[nk_vals] = cat
+    models.Category.objects.rebuild()
 
     # we cann= now create the actual primary records (m2m relationships done below
     extra_kwargs = {'created': created, 'modified': created, 'created_by': user, 'modified_by': user}
@@ -266,7 +271,7 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             del obj[parent_attr]
             del obj[child_attr]
             if tuple(obj.items()) in seen:
-                continue
+                continue  # pragma: no cover
             seen.add(tuple(obj.items()))
 
             # remove any fields that don't exist in this version for backwards compatibility

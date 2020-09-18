@@ -14,65 +14,159 @@ Acknowledgements
 Details of the v0.3.1 release
 .............................
 
+Non backwards compatible changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* A new :ref:`Reports <reports>` tool has been added for generating and scheduling
-  reports.
+* Composite Tests will now raise an error if they return anything other than a
+  numerical value, None, or an empty string ("").  Previously it was possible
+  to return e.g.a string which would have resulted in the test being skipped.
+  If you were relying on this behaviour, you need to switch to using a
+  :ref:`String Composite/JSON <qa_string_comp_json>` test type instead.
 
-* A new :ref:`Query Tool <qa_query_tool>` has been added for advanced query and
+* The `day` key is now required when performing a Test List Cycle via the API
+
+* Upload tests can not have reference/tolerance values set.  Allowing this originally
+  was an implementation oversight.
+
+
+Major Features
+^^^^^^^^^^^^^^
+
+* A new :ref:`Reports <reports>` tool has been added for generating and
+  scheduling PDF & Excel reports.  As part of this move the following
+  features have now been moved to a report rather than a standalone page:
+
+    * Paper Backup Forms
+
+* A new :ref:`Query Tool <reports-query_tool>` has been added for advanced query and
   reporting.
 
-* QA -> QC:  In most places in the UI the initials QA have been replaced by QC to
-  reflect the fact that data collected in QATrack+ is QC data. This has been an
-  annoyance since I first made the labeling error in the original version of
-  QATrack+.
+* :ref:`Notifications <notifications>` have been expanded & improved.
+    * You can now send notifications on test lists being completed.
+    * You can now specify to send notifications to individual users as well as groups.
+    * You can now specify that a given notifications will only be sent for
+      specific units or test lists.
+    * New QC Scheduling & Unreviewed QC Notices.
+    * Service event creation & update notices.
 
-* A bug in the API which was causing extra information to be returned for
-  list views has been fixed.  This may require you to adjust scripts if you
-  were relying on:
+* A new :ref:`Autosave <auto_save>` feature has been implemented to
+  automatically save test list instance data temporarily to prevent data loss
+  when a user mistakingly navigates away from the page while entering QC data.
 
-    - permissions or user_set data present in the Groups list view
-    - first_name, last_name, date_joined, permissions in the User List view
-    - Fields other than name, number, or site in the Unit list
 
-* First Name & Last Name have been added to the user-list api view
+Tests & Test Lists
+^^^^^^^^^^^^^^^^^^
 
-* Improved the ordering and organization of unit, frequency, and test lists fields
-  when assigning a test list to a unit. Also improve UnitType dropdown for Unit Admin.
+* New test types including:
+
+    * :ref:`Date and Date & Time test types <qa_tests>` to allow users to
+      select dates/times with a calendar widget.  These test results will be
+      available in calculation contexts as Python date, and datetime values
+      respectively.
+
+    * :ref:`Wraparound test type <qa_tests>` have been added.  This test type
+      allows you to define a test that "wraps around" at a minimum and maximum
+      value.  This type of test is useful for example if you have a
+      collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
+      difference from a 0 deg reference.
+
+* A new "Display Name" field has been added to tests.  This is an optional
+  field where you can add text describing how a test should be displayed when
+  performing or reviewing. Having a separate name & display name allows you to
+  create tests with descriptive names that are easy to find in the admin aread,
+  but use a more succinct name when performing a Test List. If left blank, the
+  test name will be used.
+
+* A new "Require Comment" option has been added to force users to enter
+  a comment before submitting a test.
+
+* It is now possible to perform a test and not have the due date advanced
+  by de-selecting the "Include for Scheduling" option.
+
+* Calculation procedures are now syntax checked, and automatically formatted
+  using `Black <https://black.readthedocs.io>`_.
+
+* Numerical tests now have an optional :ref:`Formatting <qa_test_formatting>`
+  field to control how their results are displayed.  For example a test with a
+  formatting of "%.2E" will use scientific notation with 2 decimal places (3
+  sig figures).
+
+* Non-calculated test types (e.g. simple numerical, multiple choice, string,
+  etc) may now use the `calculation_procedure` to set :ref:`default initial
+  values <qa_default_values>`.
+
+* Added :ref:`UTILS.set_skip and UTILS.get_skip <composite_tests>` functions for
+  setting/getting skip status of tests.
+
+* Using `UTILS.set_comment` in a calculation will now open the comment box on
+  the front end.
+
+* Setting the `Warning message` field to blank on a `TestList` will now prevent
+  a warning message/banner from being shown when tests are at action level.
+
+* Calculated tests are now included in Paper Backup Forms by default
+
+* Frequency dropdown lists when choosing a unit to perform QC on will now only
+  show *Ad Hoc* if that unit has ad hoc test lists assigned
+
+* There are new Tree Views available (under the Perform QC menu) for
+  viewing/selecting QC assigned to units.  
+
+Review & Approval
+^^^^^^^^^^^^^^^^^
+
+* Test.auto_review has been replaced by new AutoReviewRuleSet's that allow you
+  to apply different AutoReviewRules to different tests. For more information
+  see the :ref:`Auto Review page <qa_auto_review>`.
+
+* A new :ref:`Bulk Review <qa_perform_bulk_review>` feature has been added to
+  allow setting review & approval status for multiple test list instances at
+  the same time.
 
 * New management commands `review_all_unreviewed` and `clear_in_progress` have
-  been added. `review_all_unreviewed` updates the status of all unreviewed test list instances, while
-  `clear_in_progress` will delete all in progress test lists.
-
-* Composite & Constant Tests now have an optional "Formatting" field to control how their results
-  are displayed.  For example a test with a formatting of "%.2E" will use scientific
-  notation with 2 decimal places (3 sig figures).
-
-* The Unit admin page now has "Save as New" as an option to make it easier to create new
-  units using an existing unit as a template.  You can also now leave the unit number blank
-  to have it assigned automatically.
-
-* Test List notifications have been improved.  (Needs docs before release)
-    * You can now send notifications on test lists being completed.
-    *  You can now specify to send notifications to individual users as well as groups.
-    *  You can now specify that a given notifications will only be sent for specific units or test lists.
-
-* **Staff Status** has been renamed to **Admin Status** to reflect the fact that almost all QATrack+ users are "Staff"!
-
-* Test Instance points with comments associated with them will now be highlighed in charts
-
-* A new setting `SL_ALLOW_BLANK_SERVICE_AREA` has been added to optionally
-  allow users to submit ServiceEvents without a ServiceArea set explicitly.
+  been added. `review_all_unreviewed` updates the status of all unreviewed test
+  list instances, while `clear_in_progress` will delete all in progress test
+  lists.
 
 
-* New :ref:`Date and Date & Time test types <qa_tests>` have been added to
-  allow users to select dates/times with a calendar widget.
+Units & Unit Types
+^^^^^^^^^^^^^^^^^^
 
-* Added :ref:`UTILS.set_skip an UTILS.get_skip <composite_tests>` functions for setting/getting skip status
-  of tests.
+* A new :ref:`Collapse <unit_type>` option has been added to the Unit Type model
+  to allow collapsing less frequency used unit types in user interface.
 
-* Using `UTILS.set_comment` will now open the comment box on the front end.
+UI Changes
+^^^^^^^^^^
 
-* Add test type css class to test rows.  Allows you to target different test types in site.css like:
+* QA -> QC:  In most places in the UI the initials QA have been replaced by QC.
+  This change was made to reflect that while QATrack+ is a tool for managing
+  the QA program of radiation therapy programs, the data collected in QATrack+
+  is QC data.
+
+* Improved the ordering and organization of unit, frequency, and test lists
+  fields when assigning a test list to a unit. Also improve UnitType dropdown
+  for Unit Admin.
+
+* The Unit admin page now has "Save as New" as an option to make it easier to
+  create new units using an existing unit as a template.  You can also now
+  leave the unit number blank to have it assigned automatically.
+
+* **Staff Status** has been renamed to **Admin Status** to reflect the fact
+  that almost all QATrack+ users are "Staff"!
+
+* Test Instance points with comments associated with them are now highlighed in
+  charts
+
+* Listing for selectin
+
+* New dropdown on Unit selection buttons to allow selecting QC to perform based
+  on Test categories.
+
+* A calculation status icon has been added (spins when calculations are being
+  performed).
+
+* Add test type css class to test rows.  Allows you to target different test
+  types in site.css like:
 
   .. code-block:: css
 
@@ -80,13 +174,118 @@ Details of the v0.3.1 release
             background-color: rgba(0, 0, 0, 0.05);
         }
 
+* The *In Progress* label will now only display the count of in progress test lists
+  visible to the users rather than the total count.
 
-* Setting the `Warning message` field on a `TestList` will now prevent a
-  warning message/banner from being shown when tests are at action level.
+* History & Unreviewed listing pages will now show a paperclip icon if the test list instance
+  has at least one attachment.
 
-* Test.auto_review has been replaced by new AutoReviewRuleSet's that allow you
-  to apply different AutoReviewRules to different tests. For more information see
-  the :ref:`Auto Review page <qa_auto_review>`.
+* ID attributes have been added to many elements on the pages for performing/editing test lists
+  to make them easier to target with JavaScript.
+
+* For installations with Units assigned to multiple 'Sites', a new 'Site'
+  column has been added to many of the views used for selecting TestList
+  assignments and TestListInstances.
+
+Admin Changes
+^^^^^^^^^^^^^
+
+* Inline links to edit and delete foreign key choices have been disabled in all
+  QATrack+ admin models. Editing or deleting a foreign key object here has
+  always been a poor workflow and can be confusing to users.
+
+* Setting multiple references & tolerances now allows removing tolerances.
+
+* Setting multiple references & tolerances will now include an entry in that
+  UnitTestInfo's change log
+
+
+
+API Changes
+^^^^^^^^^^^
+
+* A number of bug in the API have been fixed including:
+
+  * a bug which was causing extra information to be returned for list views has
+    been fixed.  This may require you to adjust scripts if you were relying on:
+
+    - permissions or user_set data present in the Groups list view
+    - first_name, last_name, date_joined, permissions in the User List view
+    - Fields other than name, number, or site in the Unit list
+  * Bugs with filtering for exact matches of search strings have been resolved.
+
+  * First Name & Last Name have been added to the user-list api view
+
+* The UnitTestCollection API results now include "next_day" and "next_test_list"
+  parameters to make it simple to determine which test list is to be performed
+  next in a test list cycle.
+
+* The TestList API results now includes a field "test_lists" which is 
+  a list of all the sublist test lists for that TestList.
+
+* The banner at the top of the browsable API now says "QATrack+ API" rather
+  than Django Rest Framework and now the link directs to the main site rather
+  than DRFs site.
+
+* It is now possible to perform a test and not have the due date advanced by
+  setting `"include_for_scheduling": False,` in your API post data.
+  
+
+* The `day` key is now required when performing a Test List Cycle via the API
+
+
+Service Log & Parts
+^^^^^^^^^^^^^^^^^^^
+
+* Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group
+  Linker required when submitting a ServiceEvent.
+
+* There is a new `New or Used` field on Parts to allow you to track new and
+  used inventories of the same part separately.
+
+* A new setting :ref:`setting_sl_allow_blank_service_area` has been added to
+  optionally allow users to submit ServiceEvents without a ServiceArea set
+  explicitly.
+
+* A new setting :ref:`setting_sl_allow_blank_service_type` has been added to
+  optionally allow users to submit ServiceEvents without a ServiceType set
+  explicitly.
+
+Authentication
+^^^^^^^^^^^^^^
+
+* The default authentication backend setting is now:
+
+  .. code-block:: python
+
+    AUTHENTICATION_BACKENDS = (
+        'qatrack.accounts.backends.QATrackAccountBackend',
+    )
+
+  the `QATrackAccountBackend` is a simple wrapper around the Django ModelBackend
+  to allow usernames to be transformed prior to authentication.  The transform
+  is controlled by the :ref:`ACCOUNTS_CLEAN_USERNAME <accounts_clean_username>` settings.
+
+* A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
+  added to control whether users are allowed to register their own accounts.
+
+* The :ref:`AD_MEMBERSHIP_REQ <settings_ad>` setting is now honoured.
+
+* A new :ref:`AD_GROUP_MAP <settings_ad>` setting has been added so 
+  that users can automatically be added to QATrack+ groups based
+  on their AD group memberships. 
+
+* When a user logs in through the AD backend, their email address, first name,
+  and lastname will be updated to match the values found in Active Directory.
+
+
+
+Other Minor Features & Bugs Fixed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fixed bug with control charts and null valued / skipped tests. #506
+* Fixed bug with selecting Test List Cycle days from sidebar menu
+
 
 Deprecations & Discontinuations
 ...............................
@@ -94,12 +293,35 @@ Deprecations & Discontinuations
 * Python 3.4: As of March 2019, Python 3.4 is no longer receiving updates and
   therefore QATrack+ will no longer be supporting Python 3.4 installations.
 
+* The settings `AD_DEBUG` & `AD_DEBUG_FILE` are no longer used.  Instead,
+  information is now logged to an 'auth.log' file.
+
+
+QATrack+ v0.3.0.18 Release Notes
+--------------------------------
+
+- Fixed a bug where Test Lists from Test List Cycles with Ad-Hoc frequency
+  would not show up when charting
+
+QATrack+ v0.3.0.16 Release Notes
+--------------------------------
+
+- Allow disabling warning message by setting TestList.warning_message blank
+- Add test type to html class for qa-valuerows so they can more
+  easily be targeted in JavaScript code.
 
 
 QATrack+ v0.3.0.15 Release Notes
 --------------------------------
 
 - The Active Unit Test Info filter was fixed
+- Fixed minimum width of Category display when performing QC tests
+- Added new setting `CATEGORY_FIRST_OF_GROUP_ONLY`.  When True,
+  if there is a group of sequential tests with the same category, only
+  the top most category name will be shown to allow better visual
+  separation of groups of categories.  Currently this defaults to False
+  to maintain current behaviour but this will default to True for the
+  v0.3.1 release.
 
 Upgrading to v0.3.0.15 from v0.3.0
 ..................................

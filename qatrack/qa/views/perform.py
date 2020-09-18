@@ -6,21 +6,21 @@ import os
 import traceback
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
-import dateutil
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.forms.models import model_to_dict
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import CreateView, TemplateView, View
 from django_comments.models import Comment
 import matplotlib
@@ -34,8 +34,13 @@ import scipy
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
+from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
-from qatrack.qatrack_core.utils import parse_date, parse_datetime
+from qatrack.qatrack_core.utils import (
+    format_datetime,
+    parse_date,
+    parse_datetime,
+)
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -60,7 +65,7 @@ def process_procedure(procedure):
     :view:`qa.perform.CompositeCalculation` views.
 
     """
-    return "\n".join(["from __future__ import division", procedure, "\n"]).replace('\r', '\n')
+    return "\n".join([procedure, "\n"]).replace('\r', '\n')
 
 
 def set_attachment_owners(test_list_instance, attachments):
@@ -140,7 +145,7 @@ class CompositeUtils:
         except models.TestListInstance.DoesNotExist:
             return None
 
-    def previous_test_instance(self, test, same_list_only=True, include_in_progress=False, exclude_skipped=True):
+    def previous_test_instance(self, test=None, same_list_only=True, include_in_progress=False, exclude_skipped=True):
         try:
             slug = test.slug
         except AttributeError:
@@ -158,6 +163,57 @@ class CompositeUtils:
             qs = qs.exclude(test_list_instance__in_progress=True)
         if exclude_skipped:
             qs = qs.exclude(skipped=True)
+
+        try:
+            return qs.latest("work_completed")
+        except models.TestInstance.DoesNotExist:
+            return None
+
+    def get_test_instance(
+        self,
+        test_id=None,
+        test_name=None,
+        test_list_id=None,
+        include_in_progress=False,
+        exclude_skipped=True,
+        include_invalid=False,
+        unit_number=None,
+        start_window=None,
+        end_window=None,
+    ):
+
+        qs = models.TestInstance.objects.all()
+
+        if test_id is not None:
+            qs = qs.filter(unit_test_info__test_id=test_id)
+
+        if test_name is not None:
+            qs = qs.filter(unit_test_info__test__name=test_name)
+
+        if start_window is not None:
+            qs = qs.filter(test_list_instance__work_completed__gte=start_window)
+
+        if end_window is None:
+            end_window = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+
+        qs = qs.filter(test_list_instance__work_completed__lte=end_window)
+
+        if test_list_id:
+            qs = qs.filter(test_list_instance__test_list_id=test_list_id)
+
+        if not include_in_progress:
+            qs = qs.filter(test_list_instance__in_progress=False)
+
+        if exclude_skipped:
+            qs = qs.filter(skipped=False)
+
+        if not include_invalid:
+            qs = qs.filter(status__valid=True)
+
+        if unit_number is None:
+            unit_number = self.unit.number
+
+        qs = qs.filter(unit_test_info__unit__number=unit_number)
 
         try:
             return qs.latest("work_completed")
@@ -201,6 +257,25 @@ def get_context_refs_tols(unit, tests):
         tols[slug] = {k: uti["tolerance__%s" % k] for k in tol_keys}
 
     return refs, tols
+
+
+def cleanup_matplotlib():
+
+    """
+    At the end of any view which may use mpl.pyplot to generate a plot
+    we need to clean the figure, to attempt to  prevent any crosstalk
+    between plots.
+
+    Generally people should use the OO interface to MPL rather than
+    pyplot, because pyplot is not threadsafe.
+    """
+    try:
+        plt.clf()
+        plt.close('all')
+    except KeyError:
+        # Occasionaly this can fail with a key error when multiple uploads
+        # are being analyzed at same time. Not 100% sure why...
+        pass
 
 
 class UploadHandler:
@@ -264,7 +339,7 @@ class UploadHandler:
         }
 
         if self.attachment is None:
-            results["errors"] = ["Original file not found. Please re-upload."]
+            results["errors"] = [_("Original file not found. Please re-upload.")]
             return results
 
         try:
@@ -278,19 +353,22 @@ class UploadHandler:
             results["comment"] = self.calculation_context.get("__comment__")
             results["skips"] = self.calculation_context['UTILS'].skips
         except models.Test.DoesNotExist:
-            results["errors"].append("Test with that ID does not exist")
+            results["errors"].append(_("Test with that ID does not exist"))
         except Exception:
             msg = traceback.format_exc(
                 limit=5, chain=True
-            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
-            results["errors"].append("Invalid Test Procedure: %s" % msg)
+            ).split("__QAT+COMP_")[-1].replace("<module>", _("Test: %(test_name)s") % {'test_name': test.name})
+            results["errors"].append(_("Invalid Test Procedure: %(traceback)s") % {'traceback': msg})
 
         return results
 
     def handle_upload(self):
         """read incoming file and save tmp file to disk ready for processing"""
 
-        comment = "Uploaded %s by %s" % (timezone.now(), self.user.username)
+        comment = _("Uploaded %(current_datetime)s by %(username)s") % {
+            'current_datetime': timezone.now(),
+            'username': self.user.username
+        }
         self.attachment = Attachment.objects.create(
             attachment=self.file,
             label=self.file.name,
@@ -306,10 +384,11 @@ class UploadHandler:
         meta_data = self.data["meta"]
         refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
+        tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = dateutil.parser.parse(meta_data[d])
-            except (KeyError, AttributeError, TypeError):
+                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
+            except (TypeError, KeyError, AttributeError):
                 pass
 
         comments = self.data["comments"]
@@ -347,12 +426,12 @@ class Upload(JSONResponseMixin, View):
             self.test_list = models.TestList.objects.get(pk=self.get_json_data("test_list_id"))
             self.all_tests = self.test_list.all_tests()
         except (models.TestList.DoesNotExist):
-            return self.render_json_response({"success": False, "errors": ["Invalid or missing test_list_id"]})
+            return self.render_json_response({"success": False, "errors": [_("Invalid or missing test_list_id")]})
 
         try:
             self.unit = Unit.objects.get(pk=self.get_json_data("unit_id"))
         except (Unit.DoesNotExist):
-            return self.render_json_response({"success": False, "errors": ["Invalid or missing unit_id"]})
+            return self.render_json_response({"success": False, "errors": [_("Invalid or missing unit_id")]})
 
         try:
             if self.request.POST.get('attachment_id'):
@@ -370,15 +449,9 @@ class Upload(JSONResponseMixin, View):
                 "user_attached": [],
             }
             resp = self.render_json_response(results)
-        """
-        At the end of any view which may use mpl.pyplot to generate a plot
-        we need to clean the figure, to attempt to  prevent any crosstalk
-        between plots.
 
-        Generally people should use the OO interface to MPL rather than
-        pyplot, because pyplot is not threadsafe.
-        """
-        plt.clf()
+        cleanup_matplotlib()
+
         return resp
 
     def reprocess(self):
@@ -403,7 +476,7 @@ class Upload(JSONResponseMixin, View):
         }
 
         if self.attachment is None:
-            results["errors"] = ["Original file not found. Please re-upload."]
+            results["errors"] = [_("Original file not found. Please re-upload.")]
             return self.render_json_response(results)
 
         try:
@@ -417,19 +490,22 @@ class Upload(JSONResponseMixin, View):
             results["comment"] = self.calculation_context.get("__comment__")
             results["skips"] = self.calculation_context['UTILS'].skips
         except models.Test.DoesNotExist:
-            results["errors"].append("Test with that ID does not exist")
+            results["errors"].append(_("Test with that ID does not exist"))
         except Exception:
             msg = traceback.format_exc(
                 limit=5, chain=True
-            ).split("__QAT+COMP_")[-1].replace("<module>", "Test: %s" % test.name)
-            results["errors"].append("Invalid Test Procedure: %s" % msg)
+            ).split("__QAT+COMP_")[-1].replace("<module>", _("Test: %(test_name)s") % {'test_name': test.name})
+            results["errors"].append(_("Invalid Test Procedure: %(traceback)s") % {'traceback': msg})
 
         return self.render_json_response(results)
 
     def handle_upload(self):
         """read incoming file and save tmp file to disk ready for processing"""
 
-        comment = "Uploaded %s by %s" % (timezone.now(), self.request.user.username)
+        comment = _("Uploaded %(current_datetime)s by %(username)s") % {
+            'current_datetime': format_datetime(timezone.now()),
+            'username': self.request.user.username
+        }
         f = self.request.FILES.get('upload')
         self.attachment = Attachment.objects.create(
             attachment=f,
@@ -446,9 +522,10 @@ class Upload(JSONResponseMixin, View):
         meta_data = self.get_json_data("meta")
         refs, tols = get_context_refs_tols(self.unit, self.all_tests)
 
+        tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = dateutil.parser.parse(meta_data[d])
+                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
             except (KeyError, AttributeError, TypeError):
                 pass
 
@@ -496,6 +573,7 @@ class CompositePerformer:
     def __init__(self, user, data):
         self.user = user
         self.data = data
+        self.defaults = data.get('defaults')
 
     def calculate(self):
         """calculate and return all composite values"""
@@ -504,23 +582,23 @@ class CompositePerformer:
             self.test_list = models.TestList.objects.get(pk=self.data["test_list_id"])
             self.all_tests = list(self.test_list.all_tests())
         except (KeyError, models.TestList.DoesNotExist):
-            return {"success": False, "errors": ["Invalid or missing test_list_id"]}
+            return {"success": False, "errors": [_("Invalid or missing test_list_id")]}
 
         try:
             self.unit = Unit.objects.get(pk=self.data["unit_id"])
         except (KeyError, Unit.DoesNotExist):
-            return {"success": False, "errors": ["Invalid or missing unit_id"]}
+            return {"success": False, "errors": [_("Invalid or missing unit_id")]}
 
         self.set_test_types()
         self.set_formatters()
 
         self.set_composite_test_data()
         if not self.composite_tests:
-            return {"success": False, "errors": ["No Valid Composite ID's"]}
+            return {"success": False, "errors": [_("No Valid Composite ID's")]}
 
         self.set_calculation_context()
         if not self.calculation_context or list(self.calculation_context.keys()) == ["write_file"]:
-            return {"success": False, "errors": ["Invalid QC Values"]}
+            return {"success": False, "errors": [_("Invalid QC Values")]}
 
         self.set_dependencies()
         self.resolve_dependency_order()
@@ -528,7 +606,10 @@ class CompositePerformer:
         results = {}
 
         for slug in self.cyclic_tests:
-            results[slug] = {'value': None, 'error': "Cyclic test dependency"}
+            results[slug] = {
+                'value': None,
+                'error': _("Cyclic test dependency"),
+            }
 
         for slug in self.calculation_order:
             raw_procedure = self.composite_tests[slug]
@@ -541,7 +622,12 @@ class CompositePerformer:
                 result = self.calculation_context[key]
 
                 if type(result) == float and result in (numpy.nan, numpy.inf):
-                    raise ValueError("%s has a result of '%s'" % (slug, str(result)))
+                    raise ValueError(
+                        _("%(test)s has a result of '%(test_result)s'") % {
+                            'test': slug,
+                            'test_result': str(result)
+                        }
+                    )
                 else:
                     try:
                         # since the json test is happening in our code, we
@@ -551,7 +637,7 @@ class CompositePerformer:
                         json.dumps(result, cls=QATrackJSONEncoder)  # ensure result is JSON serializable
                         tb_limit = 5
                     except TypeError as e:
-                        raise ValueError("%s failed with error: %s." % (slug, str(e)))
+                        raise ValueError(_("%(test)s failed with error: %(error)s.") % {'test': slug, 'error': str(e)})
 
                 formatted = utils.format_qc_value(result, self.formatters.get(slug))
 
@@ -567,15 +653,24 @@ class CompositePerformer:
                 msg = traceback.format_exc(
                     limit=tb_limit, chain=True
                 ).split("__QAT+COMP_")[-1].replace("<module>", slug)
+
                 results[slug] = {
                     'value': None,
-                    'error': "Invalid Test Procedure: %s" % msg,
+                    'error': _("Invalid Test Procedure: %(traceback)s") % {'traceback': msg},
                     'comment': "",
                     'user_attached': [],
                 }
-                deps_not_complete = any(self.data['tests'][s] is None for s in self.all_dependencies[slug])
-                if deps_not_complete:
-                    results[slug]['error'] = None
+
+                for s in self.all_dependencies[slug]:
+                    incomplete_composite = (
+                        s in self.composite_tests and
+                        (results.get(s) is None or results[s]['value'] is None or results[s]['error'])
+                    )
+                    incomplete_simple = s not in self.composite_tests and self.data['tests'][s] in (None, "")
+
+                    if incomplete_simple or incomplete_composite:
+                        results[slug]['error'] = None
+                        break
             finally:
                 # clean up calculation context for next test
                 to_clean = ['result'] + [k for k in self.calculation_context.keys() if k not in self.context_keys]
@@ -587,16 +682,28 @@ class CompositePerformer:
 
         skips = self.calculation_context['UTILS'].skips
 
+        cleanup_matplotlib()
+
         return {"success": True, "errors": [], "results": results, "skips": skips}
 
     def set_formatters(self):
         """Set formatters for tests where applicable"""
-        self.formatters = {x.slug: x.formatting for x in self.all_tests if x.type in models.NUMERICAL_TYPES}
+        if self.defaults:
+            # don't format default values since it can lead to confusion when comparing with old values
+            self.formatters = {}
+        else:
+            self.formatters = {x.slug: x.formatting for x in self.all_tests if x.type in models.NUMERICAL_TYPES}
 
     def set_composite_test_data(self):
         """retrieve calculation procs for all composite tests"""
+
+        if self.defaults:
+            filter_ = lambda t: t.type not in models.CALCULATED_TYPES and t.calculation_procedure  # noqa: E731
+        else:
+            filter_ = lambda t: t.type in models.COMPOSITE_TYPES  # noqa: E731
+
         self.composite_tests = {
-            x.slug: x.calculation_procedure for x in self.all_tests if x.type in models.COMPOSITE_TYPES
+            t.slug: t.calculation_procedure for t in self.all_tests if filter_(t)
         }
 
     def set_test_types(self):
@@ -610,9 +717,10 @@ class CompositePerformer:
         values = self.data.get("tests")
         meta_data = self.data.get("meta")
 
+        tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = dateutil.parser.parse(meta_data[d])
+                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
             except (TypeError, KeyError, AttributeError):
                 pass
 
@@ -642,15 +750,26 @@ class CompositePerformer:
 
         self.context_keys = list(self.calculation_context.keys())
 
+        tz = timezone.get_current_timezone()
         for slug, val in values.items():
+
             self.context_keys.append(slug)
-            if self.test_types[slug] in models.DATE_TYPES:
-                has_time = self.test_types[slug] == models.DATETIME
-                parser = parse_datetime if has_time else parse_date
+
+            if self.test_types.get(slug) == models.DATETIME:
+
                 try:
-                    self.calculation_context[slug] = parser(val)
+                    dt = tz.localize(parse_datetime(val))
+                    self.calculation_context[slug] = dt
                 except:  # noqa: E722
                     self.calculation_context[slug] = None
+
+            elif self.test_types.get(slug) == models.DATE:
+
+                try:
+                    self.calculation_context[slug] = parse_date(val)
+                except:  # noqa: E722
+                    self.calculation_context[slug] = None
+
             elif slug not in self.composite_tests:
                 self.calculation_context[slug] = val
 
@@ -749,20 +868,25 @@ class ChooseUnit(TemplateView):
 
         units_ordering = 'unit__%s' % (settings.ORDER_UNITS_BY,)
 
+        units_with_adhoc = set(q.filter(frequency=None).values_list("unit__number", flat=True).distinct())
+        context['units_with_adhoc'] = units_with_adhoc
+
         if Site.objects.all().exists() and self.split_sites:
 
             unit_site_types = {}
             for s in Site.objects.all():
-                unit_site_types[s.name] = collections.defaultdict(list)
+                unit_site_types[(s.slug, s.name)] = collections.defaultdict(list)
             if q.filter(unit__site__isnull=True).exists():
-                unit_site_types['zzzNonezzz'] = collections.defaultdict(list)
+                unit_site_types[('zzzNonezzz', 'zzzNonezzz')] = collections.defaultdict(list)
 
             q = q.values(
                 'unit',
                 'unit__type__name',
+                'unit__type__collapse',
                 'unit__name',
                 'unit__number',
                 'unit__id',
+                'unit__site__slug',
                 'unit__site__name',
             ).order_by(units_ordering).distinct()
 
@@ -776,10 +900,15 @@ class ChooseUnit(TemplateView):
                     'name',
                 )
 
+                unit['categories'] = get_unit_categories(unit['unit__id'])
+
                 if unit['unit__site__name']:
-                    unit_site_types[unit['unit__site__name']][unit['unit__type__name']].append(unit)
+                    key = (unit['unit__site__slug'], unit['unit__site__name'])
+                    unit_site_types[key][(unit["unit__type__name"], unit["unit__type__collapse"])].append(unit)
                 else:
-                    unit_site_types['zzzNonezzz'][unit['unit__type__name']].append(unit)
+                    unit_site_types[('zzzNonezzz', 'zzzNonezzz')][
+                        (unit['unit__type__name'], unit['unit__type__collapse'])
+                    ].append(unit)
 
             ordered = {}
             for s in unit_site_types:
@@ -797,7 +926,7 @@ class ChooseUnit(TemplateView):
             context['split_by'] = int(split_by)
 
         else:
-            q = q.values('unit', 'unit__type__name', 'unit__name', 'unit__number',
+            q = q.values('unit', 'unit__type__name', 'unit__type__collapse', 'unit__name', 'unit__number',
                          'unit__id').order_by(units_ordering).distinct()
             freq_qs = models.Frequency.objects.prefetch_related('unittestcollections__unit').all()
 
@@ -806,7 +935,8 @@ class ChooseUnit(TemplateView):
                 unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values(
                     'slug', 'name'
                 )
-                unit_types[unit["unit__type__name"]].append(unit)
+                unit['categories'] = get_unit_categories(unit['unit__id'])
+                unit_types[(unit["unit__type__name"], unit["unit__type__collapse"])].append(unit)
 
             ordered = sorted(list(unit_types.items()), key=lambda x: min([u[units_ordering] for u in x[1]]))
             context['split_sites'] = False
@@ -814,6 +944,24 @@ class ChooseUnit(TemplateView):
         context['unit_types'] = ordered
 
         return context
+
+
+def get_unit_categories(unit_id):
+
+    if not settings.CHOOSE_UNIT_CATEGORY_DROPDOWN:
+        return []
+
+    qs = models.UnitTestInfo.objects.filter(
+        unit_id=unit_id,
+        test__category__parent=None,
+    ).order_by(
+        "test__category__name",
+    ).values_list(
+        "test__category__slug",
+        "test__category__name",
+    ).distinct()
+
+    return qs
 
 
 class PerformQA(PermissionRequiredMixin, CreateView):
@@ -936,6 +1084,16 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.user_set_status = False
             return models.TestInstanceStatus.objects.default()
 
+    def form_invalid(self, form):
+        """If the form is invalid, render the invalid form."""
+        context = self.get_context_data(form=form)
+        context['has_errors'] = True
+        messages.error(
+            self.request,
+            _("Data was not submitted succesfully. Please resolve the errors below and try again."),
+        )
+        return self.render_to_response(context)
+
     @transaction.atomic
     def form_valid(self, form):
         """
@@ -953,6 +1111,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         if not formset.is_valid():
             context["form"] = form
+            context['has_errors'] = True
+            messages.error(
+                self.request,
+                _("Data was not submitted succesfully. Please resolve the errors below and try again."),
+            )
             return self.render_to_response(context)
 
         status = self.get_test_status(form)
@@ -999,8 +1162,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             attachments.extend(ti_form.attachments_to_process)
 
             ti = models.TestInstance(
-                value=ti_form.cleaned_data.get("value", None),
+                value=ti_form.cleaned_data.get("value"),
                 string_value=ti_form.cleaned_data.get("string_value", ""),
+                json_value=ti_form.cleaned_data.get("json_value", ""),
+                date_value=ti_form.cleaned_data.get("date_value"),
+                datetime_value=ti_form.cleaned_data.get("datetime_value"),
                 skipped=ti_form.cleaned_data.get("skipped", False),
                 comment=ti_form.cleaned_data.get("comment", ""),
                 unit_test_info=ti_form.unit_test_info,
@@ -1047,12 +1213,17 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             changed_se = self.object.update_all_reviewed()
 
             if len(changed_se) > 0:
-                messages.add_message(
-                    request=self.request,
-                    level=messages.INFO,
-                    message='Changed status of service event(s) %s to "%s".' %
-                    (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
-                )
+                msg = _(
+                    'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+                ) % {
+                    'service_event_ids': ', '.join(str(x) for x in changed_se),
+                    'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
+                }
+                messages.add_message(request=self.request, level=messages.INFO, message=msg)
+
+        auto = form.cleaned_data.get("autosave_id")
+        if auto:
+            models.AutoSave.objects.filter(pk=auto).delete()
 
         if not self.object.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
@@ -1060,7 +1231,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             signals.testlist_complete.send(sender=self, instance=self.object, created=False)
 
         # let user know request succeeded and return to unit list
-        messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
+        messages.success(
+            self.request,
+            _("Successfully submitted %(test_list_name)s ") % {'test_list_name': self.object.test_list.name}
+        )
 
         if settings.USE_SERVICE_LOG and form.cleaned_data['initiate_service']:
             return HttpResponseRedirect('%s?ib=%s' % (reverse('sl_new'), self.object.id))
@@ -1069,12 +1243,16 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
     def create_tli_attachments(self):
         for idx, f in enumerate(self.request.FILES.getlist('tli_attachments')):
+            comment = _("Uploaded %(current_datetime)s by %(username)s") % {
+                'current_datetime': format_datetime(timezone.now()),
+                'username': self.request.user.username
+            }
             Attachment.objects.create(
                 attachment=f,
-                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                comment=comment,
                 label=f.name,
                 testlistinstance=self.object,
-                created_by=self.request.user
+                created_by=self.request.user,
             )
 
     def get_context_data(self, **kwargs):
@@ -1086,7 +1264,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
         if models.TestInstanceStatus.objects.default() is None:
-            messages.error(self.request, "There must be at least one Test Status defined before performing a TestList")
+            messages.error(
+                self.request,
+                _("There must be at least one Test Status defined before performing a TestList"),
+            )
             return context
 
         # setup our test list, tests, current day etc
@@ -1111,7 +1292,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context['current_day'] = self.actual_day + 1
         context["last_instance"] = self.unit_test_col.last_instance
         context['last_day'] = self.last_day
-        context['borders'] = self.test_list.sublist_borders(self.all_tests)
+        context['borders'] = self.test_list.sublist_borders()
+        context["autosaves"] = list(self.unit_test_col.autosave_set.order_by("-created").select_related("modified_by"))
 
         ndays = len(self.unit_test_col.tests_object)
         if ndays > 1:
@@ -1143,15 +1325,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             self.unit_test_col.tests_object.attachment_set.all()
         )
 
-        context['top_divs_span'] = 0
+        context['top_divs_span'] = 1
         has_perms = (
             self.request.user.has_perm('qa.can_review') or
             self.request.user.has_perm('qa.can_review_own_tests') or
             self.request.user.has_perm('qa.can_override_date')
         )
         if has_perms:
-            context['top_divs_span'] += 1
-        if len(context['attachments']) > 0:
             context['top_divs_span'] += 1
         if settings.USE_SERVICE_LOG and rtsqa_id is not None:
             context['top_divs_span'] += 1
@@ -1252,12 +1432,13 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 changed_se = self.object.update_all_reviewed()
 
                 if len(changed_se) > 0:
-                    messages.add_message(
-                        request=self.request,
-                        level=messages.INFO,
-                        message='Changed status of service event(s) %s to "%s".' %
-                        (', '.join(str(x) for x in changed_se), sl_models.ServiceEventStatus.get_default().name)
-                    )
+                    msg = _(
+                        'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+                    ) % {
+                        'service_event_ids': ', '.join(str(x) for x in changed_se),
+                        'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
+                    }
+                    messages.add_message(request=self.request, level=messages.INFO, message=msg)
                 if initially_requires_reviewed != self.object.all_reviewed:
                     for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
                         sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
@@ -1266,14 +1447,18 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 try:
                     signals.testlist_complete.send(sender=self, instance=self.object, created=False)
                 except:  # noqa: E722
-                    messages.add_message(
-                        request=self.request,
-                        message='Error sending notification email.',
-                        level=messages.ERROR,
-                    )
+                    msg = _('Error sending notification email.')
+                    messages.add_message(request=self.request, message=msg, level=messages.ERROR)
+
+            auto = form.cleaned_data.get("autosave_id")
+            if auto:
+                models.AutoSave.objects.filter(pk=auto).delete()
 
             # let user know request succeeded and return to unit list
-            messages.success(self.request, _("Successfully submitted %s " % self.object.test_list.name))
+            messages.success(
+                self.request,
+                _("Successfully submitted %(test_list_name)s") % {'test_list_name': self.object.test_list.name},
+            )
 
             return HttpResponseRedirect(self.get_success_url())
         else:
@@ -1310,12 +1495,16 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             attach.delete()
 
         for idx, f in enumerate(self.request.FILES.getlist('tli_attachments')):
+            comment = _("Uploaded %(current_datetime)s by %(username)s") % {
+                'current_datetime': format_datetime(timezone.now()),
+                'username': self.request.user.username
+            }
             Attachment.objects.create(
                 attachment=f,
-                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                comment=comment,
                 label=f.name,
                 testlistinstance=self.object,
-                created_by=self.request.user
+                created_by=self.request.user,
             )
 
     def set_status_object(self, status_pk):
@@ -1344,17 +1533,22 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             ti.save(calculate_pass_fail=False)
         except ZeroDivisionError:
 
-            msga = "Tried to calculate percent diff with a zero reference value. "
-
             ti.skipped = True
-            ti.comment = msga + " Original value was %s" % ti.value
+            ti.comment = _(
+                "Tried to calculate percent diff with a zero reference value. "
+                "Original value was %(test_instance_value)s"
+            ) % {'test_instance_value': ti.value}
             ti.value = None
             ti.save()
 
-            logger.error(msga + " UTI=%d" % ti.unit_test_info.pk)
-            msg = "Please call physics.  Test %s is configured incorrectly on this unit. " % ti.unit_test_info.test.name
-            msg += msga
-            messages.error(self.request, _(msg))
+            logger.error(_(
+                "Tried to calculate percent diff with a zero reference value. UTI=%(unit_test_info_id)d"
+            ) % {'unit_test_info_id': ti.unit_test_info.pk})
+            msg = _(
+                "Please call physics. Test %(test_name)s is configured incorrectly on this unit. "
+                "Tried to calculate percent diff with a zero reference value."
+            ) % {'test_name': ti.unit_test_info.test.name}
+            messages.error(self.request, msg)
 
     def template_unit_test_infos(self):
         """prepare the unit test infos for rendering in template"""
@@ -1405,6 +1599,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
 
+        context["autosaves"] = list(
+            self.object.unit_test_collection.autosave_set.order_by("-created").select_related("modified_by")
+        )
+
         return context
 
 
@@ -1424,14 +1622,76 @@ class InProgress(TestListInstances):
     which are marked as being in progress.
     """
 
-    def get_queryset(self):
-        return models.TestListInstance.objects.in_progress()
+    def get_queryset(self, *args, **kwargs):
+        qs = models.TestListInstance.objects.in_progress(user=self.request.user)
+        qs = qs.annotate(attachment_count=Count("attachment"))
+        return qs
 
     def get_icon(self):
         return 'fa-play'
 
     def get_page_title(self):
-        return "In Progress Test Lists"
+        return _("In Progress Test Lists")
+
+
+def autosave(request):
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'autosave_id': None})
+
+    tz = timezone.get_current_timezone()
+    for d in ("work_completed", "work_started"):
+        try:
+            data['meta'][d] = tz.localize(parse_datetime(data['meta'][d]))
+        except (TypeError, KeyError, AttributeError):
+            data['meta'][d] = None
+
+    try:
+        saved = models.AutoSave.objects.get(pk=data['autosave_id'] or None)
+    except models.AutoSave.DoesNotExist:
+        saved = models.AutoSave.objects.create(
+            unit_test_collection_id=data['meta']['unit_test_collection_id'],
+            test_list_instance_id=data.get('test_list_instance') or None,
+            created_by=request.user,
+            modified_by=request.user,
+            test_list_id=data['meta']['test_list_id'],
+            data={},
+        )
+
+    saved.work_started = data['meta']['work_started'] or timezone.now()
+    saved.work_completed = data['meta']['work_completed']
+    try:
+        saved.day = int(data['meta']['cycle_day']) - 1
+    except (ValueError, TypeError):
+        pass
+
+    saved.modified_by = request.user
+    saved.data = {
+        'tests': data['tests'],
+        'comments': data['comments'],
+        'skips': data['skips'],
+        'tli_comment': data['tli_comment'],
+    }
+    saved.save()
+
+    return JsonResponse({'ok': True, 'autosave_id': saved.pk})
+
+
+def autosave_load(request):
+    autosave_id = request.GET.get("autosave_id")
+    auto = get_object_or_404(models.AutoSave, pk=autosave_id)
+
+    data = {
+        'meta': {
+            'work_started': timezone.localtime(auto.work_started) if auto.work_started else None,
+            'work_completed': timezone.localtime(auto.work_completed) if auto.work_completed else None,
+        },
+        'data': auto.data,
+    }
+
+    return JsonResponse(data, encoder=QATrackJSONEncoder)
 
 
 class FrequencyList(UTCList):
@@ -1446,13 +1706,48 @@ class FrequencyList(UTCList):
         self.frequencies = models.Frequency.objects.filter(slug__in=freqs)
 
         q = Q(frequency__in=self.frequencies)
+        self.has_ad_hoc = False
         if "ad-hoc" in freqs:
+            self.has_ad_hoc = True
             q |= Q(frequency=None)
 
         return qs.filter(q).distinct()
 
     def get_page_title(self):
-        return ",".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
+        names = ", ".join([x.name if x else "ad-hoc" for x in self.frequencies])
+        if self.has_ad_hoc:
+            names = _("Ad Hoc ") + names.strip()
+        return _("%(frequency_names)s Test Lists") % {'frequency_names': names}
+
+
+class FrequencyTree(PermissionRequiredMixin, TemplateView):
+    """
+    View for users to edit an existing :model:`qa.TestListInstance` and
+    its children :model:`qa.TestInstance`s.
+
+    Note: Some of this code is duplicated in :view:`qa.views.perform.PerformQA`
+    and the common parts may be able to be refactored into a mixin.
+    """
+
+    template_name = 'qa/frequency_tree.html'
+    permission_required = "qa.add_testlistinstance"
+    raise_exception = True
+
+    def get_context_data(self, *args, **kwargs):
+
+        context = super().get_context_data(*args, **kwargs)
+        context['tree'] = BootstrapFrequencyTree(self.request.user.groups.all()).generate()
+        return context
+
+
+class DueAndOverdue(UTCList):
+
+    page_title = _l("Due & Overdue QC")
+
+    def get_queryset(self):
+        today = timezone.now().astimezone(timezone.get_current_timezone()).date()
+        qs = super().get_queryset()
+        return qs.exclude(due_date=None).filter(due_date__lt=today)
 
 
 class UnitFrequencyList(FrequencyList):
@@ -1469,8 +1764,84 @@ class UnitFrequencyList(FrequencyList):
         return qs.filter(unit__in=self.units)
 
     def get_page_title(self):
-        title = ", ".join([x.name for x in self.units])
-        title += " " + ", ".join([x.name if x else "ad-hoc" for x in self.frequencies]) + " Test Lists"
+        freq_names = ", ".join([x.name if x else "ad-hoc" for x in self.frequencies])
+        if self.has_ad_hoc:
+            freq_names = _("Ad Hoc ") + freq_names.strip()
+        title = '%(unit_names)s %(frequency_names)s Test Lists' % {
+            'unit_names': ", ".join([x.name for x in self.units]),
+            'frequency_names': freq_names,
+        }
+
+        return title
+
+
+class CategoryTree(PermissionRequiredMixin, TemplateView):
+    """
+    View for users to edit an existing :model:`qa.TestListInstance` and
+    its children :model:`qa.TestInstance`s.
+
+    Note: Some of this code is duplicated in :view:`qa.views.perform.PerformQA`
+    and the common parts may be able to be refactored into a mixin.
+    """
+
+    template_name = 'qa/category_tree.html'
+    permission_required = "qa.add_testlistinstance"
+    raise_exception = True
+
+    def get_context_data(self, *args, **kwargs):
+
+        context = super().get_context_data(*args, **kwargs)
+        context['tree'] = BootstrapCategoryTree(self.request.user.groups.all()).generate()
+        return context
+
+
+class CategoryList(UTCList):
+
+    def get_queryset(self):
+        """filter queryset by test category"""
+
+        qs = super(CategoryList, self).get_queryset()
+
+        categories = self.kwargs["category"].split("/")
+        self.categories = models.Category.objects.filter(slug__in=categories)
+        all_cat_ids = []
+        for cat in self.categories:
+            for desc in cat.get_descendants(True):
+                all_cat_ids.append(desc.id)
+
+        q = (
+            Q(test_list__testlistmembership__test__category_id__in=all_cat_ids) |
+            Q(test_list__children__child__testlistmembership__test__category_id__in=all_cat_ids) |
+            Q(test_list_cycle__testlistcyclemembership__test_list__testlistmembership__test__category_id__in=all_cat_ids) |  # noqa: E501
+            Q(test_list_cycle__testlistcyclemembership__test_list__children__child__testlistmembership__test__category_id__in=all_cat_ids)  # noqa: E501
+        )  # yapf: disable
+
+        return qs.filter(q).distinct()
+
+    def get_page_title(self):
+        return _("Test Lists for Categories: %(category_names)s") % {
+            'category_names': ", ".join([x.name for x in self.categories])
+        }
+
+
+class UnitCategoryList(CategoryList):
+    """
+    List :model:`qa.UnitTestCollection`s for requested :model:`unit.Unit`s
+    and :model:`qa.Category`s.
+    """
+
+    def get_queryset(self):
+        """filter queryset by Unit"""
+
+        qs = super().get_queryset()
+        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
+        return qs.filter(unit__in=self.units)
+
+    def get_page_title(self):
+        title = _('Test Lists for Units: %(unit_names)s and Categories: %(category_names)s') % {
+            'unit_names': ", ".join([x.name for x in self.units]),
+            'category_names': ", ".join([x.name for x in self.categories]),
+        }
         return title
 
 
@@ -1484,5 +1855,30 @@ class UnitList(UTCList):
         return qs.filter(unit__in=self.units)
 
     def get_page_title(self):
-        title = ", ".join([x.name for x in self.units]) + " Test Lists"
+        title = '%(unit_names)s Test Lists' % {'unit_names': ", ".join([x.name for x in self.units])}
         return title
+
+
+class SiteList(UTCList):
+    """ List :model:`qa.UnitTestCollection`s for requested :model:`unit.Site`s """
+
+    def get_queryset(self):
+
+        qs = super().get_queryset()
+
+        sites = self.kwargs["site"].split("/")
+        self.sites = Site.objects.filter(slug__in=sites)
+
+        q = Q(unit__site__in=self.sites)
+        self.has_other = False
+        if "other" in sites:
+            self.has_other = True
+            q |= Q(unit__site=None)
+
+        return qs.filter(q).distinct()
+
+    def get_page_title(self):
+        names = ", ".join([x.name if x else "other" for x in self.sites])
+        if self.has_other:
+            names = _("Other") + names.strip()
+        return _("%(site_names)s Test Lists") % {'site_names': names}

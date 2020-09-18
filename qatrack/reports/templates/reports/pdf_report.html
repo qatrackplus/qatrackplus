@@ -40,11 +40,12 @@
       {% include "reports/_details.html" %}
 
       <div class="row">
-        <div class="col-xs-12">
+        <div id="report-content" class="col-xs-12">
 
           {% block content %}
           {% endblock content %}
 
+        {% include "reports/_notes.html" %}
           {% include "reports/_signature.html" %}
 
         </div>

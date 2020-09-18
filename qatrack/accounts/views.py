@@ -9,6 +9,7 @@ from django.contrib.auth.views import (
 )
 from django.contrib.sites.models import Site
 from django.core.mail import EmailMultiAlternatives
+from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.views.generic.base import TemplateView
 from registration.backends.simple.views import RegistrationView
@@ -84,6 +85,6 @@ class GroupsApp(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(GroupsApp, self).get_context_data(**kwargs)
-        context["all_perms"] = json.dumps(PERMISSIONS)
+        context["all_perms"] = json.dumps(PERMISSIONS, cls=DjangoJSONEncoder)
         context["groups"] = Group.objects.all()
         return context

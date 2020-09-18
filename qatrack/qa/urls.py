@@ -2,14 +2,14 @@ from django.conf.urls import url
 
 import qatrack.qa.views.admin
 
-from .views import admin, backup, base, charts, perform, review
+from .views import admin, base, charts, perform, review
 
 urlpatterns = [
     # CUSTOM ADMIN PAGES
     # Copy references and tolerances between testlists
     url(
         r'^admin/copy_refs_and_tols/$',
-        admin.SetReferencesAndTolerances(admin.SetReferencesAndTolerancesForm),
+        admin.CopyReferencesAndTolerances(admin.CopyReferencesAndTolerancesForm),
         name="qa_copy_refs_and_tols"
     ),
     url(
@@ -24,6 +24,8 @@ urlpatterns = [
 
     # view for composite calculations via ajax
     url(r"^composite/$", perform.CompositeCalculation.as_view(), name="composite"),
+    url(r"^autosave/$", perform.autosave, name="autosave"),
+    url(r"^autosave/load/$", perform.autosave_load, name="autosave_load"),
 
     # view for uploads via ajax
     url(r"^upload/$", perform.Upload.as_view(), name="upload"),
@@ -76,8 +78,9 @@ urlpatterns = [
         review.ReviewTestListInstance.as_view(),
         name="review_test_list_instance"
     ),
+    url(r"^session/review/bulk/$", review.bulk_review, name="qa-bulk-review"),
     url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
-    url(r"^session/unreviewedvisible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
+    url(r"^session/unreviewed/visible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
     url(r"^session/group/$", review.ChooseGroupVisibleTo.as_view(), name="choose_group_visible"),
     url(
         r"^session/unreviewedbygroup/(?P<group>[/\d]+)/$",
@@ -89,6 +92,7 @@ urlpatterns = [
     url(r"^session/edit/(?P<pk>\d+)/$", perform.EditTestListInstance.as_view(), name="edit_tli"),
     url(r"^unit/$", perform.ChooseUnit.as_view(), name="choose_unit"),
     url(r"^utc/perform(?:/(?P<pk>\d+))?/$", perform.PerformQA.as_view(), name="perform_qa"),
+    url(r"^site/(?P<site>[/\w-]+?)/$", perform.SiteList.as_view(), name="qa_by_site"),
     url(
         r"^unit/(?P<unit_number>[/\d]+)/frequency/(?P<frequency>[/\w-]+?)/$",
         perform.UnitFrequencyList.as_view(),
@@ -101,6 +105,13 @@ urlpatterns = [
         name="qa_by_unit_frequency"
     ),
     url(r"^frequency/(?P<frequency>[/\w-]+?)/$", perform.FrequencyList.as_view(), name="qa_by_frequency"),
-    url(r"^backup/$", backup.PaperFormRequest.as_view(), name="qa_paper_forms_request"),
-    url(r"^backup/paper/$", backup.PaperForms.as_view(), name="qa_paper_forms"),
+    url(r"^tree/category/$", perform.CategoryTree.as_view(), name="qa_category_tree"),
+    url(r"^tree/frequency/$", perform.FrequencyTree.as_view(), name="qa_frequency_tree"),
+    url(
+        r"^category/(?P<category>[/\w-]+)/unit/(?P<unit_number>[/\d]+)/$",
+        perform.UnitCategoryList.as_view(),
+        name="qa_by_unit_category"
+    ),
+    url(r"^category/(?P<category>[/\w-]+?)/$", perform.CategoryList.as_view(), name="qa_by_category"),
+    url(r"^due-and-overdue/$", perform.DueAndOverdue.as_view(), name="qa_by_overdue"),
 ]

@@ -2,11 +2,11 @@ from datetime import time as dt_time
 
 from django.contrib.auth.models import Group, User
 from django.db import models
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.qatrack_core.fields import JSONField
-from qatrack.reports.reports import REPORT_TYPE_CHOICES, REPORT_TYPE_LOOKUP
+from qatrack.reports.reports import report_class
 
 
 class SavedReport(models.Model):
@@ -15,10 +15,7 @@ class SavedReport(models.Model):
 
     title = models.CharField(max_length=255,)
 
-    report_type = models.CharField(
-        max_length=128,
-        choices=REPORT_TYPE_CHOICES,
-    )
+    report_type = models.CharField(max_length=128)
 
     report_format = models.CharField(
         max_length=8,
@@ -57,16 +54,16 @@ class SavedReport(models.Model):
 
     class Meta:
         permissions = (
-            ("can_run_reports", "Can Run Reports"),
-            ("can_create_reports", "Can create Reports"),
-            ("can_run_sql_reports", "Can run SQL Data Reports"),
-            ("can_create_sql_reports", "Can create SQL Data Reports"),
+            ("can_run_reports", _l("Can Run Reports")),
+            ("can_create_reports", _l("Can create Reports")),
+            ("can_run_sql_reports", _l("Can run SQL Data Reports")),
+            ("can_create_sql_reports", _l("Can create SQL Data Reports")),
         )
 
         ordering = ("title", "created",)
 
     def get_filter_class(self):
-        return REPORT_TYPE_LOOKUP[self.report_type].filter_class
+        return report_class(self.report_type).filter_class
 
     @property
     def base_opts(self):
@@ -77,8 +74,11 @@ class SavedReport(models.Model):
         }
 
     def get_report(self, user=None):
-        ReportClass = REPORT_TYPE_LOOKUP[self.report_type]
+        ReportClass = report_class(self.report_type)
         return ReportClass(base_opts=self.base_opts, report_opts=self.filters)
+
+    def get_report_type_display(self):
+        return report_class(self.report_type).name
 
     def render(self, user=None):
         """create in memory file containing rendering of report"""
@@ -92,6 +92,19 @@ class SavedReport(models.Model):
             self.get_report_type_display(),
             self.get_report_format_display(),
         )
+
+
+class ReportNote(models.Model):
+
+    report = models.ForeignKey(SavedReport, on_delete=models.CASCADE)
+
+    heading = models.TextField(
+        help_text=_l("Add a heading for this note"),
+    )
+    content = models.TextField(
+        help_text=_l("Add the content of this note"),
+        blank=True,
+    )
 
 
 class ReportSchedule(models.Model):

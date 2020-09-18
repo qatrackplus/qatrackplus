@@ -8,8 +8,8 @@
         "tol_low": -2.0,
         "tol_high": 2.0,
         "act_high": 3.0,
-        "mc_pass_choices": null,
-        "mc_tol_choices": null,
+        "mc_pass_choices": "",
+        "mc_tol_choices": "",
         "bool_warning_only": false,
         "created_date": "2018-06-01T17:59:43.086Z",
         "created_by": [
@@ -30,8 +30,8 @@
         "tol_low": -1.0,
         "tol_high": 1.0,
         "act_high": 2.0,
-        "mc_pass_choices": null,
-        "mc_tol_choices": null,
+        "mc_pass_choices": "",
+        "mc_tol_choices": "",
         "bool_warning_only": false,
         "created_date": "2018-06-01T17:59:57.999Z",
         "created_by": [
@@ -52,8 +52,8 @@
         "tol_low": -2.0,
         "tol_high": 2.0,
         "act_high": 3.0,
-        "mc_pass_choices": null,
-        "mc_tol_choices": null,
+        "mc_pass_choices": "",
+        "mc_tol_choices": "",
         "bool_warning_only": false,
         "created_date": "2018-06-01T18:00:08.242Z",
         "created_by": [
@@ -74,8 +74,8 @@
         "tol_low": -1.0,
         "tol_high": 1.0,
         "act_high": 2.0,
-        "mc_pass_choices": null,
-        "mc_tol_choices": null,
+        "mc_pass_choices": "",
+        "mc_tol_choices": "",
         "bool_warning_only": false,
         "created_date": "2018-06-01T18:00:22.746Z",
         "created_by": [

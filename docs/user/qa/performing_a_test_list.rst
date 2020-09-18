@@ -186,3 +186,41 @@ Progress QC sessions for the current test list.
    :alt: Continue an in progress test list from the sidebar
 
    Continue an in progress test list from the sidebar
+
+
+.. _auto_save:
+
+Auto Save
+~~~~~~~~~
+
+As of version 0.3.1, QATrack+ now auto-saves your data in the background 
+every time you enter a new test result.  This helps prevent data loss
+in the case that a user mistakenly navigates away from a test list page without
+submiting the data, or due to a browser crash, power failure, etc.
+
+You can see the last auto-save time in the top right hand portion of the 
+form for entering QC data.
+
+.. figure:: images/autosave_status.png
+   :alt: Autosave status showing last saved time
+
+   Autosave status showing last saved time
+
+When performing a test list with autosaved data available, the left hand drawer menu
+will also show any autosaved sessions which you can click to load and continue.
+
+.. figure:: images/autosave_load.png
+   :alt: Continue an autosaved test list instance
+
+   Continue an autosaved test list instance
+
+Autosaved sessions will be automatically deleted either:
+
+a) When the QC session is submitted succesfully -or-
+b) After 30 days has passed since the auto-saved session was last modified. (To
+   change the 30 day interval, you may change the :ref:`AUTOSAVE_DAYS_TO_KEEP
+   <autosave_days_to_keep>` setting).
+
+
+
+

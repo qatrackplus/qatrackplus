@@ -29,7 +29,8 @@ class TestTags(TestCase):
                 'can_view_ref_tol': False,
             }
         }
-        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object, perms)
+        user = None
+        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object, perms, user)
         self.assertIsInstance(rendered, str)
 
     def test_due_date(self):

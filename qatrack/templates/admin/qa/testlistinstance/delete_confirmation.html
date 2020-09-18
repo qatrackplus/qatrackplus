@@ -73,7 +73,7 @@
     </p>
     <ul>
         {% for del_obj in object.testinstance_set.all  %}
-            <li>{{del_obj.unit_test_info.test.name}} : {{del_obj.work_completed}} : {{del_obj.modified_by}} : {{del_obj.status}}</li>
+            <li>{{del_obj.unit_test_info.test}} : {{del_obj.work_completed}} : {{del_obj.modified_by}} : {{del_obj.status}}</li>
         {% endfor %}
     </ul>
     <form action="" method="post">{% csrf_token %}

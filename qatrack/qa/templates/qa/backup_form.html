@@ -1,67 +1,62 @@
 {% extends "site_base.html" %}
+{% load i18n %}
+{% load static %}
 
 {% load qatrack_tags %}
 {% load qa_tags %}
 
-{% block head_title %}Create Paper Backup Forms{% endblock %}
+{% block head_title %}{% trans "Create Paper Backup Forms" %}{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static "felter/css/felter.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+{% endblock %}
+{% block require_javascript %}
+require(['jquery', 'select2', 'felter'], function($){
+
+});
+{% endblock require_javascript %}
 
 {% block body %}
-    <div class="row">
-        <div class="col-md-3"></div>
-        <div class="col-md-6">
-            <div class="box">
+<div class="row">
+  <div class="col-md-3"></div>
+  <div class="col-md-6">
+    <div class="box">
 
-                <div class="box-header">
-                    <h3 class="box-title"><i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>Create Paper Backup Forms</h3>
-                    <p>
+      <div class="box-header">
+        <h3 class="box-title">
+          <i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>
+          {% trans "Create Paper Backup Forms" %}
+        </h3>
+        <p>
+          {% blocktrans %}
+          Fill out the form below and submit it to generate a set of
+          paper based forms that can be used in the event of a server
+          failure.  These forms can be saved or printed to pdf and stored
+          on a local computer or network drive.
+          {% endblocktrans %}
+        </p>
+      </div>
 
-                        Fill out the form below and submit it to generate a set of
-                        paper based forms that can be used in the event of a server
-                        failure.  These forms can be saved or printed to pdf and stored
-                        on a local computer or network drive.
-                    </p>
+      <div class="box-body">
+        <div class="row">
+          <div class="col-sm-12">
+            <form method="post" class="form">
+              {% csrf_token %}
+              {% include '_form_horizontal.html' with form=form %}
+              <div class="row">
+                <div class="col-sm-12">
+                  <button class="btn btn-primary btn-flat pull-right" type="submit">{% trans "Submit" %}</button>
                 </div>
-
-                <div class="box-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <form method="post" class="form form-horizontal">
-                                {% csrf_token %}
-                                {% if form.non_field_errors %}
-                                    <div class="alert alert-error">
-                                        {% if form_error_title %}
-                                            <strong>{{ form_error_title }}</strong>
-                                        {% endif %}
-                                        {% for error in form.non_field_errors %}
-                                            {{ error }}<br />
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-
-                                {% for field in form %}
-                                    {% if field.is_hidden %}
-                                        {{ field }}
-                                    {% else %}
-                                        <div class="{% if field.errors %}has-error{% endif %}">
-                                            {{ field }}
-                                            {% for error in field.errors %}
-                                                <span class="help-block">{{ error }}</span>
-                                            {% endfor %}
-                                            {% if field.help_text %}
-                                                <p class="help-block">{{ field.help_text|safe }}</p>
-                                            {% endif %}
-                                        </div>
-                                    {% endif %}
-                                {% endfor %}
-                                <button class="btn btn-primary btn-flat pull-right" type="submit">Submit</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+              </div>
+            </form>
+          </div>
         </div>
-        <div class="col-md-3"></div>
+      </div>
     </div>
-
+  </div>
+  <div class="col-md-3"></div>
+</div>
 
 {% endblock body %}

@@ -1,0 +1,36 @@
+{% extends base_template %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-12">
+    {% for site, tlis in sites_data %}
+      <h2>{% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
+      <table class="table table-bordered table-striped table-condensed" >
+        <thead>
+          <tr>
+            <th style="width: 15%">{% trans "Unit" %}<div></div></th>
+            <th style="width: 40%">{% trans "Test List" %}</th>
+            <th style="width: 15%">{% trans "Due Date" %}</th>
+            <th style="width: 15%">{% trans "Work Completed" %}</th>
+            <th style="width: 15%">{% trans "Pass/Fail Status" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tli in tlis %}
+            <tr>
+              <td>{{ tli.unit_name }}</td>
+              <td>{{ tli.test_list_name }}</td>
+              <td>{{ tli.due_date }}</td>
+              <td>{{ tli.work_completed }}</td>
+              <td>{{ tli.pass_fail }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

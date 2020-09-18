@@ -2,10 +2,12 @@
 function updateRRDisplay(cal, start, end){
     var rr;
     var txt = $("#id_recurrences").val();
+    var time = (new Date()).strftime("%H%M%S");
 
     if (txt.indexOf("DTSTART") < 0){
-        txt = "DTSTART:20120101T051800Z\n" + txt;
+        txt = "DTSTART:20120101T" + time +"\n" + txt;
     }
+
     try {
         rr = rrule.rrulestr(txt);
     } catch (e){

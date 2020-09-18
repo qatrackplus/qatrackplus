@@ -13,7 +13,14 @@ configuring a tests are described below.
 Name
 ....
 
-A name that describes what the test is (e.g. something like *Temperature (deg C)* or *0 deg Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
+A unique name that describes what the test is (e.g. something like *Temperature (deg C)* or *0 deg Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
+
+Display Name (Optional)
+.......................
+
+Text describing how a test should be displayed when performing or reviewing. Having a separate name & display name allows
+you to create tests with descriptive names that are easy to find in the admin, but use a more succinct name when
+performing a Test List. If left blank, the test name will be used.
 
 Macro Name
 ..........
@@ -91,9 +98,18 @@ Choose the :ref:`Test Category <qa_categories>` that this test belongs to.
 Type
 ~~~~
 
-QATrack+ currently supports 8 different test types as outlined below.
+QATrack+ currently supports 11 different test types as outlined below.
 
 #. **Simple Numerical** A test with a single numerical result (e.g. *Temperature*)
+
+#. **Wraparound** A test that accepts values in a predefined range (*Wrap low*
+   to *Wrap high*) and has values that "wrap" from the high to low value and
+   vice versa. This type of test is useful for example if you have a
+   collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
+   difference from a 0 deg reference.
+
+   Only absolute tolerances with reference values between *Wrap low* and *Wrap
+   high* are supported.
 
 #. **Boolean** A test with a Yes or No answer (e.g. *Door Interlock Functional*)
 
@@ -117,8 +133,9 @@ QATrack+ currently supports 8 different test types as outlined below.
 
 #. **String** Allows the user to enter a short piece of text (e.g. a user ID)
 
-#. **String Composite** A *Composite* test that stores a string (text) rather
-   than a numerical value. Please see the :ref:`Composite Test section
+#. **String Composite/JSON** A *Composite* test that stores a string (text) rather
+   than a numerical value. You may also use this type of field to store a JSON
+   data structure. Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.
 
 #. **Date** Allows the user to use a date picker to select a calendar date.
@@ -181,13 +198,25 @@ Skip Without Comment
 Check this option if you want users to be able to skip this test without being
 forced to add a comment (regardless of their commenting permissions).
 
+Require Comment
+~~~~~~~~~~~~~~~
+
+Check this option if you want users to be forced to enter a comment when
+submitting this test.
+
 Calculation Procedure
 ~~~~~~~~~~~~~~~~~~~~~
 
-The Python snippet for calculating composite test results and processing uploads (see below).
+This field is used for calculating either test results (for composite, string
+composite, & file upload test types) or default initial (user overrideable)
+values for other test types (simple numerical, string, date/time, multiple
+choice).
 
-Formatting (Composite & Constant Tests Only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _qa_test_formatting:
+
+Formatting
+~~~~~~~~~~
 
 Python style string format for displaying numerical results. Leave blank for
 the QATrack+ default, select one of the predefined options, or enter your own
@@ -217,14 +246,14 @@ Tests with Calculated Results
 
 There are currently three test types that allow you to calculate test
 results using snippets of Python code. These tests include *Composite*,
-*String Composite* & *Upload*.
+*String Composite/JSON* & *Upload*.
 
 Composite Tests
 ---------------
 
 .. _composite_tests:
 
-Composite tests allow you to do calculations to produce a numberical
+Composite tests allow you to do calculations to produce a numerical
 test result based on other test values ( e.g. to calculate a dose based
 on a raw electrometer reading and temperature & pressure ). When you
 select *Composite* for the test *Type* field, a *Calculation Procedure*
@@ -328,7 +357,11 @@ When your script (calculation procedure) is executed, it has access to
 #. A META object which is a dictionary of some potentially useful
    information about the test list currently being performed including:
 
+    -  test\_list\_id - ID of current test list
+
     -  test\_list\_name - Name of current test list
+
+    -  unit\_test\_collection\_id - ID of current Unit Test Collection (Unit Test List/Cycle Assignment)
 
     -  unit\_number - Unit number
 
@@ -365,14 +398,16 @@ When your script (calculation procedure) is executed, it has access to
       is found, `None` will be returned.
 
     - **UTILS.previous_test_instance(test, same_list_only=True,
-      include_in_progress=False)** retrieves the most recent :term:`Test
-      Instance` performed on this unit for the input `test`.  If
-      `same_list_only=True` then only Test Instances's which were created as
+      include_in_progress=False, exclude_skipped=True)** retrieves the most
+      recent :term:`Test Instance` performed on this unit for the input `test`.
+      If `same_list_only=True` then only Test Instances's which were created as
       part of the current Test List being performed will be included,
       otherwise, any Test Instance for this Test & Unit will be returned.  If
       `include_in_progress=True` than Test List Instances which are marked as
-      `In Progress` will be included, otherwise they will be excluded. If no
-      previous Test Instance is found, `None` will be returned.
+      `In Progress` will be included, otherwise they will be excluded. If
+      `exclude_skipped=False`, then skipped results will be included, otherwise
+      only non-skipped results will be searched. If no previous Test Instance
+      is found, `None` will be returned.
 
     - **UTILS.get_figure()** will get you a `matplotlib Figure instance
       <https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html>`__
@@ -476,18 +511,27 @@ by default.  The calculationn `a = 1/2` will result in `a = 0.5` rather than `a
 `//` operator like `a = 1//2 # a == 0`.
 
 
-String Composite Tests
-----------------------
+.. _qa_string_comp_json:
+
+String Composite/JSON Tests
+---------------------------
 
 The String Composite test type are the same as the Composite test type
 described above with the exception that the calculated value should be a
 string rather than a number. An example Composite String test is shown
 below.
 
+As of v0.3.1 you may now also return a `JSON serializable Python dictionary
+<https://pythontic.com/serialization/json/introduction>`__.  This allows you to
+e.g. pre-calculate values for other composite tests, or store more complex
+datatypes in the database.
+
+
 .. figure:: images/string_composite_procedure.png
    :alt: Example String Composite procedure
 
    Example String Composite procedure
+
 
 
 Upload Tests
@@ -593,3 +637,61 @@ DICOM file:
     import pydicom
     f = pydicom.read_file(BIN_FILE)
     mean_value = f.pixel_array.mean()
+
+
+.. _qa_default_values:
+
+Setting Default Initial Values for Non-Calculated Tests
+-------------------------------------------------------
+
+.. warning::
+
+    Defaults are currently only applied for Test Lists performed via the
+    web user interface and not through the API.
+
+Similar to calculated tests, as of version 0.3.1, you can now use the
+calculation procedure field to set an initial default value for a test that can
+be overridden by the user.
+
+For example, to set an initial value for a Simple Numerical test you could use
+a simple calculation procedure like:
+
+::
+
+    your_simple_test = 22
+
+To set an initial value for a Multiple Choice test with choices "A,B,C" you
+could use a simple calculation procedure like:
+
+::
+
+    your_mult_choice_test = "B"
+
+
+To set an initial value for a Boolean (Yes/No) test you would use:
+
+::
+
+    your_bool_test = True  # or False
+
+
+To set an initial value for a String test you would use:
+
+::
+
+    your_string_test = "Some string"
+
+
+To set an initial value for a Date test you could use something like this:
+
+::
+
+    from django.utils import timezone
+    your_date_test = timezone.now().date()  # or some other datetime.date instance
+
+To set an initial value for a Datetime test you could use someting like this:
+
+::
+
+    from django.utils import timezone
+    your_date_test = timezone.now()  # or some other datetime.datetime instance

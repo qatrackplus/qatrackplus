@@ -19,7 +19,7 @@ class UserViewSet(MultiSerializerMixin, viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed.
     """
-    queryset = User.objects.all().order_by('username')
+    queryset = User.objects.prefetch_related("groups").order_by('username')
     serializer_class = UserSerializer
     action_serializers = {
         'list': UserListSerializer,

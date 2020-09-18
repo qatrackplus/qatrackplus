@@ -11,9 +11,15 @@ from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
 from django_comments.forms import CommentForm
 
+from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
+
 
 def homepage(request):
-    return render(request, "homepage.html", {})
+    context = {
+        'freq_tree': BootstrapFrequencyTree(request.user.groups.all()).generate(),
+        'cat_tree': BootstrapCategoryTree(request.user.groups.all()).generate(),
+    }
+    return render(request, "homepage.html", context)
 
 
 class CustomCommentForm(CommentForm):
@@ -45,38 +51,51 @@ def ajax_comment(request, next=None, using=None):
     ctype = data.get("content_type")
     object_pk = data.get("object_pk")
     if ctype is None or object_pk is None:
-        return JsonResponse({'error': True, 'message': 'Missing content_type or object_pk field.'}, status=500)
+        return JsonResponse({'error': True, 'message': _('Missing content_type or object_pk field.')}, status=500)
     try:
         model = apps.get_model(*ctype.split(".", 1))
         target = model._default_manager.using(using).get(pk=object_pk)
     except TypeError:
-        return JsonResponse({'error': True, 'message': 'Invalid content_type value: %r' % escape(ctype)}, status=500)
+        return JsonResponse({
+            'error': True,
+            'message': _('Invalid content_type value: %(content_type)r') % {
+                'content_type': escape(ctype)
+            }
+        }, status=500)
     except AttributeError:
         return JsonResponse(
             {
                 'error': True,
-                'message': 'The given content-type %r does not resolve to a valid model.' % escape(ctype)
+                'message':
+                    _('The given content-type %(content_type)r does not resolve to a valid model.') % {
+                        'content_type': escape(ctype)
+                    }
             },
             status=500,
         )
     except ObjectDoesNotExist:
         return JsonResponse(
             {
-                'error':
-                    True,
-                'message':
-                    'No object matching content-type %r and object PK %r exists.' % (escape(ctype), escape(object_pk))
+                'error': True,
+                'message': _('No object matching content-type %(content_type)r and object PK %(object_id)r exists.') % {
+                    'content_type': escape(ctype),
+                    'object_id': escape(object_pk)
+                },
             },
             status=500,
         )
     except (ValueError, ValidationError) as e:
         return JsonResponse(
             {
-                'error':
-                    True,
-                'message':
-                    'Attempting go get content-type %r and object PK %r exists raised %s' %
-                    (escape(ctype), escape(object_pk), e.__class__.__name__)
+                'error': True,
+                'message': _(
+                    'Attempting to get content-type %(content_type)r and '
+                    'object PK %(object_id)r exists raised %(error_class)s'
+                ) % {
+                    'content_type': escape(ctype),
+                    'object_id': escape(object_pk),
+                    'error_class': e.__class__.__name__,
+                }
             },
             status=500,
         )
@@ -102,7 +121,7 @@ def ajax_comment(request, next=None, using=None):
         return JsonResponse(
             {
                 'error': True,
-                'message': 'The comment submission failed',
+                'message': _('The comment submission failed'),
                 'extra': form.errors
             },
             status=400,
@@ -126,7 +145,9 @@ def ajax_comment(request, next=None, using=None):
             return JsonResponse(
                 {
                     'error': True,
-                    'message': 'comment_will_be_posted receiver %r killed the comment' % receiver.__name__
+                    'message': _('comment_will_be_posted receiver %(receiver_name)r killed the comment') % {
+                        'receiver_name': receiver.__name__,
+                    },
                 },
                 status=500,
             )

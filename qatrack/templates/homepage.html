@@ -1,6 +1,17 @@
 {% extends "site_base.html" %}
 {% load i18n %}
+{% load mptt_tags %}
 
+{% block extra_js %}
+<script type="text/javascript">
+  window.catTree = {{ cat_tree | safe }};
+  window.freqTree = {{ freq_tree | safe }};
+</script>
+{% endblock extra_js %}
+
+{% block require_javascript %}
+require(['homepage']);
+{% endblock require_javascript %}
 
 {% block head_title %}{% trans "QATrack+ Homepage" %}{% endblock %}
 
@@ -26,11 +37,35 @@
           <a class="list-group-item" href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
             <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
             {% trans "Continue an In Progress Test List Instance" %}
-            <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
+            <span title="{% blocktrans %}There are currently {{ USERS_IN_PROGRESS }} QC Sessions saved in progress{% endblocktrans %}" class="label {% if USERS_IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-in-progress-count">{{ USERS_IN_PROGRESS }}</span>
             </span>
           </a>
+          <div class="list-group-item">
+            <i class="pull-left fa fa-stack fa-fw fa-lg">
+              <i class="fa fa-cubes fa-stack-custom-sub lower-left"></i>
+              <i class="fa fa-clock-o fa-stack-custom-sub"></i>
+            </i>
+            <div class="pull-left site-qc-tree" id="site-freq-qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              {% trans "Loading QC Unit & Frequency Tree" %}...</span>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+          <div class="list-group-item">
+            <i class="pull-left fa fa-stack fa-fw fa-lg">
+              <i style="left: -10px" class="fa fa-clock-o fa-stack-custom-sub upper-left"></i>
+              <i style="left: -2px" class="fa fa-cubes fa-lg fa-stack-custom-sub lower-left"></i>
+              <i class="fa fa-tags fa-stack-custom-sub upper-right"></i>
+            </i>
+            <div class="pull-left site-qc-tree" id="site-cat-qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              {% trans "Loading QC Unit, Frequency, Category Tree" %}...</span>
+            </div>
+            <div class="clearfix"></div>
+          </div>
       </div>
+      <!-- /.box -->
     {% endif %}
 
     {% if perms.qa.can_review or perms.qa.can_view_completed %}
@@ -46,8 +81,8 @@
             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
             {% trans "View QC data awaiting review" %}
             {% if perms.qa.can_review_non_visible_tli %}
-              <span title="There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+              <span title="There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-unreviewed-count">{{ UNREVIEWED }}</span>
               </span>
             {% else %}
               <span class="fa fa-lg fa-fw" title="There are currently {{ USERS_UNREVIEWED }} QC Sessions waiting to be reviewed" class="label {% if USERS_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
@@ -91,6 +126,19 @@
               {% trans "Open new service event" %}
             </a>
           {% endif %}
+          {% if perms.service_log.review_serviceevent %}
+            <a class="list-group-item" title="{% trans "Service Events Needing Review" %}" href="{% url 'sl_list_review_required' %}">
+              <i class="fa fa-stack fa-lg fa-fw">
+                <i class="fa fa-wrench fa-stack-custom-main"></i>
+                <i class="fa fa-question-circle fa-stack-custom-sub upper-left hover-sub-success"></i>
+              </i>
+              {% trans "Service Events Needing Review" %}
+              <span title="{% trans "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                  <span class="total-unreviewed-count">{{ SE_NEEDING_REVIEW_COUNT }}</span>
+              </span>
+            </a>
+          {% endif %}
+
           {% if perms.service_log.perform_returntoserviceqa %}
             <a class="list-group-item" title="{% trans "View all incomplete RTS QC" %}" href="{% url 'rtsqa_list_incomplete' %}">
               <i class="fa fa-stack fa-lg fa-fw">
@@ -98,12 +146,19 @@
                 <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
               </i>
               {% trans "View all incomplete return to service QC" %}
+
+              <span title="{% trans "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} incomplete return to service test lists" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0 %}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                  <span class="total-unreviewed-count">{{ SE_RTS_INCOMPLETE_QA_COUNT }}</span>
+              </span>
             </a>
           {% endif %}
           {% if perms.qa.can_review %}
             <a class="list-group-item" title="{% trans "View unreviewed RTS QC" %}" href="{% url 'rtsqa_list_unreviewed' %}">
               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
               {% trans "View unreviewed return to service QC" %}
+              <span title="{% trans "There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-unreviewed-count">{{ SE_RTS_UNREVIEWED_QA_COUNT }}</span>
+              </span>
             </a>
           {% endif %}
         </div>

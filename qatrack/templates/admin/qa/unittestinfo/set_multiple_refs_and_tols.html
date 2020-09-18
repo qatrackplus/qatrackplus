@@ -1,12 +1,33 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='qa' %}">{% trans "QC" %}</a> &rsaquo;
+    {% trans "Set References & Tolerances" %}
+  </div>
+{% endblock %}
 
 {% block content %}
 
-<p>Set the tolerance and reference:</p>
+<p>{% trans "Set the tolerance and reference" %}:</p>
 
 <form action="" method="post">{% csrf_token %}
 
-    {{ form.as_p }}
+    {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+    {% endfor %}
+
+    {% for field in form.visible_fields %}
+      <div class="fieldWrapper">
+          {{ field.errors }}
+          {{ field.label_tag }} {{ field }}
+          {% if field.help_text %}
+            <p class="help">{{ field.help_text|safe }}</p>
+          {% endif %}
+      </div>
+    {% endfor %}
 
     {% for obj in queryset %}
     <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}" />
@@ -17,27 +38,27 @@
 
 </form>
 
-<br><p>The tolerance and reference will be applied to:</p>
+<br><p>{% trans "The tolerance and reference will be applied to" %}:</p>
 
 <table>
-    <thead>
-        <tr>
-            <th>Test</th>
-            <th>Unit</th>
-            <th>Current reference</th>
-            <th>Current tolerance</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for uti in queryset %}
-        <tr>
-            <td>{{ uti.test.name }}</td>
-            <td align='center'>{{ uti.unit.name }}</td>
-            <td align='center'>{{ uti.reference }}</td>
-            <td>{{ uti.tolerance }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
+  <thead>
+      <tr>
+        <th>{% trans "Test" %}</th>
+        <th>{% trans "Unit" %}</th>
+        <th>{% trans "Current reference" %}</th>
+        <th>{% trans "Current tolerance" %}</th>
+      </tr>
+  </thead>
+  <tbody>
+      {% for uti in queryset %}
+      <tr>
+        <td>{{ uti.test.name }}</td>
+        <td align='center'>{{ uti.unit.name }}</td>
+        <td align='center'>{{ uti.reference }}</td>
+        <td>{{ uti.tolerance }}</td>
+      </tr>
+      {% endfor %}
+  </tbody>
 </table>
 
 {% endblock %}

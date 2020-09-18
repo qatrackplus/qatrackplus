@@ -1,0 +1,235 @@
+{% extends base_template %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-12">
+    {% for site, ses in sites_data %}
+    <h2>{% trans "Site" %} :: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
+      {% for se in ses %}
+        <h4>{% blocktrans with service_event_id=se.id %}Service Event #{{ service_event_id }}{% endblocktrans %}</h4>
+
+        <table class="table table-condensed table-bordered">
+          <thead>
+            <tr class="active">
+              <th style="width: 12%">{% trans "Service Date" %}</th>
+              <th style="width: 12%">{% trans "Unit" %}<div></div></th>
+              <th>{% trans "Service Area" %}</th>
+              <th>{% trans "Service Type" %}</th>
+              <th style="width: 12%">{% trans "Service Time" %}</th>
+              <th style="width: 12%">{% trans "Lost Time" %}</th>
+              <th style="width: 22%">{% trans "Status" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="page">
+              <td>
+                <a href="{{ se.link }}" title="{% trans "Click to view this service event" %}" target="_blank">
+                  {{ se.service_date }}
+                </a>
+              </td>
+              <td>{{ se.unit_name }}</td>
+              <td>{{ se.service_area }}</td>
+              <td>{{ se.service_type }}</td>
+              <td>
+                {% if se.service_time is not None and service_time != "" %}
+                  {{ se.service_time|hour_min }}
+                {% else %}
+                  <em>{% trans "Not Set" %}</em>
+                {% endif %}
+              </td>
+              <td>
+                {% if se.lost_time is not None and lost_time != "" %}
+                  {{ se.lost_time|hour_min }}
+                {% else %}
+                  <em>{% trans "Not Set" %}</em>
+                {% endif %}
+              </td>
+              <td>{{ se.status }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Created By" %}:</th>
+              <td colspan="3">{{ se.created_by }}</td>
+              <td colspan="2">{{ se.created_date }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Last Modified By" %}:</th>
+              <td colspan="3">{{ se.modified_by }}</td>
+              <td colspan="2">{{ se.modified_date }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Problem Description" %}:</th>
+              <td colspan="5">{{ se.problem }}</td>
+            </tr>
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Work Description" %}:</th>
+              <td colspan="5">{{ se.work }}</td>
+            </tr>
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Safety Precautions" %}:</th>
+              <td colspan="5">{{ se.safety }}</td>
+            </tr>
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Initiated By" %}:</th>
+              {% if se.initiated_by %}
+                <td colspan="2">
+                  <a href="{{ se.initiated_by_link }}" title="{% trans "Click to view this QC Session" %}" target="_blank">
+                    {{ se.initiated_by.test_list.name }}
+                  </a>
+                </td>
+                <td colspan="3">{{ se.initiated_by.work_completed }}</td>
+              {% else %}
+                <td colspan="5">
+                  <em>{% trans "No associated QC Session" %}</em>
+                </td>
+              {% endif %}
+            </tr>
+            {% for service_event_id, service_date, link in se.related_ses %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ se.related_ses|length }}" colspan="2">
+                    {% trans "Related Service Events" %}:
+                  </th>
+                {% endif %}
+                <td colspan="2">
+                  <a href="{{ link }}" title="{% trans "Click to view relate Service Event" %}">
+                    {% blocktrans %}
+                    Service Event #{{ service_event_id }}
+                    {% endblocktrans %}
+                  </a>
+                </td>
+                <td colspan="3">{{ service_date }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="2">{% trans "Related Service Events" %}:</th>
+                <td colspan="5"><em>{% trans "No associated Service Events" %}</em></td>
+              </tr>
+            {% endfor %}
+
+            {% for gl_name, users in se.group_linkers %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ se.group_linkers|length }}" colspan="2">
+                    {% trans "Group Members Involved" %}:
+                  </th>
+                {% endif %}
+                <td colspan="2">{{ gl_name }}</td>
+                <td colspan="3">{{ users|join:", " }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="2">{% trans "Group Members Involved" %}:</th>
+                <td colspan="5"><em>{% trans "No linked group members" %}</em></td>
+              </tr>
+            {% endfor %}
+
+            {% for user, utime in se.hours %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ se.hours|length }}" colspan="2">
+                    {% trans "Work Durations" %}:
+                  </th>
+                {% endif %}
+                <td colspan="2">{{ user }}</td>
+                <td colspan="3">{{ utime|hour_min }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="2">{% trans "Work Durations" %}:</th>
+                <td colspan="5"><em>{% trans "No work durations" %}</em></td>
+              </tr>
+            {% endfor %}
+
+            {% for utc, wc, link in se.rts_qc %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ se.rts_qc|length }}" colspan="2">
+                    {% trans "Return To Service QC" %}:
+                  </th>
+                {% endif %}
+                <td colspan="2">
+                  {% if link %}
+                    <a href="{{ link }}" title="{% trans "Click to view QC session details" %}">
+                      {{ utc }}
+                    </a>
+                  {% else %}
+                    {{ utc }}
+                  {% endif %}
+                </td>
+                <td colspan="3">{% if wc %}{{ wc }}{% else %}<em>{% trans "Not completed" %}{% endif %}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="2">{% trans "Return To Service QC" %}:</th>
+                <td colspan="5"><em>{% trans "No Return To Service QC assigned" %}</em></td>
+              </tr>
+            {% endfor %}
+
+            {% for user, dt, comment in se.rts_comments %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ se.rts_comments|length }}" colspan="2">
+                    {% trans "Return To Service Comments" %}:
+                  </th>
+                {% endif %}
+                <td colspan="1">{{ dt }}</td>
+                <td colspan="1">{{ user }}</td>
+                <td colspan="3">{{ comment }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="2">{% trans "Return To Service Comments" %}:</th>
+                <td colspan="5"><em>{% trans "No Return To Service Comments" %}</em></td>
+              </tr>
+            {% endfor %}
+
+            {% if use_parts %}
+              {% for part, storage, quantity in se.parts %}
+                <tr>
+                  {% if forloop.first %}
+                    <th class="text-right" rowspan="{{ se.parts|length }}" colspan="2">
+                      {% trans "Parts Used" %}:
+                    </th>
+                  {% endif %}
+                  <td colspan="2">{{ part }}</td>
+                  <td colspan="2">
+                    {% if storage %}{{ storage }}{% else %}<em>{% trans "Storage not specified" %}{% endif %}
+                  </td>
+                  <td colspan="1">{{ quantity }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <th class="text-right" colspan="2">{% trans "Parts Used" %}:</th>
+                  <td colspan="5"><em>{% trans "No Parts Used" %}</em></td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+
+            <tr>
+              <th class="text-right" colspan="2">{% trans "Attachments" %}:</th>
+              <td colspan="5">
+                {% for label, link in se.attachments %}
+                  <a href="{{ link }}" title="{% trans "Click to download attachment" %}">{{ label }}</a>
+                  {% if not forloop.last %}, {% endif %}
+                {% empty %}
+                  <em>{% trans "No Attachments" %}</em>
+                {% endfor %}
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+        <hr/>
+      {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

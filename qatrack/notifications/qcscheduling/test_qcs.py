@@ -54,7 +54,7 @@ class TestQCSchedulingAdmin(TestCase):
             time="0:00",
             recipients=rg,
         )
-        assert "Upcoming Test Lists Due Dates" in self.admin.get_notification_type(n)
+        assert "Upcoming Due Dates Only" in self.admin.get_notification_type(n)
 
     def test_get_notification_type_upcoming_and_due(self):
         rg = RecipientGroup.objects.create(name="RG")
@@ -64,7 +64,7 @@ class TestQCSchedulingAdmin(TestCase):
             time="0:00",
             recipients=rg,
         )
-        assert "Notify about Test Lists Upcoming, Due & Overdue (next 1 days)" in self.admin.get_notification_type(n)
+        assert "Notify About Test Lists Currently Due & Overdue, and Upcoming" in self.admin.get_notification_type(n)
 
     def test_get_notification_type_due(self):
         rg = RecipientGroup.objects.create(name="RG")
@@ -337,12 +337,19 @@ class TestQCSchedulingEmails(TestCase):
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
 
-    def test_send_notice(self):
+    def test_send_notice_send_empty(self):
         now = timezone.now()
+        self.notice.send_empty = True
+        self.notice.save()
         tasks.send_scheduling_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
         assert "QATrack+ QC Scheduling Notice:" in mail.outbox[0].subject
+
+    def test_send_notice_no_send_empty(self):
+        tasks.send_scheduling_notice(self.notice.pk)
+        self.notice.refresh_from_db()
+        assert len(mail.outbox) == 0
 
     def test_send_notice_non_existent(self):
         tasks.send_scheduling_notice(self.notice.pk + 1)
@@ -351,6 +358,7 @@ class TestQCSchedulingEmails(TestCase):
         assert len(mail.outbox) == 0
 
     def test_send_notice_no_recipients(self):
+        utils.create_test_list_instance()
         self.recipients.groups.clear()
         tasks.send_scheduling_notice(self.notice.pk)
         self.notice.refresh_from_db()
@@ -365,7 +373,7 @@ class TestQCSchedulingEmails(TestCase):
     def test_run_scheduling_notices(self):
 
         self.notice.recurrences = recurrence.Recurrence(rrules=[recurrence.Rule(recurrence.DAILY)])
-        self.notice.time = (timezone.datetime.now() + timezone.timedelta(minutes=1)).time()
+        self.notice.time = (timezone.localtime(timezone.now()) + timezone.timedelta(minutes=1)).time()
         self.notice.save()
         tasks.run_scheduling_notices()
         assert Schedule.objects.count() == 1

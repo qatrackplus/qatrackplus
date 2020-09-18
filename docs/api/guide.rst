@@ -239,7 +239,7 @@ UnitTestCollections whose Unit name is "Unit 1":
 
 .. code-block:: python
 
-    resp = requests.get(root + '/qa/unittestcollections/?unit__name=Unit 1', headers=headers)
+    resp = requests.get(root + '/qa/unittestcollections/?unit__name__icontains=Unit 1', headers=headers)
 
 Here's an example of getting :term:`Test Instance` data for a specific Test and Unit:
 
@@ -247,8 +247,8 @@ Here's an example of getting :term:`Test Instance` data for a specific Test and 
 
     url = root + '/qa/testinstances/'
     params = {
-        "unit_test_info__unit__name": "Unit Name",
-        "unit_test_info__test__name": "Test Name",
+        "unit_test_info__unit__name__icontains": "Unit Name",
+        "unit_test_info__test__name__icontains": "Test Name",
         "ordering": "-work_completed",
     }
 
@@ -269,7 +269,7 @@ Uploading Data
 --------------
 
 The real power of the API is the ability to complete TestLists programatically.
-In order to demonstrate the API, we will submit data to complete a test list
+In order to demonstrate the API, we will submit two number entries via the API to perform a test list
 that adds two numbers together shown here:
 
 .. image:: testlist.png
@@ -286,14 +286,16 @@ A script that will find the above test list, and submit the data is shown here:
     headers = {"Authorization": "Token %s" % token}
 
     # first find the UnitTestCollection we want to perform
-    resp = requests.get(root + '/qa/unittestcollections/?unit__name=Unit 1&test_list__name=Simple API Example', headers=headers)
+    resp = requests.get(root + '/qa/unittestcollections/?unit__name__icontains=Unit 1&test_list__name__icontains=Simple API Example', headers=headers)
     utc_url = resp.json()['results'][0]['url']
 
     # prepare the data to submit to the API. Notice you don't need to submit a value for
     # sum_of_two since it is calculated from number_1 and number_2
     data = {
         'unit_test_collection': utc_url,
+        'day': 0, # optional day=0, for TestLists, required for Test List Cycles (where 0 <= day < # of test lists in cycle)
         'in_progress': False,  # optional, default is False
+        'include_for_scheduling': True,
         'work_started': "2018-07-6 10:00",
         'work_completed': "2018-07-6 11:00",  # optional
         'comment': "test list comment",  # optional
@@ -314,6 +316,7 @@ A script that will find the above test list, and submit the data is shown here:
         'day': 0,
         'due_date': None,
         'in_progress': False,
+        'include_for_scheduling': True,
         'reviewed': None,
         'reviewed_by': None,
         'site_url': 'http://127.0.0.1:8081/qa/session/details/2991/',
@@ -371,7 +374,7 @@ A script that will find the above test list, and submit the data is shown here:
 
 A few things to note:
 
-* Some fields like `comment`, `in_progress`, and `attachments` are optional
+* Some fields like `comment`, `in_progress`, `include_for_scheduling`, and `attachments` are optional
 * The `tests` key is a dictionary of the form (`skipped` and `comment` keys are optional):
 
   .. code-block:: python
@@ -383,6 +386,29 @@ A few things to note:
 
 * You don't need to submit data for `sum_of_two` since it is a composite test and calculated automatically.
 * The `url` key contains the hyperlink where you can view the completed TestListInstance online.
+
+Performing A Test List Cycle
+............................
+
+In order to perform a Test List Cycle you must include a `day` key in your
+upload data.  The `day` key is a 0-indexed integer indicating which day of the
+test list cycle you want to perform (e.g. if you want to perform day 1, you
+would use `'day': 0`, and if you want to perform day 2, you would use `'day':
+1`).
+
+Example data to perform day 2 of a test list cycle would look something like:
+
+.. code-block:: python
+
+    data = {
+        'unit_test_collection': utc_url,
+        'day': 1,  # note 0-indexed days so we use 1 for day 2
+        'work_started': "2018-07-6 10:00",
+        'work_completed': "2018-07-6 11:00",  # optional
+        'tests': {
+            ...
+        },
+    }
 
 
 Upload test types
@@ -439,7 +465,7 @@ Similar to File Upload test types, you can add arbitrary attachments to your Tes
 FAQ
 ---
 
-- My site is using https and Apache and token authentication is not working:
+- **Q: My site is using https and Apache. Why is token authentication not working?**:
   You need to add
 
   ::
@@ -451,16 +477,19 @@ FAQ
   http://www.django-rest-framework.org/api-guide/authentication/#apache-mod_wsgi-specific-configuration
   for more details.
 
-- The API returned status 403 with {'detail'\: 'You do not have permission to
-  perform this action'}: The user you are submitting your data with does not
-  have permission to perform QC.  Add the user to a group with the required
+- **Q: Why is the API returning status 403 with {'detail'\: 'You do not have permission to
+  perform this action'}?**: 
+  The user you are submitting your data with does not
+  have permission to perform QA.  Add the user to a group with the required
   permissions.
 
-- The API returned status 401 with {'detail'\: 'Authentication credentials not
-  provided'}: You forgot to include the authorization token http header with
+- **Q: Why is the API returning status 401 with {'detail'\: 'Authentication credentials not
+  provided'}?**: 
+  You forgot to include the authorization token http header with
   your request.
 
-- The API returned status 401 with {'detail'\: 'Invalid token'}: You included
+- **Q: Why is the API returning status 401 with {'detail'\: 'Invalid token'}?**: 
+  You included
   an invalid authorization token http header with your request. Check to ensure
   your auth token is set correctly.
 

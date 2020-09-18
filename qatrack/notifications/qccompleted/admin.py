@@ -1,11 +1,11 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications import models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 def trim(string, length=200):
@@ -47,7 +47,7 @@ class QCCompletedNoticeAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-class QCCompletedAdmin(admin.ModelAdmin):
+class QCCompletedAdmin(BaseQATrackAdmin):
 
     list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units"]
     list_filter = ["notification_type", "recipients", "test_lists", "units"]
@@ -55,9 +55,14 @@ class QCCompletedAdmin(admin.ModelAdmin):
         "units__units__number",
         "units__units__name",
         "recipients__groups__name",
-        "recipients__users__name",
+        "recipients__users__username",
+        "recipients__users__first_name",
+        "recipients__users__last_name",
         "recipients__users__email",
         "recipients__groups__user__email",
+        "recipients__groups__user__username",
+        "recipients__groups__user__first_name",
+        "recipients__groups__user__last_name",
         "test_lists__test_lists__name",
     ]
 
@@ -70,29 +75,28 @@ class QCCompletedAdmin(admin.ModelAdmin):
         (
             "Recipients", {
                 'fields': ["recipients"],
-                'description': _("Select which recipient group should receive this notification."),
+                'description': _l("Select which recipient group should receive this notification."),
             }
         ),
         (
             "Filters", {
                 'fields': ['units', 'test_lists'],
-                'description':
-                    _("By using the below filters, you may limit this notification to "
-                      "certain units or test lists."),
+                'description': _l(
+                    "By using the below filters, you may limit this notification to "
+                    "certain units or test lists."
+                ),
             }
         ),
     )
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "select2/js/select2.js",
-            settings.STATIC_URL + "js/notification_admin.js",
+            "jquery/js/jquery.min.js",
+            "select2/js/select2.js",
+            "js/notification_admin.js",
         )
         css = {
-            'all': (
-                settings.STATIC_URL + "select2/css/select2.css",
-            ),
+            'all': ("select2/css/select2.css",),
         }
 
     def get_queryset(self, request):  # pragma: nocover

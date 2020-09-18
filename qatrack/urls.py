@@ -22,7 +22,7 @@ class QAToQC(RedirectView):
     query_string = True
 
     def get_redirect_url(self, *args, **kwargs):
-        return "/qc/%s" % kwargs['terms']
+        return "%s/qc/%s" % (settings.FORCE_SCRIPT_NAME or "", kwargs['terms'])
 
 
 urlpatterns = [
@@ -74,7 +74,7 @@ if settings.USE_ADFS:
     urlpatterns.append(path('oauth2/', include('django_auth_adfs.urls')))
 
 
-if settings.DEBUG:
+if settings.DEBUG:  # pragma: nocover
     import debug_toolbar
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),

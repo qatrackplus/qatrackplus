@@ -35,6 +35,65 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         }
     });
 
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    var $calcStatus = $(".qa-calc-status");
+    var $calcStatusSpinners = $calcStatus.find("i");
+    var $calcStatusContent = $calcStatus.find("span");
+
+    var $autoSaveStatus = $(".qa-autosave-status");
+    var $autoSaveStatusSpinners = $autoSaveStatus.find("i");
+    var $autoSaveStatusContent = $autoSaveStatus.find("span");
+
+    var $submit = $("#submit-qa");
+
+    function processing_on(){
+        $calcStatusSpinners.addClass("fa-spin fa-circle-o-notch").removeClass("fa-check-circle").attr("title", "Calculating");
+        $calcStatusContent.html("Performing calculations...");
+        $calcStatus.removeClass("label-info").addClass("label-warning");
+    }
+
+    function processing_off(){
+        $calcStatusSpinners.removeClass("fa-spin fa-circle-o-notch").addClass("fa-check-circle").attr("title", "Idle");
+        $calcStatusContent.html("Calculations Complete");
+        $calcStatus.removeClass("label-warning").addClass("label-info");
+    }
+
+    function autosaving_on(){
+        $autoSaveStatusSpinners.addClass("fa-spin fa-circle-o-notch").removeClass("fa-save").attr("title", "Saving");
+        $autoSaveStatusContent.html("Auto-saving...");
+        $autoSaveStatus.removeClass("label-info").addClass("label-warning");
+    }
+
+    function autosaving_off(){
+        var saved = moment().format(siteConfig.MOMENT_DATETIME_FMT);
+        $autoSaveStatusSpinners.removeClass("fa-spin fa-circle-o-notch").addClass("fa-save").attr("title", "Last auto saved at " + saved);
+        $autoSaveStatusContent.html(saved);
+        $autoSaveStatus.removeClass("label-warning").addClass("label-info");
+    }
+
+    function disable_submit(){
+        $submit.attr({
+            "disabled": true,
+            "title": "Please wait until the calculations complete before submitting"
+        });
+    }
+
+    function enable_submit(){
+        $submit.attr({
+            "disabled": false,
+            "title": "Click to submit your QC data"
+        });
+    }
+
     /***************************************************************/
     //Test statuse and Table context used to narrow down jQuery selectors.
     //Improves performance in IE
@@ -44,9 +103,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     var comment_on_skip;
 
 
-    // keeps track of latest composite call so we can
+    // keeps track of latest composite/autosave calls so we can
     // ignore older ones f they comlete after the latest one
-    var latest_composite_call;
+    var latest_composite_call = null;
+    var composite_update_required = false;
+    var latest_autosave_call = null;
 
     /***************************************************************/
     //minimal Pub/Sub functionality
@@ -214,6 +275,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.check_dispatch[QAUtils.MULTIPLE_CHOICE]=this.check_multi;
         this.check_dispatch[QAUtils.CONSTANT]=this.check_numerical;
         this.check_dispatch[QAUtils.SIMPLE]=this.check_numerical;
+        this.check_dispatch[QAUtils.WRAPAROUND]=this.check_numerical;
         this.check_dispatch[QAUtils.COMPOSITE]=this.check_numerical;
         this.check_dispatch[QAUtils.STRING_COMPOSITE]=this.check_multi;
         this.check_dispatch[QAUtils.STRING]=this.check_multi;
@@ -222,10 +284,28 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         this.check_dispatch[QAUtils.UPLOAD]=this.check_done;
 
         this.calculate_diff = function(value){
-            if (self.tolerance.type === QAUtils.PERCENT){
-                return 100.0*(value-self.reference.value)/self.reference.value;
+            if (self.test.type === QAUtils.WRAPAROUND){
+                var t = self.test;
+                var ref = self.reference.value;
+                var wrap_distance, direct_distance, direct_closer;
+                if (value > ref){
+                    wrap_distance = Math.abs(t.wrap_high - value) + Math.abs(ref - t.wrap_low);
+                    direct_distance = Math.abs(value - ref);
+                    direct_closer = direct_distance <= wrap_distance;
+                    return direct_closer ? direct_distance : -wrap_distance;
+                }else if (value < ref) {
+                    wrap_distance = Math.abs(value - t.wrap_low) + Math.abs(t.wrap_high - ref);
+                    direct_distance = Math.abs(ref - value);
+                    direct_closer = direct_distance <= wrap_distance;
+                    return direct_closer ? -direct_distance : wrap_distance;
+                }
+                return 0;
+            }else{
+                if (self.tolerance.type === QAUtils.PERCENT){
+                    return 100.0*(value-self.reference.value)/self.reference.value;
+                }
+                return value - self.reference.value;
             }
-            return value - self.reference.value;
         };
 
         this.diff_display = function(diff){
@@ -245,7 +325,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         var tt = this.test_info.test.type;
         this.row = $(row);
         this.prefix = this.row.attr('data-prefix');
-        this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not("[name$=user_attached]");
+        this.json_value = this.row.find("td.qa-value").find("input[name$=json_value]");
+        this.inputs = this.row.find("td.qa-value").find("input, textarea, select").not(
+            "[name$=user_attached]"
+        ).not("[name$=json_value]");
         this.user_attach_input = this.row.find("input[name$=user_attached]");
         this.unit_id = $("#unit-id").val();
         this.test_list_id = $("#test-list-id").val();
@@ -291,6 +374,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $('.hover').removeClass('hover');
             }
         );
+        self.inputs.focus(function(){self.rows.addClass("hover");});
+        self.inputs.blur(function(){self.rows.removeClass("hover");});
+
         function show_comment() {
             self.comment.slideDown('fast');
             self.showing_comment = true;
@@ -399,7 +485,14 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             }else if (
                 tt === QAUtils.STRING ||
                 tt === QAUtils.MULTIPLE_CHOICE ||
-                tt === QAUtils.STRING_COMPOSITE ||
+                tt === QAUtils.STRING_COMPOSITE
+            ){
+                if (_.isObject(value)){
+                    self.inputs.val(JSON.stringify(value));
+                }else{
+                    self.inputs.val(value);
+                }
+            }else if (
                 tt === QAUtils.DATE ||
                 tt === QAUtils.DATETIME
             ){
@@ -408,13 +501,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 }else{
                     self.inputs.val(value);
                 }
+                this.date_picker.setDate(value);
             }else if (tt === QAUtils.UPLOAD){
                 if (_.isNull(value)){
                     self.inputs.filter(".qa-input:hidden").val("");
+                    self.json_value.val("");
                     self.upload_data = value;
                 }else{
                     self.inputs.filter(".qa-input:hidden").val(value.attachment_id);
                     self.value = value.result;
+                    self.json_value.val(JSON.stringify(value.result));
                     self.upload_data = value;
                 }
             }else if (tt === QAUtils.COMPOSITE){
@@ -477,6 +573,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 self.value = value !== "" ? value : null;
             }else if (tt === QAUtils.UPLOAD){
                 if (self.inputs.val() && !this.initialized){
+                    window.init_task_count += 1;
                     data = {
                         attachment_id: self.inputs.val(),
                         test_id: self.test_info.test.id,
@@ -488,14 +585,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         skips: JSON.stringify(get_skips())
                     };
 
-                    $('body').addClass("loading");
                     $.ajax({
                         type:"POST",
                         url: QAURLs.UPLOAD_URL,
                         data: $.param(data),
                         dataType:"json",
                         success: function (result) {
-                            $('body').removeClass("loading");
                             self.status.removeClass("btn-info btn-primary btn-danger btn-success");
                             if (result.errors.length > 0){
                                 self.set_value(null);
@@ -511,15 +606,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                                 if (window.console){
                                     console.log(result);
                                 }
-                                $.Topic("valueChanged").publish();
                             }
                         },
                         traditional:true,
                         error: function(e, data){
-                            $('body').removeClass("loading");
                             self.set_value(null);
                             self.status.removeClass("btn-primary btn-danger btn-success");
                             self.status.addClass("btn-danger").text("Server Error");
+                        },
+                        complete: function(){
+                            window.init_task_count -= 1;
                         }
                     });
                 }
@@ -636,7 +732,10 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         self.status.removeClass("btn-primary btn-danger btn-success");
                         done("Filename exceeds 150 characters!");
                     }
-                    else { done(); }
+                    else {
+                        processing_on();
+                        done();
+                    }
                 }
 
             });
@@ -651,6 +750,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
 
             self.dropzone.on('error', function(file, data) {
+                processing_off();
                 var btn_txt, tool_tip;
                 if (!data || !file){
                     btn_txt = "Server Error";
@@ -668,6 +768,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
 
             self.dropzone.on('success', function(file, data) {
+                processing_off();
 
                 var response_data = JSON.parse(data);
                 self.status.removeClass("btn-primary btn-info btn-warning btn-danger btn-success");
@@ -726,11 +827,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function get_meta_data(){
 
         var meta = {
+            unit_test_collection_id: $("#unit-test-collection-id").val(),
+            test_list_id: $("#test-list-id").val(),
             test_list_name: $("#test-list-name").val(),
             unit_number: parseInt($("#unit-number").val()),
             cycle_day: parseInt($("#cycle-day-number").val()),
-            work_completed: QAUtils.parse_date($("#id_work_completed").val()),
-            work_started: QAUtils.parse_date($("#id_work_started").val()),
+            work_completed: $("#id_work_completed").val(),
+            work_started: $("#id_work_started").val(),
             username: $("#username").val()
         };
 
@@ -768,6 +871,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function TestListInstance(){
         var self = this;
 
+        processing_on();
+        window.upload_processing_count = 0;
+
         this.test_instances = [];
         this.tests_by_slug = {};
         this.slugs = [];
@@ -781,7 +887,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         //set the intitial values, tolerances & refs for all of our tests
         this.initialize = function(){
             var test_infos = _.map(window.unit_test_infos,function(e){ return new TestInfo(e);});
+
+            self.$autosave_id = $("#id_autosave_id");
+            self.autosave_id = getParameterByName("autosave_id");
+
             self.test_list_id = $("#test-list-id").val();
+            self.unit_test_collection_id = $("#unit-test-collection-id").val();
             self.unit_id = $("#unit-id").val();
             self.test_instances = _.map(_.zip(test_infos, $("#perform-qa-table tr.qa-valuerow")), function(uti_row){return new TestInstance(uti_row[0], uti_row[1]);});
             self.slugs = _.map(self.test_instances, function(ti){return ti.test_info.test.slug;});
@@ -793,24 +904,61 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 }).join("");
                 $("#tli-attachment-names").html(fnames);
             });
-            self.calculate_composites();
+
+            // only set default values if not editing an existing tli and not loading an autosave
+            var set_defaults = !(window.editing_tli > 0 || window.has_errors || self.autosave_id);
+            if (set_defaults){
+                window.init_task_count += 1;
+                self.calculate_composites({set_defaults : true});
+            }
+
+            if (!_.isNull(self.autosave_id)){
+                self.autosave_id = parseInt(self.autosave_id);
+                self.load_autosave();
+            }
+
+            var init_interval = setInterval(function(){
+                if (window.init_task_count <= 0){
+                    clearInterval(init_interval);
+                    self.calculate_composites();
+                }
+            }, 10);
+
         };
 
+        this.calculate_composites_ = function(opts){
 
-        this.calculate_composites = function(){
-
-
-            if (self.composites.length === 0){
+            if (latest_composite_call !== null){
+                composite_update_required = true;
                 return;
             }
 
-            var cur_values = _.map(self.test_instances, function(ti){return ti.value;});
+            opts = opts || {set_defaults: false};
+
+            if (window.init_task_count <= 0 && self.composites.length === 0){
+                // if there is no composites, ensure loading gets disabled
+                $('body').removeClass("loading");
+                processing_off();
+                return;
+            }
+
+            processing_on();
+
+            var cur_values = _.map(self.test_instances, function(ti){
+                var tt = ti.test_info.test.type;
+                if (QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) < 0){
+                    return ti.value;
+                }else{
+                    return null;
+                }
+            });
             var qa_values = _.zipObject(self.slugs, cur_values);
             var meta = get_meta_data();
             var comments = get_comments();
             var skips = get_skips();
 
             var data = {
+                defaults: opts.set_defaults,
                 tests: qa_values,
                 meta: meta,
                 test_list_id: self.test_list_id,
@@ -821,11 +969,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
             var on_success = function(data, status, XHR){
 
-                if (latest_composite_call !== XHR){
+                if (latest_composite_call !== null && latest_composite_call !== XHR){
                     return;
                 }
-
-                self.submit.attr("disabled", false);
 
                 if (data.success){
                     _.each(data.results,function(result, name){
@@ -861,16 +1007,29 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         set_skips(data.skips);
                     }
                 }
-                $.Topic("qaUpdated").publish();
+
             };
 
-            var on_error = function(){
-                self.submit.attr("disabled", false);
-                $.Topic("qaUpdated").publish();
+            var on_complete = function(data, status, XHR){
+                latest_composite_call = null;
+                processing_off();
+                enable_submit();
+
+                if (opts.set_defaults){
+                    window.init_task_count -= 1;
+                }else{
+                    $('body').removeClass("loading");
+                    $.Topic("qaUpdated").publish();
+                }
+
+                if (composite_update_required){
+                    setTimeout(self.calculate_composites, 100);
+                }
             };
 
-            self.submit.attr("disabled", true);
+            disable_submit();
 
+            composite_update_required = false;
             latest_composite_call = $.ajax({
                 type: "POST",
                 url: QAURLs.COMPOSITE_URL,
@@ -878,15 +1037,171 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 contentType: "application/json",
                 dataType: "json",
                 success: on_success,
-                traditional: true,
-                error: on_error
+                complete: on_complete,
+                traditional: true
             });
         };
 
+        this.calculate_composites = _.debounce(this.calculate_composites_, 4);
+
+        this.load_autosave = function(){
+
+            self.$autosave_id.val(self.autosave_id);
+
+            processing_on();
+
+            var on_success = function(data, status, XHR){
+
+                if (data.meta.work_started || data.meta.work_completed){
+                    /* temporarily unsubscribe to prevent extra composite calls. Ugly :( */
+                    $.Topic("valueChanged").unsubscribe(self.calculate_composites);
+                    $.Topic("valueChanged").unsubscribe(self.autosave);
+
+
+                    if (data.meta.work_started){
+                        $("#id_work_started").get(0)._flatpickr.setDate(data.meta.work_started, true);
+                    }
+                    if (data.meta.work_completed){
+                        $("#id_work_completed").get(0)._flatpickr.setDate(data.meta.work_completed, true);
+                    }
+
+                    $.Topic("valueChanged").subscribe(self.calculate_composites);
+                    $.Topic("valueChanged").subscribe(self.autosave);
+                }
+
+                _.each(data.data.tests, function(idx, test){
+
+                    var ti = self.tests_by_slug[test];
+                    if (!ti){
+                        // Test was removed since autosave data was created
+                        return;
+                    }
+
+                    var comment = data.data.comments[test];
+                    if (comment){
+                        ti.set_comment(comment);
+                        ti.set_comment_icon();
+                    }
+                    if (data.data.tli_comment){
+                        $("#id_comment").val(data.data.tli_comment);
+                    }
+
+                    var val = data.data.tests[test];
+                    var tt = ti.test_info.test.type;
+                    var isComp = QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) >= 0;
+                    var isUpload = tt == QAUtils.UPLOAD;
+                    if (isUpload){
+                        ti.set_value({'attachment_id': val, 'result': ""});
+                        ti.initialized = false;
+                        ti.update_value_from_input();
+                    }else if (!isComp){
+                        ti.set_value(val);
+                    }
+
+                    if (data.data.skips[test]){
+                        ti.set_skip(true);
+                    }
+
+                });
+
+            };
+
+            var on_complete = function(){
+                processing_off();
+                enable_submit();
+                window.init_task_count -= 1;
+            };
+
+            disable_submit();
+
+            window.init_task_count += 1;
+
+            $.ajax({
+                type: "GET",
+                url: QAURLs.AUTOSAVE_LOAD_URL + "?autosave_id="+self.autosave_id,
+                contentType: "application/json",
+                dataType: "json",
+                success: on_success,
+                complete: on_complete
+            });
+        };
+
+        this.autosave_ = function(){
+
+            /* don't autosave until initialization done */
+            if (window.init_task_count > 0){
+                return;
+            }
+
+            autosaving_on();
+
+            var cur_values = _.map(self.test_instances, function(ti){
+                var tt = ti.test_info.test.type;
+                var file_uploaded = (
+                    ti.test_info.test.type == QAUtils.UPLOAD &&
+                    ti.upload_data &&
+                    ti.upload_data.attachment_id
+                );
+                if (file_uploaded){
+                    return ti.upload_data.attachment_id;
+                }else if (QAUtils.COMPOSITE_TEST_TYPES.indexOf(tt) < 0){
+                    return ti.value;
+                }
+
+                return null;
+            });
+            var qa_values = _.zipObject(self.slugs, cur_values);
+            var meta = get_meta_data();
+            var comments = get_comments();
+            var skips = get_skips();
+
+            var data = {
+                autosave_id: self.$autosave_id.val(),
+                meta: meta,
+                test_list_id: self.test_list_id,
+                test_list_instance: editing_tli,
+                unit_id: self.unit_id,
+                tests: qa_values,
+                comments: comments,
+                skips: skips,
+                tli_comment: $("#id_comment").val()
+            };
+
+            var on_success = function(data, status, XHR){
+
+                if (latest_autosave_call !== XHR){
+                    return;
+                }
+
+                self.$autosave_id.val(data.autosave_id);
+
+            };
+
+            var on_complete = function(){
+                autosaving_off();
+                if (_.isNull(latest_composite_call)){
+                    enable_submit();
+                }
+            };
+
+            disable_submit();
+
+            latest_autosave_call = $.ajax({
+                type: "POST",
+                url: QAURLs.AUTOSAVE_URL,
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: on_success,
+                complete: on_complete
+            });
+        };
+        this.autosave = _.throttle(this.autosave_, 2000, {'trailing': true});
+
         this.has_failing = function(){
             return _.filter(self.test_instances, function(ti){
-                    return ti.test_status === QAUtils.ACTION;
-                }).length > 0;
+                return ti.test_status === QAUtils.ACTION;
+            }).length > 0;
         };
 
         $.Topic("categoryFilter").subscribe(function(categories) {
@@ -905,6 +1220,20 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         });
 
         $.Topic("valueChanged").subscribe(self.calculate_composites);
+        $.Topic("valueChanged").subscribe(self.autosave);
+    }
+
+    function disable_numeric_scroll(){
+        // Prevent scroll wheel from adjusting numbers
+        $('form').on('focus', 'input[type=number]', function (e) {
+            $(this).on('wheel.disableScroll', function (e) {
+                e.preventDefault();
+            });
+        });
+        $('form').on('blur', 'input[type=number]', function (e) {
+            $(this).off('wheel.disableScroll');
+        });
+
     }
 
     function set_tab_stops(){
@@ -922,6 +1251,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         $.Topic("categoryFilterComplete").subscribe(function(){
             visible_user_inputs = user_inputs.filter(":visible");
         });
+
 
         //allow arrow key and enter navigation
         $(document).on("keydown","input, select", function(e) {
@@ -967,6 +1297,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
     $(document).ready(function(){
 
+        window.init_task_count = 0;
         tli = new TestListInstance();
         tli.initialize();
 
@@ -1050,10 +1381,18 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         // });
 
         //set link for cycle when user changes cycle day dropdown
-        $(".radio-days").on('ifChecked', function(){
-            var day = $(this).attr('id').replace('day-', '');
+        $("#days-list a").on('click', function(){
+            var day = $(this).find("input").attr('id').replace('day-', '');
             var cur = document.location.href;
-            document.location.href = cur.replace(/day=(next|[0-9]+)/,"day="+day);
+            var re = /day=(next|[0-9]+)/;
+            if (!document.location.search){
+                cur += "?";
+            }
+            if (cur.match(re)){
+                document.location.href = cur.replace(re, "day=" + day);
+            }else{
+                document.location.href = cur + "&day=" + day;
+            }
         });
 
         ////////// Submit button
@@ -1081,7 +1420,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 var tt = ti.test_info.test.type;
                 if (tt === QAUtils.COMPOSITE || tt === QAUtils.CONSTANT){
                     ti.inputs.val(ti.value);
-                }else if (_.isObject(ti.value)){
+                }else if (tt !== QAUtils.UPLOAD && _.isObject(ti.value)){
                     ti.inputs.val(JSON.stringify(ti.value));
                 }
             });
@@ -1130,10 +1469,12 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 $complete_clear.show();
             }
 
-            var setDuration = function(start_date, complete_date) {
+            var setDuration = function(start_date, complete_date, publish) {
                 if (!start_date || !complete_date) {
                     $duration_picker.val('');
-                    $.Topic("valueChanged").publish();
+                    if (publish){
+                        $.Topic("valueChanged").publish();
+                    }
                     return;
                 }
                 var diff = complete_date - start_date,
@@ -1143,7 +1484,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (mins < 10) mins = '0' + mins; else mins = mins.toString();
                 $duration_picker.val(hours.toString() + mins);
 
-                $.Topic("valueChanged").publish();
+                if (publish){
+                    $.Topic("valueChanged").publish();
+                }
             };
 
             var start_fp = $start_picker.flatpickr({
@@ -1160,7 +1503,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }
 
                     if ($completed_picker.val() !== '') {
-                        setDuration(selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0]);
+                        setDuration(selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0], true);
                     }
                     $completed_picker[0]._flatpickr.set('minDate', selectedDates[0].valueOf());
                     $start_clear.fadeIn('fast');
@@ -1189,7 +1532,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                         selectedDates = [];
                     }
 
-                    setDuration($start_picker[0]._flatpickr.selectedDates[0], selectedDates[0]);
+                    setDuration($start_picker[0]._flatpickr.selectedDates[0], selectedDates[0], true);
 
                     if (selectedDates.length > 0) {
                         $start_picker[0]._flatpickr.set('maxDate', _.max([selectedDates[0].valueOf(), moment().valueOf()]));
@@ -1231,7 +1574,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             });
 
             if ($start_picker[0]._flatpickr.selectedDates && $completed_picker[0]._flatpickr.selectedDates) {
-                setDuration($start_picker[0]._flatpickr.selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0]);
+                setDuration($start_picker[0]._flatpickr.selectedDates[0], $completed_picker[0]._flatpickr.selectedDates[0], false);
             }
         }
 
@@ -1268,6 +1611,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             return false;
         });
 
+        disable_numeric_scroll();
         set_tab_stops();
 
         var $service_events = $('.service-event-btn');
@@ -1298,13 +1642,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             );
         });
 
-		$('#id_in_progress').cheekycheck({
+        $('#id_in_progress').cheekycheck({
             right: true,
             check: '<i class="fa fa-check"></i>',
             extra_class: 'warning'
         });
 
-		$('#id_initiate_service').cheekycheck({
+        $('#id_initiate_service').cheekycheck({
             right: true,
             check: '<i class="fa fa-check"></i>',
             extra_class: 'warning'

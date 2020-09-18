@@ -3,13 +3,19 @@ omit =
     *migrations*
     qatrack/wsgi.py
     qatrack/middleware/profiler.py
+    qatrack/**/management/commands/*
     qatrack/**/tests/*
     qatrack/**/apps.py
+    scripts/*
+    setup.py
+    manage.py
+    qatrack/accel_migration_tool
 source =
     qatrack.accounts
     qatrack.attachments
     qatrack.api
     qatrack.contacts
+    qatrack.issues
     qatrack.notifications
     qatrack.parts
     qatrack.reports
@@ -17,6 +23,8 @@ source =
     qatrack.qatrack_core
     qatrack.service_log
     qatrack.units
+#plugins =
+#    django_coverage_plugin
 
 [html]
 directory = cover

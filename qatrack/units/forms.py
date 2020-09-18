@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.timezone import timedelta
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from qatrack.service_log.forms import HoursMinDurationField
 from qatrack.units import models as u_models
@@ -81,7 +81,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
         for f in self.fields:
             if f == 'date_changed':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
-                self.fields[f].input_formats = ['%d-%m-%Y', '%Y-%m-%d']
+                self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
             elif f in ['year_select', 'month_select']:
                 self.fields[f].widget.attrs['class'] = 'form-control'
             else:
@@ -96,7 +96,9 @@ class UnitAvailableTimeForm(forms.ModelForm):
     def clean_date_changed(self):
         date_changed = self.cleaned_data['date_changed']
         unit = self.cleaned_data.get('unit')
-        if unit and date_changed < unit.date_acceptance:
+        if not date_changed:
+            self.add_error('date_changed', 'Date Changed is a required field')
+        elif unit and date_changed < unit.date_acceptance:
             self.add_error('date_changed', 'Date changed cannot be before units acceptance date')
         return date_changed
 
@@ -116,7 +118,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         for f in self.fields:
             if f == 'date':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
-                self.fields[f].input_formats = ['%d-%m-%Y', '%Y-%m-%d']
+                self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
             elif f == 'hours':
                 self.fields[f].widget.attrs['class'] = 'form-control duration'
             elif f == 'units':
@@ -131,7 +133,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         return cleaned
 
 
-def unit_site_unit_type_choices(include_empty=False):
+def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
     """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
 
     def site_unit_type(u):
@@ -141,8 +143,13 @@ def unit_site_unit_type_choices(include_empty=False):
         return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
 
     units = u_models.Unit.objects.select_related(
-        "site", "type",
+        "site",
+        "type",
     ).order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
+
+    if serviceable_only:
+        units = units.filter(is_serviceable=True)
+
     choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
     choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
     if include_empty:

@@ -1,39 +1,42 @@
+{% load i18n %}
 {% load qa_tags %}
-{% if history %}
-    {% for hist in history %}
-        <a target="_blank"
-           href="{{ hist.test_list_instance.get_absolute_url }}"
-           class="label {{hist.pass_fail}} history-value"
-           title="{% if test.is_upload %}{{hist.upload_name|safe}}{% else %}{% if hist.diff_display %}Diff from ref={{hist.diff_display}}{%else%}N/A{%endif%}{% endif %};  {{hist.created_by}} on {{hist.work_completed}}; {{hist.status}}">
-            {% if test.is_string or test.is_string_composite %}
-                <span class="label {{hist.pass_fail}} text-black" title="{{hist.value_display|safe}}">
-                    {{hist.value_display|safe}}
-                </span>
-            {% elif test.is_upload %}
-                <span>
-                    {{hist.upload_name|safe}}
-                </span>
-            {% elif hist.work_completed and hist.pass_fail != "not_done" %}
-                {% if show_icons %}
-                    {% if hist.pass_fail == 'tolerance' %}
-                        <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
-                    {% elif hist.pass_fail == 'action' %}
-                        <i class="pull-left fa fa-ban" aria-hidden="true"></i>
-                    {% elif hist.pass_fail == 'ok' %}
-                        <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
-                    {% elif hist.pass_fail == 'not_done' %}
-                        <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
-                    {% endif %}
-                {% endif %}
-                {{hist.value_display|safe}}
-            {% else %}
-                <span class="label not_done" title="N/A">N/A</span>
-            {% endif %}
-        </a>
-    {% endfor %}
-    {% if test.is_upload or test.is_string_type or not test.chart_visibility %}
 
-    {% else %}
-        <a title="View chart of this data" target="_blank" href="{% url 'charts' %}?units={{unit.pk}}&tests={{test.pk}}&test_lists={{test_list.pk}}&frequencies={% if frequency %}{{ frequency.id }}{% else %}0{% endif %}"><i class="fa fa-area-chart"></i></a>
-    {% endif %}
+{% if history %}
+  {% for tli, hist in history %}
+    <a target="_blank"
+        href="{{ tli.get_absolute_url }}"
+        class="label {{hist.pass_fail}} history-value"
+        title="{% if test.is_upload %} {{ hist.upload_name|safe }} {% elif hist.string_value %}{{ hist.value_display|slice:"100" }}{% else %} {% trans "Value" %}={{ hist.value_display|safe }}; {% if hist.diff_display %} {% trans "Diff from ref" %}={{hist.diff_display}} {%else%} {% trans "No ref/tol set" %} {%endif%} {% endif %}; {% blocktrans with created_by=hist.created_by created_on=hist.work_completed %} {{ created_by }} on {{ created_on }} {% endblocktrans %}; {{ hist.status }}"
+    >
+      {% if test.is_string_type or test.is_date_type %}
+        <span class="label {{hist.pass_fail}} text-black">
+          {{hist.value_display|safe}}
+        <span>
+      {% elif test.is_upload %}
+        <span>
+          {{hist.upload_name|safe}}
+        </span>
+      {% elif hist.work_completed and hist.pass_fail != "not_done" %}
+        {% if show_icons %}
+          {% if hist.pass_fail == 'tolerance' %}
+            <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
+          {% elif hist.pass_fail == 'action' %}
+            <i class="pull-left fa fa-ban" aria-hidden="true"></i>
+          {% elif hist.pass_fail == 'ok' %}
+            <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
+          {% elif hist.pass_fail == 'not_done' %}
+            <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
+          {% endif %}
+        {% endif %}
+        {{hist.value_display|safe}}
+      {% else %}
+      <span class="label not_done" title="{% trans "N/A" %}">{% trans "N/A" %}</span>
+      {% endif %}
+    </a>
+  {% endfor %}
+  {% if test.is_upload or test.is_string_type or not test.chart_visibility %}
+
+  {% else %}
+    <a title="{% trans "View chart of this data" %}" target="_blank" href="{% url 'charts' %}?units={{unit.pk}}&tests={{test.pk}}&test_lists={{test_list.pk}}&frequencies={% if frequency %}{{ frequency.id }}{% else %}0{% endif %}"><i class="fa fa-area-chart"></i></a>
+  {% endif %}
 {% endif %}

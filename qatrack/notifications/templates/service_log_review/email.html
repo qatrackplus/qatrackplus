@@ -1,0 +1,63 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% load i18n %}
+{% block title %}{% trans "QATrack+ Service Event Review Notice" %}{% endblock %}
+{% block preheader %}{% trans "QATrack+ Service Event Review Notice" %}{% endblock %}
+{% block extra_css %}
+  th.header {
+    font-weight: bold;
+    text-align: left;
+  }
+  thead th.header {
+    text-align: left;
+    border-bottom: 1px solid #ccc;
+  }
+  thead th {
+    font-weight: bold;
+    text-align: center;
+  }
+  tbody th.header {
+    padding-right: 10px;
+  }
+
+  thead th.header.unreviewed-count,
+  tbody td.unreviewed-count {
+    text-align: center;
+    width: 15%;
+  }
+{% endblock %}
+
+{% block content %}
+
+<p>{% trans "Hello" %},</p>
+<p>
+  The following Units have Service Events <a href="{{ domain }}{% url "sl_list_review_required" %}">Awaiting Review</a>.
+</p>
+<table style="border: none;" cellspacing="0" cellpadding="0">
+  <thead>
+    <tr>
+      <th class="header">{% trans "Unit" %}</th>
+      <th class="header">{% trans "Service Area" %}</th>
+      <th class="header">{% trans "Count" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% regroup notice.ses_by_unit_usa by unit_service_area__unit__name as unit_groups %}
+    {% for unit, unit_sas in unit_groups %}
+      {% for unit_sa in unit_sas %}
+        <tr>
+          {% if forloop.first %}
+            <th class="header">{{ unit }}</th>
+          {% else %}
+            <td>&nbsp;</td>
+          {% endif %}
+          <td>{{ unit_sa.unit_service_area__service_area__name }}</td>
+          <td class="unreviewed-count">
+            {{ unit_sa.unit_service_area__service_area__name__count }}
+          </td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

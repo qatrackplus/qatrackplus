@@ -2,10 +2,11 @@ import json
 import re
 
 from django import template
+from django.conf import settings
 from django.core.cache import cache
 from django.template.loader import get_template
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from qatrack.qatrack_core.utils import format_as_time, format_datetime
 from qatrack.service_log import models as sl_models
@@ -73,7 +74,9 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
     today = timezone.now().date()
     if service_log.datetime.date() == today:
         if timezone.now() - service_log.datetime < timezone.timedelta(hours=1):
-            datetime_display = '%s %s' % (int((timezone.now() - service_log.datetime).total_seconds() / 60), _('minutes ago'))
+            datetime_display = '%s %s' % (
+                int((timezone.now() - service_log.datetime).total_seconds() / 60), _('minutes ago')
+            )
         else:
             datetime_display = format_as_time(service_log.datetime)
     elif service_log.datetime.date() == today - timezone.timedelta(days=1):
@@ -96,7 +99,7 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
 
         try:
             extra_info = json.loads(service_log.extra_info.replace("'", '"'))
-        except:
+        except:  # noqa: E722
             extra_info = service_log.extra_info
 
         context['extra_info'] = extra_info
@@ -106,16 +109,16 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
 
         try:
             extra_info = json.loads(service_log.extra_info.replace("'", '"'))
-        except:
+        except:  # noqa: E722
             extra_info = service_log.extra_info
 
         context['extra_info'] = extra_info
-        status_old_colour = cache.get('service-status-colours').get(extra_info['status_change']['old'])
+        status_old_colour = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS).get(extra_info['status_change']['old'])
         context['old_status_tag'] = '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
             status_old_colour, extra_info['status_change']['old']
         ) if status_old_colour is not None else extra_info['status_change']['old']
 
-        status_new_colour = cache.get('service-status-colours').get(extra_info['status_change']['new'])
+        status_new_colour = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS).get(extra_info['status_change']['new'])
         context['new_status_tag'] = '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
             status_new_colour, extra_info['status_change']['new']
         ) if status_new_colour is not None else extra_info['status_change']['new']
@@ -127,7 +130,7 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
 
         try:
             extra_info = json.loads(service_log.extra_info.replace("'", '"'))
-        except:
+        except:  # noqa: E722
             extra_info = service_log.extra_info
 
         context['extra_info'] = extra_info
@@ -137,7 +140,7 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
 
         try:
             extra_info = json.loads(service_log.extra_info.replace("'", '"'))
-        except:
+        except:  # noqa: E722
             extra_info = service_log.extra_info
 
         context['extra_info'] = extra_info

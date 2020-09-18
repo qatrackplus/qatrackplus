@@ -118,7 +118,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'service_types': sl_models.ServiceType.objects.all(),
             'sites': [{
                 "pk": "",
-                "name": "No site"
+                "name": "Other"
             }] + list(Site.objects.values('pk', 'name')),
             'units': Unit.objects.values('pk', 'name', 'active', 'site_id'),
             'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),
@@ -186,12 +186,12 @@ class ChartView(PermissionRequiredMixin, TemplateView):
     def set_tests(self):
         """self.tests is set to all tests that are chartable"""
 
-        self.tests = models.Test.objects.order_by(
-            "name"
-        ).filter(
-            chart_visibility=True
-        ).values(
-            "pk", "category", "name", "description",
+        self.tests = models.Test.objects.order_by("name").filter(chart_visibility=True).values(
+            "pk",
+            "category",
+            "name",
+            "display_name",
+            "description",
         )
 
 
@@ -290,7 +290,26 @@ class BaseChartView(View):
 
             use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
 
-            if use_percent:
+            if ti.unit_test_info.test.type == models.WRAPAROUND:
+
+                t = ti.unit_test_info.test
+                ref = ti.reference.value
+
+                if ti.value > ref:
+                    wrap_distance = (t.wrap_high - ti.value) + (ref - t.wrap_low)
+                    direct_distance = ti.value - ref
+                    direct_closer = direct_distance <= wrap_distance
+                    value = direct_distance if direct_closer else -wrap_distance
+                elif ti.value < ref:
+                    wrap_distance = (ti.value - t.wrap_low) + (t.wrap_high - ref)
+                    direct_distance = ref - ti.value
+                    direct_closer = direct_distance <= wrap_distance
+                    value = -direct_distance if direct_closer else wrap_distance
+                else:
+                    value = ti.value
+                ref_value = 0
+
+            elif use_percent:
 
                 value = 100 * (ti.value - ti.reference.value) / ti.reference.value
                 ref_value = 0.
@@ -541,8 +560,9 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         if context["plot_data"]['series'] and list(context["plot_data"]['series'].values()):
             name, series = list(context["plot_data"]['series'].items())[0]
             points = series['series_data']
-            if points:
-                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]))
+            non_null_points = [(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]
+            if non_null_points:
+                dates, data = list(zip(*non_null_points))
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)

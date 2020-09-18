@@ -4,7 +4,7 @@ from dateutil import parser
 from django import forms
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from qatrack.qatrack_core.utils import format_as_date
 from qatrack.qatrack_core.widgets import ToolTipSelect
@@ -26,7 +26,24 @@ class ReportForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         f = self.fields['report_type']
-        f.widget = ToolTipSelect(titles=reports.REPORT_DESCRIPTIONS, choices=f.choices)
+        choices = [('', '------------')] + reports.report_type_choices()
+        f.widget = ToolTipSelect(titles=reports.report_descriptions(), choices=choices)
+
+
+ReportNoteFormSet = forms.inlineformset_factory(
+    models.SavedReport,
+    models.ReportNote,
+    extra=0,
+    fields=(
+        "id",
+        "heading",
+        "content",
+    ),
+    widgets={
+        'heading': forms.TextInput(),
+        'content': forms.Textarea(attrs={'rows': 3}),
+    },
+)
 
 
 def value_to_serializable(val, val_type=None):
@@ -67,6 +84,8 @@ def serialize_forms(forms, data_attr="initial"):
             field = form.fields[k]
             if type(field.widget).__name__ == "RecurrenceWidget":
                 inp_type = "recurrence"
+            if type(field.widget).__name__ == "Textarea":
+                inp_type = "textarea"
             else:
                 inp_type = form.fields[k].widget.input_type
 
@@ -91,6 +110,15 @@ def serialize_savedreport(instance):
     form_data = serialize_forms(forms)
 
     return form_data
+
+
+def serialize_savedreport_notes(instance):
+
+    notes_formset = ReportNoteFormSet(instance=instance)
+    return {
+        'notes': serialize_forms(notes_formset.forms),
+        'count': instance.reportnote_set.count(),
+    }
 
 
 def serialize_report(report):

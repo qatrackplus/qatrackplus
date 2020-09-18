@@ -1,35 +1,39 @@
+{% load i18n %}
 {% load qa_tags %}
+
 {% if show_se_link and perms.service_log.view_serviceevent %}
-    <a class="btn btn-default btn-xs btn-flat {% comment %}pull-right{% endcomment %} margin-left-2"
-      href="{% url 'sl_details' pk=rtsqa.service_event.id %}"
-      title="Click to view the Service Event associated with this RTSQC"
-      >
-      Service Event</a>
+  <a class="btn btn-default btn-xs btn-flat margin-left-2"
+    href="{% url 'sl_details' pk=rtsqa.service_event.id %}"
+    title="{% trans "Click to view the Service Event associated with this RTSQC" %}"
+  >
+    {% trans "Service Event" %}
+  </a>
 {% endif %}
+
 {% if rtsqa.test_list_instance.pk %}
-    {% if perms.qa.can_review %}
-        <a class="btn btn-default btn-xs btn-flat {% comment %}pull-right{% endcomment %} margin-left-2"
-          href="{% url 'review_test_list_instance' pk=rtsqa.test_list_instance.pk %}{% if next %}?next={{ next }}{% endif %}"
-          title="Review this RTSQC Test List Instance"
-          >
-            Review
-        </a>
-    {% endif %}
+  {% if perms.qa.can_review %}
+    <a class="btn btn-default btn-xs btn-flat {% comment %}pull-right{% endcomment %} margin-left-2"
+      href="{% url 'review_test_list_instance' pk=rtsqa.test_list_instance.pk %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% trans "Review this RTSQC Test List Instance" %}"
+    >
+      {% trans "Review" %}
+    </a>
+  {% endif %}
 {% else %}
-    {% if perms.qa.add_testlistinstance %}
-        <a class="btn btn-default btn-xs btn-flat {% comment %}pull-right{% endcomment %} margin-left-2"
-          href="{% url 'perform_qa' pk=rtsqa.unit_test_collection.pk %}?rtsqa={{ rtsqa.id }}{% if next %}&next={{ next }}{% endif %}"
-          title="Perform this RTSQC Test List Instance"
-          >
-            Perform
-        </a>
-        {% if show_performed %}
-            <a class="btn btn-default btn-xs btn-flat {% comment %}pull-right{% endcomment %} margin-left-2"
-               href="{% url 'review_utc' pk=rtsqa.unit_test_collection.pk %}?rtsqa={{ rtsqa.id }}{% if next %}&next={{ next }}{% endif %}"
-              title="View Test List Instance history for this RTS QC"
-              >
-                Performed
-            </a>
-        {% endif %}
+  {% if perms.qa.add_testlistinstance %}
+    <a class="btn btn-default btn-xs btn-flat {% comment %}pull-right{% endcomment %} margin-left-2"
+      href="{% url 'perform_qa' pk=rtsqa.unit_test_collection.pk %}?rtsqa={{ rtsqa.id }}{% if next %}&next={{ next }}{% endif %}"
+      title="Perform this RTSQC Test List Instance"
+    >
+      {% trans "Perform" %}
+    </a>
+    {% if show_performed %}
+      <a class="btn btn-default btn-xs btn-flat {% comment %}pull-right{% endcomment %} margin-left-2"
+        href="{% url 'review_utc' pk=rtsqa.unit_test_collection.pk %}?rtsqa={{ rtsqa.id }}{% if next %}&next={{ next }}{% endif %}"
+        title="{% trans "View Test List Instance history for this RTS QC" %}"
+      >
+        {% trans "Performed" %}
+      </a>
     {% endif %}
+  {% endif %}
 {% endif %}

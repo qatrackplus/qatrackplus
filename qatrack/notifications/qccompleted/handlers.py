@@ -45,7 +45,7 @@ def email_on_testlist_save(*args, **kwargs):
     if tolerance:
         recipients |= tol_recipients
     if failing:
-        recipients |= act_recipients
+        recipients |= act_recipients | tol_recipients
 
     context = {
         "failing_tests": failing,

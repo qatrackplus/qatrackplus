@@ -103,9 +103,6 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > header > nav > div.navbar-hea
     .custom-nav .navbar-toggle {
         display: none;
     }
-    .collapse {
-        display: block;
-    }
 
 }
 @media (max-width: 767px) {
@@ -138,6 +135,9 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > header > nav > div.navbar-hea
         background-color: #e1e3e9 !important;
     }
 
+    .collapse {
+        display: block;
+    }
 }
 
 .form-control {

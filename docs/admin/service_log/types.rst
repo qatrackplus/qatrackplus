@@ -11,7 +11,14 @@ and click the `Service Types` link in the `Service Log` section and then click
 the `Add Service Type` button.  Fill in the fields as follows:
 
 * **Name** A short descriptive name for the Service Type.
-* **Is review required** Indicate whether this service type requires review
+* **Is review required** This flag controls whether the "Is Review Required"
+  checkbox is enabled when entering/editing service events.  If this flag is 
+  not checked, then users will have the option of not requiring a new Service Event
+  to be reviewed.  If this flag is checked, then all Service Events of this type
+  will be required to undergo review.  For example, you may wish to leave
+  this flag unchecked for minor service types and allow the person entering
+  the service event details to determine whether it needs to be reviewed or not. Conversely
+  you may want to check this flag for extensive, or safety systems service types.
 * **Is active**  Unchecking this will hide the Service Type from drop down menus
 * **Description** A brief description of this service type
 

@@ -65,6 +65,7 @@ require.config({
         zxcvbn: siteConfig.STATIC_URL + 'zxcvbn_password/js/zxcvbn',
         password_strength: siteConfig.STATIC_URL + 'zxcvbn_password/js/password_strength',
         vue: siteConfig.STATIC_URL + 'vue/js/vue.min',
+        treeview: siteConfig.STATIC_URL + 'treeview/js/bootstrap-treeview.min',
 
         // Site wide:
         sidebar: siteConfig.STATIC_URL + 'qatrack_core/js/sidebar',
@@ -75,6 +76,9 @@ require.config({
         // accounts module:
         groups: siteConfig.STATIC_URL + 'accounts/js/groups',
 
+        // homepage
+        homepage: siteConfig.STATIC_URL + 'qatrack_core/js/homepage',
+
         // reports module:
         reports: siteConfig.STATIC_URL + 'reports/js/reports',
 
@@ -83,11 +87,13 @@ require.config({
         qacharts: siteConfig.STATIC_URL + 'qa/js/qacharts',
         qautils: siteConfig.STATIC_URL + 'qa/js/qautils',
         qareview: siteConfig.STATIC_URL + 'qa/js/qareview',
+        qabulkreview: siteConfig.STATIC_URL + 'qa/js/qabulkreview',
         qaoverview: siteConfig.STATIC_URL + 'qa/js/qaoverview',
 
         // unit module:
         unit_avail: siteConfig.STATIC_URL + 'units/js/unit_available_time',
         unit_list: siteConfig.STATIC_URL + 'units/js/unit_list',
+        unit_choose: siteConfig.STATIC_URL + 'units/js/unit_choose',
 
         // service log module
         sl_dash: siteConfig.STATIC_URL + 'service_log/js/sl_dash',
@@ -202,6 +208,9 @@ require.config({
         slimscroll: {
             deps: ['jquery']
         },
+        treeview: {
+            deps: ['jquery', 'lodash']
+        },
         zxcvbn: {
             deps: ['jquery']
         },
@@ -218,6 +227,10 @@ require.config({
         // accounts module:
         groups: {
             deps: ['vue']
+        },
+
+        homepage: {
+            deps: ['jquery', 'treeview']
         },
 
         // reports module:

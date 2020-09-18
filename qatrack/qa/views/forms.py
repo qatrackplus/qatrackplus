@@ -10,7 +10,8 @@ from django.forms.widgets import (
     Select,
 )
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qa import models
 from qatrack.qa.utils import format_qc_value
@@ -18,7 +19,7 @@ from qatrack.qatrack_core.utils import format_datetime
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 
-BOOL_CHOICES = [(0, "No"), (1, "Yes")]
+BOOL_CHOICES = [(0, _l("No")), (1, _l("Yes"))]
 
 
 class UserFormsetMixin(object):
@@ -52,27 +53,40 @@ class TestInstanceWidgetsMixin(object):
         comment = cleaned_data.get("comment")
         value = cleaned_data.get("value", None)
         string_value = cleaned_data.get("string_value", None)
+        date_value = cleaned_data.get("date_value", None)
+        datetime_value = cleaned_data.get("datetime_value", None)
+
+        empty = (
+            value is None and
+            string_value in ["", None] and
+            date_value is None and
+            datetime_value is None
+        )
 
         if self.unit_test_info.test.skip_required():
             # force user to enter value unless skipping test
-            if value is None and not string_value and not skipped:
-                self._errors["value"] = self.error_class(["Value required if not skipping"])
-            elif (value is not None or string_value) and skipped:
-                self._errors["value"] = self.error_class(["Clear value if skipping"])
+            if empty and not skipped:
+                self._errors["value"] = self.error_class([_("Value required if not skipping")])
+            elif not empty and skipped:
+                self._errors["value"] = self.error_class([_("Clear value if skipping")])
 
             no_comment_required = (
                 self.user.has_perm("qa.can_skip_without_comment") or
                 self.unit_test_info.test.skip_without_comment
             )
             if not no_comment_required and skipped and not comment:
-                self._errors["skipped"] = self.error_class(["Please add comment when skipping"])
+                self._errors["skipped"] = self.error_class([_("Please add comment when skipping")])
                 del cleaned_data["skipped"]
 
-            if (value is None and not string_value) and skipped and "value" in self.errors:
+            if empty and skipped and "value" in self.errors:
                 del self.errors["value"]
         else:
-            cleaned_data['skipped'] = value is None and not string_value
-            if "value" in self.errors:
+            cleaned_data['skipped'] = empty
+
+            # check if composite test calculated value that is not in (numerical, None)
+            is_comp = self.unit_test_info.test.type == models.COMPOSITE
+            invalid_composite = is_comp and self.errors.get('value') and self['value'].value() is not None
+            if "value" in self.errors and not invalid_composite:
                 del self.errors["value"]
 
         return cleaned_data
@@ -81,10 +95,11 @@ class TestInstanceWidgetsMixin(object):
         """add custom widget for boolean values (after form has been initialized)"""
 
         # temp store attributes so they can be restored to reset widget
-        self.fields["string_value"].widget.attrs["class"] = "qa-input"
-        self.fields["value"].widget.attrs["class"] = "qa-input"
-        attrs = self.fields["value"].widget.attrs
-        str_attrs = self.fields["string_value"].widget.attrs
+        value_fields = ["value", "string_value", "date_value", "datetime_value"]
+        widget_attrs = {}
+        for f in value_fields:
+            self.fields[f].widget.attrs["class"] = "qa-input"
+            widget_attrs[f] = self.fields[f].widget.attrs
 
         test_type = self.unit_test_info.test.type
 
@@ -93,12 +108,15 @@ class TestInstanceWidgetsMixin(object):
         elif test_type == models.CONSTANT:
             test = self.unit_test_info.test
             formatted = format_qc_value(test.constant_value, test.formatting)
-            self.fields["value"].widget.attrs['title'] = 'Actual value = %s' % test.constant_value
+            self.fields["value"].widget.attrs['title'] = _('Actual value = %(constant_value)s') % {
+                'constant_value': test.constant_value
+            }
             self.fields["value"].widget.attrs['data-formatted'] = formatted
         elif test_type == models.MULTIPLE_CHOICE:
             self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
             self.fields["string_value"].widget = HiddenInput()
+            self.fields["json_value"].widget = HiddenInput()
         elif test_type == models.COMPOSITE:
             self.fields["value"].widget = Input()
             if getattr(self, "instance", None):
@@ -108,14 +126,18 @@ class TestInstanceWidgetsMixin(object):
         elif test_type in models.STRING_TYPES:
             self.fields['string_value'].widget = Input({'maxlength': 20000})
         else:
-            self.fields["value"].widget = NumberInput(attrs={"step": "any"})
+            attrs = {"step": "any"}
+            if test_type == models.WRAPAROUND:
+                attrs['max'] = self.unit_test_info.test.wrap_high
+                attrs['min'] = self.unit_test_info.test.wrap_low
+            self.fields["value"].widget = NumberInput(attrs=attrs)
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
             if hasattr(self, "instance") and self.instance.value is not None:
                 self.initial["value"] = int(self.instance.value)
 
-        self.fields["value"].widget.attrs.update(attrs)
-        self.fields["string_value"].widget.attrs.update(str_attrs)
+        for f in value_fields:
+            self.fields[f].widget.attrs.update(widget_attrs[f])
 
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
@@ -137,14 +159,27 @@ class TestInstanceWidgetsMixin(object):
 
         return to_process
 
+    def clean_value(self):
+        value = self.cleaned_data.get('value')
+        t = self.unit_test_info.test
+        if value is not None and t.type == models.WRAPAROUND:
+            if not (t.wrap_low <= value <= t.wrap_high):
+                msg = _("Value for this test must be in range {low} to {high}").format(high=t.wrap_high, low=t.wrap_low)
+                self.add_error('value', msg)
+
+        return value
+
 
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
 
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
     string_value = forms.CharField(required=False)
+    json_value = forms.CharField(widget=forms.HiddenInput, required=False)
+    date_value = forms.DateField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
+    datetime_value = forms.DateTimeField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
 
-    skipped = forms.BooleanField(required=False, help_text=_("Was this test skipped for some reason (add comment)"))
-    comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_("Show or hide comment field"))
+    skipped = forms.BooleanField(required=False, help_text=_l("Was this test skipped for some reason (add comment)"))
+    comment = forms.CharField(widget=forms.Textarea, required=False, help_text=_l("Show or hide comment field"))
 
     user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
 
@@ -153,8 +188,9 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
         self.in_progress = False
         self.fields["comment"].widget.attrs["rows"] = 2
 
-    def set_unit_test_info(self, unit_test_info):
+    def set_unit_test_info(self, unit_test_info, show_category):
         self.unit_test_info = unit_test_info
+        self.show_category = show_category or not settings.CATEGORY_FIRST_OF_GROUP_ONLY
         self.set_value_widget()
         self.disable_read_only_fields()
 
@@ -164,7 +200,14 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
             "tolerance": self.unit_test_info.tolerance,
             "unit_test_info": self.unit_test_info,
             "test": self.unit_test_info.test,
+            "show_category": self.show_category,
         }
+
+    def clean_comment(self):
+        comment = self.cleaned_data.get("comment")
+        if self.unit_test_info.test.require_comment and not comment:
+            raise ValidationError("This test requires a comment before submission.")
+        return comment
 
 
 BaseTestInstanceFormSet = forms.formsets.formset_factory(CreateTestInstanceForm, extra=0)
@@ -198,8 +241,12 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
         super(CreateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
+        prev_cat = None
         for form, uti in zip(self.forms, unit_test_infos):
-            form.set_unit_test_info(uti)
+            cur_cat = uti.test.category_id
+            show_cat = cur_cat != prev_cat
+            prev_cat = cur_cat
+            form.set_unit_test_info(uti, show_cat)
 
 
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
@@ -208,7 +255,16 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
     class Meta:
         model = models.TestInstance
-        fields = ("value", "string_value", "skipped", "comment", "user_attached",)
+        fields = (
+            "value",
+            "string_value",
+            "json_value",
+            "date_value",
+            "datetime_value",
+            "skipped",
+            "comment",
+            "user_attached",
+        )
 
     def __init__(self, *args, **kwargs):
 
@@ -226,6 +282,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
             "tolerance": self.instance.tolerance,
             "unit_test_info": self.instance.unit_test_info,
             "test": self.instance.unit_test_info.test,
+            "show_category": self.show_category,
         }
 
 
@@ -239,7 +296,16 @@ BaseUpdateTestInstanceFormSet = inlineformset_factory(
 
 
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
-    pass
+
+    def __init__(self, *args, **kwargs):
+
+        super(UpdateTestInstanceFormSet, self).__init__(*args, **kwargs)
+
+        prev_cat = None
+        for form in self.forms:
+            cur_cat = form.unit_test_info.test.category_id
+            form.show_category = cur_cat != prev_cat
+            prev_cat = cur_cat
 
 
 class ReviewTestInstanceForm(forms.ModelForm):
@@ -279,7 +345,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
     # now handle saving of qa or service event and link rtsqa
 
     tli_attachments = forms.FileField(
-        label="Attachments",
+        label=_l("Attachments"),
         max_length=150,
         required=False,
         widget=forms.FileInput(attrs={
@@ -288,6 +354,8 @@ class BaseTestListInstanceForm(forms.ModelForm):
             'style': 'display:none',
         })
     )
+
+    autosave_id = forms.IntegerField(required=False, widget=HiddenInput())
 
     class Meta:
         model = models.TestListInstance
@@ -355,13 +423,13 @@ class BaseTestListInstanceForm(forms.ModelForm):
                 cleaned_data["work_completed"] = work_started + timezone.timedelta(seconds=60)
             elif work_completed < work_started:
                 self._errors["work_started"] = self.error_class(
-                    ["Work started date/time can not be after work completed date/time"]
+                    [_("Work started date/time can not be after work completed date/time")]
                 )
                 del cleaned_data["work_started"]
 
         if work_started:
             if work_started >= timezone.now().astimezone(timezone.get_current_timezone()):
-                self._errors["work_started"] = self.error_class(["Work started date/time can not be in the future"])
+                self._errors["work_started"] = self.error_class([_("Work started date/time can not be in the future")])
                 if "work_started" in cleaned_data:
                     del cleaned_data["work_started"]
 
@@ -372,14 +440,14 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
     comment = forms.CharField(widget=forms.Textarea, required=False)
-    initiate_service = forms.BooleanField(help_text=_('Initiate service event'), required=False)
+    initiate_service = forms.BooleanField(help_text=_l('Initiate service event'), required=False)
 
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
         now = timezone.localtime(timezone.now())
         self.fields['work_started'].initial = format_datetime(now)
         self.fields['comment'].widget.attrs['rows'] = '3'
-        self.fields['comment'].widget.attrs['placeholder'] = 'Add comment about this set of tests'
+        self.fields['comment'].widget.attrs['placeholder'] = _('Add comment about this set of tests')
         self.fields['comment'].widget.attrs['class'] = 'autosize form-control'
 
 
@@ -416,5 +484,5 @@ class ReviewTestListInstanceForm(forms.ModelForm):
         cleaned_data = super(ReviewTestListInstanceForm, self).clean()
 
         if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
-            raise ValidationError("You do not have the required permission to review your own tests.")
+            raise ValidationError(_("You do not have the required permission to review your own tests."))
         return cleaned_data

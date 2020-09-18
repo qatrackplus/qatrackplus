@@ -1,17 +1,18 @@
 {% extends "site_base.html" %}
 {% load qa_tags %}
 {% load listable %}
+{% load static %}
 
 {% block head_title %}QC Program Overview by Due Date{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}listable/css/jquery.dataTables.bootstrap.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}datepicker/css/bootstrap-datepicker.min.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}multiselect/css/bootstrap.multiselect.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "listable/css/jquery.dataTables.bootstrap.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "datepicker/css/bootstrap-datepicker.min.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "multiselect/css/bootstrap.multiselect.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -89,10 +90,10 @@ $(document).ready(function(){
     <div class="row">
         <div class="col-md-12">
             {% if user_groups %}
-                <h4 class="box-title"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i>QA Program Overview By Due Date For Your Groups</h4>
+                <h4 class="box-title"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i>QC Program Overview By Due Date For Your Groups</h4>
                 <p>View which test lists (visible to your groups) are due or coming due soon</p>
             {% else %}
-                <h4 class="box-title"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i>QA Program Overview By Due Date</h4>
+                <h4 class="box-title"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i>QC Program Overview By Due Date</h4>
                 <p>View which test lists are due or coming due soon</p>
             {% endif %}
         </div>
@@ -141,7 +142,7 @@ $(document).ready(function(){
                                                         {{utc|as_due_date}}
                                                     </td>
                                                     <td >
-                                                        {% firstof utc.frequency.name "Ad-Hoc" %}
+                                                        {% firstof utc.frequency.name "Ad Hoc" %}
                                                     </td>
                                                     <td>
                                                         {{ utc.assigned_to.name }}

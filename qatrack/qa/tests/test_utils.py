@@ -1,5 +1,6 @@
 import io
 import json
+from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
@@ -11,6 +12,14 @@ import recurrence
 from qatrack.qa import models, testpack
 from qatrack.qa import utils as qautils
 from qatrack.qa.tests import utils
+
+delta_time = 0
+
+
+def time():
+    global delta_time
+    delta_time += 10
+    return delta_time
 
 
 class TestUtils(TestCase):
@@ -71,6 +80,7 @@ class TestImportExport(TestCase):
         utils.create_test_list_membership(self.tl1, self.t1)
         utils.create_test_list_membership(self.tl2, self.t2)
         utils.create_test_list_membership(self.tl3, self.t3)
+        utils.create_test_list_membership(self.tl3, self.t1)
 
         self.tlqs = models.TestList.objects.filter(pk=self.tl3.pk)
         self.tlcqs = models.TestListCycle.objects.filter(pk=self.tlc.pk)
@@ -90,7 +100,7 @@ class TestImportExport(TestCase):
 
         assert models.Test.objects.count() == 4
         assert models.TestList.objects.count() == 3
-        assert models.TestListMembership.objects.count() == 3
+        assert models.TestListMembership.objects.count() == 4
         assert models.TestListCycle.objects.count() == 1
         assert models.TestListCycleMembership.objects.count() == 2
 
@@ -116,6 +126,12 @@ class TestImportExport(TestCase):
                     pass
 
         assert list_found and test_found
+
+    def test_timeout(self):
+
+        with self.assertRaises(RuntimeError):
+            with mock.patch('time.time', mock.Mock(side_effect=time)):
+                testpack.create_testpack(self.tlqs, self.tlcqs, timeout=1)
 
     def test_save_pack(self):
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
@@ -289,8 +305,24 @@ class TestCalcDueDate:
 
         rule = recurrence.Rule(freq=recurrence.MONTHLY, bymonthday=day)
         return models.Frequency(
-            name="MWF",
-            slug="mwf",
+            name="Day of Month",
+            slug="day-of-month",
+            recurrences=recurrence.Recurrence(
+                rrules=[rule],
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+            ),
+            window_end=7,
+            window_start=7,
+        )
+
+    def n_weekly(self, weeks=4):
+        """Generate a frequency to be performed on the specific day of month
+        with a 7 day window_start and 7 day window_end"""
+
+        rule = recurrence.Rule(freq=recurrence.WEEKLY, interval=weeks)
+        return models.Frequency(
+            name="%s weekly" % weeks,
+            slug="%s-weekly" % weeks,
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
                 dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
@@ -385,6 +417,14 @@ class TestCalcDueDate:
         expected_due_date = seven_am_mon
         assert qautils.calc_due_date(seven_am_sat, seven_am_mon, self.mwf) == expected_due_date
 
+    def test_mwf_due_monday_perf_sat_after(self):
+        """With a MWF test due Mon, performed on a Sat after, the due date should be set to Mon next"""
+        seven_am_sat_next = self.make_dt(timezone.datetime(2020, 5, 16, 7, 0))
+        seven_am_mon = self.make_dt(timezone.datetime(2020, 5, 11, 7, 0))
+        seven_am_mon_next = self.make_dt(timezone.datetime(2020, 5, 18, 7, 0))
+        expected_due_date = seven_am_mon_next
+        assert qautils.calc_due_date(seven_am_sat_next, seven_am_mon, self.mwf) == expected_due_date
+
     def test_mwf_due_friday_perf_sat(self):
         """With a MWF test due Friday performed on a Sat, the due date should be set to Mon"""
         seven_am_fri = self.make_dt(timezone.datetime(2018, 11, 23, 7, 0))
@@ -466,6 +506,65 @@ class TestCalcDueDate:
         due_date = self.make_dt(timezone.datetime(2018, 11, 28, 7, 0))
         expected_due_date = self.make_dt(timezone.datetime(2018, 12, 5, 7, 0))
         assert qautils.calc_due_date(thu, due_date, self.wed).date() == expected_due_date.date()
+
+    def test_first_of_month_performed_long_after_outside_next_window(self):
+        """If a test list is due on say Apr 1st and is not performed until Nov 20
+        the due date should be updated to Dec 1st"""
+
+        today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
+        due_date = self.make_dt(timezone.datetime(2018, 4, 1, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2018, 12, 1, 7, 0))
+        assert qautils.calc_due_date(today, due_date, self.day_of_month(1)).date() == expected_due_date.date()
+
+    def test_first_of_month_performed_long_after_inside_next_window(self):
+        """If a test list is due on say Apr 1st and is not performed until Nov 27
+        the due date should be updated to Jan 1st"""
+
+        today = self.make_dt(timezone.datetime(2018, 11, 27, 7, 0))
+        due_date = self.make_dt(timezone.datetime(2018, 4, 1, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2019, 1, 1, 7, 0))
+        assert qautils.calc_due_date(today, due_date, self.day_of_month(1)).date() == expected_due_date.date()
+
+    def test_first_of_month_performed_long_after_past_next_window(self):
+        """If a test list is due on say Apr 1st and is not performed until Dec 2
+        the due date should be updated to Jan 1st"""
+
+        today = self.make_dt(timezone.datetime(2018, 12, 2, 7, 0))
+        due_date = self.make_dt(timezone.datetime(2018, 4, 1, 7, 0))
+        expected_due_date = self.make_dt(timezone.datetime(2019, 1, 1, 7, 0))
+        assert qautils.calc_due_date(today, due_date, self.day_of_month(1)).date() == expected_due_date.date()
+
+    def test_4_weekly_performed_long_after_outside_next_window(self):
+        """If a test list is due on say Apr 1st and is not performed until Nov 20
+        the due date should be updated to Dec 1st"""
+
+        today = self.make_dt(timezone.datetime(2018, 11, 1, 7, 0))
+        due_date = self.make_dt(timezone.datetime(2018, 4, 15, 7, 0))
+        # due date in Nov is 8 4 week periods after April 15 which is Nov 25
+        expected_due_date = self.make_dt(timezone.datetime(2018, 11, 25, 7, 0))
+        assert qautils.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
+
+    def test_4_weekly_long_after_inside_next_window(self):
+        """If a test list is due on say Apr 1st and is not performed until Nov 27
+        the due date should be updated to Jan 1st"""
+
+        today = self.make_dt(timezone.datetime(2018, 11, 23, 7, 0))
+        due_date = self.make_dt(timezone.datetime(2018, 4, 15, 7, 0))
+        # due date in Nov is 8 4 week periods after April 15 which is Nov 25
+        # due date in Dec is 9 4 week periods after April 15 which is Dec 23
+        expected_due_date = self.make_dt(timezone.datetime(2018, 12, 23, 7, 0))
+        assert qautils.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
+
+    def test_first_of_month_performed_long_after_past_next_window(self):
+        """If a test list is due on say Apr 1st and is not performed until Dec 2
+        the due date should be updated to Jan 1st"""
+
+        today = self.make_dt(timezone.datetime(2018, 11, 26, 7, 0))
+        due_date = self.make_dt(timezone.datetime(2018, 4, 15, 7, 0))
+        # due date in Nov is 8 4 week periods after April 15 which is Nov 25
+        # due date in Dec is 9 4 week periods after April 15 which is Dec 23
+        expected_due_date = self.make_dt(timezone.datetime(2018, 12, 23, 7, 0))
+        assert qautils.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
 
 
 class TestFormatQCValue:

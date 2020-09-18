@@ -76,6 +76,8 @@ the appropriate protocol.
     HTTP_OR_HTTPS = 'https'  # when using https/ssl for your site
 
 
+.. _databases:
+
 DATABASES Setting
 .................
 
@@ -241,6 +243,32 @@ The meaning of the individual keys is as follows:
 Other Settings
 ~~~~~~~~~~~~~~
 
+.. _accounts_self_register:
+
+ACCOUNTS_SELF_REGISTER
+......................
+
+When `ACCOUNTS_SELF_REGISTER = True` anonymous users are able to register
+themselves for accounts. Default is `False`.
+
+.. _accounts_clean_username:
+
+ACCOUNTS_CLEAN_USERNAME
+.......................
+
+When `ACCOUNTS_CLEAN_USERNAME` is set to callable it will be used to transform
+any username that is to be authenticated.  The most common scenario for this
+setting it is for example to set `def ACCOUNTS_CLEAN_USERNAME(username): return
+username.lower()` which makes all logins lowercase.  Note in this case, the
+user can enter `SoMeUsErName` and it will be authenticated as `someusername`.
+Default is `ACCOUNTS_CLEAN_USERNAME = False`.
+
+
+.. _autosave_days_to_keep:
+
+Set `AUTOSAVE_DAYS_TO_KEEP` to control the maximum number of days that auto-saved
+QC data will be kept for.  The default settings is 30 days.
+
 
 CHROME_PATH
 ...........
@@ -253,6 +281,23 @@ Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. 
     # - or -
     CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
 
+
+
+CATEGORY_FIRST_OF_GROUP_ONLY
+............................
+
+When `CATEGORY_FIRST_OF_GROUP_ONLY = True`, then the category will only be shown for the first test of a consecutive group of tests sharing the same category, otherwise the category will be shown
+next to each test line when performing QC.
+
+
+COMPOSITE_AUTO_FORMAT
+.....................
+
+When `COMPOSITE_AUTO_FORMAT = True` (default) calculation procedures will be
+auto formatted with `Black <https://black.readthedocs.io/en/stable/>`_ .  This
+leaves everyones code in a consistent format making stylistic differences when
+reading code a non-issue.  Set to `False` to tell QATrack+ to leave your code
+alone!
 
 
 CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
@@ -334,6 +379,17 @@ Set `REVIEW_DIFF_COL = True` to include a difference column when reviewing test
 list results. This column shows the difference between a test value and its
 reference value.
 
+.. _review_bulk:
+
+REVIEW_BULK
+...........
+
+Set `REVIEW_BULK = True` to enable the :ref:`Bulk Review <qa_perform_bulk_review>` 
+feature which allows users to update the review and approval status of multiple
+test list instances at the same time.
+
+
+.. _setting_sl_allow_blank_service_area:
 
 SL_ALLOW_BLANK_SERVICE_AREA
 ...........................
@@ -342,6 +398,14 @@ Set `SL_ALLOW_BLANK_SERVICE_AREA = True` to allow users to create a ServiceEvent
 a blank ServiceArea set.  When a Service Event is saved without a ServiceArea explicitly set,
 the ServiceArea will be set to "Not Specified".
 
+.. _setting_sl_allow_blank_service_type:
+
+SL_ALLOW_BLANK_SERVICE_TYPE
+...........................
+
+Set `SL_ALLOW_BLANK_SERVICE_TYPE = True` to allow users to create a ServiceEvent with
+a blank ServiceType set.  When a Service Event is saved without a ServiceType explicitly set,
+the ServiceType will be set to "Not Specified".
 
 TESTPACK_TIMEOUT
 ................
@@ -1082,14 +1146,21 @@ General AD Settings
     AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
     AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
-    AD_MEMBERSHIP_REQ = []  # Currently not implemented! See issue #360
-                            # optional list of groups that user must be a part of in order to create account
-                            # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
+    # If AD_MEMBERSHIP_REQ is not empty, when a user logs in the AD groups
+    # they belong to will be compared with AD_MEMBERSHIP_REQ and if the
+    # user does not belong to at least one of those AD groups, they will
+    # not be allowed to log in
+    AD_MEMBERSHIP_REQ = []  # eg ["Your Hospital - Physics"]
+
+    # AD_GROUP_MAP is a map from AD Group names to QATrack+ group names in form
+    # of {'AD group name': 'QATrack+ Group Name',}
+    # e.g. {'Your Hospital - Physics': "Physics"}.
+    # When a user logs in to QATrack+, their AD groups will be
+    # checked and they will automatically be added to the
+    # corresponding QATrack+ group based on this map.
+    AD_GROUP_MAP = {}
 
     AD_CERT_FILE = '/path/to/your/cert.txt'
-
-    AD_DEBUG = False  # turn on active directory loggin
-    AD_DEBUG_FILE = None  # log file path for debugging AD connection issues
 
     AD_CLEAN_USERNAME_STRING = ''  # if your AD usernames are returned as e.g. "foo/jsmith" then
                                    # setting `AD_CLEAN_USERNAME_STRING = 'foo/'` will strip the `foo/` prefix
@@ -1098,7 +1169,6 @@ General AD Settings
     AD_CLEAN_USERNAME = None  # define a function called AD_CLEAN_USERNAME in local_settings.py if you
                               # wish to clean usernames before sending to ldap server e.g.
                               # def AD_CLEAN_USERNAME(username): return username.lower()
-
 
 Non-SSL AD Connection Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

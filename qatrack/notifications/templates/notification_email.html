@@ -83,7 +83,7 @@
     <tbody>
       {% for test_instance in failing_tests %}
         <tr>
-          <td class="test">{{test_instance.unit_test_info.test.name}}</td>
+          <td class="test">{{test_instance.unit_test_info.test}}</td>
           <td class="value">{{test_instance.value_display}}</td>
           <td class="value">{{test_instance.reference}}</td>
           <td class="value">{{test_instance.tolerance}}</td>
@@ -117,7 +117,7 @@
     <tbody>
       {% for test_instance in tolerance_tests %}
         <tr>
-          <td class="test">{{test_instance.unit_test_info.test.name}}</td>
+          <td class="test">{{test_instance.unit_test_info.test}}</td>
           <td class="value">{{test_instance.value_display}}</td>
           <td class="value">{{test_instance.reference}}</td>
           <td class="value">{{test_instance.tolerance}}</td>

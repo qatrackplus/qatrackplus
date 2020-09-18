@@ -2,7 +2,14 @@ DATETIME_FORMAT = "j M Y H:i"
 DATE_FORMAT = "j M Y"
 TIME_FORMAT = "H:i"
 DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
-DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d %b %Y %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
+DATETIME_INPUT_FORMATS = [
+    "%d %b %Y %H:%M",
+    "%d %b %Y %H:%M:%S",
+    "%Y-%m-%d %H:%M",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%d %H:%M:%S.%f",
+    "%Y-%m-%dT%H:%M:%S.%fZ",
+]
 TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
 
 # JavaScript formats

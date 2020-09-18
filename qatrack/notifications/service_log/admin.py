@@ -1,10 +1,9 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications.service_log import models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 class ServiceEventNoticeAdminForm(forms.ModelForm):
@@ -26,7 +25,7 @@ class ServiceEventNoticeAdminForm(forms.ModelForm):
         )
 
 
-class ServiceEventNoticeAdmin(admin.ModelAdmin):
+class ServiceEventNoticeAdmin(BaseQATrackAdmin):
 
     list_display = ["get_notification_type", "get_recipients", "get_units"]
     list_filter = ["notification_type", "recipients", "units"]
@@ -34,9 +33,14 @@ class ServiceEventNoticeAdmin(admin.ModelAdmin):
         "units__units__number",
         "units__units__name",
         "recipients__groups__name",
-        "recipients__users__name",
+        "recipients__users__username",
+        "recipients__users__first_name",
+        "recipients__users__last_name",
         "recipients__users__email",
         "recipients__groups__user__email",
+        "recipients__groups__user__username",
+        "recipients__groups__user__first_name",
+        "recipients__groups__user__last_name",
     ]
 
     form = ServiceEventNoticeAdminForm
@@ -48,27 +52,25 @@ class ServiceEventNoticeAdmin(admin.ModelAdmin):
         (
             "Recipients", {
                 'fields': ["recipients"],
-                'description': _("Select which recipient group should receive this notification."),
+                'description': _l("Select which recipient group should receive this notification."),
             }
         ),
         (
             "Filters", {
                 'fields': ['units'],
-                'description': _("By using the below filters, you may limit this notification to certain units."),
+                'description': _l("By using the below filters, you may limit this notification to certain units."),
             }
         ),
     )
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "select2/js/select2.js",
-            settings.STATIC_URL + "js/notification_admin.js",
+            "jquery/js/jquery.min.js",
+            "select2/js/select2.js",
+            "js/notification_admin.js",
         )
         css = {
-            'all': (
-                settings.STATIC_URL + "select2/css/select2.css",
-            ),
+            'all': ("select2/css/select2.css",),
         }
 
     def get_queryset(self, request):  # pragma: nocover

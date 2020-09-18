@@ -1,3 +1,5 @@
+.. _qa_charts:
+
 Plotting your data
 ==================
 

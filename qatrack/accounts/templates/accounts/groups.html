@@ -16,7 +16,7 @@
 
 {% block require_javascript %}
     window.groupsUrl = "{% url "group-list" %}";
-    window.usersUrl = "{% url "user-list" %}";
+    window.usersUrl = "{% url "user-list" %}?limit=10000";
     window.allPermissions = {{ all_perms|safe }};
     require(['groups']);
 {% endblock require_javascript %}

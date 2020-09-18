@@ -611,3 +611,48 @@ table ul.multiselect-container.dropdown-menu {
     vertical-align: top;
     transform: rotate(315deg);
 }
+
+@media (min-width: 768px) {
+  .row.equal-cols {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
+
+  .row.equal-cols:before,
+  .row.equal-cols:after {
+    display: block;
+  }
+
+  .row.equal-cols > [class*='col-'] {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+  }
+
+  .row.equal-cols > [class*='col-'] > * {
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+  }
+}
+
+.node-site-qc-tree {
+  padding: 4px;
+}
+.site-qc-tree {
+  margin-top: -6px;
+}
+.site-qc-tree > .list-group {
+  margin-bottom: 0;
+}
+
+.fa-stack.narrow {
+  width: 0;
+}

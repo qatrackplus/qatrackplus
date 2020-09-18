@@ -1,16 +1,16 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.template.defaultfilters import truncatechars
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications import models
 import qatrack.notifications.qccompleted.admin as qccadmin  # noqa: F401
 import qatrack.notifications.qcscheduling.admin as qcsadmin  # noqa: F401
 import qatrack.notifications.service_log.admin as slsadmin  # noqa: F401
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 def trim(string, length=200):
@@ -38,7 +38,7 @@ class RecipientGroupForm(forms.ModelForm):
                 invalid_emails.append(email)
 
         if invalid_emails:
-            self.add_error("emails", _("The following emails are invalid: ") + ", ".join(invalid_emails))
+            self.add_error("emails", "%s: %s" % (_("The following emails are invalid"), ", ".join(invalid_emails)))
 
         return ", ".join(sorted(invalid_emails + valid_emails))
 
@@ -55,30 +55,33 @@ class RecipientGroupForm(forms.ModelForm):
         return cleaned_data
 
 
-class RecipientGroupAdmin(admin.ModelAdmin):
+class RecipientGroupAdmin(BaseQATrackAdmin):
 
     list_display = ["name", "get_users", "get_groups", "get_emails"]
     list_filter = ["groups", "users"]
     search_fields = [
-        "units__number",
-        "units__name",
         "groups__name",
-        "users__name",
+        "users__username",
+        "users__first_name",
+        "users__last_name",
         "users__email",
         "groups__user__email",
+        "groups__user__username",
+        "groups__user__first_name",
+        "groups__user__last_name",
     ]
 
     form = RecipientGroupForm
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "select2/js/select2.js",
-            settings.STATIC_URL + "js/notification_admin.js",
+            "jquery/js/jquery.min.js",
+            "select2/js/select2.js",
+            "js/notification_admin.js",
         )
         css = {
             'all': (
-                settings.STATIC_URL + "select2/css/select2.css",
+                "select2/css/select2.css",
             ),
         }
 
@@ -109,7 +112,7 @@ class TestListGroupForm(forms.ModelForm):
         self.fields['test_lists'].queryset = self.fields['test_lists'].queryset.order_by("name")
 
 
-class TestListGroupAdmin(admin.ModelAdmin):
+class TestListGroupAdmin(BaseQATrackAdmin):
 
     list_display = ["name", "get_test_lists"]
     list_filter = ["test_lists"]
@@ -122,13 +125,13 @@ class TestListGroupAdmin(admin.ModelAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "select2/js/select2.js",
-            settings.STATIC_URL + "js/notification_admin.js",
+            "jquery/js/jquery.min.js",
+            "select2/js/select2.js",
+            "js/notification_admin.js",
         )
         css = {
             'all': (
-                settings.STATIC_URL + "select2/css/select2.css",
+                "select2/css/select2.css",
             ),
         }
 
@@ -138,7 +141,7 @@ class TestListGroupAdmin(admin.ModelAdmin):
     get_test_lists.short_description = _l("Test Lists")
 
 
-class UnitGroupAdmin(admin.ModelAdmin):
+class UnitGroupAdmin(BaseQATrackAdmin):
 
     list_display = ["name", "get_units"]
     list_filter = ["units", "units__site"]
@@ -146,19 +149,16 @@ class UnitGroupAdmin(admin.ModelAdmin):
         "name",
         "units__name",
         "units__number",
-        "units__slug",
     ]
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "select2/js/select2.js",
-            settings.STATIC_URL + "js/notification_admin.js",
+            "jquery/js/jquery.min.js",
+            "select2/js/select2.js",
+            "js/notification_admin.js",
         )
         css = {
-            'all': (
-                settings.STATIC_URL + "select2/css/select2.css",
-            ),
+            'all': ("select2/css/select2.css",),
         }
 
     def get_units(self, obj):

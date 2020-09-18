@@ -45,6 +45,11 @@ def send_scheduling_notice(notice_id, task_name=""):
     notice = QCSchedulingNotice.objects.filter(id=notice_id).first()
 
     if notice:
+
+        if not notice.send_required():
+            logger.info("Send of QCReviewNotice %s requested, but no QC to notify about" % notice_id)
+            return
+
         recipients = notice.recipients.recipient_emails()
         if not recipients:
             logger.info("Send of QCSchedulingNotice %s requested, but no recipients" % notice_id)
@@ -61,14 +66,14 @@ def send_scheduling_notice(notice_id, task_name=""):
             subject_template="qcscheduling/subject.txt",
             text_template="qcscheduling/email.txt",
         )
-        logger.info("Sent QCSChedulingNotice %s at %s" % (notice_id, timezone.now()))
+        logger.info("Sent QCSchedulingNotice %s at %s" % (notice_id, timezone.now()))
         try:
             Schedule.objects.get(name=task_name).delete()
         except:  # noqa: E722  # pragma: nocover
             logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
     except:  # noqa: E722  # pragma: nocover
         logger.exception(
-            "Error sending email for QCSChedulingNotice %s at %s." % (notice_id, timezone.now())
+            "Error sending email for QCSchedulingNotice %s at %s." % (notice_id, timezone.now())
         )
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)

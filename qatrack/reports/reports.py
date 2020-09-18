@@ -5,31 +5,23 @@ import json
 from urllib.parse import quote_plus
 
 from django.conf import settings
-from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from django.db.models import Prefetch, Q
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import reverse
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
-import pandas as pd
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 import xlsxwriter
 
-from qatrack.qa import models
-from qatrack.qa.templatetags.qa_tags import as_time_delta
-from qatrack.qa.utils import end_of_day
 from qatrack.qatrack_core.utils import (
     chrometopdf,
     format_as_date,
     format_datetime,
+    relative_dates,
 )
-from qatrack.reports import filters
-from qatrack.units import models as umodels
 
 CSV = "csv"
 XLS = "xlsx"
@@ -41,6 +33,7 @@ CONTENT_TYPES = {
     PDF: "application/pdf",
     XLS: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 }
+ORDERED_CONTENT_TYPES = [CSV, PDF, XLS]
 
 
 def register_class(target_class):
@@ -51,7 +44,9 @@ def format_user(user):
     if not user:
         return ""
 
-    return user.username if not user.email else "%s (%s)" % (user.username, user.email)
+    return user.username if not user.email else mark_safe(
+        '%s (<a href="mailto:%s">%s</a>)' % (user.username, user.email, user.email)
+    )
 
 
 class ReportMeta(type):
@@ -83,13 +78,14 @@ class BaseReport(object, metaclass=ReportMeta):
     extra_form = None
     formats = [PDF, XLS, CSV]
 
-    def __init__(self, base_opts=None, report_opts=None, user=None):
+    def __init__(self, base_opts=None, report_opts=None, notes=None, user=None):
         """base_opts is dict of form:
             {'report_id': <rid|None>, 'include_signature': <bool>, 'title': str} """
 
         self.user = user
         self.base_opts = base_opts or {}
         self.report_opts = report_opts or {}
+        self.notes = notes or []
         if self.filter_class:
             self.filter_set = self.filter_class(self.report_opts, queryset=self.get_queryset())
         else:
@@ -121,7 +117,10 @@ class BaseReport(object, metaclass=ReportMeta):
 
     def render(self, report_format):
         self.report_format = report_format
-        content = getattr(self, "to_%s" % report_format)()
+        try:
+            content = getattr(self, "to_%s" % report_format)()
+        except AttributeError:  # pragma: nocover
+            raise Http404("Unknown report format %s" % report_format)
         return self.get_filename(report_format), content
 
     def render_to_response(self, report_format):
@@ -154,6 +153,7 @@ class BaseReport(object, metaclass=ReportMeta):
             'report_title': self.base_opts.get("title", name),
             'report_url': self.get_report_url(),
             'report_details': self.get_report_details(),
+            'notes': self.notes,
             'queryset': self.filter_set.qs if self.filter_set else None,
             'include_signature': self.base_opts.get("include_signature", False),
         }
@@ -204,7 +204,7 @@ class BaseReport(object, metaclass=ReportMeta):
             if getter:
                 try:
                     label, field_details = getter(val)
-                except ValueError:
+                except ValueError:  # pragma: no cover
                     raise ValueError("get_%s_details should return a 2-tuple of form (label:str, details:str)" % name)
 
                 details.append((label, field_details))
@@ -217,9 +217,13 @@ class BaseReport(object, metaclass=ReportMeta):
         """Take a value and return as a formatted string based on its type"""
 
         if val is None:
-            return "<em>No Filter</em>"
+            msg = "No Filter"
+            return "<em>%s</em>" % msg if self.report_format not in [XLS, CSV] else msg
 
         if isinstance(val, str):
+            if val.lower() in relative_dates.ALL_DATE_RANGES:
+                start, end = relative_dates(val).range()
+                return "%s (%s - %s)" % (val, format_as_date(start), format_as_date(end))
             return val
 
         if isinstance(val, timezone.datetime):
@@ -281,7 +285,10 @@ class BaseReport(object, metaclass=ReportMeta):
                 elif isinstance(data, datetime.date):
                     ws.write_string(row, col, format_as_date(data))
                 else:
-                    ws.write(row, col, data)
+                    try:
+                        ws.write(row, col, data)
+                    except TypeError:
+                        ws.write(row, col, str(data))
 
                 col += 1
             row += 1
@@ -320,652 +327,45 @@ class BaseReport(object, metaclass=ReportMeta):
         for label, criteria in context['report_details']:
             rows.append([label + ":", criteria])
 
-        return rows
-
-
-class QCSummaryReport(BaseReport):
-
-    report_type = "qc-summary-by-date"
-    name = "QC Summary"
-    filter_class = filters.TestListInstanceFilter
-    description = mark_safe(_l(
-        "This report lists all Test List Instances from a given time period for "
-        "selected sites, units, frequencies, and groups."
-    ))
-
-    MAX_TLIS = getattr(settings, "REPORT_QCSUMMARYREPORT_MAX_TLIS", 5000)
-
-    template = "reports/reports/qc_summary.html"
-
-    def filter_form_valid(self, filter_form):
-
-        ntlis = self.filter_set.qs.count()
-        if ntlis > self.MAX_TLIS:
-            filter_form.add_error(
-                "__all__", "This report can only be generated with %d or fewer Test List "
-                "Instances.  Your filters are including %d. Please reduce the "
-                "number of Test List (Cycle) assignments, or Work Completed time "
-                "period." % (self.MAX_TLIS, ntlis)
-            )
-
-        return filter_form.is_valid()
-
-    def get_queryset(self):
-        return models.TestListInstance.objects.all()
-
-    def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "qc-summary-report"), report_format)
-
-    def get_unit_test_collection__unit__site_details(self, val):
-        sites = [x.name if x != "null" else "No Site Assigned" for x in val]
-        return ("Site", ", ".join(sites))
-
-    def get_unit_test_collection__unit_details(self, val):
-        units = models.Unit.objects.select_related("site").filter(pk__in=val)
-        units = ('%s - %s' % (u.site.name if u.site else _("No Site Assigned"), u.name) for u in units)
-        return ("Unit(s)", ', '.join(units))
-
-    def get_unit_test_collection__frequency_details(self, val):
-        freqs = [x.name if x != "null" else "Ad Hoc" for x in val]
-        return ("Frequencies", ", ".join(freqs))
-
-    def get_context(self):
-
-        context = super().get_context()
-
-        # since we're grouping by site, we need to handle sites separately
-        sites = self.filter_set.qs.order_by(
-            "unit_test_collection__unit__site__name"
-        ).values_list("unit_test_collection__unit__site", flat=True).distinct()
-
-        sites_data = []
-
-        for site in sites:
-
-            if site:  # site can be None here since not all units may have a site
-                site = umodels.Site.objects.get(pk=site)
-
-            sites_data.append((site.name if site else "", []))
-
-            for tli in self.get_tlis_for_site(self.filter_set.qs, site):
-                sites_data[-1][-1].append({
-                    'unit_name': tli.unit_test_collection.unit.name,
-                    'test_list_name': tli.test_list.name,
-                    'due_date': format_as_date(tli.due_date),
-                    'work_completed': self.get_work_completed(tli),
-                    'pass_fail': self.get_pass_fail_status(tli),
-                    'link': self.make_url(tli.get_absolute_url(), plain=True),
-                })
-
-        context['sites_data'] = sites_data
-
-        return context
-
-    def get_tlis_for_site(self, qs, site):
-        """Get Test List Instances from filtered queryset for input site"""
-
-        tlis = qs.filter(
-            unit_test_collection__unit__site=site,
-        ).exclude(
-            Q(work_completed=None) | Q(in_progress=True),
-        )
-
-        tlis = tlis.order_by(
-            "unit_test_collection__unit__%s" % settings.ORDER_UNITS_BY,
-            "unit_test_collection__name",
-            "test_list__name",
-            "work_completed",
-        ).select_related(
-            "test_list",
-            "unit_test_collection",
-            "unit_test_collection__unit",
-            "unit_test_collection__frequency",
-        ).prefetch_related("testinstance_set")
-
-        return tlis
-
-    def get_pass_fail_status(self, tli):
-        """Format pass fail status with icons for html reports, otherwise just as plain text"""
-
-        if self.html:
-            if not hasattr(self, "_pass_fail_t"):
-                self._pass_fail_t = get_template("qa/pass_fail_status.html")
-            return self._pass_fail_t.render({'instance': tli, 'show_icons': True})
-
-        return ", ".join("%d %s" % (len(t), d) for s, d, t in tli.pass_fail_status())
-
-    def get_work_completed(self, tli):
-        """Format work completed as link to instance if html report otherwise just return formatted date"""
-
-        wc = format_as_date(tli.work_completed)
-
-        if self.html:
-            return self.make_url(tli.get_absolute_url(), wc, _("Click to view on site"))
-
-        return wc
-
-    def to_table(self, context):
-
-        rows = super().to_table(context)
-
-        rows.append([])
-
-        rows.append([
-            _("Site"),
-            _("Unit"),
-            ("Test list"),
-            _("Due Date"),
-            _("Work Completed"),
-            _("Pass/Fail Status"),
-            _("Link"),
-        ])
-
-        for site, tlis in context['sites_data']:
-            for tli in tlis:
-                rows.append([
-                    site,
-                    tli['unit_name'],
-                    tli['test_list_name'],
-                    tli['due_date'],
-                    tli['work_completed'],
-                    tli['pass_fail'],
-                    tli['link'],
-                ])
+        if context.get("notes"):
+            rows.append(["Notes:"])
+            for note in context['notes']:
+                rows.append([note['heading'], note['content']])
 
         return rows
 
 
-class UTCReport(BaseReport):
+def report_types():
+    """Return all report classes in the report registry"""
+    return [ReportClass for name, ReportClass in REPORT_REGISTRY.items() if name != "BaseReport"]
 
-    report_type = "utc"
-    name = "Test List Instances"
-    filter_class = filters.UnitTestCollectionFilter
-    description = mark_safe(
-        _l(
-            "This report includes details for all Test List Instances from a given time period for "
-            "a given Unit Test List (Cycle) assignment."
-        )
-    )
 
-    MAX_TLIS = getattr(settings, "REPORT_UTCREPORT_MAX_TLIS", 365)
+def report_descriptions():
+    """
+    Return dictionary of form {report_type: description} for all report classes
+    in the report registry
+    """
 
-    template = "reports/reports/utc.html"
+    return {r.report_type: mark_safe(r.description) for r in report_types()}
 
-    def filter_form_valid(self, filter_form):
 
-        ntlis = self.filter_set.qs.count()
-        if ntlis > self.MAX_TLIS:
-            filter_form.add_error(
-                "__all__", "This report can only be generated with %d or fewer Test List "
-                "Instances.  Your filters are including %d. Please reduce the "
-                "number of Test List (Cycle) assignments, or Work Completed time "
-                "period." % (self.MAX_TLIS, ntlis)
-            )
+def report_class(report_type):
+    """Return report class corresponding to input report_type"""
 
-        return filter_form.is_valid()
+    for r in report_types():
+        if r.report_type == report_type:
+            return r
+    raise ValueError("Report class '%s' not found" % report_type)
 
-    def get_queryset(self):
-        return models.TestListInstance.objects.select_related("created_by")
 
-    def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "unit-test-list-assignment-summary-report"), report_format)
+def report_categories():
+    """return list of all available report categories"""
+    return list(sorted(set([rt.category for rt in report_types()])))
 
-    def get_unit_test_collection_details(self, val):
-        utcs = models.UnitTestCollection.objects.filter(pk__in=val)
-        return ("Unit / Test List", ', '.join("%s - %s" % (utc.unit.name, utc.name) for utc in utcs))
 
-    def get_context(self):
+def report_type_choices():
+    """Return list of report type choices grouped by category. Suitable for choices for form field"""
 
-        context = super().get_context()
-
-        qs = self.filter_set.qs.select_related(
-            "created_by",
-            "modified_by",
-            "reviewed_by",
-            "test_list",
-            "unit_test_collection",
-            "unit_test_collection__unit",
-            "unit_test_collection__content_type",
-        ).prefetch_related(
-            "comments",
-            Prefetch("testinstance_set", queryset=models.TestInstance.objects.order_by("created")),
-            "testinstance_set__unit_test_info__test",
-            "testinstance_set__reference",
-            "testinstance_set__tolerance",
-            "testinstance_set__status",
-            "testinstance_set__attachment_set",
-            "attachment_set",
-            "serviceevents_initiated",
-            "rtsqa_for_tli",
-        ).order_by("work_completed")
-        context['queryset'] = qs
-
-        form = self.get_filter_form()
-        utcs = models.UnitTestCollection.objects.filter(pk__in=form.cleaned_data['unit_test_collection'])
-        context['utcs'] = utcs
-
-        context['site_name'] = ', '.join(sorted(set(utc.unit.site.name if utc.unit.site else _("N/A") for utc in utcs)))
-
-        context['test_list_borders'] = self.get_borders(utcs)
-        context['comments'] = self.get_comments(utcs)
-        context['perms'] = PermWrapper(self.user)
-        return context
-
-    def get_borders(self, utcs):
-        borders = {}
-        for utc in utcs:
-            for tl in utc.tests_object.all_lists():
-                borders[tl.pk] = tl.sublist_borders()
-
-        return borders
-
-    def get_comments(self, utcs):
-        from django_comments.models import Comment
-        ct = ContentType.objects.get(model="testlistinstance").pk
-        tlis = models.TestListInstance.objects.filter(
-            unit_test_collection__id__in=utcs.values_list("id"),
-        )
-
-        comments_qs = Comment.objects.filter(
-            content_type_id=ct,
-            object_pk__in=map(str, tlis.values_list("id", flat=True)),
-        ).order_by(
-            "-submit_date",
-        ).values_list(
-            "pk",
-            "submit_date",
-            "user__username",
-            "comment",
-        )
-
-        comments = dict((c[0], c[1:]) for c in comments_qs)
-        return comments
-
-    def to_table(self, context):
-
-        rows = [
-            [_("Report Title:"), context['report_title']],
-            [_("View On Site:"), self.get_report_url()],
-            [_("Report Type:"), context['report_name']],
-            [_("Report Description:"), context['report_description']],
-            [_("Generated:"), format_datetime(timezone.now())],
-            [],
-            ["Filters:"],
-        ]
-
-        for label, criteria in context['report_details']:
-            rows.append([label + ":", criteria])
-
-        for tli in context['queryset']:
-
-            rows.extend([
-                [],
-                [],
-                ["Test List Instance:", self.make_url(tli.get_absolute_url())],
-                [_("Created By") + ":", format_user(tli.created_by)],
-                [_("Work Started") + ":", format_as_date(tli.work_started)],
-                [_("Work Completed") + ":", format_as_date(tli.work_completed)],
-                [_("Duration") + ":", _("In Progress") if tli.in_progress else as_time_delta(tli.duration())],
-                [_("Modified") + ":", format_as_date(tli.modified)],
-                [_("Mofified By") + ":", format_user(tli.modified_by)],
-                [_("Reviewed") + ":", format_as_date(tli.reviewed)],
-                [_("Reviewed By") + ":", format_user(tli.reviewed_by)],
-            ])
-
-            for c in context['comments'].get(tli.pk, []):
-                rows.append([_("Comment") + ":", format_datetime(c[0]), c[1], c[2]])
-
-            for a in tli.attachment_set.all():
-                rows.append([_("Attachment") + ":", a.label, self.make_url(a.attachment.url, plain=True)])
-
-            rows.append([])
-            rows.append([
-                _("Test"),
-                _("Value"),
-                ("Reference"),
-                _("Tolerance"),
-                _("Pass/Fail"),
-                _("Review Status"),
-                _("Comment"),
-                _("Attachments"),
-            ])
-
-            for ti, history in tli.history()[0]:
-                row = [
-                    ti.unit_test_info.test.name,
-                    ti.value_display(coerce_numerical=False),
-                    ti.reference.value_display() if ti.reference else "",
-                    ti.tolerance.name if ti.tolerance else "",
-                    ti.get_pass_fail_display(),
-                    ti.status.name,
-                    ti.comment,
-                ]
-                for a in ti.attachment_set.all():
-                    row.append(self.make_url(a.attachment.url, plain=True))
-
-                rows.append(row)
-
-        return rows
-
-
-class DueDatesReportMixin:
-
-    def get_queryset(self):
-        return models.UnitTestCollection.objects.select_related(
-            "assigned_to",
-            "unit",
-            "frequency",
-        ).exclude(active=False)
-
-    def get_unit__site_details(self, val):
-        sites = [x.name if x != "null" else _("No Site Assigned") for x in val]
-        return ("Site(s)", ", ".join(sites))
-
-    def get_unit_details(self, val):
-        units = models.Unit.objects.select_related("site").filter(pk__in=val)
-        units = ('%s - %s' % (u.site.name if u.site else _("No Site Assigned"), u.name) for u in units)
-        return ("Unit(s)", ', '.join(units))
-
-    def get_context(self):
-
-        context = super().get_context()
-        qs = self.filter_set.qs
-
-        sites = self.filter_set.qs.order_by("unit__site__name").values_list("unit__site", flat=True).distinct()
-
-        sites_data = []
-
-        for site in sites:
-
-            if site:  # site can be None here since not all units may have a site
-                site = umodels.Site.objects.get(pk=site)
-
-            sites_data.append((site.name if site else "", []))
-
-            utcs = qs.filter(
-                unit__site_id=(site if site else None),
-                due_date__isnull=False,
-            ).order_by("due_date", "unit__%s" % settings.ORDER_UNITS_BY)
-
-            for utc in utcs:
-
-                window = utc.window()
-                if window:
-                    window = "%s - %s" % (format_as_date(window[0]), format_as_date(window[1]))
-
-                sites_data[-1][-1].append({
-                    'utc': utc,
-                    'unit_name': utc.unit.name,
-                    'name': utc.name,
-                    'window': window,
-                    'frequency': utc.frequency.name if utc.frequency else _("Ad Hoc"),
-                    'due_date': format_as_date(utc.due_date),
-                    'assigned_to': utc.assigned_to.name,
-                    'link': self.make_url(utc.get_absolute_url(), plain=True),
-                })
-
-        context['sites_data'] = sites_data
-
-        return context
-
-    def to_table(self, context):
-
-        rows = super().to_table(context)
-
-        rows.append([])
-
-        for site, site_rows in context['sites_data']:
-            rows.extend([
-                [],
-                [],
-                [site if site else _("No Site Assigned")],
-                [
-                    _("Unit"),
-                    _("Name"),
-                    _("Frequency"),
-                    _("Due Date"),
-                    _("Window"),
-                    _("Assinged To"),
-                    _("Perform")
-                ],
-            ])
-
-            for row in site_rows:
-                rows.append([
-                    row['unit_name'],
-                    row['name'],
-                    row['frequency'],
-                    format_as_date(row['utc'].due_date),
-                    row['window'],
-                    row['assigned_to'],
-                ])
-
-        return rows
-
-
-class NextDueDatesReport(DueDatesReportMixin, BaseReport):
-
-    report_type = "next_due"
-    name = "Next Due Dates for QC"
-    filter_class = filters.SchedulingFilter
-    description = mark_safe(_l("This report shows QC tests whose next due date fall in the selected time period."))
-
-    category = _l("Scheduling")
-    template = "reports/reports/next_due.html"
-
-    def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "next-due-dates-report"), report_format)
-
-
-class DueAndOverdueQCReport(DueDatesReportMixin, BaseReport):
-
-    report_type = "due_and_overdue"
-    name = "Due and Overdue QC"
-    filter_class = filters.DueAndOverdueFilter
-    description = mark_safe(_l("This report shows QC tests which are currently due or overdue"))
-
-    category = _l("Scheduling")
-    template = "reports/reports/next_due.html"
-
-    def get_queryset(self):
-        return super().get_queryset().filter(
-            due_date__lte=end_of_day(timezone.now())
-        ).exclude(due_date=None)
-
-    def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "due-and-overdue-report"), report_format)
-
-
-class TestDataReport(BaseReport):
-
-    report_type = "test_data"
-    name = "Test Instance Values"
-    filter_class = filters.TestDataFilter
-    description = mark_safe(_l("This report shows QC test values for select units"))
-
-    category = _l("General")
-
-    MAX_TIS = getattr(settings, "REPORT_TESTDATAREPORT_MAX_TIS", 365 * 3)
-
-    template = "reports/reports/test_data.html"
-    formats = [CSV, XLS]
-
-    def filter_form_valid(self, filter_form):
-
-        ntis = self.filter_set.qs.count()
-        if ntis > self.MAX_TIS:
-            filter_form.add_error(
-                "__all__", "This report can only be generated with %d or fewer Test "
-                "Instances.  Your filters are including %d. Please reduce the "
-                "number of Tests, Sites, Units, or Work Completed time "
-                "period." % (self.MAX_TIS, ntis)
-            )
-
-        return filter_form.is_valid()
-
-    def get_queryset(self):
-        return models.TestInstance.objects.order_by("work_completed")
-
-    def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "test-instance-values-report"), report_format)
-
-    def get_unit_test_info__test_details(self, val):
-        return (
-            _("Test"),
-            ', '.join(models.Test.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
-        )
-
-    def get_context(self):
-
-        context = super().get_context()
-        context['qs'] = self.filter_set.qs
-
-        qs = self.filter_set.qs.values(
-            "test_list_instance__work_completed",
-            "unit_test_info__test__name",
-            "unit_test_info__test__type",
-            "unit_test_info__unit__name",
-            "unit_test_info__unit__site__name",
-            "value",
-            "string_value",
-            "skipped",
-            "created_by__username",
-        )
-        df = pd.DataFrame.from_records(qs)
-        context['df'] = df
-
-        return context
-
-    def to_table(self, context):
-
-        rows = super().to_table(context)
-
-        rows.append([])
-
-        if self.filter_set.organization == "one_per_row":
-            test_data = self.organize_one_per_row(context)
-        elif self.filter_set.organization == "group_by_unit_test_date":
-            test_data = self.organize_by_unit_test_date(context)
-
-        rows.extend(test_data)
-        return rows
-
-    def organize_one_per_row(self, context):
-
-        qs = context['qs'].select_related(
-            "test_list_instance",
-            "unit_test_info__test",
-            "unit_test_info__unit",
-            "unit_test_info__unit__site",
-            "reference",
-            "tolerance",
-            "created_by",
-        )
-
-        headers = [[
-            _("Work Completed"),
-            _("Test"),
-            _("Unit"),
-            _("Site"),
-            _("Value"),
-            _("Reference"),
-            _("Tolerance"),
-            _("Skipped"),
-            _("Performed By"),
-            _("Comment"),
-        ]]
-
-        table = headers
-        for ti in qs:
-
-            uti = ti.unit_test_info
-
-            table.append([
-                ti.test_list_instance.work_completed,
-                uti.test.name,
-                uti.unit.name,
-                uti.unit.site.name if uti.unit.site else "",
-                ti.value_display(),
-                ti.reference.value_display() if ti.reference else "",
-                ti.tolerance.name if ti.tolerance else "",
-                ti.skipped,
-                format_user(ti.created_by),
-                ti.comment,
-            ])
-
-        return table
-
-    def organize_by_unit_test_date(self, context):
-
-        qs = context['qs']
-        unit_test_combos = list(qs.values_list(
-            "unit_test_info__unit",
-            "unit_test_info__test",
-        ).order_by(
-            "unit_test_info__unit__%s" % settings.ORDER_UNITS_BY,
-            "unit_test_info__test__name",
-        ).distinct())
-
-        unique_dates = list(qs.order_by(
-            "test_list_instance__work_completed",
-        ).values_list(
-            "test_list_instance__work_completed",
-            flat=True,
-        ))
-
-        cells_per_ti = 5
-        date_rows = {d: i for i, d in enumerate(unique_dates)}
-        ut_cols = {ut: i * cells_per_ti for i, ut in enumerate(unit_test_combos)}
-
-        tests = dict(qs.values_list("unit_test_info__test_id", "unit_test_info__test__name").distinct())
-
-        unit_qs = qs.values_list(
-            "unit_test_info__unit_id",
-            "unit_test_info__unit__site__name",
-            "unit_test_info__unit__name",
-        ).distinct()
-        units = {}
-        for unit_id, site_name, unit_name in unit_qs:
-            units[unit_id] = "%s : %s" % (site_name or _("No Site Assigned"), unit_name)
-
-        table = [[_("Date")]]
-
-        for unit_id, test_id in unit_test_combos:
-            table[-1].append("%s - %s" % (units[unit_id], tests[test_id]))
-            table[-1].append("Reference")
-            table[-1].append("Tolerance")
-            table[-1].append("Peformed By")
-            table[-1].append("Comment")
-
-        ncombos = len(unit_test_combos)
-        table += [[ut] + [""] * (cells_per_ti * ncombos) for ut in unique_dates]
-
-        wc_cache = dict(qs.values_list("pk", "test_list_instance__work_completed"))
-        for unit_id, test_id in unit_test_combos:
-
-            tis = qs.filter(
-                unit_test_info__unit_id=unit_id, unit_test_info__test_id=test_id,
-            ).select_related(
-                "unit_test_info__test",
-                "reference",
-                "tolerance",
-                "created_by",
-            )
-            for ti in tis:
-                val = ti.value_display(coerce_numerical=False)
-                ref = ti.reference.value_display() if ti.reference else ''
-                tol = ti.tolerance.name if ti.tolerance else ''
-                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 1] = val
-                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 2] = ref
-                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 3] = tol
-                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 4] = format_user(ti.created_by)
-                table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 5] = ti.comment
-
-        return table
-
-
-REPORT_TYPES = [ReportClass for name, ReportClass in REPORT_REGISTRY.items() if name != "BaseReport"]
-REPORT_DESCRIPTIONS = {r.report_type: mark_safe(r.description) for r in REPORT_TYPES}
-REPORT_TYPE_LOOKUP = {r.report_type: r for r in REPORT_TYPES}
-REPORT_CATEGORIES = list(sorted(set([rt.category for rt in REPORT_TYPES])))
-REPORT_TYPE_CHOICES = [(c, [(rt.report_type, rt.name) for rt in REPORT_TYPES if rt.category == c]) for c in REPORT_CATEGORIES]  # noqa: E501
+    rts = report_types()
+    rcs = report_categories()
+    return [(c, [(rt.report_type, rt.name) for rt in rts if rt.category == c]) for c in rcs]

@@ -1,14 +1,16 @@
 {% extends "site_base.html" %}
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
 {% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -89,6 +91,24 @@
                                         {% endif %}
                                     </dd>
 
+                                    <dt>Previous Due Date:</dt>
+                                    <dd>
+                                      {% if tli.due_date %}
+                                        <abbr title="Due date when this test list was performed">{{ tli.due_date }}</abbr>
+                                      {% else %}
+                                        <em>No due date set</em>
+                                      {% endif %}
+                                    </dd>
+
+                                    <dt>Scheduled:</dt>
+                                    <dd>
+                                      {% if tli.include_for_scheduling %}
+                                        <abbr title="This instance is included when calculating due dates">Yes</abbr>
+                                      {% else %}
+                                        <abbr title="This instance is not considered when calculating due dates">No</abbr>
+                                      {% endif %}
+                                    </dd>
+
                                     <dt>Last Modification :</dt>
                                     <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
 
@@ -97,7 +117,7 @@
                                </dl>
                             </div>
                             <div class="col-md-4">
-                                {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                                {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
                                   <div class="row">
                                     <div class="col-sm-12 text-right">
                                       {% include "qa/testlistinstance_pdf_button.html" with tli=tli %}
@@ -250,8 +270,10 @@
                                         <th class="review-ref">Reference</th>
                                         <th>Comment</th>
                                         <th class="qa-history">History<br/>
-                                            {% for d in instances_and_dates.1 %}
-                                                <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                            {% for tli_url, d in instances_and_dates.1 %}
+                                              <a href="{{ tli_url}}" title="{% blocktrans %}Click to view this test list instance performed at {{ d }}{% endblocktrans %}">
+                                                <span class="label history-label">{{d|date:"dMy"}}</span>
+                                              </a>
                                             {% endfor %}
                                             <div></div>
                                         </th>
@@ -279,24 +301,32 @@
                                               {% endif %}
                                             {% endwith %}
                                           <tr>
-                                              <td><strong>{{test.name}}</strong></td>
+                                              <td title="{{ ti.unit_test_info.test.name }}"><strong>{{ test.display }}</strong></td>
                                               <td class="review-value">
-                                                  <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
-                                                      {% with ti.pass_fail as status %}
-                                                          {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
-                                                              {% if status == 'tolerance' %}
-                                                                  <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
-                                                              {% elif status == 'action' %}
-                                                                  <i class="pull-left fa fa-ban" aria-hidden="true"></i>
-                                                              {% elif status == 'ok' %}
-                                                                  <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
-                                                              {% elif status == 'not_done' %}
-                                                                  <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
-                                                              {% endif %}
+                                                {% with vd=ti.value_display %}
+                                                  <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{vd|slice:"100"}}{% elif ti.diff_display %}{% trans "Diff from ref" %}={{ti.diff_display}}{%else%}{% trans "No ref/tol set" %}{% endif %}">
+                                                    {% with ti.pass_fail as status %}
+                                                      {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                                          {% if status == 'tolerance' %}
+                                                              <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
+                                                          {% elif status == 'action' %}
+                                                              <i class="pull-left fa fa-ban" aria-hidden="true"></i>
+                                                          {% elif status == 'ok' %}
+                                                              <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
+                                                          {% elif status == 'not_done' %}
+                                                              <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
                                                           {% endif %}
-                                                      {% endwith %}
+                                                      {% endif %}
+                                                    {% endwith %}
+                                                    {% if test.is_upload %}
+                                                        <a href="#!" class="revealtext" title="{% trans "Click to show full results" %}"><i class="fa fa-book"></i></a>
+                                                    {% elif vd|length > 100 %}
+                                                      <a href="#!" class="revealtext" title="{{ vd|slice:"100" }}...{% trans "Click to show full text" %}"><i class="fa fa-book"></i></a>
+                                                    {% else %}
                                                       {{ti.value_display|safe}}
+                                                    {% endif %}
                                                   </span>
+                                                {% endwith %}
                                               </td>
                                               <td class="review-ref">
                                                   {% reference_tolerance_span test ti.reference ti.tolerance%}
@@ -326,9 +356,26 @@
                                               </tr>
                                           {% endif %}
 
+                                          {% if not test.is_upload and ti.string_value|length > 100 %}
+                                            <tr class="qa-text-display no-hover row-{{ ti_form.prefix }} hidden">
+                                              <td colspan="{% qa_table_colspan perms %}"  class="">
+                                              <pre style="">
+                                                {{ ti.value_display }}
+                                              </pre>
+                                              </td>
+                                            </tr>
+                                          {% elif test.is_upload %}
+                                            <tr class="qa-text-display no-hover row-{{ ti_form.prefix }} hidden">
+                                              <td colspan="{% qa_table_colspan perms %}"  class="">
+                                              <pre style="">
+                                                {% firstof ti.json_value|pprint "" %}
+                                              </pre>
+                                              </td>
+                                            </tr>
+                                          {% endif %}
                                           {% if ti.attachment_set.exists %}
                                               <tr class="qa-attach no-hover">
-                                                  <td>{{ti.unit_test_info.test.name}} Attachments</td>
+                                                  <td>{{ti.unit_test_info.test}} Attachments</td>
                                                   <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
                                                       <ul>
                                                           {% for attach in ti.attachment_set.all %}

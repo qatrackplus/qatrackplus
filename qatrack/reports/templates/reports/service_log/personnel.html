@@ -1,0 +1,110 @@
+{% extends base_template %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-12">
+
+    <h3>{% trans "Group Members Involved Summary" %}</h3>
+
+    <table class="table table-condensed table-bordered">
+
+      <thead>
+        <tr>
+          <th style="width: 38%">{% trans "User" %}</th>
+          <th style="width: 37%">{% trans "Linked Group Name" %}</th>
+          <th style="width: 25%">{% trans "# of Service Events" %}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        {% for user, num_rows, linker_counts in group_linkers %}
+
+          {% with even=forloop.counter|divisibleby:"2" %}
+            {% for group, count in linker_counts|slice:":1" %}
+              <tr {% if not even %}class="active"{% endif %}>
+                <td rowspan="{{ num_rows }}"><b>{{ user }}</b></td>
+                <td>{{ group }}</td>
+                <td>{{ count }}</td>
+              </tr>
+            {% endfor %}
+
+            {% for group, count in linker_counts|slice:"1:" %}
+              <tr {% if not even %}class="active"{% endif %}>
+                <td>{{ group }}</td>
+                <td>{{ count }}</td>
+              </tr>
+            {% endfor %}
+
+          {% endwith %}
+        {% empty %}
+          <tr class="page">
+            <td colspan="3"><em>{% trans "No Group Members Involved found" %}</em></td>
+          </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+
+    <h3>{% trans "QATrack+ User Hours Summary" %}</h3>
+
+    <table class="table table-condensed table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>{% trans "User" %}</th>
+          <th>{% trans "Total Time (HH:MM)" %}</th>
+          <th>{% trans "# of Service Events" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% for user, total_ses, total_hours in user_hours %}
+          <tr class="page">
+            <td>{{ user }}</td>
+            <td style="width: 25%">{{ total_hours| hour_min }}</td>
+            <td style="width: 25%">{{ total_ses }}</td>
+          </tr>
+        {% empty %}
+          <tr class="page">
+            <td colspan="3"><em>{% trans "No user hours found" %}</em></td>
+          </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+    <h3>{% trans "Third Party Hours Summary" %}</h3>
+
+    <table class="table table-condensed table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>{% trans "Name" %}</th>
+          <th>{% trans "Vendor" %}<div></div></th>
+          <th style="width: 25%">{% trans "Total Time (HH:MM)" %}</th>
+          <th style="width: 25%">{% trans "# of Service Events" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% for tp in tp_hours %}
+          <tr class="page">
+            <td>{{ tp.third_party__last_name }}, {{ tp.third_party__first_name }}  </td>
+            <td>{{ tp.third_party__vendor__name }}</td>
+            <td>{{ tp.total_hours| hour_min }}</td>
+            <td>{{ tp.total_ses }}</td>
+          </tr>
+        {% empty %}
+          <tr class="page">
+            <td colspan="4"><em>{% trans "No third party user hours found" %}</em></td>
+          </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

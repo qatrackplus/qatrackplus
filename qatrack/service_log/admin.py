@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.db.models import Count, Max
 from django.forms import ModelForm, ValidationError
 
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
+
 from .models import (
     GroupLinker,
     ServiceArea,
@@ -28,7 +30,7 @@ class ServiceEventStatusFormAdmin(ModelForm):
         return is_default
 
 
-class DeleteOnlyFromOwnFormAdmin(admin.ModelAdmin):
+class DeleteOnlyFromOwnFormAdmin(BaseQATrackAdmin):
 
     def has_delete_permission(self, request, obj=None):
         if obj is None:
@@ -57,9 +59,6 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
 
     filter_horizontal = ["service_event_related"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
         if db_field.name == "unit_service_area":
@@ -71,7 +70,14 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
         return "Service Event #%d" % obj.pk
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+
+        qs = self.model.all_objects.get_queryset()
+
+        # we need this from the superclass method
+        ordering = self.ordering or ()  # otherwise we might try to *None, which is bad ;)
+        if ordering:
+            qs = qs.order_by(*ordering)
+
         qs = qs.select_related(
             "unit_service_area",
             "unit_service_area__service_area",
@@ -87,16 +93,16 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + "jquery/js/jquery.min.js",
-            settings.STATIC_URL + "colorpicker/js/bootstrap-colorpicker.min.js",
-            settings.STATIC_URL + "qatrack_core/js/admin_colourpicker.js",
+            "jquery/js/jquery.min.js",
+            "colorpicker/js/bootstrap-colorpicker.min.js",
+            "qatrack_core/js/admin_colourpicker.js",
 
         )
         css = {
             'all': (
-                settings.STATIC_URL + "bootstrap/css/bootstrap.min.css",
-                settings.STATIC_URL + "colorpicker/css/bootstrap-colorpicker.min.css",
-                settings.STATIC_URL + "qatrack_core/css/admin.css",
+                "bootstrap/css/bootstrap.min.css",
+                "colorpicker/css/bootstrap-colorpicker.min.css",
+                "qatrack_core/css/admin.css",
             ),
         }
 
@@ -150,7 +156,7 @@ class GroupLinkerAdminForm(ModelForm):
 
 
 class GroupLinkerAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ['name', 'group', 'multiple', 'description', 'help_text']
+    list_display = ['name', 'group', 'required', 'multiple', 'description', 'help_text']
     list_filter = ['group']
     search_fields = ['name', 'group__name']
 
@@ -165,4 +171,4 @@ if settings.USE_SERVICE_LOG:
     admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
     admin.site.register(GroupLinker, GroupLinkerAdmin)
 
-    admin.site.register([ThirdParty], admin.ModelAdmin)
+    admin.site.register([ThirdParty], BaseQATrackAdmin)

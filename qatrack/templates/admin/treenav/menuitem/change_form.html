@@ -20,6 +20,10 @@
 
             $(document).ready(function($) {
 
+                $("#id_frequency").select2();
+                $("#id_unit").select2();
+                $("#id_assigned_to").select2({placeholder: '<Choose a Group>', width: 200});
+
                 $('input#id_object_id').hide();
                 $('input#id_object_id').after('<select id="generic_object_id"></select>');
 

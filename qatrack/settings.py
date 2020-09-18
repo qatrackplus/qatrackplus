@@ -84,7 +84,14 @@ FORMAT_MODULE_PATH = "qatrack.formats"
 
 # formats for strptime/strftime
 DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
-DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d %b %Y %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
+DATETIME_INPUT_FORMATS = [
+    "%d %b %Y %H:%M",
+    "%d %b %Y %H:%M:%S",
+    "%Y-%m-%d %H:%M",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%d %H:%M:%S.%f",
+    "%Y-%m-%dT%H:%M:%S.%fZ",
+]
 TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
 
 DATETIME_FORMAT = "j M Y H:i"
@@ -239,6 +246,8 @@ INSTALLED_APPS = [
     'recurrence',
     'widget_tweaks',
     'dynamic_raw_id',
+    'mptt',
+    'django_mptt_admin',
     'qatrack.cache',
     'qatrack.accounts',
     'qatrack.units',
@@ -292,10 +301,12 @@ CACHE_UNREVIEWED_COUNT = 'unreviewed-count'
 CACHE_UNREVIEWED_COUNT_USER = 'unreviewed-count-user'
 CACHE_QA_FREQUENCIES = 'qa-frequencies'
 CACHE_RTS_QA_COUNT = 'unreviewed-rts-qa'
-CACHE_IN_PROGRESS_COUNT = 'in-progress-count'
+CACHE_RTS_INCOMPLETE_QA_COUNT = 'incomplete-rts-qa'
+CACHE_IN_PROGRESS_COUNT_USER = 'in-progress-count-users'
 CACHE_UNREVIEWED_COUNT_USER_DICT = 'unreviewed-count-users'
 CACHE_DEFAULT_SE_STATUS = 'default-se-status'
 CACHE_SE_NEEDING_REVIEW_COUNT = 'se_needing_review_count'
+CACHE_SL_NOTIFICATION_TOTAL = 'sl-notification-total'
 CACHE_SERVICE_STATUS_COLOURS = 'service-status-colours'
 CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
 CACHE_AUTOREVIEW_RULESETS = "autoreviewrulesets"
@@ -316,6 +327,7 @@ CACHES = {
 # Session Settings
 SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
 # needs to be set to True when running behind reverse proxy (normal deploy)
@@ -349,11 +361,17 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 
 # -----------------------------------------------------------------------------
 # Authentication backend settings
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
+AUTHENTICATION_BACKENDS = (
+    'qatrack.accounts.backends.QATrackAccountBackend',
     # 'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
-]
+)
+
+
+ACCOUNT_ACTIVATION_DAYS = 7
+ACCOUNTS_SELF_REGISTER = False
+ACCOUNTS_CLEAN_USERNAME = None
+
 
 # active directory settings (not required if only using ModelBackend
 AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
@@ -361,8 +379,8 @@ AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
 # If using non-SSL use these
 AD_LDAP_PORT = 389
 AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
-AD_LDAP_USER = ''
-AD_LDAP_PW = ''
+AD_LDAP_USER = ''  # only used for WindowsIntegratedAuthenticationBackend
+AD_LDAP_PW = ''  # only used for WindowsIntegratedAuthenticationBackend
 
 AD_LU_ACCOUNT_NAME = "sAMAccountName"
 AD_LU_MAIL = "mail"
@@ -378,11 +396,22 @@ AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
 AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
 AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_NAME, AD_LU_MEMBER_OF]
-AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
-AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
-AD_DEBUG_FILE = None
-AD_DEBUG = False
+# If AD_MEMBERSHIP_REQ is not empty, when a user logs in the AD groups
+# they belong to will be compared with AD_MEMBERSHIP_REQ and if the
+# user does not belong to at least one of those AD groups, they will
+# not be allowed to log in
+AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
+
+# AD_GROUP_MAP is a map from AD Group names to QATrack+ group names in form
+# of {'AD group name': 'QATrack+ Group Name',}
+# e.g. {'Your Hospital - Physics': "Physics"}.
+# When a user logs in to QATrack+, their AD groups will be
+# checked and they will automatically be added to the
+# corresponding QATrack+ group based on this map.
+AD_GROUP_MAP = {}
+
+AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
 CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
 
@@ -445,6 +474,24 @@ LOGGING = {
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
+        'django-q': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "django-q.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 7,  # defaults to 1, only necessary for other values
+            'backupCount': 26,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
+        'auth': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_ROOT, "auth.log"),
+            'when': 'D',  # this specifies the interval
+            'interval': 1,  # defaults to 1, only necessary for other values
+            'backupCount': 1,  # how many backup file to keep, 10 days
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
@@ -482,9 +529,25 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'django_auth_adfs': {
-            'handlers': ['console'],
+        'django-q': {
+            'handlers': ['console', 'django-q'],
             'level': 'DEBUG',
+            'propagate': True,
+        },
+        'auth.QATrackAccountBackend': {
+            'handlers': ['console', 'auth'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'auth.ActiveDirectoryGroupMembershipSSLBackend': {
+            'handlers': ['console', 'auth'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django_auth_adfs': {
+            'handlers': ['console', 'auth'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
     }
 }
@@ -512,12 +575,19 @@ ICON_SETTINGS = {
     'SHOW_DUE_ICONS': True,
 }
 
+# Only show first display of category when multiple tests are shown
+# sequentially with the same category
+CATEGORY_FIRST_OF_GROUP_ONLY = False
+CHOOSE_UNIT_CATEGORY_DROPDOWN = False
 
 # Display ordering on the "Choose Unit" page. (Use "name" or "number")
 ORDER_UNITS_BY = "number"
 
 # Enable or disable the "Difference" column when reviewing test lists
 REVIEW_DIFF_COL = False
+
+# Enable bulk review on Unreviewed pages
+REVIEW_BULK = False
 
 # default display settings for test statuses
 TEST_STATUS_DISPLAY = {
@@ -579,9 +649,16 @@ DEFAULT_AVAILABLE_TIMES = {
 }
 
 SL_ALLOW_BLANK_SERVICE_AREA = False
+SL_ALLOW_BLANK_SERVICE_TYPE = False
+PARTS_ALLOW_BLANK_PART_NUM = False
 
 TESTPACK_TIMEOUT = 30
 
+# maximum line length for formatting of calculation procedures
+COMPOSITE_AUTO_FORMAT = True
+COMPOSITE_MAX_LINE_LENGTH = 88
+
+AUTOSAVE_DAYS_TO_KEEP = 30
 
 # SQL Explorer Settings
 
@@ -702,7 +779,7 @@ LOGOUT_REDIRECT_URL = LOGIN_URL
 
 Q_CLUSTER = {
     'name': 'qatrack',
-    'workers': 1,
+    'workers': 2,
     'timeout': 60,
     'catch_up': True,
     'recycle': 20,

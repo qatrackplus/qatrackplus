@@ -4,9 +4,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ChoiceField, ModelForm, ModelMultipleChoiceField
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import gettext_lazy as _l
 
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 from qatrack.service_log.models import (
     ServiceArea,
     ServiceEvent,
@@ -34,7 +34,7 @@ class UnitFormAdmin(ModelForm):
             queryset=ServiceArea.objects.all(),
             required=False,
             widget=FilteredSelectMultiple(
-                verbose_name=_('Service areas'),
+                verbose_name=_l('Service areas'),
                 is_stacked=False
             )
         )
@@ -42,7 +42,7 @@ class UnitFormAdmin(ModelForm):
         queryset=Modality.objects.all(),
         required=False,
         widget=FilteredSelectMultiple(
-            verbose_name=_('Modalities'),
+            verbose_name=_l('Modalities'),
             is_stacked=False
         )
     )
@@ -101,7 +101,7 @@ class UnitFormAdmin(ModelForm):
             unit = self.instance
 
             for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
-                if ServiceEvent.objects.filter(unit_service_area=usa).exists():
+                if ServiceEvent.all_objects.filter(unit_service_area=usa).exists():
                     data_copy = self.data.copy()
                     data_copy.setlist(
                         'service_areas',
@@ -145,12 +145,13 @@ class UnitAvailableTimeInline(admin.TabularInline):
     verbose_name_plural = 'Unit Schedule'
 
 
-class UnitAdmin(admin.ModelAdmin):
+class UnitAdmin(BaseQATrackAdmin):
 
     form = UnitFormAdmin
     list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
     list_editable = ['site', 'is_serviceable']
+    list_select_related = ["site", "type"]
     ordering = ['number']
     search_fields = ['number', 'name']
 
@@ -161,23 +162,35 @@ class UnitAdmin(admin.ModelAdmin):
 
     class Media:
         js = (
-            settings.STATIC_URL + 'jquery/js/jquery.min.js',
-            settings.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min.js',
+            'jquery/js/jquery.min.js',
+            'inputmask/js/jquery.inputmask.bundle.min.js',
         )
         css = {
             'all': (
-                settings.STATIC_URL + 'units/css/admin.css',
+                'units/css/admin.css',
             ),
         }
 
     def get_queryset(self, request):
+        self.formfield_for_dbfield
         return super().get_queryset(request).select_related('site', 'type')
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "site":
+            choices = getattr(request, '_site_choices_cache', None)
+            if choices is None:
+                request._site_choices_cache = choices = list(formfield.choices)
+            formfield.choices = request._site_choices_cache
 
-class UnitTypeAdmin(admin.ModelAdmin):
+        return formfield
 
-    list_display = ['model_name', 'vendor', 'unit_class']
+
+class UnitTypeAdmin(BaseQATrackAdmin):
+
+    list_display = ['model_name', 'vendor', 'unit_class', 'collapse']
     list_filter = ['unit_class', 'vendor']
+    list_editable = ['unit_class', 'vendor', 'collapse']
 
     def get_queryset(self, request):
         return super(UnitTypeAdmin, self).get_queryset(request).select_related(
@@ -191,12 +204,22 @@ class UnitTypeAdmin(admin.ModelAdmin):
         return "{}{}{}".format(vendor_name, obj.name, model)
 
 
-class ModalityAdmin(admin.ModelAdmin):
+class ModalityAdmin(BaseQATrackAdmin):
 
     list_display = ["name"]
+
+
+class SiteAdmin(BaseQATrackAdmin):
+    """QC categories admin"""
+    prepopulated_fields = {'slug': ('name',)}
+    list_display = (
+        "name",
+        "slug"
+    )
 
 
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
 admin.site.register(Modality, ModalityAdmin)
-admin.site.register([Site, UnitClass, Vendor], admin.ModelAdmin)
+admin.site.register(Site, SiteAdmin)
+admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)

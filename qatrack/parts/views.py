@@ -1,35 +1,21 @@
-
-import csv
+from collections import defaultdict
 
 from braces.views import LoginRequiredMixin
-from decimal import Decimal
-from django.urls import reverse, resolve
-from django.contrib.auth.context_processors import PermWrapper
 from django.contrib import messages
-from django.db.models import F, Q, Sum
-from django.forms.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
-from django.shortcuts import redirect
+from django.contrib.auth.context_processors import PermWrapper
+from django.db.models import F, Q
+from django.http import HttpResponseRedirect, JsonResponse
 from django.template.loader import get_template
-from django.utils.encoding import smart_str
-from django.utils.translation import ugettext as _
-from django.views.generic.edit import ModelFormMixin, ProcessFormView
+from django.urls import resolve, reverse
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
+from django.views.generic import DetailView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
-from django.views.generic import TemplateView, DetailView
-from io import BytesIO
-from reportlab.pdfgen import canvas
+from django.views.generic.edit import ModelFormMixin, ProcessFormView
+from listable.views import SELECT_MULTI, TEXT, BaseListableView
 
-from listable.views import (
-    BaseListableView,
-    SELECT_MULTI,
-    NONEORNULL,
-    TEXT,
-)
-
-from . import models as p_models
-from . import forms as p_forms
-from qatrack.units import models as u_models
-from qatrack.service_log import models as s_models
+from qatrack.parts import forms as p_forms
+from qatrack.parts import models as p_models
 
 
 def parts_searcher(request):
@@ -116,8 +102,8 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
                 prefix='storage'
             )
         else:
-            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(instance=self.object, prefix='supplier')
-            context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(instance=self.object, prefix='storage')
+            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(instance=self.object, prefix='supplier')  # noqa: E501
+            context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(instance=self.object, prefix='storage')  # noqa: E501
 
         return context_data
 
@@ -136,7 +122,11 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             return self.render_to_response(context)
 
         part = form.save(commit=False)
-        message = 'New part %s added' % part.part_number if not part.pk else 'Part %s updated' % part.part_number
+        if not part.pk:
+            message = _('New part %(description)s added') % {'description': str(part)}
+        else:
+            message = _('Part %(description)s updated') % {'description': str(part)}
+
         messages.add_message(request=self.request, level=messages.SUCCESS, message=message)
         part.save()
 
@@ -192,6 +182,7 @@ class PartDetails(DetailView):
 
 
 class PartsList(BaseListableView):
+
     model = p_models.Part
     template_name = 'parts/parts_list.html'
     paginate_by = 50
@@ -204,38 +195,46 @@ class PartsList(BaseListableView):
         'actions',
         'name',
         'part_number',
+        'new_or_used',
         'quantity_current',
         'quantity_min',
-        'part_category__name'
+        'part_category__name',
+        'locations',
     )
 
     headers = {
-        'actions': _('Actions'),
-        'name': _('Name'),
-        'part_number': _('Part Number'),
-        'quantity_min': _('Min Quantity'),
-        'quantity_current': _('In Storage'),
-        'part_category__name': _('Category')
+        'actions': _l('Actions'),
+        'name': _l('Name'),
+        'part_number': _l('Part Number'),
+        'new_or_used': _l('New or Used'),
+        'quantity_current': _l('In Storage'),
+        'quantity_min': _l('Min Quantity'),
+        'locations': _l("Locations"),
+        'part_category__name': _l('Category'),
     }
 
     widgets = {
         'actions': None,
         'name': TEXT,
         'part_number': TEXT,
+        'new_or_used': SELECT_MULTI,
         'quantity_min': None,
         'quantity_current': None,
-        'part_category__name': SELECT_MULTI
+        'locations': None,
+        'part_category__name': SELECT_MULTI,
     }
 
     search_fields = {
         'actions': False,
         'quantity_current': False,
-        'quantity_min': False
+        'quantity_min': False,
+        'locations': False,
     }
 
     order_fields = {
         'actions': False,
-        'part_category__name': False
+        'part_category__name': False,
+        'locations': "partstoragecollection__storage__room__site__name",
     }
 
     select_related = ('part_category',)
@@ -245,14 +244,14 @@ class PartsList(BaseListableView):
 
     def get_page_title(self, f=None):
         if not f:
-            return 'All Parts'
-        to_return = 'Parts'
+            return _l("All Parts")
+        to_return = _l("Parts")
         filters = f.split('_')
         for filt in filters:
             [key, val] = filt.split('-')
             if key == 'qcqm':
                 if val == 'lt':
-                    to_return += ' - Low Inventory'
+                    to_return += ' - ' + _("Low Inventory")
 
         return to_return
 
@@ -303,6 +302,44 @@ class PartsList(BaseListableView):
         c = {'p': p, 'request': self.request, 'next': mext, 'perms': perms}
         return template.render(c)
 
+    def locations(self, obj):
+        return self.parts_locations_cache.get(obj.id, _("None in storage"))
+
+    @property
+    def parts_locations_cache(self):
+        if not hasattr(self, "_parts_locations_cache"):
+            self._generate_parts_locations()
+        return self._parts_locations_cache
+
+    def _generate_parts_locations(self):
+
+        psc = p_models.PartStorageCollection.objects.order_by(
+            "storage__room__site__name",
+            "storage__room__name",
+            "storage__location",
+        ).values_list(
+            "part_id",
+            "quantity",
+            "storage__location",
+            "storage__room__site__name",
+            "storage__room__name",
+        )
+
+        tmp_cache = defaultdict(list)
+        for part_id, quantity, loc, site_name, room_name in psc:
+            site = "%s:" % site_name if site_name else ""
+            text = '<div style="display: inline-block; white-space: nowrap;">%s%s:%s <span class="badge">%d</span></div>' % (
+                site, room_name, loc or "", quantity
+            )
+            tmp_cache[part_id].append(text)
+
+        self._parts_locations_cache = {}
+        for k, v in tmp_cache.items():
+            self._parts_locations_cache[k] = ', '.join(v)
+
+    def part_number(self, part):
+        return part.part_number or "<em>N/A</em>"
+
 
 class SuppliersList(BaseListableView):
 
@@ -321,10 +358,10 @@ class SuppliersList(BaseListableView):
     )
 
     headers = {
-        'actions': _('Actions'),
-        'pk': _('ID'),
-        'name': _('Name'),
-        'notes': _('Notes'),
+        'actions': _l('Actions'),
+        'pk': _l('ID'),
+        'name': _l('Name'),
+        'notes': _l('Notes'),
     }
 
     widgets = {
@@ -348,7 +385,7 @@ class SuppliersList(BaseListableView):
 
     def get_page_title(self, f=None):
         if not f:
-            return 'All Suppliers'
+            return _l("All Suppliers")
 
     def format_col(self, field, obj):
         col = super(SuppliersList, self).format_col(field, obj)
@@ -369,4 +406,3 @@ class SuppliersList(BaseListableView):
         mext = reverse('parts_list')
         c = {'p': p, 'request': self.request, 'next': mext}
         return template.render(c)
-

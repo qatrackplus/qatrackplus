@@ -1,20 +1,30 @@
 {% extends "service_log/sl_base.html" %}
 
+{% load i18n %}
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
-{% block head_title %}Service Event{% endblock %}
+{% block head_title %}
+  {% if form.instance.id %}
+    {% blocktrans with service_event_id=form.instance.id %}
+      Edit Service Event #{{ service_event_id }}
+    {% endblocktrans %}
+  {% else %}
+    {% trans "Enter New Service Event" %}
+  {% endif %}
+{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/tables.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "flatpickr/css/flatpickr.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/flatpickr-custom.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -241,9 +251,9 @@
                                 <div class="row margin-bottom-15">
                                     <div id="g-link-fields" class="col-md-12 form-horizontal">
                                         {% for field in form.fieldsets.g_link_fields %}
-                                            <div class="form-group margin-bottom-5{% if field.errors %}has-error{% endif %}" title="{{ field.field.title }}">
+                                            <div class="form-group margin-bottom-5{% if field.errors %} has-error{% endif %}" title="{{ field.field.title }}">
                                                 <label for="{{ field.id_for_label }}" class="col-sm-6{% if field.field.required %} required{% endif %}">
-                                                    <div>{{ field.label }}</div>
+                                                    <div>{{ field.label }}{% if field.field.required %} *{% endif %}</div>
                                                     {% if field.help_text %}<div class="help-block margin-0 display-inline-block">{{ field.help_text }}</div>{% endif %}
                                                 </label>
                                                 <div class="col-sm-6">
@@ -283,6 +293,9 @@
                                                                 <div class="help-block">{{ e }}</div>
                                                             {% endfor %}
 
+                                                            {% for e in h_form.non_field_errors %}
+                                                                <div class="help-block">{{ e }}</div>
+                                                            {% endfor %}
                                                         </td>
                                                         <td class="{% if h_form.time.errors %} has-error{% endif %}" title="{{ h_form.time.help_text }}">
                                                             {{ h_form.time }}
@@ -555,8 +568,8 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <button class="btn btn-flat btn-primary service-save pull-right">Save</button>
-                    {% if perms.service_log.delete_service_event and form.instance.id %}
+                    <button id="save-se" class="btn btn-flat btn-primary service-save pull-right">Save</button>
+                    {% if perms.service_log.delete_serviceevent and form.instance.id %}
 {#                        <div href="#" class="btn btn-flat btn-default service-delete pull-left" data-toggle="modal" data-target="#delete-modal">Delete</div>#}
                         <a href="{% url 'se_delete' pk=form.instance.id %}" class="btn btn-flat btn-default service-delete pull-left">Delete</a>
                     {% endif %}

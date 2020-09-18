@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.utils import timezone
+from django.utils.text import slugify
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
@@ -165,6 +166,8 @@ def create_group_linker_instance(group_linker=None, user=None, service_event=Non
     if service_event is None:
         service_event = create_service_event()
 
+    user.groups.add(group_linker.group)
+
     gli, _ = models.GroupLinkerInstance.objects.get_or_create(
         group_linker=group_linker, user=user, service_event=service_event, datetime_linked=datetime_linked
     )
@@ -188,7 +191,7 @@ def create_part(part_category=None, part_number=None, name='description', add_st
     if part_category is None:
         part_category = create_part_category()
     if part_number is None:
-        part_number = get_next_id(p_models.PartCategory.objects.order_by('id').last())
+        part_number = str(get_next_id(p_models.PartCategory.objects.order_by('id').last()))
 
     p, _ = p_models.Part.objects.get_or_create(
         part_category=part_category, part_number=part_number, name=name, quantity_min=quantity_min,
@@ -230,7 +233,8 @@ def create_site(name=None):
     if name is None:
         name = 'site_%04d' % get_next_id(u_models.Site.objects.order_by('id').last())
 
-    s, _ = u_models.Site.objects.get_or_create(name=name)
+    slug = slugify(name)
+    s, _ = u_models.Site.objects.get_or_create(name=name, slug=slug)
 
     return s
 

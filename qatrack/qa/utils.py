@@ -7,7 +7,6 @@ import token
 import tokenize
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.db.transaction import atomic
 from django.utils import timezone
 
@@ -18,27 +17,6 @@ class SetEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
         return json.JSONEncoder.default(self, obj)  # pragma: nocover
-
-
-def qs_extra_for_utc_name():
-
-    from qatrack.qa import models
-
-    ct_tl = ContentType.objects.get_for_model(models.TestList)
-    ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
-
-    extraq = """
-         CASE
-            WHEN content_type_id = {0}
-                THEN (SELECT name AS utc_name from qa_testlist WHERE object_id = qa_testlist.id )
-            WHEN content_type_id = {1}
-                THEN (SELECT name AS utc_name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
-         END
-         """.format(ct_tl.pk, ct_tlc.pk)
-
-    return {
-        "select": {'utc_name': extraq}
-    }
 
 
 def to_precision(x, p):
@@ -103,8 +81,18 @@ def to_precision(x, p):
 
 def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
-    tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
-    return [t[token.NAME] for t in tokens if t[token.NAME]]
+    all_tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
+    tokens = []
+    prev = None
+    for t in all_tokens:
+        val = t[token.NAME]
+        if not val:
+            prev = val
+            continue
+        if prev != ".":
+            tokens.append(val)
+        prev = val
+    return tokens
 
 
 def unique(seq, idfun=None):
@@ -232,7 +220,18 @@ def calc_due_date(completed, due_date, frequency):
         return calc_initial_due_date(completed, frequency)
 
     if should_update_schedule(completed, due_date, frequency):
-        return frequency.recurrences.after(due_date, dtstart=due_date)
+
+        # ok, we're inside or beyond QC window so get next due date
+        next_due_date = frequency.recurrences.after(completed, dtstart=due_date)
+
+        # now, it's possible that we performed the test long after the due
+        # date and now we're inside the next QC window so we have to check
+        # if we should move the next one!
+        # See TestCalcDueDate.test_first_of_month_performed_long_after_inside_next_window
+        if should_update_schedule(completed, next_due_date, frequency):
+            next_due_date = frequency.recurrences.after(next_due_date, dtstart=next_due_date)
+
+        return next_due_date
 
     return due_date
 

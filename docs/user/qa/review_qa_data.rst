@@ -61,9 +61,35 @@ statuses can also be set individually.) Click the **Update Test
 Statuses** to save your changes to the database.
 
 .. figure:: images/reviewing_test_list.png
-   :alt: Updating test statuses
+   :alt: Updating test instance statuses
 
-   Updating test statuses
+   Updating test instance statuses
 
 If all the Test Instances were assigned a Status that does not require
 review, than the Test List Instance will be removed from the Unreviewed Queue.
+
+
+.. _qa_perform_bulk_review:
+
+Bulk Review of Test List Instances
+----------------------------------
+
+If your administrator has enabled the :ref:`REVIEW_BULK <review_bulk>` setting,
+your `Unreviewed Test List Instances` queue will have an extra column on the
+right hand side that behaves similar to the Review page described above.  This page
+allows you to set the review and approval status for all test instances included
+in any test list instances which have a Review & Approval status selected.
+
+First set the Review Status of all Test List Instances you want to update, and then
+click `Update Review Statuses` and then review and confirm before submitting.
+
+.. figure:: images/review_bulk.png
+   :alt: Updating test list instance test statuses
+
+   Updating test list instance review statuses in bulk
+
+
+.. figure:: images/review_bulk_confirm.png
+   :alt: Confirm that you want to update the test list instance review statuses in bulk
+
+   Confirm that you want to update the test list instance review statuses in bulk

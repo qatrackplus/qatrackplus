@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import os
 import time
@@ -6,7 +7,9 @@ import time
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.urls import reverse
+from django.utils import timezone
 import pytest
+import pytz
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -35,13 +38,20 @@ class TestTestListInstanceAPI(APITestCase):
         self.tsc = utils.create_test(name="testsc", test_type=models.STRING_COMPOSITE)
         self.tsc.calculation_procedure = "result = 'hello %s' % test3"
         self.tsc.save()
+
+        self.tdate = utils.create_test(name="testdate", test_type=models.DATE)
+        self.tdatetime = utils.create_test(name="testdatetime", test_type=models.DATETIME)
+
         self.default_tests = [self.t1, self.t2, self.t3, self.t4, self.t5]
         self.ntests = len(self.default_tests)
 
         for order, t in enumerate(self.default_tests):
             utils.create_test_list_membership(self.test_list, t, order=order)
 
-        self.utc = utils.create_unit_test_collection(test_collection=self.test_list, unit=self.unit)
+        frequency = utils.create_frequency(name="daily")
+        self.utc = utils.create_unit_test_collection(
+            test_collection=self.test_list, unit=self.unit, frequency=frequency
+        )
 
         self.create_url = reverse('testlistinstance-list')
         self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
@@ -380,6 +390,34 @@ class TestTestListInstanceAPI(APITestCase):
         self.data['tests']['test2'] = 100
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_with_date(self):
+        """
+        Add a date test. Resulting TestInstance should have date_value != None
+        """
+        utils.create_test_list_membership(self.test_list, self.tdate)
+        today = datetime.date(2019, 11, 11)
+
+        self.data['tests']['testdate'] = {'value': today.strftime("%Y-%m-%d")}
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tdate)
+        assert tic.date_value == today
+
+    def test_create_with_datetime(self):
+        """
+        Add a datetime test. Resulting TestInstance should have datetime_value != None
+        """
+        utils.create_test_list_membership(self.test_list, self.tdatetime)
+        now = timezone.now()
+        self.data['tests']['testdatetime'] = {
+            'value': now.astimezone(pytz.timezone("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S.%f")
+        }
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tdatetime)
+        assert tic.datetime_value == now
 
     def test_create_with_string_composite(self):
         """
@@ -734,6 +772,30 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.patch(resp.data['url'], new_data)
         assert not models.TestListInstance.objects.all().first().in_progress
 
+    def test_complete_unscheduled(self):
+        self.data['include_for_scheduling'] = True
+        resp = self.client.post(self.create_url, self.data)
+        assert models.TestListInstance.objects.all().first().include_for_scheduling
+        new_data = {'include_for_scheduling': False}
+        self.client.patch(resp.data['url'], new_data)
+        assert not models.TestListInstance.objects.all().first().include_for_scheduling
+
+    def test_complete_unscheduled_due_dates(self):
+        utils.create_test_list_instance(
+            unit_test_collection=self.utc, work_completed=timezone.now() - timezone.timedelta(days=10)
+        )
+        self.utc.refresh_from_db()
+        expected_due_date = self.utc.due_date
+
+        self.data['include_for_scheduling'] = False
+        self.data['work_completed'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        self.data['work_started'] = self.data['work_completed']
+        self.client.post(self.create_url, self.data)
+
+        # unscheduled so should be same due date
+        self.utc.refresh_from_db()
+        assert self.utc.due_date.date() == expected_due_date.date()
+
     def test_no_put(self):
         """All updates should be via patch"""
         resp = self.client.post(self.create_url, self.data)
@@ -889,3 +951,80 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.patch(resp.data['url'], new_data)
         tli.refresh_from_db()
         assert tli.attachment_set.count() == 2
+
+
+class TestPerformTestListCycleAPI(APITestCase):
+
+    def setUp(self):
+
+        self.unit = utils.create_unit()
+        self.test_list1 = utils.create_test_list("test list 1")
+        self.test_list2 = utils.create_test_list("test list 2")
+        self.test_list_cycle = utils.create_cycle([self.test_list1, self.test_list2], "test list cycle")
+
+        self.t1 = utils.create_test(name="test1")
+        self.t2 = utils.create_test(name="test2")
+
+        utils.create_test_list_membership(self.test_list1, self.t1)
+        utils.create_test_list_membership(self.test_list2, self.t2)
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list_cycle, unit=self.unit)
+
+        self.create_url = reverse('testlistinstance-list')
+        self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
+
+        self.day1_data = {
+            'unit_test_collection': self.utc_url,
+            'work_completed': '2019-07-25 10:49:47',
+            'work_started': '2019-07-25 10:49:00',
+            'tests': {'test1': {'value': 1}},
+            'day': 0,
+        }
+        self.day2_data = self.day1_data.copy()
+        self.day2_data['day'] = 1
+        self.day2_data['tests'] = {'test2': {'value': 2}}
+
+        self.client.login(username="user", password="password")
+        self.status = utils.create_status()
+
+    def test_create_day_2(self):
+        response = self.client.post(self.create_url, self.day2_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        tli = models.TestListInstance.objects.first()
+        assert tli.testinstance_set.values_list('value', flat=True)[0] == 2
+        assert tli.test_list_id == self.test_list2.id
+        assert tli.day == self.day2_data['day']
+
+    def test_create_day_1(self):
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        tli = models.TestListInstance.objects.first()
+        assert tli.testinstance_set.values_list('value', flat=True)[0] == 1
+        assert tli.test_list_id == self.test_list1.id
+        assert tli.day == 0
+
+    def test_create_no_day(self):
+        """If no day is supplied, an error should be returned"""
+        del self.day1_data['day']
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_invalid_day(self):
+        """If incorrect day is supplied, an error should be returned"""
+        self.day1_data['day'] = 'foo'
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_over_range_day(self):
+        """If day is supplied but out of range, an error should be returned"""
+        self.day1_data['day'] = 2
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_under_range_day(self):
+        """If day is supplied but out of range, an error should be returned"""
+        self.day1_data['day'] = -1
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST

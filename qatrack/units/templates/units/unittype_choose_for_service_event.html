@@ -1,103 +1,129 @@
-
 {% extends "service_log/sl_base.html" %}
 {% block require_javascript %}
-{#    require(['report']);#}
+require(['unit_choose']);
 {% endblock require_javascript %}
 
-{% block head_title %}Choose Unit{% endblock %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Choose Unit" %}{% endblock %}
 
 {% block body %}
 
-
-        {% if not split_sites %}
+{% if not split_sites %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header">
+          <i class="fa fa-cube" aria-hidden="true"></i>
+          <h3 class="box-title">
+            {% if new_se %}
+              {% trans "Choose a Unit to Create a New Service Event for" %}
+            {% else %}
+              {% trans "Choose a Unit to View Service Events for" %}
+            {% endif %}
+          </h3>
+          <p>
+            {% if new_se %}
+              {% trans "Click a button to create a service event for one of the units below." %}
+            {% else %}
+              {% trans "Click a button to view service events for one of the units below." %}
+            {% endif %}
+          </p>
+        </div>
+        <div class="box-body unit-btns">
+          {% for type, units in unit_types%}
             <div class="row">
-                <div class="col-md-12">
-                    <div class="box">
-                        <div class="box-header">
-                            <i class="fa fa-cube" aria-hidden="true"></i>
-                            <h3 class="box-title">
-                              {% if new_se %}
-                                Choose a Unit to Create a New Service Event for
-                              {% else %}
-                                Choose a Unit to View Service Events for
-                              {% endif %}
-                            </h3>
-                            <p>
-                              {% if new_se %}
-                                Click a button to create a service event for one of the units below.
-                              {% else %}
-                                Click a button to view service events for one of the units below.
-                              {% endif %}
-                            </p>
-                        </div>
-                        <div class="box-body unit-btns">
-                            {% for unit_type, units in unit_types%}
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <h4 class="header-spacer">{{unit_type}}</h4>
-                                        {% for unit in units %}
-                                            <a class="btn btn-default btn-flat"
-                                               href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}">{{unit.unit__name}}</a>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <div class="box-footer"></div>
-                    </div>
+              <div class="col-sm-12">
+                <h4 class="header-spacer">
+                  {{ type.0 }}
+                  {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                  {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                  <a role="button" data-toggle="collapse" data-target="#collapse-{{ site.0 }}-{{ forloop.counter }}"
+                    title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                    data-title-shown="{{ title_shown }}"
+                    data-title-hidden="{{ title_hidden }}"
+                  >
+                    <i class="fa fa-fw {% if type.1 %}fa-caret-right{% else %}fa-caret-down{% endif %}"></i>
+                  </a>
+                </h4>
+                <div id="collapse-{{ site.0 }}-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
+                  {% for unit in units %}
+                    <a class="btn btn-default btn-flat"
+                      href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}"
+                    >
+                      {{unit.unit__name}}
+                    </a>
+                  {% endfor %}
                 </div>
+              </div>
             </div>
+          {% endfor %}
+        </div>
+        <div class="box-footer"></div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="row">
+    <div class="col-md-12">
+      <h4>
+        <i class="fa fa-cube" aria-hidden="true"></i>
+        {% if new_se %}
+          {% trans "Choose a Unit to Create a New Service Event for" %}
         {% else %}
-            <div class="row">
-                <div class="col-md-12">
-                    <h4>
-                      <i class="fa fa-cube" aria-hidden="true"></i>
-                      {% if new_se %}
-                        Choose a Unit to Create a New Service Event for
-                      {% else %}
-                        Choose a Unit to View Service Events for
-                      {% endif %}
-                    </h4>
-                    <p>
-                      {% if new_se %}
-                        Click a button to create a service event for one of the units below.
-                      {% else %}
-                        Click a button to view service events for one of the units below.
-                      {% endif %}
-                    </p>
-                </div>
-            </div>
-            <div class="row">
-                {% for site, types in unit_types.items %}
-                    <div class="col-md-{{ split_by }}">
-                        <div class="box">
-                            <div class="box-header">
-                                <h3 class="box-title">{% if site == 'zzzNonezzz' %}Other{% else %}{{ site }}{% endif %}</h3>
-                            </div>
-                            <div class="box-body unit-btns">
-                                {% for type, units in types %}
-
-                                    <div class="row">
-                                        <div class="col-sm-12">
-
-                                            <h4 class="header-spacer">{{ type }}</h4>
-                                            {% for unit in units %}
-                                            <a class="btn btn-default btn-flat" href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}">{{unit.unit__name}}</a>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-
-                                {% endfor %}
-                            </div>
-                            <div class="box-footer"></div>
-                        </div>
-                    </div>
-
-                {% endfor %}
-            </div>
-
+          {% trans "Choose a Unit to View Service Events for" %}
         {% endif %}
+      </h4>
+      <p>
+        {% if new_se %}
+          {% trans "Click a button to create a service event for one of the units below." %}
+        {% else %}
+          {% trans "Click a button to view service events for one of the units below." %}
+        {% endif %}
+      </p>
+    </div>
+  </div>
+  <div class="row equal-cols">
+    {% for site, types in unit_types.items %}
+      <div class="col-md-{{ split_by }}">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">{% if site.1 == 'zzzNonezzz' %}Other{% else %}{{ site.1 }}{% endif %}</h3>
+          </div>
+          <div class="box-body unit-btns">
+            {% for type, units in types %}
+              <div class="row">
+                <div class="col-sm-12">
+                    <h4 class="header-spacer">
+                      {{ type.0 }}
+                      {% blocktrans with unit_type=type.0 asvar title_hidden %}Click to show {{ unit_type }} units{% endblocktrans %}
+                      {% blocktrans with unit_type=type.0 asvar title_shown %}Click to hide {{ unit_type }} units{% endblocktrans %}
+                      <a role="button" data-toggle="collapse" data-target="#collapse-{{ site.0 }}-{{ forloop.counter }}"
+                        title="{% if type.1 %}{{ title_hidden }}{% else %}{{ title_shown }}{% endif %}"
+                        data-title-shown="{{ title_shown }}"
+                        data-title-hidden="{{ title_hidden }}"
+                      >
+                        <i class="fa fa-fw {% if type.1 %}fa-caret-right{% else %}fa-caret-down{% endif %}"></i>
+                      </a>
+                    </h4>
+                    <div id="collapse-{{ site.0 }}-{{ forloop.counter }}" class="collapse {% if not type.1 %}in{% endif %}">
+                      {% for unit in units %}
+                        <a class="btn btn-default btn-flat"
+                          href="{% if new_se %}{% url "sl_new" %}?u={{ unit.unit__id }}{% else %}{% url 'sl_list_by_unit' unit_number=unit.unit__number %}{% endif %}"
+                        >
+                          {{unit.unit__name}}
+                        </a>
+                      {% endfor %}
+                    </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="box-footer"></div>
+        </div>
+      </div>
+
+    {% endfor %}
+  </div>
+{% endif %}
 {% endblock %}
-
-
-

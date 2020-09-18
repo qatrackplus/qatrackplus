@@ -20,8 +20,8 @@ The unit you want to assign the test list to.
 Frequency
 ---------
 
-The :ref:`Frequency <qa_frequencies>` with which you want the test list (cycle) to
-be performed (e.g. Daily, Monthly, Yearly etc).
+The :ref:`Frequency <qa_frequencies>` with which you want the test list (cycle)
+to be performed (e.g. Daily, Monthly, Yearly etc).
 
 Optionally, you can leave the frequency blank and the test list will be
 assigned to be performed on an *ad-hoc* basis.

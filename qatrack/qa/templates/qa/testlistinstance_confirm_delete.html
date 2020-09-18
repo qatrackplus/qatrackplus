@@ -1,12 +1,13 @@
 {% extends "site_base.html" %}
 {% load qa_tags %}
 {% load comments %}
+{% load static %}
 
 {% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}

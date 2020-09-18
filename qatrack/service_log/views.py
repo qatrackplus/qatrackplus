@@ -22,7 +22,8 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
@@ -35,6 +36,7 @@ from listable.views import (
     LAST_MONTH,
     LAST_WEEK,
     LAST_YEAR,
+    NONEORNULL,
     SELECT,
     SELECT_MULTI,
     THIS_MONTH,
@@ -58,6 +60,7 @@ from qatrack.qatrack_core.utils import (
     format_datetime,
     parse_date,
 )
+from qatrack.reports.service_log import ServiceEventDetailsReport
 from qatrack.service_log import forms, models
 from qatrack.units import models as u_models
 
@@ -324,7 +327,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         return context_data
 
     def form_invalid(self, form):
-        messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        messages.add_message(self.request, messages.ERROR, _('Please correct the Service Event Details error below.'))
         return super().form_invalid(form)
 
     def reset_status(self, form):
@@ -363,13 +366,18 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         if settings.USE_PARTS:
             parts_formset = context['part_used_formset']
             if not parts_formset or not parts_formset.is_valid():
-                messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+                messages.add_message(self.request, messages.ERROR, _('Please correct the Parts error below.'))
                 return self.render_to_response(context)
         else:
             parts_formset = None
 
-        if not hours_formset.is_valid() or not rtsqa_formset.is_valid():
-            messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        hours_valid = hours_formset.is_valid()
+        rtsqa_valid = rtsqa_formset.is_valid()
+        if not hours_valid:
+            messages.add_message(self.request, messages.ERROR, _('Please correct the User Hours error below.'))
+        if not rtsqa_valid:
+            messages.add_message(self.request, messages.ERROR, _('Please correct the Return to Service QC error below.'))
+        if not (rtsqa_valid and hours_valid):
             return self.render_to_response(context)
 
         new = form.instance.pk is None
@@ -387,7 +395,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 service_status__in=models.ServiceEventStatus.objects.filter(is_review_required=True),
                 is_review_required=True
             ).count()
-            cache.set('se_needing_review_count', se_needing_review_count)
+            cache.set(settings.CACHE_SE_NEEDING_REVIEW_COUNT, se_needing_review_count)
 
         comment = form.cleaned_data['qafollowup_comments']
         if comment:
@@ -579,7 +587,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                         messages.add_message(
                             request=self.request,
                             level=messages.INFO,
-                            message='Part number %s is low (%s left in stock).' % (current_p.part_number, current_p.quantity_current)
+                            message='Part %s is low (%s left in stock).' % (str(current_p), current_p.quantity_current)
                         )
                     if initial_p:
                         initial_p.set_quantity_current()
@@ -643,7 +651,12 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
+        context['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object).select_related(
+            "user",
+            "service_event",
+            "service_event__unit_service_area",
+            "service_event__unit_service_area__unit",
+        )
         return context
 
     def form_valid(self, form):
@@ -698,7 +711,12 @@ class DetailsServiceEvent(DetailView):
         context_data['request'] = self.request
         context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
 
-        context_data['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
+        context_data['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object).select_related(
+            "user",
+            "service_event",
+            "service_event__unit_service_area",
+            "service_event__unit_service_area__unit",
+        )
 
         return context_data
 
@@ -773,31 +791,20 @@ class ServiceEventsBaseList(BaseListableView):
     order_by = ['-datetime_service']
     kwarg_filters = None
 
-    fields = (
-        'actions',
-        'pk',
-        'datetime_service',
-        'unit_service_area__unit__name',
-        'unit_service_area__service_area__name',
-        'service_type__name',
-        # 'problem_type__name',
-        'problem_description',
-        'work_description',
-        'service_status__name'
-    )
-
     headers = {
-        'pk': _('ID'),
-        'datetime_service': _('Service Date'),
-        'unit_service_area__unit__name': _('Unit'),
-        'unit_service_area__service_area__name': _('Service Area'),
-        'service_type__name': _('Service Type'),
-        # 'problem_type__name': _('Problem Type'),
-        'service_status__name': _('Service Status'),
+        'pk': _l('ID'),
+        'datetime_service': _l('Service Date'),
+        'unit_service_area__unit__site__name': _l('Site'),
+        'unit_service_area__unit__name': _l('Unit'),
+        'unit_service_area__service_area__name': _l('Service Area'),
+        'service_type__name': _l('Service Type'),
+        # 'problem_type__name': _l('Problem Type'),
+        'service_status__name': _l('Service Status'),
     }
 
     widgets = {
         'datetime_service': DATE_RANGE,
+        'unit_service_area__unit__site__name': SELECT_MULTI,
         'unit_service_area__unit__name': SELECT_MULTI,
         'unit_service_area__service_area__name': SELECT_MULTI,
         'service_type__name': SELECT_MULTI,
@@ -821,6 +828,7 @@ class ServiceEventsBaseList(BaseListableView):
 
     select_related = (
         'unit_service_area__unit',
+        'unit_service_area__unit__site',
         'unit_service_area__service_area',
         'service_type',
         'service_status'
@@ -842,6 +850,39 @@ class ServiceEventsBaseList(BaseListableView):
 
     def get_page_title(self, f=None):
         return 'All Service Events'
+
+    @classmethod
+    def get_fields(cls):
+
+        fields = (
+            'actions',
+            'pk',
+            'datetime_service',
+        )
+
+        multiple_sites = len(set(models.Unit.objects.values_list("site_id"))) > 1
+        if multiple_sites:
+            fields += ('unit_service_area__unit__site__name',)
+
+        fields += (
+            'unit_service_area__unit__name',
+            'unit_service_area__service_area__name',
+            'service_type__name',
+            'problem_description',
+            'work_description',
+            'service_status__name'
+        )
+
+        return fields
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super().get_filters(field, queryset=queryset)
+
+        if field == 'unit_service_area__unit__site__name':
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
 
     def get_context_data(self, *args, **kwargs):
         context = super(ServiceEventsBaseList, self).get_context_data(*args, **kwargs)
@@ -932,7 +973,7 @@ class ServiceEventsInitiatedByList(ServiceEventsBaseList):
 
 class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
     """View to show Service Events where a TestListInstance was performed as
-    return to service qa."""
+    Return To Service QC."""
 
     def get_page_title(self, *args):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
@@ -986,13 +1027,13 @@ class ReturnToServiceQABaseList(BaseListableView):
     )
 
     headers = {
-        'service_event__datetime_service': _('Service Date'),
-        'service_event__unit_service_area__unit__name': _('Unit'),
-        'unit_test_collection__name': _('Test List'),
-        'test_list_instance__work_completed': _('Test List Completed'),
-        'test_list_instance_pass_fail': _('Pass/Fail'),
-        'test_list_instance_review_status': _('Review Status'),
-        'service_event__service_status__name': _('Service Event Status')
+        'service_event__datetime_service': _l('Service Date'),
+        'service_event__unit_service_area__unit__name': _l('Unit'),
+        'unit_test_collection__name': _l('Test List'),
+        'test_list_instance__work_completed': _l('Test List Completed'),
+        'test_list_instance_pass_fail': _l('Pass/Fail'),
+        'test_list_instance_review_status': _l('Review Status'),
+        'service_event__service_status__name': _l('Service Event Status')
     }
 
     widgets = {
@@ -1168,7 +1209,7 @@ class TLISelect(UTCInstances):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
             return "Select a %s instance" % utc.name
-        except:
+        except models.UnitTestCollection.DoesNotExist:
             raise Http404
 
     def actions(self, tli):
@@ -1234,15 +1275,15 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     )
 
     headers = {
-        # 'pk': _('ID'),
-        'datetime_service': _('Service Date'),
-        'unit_service_area__unit__name': _('Unit'),
-        'unit_service_area__unit__type__name': _('Unit Type'),
-        'unit_service_area__unit__active': _('Active'),
-        'unit_service_area__service_area__name': _('Service Area'),
-        # 'service_type__name': _('Service Type'),
-        'duration_service_time': _('Service Time (hh:mm)'),
-        'duration_lost_time': _('Lost Time (hh:mm)')
+        # 'pk': _l('ID'),
+        'datetime_service': _l('Service Date'),
+        'unit_service_area__unit__name': _l('Unit'),
+        'unit_service_area__unit__type__name': _l('Unit Type'),
+        'unit_service_area__unit__active': _l('Active'),
+        'unit_service_area__service_area__name': _l('Service Area'),
+        # 'service_type__name': _l('Service Type'),
+        'duration_service_time': _l('Service Time (hh:mm)'),
+        'duration_lost_time': _l('Lost Time (hh:mm)')
     }
 
     widgets = {
@@ -1462,3 +1503,27 @@ def handle_unit_down_time(request):
         writer.writerow(r)
 
     return response
+
+
+def service_log_report(request, pk):
+
+    se = get_object_or_404(models.ServiceEvent, id=pk)
+
+    se_date = format_datetime(se.datetime_service)
+    base_opts = {
+        'report_type': ServiceEventDetailsReport.report_type,
+        'report_format': request.GET.get("type", "pdf"),
+        'title': "Service Event %s - %s" % (se.pk, se_date),
+        'include_signature': False,
+        'visible_to': [],
+    }
+
+    report_opts = {
+        'datetime_service': "%s - %s" % (se_date, se_date),
+        'unit_service_area__unit': [se.unit_service_area.unit.id],
+        'unit_service_area__service_area': [se.unit_service_area],
+        'unit_service_area__service_type': [se.service_type],
+    }
+    report = ServiceEventDetailsReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
+
+    return report.render_to_response(base_opts['report_format'])

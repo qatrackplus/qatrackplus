@@ -72,10 +72,13 @@ class TestAttachment(TestCase):
             os.path.join(settings.UPLOAD_ROOT, "testlist", "1", name),
         )
 
-        expected_make_dirs = (
-            os.path.join(settings.UPLOAD_ROOT, "testlist", "1"),
-        )
+        dir_path = os.path.join(settings.UPLOAD_ROOT, "testlist", "1")
+        if not os.path.exists(os.path.dirname(dir_path)):
+            expected_make_dirs = (dir_path,)
+        else:
+            expected_make_dirs = None
 
         assert copy.call_args[0] == expected_rename_from_to
         assert remove.call_args[0] == (expected_rename_from_to[0],)
-        assert makedirs.call_args[0] == expected_make_dirs
+        if expected_make_dirs:
+            assert makedirs.call_args[0] == expected_make_dirs

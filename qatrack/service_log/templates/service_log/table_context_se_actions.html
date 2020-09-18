@@ -1,17 +1,19 @@
+{% load i18n %}
 {% load qa_tags %}
+
 <div style="min-width: 85px;">
-    {% if perms.service_log.change_serviceevent %}
-        <a class="btn btn-default btn-xs btn-flat"
-          href="{% url 'sl_edit' se.pk %}{% if next %}?next={{ next }}{% endif %}"
-          title="Click to edit this Service Event"
-          >
-          Edit
-      </a>
-    {% endif %}
-    {% if perms.service_log.view_serviceevent %}
-        <a class="btn btn-default btn-xs btn-flat"
-           href="{% url 'sl_details' se.pk %}"
-           title="Click to view details of this Service Event"
-          >Details</a>
-    {% endif %}
+  {% if perms.service_log.change_serviceevent %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'sl_edit' se.pk %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% trans "Click to edit this Service Event" %}"
+    >
+      {% trans "Edit" %}
+    </a>
+  {% endif %}
+  {% if perms.service_log.view_serviceevent %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'sl_details' se.pk %}"
+      title="{% trans "Click to view details of this Service Event" %}"
+    >{% trans "Details" %}</a>
+  {% endif %}
 </div>

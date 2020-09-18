@@ -12,14 +12,16 @@ register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, test_list, perms, test_info=None, unit_test_collection=None):
+def qa_value_form(form, test_list, perms, user, test_info=None, unit_test_collection=None, show_category=True):
     template = get_template("qa/qavalue_form.html")
     c = {
+        "user": user,
         "form": form,
         "perms": perms,
         "test_list": test_list,
         "test_info": test_info,
-        'unit_test_collection': unit_test_collection
+        'unit_test_collection': unit_test_collection,
+        'show_category': show_category,
     }
     return template.render(c)
 
@@ -95,7 +97,7 @@ def tolerance_for_reference(tol, ref):
     for key in tols:
         tols[key] = "-" if tols[key] is None else "%.4g" % tols[key]
     tols["ok_disp"] = tsd['ok']
-    tols["tol_disp"] = tsd['ok']
+    tols["tol_disp"] = tsd['tolerance']
     tols["act_disp"] = tsd['action']
     return mark_safe(
         '<span>%(ok_disp)s: Between %(tol_low)s &amp; %(tol_high)s</br> '
@@ -210,6 +212,8 @@ def as_data_attributes(unit_test_collection):
 
 @register.filter
 def hour_min(duration):
+    if duration in (None, ""):
+        return ""
     total_seconds = int(duration.total_seconds())
     hours = total_seconds // 3600
     minutes = (total_seconds % 3600) // 60

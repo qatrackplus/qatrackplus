@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^event/initiated-by/(?P<tli_pk>\d+)/$', views.ServiceEventsInitiatedByList.as_view(), name="sl_list_initiated_by"),
     url(r'^event/return-to-service-for/(?P<tli_pk>\d+)/$', views.ServiceEventsReturnToServiceForList.as_view(), name="sl_list_return_to_service_for"),
     url(r'^event/status/(?P<pk>\d+)/$', views.ServiceEventsByStatusList.as_view(), name="sl_list_by_status"),
+    url(r'^event/report/(?P<pk>\d+)/$', views.service_log_report, name="sl_service_event_report"),
     url(r'^rtsqa/$', views.ReturnToServiceQABaseList.as_view(), name="rtsqa_list_all"),
     url(r'^rtsqa/incomplete/$', views.ReturnToServiceQAIncompleteList.as_view(), name="rtsqa_list_incomplete"),
     url(r'^rtsqa/unreviewed/$', views.ReturnToServiceQAUnreviewedList.as_view(), name="rtsqa_list_unreviewed"),

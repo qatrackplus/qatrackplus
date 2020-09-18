@@ -2,6 +2,7 @@ from unittest import mock
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -31,6 +32,11 @@ class TestFrequencyManager(TestCase):
             utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
         self.assertEqual([(x[1], x[0]) for x in intervals], list(models.Frequency.objects.frequency_choices()))
 
+    def test_by_natural_key(self):
+        utils.create_frequency(name="Daily", slug="daily")
+        f = models.Frequency.objects.get_by_natural_key('daily')
+        assert f.name == 'Daily'
+
 
 class TestFrequency(TestCase):
 
@@ -44,6 +50,12 @@ class TestFrequency(TestCase):
         for t, s, nom, due, overdue in intervals:
             f = utils.create_frequency(name=t, slug=s, interval=due, window_end=overdue)
             assert 1 <= round(f.nominal_interval) <= round(nom)
+
+    def test_natural_key(self):
+        assert models.Frequency(slug="daily").natural_key() == ("daily",)
+
+    def test_classical(self):
+        assert models.Frequency(window_start=None).classical
 
 
 class TestStatus(TestCase):
@@ -76,6 +88,24 @@ class TestStatus(TestCase):
 
         defaults = models.TestInstanceStatus.objects.filter(is_default=True)
         self.assertEqual(list(defaults), [new_status])
+
+    def test_get_by_natural_key(self):
+        new_status = models.TestInstanceStatus(
+            name="bar",
+            slug="bar",
+            is_default=True,
+        )
+        new_status.save()
+        assert models.TestInstanceStatus.objects.get_by_natural_key("bar").name == "bar"
+
+    def test_natural_key(self):
+        new_status = models.TestInstanceStatus(
+            name="bar",
+            slug="bar",
+            is_default=True,
+        )
+        new_status.save()
+        assert new_status.natural_key() == (new_status.slug,)
 
 
 class TestReference(TestCase):
@@ -185,6 +215,14 @@ class TestTolerance(TestCase):
         with self.assertRaises(IntegrityError):
             utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.PERCENT)
 
+    def test_get_by_natural_key(self):
+        t = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        assert models.Tolerance.objects.get_by_natural_key(t.name).id == t.pk
+
+    def test_natural_key(self):
+        t = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        assert t.natural_key() == (t.name,)
+
 
 class TestTestCollectionInterface(TestCase):
 
@@ -221,18 +259,24 @@ class TestTest(TestCase):
         test = self.create_test(name="upload", type=models.UPLOAD)
         assert test.is_upload()
 
+    def test_can_attach(self):
+        for tt in (models.STRING_COMPOSITE, models.COMPOSITE, models.UPLOAD):
+            assert models.Test(type=tt).can_attach()
+
     def test_is_numerical_type(self):
         for t in (models.COMPOSITE, models.CONSTANT, models.SIMPLE):
             test = self.create_test(name="num", type=t)
             assert test.is_numerical_type()
 
     def test_is_string_type(self):
-        for t in (
-            models.STRING_COMPOSITE,
-            models.STRING,
-        ):
-            test = self.create_test(name="num", type=t)
+        for t in (models.STRING_COMPOSITE, models.STRING):
+            test = self.create_test(name="str", type=t)
             assert test.is_string_type()
+
+    def test_is_date_type(self):
+        for t in (models.DATE, models.DATETIME):
+            test = self.create_test(name="date", type=t)
+            assert test.is_date_type()
 
     def test_valid_check_type(self):
         types = (
@@ -384,6 +428,10 @@ result = foo + bar
         test = self.create_test(type=models.MULTIPLE_CHOICE)
         test.choices = "a,b"
         assert test.get_choices() == [("a", "a"), ("b", "b")]
+
+    def test_display(self):
+        assert models.Test(display_name="display", name="name").display() == "display"
+        assert models.Test(name="name").display() == "name"
 
 
 class TestOnTestSaveSignal(TestCase):
@@ -546,9 +594,23 @@ class TestUnitTestInfo(TestCase):
         # only utc1 is active now
         self.assertEqual(models.UnitTestInfo.objects.active().count(), 1)
 
+    def test_inactive_only_simple(self):
+
+        utis = models.UnitTestInfo.objects.inactive()
+        self.assertEqual(utis.count(), 0)
+        self.utc.active = False
+        self.utc.save()
+        self.assertEqual(models.UnitTestInfo.objects.inactive().count(), 1)
+
 
 class TestTestListMembership(TestCase):
-    pass
+
+    def test_get_by_natural_key(self):
+        tlm = utils.create_test_list_membership()
+        assert models.TestListMembership.objects.get_by_natural_key(
+            tlm.test_list.slug,
+            tlm.test.name,
+        ).id == tlm.id
 
 
 class TestTestList(TestCase):
@@ -847,6 +909,26 @@ class TestUTCDueDates(TestCase):
         self.utc_hist.refresh_from_db()
         self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + timezone.timedelta(days=1)).date())
 
+    def test_due_date_not_updated_for_unscheduled(self):
+
+        # first create valid history
+        now = timezone.now()
+        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
+        utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli1.save()
+
+        # now create 2nd unscheduled
+        now = timezone.now()
+        tli2 = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=now + timezone.timedelta(days=1)
+        )
+        utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli2.include_for_scheduling = False
+        tli2.save()
+
+        self.utc_hist.refresh_from_db()
+        self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + timezone.timedelta(days=1)).date())
+
     def test_cycle_due_date(self):
 
         test_lists = [utils.create_test_list(name="test list %d" % i) for i in range(2)]
@@ -1064,14 +1146,14 @@ class TestUnitTestCollection(TestCase):
 
         test_hist, dates = utc.history(before=now)
 
-        dates = [x.replace(second=0, microsecond=0) for x in dates]
+        dates = [d.replace(second=0, microsecond=0) for (tli_url, d) in dates]
         wcs = [x.work_completed.replace(second=0, microsecond=0) for x in tlis]
 
         self.assertEqual(sorted_hist, dates)
         self.assertEqual(sorted_hist, wcs)
 
         # test returns correct number of results
-        self.assertEqual([(test, tis)], test_hist)
+        self.assertEqual([(test, list(zip(tlis, tis)))], test_hist)
 
     def test_test_list_next_list(self):
 
@@ -1292,6 +1374,7 @@ class TestTestInstance(TestCase):
         self.test_list = utils.create_test_list()
         utils.create_test_list_membership(test=self.test, test_list=self.test_list)
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
+        self.unit = self.utc.unit
         self.uti = models.UnitTestInfo.objects.get(test=self.test, unit=self.utc.unit)
         self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
 
@@ -1307,6 +1390,54 @@ class TestTestInstance(TestCase):
         ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=1)
         ti.reference = ref
         self.assertEqual(0, ti.difference())
+
+    def test_diff_wrap_high_inside(self):
+        ref = utils.create_reference(value=0)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=0)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=99)
+        ti.reference = ref
+        assert -1 == ti.difference_wraparound()
+
+    def test_diff_wrap_high_outside(self):
+        ref = utils.create_reference(value=0)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=101)
+        ti.reference = ref
+        assert 101 == ti.difference_wraparound()
+
+    def test_diff_wrap_low_inside(self):
+        ref = utils.create_reference(value=0)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=-99)
+        ti.reference = ref
+        assert -99 == ti.difference_wraparound()
+
+    def test_diff_wrap_low_outside(self):
+        ref = utils.create_reference(value=0)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=-101)
+        ti.reference = ref
+        assert -101 == ti.difference_wraparound()
+
+    def test_diff_wrap_mid(self):
+        ref = utils.create_reference(value=0)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=100, wrap_low=-100)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=0)
+        ti.reference = ref
+        assert 0 == ti.difference_wraparound()
+
+    def test_diff_wrap_mid_not_sym(self):
+        ref = utils.create_reference(value=5)
+        test = utils.create_test(test_type=models.WRAPAROUND, wrap_high=10, wrap_low=2)
+        uti = utils.create_unit_test_info(unit=self.unit, test=test, ref=ref)
+        ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=6)
+        ti.reference = ref
+        assert 1 == ti.difference_wraparound()
 
     def test_diff_unavailable(self):
         ti = utils.create_test_instance(self.tli, unit_test_info=self.uti, value=1)
@@ -1559,6 +1690,13 @@ class TestTestInstance(TestCase):
 
         ti = models.TestInstance(unit_test_info=uti, string_value="c")
         self.assertEqual("c", ti.value_display())
+
+    def test_invalid_display_value(self):
+        t = models.Test(type=models.SIMPLE)
+        uti = models.UnitTestInfo(test=t)
+
+        ti = models.TestInstance(unit_test_info=uti, string_value="Invalid")
+        self.assertEqual("Invalid", ti.value_display())
 
     def test_reg_display_value(self):
         t = models.Test(type=models.SIMPLE)
@@ -1837,3 +1975,17 @@ class TestAutoReview(TestCase):
         ti.auto_review()
         ti.save()
         assert not ti.status.requires_review
+
+    def test_autoreviewruleset_cache_missing_id(self):
+        """Rule is missing, so cache should be refreshed"""
+        cache.set(settings.CACHE_AUTOREVIEW_RULESETS, {})
+        r = models.AutoReviewRuleSet.objects.first()
+        cached = models.autoreviewruleset_cache(r.id)
+        assert 'ok' in cached and 'tolerance' in cached
+
+    def test_arr_str(self):
+        r = models.AutoReviewRule.objects.get(pass_fail="ok")
+        assert str(r) == "OK => pass"
+
+    def test_arrset_str(self):
+        assert str(self.ruleset) == "default"

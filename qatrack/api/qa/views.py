@@ -41,6 +41,13 @@ class AutoReviewRuleViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
+class AutoReviewRuleSetViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.AutoReviewRuleSet.objects.all()
+    serializer_class = serializers.AutoReviewRuleSetSerializer
+    filterset_class = filters.AutoReviewRuleSetFilter
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+
+
 class ReferenceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Reference.objects.all()
     serializer_class = serializers.ReferenceSerializer
@@ -70,7 +77,10 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TestListViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.TestList.objects.all()
+    queryset = models.TestList.objects.prefetch_related(
+        "test_lists",
+        "tests",
+    )
     serializer_class = serializers.TestListSerializer
     filterset_class = filters.TestListFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
@@ -98,7 +108,10 @@ class SublistViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.UnitTestCollection.objects.select_related().prefetch_related(
+    queryset = models.UnitTestCollection.objects.select_related(
+        "last_instance",
+        "content_type",
+    ).prefetch_related(
         "visible_to",
         "tests_object",
     )
@@ -204,7 +217,8 @@ def test_list_cycle_searcher(request):
 def test_instance_searcher(request):
     q = request.GET.get('q')
     testinstance = models.TestInstance.objects.filter(
-        Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q),
+        Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q)
+        | Q(unit_test_info__test__display_name__icontains=q),
     ).values('id', 'unit_test_info__test__name')[0:50]
     return JsonResponse({'items': list(testinstance), 'name': 'unit_test_info__test__name'})
 

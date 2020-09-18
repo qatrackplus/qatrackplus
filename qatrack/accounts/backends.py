@@ -3,109 +3,168 @@ try:
 except ImportError:
     pass
 
+import logging
+
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
+
+
+class QATrackAccountBackend(ModelBackend):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logger = logging.getLogger('auth.QATrackAccountBackend')
+
+    def authenticate(self, request, username=None, password=None):
+        self.logger.info("Attempting to authenticate %s" % username)
+        username = self.clean_username(username)
+        self.logger.info("Cleaned username: %s" % username)
+
+        user = super().authenticate(request, username=username, password=password)
+        if user:
+            self.logger.info("Successfully authenticated user: %s" % username)
+        else:
+            self.logger.info("Authentication failed for user: %s" % username)
+
+        return user
+
+    def clean_username(self, username):
+        """
+        Performs any cleaning on the "username" prior to using it to get or
+        create the user object.  Returns the cleaned username.
+
+        By default, returns the username unchanged.
+        """
+        if settings.ACCOUNTS_CLEAN_USERNAME and callable(settings.ACCOUNTS_CLEAN_USERNAME):
+            return settings.ACCOUNTS_CLEAN_USERNAME(username)
+        return username.replace(settings.CLEAN_USERNAME_STRING, "")
 
 
 # stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
 
-    def authenticate(self, username=None, password=None):
-        username = self.clean_username(username)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logger = logging.getLogger('auth.ActiveDirectoryGroupMembershipSSLBackend')
 
-        debug = None
-        if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
-            debug = open(settings.AD_DEBUG_FILE, 'a')
-            print("authenticate user %s" % username, file=debug)
+        ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
+        if settings.AD_CERT_FILE:
+            self.logger.debug("Setting TLS CERTFILE %s." % settings.AD_CERT_FILE)
+            ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
+
+    def authenticate(self, request, username=None, password=None):
+
+        self.logger.info("Attempting to authenticate %s" % username)
+        username = self.clean_username(username)
+        self.logger.info("Cleaned username: %s" % username)
 
         try:
             if len(password) == 0:
+                self.logger.info("Failed to authenticate user. No password provided.")
                 return None
 
-            if settings.AD_CERT_FILE:
-                ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
-            if debug:
-                print("\tinitialize...", file=debug)
+            self.logger.debug("Initializing with ldap url=%s" % settings.AD_LDAP_URL)
             l = ldap.initialize(settings.AD_LDAP_URL)
             l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
+
             binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
-            if debug:
-                print("\tbind...", file=debug)
+            self.logger.debug("Binding with binddn=%s" % binddn)
             l.simple_bind_s(binddn, password)
-            l.unbind_s()
 
-            if debug:
-                print("\tsuccessfully authenticated: %s" % username, file=debug)
-            return self.get_or_create_user(username, password)
+            user_attrs = self.get_user_attrs(l, username)
+            if settings.AD_MEMBERSHIP_REQ:
+                if len(set(settings.AD_MEMBERSHIP_REQ) & set(user_attrs['member_of'])) == 0:
+                    self.logger.info(
+                        "successfully authenticated: %s but they don't belong to a required group (%s)" %
+                        (username, settings.AD_MEMBERSHIP_REQ)
+                    )
+                    return None
 
-        except Exception as e:
-            if debug:
-                print("\tException occurred ", file=debug)
-                print(e, file=debug)
-        if debug:
-            debug.close()
+            self.logger.debug("successfully authenticated: %s" % username)
 
-    def get_or_create_user(self, username, password):
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
+            return self.get_or_create_user(username, user_attrs)
 
+        except ldap.INVALID_CREDENTIALS:
+            self.logger.info("Invalid username or password for user: %s" % username)
+            return None
+        except ldap.SERVER_DOWN:
+            self.logger.exception("Unable to contact LDAP server")
+        except Exception:
+            self.logger.exception("Exception occured while trying to authenticate %s" % username)
+            return None
+        finally:
             try:
-                print('--- Creating user ' + username + ' ---')
-                debug = None
-                if settings.AD_DEBUG_FILE and settings.AD_DEBUG:
-                    debug = open(settings.AD_DEBUG_FILE, 'a')
-                    print("create user %s" % username, file=debug)
-
-                # ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
-                ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
-
-                # initialize
-                if debug:
-                    print("\tinitialize...", file=debug)
-                l = ldap.initialize(settings.AD_LDAP_URL)
-                l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-
-                # bind
-                if debug:
-                    print("\tbind...", file=debug)
-                binddn = "%s@%s" % (username, settings.AD_NT4_DOMAIN)
-                l.bind_s(binddn, password)
-
-                # search
-                if debug:
-                    print("\tsearch...", file=debug)
-                result = l.search_ext_s(
-                    settings.AD_SEARCH_DN,
-                    ldap.SCOPE_SUBTREE,
-                    "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username),
-                    settings.AD_SEARCH_FIELDS,
-                )[0][1]
-
-                # get personal info
-                mail = result.get(settings.AD_LU_MAIL, ["mail@example.com"])[0]
-                last_name = result.get(settings.AD_LU_SURNAME, [username])[0]
-                first_name = result.get(settings.AD_LU_GIVEN_NAME, [username])[0]
-
                 l.unbind_s()
+            except Exception:
+                pass
 
-                user = User(username=username, first_name=first_name, last_name=last_name, email=mail)
+    def get_user_attrs(self, con, username):
 
-            except Exception as e:
-                if debug:
-                    print("Exception:", file=debug)
-                    print(e, file=debug)
+        self.logger.debug("Searching active directory for user attributes with search DN: %s" % settings.AD_SEARCH_DN)
+
+        result = con.search_ext_s(
+            settings.AD_SEARCH_DN,
+            ldap.SCOPE_SUBTREE,
+            "%s=%s" % (settings.AD_LU_ACCOUNT_NAME, username),
+            settings.AD_SEARCH_FIELDS,
+        )[0][1]
+
+        attrs = {
+            'email': result.get(settings.AD_LU_MAIL, [""])[0],
+            'last_name': result.get(settings.AD_LU_SURNAME, [""])[0],
+            'first_name': result.get(settings.AD_LU_GIVEN_NAME, [""])[0],
+        }
+
+        member_of = result.get(settings.AD_LU_MEMBER_OF, [""])[0]
+        if isinstance(member_of, bytes):
+            member_of = member_of.decode()
+
+        # member of comes in format like CN=TestGroup,CN=Users,DC=foo,DC=example,DC=com
+        member_of = [x.split("=")[1] for x in member_of.split(",") if "cn=" in x.lower()]
+        attrs['member_of'] = member_of
+
+        return attrs
+
+    def get_or_create_user(self, username, user_attrs):
+
+        try:
+            self.logger.debug("Looking for existing user with username: %s" % username)
+            user = User.objects.get(username=username)
+            self.logger.debug("Found existing user with username: %s" % username)
+        except User.DoesNotExist:
+            self.logger.debug("No existing user with username: %s" % username)
+            user = User(username=username, is_staff=False, is_superuser=False)
+            user.set_unusable_password()
+            try:
+                user.save()
+                self.logger.info("Created user with username: %s" % username)
+            except Exception:
+                self.logger.info("Creation of user failed")
                 return None
 
-            user.is_staff = False
-            user.is_superuser = False
-            user.set_unusable_password()
-            user.save()
-            if debug:
-                print("User created: %s" % username, file=debug)
-                debug.close()
+        self.update_user_attrs(user, user_attrs)
+
         return user
+
+    def update_user_attrs(self, user, user_attrs):
+
+        self.logger.info("Updating user info for %s" % user.username)
+
+        # get personal info
+        user.email = user_attrs['email'] or user.email
+        user.last_name = user_attrs['last_name'] or user.last_name
+        user.first_name = user_attrs['first_name'] or user.first_name
+
+        user_groups = user.groups.all()
+        for ad_group in user_attrs['member_of']:
+            if ad_group in settings.AD_GROUP_MAP:
+                group = Group.objects.filter(name=settings.AD_GROUP_MAP[ad_group]).first()
+                if group and group not in user_groups:
+                    user.groups.add(group)
+                    self.logger.info("Add %s to group %s" % (user.username, group.name))
+
+        user.save()
 
     def get_user(self, user_id):
         try:
@@ -134,18 +193,18 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
     # Create a User object if not already in the database?
     create_unknown_user = True
 
-    def authenticate(self, remote_user):
+    def authenticate(self, request, username=None):
         """
-        The username passed as ``remote_user`` is considered trusted.  This
+        The username passed is considered trusted.  This
         method simply returns the ``User`` object with the given username,
         creating a new ``User`` object if ``create_unknown_user`` is ``True``.
 
         Returns None if ``create_unknown_user`` is ``False`` and a ``User``
         object with the given username is not found in the database.
         """
-        if not remote_user:
+        if not username:
             return
-        username = self.clean_username(remote_user)
+        username = self.clean_username(username)
 
         # Note that this could be accomplished in one try-except clause, but
         # instead we use get_or_create when creating unknown users since it has

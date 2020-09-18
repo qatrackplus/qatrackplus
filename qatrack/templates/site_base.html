@@ -2,7 +2,6 @@
 {% load l10n %}
 {% load qatrack_tags %}
 {% load static %}
-{% load staticfiles %}
 <!DOCTYPE html> <!-- html5 -->
 <html lang="{{ LANGUAGE_CODE }}" xmlns="http://www.w3.org/1999/html">
   <head>
@@ -17,24 +16,23 @@
     {% endblock favicon %}
 
     {% block style_base %}
-      <link href="{{ STATIC_URL }}fontawsome/css/font-awesome.min.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}adminlte/css/admin-lte.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}adminlte/css/skins/skin-black-dark.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/custom-adminlte.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/custom-fontawesome.css?v={{ VERSION }}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/base.css?v={{VERSION}}" rel="stylesheet">
-      <link href="{{ STATIC_URL }}qatrack_core/css/print.css?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "fontawsome/css/font-awesome.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "bootstrap/css/bootstrap.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "adminlte/css/admin-lte.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "adminlte/css/skins/skin-black-dark.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-adminlte.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-fontawesome.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/base.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/print.css" %}?v={{VERSION}}" rel="stylesheet">
       {% block extra_css %}{% endblock extra_css %}
-      <link href="{{ STATIC_URL }}qatrack_core/css/site.css?v={{VERSION}}" rel="stylesheet">
+      <link href="{% static "qatrack_core/css/site.css" %}?v={{VERSION}}" rel="stylesheet">
     {% endblock style_base %}
 
-    <script src="https://browser.sentry-cdn.com/4.6.3/bundle.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript">
 
         var siteConfig = {
             VERSION: '{{ VERSION }}',
-            STATIC_URL: '{{ STATIC_URL }}',
+            STATIC_URL: '{% static "" %}',
             DEBUG: '{{ DEBUG }}',
             USE_SERVICE_LOG: '{{ USE_SERVICE_LOG }}',
             USE_PARTS: '{{ USE_PARTS }}',
@@ -49,6 +47,8 @@
 
         var QAURLs = {
             COMPOSITE_URL:"{% url "composite" %}",
+            AUTOSAVE_URL:"{% url "autosave" %}",
+            AUTOSAVE_LOAD_URL:"{% url "autosave_load" %}",
             UPLOAD_URL:"{% url "upload" %}",
             CHART_DATA_URL:"{% url "chart_data" %}",
             CONTROL_CHART_URL:"{% url "control_chart" %}",
@@ -110,9 +110,9 @@
 
     </script>
 
-    <script src="{{ STATIC_URL }}requirejs/js/require.min.js?v={{ VERSION }}"></script>
+    <script src="{% static "requirejs/js/require.min.js" %}?v={{ VERSION }}"></script>
     <script type="text/javascript">
-        require(['{{ STATIC_URL }}requirejs/js/requirejs-config.js?v={{ VERSION }}'], function () {
+        require(['{% static "requirejs/js/requirejs-config.js" %}?v={{ VERSION }}'], function () {
             {% block require_javascript %}
             {% endblock require_javascript %}
         });
@@ -162,19 +162,58 @@
                     </a>
 
                     <ul class="dropdown-menu" role="menu">
+                      <li class="nav-header">{% trans "QC Lists" %}</li>
                       <li>
-                        <a href="{% url "choose_unit" %}" title="{% trans "Choose a Unit To Perform QC On" %}">
+                        <a href="{% url "choose_unit" %}" title="{% trans "Choose a specfic Unit To Perform QC On" %}">
                           <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
                           {% trans "Choose Unit" %}
                         </a>
                       </li>
                       <li>
-                        <a href="{% url "all_lists" %}" title="{% trans "View all available QC Lists" %}">
+                        <a href="{% url "all_lists" %}" title="{% trans "View list of all available QC" %}">
                           <i class="fa fa-pencil-square-o fa-lg fa-fw" aria-hidden="true"></i>
                           {% trans "All QC" %}
                         </a>
                       </li>
+                      <li>
+                        <a href="{% url "qa_by_overdue" %}" title="{% trans "View QC that is currently due and overdue" %}">
+                          <i class="fa fa-clock-o fa-lg fa-fw" aria-hidden="true"></i>
+                          {% trans "Due & Overdue" %}
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
+                          <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
+                          <span title="{% blocktrans %}There are currently {{ USERS_IN_PROGRESS}} QC Sessions saved in progress for your groups{% endblocktrans %}" class="label {% if USERS_IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                            <span class="total-in-progress-count">{{ USERS_IN_PROGRESS }}</span>
+                          </span>
+                          {% trans "In Progress" %}
+                        </a>
+                      </li>
+                      <li class="divider"></li>
+                      <li class="nav-header">{% trans "Tree Views" %}</li>
+                      <li>
+                        <a href="{% url "qa_frequency_tree" %}" title="{% trans "View QC Organized by Unit & Frequency" %}">
+                          <i style="margin-left: 10px" class="fa fa-stack fa-fw">
+                            <i class="fa fa-clock-o fa-stack-custom-sub upper-right"></i>
+                            <i style="left: -2px" class="fa fa-cubes fa-lg fa-stack-custom-sub lower-left"></i>
+                          </i>
+                          {% trans "QC Treeview: Unit, Frequency" %}
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url "qa_category_tree" %}" title="{% trans "View QC Organized by Unit, Frequency, Category" %}">
+                          <i style="margin-left: 10px" class="fa fa-stack fa-fw">
+                            <i style="left: -10px" class="fa fa-clock-o fa-stack-custom-sub upper-left"></i>
+                            <i style="left: -2px" class="fa fa-cubes fa-lg fa-stack-custom-sub lower-left"></i>
+                            <i class="fa fa-tags fa-stack-custom-sub upper-right"></i>
+                          </i>
+                          {% trans "QC Treeview: Unit, Frequency, Category" %}
+                        </a>
+                      </li>
                       {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}
+                        <li class="divider"></li>
+                        <li class="nav-header">{% trans "Service Log" %}</li>
                         <li class="hover-parent">
                           <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service QC" %}">
                             <i class="fa fa-stack fa-lg fa-fw">
@@ -185,16 +224,6 @@
                           </a>
                         </li>
                       {% endif %}
-                      <li class="divider"></li>
-                      <li>
-                        <a href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
-                          <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
-                          <span title="{% blocktrans %}There are currently {{IN_PROGRESS}} QC Sessions saved in progress{% endblocktrans %}" class="label {% if IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                            <span class="total-in-progress-count">{{ IN_PROGRESS }}</span>
-                          </span>
-                          {% trans "In Progress" %}
-                        </a>
-                      </li>
                     </ul>
                   </li>
                 {% endif %}
@@ -202,14 +231,14 @@
                 {% if perms.qa.can_review or perms.qa.can_view_completed or perms.qa.can_view_overview %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                      {% trans "Review Data" %}
+                      {% trans "Review QC" %}
                       {% if perms.qa.can_review %}
                         {% if perms.qa.can_review_non_visible_tli %}
                           <span
-                            title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed{% endblocktrans %}"
-                            class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
+                            title="{% blocktrans %}There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed{% endblocktrans %}"
+                            class="label {% if UNREVIEWED == 0 %}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
                           >
-                            <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                            <span class="total-unreviewed-count">{{ UNREVIEWED }}</span>
                           </span>
                         {% else %}
                           <span
@@ -218,7 +247,7 @@
                           >
                             <span class="total-unreviewed-count">{{ USERS_UNREVIEWED }}</span>
                           </span>
-                          {% endif %}
+                        {% endif %}
                       {% endif %}
                       <b class="caret"></b>
                     </a>
@@ -226,7 +255,7 @@
                     <ul class="dropdown-menu" role="menu">
                       {% if perms.qa.can_review or perms.qa.can_view_overview %}
 
-                        <li class="nav-header">{% trans "QC Program Status" %}</li>
+                        <li class="nav-header">{% trans "QA Program Status" %}</li>
 
                         {% if perms.qa.can_review_non_visible_tli %}
                           <li>
@@ -266,14 +295,14 @@
 
                         <li class="divider"></li>
 
-                        <li class="nav-header">QC Sessions</li>
+                        <li class="nav-header">{% trans "QC Sessions" %}</li>
 
                         {% if perms.qa.can_review_non_visible_tli %}
                           <li>
-                            <a href="{% url  "unreviewed" %}" title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed {% endblocktrans %}">
+                            <a href="{% url  "unreviewed" %}" title="{% blocktrans %}There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed {% endblocktrans %}">
                               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                              <span title="{% blocktrans %}There are currently {{UNREVIEWED}} QC Sessions waiting to be reviewed {% endblocktrans %}" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                  <span class="total-unreviewed-count">{{UNREVIEWED}}</span>
+                              <span title="{% blocktrans %}There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed {% endblocktrans %}" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                  <span class="total-unreviewed-count">{{ UNREVIEWED }}</span>
                               </span>
                               {% trans "Unreviewed - All Groups" %}
                             </a>
@@ -295,10 +324,10 @@
                           <a href="{% url 'rtsqa_list_unreviewed' %}" title="">
                             <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                             <span
-                              title="{% blocktrans %}There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions{% endblocktrans %}"
-                              class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
+                              title="{% blocktrans %}There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to service sessions{% endblocktrans %}"
+                              class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper"
                             >
-                              <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
+                              <span class="total-unreviewed-count">{{ SE_RTS_UNREVIEWED_QA_COUNT }}</span>
                             </span>
                             {% trans "Unreviewed Return To Service" %}
                           </a>
@@ -376,6 +405,13 @@
                     <li class="dropdown">
                       <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         {% trans "Service Log" %}
+
+                        <span
+                          title="{% blocktrans %}There are currently {{ SL_NOTIFICATION_TOTAL }} Service Log Action Items {% endblocktrans %}"
+                          class="label {% if SL_NOTIFICATION_TOTAL == 0%}label-success{% else %}label-warning{% endif %} unreviewed-count-wrapper"
+                        >
+                          {{ SL_NOTIFICATION_TOTAL }}
+                        </span>
                         <b class="caret"></b>
                       </a>
                       <ul class="dropdown-menu" role="menu">
@@ -422,7 +458,7 @@
 
                             {% if DEFAULT_SE_STATUS %}
                               <li class="hover-parent">
-                                <a href="{% url 'sl_list_by_status' pk=DEFAULT_SE_STATUS.id %}" title="{% trans "View service events that are {{ DEFAULT_SE_STATUS.name }}" %}">
+                                <a href="{% url 'sl_list_by_status' pk=DEFAULT_SE_STATUS.id %}" title="{% blocktrans with service_event_status=DEFAULT_SE_STATUS.name %}View service events that are {{ service_event_status }}{% endblocktrans %}">
                                   <i class="fa fa-stack fa-lg fa-fw">
                                       <i class="fa fa-wrench fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
                                       <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
@@ -439,8 +475,8 @@
                                   <i class="fa fa-wrench fa-stack-custom-main"></i>
                                   <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
                                 </i>
-                                <span title="{% trans "There are currently {{SE_NEEDING_REVIEW_COUNT}} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{SE_NEEDING_REVIEW_COUNT}}</span>
+                                <span title="{% trans "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                    <span class="total-unreviewed-count">{{ SE_NEEDING_REVIEW_COUNT }}</span>
                                 </span>
                                 {% trans "Service Events Needing Review" %}
                               </a>
@@ -471,6 +507,9 @@
                                     <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                     <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                                   </i>
+                                  <span title="{% trans "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                    <span class="total-unreviewed-count">{{ SE_RTS_INCOMPLETE_QA_COUNT }}</span>
+                                  </span>
                                   {% trans "View All Incomplete Return To Service" %}
                                 </a>
                               </li>
@@ -480,8 +519,8 @@
                               <li>
                                 <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
                                   <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                  <span title="{% trans "There are currently {{UNREVIEWED_RTS}} unreviewed return to service sessions" %}" class="label {% if UNREVIEWED_RTS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{UNREVIEWED_RTS}}</span>
+                                  <span title="{% trans "There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                    <span class="total-unreviewed-count">{{ SE_RTS_UNREVIEWED_QA_COUNT }}</span>
                                   </span>
                                   {% trans "Unreviewed Return To Service" %}
                                 </a>
@@ -545,7 +584,7 @@
                           </a>
                         </li>
                       {% endif %}
-                      {% if perms.qa.can_run_reports or perms.qa.can_create_reports %}
+                      {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
                       <li>
                         <a href="{% url "reports" %}" title="{% trans "Run QATrack+ Reports" %}">
                           <i class="fa fa-file-text-o fa-fw fa-lg"></i>
@@ -554,7 +593,7 @@
                       </li>
                       {% endif %}
                       {% if USE_SQL_REPORTS %}
-                        {% if perms.qa.can_run_sql_reports or perms.qa.can_create_sql_reports %}
+                        {% if perms.reports.can_run_sql_reports or perms.reports.can_create_sql_reports %}
                           <li>
                             <a href="{% url "explorer_index" %}" title="{% trans "SQL Query Tool" %}">
                               <i class="fa fa-search fa-fw fa-lg"></i>
@@ -663,7 +702,7 @@
           {% block bottom_banner %}
             QATrack+ v{{ VERSION }} |
             © 2011 The Ottawa Hospital Cancer Center |
-            <a href="http://docs.qatrackplus.com/en/latest/user/guide.html" target="_blank">
+            <a href="http://docs.qatrackplus.com/en/0.3.1/user/guide.html" target="_blank">
               {% trans "Documentation" %}
             </a>
           {% endblock bottom_banner %}
@@ -723,17 +762,6 @@
                   </li>
                 {% endif %}
 
-                <li class="divider"></li>
-              </ul>
-              <h4 class="control-sidebar-heading">Backups</h4>
-              <ul class="control-sidebar-menu">
-
-                <li>
-                  <a href="{% url "qa_paper_forms_request" %}" class="margin-left-10 control-sidebar-subheading" title="{% trans "Create a set of paper backup forms" %}">
-                    <i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>
-                    {% trans "Paper Backup Forms" %}
-                  </a>
-                </li>
               </ul>
             {% endif %}
 
@@ -761,7 +789,6 @@
 
     {% block loading_modal %}{% endblock loading_modal %}
 
-    {# <script src="{{ STATIC_URL }}instant/js/instant-1.0.0.js" type="module"></script> #}
   </body>
 
 </html>

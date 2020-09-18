@@ -1,12 +1,13 @@
 {% extends "site_base.html" %}
 
+{% load static %}
 {% load qa_tags %}
 
 {% block head_title %}QC Program Overview{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "felter/css/felter.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
