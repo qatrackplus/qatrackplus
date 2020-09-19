@@ -8,6 +8,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group, User
+from django_auth_adfs.backend import AdfsAuthCodeBackend
 
 
 class QATrackAccountBackend(ModelBackend):
@@ -143,11 +144,11 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 self.logger.info("Creation of user failed")
                 return None
 
-        self.update_user_attrs(user, user_attrs)
+        self.update_user_attributes(user, user_attrs)
 
         return user
 
-    def update_user_attrs(self, user, user_attrs):
+    def update_user_attributes(self, user, user_attrs):
 
         self.logger.info("Updating user info for %s" % user.username)
 
@@ -270,3 +271,60 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
         user.save()
         return user
+
+
+class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
+    """Note https://github.com/jobec/django-auth-adfs/issues/31#issuecomment-384034365
+    was extremely helpful in getting an ADFS test server set up!"""
+
+    def update_user_groups(self, user, claims):
+        """
+        AdfsAuthCodeBackend syncs Django groups and AD FS groups by default.
+        That is to say it will remove a user from a group if the group is not
+        present in the claims.  Since we rely so heavily on Django group based
+        permissions and may be adapting existing QATrack+ installations to use
+        AD FS, we will not remove users from groups when using this backend.
+        If you want to use the default behaviour (that is always sync groups)
+        then you can use the django_adfs.backends.AdfsAuthCodeBackend.
+
+        Args:
+            user (django.contrib.auth.models.User): User model instance
+            claims (dict): Claims from the access token
+        """
+
+        from django_auth_adfs.backend import logger
+        from django_auth_adfs.config import settings as adfs_settings
+
+        if adfs_settings.GROUPS_CLAIM is not None:
+
+            if adfs_settings.GROUPS_CLAIM in claims:
+                claim_groups = claims[adfs_settings.GROUPS_CLAIM]
+                if not isinstance(claim_groups, list):
+                    claim_groups = [claim_groups, ]
+            else:
+                logger.debug(
+                    "The configured groups claim '{}' was not found in the access token".format(
+                        adfs_settings.GROUPS_CLAIM
+                    ),
+                )
+                claim_groups = []
+
+            # Update the user's group memberships
+            django_groups = [group.name for group in user.groups.all()]
+            groups_to_add = set(claim_groups) - set(django_groups)
+
+            for group_name in groups_to_add:
+                # look for group name in GROUP_MAP and if it's not present use name from AD FS
+                group_name = settings.ADFS_GROUP_MAP.get(group_name, group_name)
+
+                try:
+                    if adfs_settings.MIRROR_GROUPS:
+                        group, _ = Group.objects.get_or_create(name=group_name)
+                        logger.debug("Created group '{}'".format(group_name))
+                    else:
+                        group = Group.objects.get(name=group_name)
+                    user.groups.add(group)
+                    logger.debug("User added to group '{}'".format(group_name))
+                except Group.DoesNotExist:
+                    # Silently fail for non-existing groups.
+                    pass

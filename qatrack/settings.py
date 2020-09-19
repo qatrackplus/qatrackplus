@@ -183,7 +183,7 @@ MIDDLEWARE = [
 
 
 # login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2"]
+LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*"]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
@@ -361,11 +361,12 @@ DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 
 # -----------------------------------------------------------------------------
 # Authentication backend settings
-AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = [
     'qatrack.accounts.backends.QATrackAccountBackend',
     # 'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
-)
+    # 'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend',
+]
 
 
 ACCOUNT_ACTIVATION_DAYS = 7
@@ -403,12 +404,11 @@ AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_N
 # not be allowed to log in
 AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
 
-# AD_GROUP_MAP is a map from AD Group names to QATrack+ group names in form
-# of {'AD group name': 'QATrack+ Group Name',}
-# e.g. {'Your Hospital - Physics': "Physics"}.
-# When a user logs in to QATrack+, their AD groups will be
-# checked and they will automatically be added to the
-# corresponding QATrack+ group based on this map.
+# AD_GROUP_MAP is a map from AD Group names to QATrack+ group names in form of
+# {'AD group name': 'QATrack+ Group Name',} e.g. {'Your Hospital - Physics':
+# "Physics"}.  When a user logs in to QATrack+, their AD groups will be checked
+# and they will automatically be added to the corresponding QATrack+ group
+# based on this map.
 AD_GROUP_MAP = {}
 
 AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
@@ -418,6 +418,34 @@ CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
 # define a function called AD_CLEAN_USERNAME in local_settings.py if you
 # wish to clean usernames before sending to ldap server
 AD_CLEAN_USERNAME = None
+
+
+# AD FS settings. For more information and other settings, see
+# https://django-auth-adfs.readthedocs.io/en/latest/settings_ref.html
+# You can generate a CLIENT_ID like: python -c "import uuid; print(uuid.uuid4())"
+AUTH_ADFS = {
+    "SERVER": "some.adfs.server.com",
+    "CLIENT_ID": "some-uuid",
+    "RELYING_PARTY_ID": "https://your.qatrackserver.com",
+    "AUDIENCE": "http://your.qatrackserver.com",
+    "CLAIM_MAPPING": {
+        "first_name": "given_name",
+        "last_name": "family_name",
+        "email": "email"
+    },
+    "USERNAME_CLAIM": "winaccountname",
+    "GROUP_CLAIM": "group",
+}
+
+# qatrack.accounts.backends.QATrackAdfsAuthCodeBackend specific settings
+
+# ADFS_GROUP_MAP is a map from AD Group names to QATrack+ group names in form
+# of {'AD group name': 'QATrack+ Group Name',} e.g. {'Your Hospital - Physics':
+# "Physics"}.  When a user logs in to QATrack+, their AD groups will be checked
+# and they will automatically be added to the corresponding QATrack+ group
+# based on this map.
+
+ADFS_GROUP_MAP = {}
 
 # ------------------------------------------------------------------------------
 # Logging Settings
@@ -753,10 +781,13 @@ if DEBUG_TOOLBAR:
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 
-if USE_ADFS:
-    AUTHENTICATION_BACKENDS.append('django_auth_adfs.backend.AdfsAuthCodeBackend')
-    INSTALLED_APPS.append('django_auth_adfs')
+USE_ADFS = (
+    'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS or
+    'django_adfs.backends.AdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS
+)
 
+if USE_ADFS:
+    INSTALLED_APPS.append('django_auth_adfs')
 
 
 if USE_SQL_REPORTS:
