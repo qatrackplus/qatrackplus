@@ -7,6 +7,19 @@
 
 {% block login_active %} class="active"{% endblock %}
 
+{% block require_javascript %}
+
+{% if USE_ADFS %}
+  require(['jquery'], function($){
+    $("#sign-on-method").on("change", function(){
+        $("#sso-wrapper, #qatrack-wrapper").toggleClass("hidden");
+    });
+
+  });
+{% endif %}
+
+{% endblock require_javascript %}
+
 {% block account_box %}
 <div class="box">
 
@@ -23,45 +36,51 @@
       </div>
     {% endif %}
 
-    <form method="POST" action="{% url "auth_login" %}" autocapitalize="off">
-
-      {% csrf_token %}
-      {% if form.non_field_errors %}
-        <div class="alert alert-error margin-bottom-10">
-          {% if form_error_title %}
-            <strong>{{ form_error_title }}</strong>
-          {% endif %}
-          {% for error in form.non_field_errors %}
-            {{ error }}<br />
-          {% endfor %}
-        </div>
-      {% endif %}
-
-      {% for field in form %}
-        {% if field.is_hidden %}
-          {{ field }}
-        {% else %}
-          <div class="form-group {% if field.errors %}has-error{% endif %}">
-            {{ field|addcss_addplaceholder:"form-control" }}
-            {% for error in field.errors %}
-              <span class="help-block">{{ error }}</span>
-            {% endfor %}
-            {% if field.help_text %}
-              <p class="help-block">{{ field.help_text|safe }}</p>
-            {% endif %}
-          </div>
-        {% endif %}
-      {% endfor %}
-
-      {% if next %}
-        <input type="hidden" name="next" value="{{ next }}" />
-      {% endif %}
-
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary btn-flat">{% trans "Log in" %}</button>
+    {% for message in messages %}
+      <div class="alert fade in{% if message.tags %} alert-{{ message.tags }}{% endif %}">
+        {{ message }}
       </div>
+    {% endfor %}
 
-    </form>
+    {% if USE_ADFS %}
+      <div class="form">
+        <div class="form-group">
+          <label class="control-label" for="login-type">{% trans "Login Type" %}</label>
+          <select id="sign-on-method" class="form-control input-sm">
+            <option value="sso">{% trans "Single Sign On (Login through your hospital network)" %}</option>
+            <option value="qatrack" {% if form.errors %}selected={% endif %}>{% trans "QATrack+" %}</option>
+          </select>
+          <small class="form-text text-muted">{% trans "Choose the login method you would like to use" %}</small>
+        </div>
+      </div>
+      <div id="sso-wrapper" class="{% if form.errors %}hidden{% endif %}">
+        <div class="form-group">
+          <a href="{% url "django_auth_adfs:login" %}"
+            class="btn btn-info"
+            title="{% trans "Click to login to using your organizations single sign on functionality" %}"
+            >
+            {% trans "Login with Single Sign On" %}
+          </a>
+        </div>
+      </div>
+    {% endif %}
+    <div id="qatrack-wrapper" class="{% if USE_ADFS and not form.errors %}hidden{% endif %}">
+
+      <form method="POST" class="form" action="{% url "auth_login" %}" autocapitalize="off">
+
+        {% csrf_token %}
+        {% include "_form.html" with form=form %}
+
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}" />
+        {% endif %}
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-info">{% trans "Log in" %}</button>
+        </div>
+
+      </form>
+    </div>
 
     {% if not user.is_authenticated %}
       <div class="text-muted description-block">{% blocktrans %}If you have any trouble logging in to your account, contact the site administrator.{% endblocktrans %}</div>

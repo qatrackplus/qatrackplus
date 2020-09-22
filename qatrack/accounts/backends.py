@@ -8,7 +8,10 @@ import logging
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import PermissionDenied
 from django_auth_adfs.backend import AdfsAuthCodeBackend
+
+from qatrack.accounts.models import ActiveDirectoryGroupMap
 
 
 class QATrackAccountBackend(ModelBackend):
@@ -74,11 +77,12 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             l.simple_bind_s(binddn, password)
 
             user_attrs = self.get_user_attrs(l, username)
-            if settings.AD_MEMBERSHIP_REQ:
-                if len(set(settings.AD_MEMBERSHIP_REQ) & set(user_attrs['member_of'])) == 0:
+            qualified_groups = ActiveDirectoryGroupMap.qualified_ad_group_names()
+            if qualified_groups:
+                if len(set(qualified_groups) & set(user_attrs['member_of'])) == 0:
                     self.logger.info(
-                        "successfully authenticated: %s but they don't belong to a required group (%s)" %
-                        (username, settings.AD_MEMBERSHIP_REQ)
+                        "successfully authenticated: %s but they don't belong to a qualified group (%s)" %
+                        (username, ', '.join(qualified_groups))
                     )
                     return None
 
@@ -157,13 +161,30 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         user.last_name = user_attrs['last_name'] or user.last_name
         user.first_name = user_attrs['first_name'] or user.first_name
 
-        user_groups = user.groups.all()
-        for ad_group in user_attrs['member_of']:
-            if ad_group in settings.AD_GROUP_MAP:
-                group = Group.objects.filter(name=settings.AD_GROUP_MAP[ad_group]).first()
-                if group and group not in user_groups:
-                    user.groups.add(group)
-                    self.logger.info("Add %s to group %s" % (user.username, group.name))
+        ad_groups = user_attrs['member_of'] + [""]
+
+        existing_user_groups = list(user.groups.all())
+
+        ad_group_map = ActiveDirectoryGroupMap.group_map()
+        for ad_group_name in ad_groups:
+
+            qatrack_groups = ad_group_map.get(ad_group_name, [])
+
+            try:
+                if settings.AD_MIRROR_GROUPS and ad_group_name:
+                    group, _ = Group.objects.get_or_create(name=ad_group_name)
+                    self.logger.debug("Created group '{}'".format(ad_group_name))
+                else:
+                    group = Group.objects.get(name=ad_group_name)
+
+                qatrack_groups.append(group)
+            except Group.DoesNotExist:
+                pass
+
+            for qat_group in qatrack_groups:
+                if qat_group not in existing_user_groups:
+                    self.logger.debug("User added to group '{}'".format(qat_group.name))
+                    user.groups.add(qat_group)
 
         user.save()
 
@@ -275,7 +296,45 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
 
 class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
     """Note https://github.com/jobec/django-auth-adfs/issues/31#issuecomment-384034365
-    was extremely helpful in getting an ADFS test server set up!"""
+    was extremely helpful in getting an Windows Server 2016 ADFS test server set up!"""
+
+    def authenticate(self, request=None, authorization_code=None, **kwargs):
+        try:
+            return super().authenticate(request=request, authorization_code=authorization_code, **kwargs)
+        except PermissionDenied:
+            return None
+
+    def create_user(self, claims):
+
+        from django_auth_adfs.config import settings as adfs_settings
+        from django_auth_adfs.backend import logger
+
+        username = claims[adfs_settings.USERNAME_CLAIM]
+
+        qualified_groups = ActiveDirectoryGroupMap.qualified_ad_group_names()
+        if qualified_groups and adfs_settings.GROUPS_CLAIM:
+            if len(set(qualified_groups) & set(claims[adfs_settings.GROUPS_CLAIM])) == 0:
+                logger.info(
+                    "successfully authenticated: %s but they don't belong to a qualifying group (%s)" %
+                    (username, ', '.join(qualified_groups))
+                )
+                raise PermissionDenied
+
+        username = self.clean_username(username)
+        claims[adfs_settings.USERNAME_CLAIM] = username
+
+        return super().create_user(claims)
+
+    def clean_username(self, username):
+        """
+        Performs any cleaning on the "username" prior to using it to get or
+        create the user object.  Returns the cleaned username.
+
+        By default, returns the username unchanged.
+        """
+        if settings.ACCOUNTS_CLEAN_USERNAME and callable(settings.ACCOUNTS_CLEAN_USERNAME):
+            return settings.ACCOUNTS_CLEAN_USERNAME(username)
+        return username.replace(settings.CLEAN_USERNAME_STRING, "")
 
     def update_user_groups(self, user, claims):
         """
@@ -295,7 +354,7 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
         from django_auth_adfs.backend import logger
         from django_auth_adfs.config import settings as adfs_settings
 
-        if adfs_settings.GROUPS_CLAIM is not None:
+        if adfs_settings.GROUPS_CLAIM:
 
             if adfs_settings.GROUPS_CLAIM in claims:
                 claim_groups = claims[adfs_settings.GROUPS_CLAIM]
@@ -309,22 +368,27 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
                 )
                 claim_groups = []
 
-            # Update the user's group memberships
-            django_groups = [group.name for group in user.groups.all()]
-            groups_to_add = set(claim_groups) - set(django_groups)
+            claim_groups += [""]
 
-            for group_name in groups_to_add:
-                # look for group name in GROUP_MAP and if it's not present use name from AD FS
-                group_name = settings.ADFS_GROUP_MAP.get(group_name, group_name)
+            existing_user_groups = list(user.groups.all())
+
+            ad_group_map = ActiveDirectoryGroupMap.group_map()
+            for ad_group_name in claim_groups:
+
+                qatrack_groups = ad_group_map.get(ad_group_name, [])
 
                 try:
-                    if adfs_settings.MIRROR_GROUPS:
-                        group, _ = Group.objects.get_or_create(name=group_name)
-                        logger.debug("Created group '{}'".format(group_name))
+                    if adfs_settings.MIRROR_GROUPS and ad_group_name:
+                        group, _ = Group.objects.get_or_create(name=ad_group_name)
+                        logger.debug("Created group '{}'".format(ad_group_name))
                     else:
-                        group = Group.objects.get(name=group_name)
-                    user.groups.add(group)
-                    logger.debug("User added to group '{}'".format(group_name))
+                        group = Group.objects.get(name=ad_group_name)
+
+                    qatrack_groups.append(group)
                 except Group.DoesNotExist:
-                    # Silently fail for non-existing groups.
                     pass
+
+                for qat_group in qatrack_groups:
+                    if qat_group not in existing_user_groups:
+                        logger.debug("User added to group '{}'".format(qat_group.name))
+                        user.groups.add(qat_group)

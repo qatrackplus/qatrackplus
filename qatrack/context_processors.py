@@ -119,6 +119,7 @@ def site(request):
 
     context = {
         'SELF_REGISTER': settings.ACCOUNTS_SELF_REGISTER,
+        'USE_ADFS': settings.USE_ADFS,
         'VERSION': settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,

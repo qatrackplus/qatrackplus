@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib.auth import views as auth_views
+from django.urls import path
 
 from qatrack.accounts import views
 from qatrack.qatrack_core.views import handle_404
@@ -25,6 +26,10 @@ else:
     urlpatterns += [
         url(r'^register/$', handle_404, name="account-register"),
     ]
+
+if settings.USE_ADFS:
+    urlpatterns.append(path('oauth2/callback', views.QATrackOAuth2CallbackView.as_view(), name="oauth-callback"))
+    urlpatterns.append(path('oauth2/', include('django_auth_adfs.urls')))
 
 urlpatterns += [
     url('^', include('django.contrib.auth.urls')),

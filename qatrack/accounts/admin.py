@@ -1,8 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
+
+from qatrack.accounts import models
+from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
 class AdminFilter(admin.SimpleListFilter):
@@ -63,5 +68,27 @@ class QATrackUserAdmin(UserAdmin):
     is_admin.boolean = True
 
 
+class ActiveDirectoryGroupMapAdmin(BaseQATrackAdmin):
+
+    list_display = ("get_ad_group", "get_groups", "account_qualifier")
+    list_filter = ("groups", "account_qualifier",)
+    search_fields = ("ad_group", "groups__name")
+
+    def get_groups(self, obj):
+        return ', '.join(sorted(obj.groups.values_list("name", flat=True)))
+
+    get_groups.short_description = _l("QATrack+ Groups")
+
+    @mark_safe
+    def get_ad_group(self, obj):
+        if not obj.ad_group:
+            return '<em>' + _("Default Groups") + "</em>"
+        return escape(obj.ad_group)
+    get_ad_group.short_description = _l("Active Directory Group Name")
+
+
 admin.site.unregister(User)
+admin.site.unregister(Group)
 admin.site.register(User, QATrackUserAdmin)
+admin.site.register(Group, BaseQATrackAdmin)
+admin.site.register(models.ActiveDirectoryGroupMap, ActiveDirectoryGroupMapAdmin)

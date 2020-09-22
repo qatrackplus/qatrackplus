@@ -181,7 +181,6 @@ MIDDLEWARE = [
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
-
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*"]
 ACCOUNT_ACTIVATION_DAYS = 7
@@ -398,18 +397,10 @@ AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
 AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_NAME, AD_LU_MEMBER_OF]
 
-# If AD_MEMBERSHIP_REQ is not empty, when a user logs in the AD groups
-# they belong to will be compared with AD_MEMBERSHIP_REQ and if the
-# user does not belong to at least one of those AD groups, they will
-# not be allowed to log in
-AD_MEMBERSHIP_REQ = []  # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
+# If AD_MIRROR_GROUPS is True then a QATrack+ group will be created with the
+# same name as the AD group if it doesn't exist.
+AD_MIRROR_GROUPS = False
 
-# AD_GROUP_MAP is a map from AD Group names to QATrack+ group names in form of
-# {'AD group name': 'QATrack+ Group Name',} e.g. {'Your Hospital - Physics':
-# "Physics"}.  When a user logs in to QATrack+, their AD groups will be checked
-# and they will automatically be added to the corresponding QATrack+ group
-# based on this map.
-AD_GROUP_MAP = {}
 
 AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
@@ -434,7 +425,7 @@ AUTH_ADFS = {
         "email": "email"
     },
     "USERNAME_CLAIM": "winaccountname",
-    "GROUP_CLAIM": "group",
+    "GROUPS_CLAIM": "group",
 }
 
 # qatrack.accounts.backends.QATrackAdfsAuthCodeBackend specific settings

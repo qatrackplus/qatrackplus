@@ -1,9 +1,6 @@
-import uuid
-
 from django.conf import settings
+from django.contrib.auth.models import Group, User
 from django.db import models
-
-from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.text import gettext_lazy as _l
@@ -26,13 +23,17 @@ def add_to_default_groups(sender, instance, created, **kwargs):
             instance.save()
 
 
-class ActiveDirectoryGroupConversion(models.Model):
+class ActiveDirectoryGroupMap(models.Model):
 
     ad_group = models.CharField(
         _l("Active Directory Group"),
         max_length=256,
         unique=True,
-        help_text=_l("Enter the name of the group from your Active Directory Server"),
+        help_text=_l(
+            "Enter the name of the group from your Active Directory Server. "
+            "Leave blank to add all users to the selected QATrack+ groups"
+        ),
+        blank=True,
     )
 
     groups = models.ManyToManyField(
@@ -41,65 +42,28 @@ class ActiveDirectoryGroupConversion(models.Model):
         help_text=_l(
             "Select the QATrack+ groups you want this user added to when they belong to the Active Directory Group"
         ),
+        blank=True,
     )
 
-
-class ADFSConfig(models.Model):
-
-    server = models.CharField(
-        _l("Server"),
-        max_length=128,
-        help_text=_l("URL of your ADFS server (e.g. adfs.yourhospital.com)"),
-    )
-    client_id = models.CharField(
-        _l("Client ID"),
-        max_length=64,
+    account_qualifier = models.BooleanField(
+        verbose_name=_l("Account Qualifying Group"),
         help_text=_l(
-            "ClientID of the ADFS Client configured on your ADFS Server. "
-            "Leave blank to have a random UUID generated",
+            "Add this Active Directory Group to the set of Active Directory Groups of which a user must "
+            "belong to at least one in order to log into QATrack+. (If there are no qualifying groups "
+            "then all authenticated users may log into QATrack+.)"
         ),
-        default=lambda: str(uuid.uuid4),
-        blank=True,
-    )
-    relying_party_id = models.CharField(
-        _l("Relying Party ID"),
-        max_length=128,
-        help_text=_l("Typically you can set this to e.g. http://yourqatrackserver/"),
-    )
-    audience = models.CharField(
-        _l("Audience"),
-        max_length=128,
-        help_text=_l("Typically you can set this to e.g. http://yourqatrackserver/"),
-    )
-    username_claim = models.CharField(
-        _l("Username Claim"),
-        max_length=64,
-        help_text=_l("Name of the claim field that holds the users username. (default=winaccountname)"),
-        default="winaccountname",
-        blank=True,
-    )
-    group_claim = models.CharField(
-        _l("Group Claim"),
-        max_length=64,
-        help_text=_l("Name of the claim field that holds the users AD Groups. (default=group)"),
-        default="group",
-        blank=True,
-    )
-    first_name_claim = models.CharField(
-        _l("First Name Claim"),
-        max_length=64,
-        help_text=_l("Name of the claim field that holds the users first name. (default=given_name)"),
-        default="given_name",
-        blank=True,
-    )
-
-    last_name_claim = models.CharField(
-        _l("Last Name Claim"),
-        max_length=64,
-        help_text=_l("Name of the claim field that holds the users surname. (default=family_name)"),
-        default="family_name",
-        blank=True,
+        default=False,
     )
 
     class Meta:
-        unique_together = [("server", "client_id")]
+        verbose_name = _l("Active Directory Group to QATrack+ Group Map")
+        verbose_name_plural = _l("Active Directory Group to QATrack+ Group Maps")
+
+    @classmethod
+    def group_map(cls):
+        group_map = {g.ad_group: list(g.groups.all()) for g in cls.objects.prefetch_related("groups").all()}
+        return group_map
+
+    @classmethod
+    def qualified_ad_group_names(cls):
+        return list(cls.objects.filter(account_qualifier=True).order_by("ad_group").values_list("ad_group", flat=True))

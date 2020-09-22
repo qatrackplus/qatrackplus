@@ -684,14 +684,16 @@
       {% endblock main_sidebar %}
 
       <div class="content-wrapper">
-        <div class="content-header">
-          {% for message in messages %}
+        {% block messages %}
+          <div class="content-header">
+            {% for message in messages %}
             <div class="alert fade in{% if message.tags %} alert-{{ message.tags }}{% endif %}">
               <a class="close" href="#" data-dismiss="alert">&times;</a>
               {{ message }}
             </div>
-          {% endfor %}
-        </div>
+            {% endfor %}
+          </div>
+        {% endblock messages %}
 
         <div class="content">
           {% block body %}

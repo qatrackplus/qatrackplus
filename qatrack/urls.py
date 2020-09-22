@@ -61,9 +61,6 @@ urlpatterns += [url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict)]
 if settings.USE_SQL_REPORTS:
     urlpatterns.append(url(r'^sql-reports/', include('explorer.urls')),)
 
-if settings.USE_ADFS:
-    urlpatterns.append(path('oauth2/', include('django_auth_adfs.urls')))
-
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # error handling views

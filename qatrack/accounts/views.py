@@ -1,6 +1,7 @@
 import json
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import (
@@ -10,8 +11,11 @@ from django.contrib.auth.views import (
 from django.contrib.sites.models import Site
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
+from django.shortcuts import redirect
 from django.template.loader import get_template
+from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView
+from django_auth_adfs.views import OAuth2CallbackView
 from registration.backends.simple.views import RegistrationView
 
 from qatrack.accounts.forms import (
@@ -88,3 +92,23 @@ class GroupsApp(PermissionRequiredMixin, TemplateView):
         context["all_perms"] = json.dumps(PERMISSIONS, cls=DjangoJSONEncoder)
         context["groups"] = Group.objects.all()
         return context
+
+
+class QATrackOAuth2CallbackView(OAuth2CallbackView):
+
+    def get(self, request):
+        result = super().get(request)
+        if result.status_code >= 400:
+            if result.status_code == 400:
+                msg = _("Login failed with error 400: No authorization code was provided")
+            elif result.status_code == 401:
+                msg = _("Login failed with error 401: Your account is not authorized to use QATrack+")
+            elif result.status_code == 403:
+                msg = _("Login failed with error 401: Your account is disabled")
+            else:
+                msg = _("Login Failed with error {status_code}: {phrase}").format(
+                    status_code=result.status_code, phrase=result.reason_phrase
+                )
+            messages.error(request, msg)
+            return redirect(settings.LOGIN_URL)
+        return result
