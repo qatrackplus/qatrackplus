@@ -1,7 +1,7 @@
 .. _adfs_server_2016:
 
-Configuring ADFS 2016
-=====================
+Configuring ADFS 2016 (ADFS 4.0)
+================================
 
 The following will give a step by step on how to configure QATrack+ as a client
 application in Active Directory Federation Services 2016 (AD FS 2016).
@@ -86,20 +86,9 @@ in the `Web application` section and then click `Edit...`
 
     QATrack+ App group properties
 
-On the `Identifiers` tab, under the `Relying party identifiers` select
-`qatrackplus` and click `Remove`.  Then set the  `Relying party identifier`
-field to your server url e.g.  `https://qatrack.yourhospital.com/` and click
-`Add`. This is the value you will use for both the `RELYING_PARTY_ID` and
-`AUDIENCE` settings in QATrack+.
 
-
-.. figure:: images/adfs_2016/identifiers.png
-    :alt: QATrack+ Web App Identifiers
-
-    QATrack+ Web App Identifiers
-
-Next click on the `Issuance Transform Rules` tab at the top of the properties
-dialog and click `Add Rule`
+Click on the `Issuance Transform Rules` tab at the top of the properties dialog
+and click `Add Rule`
 
 
 .. figure:: images/adfs_2016/add_rule.png
@@ -164,15 +153,21 @@ You can now proceed to :ref:`configure your QATrack+ application to use AD FS
 
 * **CLIENT_ID**: Use `qatrackplus` or whatever you set the `Client Identifier` to above.
 
-* **RELYING_PARTY_ID** & **AUDIENCE**: Use the Relying Party Identifier you set
-  above for both these settings e.g.  `https://qatrack.yourhospital.com/`. To
-  double check this setting open a PowerShell window and enter:
+  To double check this setting open a PowerShell window and enter:
+
+    .. code:: powershell
+
+        Get-AdfsNativeClientApplication -Name "QATrack+ - Native application"
+
+  and look for the `Identifier` field.
+
+* **RELYING_PARTY_ID**: The Relying Party Identifier will be the same as the
+  **CLIENT_ID** setting e.g. `qatrackplus` double check this setting open a
+  PowerShell window and enter:
 
     .. code:: powershell
 
         Get-AdfsWebApiApplication | select Identifier | Format-List
-
-  the `RELYING_PARTY_ID` and `AUDIENCE` settings must match this value exactly.
-  It is not acceptable for example to have a trailing slash on your Relying
-  Party Identifier but not on the `RELYING_PARTY_ID` or `AUDIENCE` settings.
-
+  
+* **AUDIENCE**: Use the **RELYING_PARTY_ID** setting but prefixed with
+  `microsoft:identityserver:` e.g.  `microsoft:identityserver:qatrackplus` 
