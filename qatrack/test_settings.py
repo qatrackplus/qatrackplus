@@ -38,6 +38,8 @@ class SimplePasswordHasher(BasePasswordHasher):
 
 PASSWORD_HASHERS = ("qatrack.test_settings.SimplePasswordHasher",)
 
+AUTHENTICATION_BACKENDS = ['qatrack.accounts.backends.QATrackAccountBackend']
+
 try:
     from .local_test_settings import *  # noqa: F403,F401
 except ImportError:

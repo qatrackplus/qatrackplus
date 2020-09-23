@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 from django_auth_adfs.backend import AdfsAuthCodeBackend
 
-from qatrack.accounts.models import ActiveDirectoryGroupMap
+from qatrack.accounts.models import ActiveDirectoryGroupMap, DefaultGroup
 
 
 class QATrackAccountBackend(ModelBackend):
@@ -28,6 +28,7 @@ class QATrackAccountBackend(ModelBackend):
         user = super().authenticate(request, username=username, password=password)
         if user:
             self.logger.info("Successfully authenticated user: %s" % username)
+            self.update_user_groups(user)
         else:
             self.logger.info("Authentication failed for user: %s" % username)
 
@@ -43,6 +44,14 @@ class QATrackAccountBackend(ModelBackend):
         if settings.ACCOUNTS_CLEAN_USERNAME and callable(settings.ACCOUNTS_CLEAN_USERNAME):
             return settings.ACCOUNTS_CLEAN_USERNAME(username)
         return username.replace(settings.CLEAN_USERNAME_STRING, "")
+
+    def update_user_groups(self, user):
+        existing_user_groups = list(user.groups.all())
+        default_groups = [dg.group for dg in DefaultGroup.objects.select_related("group")]
+        for qat_group in default_groups:
+            if qat_group not in existing_user_groups:
+                self.logger.debug("User added to group '{}'".format(qat_group.name))
+                user.groups.add(qat_group)
 
 
 # stripped down version of http://djangosnippets.org/snippets/901/
@@ -161,9 +170,15 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         user.last_name = user_attrs['last_name'] or user.last_name
         user.first_name = user_attrs['first_name'] or user.first_name
 
-        ad_groups = user_attrs['member_of'] + [""]
+        ad_groups = user_attrs['member_of']
 
         existing_user_groups = list(user.groups.all())
+
+        default_groups = [dg.group for dg in DefaultGroup.objects.select_related("group")]
+        for qat_group in default_groups:
+            if qat_group not in existing_user_groups:
+                self.logger.debug("User added to group '{}'".format(qat_group.name))
+                user.groups.add(qat_group)
 
         ad_group_map = ActiveDirectoryGroupMap.group_map()
         for ad_group_name in ad_groups:
@@ -371,6 +386,12 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
             claim_groups += [""]
 
             existing_user_groups = list(user.groups.all())
+
+            default_groups = [dg.group for dg in DefaultGroup.objects.select_related("group")]
+            for qat_group in default_groups:
+                if qat_group not in existing_user_groups:
+                    logger.debug("User added to group '{}'".format(qat_group.name))
+                    user.groups.add(qat_group)
 
             ad_group_map = ActiveDirectoryGroupMap.group_map()
             for ad_group_name in claim_groups:

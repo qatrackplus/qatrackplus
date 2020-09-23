@@ -54,5 +54,5 @@ described here:
    :maxdepth: 2
 
    config
-   active_directory
+   authentication_backends
    backup

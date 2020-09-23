@@ -1,5 +1,6 @@
+from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group, User
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
@@ -68,6 +69,46 @@ class QATrackUserAdmin(UserAdmin):
     is_admin.boolean = True
 
 
+class GroupForm(forms.ModelForm):
+
+    default_group = forms.BooleanField(
+        label=_l("Default Group"),
+        required=False,
+        help_text=_l("Should users be added to this group by default"),
+    )
+
+    class Meta:
+        model = Group
+        fields = ("name", "permissions", "default_group")
+
+
+class QATrackGroupAdmin(GroupAdmin):
+    form = GroupForm
+    list_display = ("name", "is_default")
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj=obj, change=change, **kwargs)
+        if obj and models.DefaultGroup.objects.filter(group=obj).exists():
+            form.base_fields['default_group'].initial = True
+        return form
+
+    def save_model(self, request, obj, form, change):
+
+        super().save_model(request, obj, form, change)
+
+        if form.cleaned_data.get("default_group"):
+            models.DefaultGroup.objects.get_or_create(group=obj)
+        else:
+            models.DefaultGroup.objects.filter(group=obj).delete()
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).prefetch_related("defaultgroup_set")
+
+    def is_default(self, obj):
+        return bool(obj.defaultgroup_set.all())
+    is_default.boolean = True
+
+
 class ActiveDirectoryGroupMapAdmin(BaseQATrackAdmin):
 
     list_display = ("get_ad_group", "get_groups", "account_qualifier")
@@ -90,5 +131,5 @@ class ActiveDirectoryGroupMapAdmin(BaseQATrackAdmin):
 admin.site.unregister(User)
 admin.site.unregister(Group)
 admin.site.register(User, QATrackUserAdmin)
-admin.site.register(Group, BaseQATrackAdmin)
+admin.site.register(Group, QATrackGroupAdmin)
 admin.site.register(models.ActiveDirectoryGroupMap, ActiveDirectoryGroupMapAdmin)

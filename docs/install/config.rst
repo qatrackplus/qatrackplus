@@ -328,16 +328,6 @@ for examples.
     DEFAULT_NUMBER_FORMAT = "{:.4E}"  # 5 sig fig scientific notation using "New" style formatting
 
 
-DEFAULT_GROUP_NAMES
-...................
-
-A list of group names to automatically add users to when they sign up (default
-is an emtpy list):
-
-.. code-block:: python
-
-    DEFAULT_GROUP_NAMES = ["Therapists"]
-
 DEFAULT_WARNING_MESSAGE
 .......................
 
@@ -355,8 +345,8 @@ set these settings as follows:
 .. code-block:: python
 
     FORCE_SCRIPT_NAME = '/qatrack'
-    LOGIN_EXEMPT_URLS = [r"^qatrack/accounts/", r"qatrack/api/*"]
-    LOGIN_REDIRECT_URL = 'qatrack//qa/unit/'
+    LOGIN_EXEMPT_URLS = [r"^qatrack/favicon.ico$", r"^qatrack/accounts/", r"qatrack/api/*", r"^qatrack/oauth2/*"]
+    LOGIN_REDIRECT_URL = 'qatrack/'
     LOGIN_URL = "/qatrack/accounts/login/"
 
 
@@ -1121,14 +1111,18 @@ following settings:
 AUTHENTICATION_BACKENDS
 .......................
 
-In order to use the AD backend, you need to set the `AUTHENTICATION BACKENDS` setting as follows:
+In order to use one of the Active Directory backends, you need to copy the
+`AUTHENTICATION BACKENDS` setting to your local_settings.py and uncomment the 
+:ref:`backend <auth_backends>` you want to use e.g.:
 
 .. code-block:: python
 
-    AUTHENTICATION_BACKENDS = (
-        'django.contrib.auth.backends.ModelBackend',
+    AUTHENTICATION_BACKENDS = [
+        'qatrack.accounts.backends.QATrackAccountBackend',
         'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
-    )
+        # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
+        # 'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend',
+    ]
 
 General AD Settings
 ...................
@@ -1145,20 +1139,6 @@ General AD Settings
 
     AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
     AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
-
-    # If AD_MEMBERSHIP_REQ is not empty, when a user logs in the AD groups
-    # they belong to will be compared with AD_MEMBERSHIP_REQ and if the
-    # user does not belong to at least one of those AD groups, they will
-    # not be allowed to log in
-    AD_MEMBERSHIP_REQ = []  # eg ["Your Hospital - Physics"]
-
-    # AD_GROUP_MAP is a map from AD Group names to QATrack+ group names in form
-    # of {'AD group name': 'QATrack+ Group Name',}
-    # e.g. {'Your Hospital - Physics': "Physics"}.
-    # When a user logs in to QATrack+, their AD groups will be
-    # checked and they will automatically be added to the
-    # corresponding QATrack+ group based on this map.
-    AD_GROUP_MAP = {}
 
     AD_CERT_FILE = '/path/to/your/cert.txt'
 

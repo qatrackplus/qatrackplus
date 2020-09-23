@@ -117,8 +117,7 @@ class TestADFSBackend(TestCase):
         m1 = models.ActiveDirectoryGroupMap.objects.create(ad_group='ad group 1')
         m1.groups.add(self.group1)
 
-        m2 = models.ActiveDirectoryGroupMap.objects.create(ad_group='')
-        m2.groups.add(self.group2)
+        models.DefaultGroup.objects.create(group=self.group2)
 
         be = QATrackAdfsAuthCodeBackend()
         be.update_user_groups(self.user, claims)

@@ -355,10 +355,7 @@ EMAIL_PORT = 587
 
 # -----------------------------------------------------------------------------
 # Account settings
-# a list of group names to automatically add users to when they sign up
-DEFAULT_GROUP_NAMES = []  # eg ["Therapists"]
 
-# -----------------------------------------------------------------------------
 # Authentication backend settings
 AUTHENTICATION_BACKENDS = [
     'qatrack.accounts.backends.QATrackAccountBackend',
@@ -413,10 +410,9 @@ AD_CLEAN_USERNAME = None
 
 # AD FS settings. For more information and other settings, see
 # https://django-auth-adfs.readthedocs.io/en/latest/settings_ref.html
-# You can generate a CLIENT_ID like: python -c "import uuid; print(uuid.uuid4())"
 AUTH_ADFS = {
     "SERVER": "some.adfs.server.com",
-    "CLIENT_ID": "some-uuid",
+    "CLIENT_ID": "qatrackplus",
     "RELYING_PARTY_ID": "https://your.qatrackserver.com",
     "AUDIENCE": "http://your.qatrackserver.com",
     "CLAIM_MAPPING": {
@@ -427,16 +423,6 @@ AUTH_ADFS = {
     "USERNAME_CLAIM": "winaccountname",
     "GROUPS_CLAIM": "group",
 }
-
-# qatrack.accounts.backends.QATrackAdfsAuthCodeBackend specific settings
-
-# ADFS_GROUP_MAP is a map from AD Group names to QATrack+ group names in form
-# of {'AD group name': 'QATrack+ Group Name',} e.g. {'Your Hospital - Physics':
-# "Physics"}.  When a user logs in to QATrack+, their AD groups will be checked
-# and they will automatically be added to the corresponding QATrack+ group
-# based on this map.
-
-ADFS_GROUP_MAP = {}
 
 # ------------------------------------------------------------------------------
 # Logging Settings

@@ -269,15 +269,18 @@ Authentication
 * A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
   added to control whether users are allowed to register their own accounts.
 
-* The :ref:`AD_MEMBERSHIP_REQ <settings_ad>` setting is now honoured.
+* Users can now automatically be added to QATrack+ groups based
+  on their AD group memberships using . :ref:`Active Directory Groups to QATrack+ Group Map <auth_ad_groups>`'s
 
-* A new :ref:`AD_GROUP_MAP <settings_ad>` setting has been added so 
-  that users can automatically be added to QATrack+ groups based
-  on their AD group memberships. 
+* The :ref:`AD_MEMBERSHIP_REQ <settings_ad>` was previously not functional and 
+  has now been replaced by :ref:`Qualifying Groups <auth_ad_qualifying_groups>`'s
 
 * When a user logs in through the AD backend, their email address, first name,
   and lastname will be updated to match the values found in Active Directory.
 
+* The `DEFAULT_GROUP_NAMES` setting has been removed.  Instead, QATrack+ groups
+  now have a :ref:`default group flag <auth_groups>`.  Anytime a user logs into
+  QATrack+, they will automatically be added to any group with this flag set.
 
 
 Other Minor Features & Bugs Fixed
