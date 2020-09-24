@@ -104,7 +104,7 @@ class QATrackOAuth2CallbackView(OAuth2CallbackView):
             elif result.status_code == 401:
                 msg = _("Login failed with error 401: Your account is not authorized to use QATrack+")
             elif result.status_code == 403:
-                msg = _("Login failed with error 401: Your account is disabled")
+                msg = _("Login failed with error 403: Your account is disabled")
             else:
                 msg = _("Login Failed with error {status_code}: {phrase}").format(
                     status_code=result.status_code, phrase=result.reason_phrase

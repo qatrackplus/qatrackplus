@@ -3,7 +3,14 @@
 Authentication Backends
 =======================
 
-QATrack+ has a few different methods of authenticating users
+QATrack+ has a few different methods of authenticating users:
+
+* The built in Django backend. No additional configuration is required but
+  users and their group memberships need to be managed manually.
+* :ref:`Active Directory <active_directory>`.  Use your hospitals AD system for managing
+  users and groups.
+* :ref:`Active Directory Federiation Services <auth_adfs>`.  Use your hospitals AD FS system for managing
+  users and groups.
 
 .. _active_directory:
 
@@ -140,7 +147,7 @@ Please see the following guides to configure your ADFS Server to allow
 access for QATrack+:
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     adfs_server_2016
     adfs_server_2012

@@ -7,8 +7,8 @@ The following will give a step by step on how to configure QATrack+ as a client
 application in Active Directory Federation Services 3.0 (AD FS 2016).
 
 
-Adding an ADFS Application Group
---------------------------------
+Adding an ADFS Relying Party Trust
+----------------------------------
 
 First, launch AD FS Management, which can be located in the Start Menu under
 `Windows Administrative Tools`:
@@ -76,7 +76,7 @@ On the `Configure Identifiers` page set the `Relying party trust identifier` to
 
     Set the relying party trust identifier to `qatrackplus`
 
-On the `Configure Multi-facotr Authentication Now` page leave the `I do
+On the `Configure Multi-factor Authentication Now` page leave the `I do
 not want to configure multi-factor authentication settings for this relying party trust
 at this time` option selected and click `Next`.
 
@@ -159,7 +159,7 @@ Redirect URI to `https://qatrack.yourhospital.com/accounts/oauth2/callback`.
 
     Add-ADFSClient -Name "QATrack+ OAuth2 Client" `
                    -ClientId "qatrackplus" `
-                   -RedirectUri "https://web.example.com/oauth2/callback"
+                   -RedirectUri "https://qatrack.yourhospital.com/accounts/oauth2/callback"
 
 
 .. figure:: images/adfs_2012/add_client.png

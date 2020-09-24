@@ -51,7 +51,7 @@ settings for QATrack+.  All of the available settings and how to set them is
 described here:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    config
    authentication_backends

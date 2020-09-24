@@ -19,6 +19,12 @@ First, launch AD FS Management, which can be located in the Start Menu under
     AD FS Management Link in Start Menu
 
 
+
+.. _adfs_2016_add_group:
+
+Add New Application Group
+.........................
+
 In the left hand panel expand the 'AD FS' folder and click on 'Application
 Groups' then click on 'Add Application Group...'.
 
@@ -37,6 +43,11 @@ web application` and then click `Next >`.
 
     Add Application Group Wizard
 
+
+.. _adfs_2016_client_identifier:
+
+Set Client Identifier & Redirect URI
+....................................
 
 On the next page set the `Client Identifier` to `qatrackplus`; this is what you
 will set the `CLIENT_ID` field to in your :ref:`AUTH_ADFS settings
