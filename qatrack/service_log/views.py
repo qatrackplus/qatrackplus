@@ -851,8 +851,7 @@ class ServiceEventsBaseList(BaseListableView):
     def get_page_title(self, f=None):
         return 'All Service Events'
 
-    @classmethod
-    def get_fields(cls):
+    def get_fields(self, request=None):
 
         fields = (
             'actions',
@@ -870,8 +869,10 @@ class ServiceEventsBaseList(BaseListableView):
             'service_type__name',
             'problem_description',
             'work_description',
-            'service_status__name'
         )
+
+        if request and request.user.has_perm('view_serviceeventstatus'):
+            fields += ('service_status__name',)
 
         return fields
 

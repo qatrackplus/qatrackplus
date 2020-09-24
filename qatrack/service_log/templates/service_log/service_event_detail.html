@@ -31,7 +31,9 @@
           Service Event {{ service_event_id }} Details
         {% endblocktrans %}
       </h4>
-      {% service_status_label serviceevent.service_status size="14" %}
+      {% if perms.view_serviceeventstatus %}
+        {% service_status_label serviceevent.service_status size="14" %}
+      {% endif %}
     </div>
     <div class="col-md-7">
       <div class="row">

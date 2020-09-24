@@ -412,9 +412,8 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
     permission_required = "qa.can_review"
     raise_exception = True
 
-    @classmethod
-    def get_fields(cls):
-        fields = super().get_fields()
+    def get_fields(self, request=None):
+        fields = super().get_fields(request=request)
         if settings.REVIEW_BULK:
             fields += ("bulk_review_status", "selected")
 

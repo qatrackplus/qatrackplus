@@ -266,8 +266,7 @@ class UTCList(BaseListableView):
             'due_date': get_template("qa/due_date.html"),
         }
 
-    @classmethod
-    def get_fields(cls):
+    def get_fields(self, request=None):
 
         fields = (
             "actions",
@@ -449,8 +448,7 @@ class TestListInstances(BaseListableView):
     def get_page_title(self):
         return "All Test Collections"
 
-    @classmethod
-    def get_fields(cls):
+    def get_fields(self, request=None):
 
         fields = ("actions",)
 
