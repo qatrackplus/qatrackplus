@@ -486,7 +486,9 @@ class UnreviewedVisibleTo(Unreviewed):
         the user"""
 
     def get_queryset(self):
-        return models.TestListInstance.objects.your_unreviewed(self.request.user)
+        return models.TestListInstance.objects.your_unreviewed(self.request.user).annotate(
+            attachment_count=Count("attachment"),
+        )
 
     def get_page_title(self):
         return _("Unreviewed Test List Instances Visible To Your Groups")
