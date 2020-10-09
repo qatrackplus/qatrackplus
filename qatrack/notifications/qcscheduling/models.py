@@ -121,7 +121,7 @@ class QCSchedulingNotice(models.Model):
     def utcs(self):
         """Return UTCS relevant to this notice"""
 
-        utcs = UnitTestCollection.objects.all()
+        utcs = UnitTestCollection.objects.filter(active=True)
 
         if self.units_id:
             utcs = utcs.filter(unit__in=self.units.units.all())
