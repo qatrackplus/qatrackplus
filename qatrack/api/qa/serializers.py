@@ -155,6 +155,7 @@ class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
     attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
     comments = CommentSerializer(many=True, required=False)
+    test_instances = TestInstanceSerializer(many=True, source="testinstance_set", required=False)
 
     site_url = serializers.SerializerMethodField(read_only=True)
 
