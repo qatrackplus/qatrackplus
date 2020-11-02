@@ -364,7 +364,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     def type_okay(self, type_, val):
         if type_ in models.STRING_TYPES + models.DATE_TYPES and not isinstance(val, str):
-            return False
+            try:
+                json.dumps(val)
+            except Exception:
+                return False
         elif type_ in models.NUMERICAL_TYPES and not isinstance(val, Number):
             return False
         return True
