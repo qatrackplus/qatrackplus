@@ -681,7 +681,10 @@ if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
 if os.name.lower() == "nt":
     CHROME_PATH = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"'
 else:
-    CHROME_PATH = "/usr/bin/chromium-browser"
+    CHROME_PATH = ""
+    for path in ["/usr/bin/chromium", "/usr/bin/chromium-browser"]:
+        if os.path.exists(path):
+            CHROME_PATH = path
 
 
 # ------------------------------------------------------------------------------
