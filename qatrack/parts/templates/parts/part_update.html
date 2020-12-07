@@ -155,6 +155,13 @@
               </thead>
               <tbody>
                 {{ supplier_formset.management_form }}
+                {% for e in supplier_formset.non_form_errors %}
+                  <tr>
+                    <td colspan="5" class="has-error">
+                      <div class="help-block text-center">{{ e }}</div>
+                    </td>
+                  </tr>
+                {% endfor %}
                 {% for sup_form in supplier_formset %}
                   {{ sup_form.part }}
                   {{ sup_form.id }}
@@ -194,6 +201,13 @@
               </thead>
               <tbody>
                 {{ storage_formset.management_form }}
+                {% for e in storage_formset.non_form_errors %}
+                  <tr>
+                    <td colspan="5" class="has-error">
+                      <div class="help-block text-center">{{ e }}</div>
+                    </td>
+                  </tr>
+                {% endfor %}
                 {% for sto_form in storage_formset %}
                   {{ sto_form.part }}
                   {{ sto_form.id }}

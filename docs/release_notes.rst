@@ -48,6 +48,7 @@ Major Features
       specific units or test lists.
     * New QC Scheduling & Unreviewed QC Notices.
     * Service event creation & update notices.
+    * Parts low inventory notices.
 
 * A new :ref:`Autosave <auto_save>` feature has been implemented to
   automatically save test list instance data temporarily to prevent data loss

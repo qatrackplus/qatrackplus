@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist
 from django.utils.encoding import force_text
+from django.utils.translation import gettext as _
 from form_utils.forms import BetterModelForm
 
 from qatrack.parts import models as p_models
@@ -320,7 +321,33 @@ class PartStorageCollectionForm(forms.ModelForm):
 
         return cleaned_data
 
+    def clean_quantity(self):
+        quantity = self.cleaned_data['quantity']
+        if quantity < 0:
+            self.add_error('quantity', 'Quantity must be greater than 0')
+        return quantity
 
-PartStorageCollectionFormset = forms.inlineformset_factory(
+
+
+BasePartStorageCollectionFormset = forms.inlineformset_factory(
     p_models.Part, p_models.PartStorageCollection, form=PartStorageCollectionForm, extra=3
 )
+
+
+class PartStorageCollectionFormset(BasePartStorageCollectionFormset):
+
+    def clean(self):
+        if any(self.errors):
+            return
+
+        locations = []
+
+        for form in self.forms:
+            room = form.cleaned_data.get('room')
+            loc = form.cleaned_data.get('location')
+            if room is None or (self.can_delete and self._should_delete_form(form)):
+                continue
+
+            if (room, loc) in locations:
+                raise ValidationError(_("Duplicated storage locations are not allowed"))
+            locations.append((room, loc))

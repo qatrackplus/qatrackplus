@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -237,13 +238,21 @@ class Part(models.Model):
 
     def set_quantity_current(self):
         qs = PartStorageCollection.objects.filter(part=self, storage__isnull=False)
+        initial_quantity = self.quantity_current
         if qs.exists():
             self.quantity_current = qs.aggregate(models.Sum('quantity'))['quantity__sum']
         else:
             self.quantity_current = 0
         self.quantity_current = self.quantity_current if self.quantity_current >= 0 else 0
-        self.save()
+
+        quantity_changed = initial_quantity != self.quantity_current
+        update_fields = ['quantity_current'] if quantity_changed else None
+
+        self.save(update_fields=update_fields)
         return self.quantity_current < self.quantity_min
+
+    def get_absolute_url(self):
+        return reverse("part_details", kwargs={"pk": self.pk})
 
 
 class PartStorageCollectionManager(models.Manager):

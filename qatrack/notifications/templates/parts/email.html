@@ -1,0 +1,76 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% load i18n %}
+{% block title%}QATrack+ Low Inventory Part Notice{% endblock %}
+{% block preheader %}QATrack+ Low Inventory Part Notice{% endblock %}
+{% block extra_css %}
+  th.header {
+    font-weight: bold;
+  }
+  thead th.header {
+    text-align: center;
+    background: #eee;
+  }
+  tbody th.header,
+  tbody td.header {
+    padding-right: 10px;
+    text-align: right;
+  }
+{% endblock %}
+{% block content %}
+<p>{% trans "Hello" %},</p>
+<p>
+  {% trans "The following part is now below its low inventory threshold:" %}:
+</p>
+<table>
+  <tbody>
+    <tr>
+      <th class="header">{% trans "Part Name" %}:</th>
+      <td>
+        <a href="{{ domain }}{{ part.get_absolute_url }}"
+            title="{% trans "Click to view on the site" %}"
+        >
+        {{ part.name }}
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Part Number" %}:</th>
+      <td>{{ part.part_number }}</td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Part Category" %}:</th>
+      <td>{{ part.part_category }}</td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "New / Used" %}:</th>
+      <td>{{ part.get_new_or_used_display }}</td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Current Quantity" %}:</th>
+      <td>{{ part.quantity_current }}</td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Notification Level" %}:</th>
+      <td>{{ part.quantity_min }}</td>
+    </tr>
+    {% if part.storage.count > 0 %}
+      <tr>
+        <th class="header">{% trans "Current Known Locations" %}:</th>
+        <td></td>
+      </tr>
+      {% for psc in part.partstoragecollection_set.all %}
+        <tr>
+          <td class="header">{{ psc.storage }}:</td>
+          <td>{{ psc.quantity }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan=2><em>{% trans "No known locations" %}</em></td>
+        </tr>
+      {% endfor %}
+    {% endif %}
+  </tbody>
+</table>
+
+{% endblock content %}

@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.db.models import Sum
 from django.forms.utils import timezone
 from django.http import (
@@ -67,6 +68,7 @@ from qatrack.units import models as u_models
 if settings.USE_PARTS:
     from qatrack.parts import forms as p_forms
     from qatrack.parts import models as p_models
+
 
 
 def get_time_display(dt):
@@ -632,6 +634,7 @@ class CreateServiceEvent(ServiceEventUpdateCreate):
         kwargs['initial_u'] = self.request.GET.get('u', None)
         return kwargs
 
+    @transaction.atomic
     def form_valid(self, form):
 
         self.instance = form.save(commit=False)
@@ -659,6 +662,7 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
         )
         return context
 
+    @transaction.atomic
     def form_valid(self, form):
 
         self.instance = form.save(commit=False)

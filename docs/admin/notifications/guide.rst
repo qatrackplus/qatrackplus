@@ -15,14 +15,16 @@ specific time.  Currently the availble notification types are:
 
 * :ref:`Service Event Notices <notifications-serviceevent>`
 
+* :ref:`Part Notices <notifications-part>`
 
 Configuring Notifications
 -------------------------
 
-Through the use of `Recipient Groups`, `Unit Groups`, and `Test List Groups`
-notifications can be configured so that they are only apply to certain Units &
-Test Lists and are only sent to specific users.  Configuring these notification
-groups is done in the admin area under the Notifications header:
+Through the use of `Recipient Groups`, `Unit Groups`, `Test List Groups`, and
+`Part Category Groups` notifications can be configured so that they are only
+apply to certain Units & Test Lists and are only sent to specific users.
+Configuring these notification groups is done in the admin area under the
+Notifications header:
 
 .. figure:: images/notification-admin.png
     :alt: The Notification admin section
@@ -110,6 +112,25 @@ Test Lists (required)
 
 and finally click `Save`.  This `Test List Group` can now be associated with
 Notifications.
+
+.. _notifications_part_category_group:
+
+Part Category Groups
+....................
+
+A `Part Category Groups` is made up of one or more Part Categories and allows
+you to target Part notifications to specific Part Categories using `Part
+Category Groups`.  To create a new `Part Category Group` click through the
+`Part Category Group` section of the admin and then on the next page click `Add
+Part Category Group` and then fill out the fields:
+
+Name (required)
+    Give the Units Group a relevant name
+Part Categories (required)
+    Select the Part Categories to include in this group.
+
+and finally click `Save`.  This `Part Category Group` can now be associated
+with Notifications.
 
 
 .. _notifications-qccompleted:
@@ -372,6 +393,34 @@ Click `Save` once you have configured the notification the way you want.
     :alt: Filling out the fields for a Service Event Review notice.
 
     Filling out the fields for a Service Event Review notice.
+
+
+.. _notifications-part:
+
+Part Notices
+------------
+
+There is currently one Part notice type:
+
+    * *Notify when inventory for a part falls below it's Low Inventory threshold*  Use these alerts to
+      get an email whenever the number of parts fall below its low inventory threshold.
+
+To create a new `Part Notice` click through the `Part Notices` section of the
+Notification admin section and then on the next page click `Add Part Notice`
+and then fill out the fields:
+
+Notification Type (required):
+    Select the notification type you want to create
+
+Recipients (required):
+    Select the recipient group you want this notification sent to.
+
+Part Category Group filter (optional):
+    If you want this notification to only pertain to specific part categories, select a
+    Part Category Group filter.
+
+
+Click `Save` once you have configured the notification the way you want.
 
 
 .. _notifications_edit:
