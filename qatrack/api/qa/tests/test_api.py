@@ -170,11 +170,6 @@ class TestTestListInstanceAPI(APITestCase):
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_invalid_string_value(self):
-        self.data['tests']['test3']['value'] = 3
-        response = self.client.post(self.create_url, self.data)
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
     def test_invalid_constant_value(self):
         models.Test.objects.filter(pk=self.t2.pk).update(
             type=models.CONSTANT,
