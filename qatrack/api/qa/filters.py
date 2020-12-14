@@ -238,7 +238,7 @@ class TestListInstanceFilter(filters.FilterSet):
     unit_test_collection = filters.RelatedFilter(
         UnitTestCollectionFilter,
         name="unit_test_collection",
-        queryset=models.UnitTestInfo.objects.all(),
+        queryset=models.UnitTestCollection.objects.all(),
     )
     test_list = filters.RelatedFilter(TestListFilter, name="test_list", queryset=models.TestList.objects.all())
 
