@@ -4,6 +4,12 @@ Release Notes
 QATrack+ v0.3.0.18 Release Notes
 --------------------------------
 
+- Fixed the UnitTestCollection queryset in the API
+- Updated requirements to work with Python 3.7 & new versions of pip
+
+QATrack+ v0.3.0.18 Release Notes
+--------------------------------
+
 - Fixed a bug where Test Lists from Test List Cycles with Ad-Hoc frequency
   would not show up when charting
 
