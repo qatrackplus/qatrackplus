@@ -1,4 +1,4 @@
--e git+https://github.com/randlet/django-genericdropdown.git@473ff52610af659f7d2a3616a6e3322e21673b4d#egg=django_genericdropdown-master
+-e git+https://github.com/randlet/django-genericdropdown.git@473ff52610af659f7d2a3616a6e3322e21673b4d#egg=django_genericdropdown
 -e git+https://github.com/randlet/django-listable.git@django_21_dynamic_request#egg=django_listable
 -e git+https://github.com/randlet/django-recurrence.git@035ef961483a9ed58ecea6cac5dc8909b1227ef7#egg=django-recurrence
 -e git+https://github.com/randlet/django-sql-explorer.git@196e1f5af2abed61f504878b89a0719ae0901ed8#egg=django-sql-explorer
