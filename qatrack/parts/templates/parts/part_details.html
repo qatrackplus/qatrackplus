@@ -80,7 +80,12 @@
                     <tbody>
                       {% for psc in psc_set %}
                         <tr>
-                          <td class="min-width-200">{{ psc.supplier.name }}</td>
+                          <td class="min-width-200">
+                            <a href="{{ psc.supplier.get_absolute_url }}"
+                               title="{% trans "Click to view supplier details" %}">
+                              {{ psc.supplier.name }}
+                            </a>
+                          </td>
                           <td>{% if psc.part_number %}{{ psc.part_number }}{% endif %}</td>
                         </tr>
                       {% endfor %}

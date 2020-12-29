@@ -291,8 +291,8 @@ class ThirdParty(models.Model):
 
     vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT)
 
-    first_name = models.CharField(max_length=32, help_text=_l('Enter this person\'s first name'))
-    last_name = models.CharField(max_length=32, help_text=_l('Enter this person\'s last name'))
+    first_name = models.CharField(max_length=32, help_text=_l("Enter this persons first name"))
+    last_name = models.CharField(max_length=32, help_text=_l("Enter this persons last name"))
 
     objects = ThirdPartyManager()
 

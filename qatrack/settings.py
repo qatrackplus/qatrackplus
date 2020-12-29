@@ -243,6 +243,7 @@ INSTALLED_APPS = [
     'listable',
     'genericdropdown',
     'recurrence',
+    'phone_field',
     'widget_tweaks',
     'dynamic_raw_id',
     'mptt',

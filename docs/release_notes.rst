@@ -252,6 +252,12 @@ Service Log & Parts
   optionally allow users to submit ServiceEvents without a ServiceType set
   explicitly.
 
+* Parts Supplier details have been expanded to include phone numbers, website,
+  address and contact information
+
+* Part supplier details pages have been added to show what parts are available
+  from each supplier as well as company & contact details.
+
 Authentication
 ^^^^^^^^^^^^^^
 

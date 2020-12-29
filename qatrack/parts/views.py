@@ -352,23 +352,23 @@ class SuppliersList(BaseListableView):
 
     fields = (
         'actions',
-        'pk',
         'name',
-        'notes'
+        'phone_number',
+        'get_website_tag',
     )
 
     headers = {
         'actions': _l('Actions'),
-        'pk': _l('ID'),
         'name': _l('Name'),
-        'notes': _l('Notes'),
+        'phone_number': _l("Phone Number"),
+        'get_website_tag': _l("Website"),
     }
 
     widgets = {
         'actions': None,
-        'pk': TEXT,
         'name': TEXT,
-        'notes': TEXT,
+        'phone_number': TEXT,
+        'website': TEXT,
     }
 
     search_fields = {
@@ -377,7 +377,6 @@ class SuppliersList(BaseListableView):
 
     order_fields = {
         'actions': False,
-        'notes': False
     }
 
     def get_icon(self):
@@ -386,10 +385,6 @@ class SuppliersList(BaseListableView):
     def get_page_title(self, f=None):
         if not f:
             return _l("All Suppliers")
-
-    def format_col(self, field, obj):
-        col = super(SuppliersList, self).format_col(field, obj)
-        return col
 
     def get_context_data(self, *args, **kwargs):
         context = super(SuppliersList, self).get_context_data(*args, **kwargs)
@@ -401,8 +396,25 @@ class SuppliersList(BaseListableView):
         context['page_title'] = self.get_page_title(f)
         return context
 
-    def actions(self, p):
+    def actions(self, supplier):
         template = get_template('parts/table_context_suppliers_actions.html')
-        mext = reverse('parts_list')
-        c = {'p': p, 'request': self.request, 'next': mext}
+        mext = reverse('suppliers_list')
+        c = {
+            'supplier': supplier,
+            'request': self.request,
+            'next': mext,
+            'perms': PermWrapper(self.request.user),
+        }
         return template.render(c)
+
+
+class SupplierDetails(DetailView):
+
+    model = p_models.Supplier
+    template_name = 'parts/supplier_details.html'
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related(
+            "partsuppliercollection_set__part",
+            "contact_set",
+        )

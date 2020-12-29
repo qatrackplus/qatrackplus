@@ -561,6 +561,16 @@
                                 </a>
                               </li>
                             {% endif %}
+                            {% if perms.parts.view_supplier %}
+                              <li class="hover-parent">
+                                <a href="{% url "suppliers_list" %}" title="{% trans "View Part Suppliers" %}">
+                                  <i class="fa fa-stack fa-lg fa-fw">
+                                      <i class="fa fa-microchip fa-flip-horizontal fa-stack-custom-main"></i>
+                                  </i>
+                                  {% trans "View All Suppliers" %}
+                                </a>
+                              </li>
+                            {% endif %}
                           {% endif %}
                         {% endif %}
                       </ul>

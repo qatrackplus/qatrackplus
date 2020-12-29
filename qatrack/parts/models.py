@@ -3,8 +3,10 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
+from phone_field import PhoneField
 
 from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
@@ -18,6 +20,20 @@ class Supplier(models.Model):
         unique=True,
         help_text=_l("Enter a unique name for this supplier"),
     )
+    address = models.TextField(
+        verbose_name=_l("address"),
+        blank=True,
+    )
+    phone_number = PhoneField(
+        verbose_name=_l("phone number"),
+        blank=True,
+        help_text=_l("Company phone number"),
+    )
+    website = models.URLField(
+        verbose_name=_l("website"),
+        blank=True,
+        help_text=_l("Enter a URL for the company"),
+    )
     notes = models.TextField(
         verbose_name=_l("notes"),
         max_length=255,
@@ -29,8 +45,63 @@ class Supplier(models.Model):
     class Meta:
         ordering = ('name',)
 
+    def get_absolute_url(self):
+        return reverse("supplier_details", kwargs={"pk": self.pk})
+
+    def get_website_tag(self):
+        if self.website:
+            return format_html(
+                '<a href="%s" title="%s">%s</a>' % (
+                    self.website,
+                    _("Click to visit this suppliers website"),
+                    self.website,
+                )
+            )
+        return ""
     def __str__(self):
         return self.name
+
+
+class Contact(models.Model):
+
+    supplier = models.ForeignKey(
+        Supplier,
+        verbose_name=_("supplier"),
+        on_delete=models.CASCADE,
+    )
+
+    first_name = models.CharField(
+        max_length=64,
+        verbose_name=_("first name"),
+        help_text=_l("Enter this persons first name"),
+    )
+    last_name = models.CharField(
+        max_length=64,
+        verbose_name=_("last name"),
+        help_text=_l("Enter this persons last name"),
+    )
+
+    email = models.EmailField(
+        verbose_name=_("email"),
+        help_text=_l("Enter this persons email address"),
+    )
+
+    phone_number = PhoneField(
+        verbose_name=_l("phone number"),
+        blank=True,
+        help_text=_l("Company phone number"),
+    )
+
+    class Meta:
+        verbose_name = _l('Contact')
+        verbose_name_plural = _l('Contacts')
+        unique_together = ('first_name', 'last_name', 'supplier')
+
+    def __str__(self):
+        return self.last_name + ', ' + self.first_name + ' (' + self.supplier.name + ')'
+
+    def get_full_name(self):
+        return str(self)
 
 
 class RoomManager(models.Manager):
