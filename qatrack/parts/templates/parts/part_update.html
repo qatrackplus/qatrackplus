@@ -1,11 +1,12 @@
 {% extends "service_log/sl_base.html" %}
 
+{% load attach_tags %}
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load i18n %}
 {% load static %}
 
-{% block head_title %}{% trans "Part" %}{% endblock %}
+{% block head_title %}{% trans "Edit Part" %}: {{ part.name }}{% endblock %}
 
 {% block extra_css %}
   {{ block.super }}
@@ -22,7 +23,7 @@
 
 {% block body %}
 
-<form action="" method="post" novalidate>
+<form action="" method="post" novalidate enctype="multipart/form-data">
   {% csrf_token %}
   <div class="max-width-lg">
     <div class="row">
@@ -254,6 +255,58 @@
     </div>
 
     <div class="row">
+      <div class="col-md-5">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title{% if form.part_attachments.errors %} has-error{% endif %}">
+              <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+              Attachments
+            </h3>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-sm-12">
+                <table id="attach-table" class="table table-responsive table-condensed">
+                  <thead>
+                    <tr>
+                      <th>Filename</th>
+                      <th>Delete</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ form.part_attachments_delete_ids }}
+                    {% if form.instance.id %}
+                      {% for attach in form.instance.attachment_set.all %}
+                        <tr>
+                          <td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td>
+                          <td align="center"><input type="checkbox" name="attach-{{ attach.id }}-DELETE" id="attach-{{ attach.id }}-DELETE" class="attach-delete" value="{{ attach.id }}"></td>
+                        </tr>
+                      {% endfor %}
+                    {% endif %}
+                  </tbody>
+                  <tfoot id="part-attachment-names"></tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="box-footer">
+
+            {% if perms.attachments.add_attachment %}
+              <div class="form-group{% if form.part_attachments.errors %} has-error{% endif %}">
+                {% for error in form.part_attachments.errors %}
+                  <div class="col-sm-12 help-block text-center">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <label class="qa-input btn btn-default btn-sm btn-flat pull-right" title="Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)">
+                Browse {{ form.part_attachments }}
+              </label>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
       <div class="col-md-12">
         <input name="submit" class="btn btn-flat btn-primary pull-right" type="submit" value="{% if form.instance.id %}{% trans "Save Part" %}{% else %}{% trans "Add Part" %}{% endif %}" />
         {% if not form.instance.id %}<input name="submit_add_another" class="btn btn-flat btn-primary pull-right margin-r-5" type="submit" value="{% trans "Add Part and enter another" %}" />{% endif %}
@@ -262,4 +315,28 @@
   </div>
 
 </form>
+
+<script id="attach-template" type="text/template">
+    <div class="col-sm-6">
+        <div class="row">
+            <div class="col-sm-6">
+                <a target="_blank" href="<%= a.url %>">
+                    <img class="img-responsive" src="<%= a.url %>" alt="<%= a.name %>"/>
+                </a>
+            </div>
+            <div class="col-sm-6">
+                <dl>
+                    <dt>File</dt>
+                    <dd>
+                        <a target="_blank" href="<%= a.url %>"><%= a.name %></a>
+                    </dd>
+
+                    <dt>Size</dt>
+                    <dd><%= a.size %></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</script>
+
 {% endblock body %}

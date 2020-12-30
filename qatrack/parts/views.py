@@ -3,10 +3,12 @@ from collections import defaultdict
 from braces.views import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
+from django.forms.utils import timezone
 from django.http import HttpResponseRedirect, JsonResponse
 from django.template.loader import get_template
 from django.urls import resolve, reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import DetailView
@@ -14,6 +16,11 @@ from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from listable.views import SELECT_MULTI, TEXT, BaseListableView
 
+from qatrack.attachments.models import Attachment
+from qatrack.attachments.templatetags.attach_tags import (
+    attachment_img,
+    attachment_link,
+)
 from qatrack.parts import forms as p_forms
 from qatrack.parts import models as p_models
 
@@ -105,11 +112,26 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(instance=self.object, prefix='supplier')  # noqa: E501
             context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(instance=self.object, prefix='storage')  # noqa: E501
 
+        context_data['attachments'] = self.object.attachment_set.all() if self.object else []
         return context_data
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, _('Please correct the errors below.'))
         return super().form_invalid(form)
+
+    def edit_part_attachments(self, part):
+        for idx, f in enumerate(self.request.FILES.getlist('part_attachments')):
+            Attachment.objects.create(
+                attachment=f,
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                part=part,
+                created_by=self.request.user
+            )
+
+        a_ids = self.request.POST.get('part_attachments_delete_ids', '').split(',')
+        if a_ids != ['']:
+            Attachment.objects.filter(id__in=a_ids).delete()
 
     def form_valid(self, form):
 
@@ -170,6 +192,8 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
                 psc_instance.save()
                 part.set_quantity_current()
 
+        self.edit_part_attachments(part)
+
         if 'submit_add_another' in self.request.POST:
             return HttpResponseRedirect(reverse('part_new'))
         return HttpResponseRedirect(reverse('parts_list'))
@@ -200,6 +224,7 @@ class PartsList(BaseListableView):
         'quantity_min',
         'part_category__name',
         'locations',
+        'attachments',
     )
 
     headers = {
@@ -211,6 +236,7 @@ class PartsList(BaseListableView):
         'quantity_min': _l('Min Quantity'),
         'locations': _l("Locations"),
         'part_category__name': _l('Category'),
+        'attachments': _l('Attachments'),
     }
 
     widgets = {
@@ -222,6 +248,7 @@ class PartsList(BaseListableView):
         'quantity_current': None,
         'locations': None,
         'part_category__name': SELECT_MULTI,
+        'attachments': None,
     }
 
     search_fields = {
@@ -229,15 +256,18 @@ class PartsList(BaseListableView):
         'quantity_current': False,
         'quantity_min': False,
         'locations': False,
+        'attachments': False,
     }
 
     order_fields = {
         'actions': False,
         'part_category__name': False,
         'locations': "partstoragecollection__storage__room__site__name",
+        "attachments": "attachment_count",
     }
 
     select_related = ('part_category',)
+    prefetch_related = ("attachment_set",)
 
     def get_icon(self):
         return 'fa-cog'
@@ -277,6 +307,7 @@ class PartsList(BaseListableView):
 
             qs = qs.filter(**query_kwargs)
 
+        qs = qs.annotate(attachment_count=Count("attachment"))
         return qs
 
     def format_col(self, field, obj):
@@ -328,9 +359,11 @@ class PartsList(BaseListableView):
         tmp_cache = defaultdict(list)
         for part_id, quantity, loc, site_name, room_name in psc:
             site = "%s:" % site_name if site_name else ""
-            text = '<div style="display: inline-block; white-space: nowrap;">%s%s:%s <span class="badge">%d</span></div>' % (
-                site, room_name, loc or "", quantity
-            )
+            text = (
+                '<div style="display: inline-block; white-space: nowrap;">'
+                '%s%s:%s <span class="badge">%d</span>'
+                '</div>'
+            ) % (site, room_name, loc or "", quantity)
             tmp_cache[part_id].append(text)
 
         self._parts_locations_cache = {}
@@ -339,6 +372,18 @@ class PartsList(BaseListableView):
 
     def part_number(self, part):
         return part.part_number or "<em>N/A</em>"
+
+    def attachments(self, part):
+        items = []
+        attachments = part.attachment_set.all()
+        label = mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>')
+        for a in attachments:
+            if a.is_image:
+                items.append(attachment_img(a, klass="listable-image"))
+            else:
+                items.append(attachment_link(a, label=label))
+
+        return '<br/>'.join(items)
 
 
 class SuppliersList(BaseListableView):

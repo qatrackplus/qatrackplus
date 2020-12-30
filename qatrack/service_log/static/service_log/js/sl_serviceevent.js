@@ -70,7 +70,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             },
             templateResult: function(a) {
                 if ($(a.element).parent().attr('id') === 'id_initiated_utc_field') {
-                    return $('<span>' + a.text + '<span class="pull-right"><i class="fa fa-chevron-right new-tab-icon" aria-hidden="true"></i></span></span>')
+                    return $('<span>' + a.text + '<span class="pull-right"><i class="fa fa-chevron-right new-tab-icon" aria-hidden="true"></i></span></span>');
                 } else {
                     return a.text;
                 }
@@ -171,7 +171,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                         page: params.page,
                         unit_id: $units.val(),
                         self_id: se_id
-                    }
+                    };
                 },
                 processResults: process_related_results,
                 cache: true
@@ -378,7 +378,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                     success: function (res) {
                         displayTLI(form, res, returnValue);
                     }
-                })
+                });
             }
         };
         disable_units = function(force) {
@@ -509,7 +509,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                         return {
                             q: params.term, // search term
                             page: params.page,
-                        }
+                        };
                     },
                     success: function(res) {
                         console.log(res);
@@ -548,7 +548,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                             }
                         }
                     }
-                })
+                });
             }
 
             $parts_used_parts.select2(part_select2);
@@ -597,14 +597,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $tli_initiated_by.val('');
                 disable_units();
             });
-            if ($(this).val() != '') {
+            if ($(this).val() !== '') {
                 var w = window.open($(this).attr('data-link') + '/' + $(this).val() + '/utc_initiated', '_blank', 'scrollbars=no,menubar=no,height=900,width=1200,resizable=yes,toolbar=no,location=no,status=no');
                 w.focus();
                 w.onbeforeunload = function() {
                     setSearchResult('utc_initiated', $tli_initiated_by.val());
                     disable_units();
                     return null;
-                }
+                };
             }
         });
         disable_units();

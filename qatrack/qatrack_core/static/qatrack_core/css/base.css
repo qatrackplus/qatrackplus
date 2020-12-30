@@ -656,3 +656,12 @@ table ul.multiselect-container.dropdown-menu {
 .fa-stack.narrow {
   width: 0;
 }
+
+.listable-image {
+  max-width: 200px;
+  max-height: 200px;
+}
+.parts-image {
+  max-width: 600px;
+  max-height: 400px;
+}

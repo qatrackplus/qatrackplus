@@ -1,10 +1,11 @@
 {% extends "service_log/sl_base.html" %}
 
 {% load widget_tweaks %}
+{% load attach_tags %}
 {% load qa_tags %}
 {% load i18n %}
 
-{% block head_title %}{% trans "Part" %}{% endblock %}
+{% block head_title %}{% trans "Part Details" %}: {{ part.name }}{% endblock %}
 
 {% block body %}
 
@@ -133,6 +134,49 @@
 
         </div>
       {% endwith %}
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        {% if part.attachment_set.all|length > 0 %}
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title">
+                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+                {% trans "Attachments" %}
+              </h3>
+            </div>
+            <div class="box-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <table id="attach-table" class="table table-responsive table-condensed">
+                    <thead>
+                      <th>{% trans "Attachment" %}</th>
+                      <th>{% trans "Image" %}</th>
+                    </thead>
+                    <tbody>
+                      {% for attach in part.attachment_set.all %}
+                        <tr>
+                          <td>
+                            <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>
+                            {{ attach | attachment_link }}
+                          </td>
+                          <td>
+                            {% if attach.is_image %}
+                              {{ attach | attachment_img:"parts-image" }}
+                            {% endif %}
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                    <tfoot id="se-attachment-names"></tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
     </div>
 
     <div class="row">

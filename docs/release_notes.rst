@@ -258,6 +258,9 @@ Service Log & Parts
 * Part supplier details pages have been added to show what parts are available
   from each supplier as well as company & contact details.
 
+* You may now add attachments & images to Parts.  Images will be shown inline
+  in the parts listing table and parts detail pages.
+
 Authentication
 ^^^^^^^^^^^^^^
 

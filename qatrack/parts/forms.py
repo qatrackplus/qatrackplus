@@ -67,7 +67,9 @@ class PartUsedForm(forms.ModelForm):
                     ).values_list('storage_id', 'quantity'))
                     s_qs = p_models.Storage.objects.filter(id__in=s_dict.keys())
                     self.fields['from_storage'].queryset = s_qs
-                    self.fields['from_storage'].choices = [(None, '----------')] + [(s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs]
+                    self.fields['from_storage'].choices = [(None, '----------')] + [
+                        (s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs
+                    ]
 
         else:
             self.initial['part'] = self.instance.part
@@ -87,7 +89,8 @@ class PartUsedForm(forms.ModelForm):
             s_qs = p_models.Storage.objects.filter(id__in=s_dict.keys())
             self.fields['from_storage'].queryset = s_qs
             # Edit choices to insert quantity of part in storage
-            self.fields['from_storage'].choices = [(None, '----------')] + [(s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs]
+            self.fields['from_storage'].choices = [(None, '----------')
+                                                   ] + [(s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs]
 
         self.fields['part'].widget.attrs['data-prefix'] = self.prefix
 
@@ -145,6 +148,18 @@ class PartForm(BetterModelForm):
         help_text=p_models.Part._meta.get_field('cost').help_text,
         required=False,
     )
+
+    part_attachments = forms.FileField(
+        label="Attachments",
+        max_length=150,
+        required=False,
+        widget=forms.FileInput(attrs={
+            'multiple': '',
+            'class': 'file-upload',
+            'style': 'display:none',
+        })
+    )
+    part_attachments_delete_ids = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = p_models.Part
@@ -326,7 +341,6 @@ class PartStorageCollectionForm(forms.ModelForm):
         if quantity < 0:
             self.add_error('quantity', 'Quantity must be greater than 0')
         return quantity
-
 
 
 BasePartStorageCollectionFormset = forms.inlineformset_factory(

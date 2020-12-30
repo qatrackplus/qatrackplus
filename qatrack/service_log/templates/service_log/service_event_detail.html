@@ -310,16 +310,14 @@
           <div class="box-body">
             <div class="row">
               <div class="col-sm-12">
-                {% if perms.attachments.add_attachment %}
-                  <table id="attach-table" class="table table-responsive table-condensed">
-                    <tbody>
-                      {% for attach in serviceevent.attachment_set.all %}
-                        <tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td></tr>
-                      {% endfor %}
-                    </tbody>
-                    <tfoot id="se-attachment-names"></tfoot>
-                  </table>
-                {% endif %}
+                <table id="attach-table" class="table table-responsive table-condensed">
+                  <tbody>
+                    {% for attach in serviceevent.attachment_set.all %}
+                      <tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td></tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot id="se-attachment-names"></tfoot>
+                </table>
               </div>
             </div>
           </div>
