@@ -666,7 +666,8 @@ table ul.multiselect-container.dropdown-menu {
   max-height: 400px;
 }
 
-.hover-img a { position:relative; }
+.hover-img {display: inline-block;}
+.hover-img a { position:relative; display: inline-block;}
 .hover-img a span { position:absolute; right:0; display:none; z-index:99; }
 .hover-img a:hover span {
   display:block;

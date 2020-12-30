@@ -17,10 +17,7 @@ from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from listable.views import SELECT_MULTI, TEXT, BaseListableView
 
 from qatrack.attachments.models import Attachment
-from qatrack.attachments.templatetags.attach_tags import (
-    attachment_img,
-    attachment_link,
-)
+from qatrack.attachments.views import listable_attachment_tags
 from qatrack.parts import forms as p_forms
 from qatrack.parts import models as p_models
 
@@ -374,21 +371,7 @@ class PartsList(BaseListableView):
         return part.part_number or "<em>N/A</em>"
 
     def attachments(self, part):
-        items = []
-        attachments = part.attachment_set.all()
-        label = mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>')
-        img_label = mark_safe('<i class="fa fa-photo fa-fw" aria-hidden="true"></i>')
-        for a in attachments:
-            if a.is_image:
-                img = attachment_img(a, klass="listable-image")
-                items.append(
-                    '<div class="hover-img"><a href="%s" target="_blank">%s<span>%s</span></a></div>' %
-                    (a.attachment.url, img_label, img)
-                )
-            else:
-                items.append(attachment_link(a, label=label))
-
-        return '<br/>'.join(items)
+        return listable_attachment_tags(part)
 
 
 class SuppliersList(BaseListableView):
