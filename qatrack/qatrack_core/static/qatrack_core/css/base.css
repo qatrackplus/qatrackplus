@@ -658,10 +658,21 @@ table ul.multiselect-container.dropdown-menu {
 }
 
 .listable-image {
-  max-width: 200px;
-  max-height: 200px;
+  max-width: 600px;
+  max-height: 400px;
 }
 .parts-image {
   max-width: 600px;
   max-height: 400px;
+}
+
+.hover-img a { position:relative; }
+.hover-img a span { position:absolute; right:0; display:none; z-index:99; }
+.hover-img a:hover span {
+  display:block;
+  padding: 5px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  -moz-box-shadow: 0 0 30px 5px #999;
+  -webkit-box-shadow: 0 0 30px 5px #999;
 }

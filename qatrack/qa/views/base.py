@@ -27,6 +27,10 @@ from listable.views import (
     BaseListableView,
 )
 
+from qatrack.attachments.templatetags.attach_tags import (
+    attachment_img,
+    attachment_link,
+)
 from qatrack.qa import models
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Unit
@@ -554,4 +558,18 @@ class TestListInstances(BaseListableView):
         return template.render(c)
 
     def attachments(self, tli):
-        return '<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' if tli.attachment_count else ""
+        items = []
+        attachments = tli.attachment_set.all()
+        label = mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>')
+        img_label = mark_safe('<i class="fa fa-photo fa-fw" aria-hidden="true"></i>')
+        for a in attachments:
+            if a.is_image:
+                img = attachment_img(a, klass="listable-image")
+                items.append(
+                    '<div class="hover-img"><a href="%s" target="_blank">%s<span>%s</span></a></div>' %
+                    (a.attachment.url, img_label, img)
+                )
+            else:
+                items.append(attachment_link(a, label=label))
+
+        return '<br/>'.join(items)

@@ -236,7 +236,7 @@ class PartsList(BaseListableView):
         'quantity_min': _l('Min Quantity'),
         'locations': _l("Locations"),
         'part_category__name': _l('Category'),
-        'attachments': _l('Attachments'),
+        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
     }
 
     widgets = {
@@ -377,9 +377,14 @@ class PartsList(BaseListableView):
         items = []
         attachments = part.attachment_set.all()
         label = mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>')
+        img_label = mark_safe('<i class="fa fa-photo fa-fw" aria-hidden="true"></i>')
         for a in attachments:
             if a.is_image:
-                items.append(attachment_img(a, klass="listable-image"))
+                img = attachment_img(a, klass="listable-image")
+                items.append(
+                    '<div class="hover-img"><a href="%s" target="_blank">%s<span>%s</span></a></div>' %
+                    (a.attachment.url, img_label, img)
+                )
             else:
                 items.append(attachment_link(a, label=label))
 
