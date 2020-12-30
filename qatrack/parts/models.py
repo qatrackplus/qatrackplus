@@ -402,7 +402,7 @@ class PartSupplierCollection(models.Model):
     )
 
     class Meta:
-        unique_together = ('part', 'supplier')
+        unique_together = ('part', 'supplier', 'part_number')
         default_permissions = ()
 
 
