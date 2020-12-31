@@ -6,6 +6,7 @@ from django.contrib.auth.context_processors import PermWrapper
 from django.db.models import Count, F, Q
 from django.forms.utils import timezone
 from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
@@ -441,13 +442,14 @@ class SuppliersList(BaseListableView):
         return template.render(c)
 
 
-class SupplierDetails(DetailView):
+class SupplierDetails(PartsList):
 
-    model = p_models.Supplier
     template_name = 'parts/supplier_details.html'
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related(
-            "partsuppliercollection_set__part",
-            "contact_set",
-        )
+        return super().get_queryset().filter(partsuppliercollection__supplier__id=self.kwargs['pk'])
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['supplier'] = get_object_or_404(p_models.Supplier, pk=self.kwargs['pk'])
+        return context
