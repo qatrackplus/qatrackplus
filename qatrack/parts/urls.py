@@ -11,5 +11,5 @@ urlpatterns = [
     url(r'^edit/(?P<pk>\d+)?/$', views.PartUpdateCreate.as_view(), name='part_edit'),
     url(r'^details/(?P<pk>\d+)?/$', views.PartDetails.as_view(), name='part_details'),
     url(r'^suppliers/$', views.SuppliersList.as_view(), name='suppliers_list'),
-    url(r'^suppliers/(?P<pk>\d+)?/$', views.SupplierDetails.as_view(), name='supplier_details'),
+    url(r"^suppliers/(?P<pk>[/\d]+)/$", views.SupplierDetails.as_view(), name="supplier_details"),
 ]

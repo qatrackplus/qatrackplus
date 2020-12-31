@@ -318,7 +318,10 @@ class PartsList(BaseListableView):
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
         f = self.request.GET.get('f', False)
-        context['kwargs'] = {'f': f} if f else {}
+
+        context['kwargs'] = context['kwargs'] or {}
+        if f:
+            context['kwargs']['f'] = f
         if f == 'qcqm-lt':
             context['print_parts'] = True
         context['page_title'] = self.get_page_title(f)
@@ -415,21 +418,12 @@ class SuppliersList(BaseListableView):
         'get_website_tag': 'website',
     }
 
-    def get_icon(self):
-        return 'fa-microchip'
-
-    def get_page_title(self, f=None):
-        if not f:
-            return _l("All Suppliers")
-
     def get_context_data(self, *args, **kwargs):
         context = super(SuppliersList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
-        context['icon'] = self.get_icon()
-        f = self.request.GET.get('f', False)
-        context['kwargs'] = {'f': f} if f else {}
-        context['page_title'] = self.get_page_title(f)
+        context['icon'] = 'fa-microchip'
+        context['page_title'] = _l("All Suppliers")
         return context
 
     def actions(self, supplier):
