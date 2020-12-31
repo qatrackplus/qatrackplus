@@ -407,10 +407,12 @@ class SuppliersList(BaseListableView):
 
     search_fields = {
         'actions': False,
+        'get_website_tag': 'website',
     }
 
     order_fields = {
         'actions': False,
+        'get_website_tag': 'website',
     }
 
     def get_icon(self):
