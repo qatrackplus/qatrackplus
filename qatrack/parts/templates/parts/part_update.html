@@ -41,11 +41,11 @@
           <div class="box-header"></div>
           <div class="box-body">
             <div class="row" style="display: none;">
-              {% for field in form.hidden_fields %}
-                {{ field }}
-                {% if field.errors %}
-                    {{ field.errors }}
-                {% endif %}
+              {% for field in form.fieldsets.hidden_fields %}
+                  {{ field }}
+                  {% if field.errors %}
+                      {{ field.errors }}
+                  {% endif %}
               {% endfor %}
             </div>
             <div class="row">
