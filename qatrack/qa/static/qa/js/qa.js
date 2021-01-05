@@ -1495,6 +1495,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 minuteIncrement: 1,
                 dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 maxDate: work_completed_initial ? _.max([work_completed_initial, moment().valueOf()]) : moment().valueOf(),
+                allowInput: true,
                 onChange: function(selectedDates, dateStr, instance) {
 
                     if (dateStr === '') {
@@ -1509,6 +1510,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     $start_clear.fadeIn('fast');
                 }
             });
+            start_fp._input.addEventListener('blur', function (event) {
+                start_fp.setDate(start_fp._input.value, true);
+            }, true);
             $start_clear.click(function() {
                 start_fp.clear();
                 $(this).fadeOut('fast');
@@ -1520,6 +1524,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 minuteIncrement: 1,
                 minDate: $start_picker[0]._flatpickr.selectedDates[0],
+                allowInput: true,
                 onOpen: function(selectedDates, dateStr, instance) {
                     if (dateStr === '') {
                         instance.setDate(work_completed_initial ? work_completed_initial : moment().valueOf(), true);
@@ -1542,6 +1547,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }
                 }
             });
+            complete_fp._input.addEventListener('blur', function (event) {
+                complete_fp.setDate(complete_fp._input.value, true);
+            }, true);
 
             $complete_clear.click(function() {
                 complete_fp.clear();
