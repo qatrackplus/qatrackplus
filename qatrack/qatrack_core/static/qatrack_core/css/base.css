@@ -75,6 +75,11 @@ li.indent {
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
 }
+.pre-base {
+    white-space: pre-wrap;
+    word-break: normal;
+    word-wrap: normal;
+}
 .pre {
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
     white-space: pre-wrap;
