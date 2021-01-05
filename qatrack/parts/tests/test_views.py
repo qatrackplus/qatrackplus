@@ -262,5 +262,5 @@ class TestPartViews(TestCase):
         self.client.get(reverse('parts_list'))
 
     def test_parts_low_title(self):
-        response = self.client.get(reverse('parts_list') + '?f=qcqm-lt')
-        self.assertContains(response, ' - Low Inventory')
+        response = self.client.get(reverse('low_inventory_parts_list'))
+        self.assertContains(response, 'Low Inventory Parts')

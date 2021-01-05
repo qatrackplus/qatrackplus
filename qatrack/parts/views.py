@@ -205,6 +205,7 @@ class PartDetails(DetailView):
 
 class PartsList(BaseListableView):
 
+    page_title = _l("All Parts")
     model = p_models.Part
     template_name = 'parts/parts_list.html'
     paginate_by = 50
@@ -270,19 +271,6 @@ class PartsList(BaseListableView):
     def get_icon(self):
         return 'fa-cog'
 
-    def get_page_title(self, f=None):
-        if not f:
-            return _l("All Parts")
-        to_return = _l("Parts")
-        filters = f.split('_')
-        for filt in filters:
-            [key, val] = filt.split('-')
-            if key == 'qcqm':
-                if val == 'lt':
-                    to_return += ' - ' + _("Low Inventory")
-
-        return to_return
-
     def get(self, request, *args, **kwargs):
         if self.kwarg_filters is None:
             self.kwarg_filters = kwargs.pop('f', None)
@@ -290,23 +278,7 @@ class PartsList(BaseListableView):
 
     def get_queryset(self):
         qs = super(PartsList, self).get_queryset()
-
-        if self.kwarg_filters is None:
-            self.kwarg_filters = self.request.GET.get('f', None)
-
-        if self.kwarg_filters is not None:
-            filters = self.kwarg_filters.split('_')
-            query_kwargs = {}
-            for filt in filters:
-                [key, val] = filt.split('-')
-                if key == 'qcqm':
-                    if val == 'lt':
-                        qs = qs.filter(quantity_current__lt=F('quantity_min'))
-
-            qs = qs.filter(**query_kwargs)
-
-        qs = qs.annotate(attachment_count=Count("attachment"))
-        return qs
+        return qs.annotate(attachment_count=Count("attachment"))
 
     def format_col(self, field, obj):
         col = super(PartsList, self).format_col(field, obj)
@@ -317,14 +289,7 @@ class PartsList(BaseListableView):
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
-        f = self.request.GET.get('f', False)
-
-        context['kwargs'] = context['kwargs'] or {}
-        if f:
-            context['kwargs']['f'] = f
-        if f == 'qcqm-lt':
-            context['print_parts'] = True
-        context['page_title'] = self.get_page_title(f)
+        context['page_title'] = self.page_title
         return context
 
     def actions(self, p):
@@ -376,6 +341,15 @@ class PartsList(BaseListableView):
 
     def attachments(self, part):
         return listable_attachment_tags(part)
+
+
+class LowInventoryPartsList(PartsList):
+
+    page_title = _l("Low Inventory Parts")
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(quantity_current__lt=F('quantity_min'))
 
 
 class SuppliersList(BaseListableView):
