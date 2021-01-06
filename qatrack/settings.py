@@ -313,13 +313,10 @@ CACHE_AUTOREVIEW_RULESETS = "autoreviewrulesets"
 
 MAX_CACHE_TIMEOUT = None
 
-CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
-
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': CACHE_LOCATION,
-        'TIMEOUT': MAX_CACHE_TIMEOUT,
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'qatrack_cache_table',
     }
 }
 
@@ -716,6 +713,7 @@ for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT, LOG_ROOT, TMP_REPORT_ROOT):
     if not os.path.isdir(d):
         os.mkdir(d)
 
+CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 IS_FILE_CACHE = CACHES['default']['BACKEND'] == 'django.core.cache.backends.filebased.FileBasedCache'
 if IS_FILE_CACHE and not os.path.isdir(CACHE_LOCATION):
     os.mkdir(CACHE_LOCATION)

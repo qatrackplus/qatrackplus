@@ -158,7 +158,8 @@ UI Changes
 * Test Instance points with comments associated with them are now highlighed in
   charts
 
-* Listing for selectin
+* Keyboard entry of dates is now permitted for Work Started & Work Completed dates
+  when performing QC
 
 * New dropdown on Unit selection buttons to allow selecting QC to perform based
   on Test categories.
@@ -261,6 +262,7 @@ Service Log & Parts
 * You may now add attachments & images to Parts.  Images will be shown inline
   in the parts listing table and parts detail pages.
 
+
 Authentication
 ^^^^^^^^^^^^^^
 
@@ -289,12 +291,16 @@ Authentication
   and lastname will be updated to match the values found in Active Directory.
 
 
-
 Other Minor Features & Bugs Fixed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fixed bug with control charts and null valued / skipped tests. #506
 * Fixed bug with selecting Test List Cycle days from sidebar menu
+
+* QATrack+ by default will now use the database for caching rather than the
+  filesystem.  This should have comparable or better performance and eliminate
+  the occassional 500 errors generated on Windows servers due to file
+  permissions & access issues.
 
 
 Deprecations & Discontinuations
