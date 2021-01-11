@@ -188,7 +188,6 @@
 
                   {% for field in form.fieldsets.right_fields %}
                     <div class="form-group {% if field.errors %}has-error{% endif %}" title="{{ field.help_text }}">
-
                       <label for="{{ field.id_for_label }}" class="col-sm-4">
                         {{ field.label }}{% if field.field.required %} *{% endif %}
                       </label>

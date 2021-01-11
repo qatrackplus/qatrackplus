@@ -37,6 +37,7 @@
             USE_SERVICE_LOG: '{{ USE_SERVICE_LOG }}',
             USE_PARTS: '{{ USE_PARTS }}',
             USE_SQL_REPORTS: '{{ USE_PARTS }}',
+            USE_SERVICE_TEMPLATES: '{{ USE_SERVICE_TEMPLATES }}',
 
             MOMENT_DATE_DATA_FMT: '{{ MOMENT_DATE_DATA_FMT }}',
             MOMENT_DATE_FMT: '{{ MOMENT_DATE_FMT }}',
@@ -593,6 +594,27 @@
                             {% endif %}
                           {% endif %}
                         {% endif %}
+                        <li class="divider"></li>
+                        <li class="nav-header">{% trans "Service Event Templates" %}</li>
+                        {% if perms.service_log.add_serviceeventtemplate %}
+                          <li class="hover-parent">
+                            <a href="{% url "se_template_create" %}" title="{% trans "Create Template" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                <i class="fa fa-clipboard fa-stack-custom-main"></i>
+                                <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                              </i>
+                              {% trans "Create Template" %}
+                            </a>
+                          </li>
+                        {% endif %}
+                        <li class="hover-parent">
+                          <a href="{% url "all_se_templates" %}" title="{% trans "All Templates" %}">
+                            <i class="fa fa-stack fa-lg fa-fw">
+                              <i class="fa fa-clipboard fa-stack-custom-main"></i>
+                            </i>
+                            {% trans "All Templates" %}
+                          </a>
+                        </li>
                       </ul>
                     </li>
                   {% endif %}

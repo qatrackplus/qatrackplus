@@ -133,6 +133,7 @@ def site(request):
         'USE_SERVICE_LOG': settings.USE_SERVICE_LOG,
         'USE_PARTS': settings.USE_PARTS,
         'USE_ISSUES': settings.USE_ISSUES,
+        'USE_SERVICE_TEMPLATES': settings.USE_SERVICE_TEMPLATES,
 
         # JavaScript Date Formats
         'MOMENT_DATE_DATA_FMT': get_format("MOMENT_DATE_DATA_FMT"),

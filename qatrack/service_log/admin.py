@@ -455,7 +455,9 @@ if settings.USE_SERVICE_LOG:
     admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
     admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
     admin.site.register(GroupLinker, GroupLinkerAdmin)
-    admin.site.register(ServiceEventSchedule, ServiceEventScheduleAdmin)
-    admin.site.register(ServiceEventTemplate, ServiceEventTemplateAdmin)
+
+    if settings.USE_SERVICE_TEMPLATES:
+        admin.site.register(ServiceEventSchedule, ServiceEventScheduleAdmin)
+        admin.site.register(ServiceEventTemplate, ServiceEventTemplateAdmin)
 
     admin.site.register([ThirdParty], BaseQATrackAdmin)
