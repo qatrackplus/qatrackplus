@@ -1059,10 +1059,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
 
                     if (data.meta.work_started){
-                        $("#id_work_started").get(0)._flatpickr.setDate(data.meta.work_started, true);
+                        if (override_date)
+                            $("#id_work_started").get(0)._flatpickr.setDate(data.meta.work_started, true);
+                        else
+                            $("#id_work_started").val(data.meta.work_started);
                     }
                     if (data.meta.work_completed){
-                        $("#id_work_completed").get(0)._flatpickr.setDate(data.meta.work_completed, true);
+                        if (override_date)
+                            $("#id_work_completed").get(0)._flatpickr.setDate(data.meta.work_completed, true);
+                        else
+                            $("#id_work_completed").val(data.meta.work_completed);
                     }
 
                     $.Topic("valueChanged").subscribe(self.calculate_composites);
@@ -1103,6 +1109,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }
 
                 });
+                $.Topic("qaUpdated").publish();
 
             };
 

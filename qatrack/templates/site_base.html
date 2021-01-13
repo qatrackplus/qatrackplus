@@ -114,7 +114,7 @@
 
     <script src="{% static "requirejs/js/require.min.js" %}?v={{ VERSION }}"></script>
     <script type="text/javascript">
-        require(['{% static "requirejs/js/requirejs-config.js" %}?v={{ VERSION }}'], function () {
+        require(['{% static "requirejs/js/requirejs-config.js" %}?v={{ CSS_VERSION }}'], function () {
             {% block require_javascript %}
             {% endblock require_javascript %}
         });
