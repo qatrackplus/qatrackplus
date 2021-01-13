@@ -7,6 +7,7 @@ black==19.10b0
 Django==2.1.15
 PyVirtualDisplay==0.2
 beautifulsoup4==4.6.0
+concurrent-log-handler==0.9.19
 coreapi==2.3.3
 coverage==4.5.1
 django-admin-views==0.8.0

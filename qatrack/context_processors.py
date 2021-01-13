@@ -135,6 +135,7 @@ def site(request):
         'USE_ISSUES': settings.USE_ISSUES,
 
         # JavaScript Date Formats
+        'MOMENT_DATE_DATA_FMT': get_format("MOMENT_DATE_DATA_FMT"),
         'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
         'MOMENT_DATETIME_FMT': get_format("MOMENT_DATETIME_FMT"),
         'FLATPICKR_DATE_FMT': get_format("FLATPICKR_DATE_FMT"),

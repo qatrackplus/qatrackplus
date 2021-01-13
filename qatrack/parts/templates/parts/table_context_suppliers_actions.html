@@ -1,7 +1,7 @@
 {% load qa_tags %}
 {% load i18n %}
 <a
-  class="btn btn-primary btn-xs btn-flat"
+  class="btn btn-default btn-xs btn-flat"
   href="{% url 'supplier_details' supplier.pk %}{% if next %}?next={{ next }}{% endif %}"
 >
   {% trans "View" %}
@@ -9,7 +9,7 @@
 
 {% if request.user.is_staff and perms.parts.change_supplier %}
   <a
-    class="btn btn-primary btn-xs btn-flat"
+    class="btn btn-default btn-xs btn-flat"
     href="{% url 'admin:parts_supplier_change' object_id=supplier.pk %}"
     title="{% trans "Click to edit this supplier details" %}"
   >

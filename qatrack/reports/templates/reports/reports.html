@@ -21,14 +21,16 @@
 {% block extra_css %}
   <link href="{% static "select2/css/select2.min.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "select2/css/select2-bootstrap.min.css" %}?v={{VERSION}}" rel="stylesheet">
-  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
   <link href="{% static "datepicker/css/bootstrap-datepicker.min.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
-  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
-  <link href="{% static "datatables/1.10/css/datatables.min.css" %}?v={{ VERSION }}" rel="stylesheet">
-  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/dataTables.bootstrap.min.css" %}?v={{ VERSION }}" rel="stylesheet">
-  <link href="{% static "reports/css/reports.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ CSS_VERSION }}" rel="stylesheet">
+{#  <link href="{% static "datatables/1.10/css/datatables.min.css" %}?v={{ VERSION }}" rel="stylesheet">#}
+{#  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/dataTables.bootstrap.min.css" %}?v={{ VERSION }}" rel="stylesheet">#}
+  <link href="{% static "reports/css/reports.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
   <link href="{% static "recurrence/css/recurrence.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
@@ -146,9 +148,9 @@
                   <div class="input-group">
                     <input id="current" data-original="{% trans "New Report" %}" type="text" class="form-control disabled" disabled value="{% trans "New Report" %}"/>
                     <div class="input-group-btn">
-                      <button id="clear-report" {% if not report_form.is_bound %}disabled{% endif %} type="button" class="btn btn-primary btn-sm" title="{% trans "Clear report" %}"><i class="fa fa-remove"></i></button>
+                      <button id="clear-report" {% if not report_form.is_bound %}disabled{% endif %} type="button" class="btn btn-default btn-sm" title="{% trans "Clear report" %}"><i class="fa fa-remove"></i></button>
                       <button id="delete-report" {% if not report_form.is_bound %}disabled{% endif %} type="button"
-                              class="btn btn-primary btn-sm"
+                              class="btn btn-default btn-sm"
                               title="{% trans "Delete report" %}"
                               data-target="#delete-modal"
                       >
@@ -301,13 +303,14 @@
         <p>{% trans "Are you sure you want to delete this report?" %}</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">
-          <i class="fa fa-ban"></i>
-          {% trans "No, Cancel" %}
-        </button>
-        <button id="delete" type="button" class="btn btn-danger">
+
+        <button id="delete" type="button" class="btn btn-flat btn-danger pull-left">
           <i class="fa fa-trash"></i>
           {% trans "Yes, Delete" %}
+        </button>
+        <button type="button" class="btn btn-default btn-flat" data-dismiss="modal">
+          <i class="fa fa-ban"></i>
+          {% trans "No, Cancel" %}
         </button>
       </div>
     </div><!-- /.modal-content -->
@@ -341,17 +344,17 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button id="clear-schedule" type="button" class="btn btn-info pull-left" title="{% trans "Click to clear this reports schedule" %}" >
+        <button id="clear-schedule" type="button" class="btn btn-primary btn-flat pull-left" title="{% trans "Click to clear this reports schedule" %}" >
           <i class="fa fa-trash"></i>
           {% trans "Clear Schedule" %}
         </button>
 
-        <button id="schedule" type="button" class="btn btn-info">
+        <button id="schedule" type="button" class="btn btn-primary btn-flat">
           <i class="fa fa-clock-o"></i>
           {% trans "Update Schedule" %}
         </button>
 
-        <button type="button" class="btn btn-info" data-dismiss="modal">
+        <button type="button" class="btn btn-default btn-flat" data-dismiss="modal">
           <i class="fa fa-remove"></i>
           {% trans "Close" %}
         </button>

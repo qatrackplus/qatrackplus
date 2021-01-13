@@ -3,7 +3,7 @@ import calendar
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Max
-from django.utils.timezone import timedelta
+from django.utils.timezone import timedelta, datetime
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
@@ -296,6 +296,9 @@ class Unit(models.Model):
 
         return potential_time / 3600
 
+    def get_available_times_list(self):
+        return [uat.to_dict() for uat in self.unitavailabletime_set.all()]
+
     def save(self, *args, **kwargs):
         if self.number in ("", None):
             next_available = Unit.objects.all().aggregate(max_num=Max("number") + 1)['max_num'] or 1
@@ -348,6 +351,18 @@ class UnitAvailableTime(models.Model):
 
     def __str__(self):
         return 'Available time schedule change'
+
+    def to_dict(self):
+        return {
+            'date_changed': '{:02d}-{:02d}-{}'.format(self.date_changed.day, self.date_changed.month, self.date_changed.year),
+            'hours_sunday': self.hours_sunday,
+            'hours_monday': self.hours_monday,
+            'hours_tuesday': self.hours_tuesday,
+            'hours_wednesday': self.hours_wednesday,
+            'hours_thursday': self.hours_thursday,
+            'hours_friday': self.hours_friday,
+            'hours_saturday': self.hours_saturday,
+        }
 
     @staticmethod
     def available_times_on_unit_acceptance(unit_id):

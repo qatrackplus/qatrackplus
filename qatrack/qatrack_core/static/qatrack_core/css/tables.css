@@ -99,3 +99,12 @@ table.table-valign-middle > tfoot > tr > td {
 .table > tbody > tr > td {
     border-top-color: transparent;
 }
+#listable-table-suppliers_list > thead > tr > th:nth-child(1) {
+    width: 100px;
+}
+#listable-table-suppliers_list > thead > tr > th:nth-child(2) {
+    width: 150px;
+}
+#listable-table-suppliers_list > thead > tr > th:nth-child(3) {
+    width: 150px;
+}

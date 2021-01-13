@@ -66,20 +66,20 @@
         <form class="form-horizontal">
           <div class="form-group">
             <label class="col-sm-2" for="groups">{% trans "Group" %}</label>
-            <div class="col-sm-6">
+            <div class="col-sm-5">
               <select class="form-control" id="groups" v-model="selected">
                 <option v-for="group in groups" :value="group.name" v-text="group.name"></option>
               </select>
             </div>
-            <div class="col-sm-4">
+            <div class="col-sm-5">
               <a @click="addGroupDialog('add')"
-                class="btn btn-default btn-sm"
+                class="btn btn-default btn-flat btn-sm"
                 type="button" title="{% trans "Add New Group" %}"
               >
                 <i class="fa fa-plus"></i> {% trans "Add Group" %}
               </a>
               <a @click="addGroupDialog('edit')"
-                class="btn btn-default btn-sm"
+                class="btn btn-default btn-flat btn-sm"
                 type="button" title="{% trans "Edit Group Name & Members" %}"
               >
                 <i class="fa fa-edit"></i> {% trans "Edit Group" %}
@@ -130,8 +130,8 @@
                   </div>
                   <div class="form-group">
                     <label for="new-group-users">{% trans "Select Users Below" %}</label>
-                    <a @click="userSelectAll" class="btn btn-xs btn-info pull-right">{% trans "Select All" %}</a>
-                    <a @click="userSelectNone" class="btn btn-xs btn-info pull-right" style="margin-right: 5px">{% trans "Select None" %}</a>
+                    <a @click="userSelectAll" class="btn btn-xs btn-flat btn-default pull-right">{% trans "Select All" %}</a>
+                    <a @click="userSelectNone" class="btn btn-xs btn-flat btn-default pull-right" style="margin-right: 5px">{% trans "Select None" %}</a>
                     <table id="user-table" class="table table-bordered table-striped table-condensed fixed">
                       <thead>
                         <tr>
@@ -159,8 +159,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button @click="groupModalClose" type="button" class="btn btn-default" data-dismiss="modal">{% trans "Close" %}</button>
-            <button @click="updateGroup" type="button" class="btn btn-primary" v-text="groupModalButton"></button>
+            <button @click="groupModalClose" type="button" class="btn btn-flat btn-default" data-dismiss="modal">{% trans "Close" %}</button>
+            <button @click="updateGroup" type="button" class="btn btn-flat btn-primary" v-text="groupModalButton"></button>
           </div>
         </div>
       </div>
