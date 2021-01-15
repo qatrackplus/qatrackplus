@@ -110,10 +110,16 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             settings.AD_SEARCH_FIELDS,
         )[0][1]
 
+        email = result.get(settings.AD_LU_MAIL, [""])[0]
+        last_name = result.get(settings.AD_LU_SURNAME, [""])[0]
+        first_name = result.get(settings.AD_LU_GIVEN_NAME, [""])[0]
+        email = email.decode('utf-8') if isinstance(email, bytes) else email
+        last_name = last_name.decode('utf-8') if isinstance(last_name, bytes) else last_name
+        first_name = last_name.decode('utf-8') if isinstance(last_name, bytes) else last_name
         attrs = {
-            'email': result.get(settings.AD_LU_MAIL, [""])[0],
-            'last_name': result.get(settings.AD_LU_SURNAME, [""])[0],
-            'first_name': result.get(settings.AD_LU_GIVEN_NAME, [""])[0],
+            'email': email,
+            'last_name': last_name,
+            'first_name': first_name,
         }
 
         member_of = result.get(settings.AD_LU_MEMBER_OF, [""])[0]
