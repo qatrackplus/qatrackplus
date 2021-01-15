@@ -35,12 +35,12 @@ from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
-from qatrack.qatrack_core.serializers import QATrackJSONEncoder
-from qatrack.qatrack_core.utils import (
+from qatrack.qatrack_core.dates import (
     format_datetime,
     parse_date,
     parse_datetime,
 )
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 

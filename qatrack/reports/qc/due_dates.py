@@ -6,8 +6,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qa import models
-from qatrack.qa.utils import end_of_day
-from qatrack.qatrack_core.utils import format_as_date
+from qatrack.qatrack_core.dates import end_of_day, format_as_date
 from qatrack.reports import filters
 from qatrack.reports.reports import BaseReport
 from qatrack.units import models as umodels

@@ -15,7 +15,7 @@ from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qa import models
 from qatrack.qa.utils import format_qc_value
-from qatrack.qatrack_core.utils import format_datetime
+from qatrack.qatrack_core.dates import format_datetime
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 

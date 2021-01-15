@@ -1,0 +1,13 @@
+{% load i18n %}
+{% load qa_tags %}
+
+<div style="min-width: 85px;">
+  {% if perms.service_log.change_serviceevent %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'sl_new' %}?se_schedule={{ se_schedule.pk }}&next={{request.path|cut:"data/"}}"
+      title="{% trans "Click to perform this Service Event" %}"
+    >
+      {% trans "Perform" %}
+    </a>
+  {% endif %}
+</div>

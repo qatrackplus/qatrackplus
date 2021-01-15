@@ -1,0 +1,19 @@
+{% load i18n %}
+{% load qa_tags %}
+
+<div style="min-width: 85px;">
+  {% if perms.service_log.add_serviceevent %}
+    <a class="btn btn-default btn-xs btn-flat"
+       href="{% url 'sl_new' %}?set={{ se_template.pk }}&next={{ se_next }}"
+      title="{% trans "Create a Service Event with this template" %}"
+    >
+      {% trans "Create Service Event" %}
+    </a>
+  {% endif %}
+  {% if perms.service_log.change_serviceeventtemplate %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'se_template_edit' pk=se_template.pk %}?next={{ set_next }}"
+      title="{% trans "Edit this template" %}"
+    >{% trans "Edit" %}</a>
+  {% endif %}
+</div>

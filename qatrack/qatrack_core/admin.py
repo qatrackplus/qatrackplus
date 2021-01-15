@@ -36,3 +36,7 @@ class DisableInlineEditMixin:
 
 class BaseQATrackAdmin(DisableInlineEditMixin, admin.ModelAdmin):
     pass
+
+
+class SaveUserQATrackAdmin(SaveUserMixin, BaseQATrackAdmin):
+    """Adds SaveUser functionality to the BaseQATrackAdmin"""

@@ -13,8 +13,8 @@ from selenium.webdriver.support import expected_conditions as e_c
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
 from qatrack.qa.tests import utils
+from qatrack.qatrack_core.dates import format_as_date
 from qatrack.qatrack_core.tests.live import SeleniumTests
-from qatrack.qatrack_core.utils import format_as_date
 from qatrack.service_log.tests import utils as sl_utils
 
 objects = {

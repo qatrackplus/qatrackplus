@@ -2,7 +2,7 @@
 
 from django.db import migrations
 
-from qatrack.qatrack_core.utils import (
+from qatrack.qatrack_core.dates import (
     format_as_date,
     format_datetime,
     parse_date,

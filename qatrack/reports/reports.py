@@ -16,12 +16,8 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 import xlsxwriter
 
-from qatrack.qatrack_core.utils import (
-    chrometopdf,
-    format_as_date,
-    format_datetime,
-    relative_dates,
-)
+from qatrack.qatrack_core.dates import format_as_date, format_datetime
+from qatrack.qatrack_core.utils import chrometopdf, relative_dates
 
 CSV = "csv"
 XLS = "xlsx"

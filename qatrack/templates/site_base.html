@@ -72,6 +72,8 @@
             HANDLE_UNIT_DOWN_TIME: "{% url 'handle_unit_down_time' %}",
             AJAX_COMMENT: "{% url 'ajax_comment' %}",
             UNIT_AT_DATA: "{% url 'get_unit_available_time_data' %}",
+            SE_TEMPLATE: "{% url 'create_se_template' %}",
+            SE_TEMPLATE_SEARCHER: "{% url 'se_template_searcher' %}",
 
             options_from_url_query: function(query){
                 var options = [];
@@ -482,51 +484,68 @@
                               </a>
                             </li>
                           {% endif %}
+
+                          <li class="divider"></li>
+                          <li class="nav-header">{% trans "Service Event Schedules" %}</li>
+
+                          <li class="hover-parent">
+                            <a href="{% url "se_schedule_list_all" %}" title="{% trans "View all service event schedules" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                <i class="fa fa-clock-o fa-stack-custom-sub upper-left hover-sub-primary"></i>
+                              </i>
+                              {% trans "Service Event Schedules" %}
+                            </a>
+                          </li>
+
                         {% endif %}
                         {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
 
                           <li class="divider"></li>
 
                           <li class="nav-header">{% trans "Return To Service QC" %}</li>
-                            {% if perms.service_log.view_returntoserviceqa %}
-                              <li class="hover-parent">
-                                <a href="{% url "rtsqa_list_all" %}" title="{% trans "View all return to service qa" %}">
-                                  <i class="fa fa-stack fa-lg fa-fw">
-                                    <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
-                                    <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
-                                  </i>
-                                  {% trans "View All Return To Service" %}
-                                </a>
-                              </li>
-                            {% endif %}
+                          {% if perms.service_log.view_returntoserviceqa %}
+                            <li class="hover-parent">
+                              <a href="{% url "rtsqa_list_all" %}" title="{% trans "View all return to service qa" %}">
+                                <i class="fa fa-stack fa-lg fa-fw">
+                                  <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                                  <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                                </i>
+                                {% trans "View All Return To Service" %}
+                              </a>
+                            </li>
+                          {% endif %}
 
-                            {% if perms.service_log.perform_returntoserviceqa %}
-                              <li class="hover-parent">
-                                <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service qa" %}">
-                                  <i class="fa fa-stack fa-lg fa-fw">
-                                    <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
-                                    <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
-                                  </i>
-                                  <span title="{% trans "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{ SE_RTS_INCOMPLETE_QA_COUNT }}</span>
-                                  </span>
-                                  {% trans "View All Incomplete Return To Service" %}
-                                </a>
-                              </li>
-                            {% endif %}
+                          {% if perms.service_log.perform_returntoserviceqa %}
+                            <li class="hover-parent">
+                              <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service qa" %}">
+                                <i class="fa fa-stack fa-lg fa-fw">
+                                  <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                                  <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                                </i>
+                                <span title="{% trans "There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                  <span class="total-unreviewed-count">{{SE_RTS_INCOMPLETE_QA_COUNT}}</span>
+                                </span>
+                                {% trans "View All Incomplete Return To Service" %}
+                              </a>
+                            </li>
+                          {% endif %}
 
-                            {% if perms.qa.can_review %}
-                              <li>
-                                <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
-                                  <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                  <span title="{% trans "There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{ SE_RTS_UNREVIEWED_QA_COUNT }}</span>
-                                  </span>
-                                  {% trans "Unreviewed Return To Service" %}
-                                </a>
-                              </li>
-                            {% endif %}
+                          {% if perms.qa.can_review %}
+                            <li>
+                              <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
+                                <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
+                                <span title="{% trans "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                  <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>
+                                </span>
+                                {% trans "Unreviewed Return To Service" %}
+                              </a>
+                            </li>
+                          {% endif %}
+
                         {% endif %}
+
+
                         {% if USE_PARTS %}
                           {% if perms.parts.add_part or perms.view_part %}
                             <li class="divider"></li>

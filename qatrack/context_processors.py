@@ -8,6 +8,7 @@ from django.db.models import ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.formats import get_format
+from random import Random
 
 from qatrack.parts.models import PartStorageCollection, PartUsed
 from qatrack.qa.models import TestListInstance, UnitTestCollection
@@ -120,6 +121,7 @@ def site(request):
     context = {
         'SELF_REGISTER': settings.ACCOUNTS_SELF_REGISTER,
         'VERSION': settings.VERSION,
+        'CSS_VERSION': Random().randint(1, 1000) if settings.DEBUG else settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'ICON_SETTINGS': settings.ICON_SETTINGS,

@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qa import models
 from qatrack.qa.templatetags.qa_tags import as_time_delta
-from qatrack.qatrack_core.utils import format_as_date, format_datetime
+from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.reports import filters
 from qatrack.reports.reports import BaseReport, format_user
 from qatrack.units import models as umodels

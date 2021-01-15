@@ -24,7 +24,7 @@ from django.views.generic import (
 )
 import pytz
 
-from qatrack.qatrack_core.utils import format_datetime
+from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
 from qatrack.service_log.models import (
     ReturnToServiceQA,

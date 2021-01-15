@@ -1,5 +1,3 @@
-import calendar
-import datetime
 import io
 import json
 import math
@@ -8,7 +6,6 @@ import tokenize
 
 from django.conf import settings
 from django.db.transaction import atomic
-from django.utils import timezone
 
 
 class SetEncoder(json.JSONEncoder):
@@ -202,118 +199,6 @@ def get_internal_user(user_klass=None):
         u.save()
 
     return u
-
-
-def calc_due_date(completed, due_date, frequency):
-    """Calculate the next due date after completed for input frequency. If
-    completed is prior to qc window the due date return will be the same as
-    input due_date."""
-
-    if frequency is None:
-        return None
-
-    is_classic_offset = frequency.window_start is None
-    if is_classic_offset or due_date is None:
-        return frequency.recurrences.after(completed, dtstart=completed)
-
-    if due_date is None:
-        return calc_initial_due_date(completed, frequency)
-
-    if should_update_schedule(completed, due_date, frequency):
-
-        # ok, we're inside or beyond QC window so get next due date
-        next_due_date = frequency.recurrences.after(completed, dtstart=due_date)
-
-        # now, it's possible that we performed the test long after the due
-        # date and now we're inside the next QC window so we have to check
-        # if we should move the next one!
-        # See TestCalcDueDate.test_first_of_month_performed_long_after_inside_next_window
-        if should_update_schedule(completed, next_due_date, frequency):
-            next_due_date = frequency.recurrences.after(next_due_date, dtstart=next_due_date)
-
-        return next_due_date
-
-    return due_date
-
-
-def calc_initial_due_date(completed, frequency):
-    """if due date is None, check whether completed date falls within the
-    window for the next occurence. If it does return second occurence,
-    otherwise return next occurence."""
-
-    next_occurence = frequency.recurrences.after(completed, dtstart=completed)
-    if should_update_schedule(completed, next_occurence, frequency):
-        return frequency.recurrences.after(next_occurence, dtstart=next_occurence)
-    return next_occurence
-
-
-def qc_window(due_date, frequency):
-    """Calculate the qc window around due_date for given frequency"""
-
-    #    assert False, "need to use day start and end I think"
-    if frequency is None or due_date is None:
-        return (None, None)
-
-    start = None
-    if frequency.window_start is not None:
-        start = start_of_day(due_date - timezone.timedelta(days=frequency.window_start))
-
-    end = end_of_day(due_date + timezone.timedelta(days=frequency.window_end))
-
-    return (start, end)
-
-
-def should_update_schedule(date, due_date, frequency):
-    """Return true if date falls after start of qc_window for due_date"""
-    start, end = qc_window(due_date, frequency)
-    return start is None or start <= date
-
-
-def calc_nominal_interval(frequency):
-    """Calculate avg number of days between tests for ordering purposes"""
-    tz = timezone.get_current_timezone()
-    occurrences = frequency.recurrences.occurrences(
-        dtstart=tz.localize(timezone.datetime(2012, 1, 1)),
-        dtend=end_of_day(tz.localize(timezone.datetime(2012, 12, 31))),
-    )
-    deltas = [(t2 - t1).total_seconds() / (60 * 60 * 24) for t1, t2 in zip(occurrences, occurrences[1:])]
-    return sum(deltas) / len(deltas)
-
-
-def date_to_datetime(date):
-    """If passed a date object will return an equivalent datetime at 00:00 in the current timezone"""
-    if isinstance(date, datetime.date):
-        return timezone.get_current_timezone().localize(timezone.datetime(date.year, date.month, date.day))
-    return date
-
-
-def start_of_day(dt):
-    """convert datetime to start of day in local timezone"""
-    tz = timezone.get_current_timezone()
-    return dt.astimezone(tz).replace(hour=0, minute=0, second=0, microsecond=0)
-
-
-def end_of_day(dt):
-    """convert datetime to end of day in local timezone"""
-    tz = timezone.get_current_timezone()
-    return dt.astimezone(tz).replace(hour=23, minute=59, second=59, microsecond=999999)
-
-
-def month_start_and_end(year, month):
-    """Return start, end tuple of datetimes representing the start and end of input year/month"""
-    tz = timezone.get_current_timezone()
-    start = tz.localize(timezone.datetime(year, month, 1))
-    end = tz.localize(timezone.datetime(year, month, calendar.monthrange(year, month)[1]))
-    return start, end
-
-
-def last_month_dates(dt=None):
-    """Return the start and end datetimes of the month before either the input
-    datetime or timezone.now() if dt=None"""
-
-    dt = dt or timezone.now()
-    month, year = (12, dt.year - 1) if dt.month == 1 else (dt.month - 1, dt.year)
-    return month_start_and_end(year, month)
 
 
 def format_qc_value(val, format_str, _try_default=True):

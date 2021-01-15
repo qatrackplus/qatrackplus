@@ -6,7 +6,7 @@ from django.db import migrations
 from django.utils import timezone
 import recurrence
 
-from qatrack.qa.utils import calc_nominal_interval
+from qatrack.qatrack_core.scheduling import calc_nominal_interval
 
 
 def create_freq_schedule(apps, schema):

@@ -25,8 +25,10 @@ from recurrence.fields import RecurrenceField
 
 from qatrack.qa import utils
 from qatrack.qa.testpack import TestPackMixin
+from qatrack.qatrack_core import scheduling
+from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.qatrack_core.fields import JSONField
-from qatrack.qatrack_core.utils import format_as_date, format_datetime
+from qatrack.qatrack_core.scheduling import SchedulingMixin
 from qatrack.units.models import Unit
 
 # All available test types
@@ -110,13 +112,6 @@ PASS_FAIL_CHOICES = (
 )
 PASS_FAIL_CHOICES_DISPLAY = dict(PASS_FAIL_CHOICES)
 
-
-# due date choices
-NO_DUE_DATE = NO_TOL
-NOT_DUE = OK
-DUE = TOLERANCE
-OVERDUE = ACTION
-NEWLIST = NOT_DONE
 
 EPSILON = 1E-10
 
@@ -375,7 +370,7 @@ class Frequency(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        self.nominal_interval = utils.calc_nominal_interval(self)
+        self.nominal_interval = scheduling.calc_nominal_interval(self)
         super().save(*args, **kwargs)
 
     def natural_key(self):
@@ -1171,7 +1166,7 @@ def get_utc_tlc_ids(active=None, units=None, frequencies=None):
     return tlcs
 
 
-def get_utc_tl_ids(active=None, units=None, frequencies=None):
+def get_utc_tl_ids(active=None, units=None, frequencies=None, include_cycles=True):
 
     tlct = ContentType.objects.get_for_model(TestList)
 
@@ -1200,10 +1195,13 @@ def get_utc_tl_ids(active=None, units=None, frequencies=None):
         object_id__count__gt=0
     ).values_list("object_id", flat=True)
 
-    tlcs = get_utc_tlc_ids(active=active, units=units, frequencies=frequencies)
-    tls_from_tlcs = TestListCycleMembership.objects.filter(
-        cycle_id__in=tlcs
-    ).values_list("test_list_id", flat=True)
+    if include_cycles:
+        tlcs = get_utc_tlc_ids(active=active, units=units, frequencies=frequencies)
+        tls_from_tlcs = TestListCycleMembership.objects.filter(
+            cycle_id__in=tlcs
+        ).values_list("test_list_id", flat=True)
+    else:
+        tls_from_tlcs = []
 
     return list(tls) + list(tls_from_tlcs)
 
@@ -1608,8 +1606,14 @@ class UnitTestListManager(models.Manager):
     def by_visibility(self, groups):
         return self.get_queryset().filter(visible_to__in=groups)
 
+    def active(self):
+        return self.get_queryset().filter(active=True)
 
-class UnitTestCollection(models.Model):
+    def inactive(self):
+        return self.get_queryset().filter(active=False)
+
+
+class UnitTestCollection(SchedulingMixin, models.Model):
     """keeps track of which units should perform which test lists at a given frequency"""
 
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
@@ -1673,51 +1677,6 @@ class UnitTestCollection(models.Model):
             ("can_view_overview", _l("Can view program overview")),
             ("can_review_non_visible_tli", _l("Can view tli and utc not visible to user's groups"))
         )
-
-    def calc_due_date(self):
-        """return the next due date of this Unit/TestList pair """
-
-        if self.auto_schedule and self.frequency:
-            last_valid = self.last_instance_for_scheduling()
-            if not last_valid and self.last_instance:
-                # Done before but no valid lists
-                return timezone.now()
-            elif (last_valid and last_valid.work_completed):
-                return utils.calc_due_date(last_valid.work_completed, self.due_date, self.frequency)
-
-        # return existing due date (could be None)
-        return self.due_date
-
-    def set_due_date(self, due_date=None):
-        """Set due date field for this UTC. Note model is not saved to db.
-        Saving be done manually"""
-        if self.auto_schedule and due_date is None and self.frequency is not None:
-            due_date = self.calc_due_date()
-
-        if due_date is not None:
-            # use update here instead of save so post_save and pre_save signals are not
-            # triggered
-            self.due_date = due_date
-            UnitTestCollection.objects.filter(pk=self.pk).update(due_date=due_date)
-
-    def due_status(self):
-        if not self.due_date:
-            return NO_DUE_DATE
-
-        today = timezone.localtime(timezone.now()).date()
-        due = timezone.localtime(self.due_date).date()
-
-        if today < due:
-            return NOT_DUE
-
-        if self.frequency is not None:
-            overdue = due + timezone.timedelta(days=self.frequency.window_end)
-        else:
-            overdue = due + timezone.timedelta(days=1)
-
-        if today < overdue:
-            return DUE
-        return OVERDUE
 
     def last_instance_for_scheduling(self):
         """ return last test_list_instance with all valid tests """
@@ -1825,21 +1784,6 @@ class UnitTestCollection(models.Model):
                 reference=source_uti.reference,
                 tolerance=source_uti.tolerance
             )
-
-    def window(self):
-
-        if self.due_date is None:
-            return None
-
-        if not self.frequency:
-            return (self.due_date, self.due_date)
-
-        if self.frequency.classical:
-            return (self.due_date, (self.due_date + timezone.timedelta(days=self.frequency.window_end)))
-
-        start = self.due_date - timezone.timedelta(days=self.frequency.window_start)
-        end = self.due_date + timezone.timedelta(days=self.frequency.window_end)
-        return (start, end)
 
     def __str__(self):
         return self.name

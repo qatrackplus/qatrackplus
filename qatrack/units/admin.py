@@ -81,7 +81,7 @@ class UnitFormAdmin(ModelForm):
         def vendor_unit_type(ut):
             return "%s :: %s" % (ut.vendor.name if ut.vendor else "Other", ut.name)
 
-        unit_types = UnitType.objects.order_by("vendor__name", "name")
+        unit_types = UnitType.objects.select_related("vendor").order_by("vendor__name", "name")
         choices = [(v, list(uts)) for (v, uts) in groupby(unit_types, key=vendor_name)]
         choices = [(v, [(ut.id, vendor_unit_type(ut)) for ut in uts]) for (v, uts) in choices]
         choices = [("", "---------")] + choices
@@ -101,7 +101,7 @@ class UnitFormAdmin(ModelForm):
             unit = self.instance
 
             for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
-                if ServiceEvent.all_objects.filter(unit_service_area=usa).exists():
+                if ServiceEvent.objects.filter(unit_service_area=usa).exists():
                     data_copy = self.data.copy()
                     data_copy.setlist(
                         'service_areas',

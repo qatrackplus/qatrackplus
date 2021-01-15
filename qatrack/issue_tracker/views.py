@@ -170,7 +170,7 @@ class IssueList(BaseListableView):
         return template.render(c)
 
     def datetime_submitted(self, i):
-        template = get_template('service_log/table_context_datetime.html')
+        template = get_template('service_log/table_context/table_context_datetime.html')
         c = {'datetime': i.datetime_submitted}
         return template.render(c)
 

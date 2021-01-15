@@ -163,3 +163,11 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
 h3.has-error {
     color: #dd4b39;
 }
+
+#submit_cover {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: #fff;
+    z-index: 1000;
+}

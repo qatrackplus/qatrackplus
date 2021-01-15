@@ -103,6 +103,7 @@ require.config({
         sl_utils: siteConfig.STATIC_URL + 'service_log/js/sl_utils',
         service_event_down_time_list: siteConfig.STATIC_URL + 'service_log/js/service_event_down_time_list',
         down_time_summary: siteConfig.STATIC_URL + 'service_log/js/down_time_summary',
+        sl_se_template: siteConfig.STATIC_URL + 'service_log/js/sl_se_template',
 
         //parts module:
         p_part: siteConfig.STATIC_URL + 'parts/js/p_part',

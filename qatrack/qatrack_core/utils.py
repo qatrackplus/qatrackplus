@@ -5,7 +5,6 @@ import uuid
 from dateutil import relativedelta as rdelta
 from django.conf import settings
 from django.utils import timezone
-from django.utils.formats import get_format
 
 
 def chrometopdf(html, name=""):
@@ -55,52 +54,6 @@ def chrometopdf(html, name=""):
             pass
 
     return pdf
-
-
-def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
-    """Take a date time and return as string formatted date time after converting to localtime"""
-
-    if not dt:
-        return ""
-
-    if isinstance(dt, timezone.datetime) and timezone.is_aware(dt):
-        dt = timezone.localtime(dt)
-
-    return dt.strftime(fmt)
-
-
-def format_as_date(dt, fmt=settings.DATE_INPUT_FORMATS[0]):
-    """Take a date time and return as string formatted date after converting to localtime"""
-    return format_datetime(dt, fmt=fmt)
-
-
-def format_as_time(dt, fmt=settings.TIME_INPUT_FORMATS[0]):
-    return format_datetime(dt, fmt=fmt)
-
-
-def format_timedelta(td):
-    return "" if td is None else str(td)
-
-
-def parse_datetime(dt_str):
-    """Take string and return datetime object"""
-    for fmt in get_format("DATETIME_INPUT_FORMATS"):
-        try:
-            return timezone.datetime.strptime(dt_str, fmt)
-        except (ValueError, TypeError):
-            continue
-
-
-def parse_date(dt_str, as_date=True):
-    """Take a string and return date object"""
-    for fmt in get_format("DATE_INPUT_FORMATS"):
-        try:
-            dt = timezone.datetime.strptime(dt_str, fmt)
-            if as_date:
-                dt = dt.date()
-            return dt
-        except (ValueError, TypeError):
-            continue
 
 
 def end_of_day(dt):

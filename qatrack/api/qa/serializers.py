@@ -20,8 +20,8 @@ from qatrack.api.comments.serializers import CommentSerializer
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models, signals
 from qatrack.qa.views.perform import CompositePerformer, UploadHandler
+from qatrack.qatrack_core.dates import parse_date, parse_datetime
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
-from qatrack.qatrack_core.utils import parse_date, parse_datetime
 from qatrack.service_log import models as sl_models
 
 BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")

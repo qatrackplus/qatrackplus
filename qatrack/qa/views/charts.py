@@ -19,7 +19,7 @@ import numpy
 
 from qatrack.qa.control_chart import control_chart
 from qatrack.qa.utils import SetEncoder
-from qatrack.qatrack_core.utils import (
+from qatrack.qatrack_core.dates import (
     format_as_date,
     format_datetime,
     parse_date,

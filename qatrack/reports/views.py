@@ -5,8 +5,8 @@ from django.template.loader import get_template
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from qatrack.qatrack_core.utils import format_as_date
-from qatrack.reports import models, qc, reports, service_log
+from qatrack.qatrack_core.dates import format_as_date
+from qatrack.reports import models, qc, reports, service_log  # noqa: F401
 from qatrack.reports.forms import (
     ReportForm,
     ReportNoteFormSet,

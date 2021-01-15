@@ -106,7 +106,7 @@
           <div class="row">
             <div id="required-fields" class="col-md-6 form-horizontal">
               <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                   <dl class="dl-horizontal">
 
                     <dt>{% trans "Service date" %}:</dt>
@@ -132,6 +132,32 @@
               <div class="row">
                 <div class="col-md-12">
                   <dl class="dl-horizontal">
+                    {% if serviceevent.service_event_template %}
+                      <dt>{% trans "Template" %}:</dt>
+                      <dd>
+                        {{ serviceevent.service_event_template }}
+                      </dd>
+                    {% endif %}
+                    {% if serviceevent.service_event_schedule %}
+                      <dt>{% trans "Previous Due Date" %}:</dt>
+
+                      <dd>
+                        {% if serviceevent.due_date %}
+                          <abbr title="Due date when this service event was completed">{{ serviceevent.due_date }}</abbr>
+                        {% else %}
+                          <em>{% trans "No due date set" %}</em>
+                        {% endif %}
+                      </dd>
+
+                      <dt>{% trans "Scheduled" %}:</dt>
+                      <dd>
+                        {% if serviceevent.include_for_scheduling %}
+                          <abbr title="This service event is included when calculating due dates">{% trans "Yes" %}</abbr>
+                        {% else %}
+                          <abbr title="This service event is not considered when calculating due dates">{% trans "No" %}</abbr>
+                        {% endif %}
+                      </dd>
+                    {% endif %}
                     {% if serviceevent.service_event_related.all|length > 0 %}
                       <dt>{% trans "Related service events" %}:</dt>
                       <dd>

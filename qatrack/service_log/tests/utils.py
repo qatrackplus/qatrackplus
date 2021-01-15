@@ -81,7 +81,7 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
     )
 
     if add_test_list_instance_initiated_by:
-        if isinstance(add_test_list_instance_initiated_by, models.TestListInstance):
+        if isinstance(add_test_list_instance_initiated_by, qa_models.TestListInstance):
             se.test_list_instance_initiated_by = add_test_list_instance_initiated_by
         else:
             utc = qa_utils.create_unit_test_collection(unit=unit_service_area.unit)

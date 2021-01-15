@@ -14,6 +14,7 @@ from django.template.loader import get_template
 from django.views.generic.base import TemplateView
 from registration.backends.simple.views import RegistrationView
 
+
 from qatrack.accounts.forms import (
     ChangePasswordForm,
     RegisterForm,

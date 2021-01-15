@@ -14,7 +14,7 @@ from form_utils.forms import BetterModelForm
 
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models as qa_models
-from qatrack.qatrack_core.utils import format_datetime
+from qatrack.qatrack_core.dates import format_datetime
 from qatrack.service_log import models
 from qatrack.units import models as u_models
 
@@ -236,7 +236,7 @@ def get_rtsqa_formset(extra):
         models.ServiceEvent,
         models.ReturnToServiceQA,
         form=ReturnToServiceQAForm,
-        extra=extra,
+        extra=extra
     )
 
 
@@ -330,12 +330,13 @@ class ModelSelectWithOptionTitles(forms.Select):
         super().__init__(attrs=attrs, choices=choices)
         self.model = model
         self.title_variable = title_variable
+        self.title_variables = dict(self.model.objects.values_list("pk", self.title_variable))
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
         if value in [None, '']:
             title = '-----'
         elif self.title_variable is not None and self.model is not None:
-            title = getattr(self.model.objects.get(pk=value), self.title_variable)
+            title = self.title_variables.get('value', '')
         else:
             title = ''
         if attrs is None:
@@ -351,8 +352,9 @@ class ServiceEventForm(BetterModelForm):
     serviceable_units = models.Unit.objects.filter(is_serviceable=True)
     unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=True)
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
-    service_area_field = forms.ModelChoiceField(
-        queryset=models.ServiceArea.objects.all(), label='Service area'
+    service_area_field = forms.ModelChoiceField(queryset=models.ServiceArea.objects.all())
+    service_area_field_fake = forms.ModelChoiceField(
+        queryset=models.ServiceArea.objects.all(), label='Service area', required=True
     )
     duration_service_time = HoursMinDurationField(
         label=_l('Service time'), required=False,
@@ -379,6 +381,10 @@ class ServiceEventForm(BetterModelForm):
     initiated_utc_field = forms.ModelChoiceField(
         required=False, queryset=qa_models.UnitTestCollection.objects.none(), label='Initiated By',
         help_text=_l('Was there a QC session that initiated this service event?')
+    )
+    service_event_template = forms.ModelChoiceField(
+        required=False, queryset=models.ServiceEventTemplate.objects.none(), label=_l('Template'),
+        help_text=_l('Possible matching templates. Select one to auto fill descriptions and return to service.')
     )
     service_type = forms.ModelChoiceField(
         queryset=models.ServiceType.objects.filter(is_active=True), label=_l('Service type'),
@@ -416,7 +422,7 @@ class ServiceEventForm(BetterModelForm):
         model = models.ServiceEvent
         fieldsets = [
             ('hidden_fields', {
-                'fields': ['test_list_instance_initiated_by', 'is_review_required', 'unit_field'],
+                'fields': ['test_list_instance_initiated_by', 'is_review_required', 'unit_field', 'service_area_field'],
             }),
             ('service_status', {
                 'fields': [
@@ -425,13 +431,13 @@ class ServiceEventForm(BetterModelForm):
             }),
             ('left_fields', {
                 'fields': [
-                    'datetime_service', 'unit_field_fake', 'service_area_field', 'service_type',
+                    'datetime_service', 'unit_field_fake', 'service_area_field_fake', 'service_type',
                     'is_review_required_fake',
                 ],
             }),
             ('right_fields', {
                 'fields': [
-                    'service_event_related_field', 'initiated_utc_field',
+                    'service_event_related_field', 'initiated_utc_field', 'service_event_template', 'include_for_scheduling',
                 ],
             }),
             ('problem_and_safety', {
@@ -453,10 +459,13 @@ class ServiceEventForm(BetterModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
+
         self.initial_ib = kwargs.pop('initial_ib', None)
         self.initial_u = kwargs.pop('initial_u', None)
+        self.se_schedule = kwargs.pop('se_schedule', None)
         self.group_linkers = kwargs.pop('group_linkers', [])
         self.user = kwargs.pop('user', None)
+
         super(ServiceEventForm, self).__init__(*args, **kwargs)
 
         is_new = self.instance.id is None
@@ -502,39 +511,14 @@ class ServiceEventForm(BetterModelForm):
             g_fields.append(field_name)
         self._fieldsets.append(('g_link_fields', {'fields': g_fields}))
 
+        template = None
+        if self.data.get('service_event_template'):
+            template = models.ServiceEventTemplate.objects.filter(pk=self.data.get('service_event_template')).first()
+
         # If this is a new ServiceEvent
         if is_new:
 
-            # if url param 'ib' is included. For prefilling initiated by field
-            if self.initial_ib and 'test_list_instance_initiated_by' not in self.data:
-                initial_ib_tli = qa_models.TestListInstance.objects.get(id=self.initial_ib)
-                self.initial['test_list_instance_initiated_by'] = initial_ib_tli
-                initial_ib_utc = initial_ib_tli.unit_test_collection
-                initial_ib_utc_u = initial_ib_utc.unit
-                self.initial['unit_field'] = initial_ib_utc_u
-                self.initial['initiated_utc_field'] = initial_ib_utc
-                self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
-                i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(
-                    unit=initial_ib_utc_u, active=True
-                ).order_by('name')
-                choices = (('', '---------'),) + tuple(
-                        ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)  # noqa: E501
-                )
-                self.fields['initiated_utc_field'].choices = choices
-
-            if self.initial_u and 'unit_field' not in self.data:
-                try:
-                    initial_unit = u_models.Unit.objects.get(pk=self.initial_u)
-                    self.initial['unit_field'] = initial_unit
-                    self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_unit)
-                    i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(
-                        unit=initial_unit, active=True
-                    ).order_by('name')
-                    self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
-                            ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)  # noqa: E501
-                    )
-                except ObjectDoesNotExist:
-                    pass
+            self.initial_values_helper()
 
             if 'service_event_related_field' in self.data:
                 self.fields['service_event_related_field'].queryset = models.ServiceEvent.objects.filter(
@@ -542,22 +526,42 @@ class ServiceEventForm(BetterModelForm):
                 )
 
             if 'unit_field' not in self.data and 'unit_field' not in self.initial:
-                self.fields['service_area_field'].widget.attrs.update({'disabled': True})
+                # self.fields['service_area_field'].widget.attrs.update({'disabled': True})
+                self.fields['service_area_field_fake'].widget.attrs.update({'disabled': True})
                 self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
                 self.fields['initiated_utc_field'].widget.attrs.update({'disabled': True})
 
             if 'unit_field' in self.data:
                 if self.data['unit_field']:
-                    self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(
+                    self.fields['service_area_field_fake'].queryset = models.ServiceArea.objects.filter(
                         units=self.data['unit_field']
                     )
                     self.fields['initiated_utc_field'].queryset = qa_models.UnitTestCollection.objects.filter(
                         unit=self.data['unit_field']
                     )
                 else:
-                    self.fields['service_area_field'].widget.attrs.update({'disabled': True})
+                    if template and template.service_area:
+                        self.fields['service_area_field_fake'].widget.attrs.update({'disabled': True})
+                        # self.fields['service_area_field'].widget.attrs.update({'disabled': True})
                     self.fields['service_event_related_field'].widget.attrs.update({'disabled': True})
                     self.fields['initiated_utc_field'].widget.attrs.update({'disabled': True})
+
+            if self.data.get('service_event_template'):
+                self.fields['service_event_template'].queryset = models.ServiceEventTemplate.objects.filter(
+                    pk=self.data.get('service_event_template')
+                )
+                self.fields['service_event_template'].widget.attrs.update({'disabled': True})
+
+            elif self.data.get('unit_field') and (self.data.get('service_area_field') or self.data.get('service_area_type')):
+                templates = models.ServiceEventTemplate.objects.all()
+                if self.data.get('service_area_field'):
+                    templates = templates.filter(service_area=self.data['service_area_field'])
+                if self.data.get('service_type_field'):
+                    templates = templates.filter(service_area=self.data['service_type_field'])
+
+                self.fields['service_event_template'].queryset = templates
+            else:
+                self.fields['service_event_template'].widget.attrs.update({'disabled': True})
 
             if self.user.has_perm('service_log.review_serviceevent'):
                 self.fields['service_status'].queryset = models.ServiceEventStatus.objects.all()
@@ -572,6 +576,7 @@ class ServiceEventForm(BetterModelForm):
 
         # if we are editing a saved instance
         else:
+            # del self.fields['template']
 
             try:
                 unit = u_models.Unit.objects.get(pk=self.data['unit_field'])
@@ -580,10 +585,13 @@ class ServiceEventForm(BetterModelForm):
 
             self.fields['unit_field_fake'].queryset = self.serviceable_units | models.Unit.objects.filter(pk=unit.id)
             self.initial['unit_field'] = unit
-            self.initial['service_area_field'] = self.instance.unit_service_area.service_area
+
+            for f in ['service_area_field', 'service_area_field_fake']:
+                self.initial[f] = self.instance.unit_service_area.service_area
+                self.fields[f].queryset = models.ServiceArea.objects.filter(units=unit)
+
             self.initial['service_event_related_field'] = self.instance.service_event_related.all()
             self.fields['service_event_related_field'].queryset = self.initial['service_event_related_field']
-            self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=unit)
 
             # disable Unit field if service event has initiated by or any existing RTSQA
             rtsqa_exisits = models.ReturnToServiceQA.objects.filter(service_event=self.instance).exists()
@@ -618,12 +626,19 @@ class ServiceEventForm(BetterModelForm):
                 st_qs = models.ServiceType.objects.filter(id=self.instance.service_type.id)
                 self.fields['service_type'].queryset |= st_qs
 
+            if self.instance.service_event_template:
+                self.fields['service_event_template'].queryset = models.ServiceEventTemplate.objects.filter(
+                    id=self.instance.service_event_template.id
+                )
+                self.initial['service_event_template'] = self.instance.service_event_template
+                self.fields['service_event_template'].widget.attrs.update({'disabled': True})
+
         for f in ['safety_precautions', 'problem_description', 'work_description', 'qafollowup_comments']:
             self.fields[f].widget.attrs.update({'rows': 3, 'class': 'autosize'})
 
         select2_fields = [
-            'unit_field_fake', 'service_area_field', 'service_type', 'service_status',
-            'initiated_utc_field'
+            'unit_field_fake', 'service_area_field_fake', 'service_type', 'service_status',
+            'initiated_utc_field', 'service_event_template'
         ]
         for f in select2_fields:
             self.fields[f].widget.attrs['class'] = 'select2'
@@ -645,7 +660,7 @@ class ServiceEventForm(BetterModelForm):
             classes += ' form-control'
             self.fields[f].widget.attrs.update({'class': classes, 'autocomplete': 'off'})
 
-        for f in ['is_review_required_fake', 'is_review_required']:
+        for f in ['is_review_required_fake', 'is_review_required', 'include_for_scheduling']:
             classes = self.fields[f].widget.attrs.get('class', '')
             classes = classes.replace('form-control', '')
             self.fields[f].widget.attrs.update({'class': classes})
@@ -654,7 +669,66 @@ class ServiceEventForm(BetterModelForm):
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
         self.fields['service_area_field'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
+        self.fields['service_area_field_fake'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
         self.fields['service_type'].required = not settings.SL_ALLOW_BLANK_SERVICE_TYPE
+
+    def initial_values_helper(self):
+
+        # if url param 'ib' is included. For prefilling initiated by field
+        if self.initial_ib and 'test_list_instance_initiated_by' not in self.data:
+            initial_ib_tli = qa_models.TestListInstance.objects.get(id=self.initial_ib)
+            self.initial['test_list_instance_initiated_by'] = initial_ib_tli
+            initial_ib_utc = initial_ib_tli.unit_test_collection
+            initial_ib_utc_u = initial_ib_utc.unit
+            self.initial['unit_field'] = initial_ib_utc_u
+            self.initial['initiated_utc_field'] = initial_ib_utc
+            self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
+            self.fields['service_area_field_fake'].queryset = models.ServiceArea.objects.filter(units=initial_ib_utc_u)
+            i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(
+                unit=initial_ib_utc_u, active=True
+            ).order_by('name')
+            choices = (('', '---------'),) + tuple(
+                ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)
+                # noqa: E501
+            )
+            self.fields['initiated_utc_field'].choices = choices
+
+        if self.se_schedule:
+            try:
+
+                template = self.se_schedule.service_event_template
+                self.initial_u = self.se_schedule.unit_service_area.unit.id
+                self.initial['service_area_field'] = self.se_schedule.unit_service_area.service_area
+                self.initial['service_area_field_fake'] = self.se_schedule.unit_service_area.service_area
+                self.initial['service_type'] = template.service_type
+                self.initial['is_review_required'] = template.is_review_required
+                self.initial['is_review_required_fake'] = template.is_review_required
+                self.initial['problem_description'] = template.problem_description
+                self.initial['work_description'] = template.work_description
+                self.initial['service_event_template'] = template
+                qs = models.ServiceEventTemplate.objects.filter(id=template.id)
+                self.fields['service_event_template'].queryset = qs
+
+            except ObjectDoesNotExist:
+                pass
+
+        if self.initial_u and 'unit_field' not in self.data:
+            try:
+                initial_unit = u_models.Unit.objects.get(pk=self.initial_u)
+                self.initial['unit_field'] = initial_unit
+                self.fields['service_area_field'].queryset = models.ServiceArea.objects.filter(units=initial_unit)
+                self.fields['service_area_field_fake'].queryset = models.ServiceArea.objects.filter(units=initial_unit)
+                i_utc_f_qs = qa_models.UnitTestCollection.objects.filter(
+                    unit=initial_unit,
+                    active=True
+                ).select_related(
+                    'frequency',
+                ).order_by('name')
+                self.fields['initiated_utc_field'].choices = (('', '---------'),) + tuple(
+                    ((utc.id, '(%s) %s' % (utc.frequency if utc.frequency else 'Ad Hoc', utc.name)) for utc in i_utc_f_qs)  # noqa: E501
+                )
+            except ObjectDoesNotExist:
+                pass
 
     def strigify_form_item(self, item):
 
@@ -726,10 +800,10 @@ class ServiceEventForm(BetterModelForm):
 
         if unit_field and settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
             # If SA can be blank, then make sure appropriate SA and USA's exist
-            sa, __ = models.ServiceArea.objects.get_or_create(name="Not specified")
-            usa, __ = models.UnitServiceArea.objects.get_or_create(
+            sa = models.ServiceArea.blank_service_area()
+            models.UnitServiceArea.objects.get_or_create(
                 unit=self.cleaned_data['unit_field'],
-                service_area=sa,
+                service_area_id=sa.id,
             )
             self.cleaned_data['service_area_field'] = sa
 
@@ -768,21 +842,18 @@ class ServiceEventForm(BetterModelForm):
             self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
 
         if settings.SL_ALLOW_BLANK_SERVICE_TYPE and not self.cleaned_data.get('service_type'):
-            # If ST can be blank, then make sure appropriate ST exists
-            st, __ = models.ServiceType.objects.get_or_create(
-                name="Not specified",
-                defaults={
-                    'is_review_required': False,
-                    'is_active': True,
-                    'description': _("Unspecified service type"),
-                }
-            )
-            self.cleaned_data['service_type'] = st
+            self.cleaned_data['service_type'] = models.ServiceType.blank_service_type()
 
         return self.cleaned_data
 
     def clean_unit_field_fake(self):
         return self.cleaned_data.get('unit_field')
+
+    def clean_service_type(self):
+        st = self.cleaned_data.get('service_type')
+        if not st:
+            return models.ServiceType.blank_service_type()
+        return st
 
 
 class ServiceEventDeleteForm(forms.ModelForm):
@@ -801,3 +872,84 @@ class ServiceEventDeleteForm(forms.ModelForm):
 
         self.fields['comment'].widget.attrs.update({'rows': 3, 'class': 'autosize form-control'})
         self.fields['reason'].widget.attrs.update({'class': 'form-control'})
+
+
+class ServiceEventTemplateForm(forms.ModelForm):
+
+    service_area = forms.ModelChoiceField(
+        models.ServiceArea.objects.all(),
+        label=_l("Service area"),
+        help_text=_l("Select the Service Area this Service Event Template will apply to"),
+        required=False,
+    )
+
+    return_to_service_utcs = forms.ModelMultipleChoiceField(
+        qa_models.UnitTestCollection.objects.all(),
+        label=_l("Return To Service QC"),
+        help_text=_l("Select the return to service QC"),
+        required=False,
+    )
+
+    class Meta:
+        model = models.ServiceEventTemplate
+        fields = [
+            'name',
+            'service_area',
+            'service_type',
+            'is_review_required',
+            'problem_description',
+            'work_description',
+            'return_to_service_utcs',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+
+        self.set_initial_values()
+        self.update_widgets()
+
+    def set_initial_values(self):
+        if self.instance.id:
+            self.initial['service_area'] = self.instance.unit_service_area.service_area
+            self.fields['service_area'].queryset = models.ServiceArea.objects.filter(
+                units=self.instance.unit_service_area.unit
+            )
+            self.fields['return_to_service_utcs'].queryset = qa_models.UnitTestCollection.objects.active().filter(
+                unit=self.instance.unit_service_area.unit
+            )
+
+    def update_widgets(self):
+
+        self.fields['return_to_service_utcs'].required = False
+
+        for field in self.fields:
+            if field in ['service_area', 'service_type', 'return_to_service_utcs']:
+                self.fields[field].widget.attrs.update({'class': 'select2 form-control'})
+            elif field in ['problem_description', 'work_description']:
+                self.fields[field].widget.attrs.update({'class': 'form-control autosize', 'rows': 3})
+            elif field not in ['is_review_required', 'copy_to_units_of_same_type']:
+                self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+            self.fields[field].widget.attrs.update({'id': 'template_{}'.format(field)})
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if models.ServiceEventTemplate.objects.filter(name=name).exists():
+            self.add_error(
+                'name',
+                'Service event template with name {} already exists'.format(name),
+            )
+
+        return name
+
+    def save(self, **kwargs):
+
+        super().save(commit=False)
+        self.instance.modified_by = self.request.user
+        if self.instance.id is None:
+            self.instance.created_by = self.request.user
+        self.instance.save()
+        self.save_m2m()
+
+        return self.instance

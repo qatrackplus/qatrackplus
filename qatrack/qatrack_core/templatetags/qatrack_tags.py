@@ -8,7 +8,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from qatrack.qatrack_core.utils import format_as_time, format_datetime
+from qatrack.qatrack_core.dates import format_as_time, format_datetime
 from qatrack.service_log import models as sl_models
 
 register = template.Library()
