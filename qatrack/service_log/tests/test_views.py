@@ -901,6 +901,10 @@ class TestServiceEventTemplateSearcher(TestCase):
         # one template with correct service type
         sa1 = sl_utils.create_service_area()
         t1 = self.create_template("1", service_area=sa1)
+        sl_utils.create_unit_service_area(
+            unit=self.unit,
+            service_area=sa1,
+        )
 
         # one template with incorrect service area
         sa2 = sl_utils.create_service_area()
