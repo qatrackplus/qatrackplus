@@ -695,7 +695,7 @@ from .local_settings import *  # noqa: F403, F401
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
 # Parts must be used with service log
-USE_PARTS = USE_PARTS or USE_SERVICE_LOG
+USE_PARTS = USE_PARTS and USE_SERVICE_LOG
 
 
 # ------------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 -e git+https://github.com/randlet/django-listable.git@django_21_dynamic_request#egg=django_listable
 -e git+https://github.com/randlet/django-recurrence.git@b3a73e8e03952107e58382922fec37aead31fd6f#egg=django-recurrence
 -e git+https://github.com/randlet/django-sql-explorer.git@196e1f5af2abed61f504878b89a0719ae0901ed8#egg=django-sql-explorer
+-e git+https://github.com/qatrackplus/django-q.git@qatrackplus#egg=django-q
 black==19.10b0
 Django==2.1.15
 PyVirtualDisplay==0.2
@@ -23,7 +24,6 @@ django-mptt==0.10.0
 django-mptt-admin==0.7.2
 django-phone-field==1.8.1
 django-picklefield==2.0
-django-q==1.0.2
 django-registration==2.5.2
 djangorestframework==3.9.1
 djangorestframework-filters==1.0.0_dev0
