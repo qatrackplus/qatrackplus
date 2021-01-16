@@ -1876,6 +1876,8 @@ class TestInstance(models.Model):
 
     objects = TestInstanceManager()
 
+    __test__ = False  # supress pytest warning
+
     class Meta:
         # ordering = ("work_completed",)
         get_latest_by = "work_completed"
@@ -2233,6 +2235,8 @@ class TestListInstance(models.Model):
     )
 
     objects = TestListInstanceManager()
+
+    __test__ = False  # supress pytest warning
 
     class Meta:
         # ordering = ("work_completed",)

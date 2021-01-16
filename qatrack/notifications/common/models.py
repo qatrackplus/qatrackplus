@@ -67,6 +67,8 @@ class TestListGroup(models.Model):
         ),
     )
 
+    __test__ = False  # supress pytest warning
+
     def __str__(self):
         return self.name
 

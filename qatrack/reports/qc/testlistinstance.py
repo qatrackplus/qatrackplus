@@ -35,6 +35,8 @@ class TestListInstanceSummaryReport(BaseReport):
 
     template = "reports/qc/testlistinstance_summary.html"
 
+    __test__ = False  # supress pytest warning
+
     def filter_form_valid(self, filter_form):
 
         ntlis = self.filter_set.qs.count()
@@ -190,6 +192,8 @@ class TestListInstanceDetailsReport(BaseReport):
     category = _l("QC")
 
     template = "reports/qc/testlistinstance_details.html"
+
+    __test__ = False  # supress pytest warning
 
     def filter_form_valid(self, filter_form):
 
