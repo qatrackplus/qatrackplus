@@ -1,4 +1,5 @@
 import json
+from random import Random
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -8,7 +9,6 @@ from django.db.models import ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.formats import get_format
-from random import Random
 
 from qatrack.parts.models import PartStorageCollection, PartUsed
 from qatrack.qa.models import TestListInstance, UnitTestCollection
@@ -136,7 +136,6 @@ def site(request):
         'USE_SERVICE_TEMPLATES': settings.USE_SERVICE_TEMPLATES,
 
         # JavaScript Date Formats
-        'MOMENT_DATE_DATA_FMT': get_format("MOMENT_DATE_DATA_FMT"),
         'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
         'MOMENT_DATETIME_FMT': get_format("MOMENT_DATETIME_FMT"),
         'FLATPICKR_DATE_FMT': get_format("FLATPICKR_DATE_FMT"),

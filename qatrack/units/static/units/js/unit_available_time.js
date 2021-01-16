@@ -393,7 +393,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                             uate_data = unit_available_time_data[unit_id].available_time_edits,
                             date_acceptance = unit_available_time_data[unit_id].date_acceptance,
                             unit_avail_time_today = 0,
-                            day_str = day.format(siteConfig.MOMENT_DATE_DATA_FMT),
+                            day_str = day.format(siteConfig.MOMENT_DATE_FMT),
                             day_edit_name = null,
                             available_time_changed,
                             unit_name = unit_available_time_data[unit_id].name;
@@ -410,7 +410,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                         } else {
                             // search through available time objects which should be ordered most recent to oldest
                             for (var j = 0; j < uat_data.length; j++) {
-                                if (moment(uat_data[j].date_changed, siteConfig.MOMENT_DATE_DATA_FMT).subtract(1, 'days').isBefore(day)) {
+                                if (moment(uat_data[j].date_changed, siteConfig.MOMENT_DATE_FMT).subtract(1, 'days').isBefore(day)) {
                                     unit_avail_time_today = duration_minutes(
                                         uat_data[j]['hours_' + day.format('dddd').toLocaleLowerCase()]
                                     );
