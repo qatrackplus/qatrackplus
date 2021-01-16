@@ -3,7 +3,7 @@ import calendar
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Max
-from django.utils.timezone import timedelta, datetime
+from django.utils.timezone import timedelta
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
@@ -376,3 +376,26 @@ class UnitAvailableTime(models.Model):
             uat = UnitAvailableTime(**kwargs)
 
         return uat
+
+
+class TreatmentTechnique(models.Model):
+
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=255,
+        unique=True,
+        help_text=_l('Name of this treatment technique'),
+    )
+
+    objects = NameNaturalKeyManager()
+
+    class Meta:
+        verbose_name = _l("treatment technique")
+        verbose_name_plural = _l("treatment techniques")
+        ordering = ("name",)
+
+    def natural_key(self):
+        return (self.name,)
+
+    def __str__(self):
+        return self.name

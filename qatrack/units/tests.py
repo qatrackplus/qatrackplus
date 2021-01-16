@@ -227,3 +227,9 @@ class TestUnitAvailableTimeEdit(TestCase):
         len_uate_after_updated = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         assert len_uate_after_updated == len_uate_after
         assert models.UnitAvailableTimeEdit.objects.first().hours == timezone.timedelta(hours=2)
+
+
+class TestTreatmentTechnique:
+
+    def test_str(self):
+        assert str(models.TreatmentTechnique(name="name")) == "name"

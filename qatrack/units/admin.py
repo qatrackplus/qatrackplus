@@ -17,6 +17,7 @@ from .forms import UnitAvailableTimeForm
 from .models import (
     Modality,
     Site,
+    TreatmentTechnique,
     Unit,
     UnitAvailableTime,
     UnitClass,
@@ -218,8 +219,13 @@ class SiteAdmin(BaseQATrackAdmin):
     )
 
 
+class TreatmentTechniqueAdmin(BaseQATrackAdmin):
+    list_display = ("name",)
+
+
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
 admin.site.register(Modality, ModalityAdmin)
 admin.site.register(Site, SiteAdmin)
 admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)
+admin.site.register([TreatmentTechnique], TreatmentTechniqueAdmin)

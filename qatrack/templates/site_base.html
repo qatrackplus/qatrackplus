@@ -597,6 +597,30 @@
                   {% endif %}
                 {% endif %}
 
+                {% if perms.interlock.add_interlock or perms.interlock.view_interlock or perms.interlock.review_interlock %}
+                  <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                      {% trans "Interlocks" %}
+
+                      <span
+                        title="{% blocktrans %}There are currently {{ INTERLOCKS_UNREVIEWED }} Unreviewed Interlocks{% endblocktrans %}"
+                        class="label {% if INTERLOCKS_UNREVIEWED == 0%}label-success{% else %}label-warning{% endif %} unreviewed-count-wrapper"
+                      >
+                        {{ INTERLOCKS_UNREVIEWED }}
+                      </span>
+                      <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li>
+                        <a href="{% url "interlock_list" %}" title="{% trans "All Interlocks" %}">
+                          <i class="fa fa-lock fa-lg fa-fw" aria-hidden="true"></i>
+                          {% trans "All Interlocks" %}
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                {% endif %}
+
                 {% if perms.reports.can_create_sql_reports or perms.reports.can_run_sql_reports or perms.reports.can_create_reports or perms.reports.can_run_reports or perms.qa.can_view_charts or USE_SERVICE_LOG and user.is_staff %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">

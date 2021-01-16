@@ -91,7 +91,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         except ldap.SERVER_DOWN:
             self.logger.exception("Unable to contact LDAP server")
         except Exception:
-            self.logger.exception("Exception occured while trying to authenticate %s" % username)
+            self.logger.exception("Exception occurred while trying to authenticate %s" % username)
             return None
         finally:
             try:

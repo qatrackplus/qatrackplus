@@ -188,6 +188,8 @@ def site(request):
         ),
     )
 
+    context['INTERLOCKS_UNREVIEWED'] = 999
+
     context['USERS_IN_PROGRESS'] = get_user_count(
         request,
         settings.CACHE_IN_PROGRESS_COUNT_USER,

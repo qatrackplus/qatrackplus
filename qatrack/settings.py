@@ -258,6 +258,7 @@ INSTALLED_APPS = [
     'qatrack.issue_tracker',
     'qatrack.service_log',
     'qatrack.parts',
+    'qatrack.interlocks',
     'qatrack.attachments',
     'qatrack.reports',
     'admin_views',
