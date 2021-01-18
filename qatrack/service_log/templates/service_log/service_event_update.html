@@ -193,7 +193,20 @@
                       </label>
 
                       <div class="col-sm-8">
-                        {{ field }}
+                        {% if field.html_name == 'service_event_template' and perms.service_log.add_serviceeventtemplate and not se_template %}
+                          <div class="input-group">
+                            {{ field }}
+                            <div class="input-group-btn">
+                              <div class="btn btn-flat btn-sm btn-default se-template-btn"
+                                   title="{% trans "Create service event template with currently selected values for Unit, Service Area, Service Type, Review Required, Descriptions, and any Return to Service TestLists" %}"
+                                   data-toggle="modal"
+                                   >{% trans "Create" %}
+                              </div>
+                            </div>
+                          </div>
+                        {% else %}
+                          {{ field }}
+                        {% endif %}
                         {% if field.help_text %}
                           <div class="help-block margin-0">{{ field.help_text }}</div>
                         {% endif %}
@@ -636,13 +649,6 @@
         <div class="col-md-12">
 
           <button id="save-se" class="btn btn-flat btn-primary service-save pull-right">{% trans "Save" %}</button>
-          {% if perms.service_log.add_serviceeventtemplate and not se_template %}
-            <div class="btn btn-flat btn-default pull-right margin-right-5 disabled se-template-btn"
-                 title="{% trans "Create service event template with currently selected values for Unit, Service Area, Service Type, Review Required, Descriptions, and any Return to Service TestLists" %}"
-                 data-toggle="modal"
-                 >{% trans "Create Template" %}
-            </div>
-          {% endif %}
           {% if perms.service_log.delete_serviceevent and form.instance.id %}
             <a href="{% url 'se_delete' pk=form.instance.id %}"
                class="btn btn-flat btn-default service-delete pull-left">{% trans "Delete" %}</a>

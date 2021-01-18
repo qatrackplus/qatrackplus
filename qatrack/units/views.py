@@ -79,7 +79,7 @@ def handle_unit_available_time(request):
         uat.save()
 
     for unit in u_models.Unit.objects.filter(id__in=units):
-        if day > unit.date_acceptance and len(uats.filter(unit=unit, date_changed=day)) == 0:
+        if day > unit.date_acceptance.date() and len(uats.filter(unit=unit, date_changed=day)) == 0:
             u = u_models.UnitAvailableTime.objects.create(
                 unit=unit,
                 date_changed=day,
@@ -114,7 +114,7 @@ def handle_unit_available_time_edit(request):
 
         for d in days:
             for u in units:
-                if d < u.date_acceptance:
+                if d < u.date_acceptance.date():
                     continue
                 try:
                     uate = u_models.UnitAvailableTimeEdit.objects.get(unit=u, date=d)

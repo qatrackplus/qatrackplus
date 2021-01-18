@@ -616,7 +616,7 @@ DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 USE_SERVICE_LOG = True
 USE_PARTS = True
 USE_ISSUES = False  # internal development issue tracker
-USE_SERVICE_TEMPLATES = False
+USE_SERVICE_TEMPLATES = True
 
 DELETE_REASONS = (
     ('Duplicate', 'Duplicate'),

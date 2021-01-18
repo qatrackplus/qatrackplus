@@ -354,7 +354,7 @@ class UnitAvailableTime(models.Model):
 
     def to_dict(self):
         return {
-            'date_changed': '{:02d}-{:02d}-{}'.format(self.date_changed.day, self.date_changed.month, self.date_changed.year),
+            'date_changed': self.date_changed.strftime('%d %b %Y'),
             'hours_sunday': self.hours_sunday,
             'hours_monday': self.hours_monday,
             'hours_tuesday': self.hours_tuesday,
