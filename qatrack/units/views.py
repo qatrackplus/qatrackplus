@@ -29,7 +29,7 @@ def get_unit_available_time_data(request):
                     'hours': uate.hours
                 } for uate in u.unitavailabletimeedit_set.all()
             },
-            'available_times': u.get_available_times_list()
+            'available_times': list(u.unitavailabletime_set.all().values())
         } for u in unit_qs
     }
 
@@ -79,7 +79,7 @@ def handle_unit_available_time(request):
         uat.save()
 
     for unit in u_models.Unit.objects.filter(id__in=units):
-        if day > unit.date_acceptance.date() and len(uats.filter(unit=unit, date_changed=day)) == 0:
+        if day > unit.date_acceptance and len(uats.filter(unit=unit, date_changed=day)) == 0:
             u = u_models.UnitAvailableTime.objects.create(
                 unit=unit,
                 date_changed=day,
@@ -91,7 +91,6 @@ def handle_unit_available_time(request):
                 hours_saturday=timezone.timedelta(hours=int(hours['saturday'][0]), minutes=int(hours['saturday'][1])),
                 hours_sunday=timezone.timedelta(hours=int(hours['sunday'][0]), minutes=int(hours['sunday'][1])),
             )
-            print(u.hours_thursday)
 
     return get_unit_available_time_data(request)
 
@@ -114,7 +113,7 @@ def handle_unit_available_time_edit(request):
 
         for d in days:
             for u in units:
-                if d < u.date_acceptance.date():
+                if d < u.date_acceptance:
                     continue
                 try:
                     uate = u_models.UnitAvailableTimeEdit.objects.get(unit=u, date=d)

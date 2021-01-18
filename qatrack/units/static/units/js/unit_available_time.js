@@ -398,7 +398,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                             available_time_changed,
                             unit_name = unit_available_time_data[unit_id].name;
 
-                        if (uat_data.map(function(v) {return v.date_changed}).indexOf(day_str) !== -1) {
+                        if (uat_data.map(function(v) {return moment(v.date_changed).format('DD MMM YYYY')}).indexOf(day_str) !== -1) {
                             available_time_changed = true;
                             var uat_details = $.grep(uat_data, function(v){ return v.date_changed === day_str; })[0];
                         } else {
@@ -410,7 +410,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                         } else {
                             // search through available time objects which should be ordered most recent to oldest
                             for (var j = 0; j < uat_data.length; j++) {
-                                if (moment(uat_data[j].date_changed, siteConfig.MOMENT_DATE_FMT).subtract(1, 'days').isBefore(day)) {
+                                if (moment(uat_data[j].date_changed).subtract(1, 'days').isBefore(day)) {
                                     unit_avail_time_today = duration_minutes(
                                         uat_data[j]['hours_' + day.format('dddd').toLocaleLowerCase()]
                                     );
