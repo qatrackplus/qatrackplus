@@ -597,24 +597,24 @@
                   {% endif %}
                 {% endif %}
 
-                {% if perms.interlock.add_interlock or perms.interlock.view_interlock or perms.interlock.review_interlock %}
+                {% if perms.fault.add_fault or perms.fault.view_fault or perms.fault.review_fault %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                      {% trans "Interlocks" %}
+                      {% trans "Faults" %}
 
                       <span
-                        title="{% blocktrans %}There are currently {{ INTERLOCKS_UNREVIEWED }} Unreviewed Interlocks{% endblocktrans %}"
-                        class="label {% if INTERLOCKS_UNREVIEWED == 0%}label-success{% else %}label-warning{% endif %} unreviewed-count-wrapper"
+                        title="{% blocktrans %}There are currently {{ FAULTS_UNREVIEWED }} Unreviewed Faults{% endblocktrans %}"
+                        class="label {% if FAULTS_UNREVIEWED == 0%}label-success{% else %}label-warning{% endif %} unreviewed-count-wrapper"
                       >
-                        {{ INTERLOCKS_UNREVIEWED }}
+                        {{ FAULTS_UNREVIEWED }}
                       </span>
                       <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                       <li>
-                        <a href="{% url "interlock_list" %}" title="{% trans "All Interlocks" %}">
+                        <a href="{% url "fault_list" %}" title="{% trans "All Faults" %}">
                           <i class="fa fa-lock fa-lg fa-fw" aria-hidden="true"></i>
-                          {% trans "All Interlocks" %}
+                          {% trans "All Faults" %}
                         </a>
                       </li>
                     </ul>

@@ -1,13 +1,13 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _l
 
-from qatrack.interlocks import models
+from qatrack.faults import models
 from qatrack.qa.admin import SiteFilter, site_name
 from qatrack.qatrack_core.admin import BaseQATrackAdmin, SaveUserQATrackAdmin
 from qatrack.units.models import Modality
 
 
-class InterlockTypeAdmin(BaseQATrackAdmin):
+class FaultTypeAdmin(BaseQATrackAdmin):
 
     list_display = ("code", "description")
     prepopulated_fields = {'slug': ('code',)}
@@ -33,15 +33,15 @@ class ModalityFilter(admin.SimpleListFilter):
         return qs
 
 
-class InterlockAdmin(SaveUserQATrackAdmin):
+class FaultAdmin(SaveUserQATrackAdmin):
 
     list_display = (
         "name",
         site_name,
         "unit",
         "modality",
-        "interlock_type",
-        "occurred_on",
+        "fault_type",
+        "occurred",
         "reviewed",
         "reviewed_by",
     )
@@ -50,21 +50,20 @@ class InterlockAdmin(SaveUserQATrackAdmin):
         SiteFilter,
         "unit",
         ModalityFilter,
-        "interlock_type",
+        "fault_type",
     )
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            "modality",
-            "interlock_type",
-            "unit",
-            "unit__site",
-        )
+    select_related = [
+        "modality",
+        "fault_type",
+        "unit",
+        "unit__site",
+    ]
 
     def name(self, obj):
         return str(obj)
     name.admin_order_field = "pk"
 
 
-admin.site.register([models.InterlockType], InterlockTypeAdmin)
-admin.site.register([models.Interlock], InterlockAdmin)
+admin.site.register([models.FaultType], FaultTypeAdmin)
+admin.site.register([models.Fault], FaultAdmin)

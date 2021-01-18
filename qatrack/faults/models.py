@@ -9,13 +9,13 @@ from django_comments.models import Comment
 from qatrack.units import models as u_models
 
 
-class InterlockType(models.Model):
+class FaultType(models.Model):
 
     code = models.CharField(
         _l("code"),
         max_length=255,
         unique=True,
-        help_text=_l('Enter the interlock code or number'),
+        help_text=_l('Enter the fault code or number'),
     )
     slug = models.SlugField(
         max_length=255,
@@ -25,20 +25,26 @@ class InterlockType(models.Model):
 
     description = models.TextField(
         _l("description"),
-        help_text=_l("Enter a description for this interlock type"),
+        help_text=_l("Enter a description for this fault type"),
     )
 
     def __str__(self):
         return self.code
 
 
-class Interlock(models.Model):
+class FaultManager(models.Manager):
+
+    def unreviewed(self):
+        return self.filter(reviewed_by=None).order_by("-occurred")
+
+
+class Fault(models.Model):
 
     unit = models.ForeignKey(
         u_models.Unit,
         verbose_name=_l("unit"),
         on_delete=models.CASCADE,
-        related_name="interlocks",
+        related_name="faults",
         help_text=_l("Select the unit this fault occurred on"),
     )
 
@@ -46,23 +52,23 @@ class Interlock(models.Model):
         u_models.Modality,
         verbose_name=_l("modality"),
         on_delete=models.SET_NULL,
-        related_name="interlocks",
+        related_name="faults",
         null=True,
         blank=True,
         help_text=_l("Select the modality being used when this fault occurred"),
     )
 
-    interlock_type = models.ForeignKey(
-        InterlockType,
+    fault_type = models.ForeignKey(
+        FaultType,
         on_delete=models.PROTECT,
-        verbose_name=_l("interlock type"),
-        help_text=_l("Select the interlock type that occurred"),
+        verbose_name=_l("fault type"),
+        help_text=_l("Select the fault type that occurred"),
     )
 
-    occurred_on = models.DateTimeField(
-        verbose_name=_l("Date & Time interlock occurred on"),
+    occurred = models.DateTimeField(
+        verbose_name=_l("Date & Time fault occurred on"),
         default=timezone.now,
-        help_text="When did this interlock occur. " + settings.DATETIME_HELP,
+        help_text="When did this fault occur. " + settings.DATETIME_HELP,
         db_index=True
     )
 
@@ -75,7 +81,7 @@ class Interlock(models.Model):
         editable=False,
         null=True,
         blank=True,
-        related_name="interlock_reviewer",
+        related_name="fault_reviewer",
     )
 
     created = models.DateTimeField(auto_now_add=True)
@@ -83,18 +89,20 @@ class Interlock(models.Model):
         User,
         on_delete=models.PROTECT,
         editable=False,
-        related_name="interlock_events_created",
+        related_name="fault_events_created",
     )
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         editable=False,
-        related_name="interlock_events_modified",
+        related_name="fault_events_modified",
     )
 
+    objects = FaultManager()
+
     class Meta:
-        ordering = ("-occurred_on",)
+        ordering = ("-occurred",)
 
     def __str__(self):
-        return "Interlock ID: %d" % self.pk
+        return "Fault ID: %d" % self.pk

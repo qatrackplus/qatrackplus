@@ -1,5 +1,4 @@
 from django.contrib.auth.context_processors import PermWrapper
-from django.shortcuts import render
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
@@ -19,14 +18,14 @@ from listable.views import (
     BaseListableView,
 )
 
-from qatrack.interlocks import models
+from qatrack.faults import models
 from qatrack.units.models import Unit
 
 
-class InterlockList(BaseListableView):
+class FaultList(BaseListableView):
 
-    model = models.Interlock
-    template_name = 'interlocks/interlocks_list.html'
+    model = models.Fault
+    template_name = 'faults/faults_list.html'
     paginate_by = 50
 
     kwarg_filters = None
@@ -37,17 +36,17 @@ class InterlockList(BaseListableView):
         'unit__site__name': _l("Site"),
         'unit__name': _l("Unit"),
         'modality__name': _l("Modality"),
-        'get_occurred_on': _l("Occurred On"),
+        'get_occurred': _l("Occurred On"),
     }
 
     widgets = {
         'actions': None,
         'get_id': TEXT,
-        'interlock_type': SELECT_MULTI,
+        'fault_type': SELECT_MULTI,
         'unit__site__name': SELECT_MULTI,
         'unit__name': SELECT_MULTI,
         'modality__name': SELECT_MULTI,
-        'get_occurred_on': DATE_RANGE,
+        'get_occurred': DATE_RANGE,
         'review_status': DATE_RANGE,
     }
 
@@ -62,12 +61,12 @@ class InterlockList(BaseListableView):
     }
 
     date_ranges = {
-        "occurred_on": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
+        "occurred": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
         "review_status": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
     }
 
     select_related = [
-        "interlock_type",
+        "fault_type",
         "unit__site",
         "unit",
         "modality",
@@ -81,16 +80,16 @@ class InterlockList(BaseListableView):
 
         # Store templates on view initialization so we don't have to reload them for every row!
         self.templates = {
-            'actions': get_template('interlocks/interlock_actions.html'),
-            'occurred_on': get_template("interlocks/interlock_occurred_on.html"),
-            'review_status': get_template("interlocks/interlock_review_status.html"),
+            'actions': get_template('faults/faults_actions.html'),
+            'occurred': get_template("faults/fault_occurred.html"),
+            'review_status': get_template("faults/fault_review_status.html"),
         }
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
-        context['page_title'] = _l("All Interlocks")
+        context['page_title'] = _l("All Faults")
         return context
 
     def get_fields(self, request=None):
@@ -98,8 +97,8 @@ class InterlockList(BaseListableView):
         fields = (
             "actions",
             "id",
-            "get_occurred_on",
-            "interlock_type",
+            "get_occurred",
+            "fault_type",
         )
 
         multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
@@ -122,31 +121,30 @@ class InterlockList(BaseListableView):
 
         return filters
 
-    def actions(self, interlock):
+    def actions(self, fault):
         c = {
-            'interlock': interlock,
-            'next': reverse('interlock_list'),
+            'fault': fault,
+            'next': reverse('fault'),
             'perms': PermWrapper(self.request.user),
         }
         return self.templates['actions'].render(c)
 
-    def review_status(self, interlock):
-        c = {'interlock': interlock}
+    def review_status(self, fault):
+        c = {'fault': fault}
         return self.templates['review_status'].render(c)
 
-    def get_occurred_on(self, interlock):
-        c = {'interlock': interlock}
-        return self.templates['occurred_on'].render(c)
+    def get_occurred(self, fault):
+        c = {'fault': fault}
+        return self.templates['occurred'].render(c)
 
 
+class EditFault(DetailView):
 
-class EditInterlock(DetailView):
-
-    model = models.Interlock
-    template_name = 'interlocks/interlock_edit.html'
+    model = models.Fault
+    template_name = 'faults/fault_edit.html'
 
 
-class InterlockDetails(DetailView):
+class FaultDetails(DetailView):
 
-    model = models.Interlock
-    template_name = 'interlocks/interlock_details.html'
+    model = models.Fault
+    template_name = 'faults/fault_details.html'
