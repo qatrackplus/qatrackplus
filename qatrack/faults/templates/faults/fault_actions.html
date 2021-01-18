@@ -1,15 +1,15 @@
 {% load i18n %}
 <div style="min-width: 85px;">
-  {% if perms.interlocks.change_interlock %}
+  {% if perms.faults.change_fault %}
     <a class="btn btn-default btn-xs btn-flat"
-      href="{% url 'interlock_edit' interlock.pk %}{% if next %}?next={{ next }}{% endif %}"
-      title="{% blocktrans %}Edit details of {{ interlock }}{% endblocktrans %}"
+      href="{% url 'fault_edit' fault.pk %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% blocktrans %}Edit details of {{ fault }}{% endblocktrans %}"
     >{% trans "Edit" %}</a>
   {% endif %}
-  {% if perms.interlocks.view_interlock %}
+  {% if perms.faults.view_fault %}
     <a class="btn btn-default btn-xs btn-flat"
-      href="{% url 'interlock_details' interlock.pk %}{% if next %}?next={{ next }}{% endif %}"
-      title="{% blocktrans  %}View details of {{ interlock }}{% endblocktrans %}"
+      href="{% url 'fault_details' fault.pk %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% blocktrans  %}View details of {{ fault }}{% endblocktrans %}"
     >
       {% trans "Details" %}
     </a>

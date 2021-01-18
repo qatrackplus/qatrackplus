@@ -4,6 +4,8 @@ from qatrack.faults import views
 
 urlpatterns = [
     url(r'^$', views.FaultList.as_view(), name='fault_list'),
+    url(r'^types/$', views.FaultTypeList.as_view(), name='fault_type_list'),
+    url(r'^types/(?P<slug>[\w-]+)/$', views.FaultTypeDetails.as_view(), name='fault_type_details'),
     url(r'^(?P<pk>\d+)?/$', views.FaultDetails.as_view(), name='fault_details'),
     url(r'^edit/(?P<pk>\d+)?/$', views.EditFault.as_view(), name='fault_edit'),
 ]

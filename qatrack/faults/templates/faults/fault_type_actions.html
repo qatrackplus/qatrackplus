@@ -1,0 +1,11 @@
+{% load i18n %}
+<div style="min-width: 85px;">
+  {% if perms.faults.view_faulttype %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'fault_type_details' slug=fault_type.slug %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% blocktrans  %}View deatils and all occurrences of the {{ fault_type }} fault type{% endblocktrans %}"
+    >
+      {% trans "Details & Occurrences" %}
+    </a>
+  {% endif %}
+</div>

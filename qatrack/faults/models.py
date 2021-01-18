@@ -28,6 +28,9 @@ class FaultType(models.Model):
         help_text=_l("Enter a description for this fault type"),
     )
 
+    class Meta:
+        ordering = ("code",)
+
     def __str__(self):
         return self.code
 

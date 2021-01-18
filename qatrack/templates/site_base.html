@@ -600,7 +600,7 @@
                 {% if perms.fault.add_fault or perms.fault.view_fault or perms.fault.review_fault %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                      {% trans "Faults" %}
+                      {% trans "Fault Log" %}
 
                       <span
                         title="{% blocktrans %}There are currently {{ FAULTS_UNREVIEWED }} Unreviewed Faults{% endblocktrans %}"
@@ -613,8 +613,17 @@
                     <ul class="dropdown-menu" role="menu">
                       <li>
                         <a href="{% url "fault_list" %}" title="{% trans "All Faults" %}">
-                          <i class="fa fa-lock fa-lg fa-fw" aria-hidden="true"></i>
+                          <i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>
                           {% trans "All Faults" %}
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url "fault_type_list" %}" title="{% trans "Fault Types" %}">
+                          <i class="fa fa-stack fa-lg fa-fw">
+                            <i class="fa fa-exclamation-triangle fa-stack-custom-main"></i>
+                            <i class="fa fa-list fa-stack-custom-sub upper-left hover-sub-success"></i>
+                          </i>
+                          {% trans "All Fault Types" %}
                         </a>
                       </li>
                     </ul>

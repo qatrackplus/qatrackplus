@@ -1,4 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
+from django.db.models import Count
+from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
@@ -25,7 +28,7 @@ from qatrack.units.models import Unit
 class FaultList(BaseListableView):
 
     model = models.Fault
-    template_name = 'faults/faults_list.html'
+    template_name = 'faults/fault_list.html'
     paginate_by = 50
 
     kwarg_filters = None
@@ -80,7 +83,7 @@ class FaultList(BaseListableView):
 
         # Store templates on view initialization so we don't have to reload them for every row!
         self.templates = {
-            'actions': get_template('faults/faults_actions.html'),
+            'actions': get_template('faults/fault_actions.html'),
             'occurred': get_template("faults/fault_occurred.html"),
             'review_status': get_template("faults/fault_review_status.html"),
         }
@@ -124,7 +127,7 @@ class FaultList(BaseListableView):
     def actions(self, fault):
         c = {
             'fault': fault,
-            'next': reverse('fault'),
+            'next': reverse('fault_list'),
             'perms': PermWrapper(self.request.user),
         }
         return self.templates['actions'].render(c)
@@ -148,3 +151,99 @@ class FaultDetails(DetailView):
 
     model = models.Fault
     template_name = 'faults/fault_details.html'
+
+
+class FaultTypeList(BaseListableView):
+
+    model = models.FaultType
+    template_name = 'faults/fault_type_list.html'
+    paginate_by = 50
+
+    kwarg_filters = None
+
+    fields = (
+        "actions",
+        "code",
+        'count',
+        "description",
+    )
+
+    headers = {
+        'actions': _l('Actions'),
+        'code': _l('Fault Type'),
+        'count': _l("# of Occurrences"),
+        'description': _l("Description"),
+    }
+
+    widgets = {
+        'actions': None,
+        'code': TEXT,
+        'count': None,
+        'description': TEXT,
+    }
+
+    search_fields = {
+        'actions': False,
+        'count': None,
+    }
+
+    order_fields = {
+        'actions': False,
+        'description': False,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.templates = {
+            'actions': get_template('faults/fault_type_actions.html'),
+        }
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            count=Count("fault"),
+        )
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        current_url = resolve(self.request.path_info).url_name
+        context['view_name'] = current_url
+        context['page_title'] = _l("All Fault Types")
+        return context
+
+    def actions(self, fault_type):
+        c = {
+            'fault_type': fault_type,
+            'next': reverse('fault_type_list'),
+            'perms': PermWrapper(self.request.user),
+        }
+        return self.templates['actions'].render(c)
+
+
+class FaultTypeDetails(FaultList):
+
+    template_name = 'faults/fault_type_details.html'
+
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            fault_type__code=self.kwargs['slug'],
+        )
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        fault_type = get_object_or_404(models.FaultType, slug=self.kwargs['slug'])
+        unit_faults = models.Fault.objects.filter(
+            fault_type=fault_type,
+        ).values(
+            "unit__name",
+            "unit__number",
+            "unit_id",
+        ).annotate(
+            unit_count=Count("unit__%s" % settings.ORDER_UNITS_BY)
+        ).order_by(
+            "-unit_count",
+        )
+        context['fault_type'] = fault_type
+        context['unit_faults'] = unit_faults
+
+        return context
