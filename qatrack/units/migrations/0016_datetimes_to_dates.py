@@ -11,16 +11,29 @@ def migrate_datetimes_to_date(apps, schema_editor):
 
     for u in Unit.objects.all():
         if u.install_date_old:
-            u.install_date = u.install_date_old.date()
-        u.date_acceptance = u.date_acceptance_old.date()
+            try:
+                u.install_date = u.install_date_old.date()
+            except AttributeError:
+                u.install_date = u.install_date_old
+
+        try:
+            u.date_acceptance = u.date_acceptance_old.date()
+        except AttributeError:
+            u.date_acceptance = u.date_acceptance_old
         u.save()
 
     for uate in UnitAvailableTimeEdit.objects.all():
-        uate.date = uate.date_old.date()
+        try:
+            uate.date = uate.date_old.date()
+        except AttributeError:
+            uate.date = uate.date_old
         uate.save()
 
     for uat in UnitAvailableTime.objects.all():
-        uat.date_changed = uat.date_changed_old.date()
+        try:
+            uat.date_changed = uat.date_changed_old.date()
+        except AttributeError:
+            uat.date_changed = uat.date_changed_old
         uat.save()
 
 
@@ -135,8 +148,9 @@ class Migration(migrations.Migration):
         ),
     ]
 
-    def apply(self, project_state, schema_editor, collect_sql=False):
-        if settings.DATABASES['default']['ENGINE'] == "sql_server.pyodbc":
-            return super().apply(project_state, schema_editor, collect_sql=collect_sql)
-        else:
-            return project_state
+    # def apply(self, project_state, schema_editor, collect_sql=False):
+    #
+    #     if settings.DATABASES['default']['ENGINE'] == "sql_server.pyodbc":
+    #         return super().apply(project_state, schema_editor, collect_sql=collect_sql)
+    #     else:
+    #         return project_state
