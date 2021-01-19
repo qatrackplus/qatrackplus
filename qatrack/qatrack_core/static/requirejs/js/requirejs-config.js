@@ -109,6 +109,9 @@ require.config({
         p_part: siteConfig.STATIC_URL + 'parts/js/p_part',
         parts_reporting: siteConfig.STATIC_URL + 'parts/js/parts_reporting',
 
+        //faults module:
+        faults: siteConfig.STATIC_URL + 'faults/js/faults',
+
         //issue module:
         issues: siteConfig.STATIC_URL + 'issue_tracker/js/issues'
     },

@@ -113,7 +113,13 @@
                                     <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
 
                                     <dt>Reviewed by:</dt>
-                                    <dd>{{tli.reviewed_by}} @ {{tli.reviewed}}</dd>
+                                    <dd>
+                                      {% if tli.reviewed %}
+                                        {{tli.reviewed_by}} @ {{tli.reviewed}}
+                                      {% else %}
+                                        <em>{% trans "Unreviewed" %}</em>
+                                      {% endif %}
+                                    </dd>
                                </dl>
                             </div>
                             <div class="col-md-4">

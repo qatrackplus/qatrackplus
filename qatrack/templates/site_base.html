@@ -611,6 +611,23 @@
                       <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu" role="menu">
+
+                      <li class="nav-header">{% trans "Faults" %}</li>
+                      <li>
+                        <a href="{% url "fault_choose_unit" %}" title="{% trans "Choose a specfic Unit To View Faults For" %}">
+                          <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
+                          {% trans "Choose Unit to View Faults" %}
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url "fault_create" %}" title="{% trans "Choose a specfic Unit To View Faults For" %}">
+                          <i class="fa fa-stack fa-lg fa-fw">
+                            <i class="fa fa-exclamation-triangle fa-stack-custom-main"></i>
+                            <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                          </i>
+                          {% trans "Enter a new fault" %}
+                        </a>
+                      </li>
                       <li>
                         <a href="{% url "fault_list" %}" title="{% trans "All Faults" %}">
                           <i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>
@@ -619,10 +636,7 @@
                       </li>
                       <li>
                         <a href="{% url "fault_type_list" %}" title="{% trans "Fault Types" %}">
-                          <i class="fa fa-stack fa-lg fa-fw">
-                            <i class="fa fa-exclamation-triangle fa-stack-custom-main"></i>
-                            <i class="fa fa-list fa-stack-custom-sub upper-left hover-sub-success"></i>
-                          </i>
+                          <i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>
                           {% trans "All Fault Types" %}
                         </a>
                       </li>

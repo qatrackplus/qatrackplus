@@ -1,11 +1,5 @@
 {% load i18n %}
 <div style="min-width: 85px;">
-  {% if perms.faults.change_fault %}
-    <a class="btn btn-default btn-xs btn-flat"
-      href="{% url 'fault_edit' fault.pk %}{% if next %}?next={{ next }}{% endif %}"
-      title="{% blocktrans %}Edit details of {{ fault }}{% endblocktrans %}"
-    >{% trans "Edit" %}</a>
-  {% endif %}
   {% if perms.faults.view_fault %}
     <a class="btn btn-default btn-xs btn-flat"
       href="{% url 'fault_details' fault.pk %}{% if next %}?next={{ next }}{% endif %}"
@@ -13,5 +7,11 @@
     >
       {% trans "Details" %}
     </a>
+  {% endif %}
+  {% if perms.faults.change_fault %}
+    <a class="btn btn-default btn-xs btn-flat"
+      href="{% url 'fault_edit' fault.pk %}{% if next %}?next={{ next }}{% endif %}"
+      title="{% blocktrans %}Edit details of {{ fault }}{% endblocktrans %}"
+    >{% trans "Edit" %}</a>
   {% endif %}
 </div>
