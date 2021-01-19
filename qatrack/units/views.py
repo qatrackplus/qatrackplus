@@ -29,7 +29,7 @@ def get_unit_available_time_data(request):
                     'hours': uate.hours
                 } for uate in u.unitavailabletimeedit_set.all()
             },
-            'available_times': u.get_available_times_list()
+            'available_times': list(u.unitavailabletime_set.all().values())
         } for u in unit_qs
     }
 
@@ -91,7 +91,6 @@ def handle_unit_available_time(request):
                 hours_saturday=timezone.timedelta(hours=int(hours['saturday'][0]), minutes=int(hours['saturday'][1])),
                 hours_sunday=timezone.timedelta(hours=int(hours['sunday'][0]), minutes=int(hours['sunday'][1])),
             )
-            print(u.hours_thursday)
 
     return get_unit_available_time_data(request)
 
