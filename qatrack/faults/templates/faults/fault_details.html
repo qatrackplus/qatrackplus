@@ -58,12 +58,28 @@
                 </dd>
 
                 <dt>{% trans "Unit" %}:</dt>
-                <dd>{{ fault.unit }}</dd>
+                <dd>
+                  <a
+                    href="{% url "fault_list_by_unit" unit_number=fault.unit.number %}"
+                    title="{% trans "Click to view all faults on this unit" %}"
+                  >
+                    {{ fault.unit }}
+                  </a>
+                </dd>
 
                 <dt>{% trans "Modality / Beam" %}:</dt>
                 <dd>
                   {% if fault.modality %}
                     {{ fault.modality }}
+                  {% else %}
+                    {% trans "Not Specified" %}
+                  {% endif %}
+                </dd>
+
+                <dt>{% trans "Treatment Technique" %}:</dt>
+                <dd>
+                  {% if fault.treatment_technique %}
+                    {{ fault.treatment_technique }}
                   {% else %}
                     {% trans "Not Specified" %}
                   {% endif %}

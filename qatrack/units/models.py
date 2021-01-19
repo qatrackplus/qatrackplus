@@ -204,6 +204,29 @@ class Modality(models.Model):
         return self.name
 
 
+class TreatmentTechnique(models.Model):
+
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=255,
+        unique=True,
+        help_text=_l('Name of this treatment technique'),
+    )
+
+    objects = NameNaturalKeyManager()
+
+    class Meta:
+        verbose_name = _l("treatment technique")
+        verbose_name_plural = _l("treatment techniques")
+        ordering = ("name",)
+
+    def natural_key(self):
+        return (self.name,)
+
+    def __str__(self):
+        return self.name
+
+
 def weekday_count(start_date, end_date, uate_list):
     week = {}
     for i in range((end_date - start_date).days + 1):
@@ -242,6 +265,7 @@ class Unit(models.Model):
     )
 
     modalities = models.ManyToManyField(Modality)
+    treatment_techniques = models.ManyToManyField(TreatmentTechnique)
 
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
@@ -365,26 +389,3 @@ class UnitAvailableTime(models.Model):
             uat = UnitAvailableTime(**kwargs)
 
         return uat
-
-
-class TreatmentTechnique(models.Model):
-
-    name = models.CharField(
-        verbose_name=_l("name"),
-        max_length=255,
-        unique=True,
-        help_text=_l('Name of this treatment technique'),
-    )
-
-    objects = NameNaturalKeyManager()
-
-    class Meta:
-        verbose_name = _l("treatment technique")
-        verbose_name_plural = _l("treatment techniques")
-        ordering = ("name",)
-
-    def natural_key(self):
-        return (self.name,)
-
-    def __str__(self):
-        return self.name

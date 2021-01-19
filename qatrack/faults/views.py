@@ -1,5 +1,6 @@
 from collections import defaultdict
 import json
+from django_comments.models import Comment
 
 from braces.views import LoginRequiredMixin
 from django.conf import settings
@@ -10,9 +11,11 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
+from django.utils import timezone
+from django.contrib.sites.shortcuts import get_current_site
 from django.utils.translation import gettext_lazy as _l
-from django.views.generic import DetailView
-from django.views.generic.edit import CreateView
+from django.views.generic import UpdateView
+from django.views.generic import CreateView
 from listable.views import (
     DATE_RANGE,
     LAST_14_DAYS,
@@ -48,6 +51,7 @@ class FaultList(BaseListableView):
         'unit__site__name': _l("Site"),
         'unit__name': _l("Unit"),
         'modality__name': _l("Modality"),
+        'treatment_technique__name': _l("Technique"),
         'get_occurred': _l("Occurred On"),
     }
 
@@ -58,6 +62,7 @@ class FaultList(BaseListableView):
         'unit__site__name': SELECT_MULTI,
         'unit__name': SELECT_MULTI,
         'modality__name': SELECT_MULTI,
+        'treatment_technique__name': SELECT_MULTI,
         'get_occurred': DATE_RANGE,
         'review_status': DATE_RANGE,
     }
@@ -84,6 +89,7 @@ class FaultList(BaseListableView):
         "unit__site",
         "unit",
         "modality",
+        "treatment_technique",
         "reviewed_by",
         "created_by",
         "modified_by",
@@ -124,6 +130,7 @@ class FaultList(BaseListableView):
         fields += (
             "unit__name",
             "modality__name",
+            "treatment_technique__name",
             "review_status",
         )
         return fields
@@ -169,10 +176,21 @@ class CreateFault(LoginRequiredMixin, CreateView):
         self.get_context_data()
 
         fault = form.save(commit=False)
-        fault.fault_type = form.cleaned_data['fault_type_field']
+        fault.fault_type = models.FaultType.objects.get(code=form.cleaned_data['fault_type_field'])
         fault.created_by = self.request.user
         fault.modified_by = self.request.user
         fault.save()
+
+        comment = form.cleaned_data['comment']
+        if comment:
+            comment = Comment(
+                submit_date=timezone.now(),
+                user=self.request.user,
+                content_object=fault,
+                comment=comment,
+                site=get_current_site(self.request)
+            )
+            comment.save()
 
         return HttpResponseRedirect(reverse('fault_list'))
 
@@ -181,18 +199,84 @@ class CreateFault(LoginRequiredMixin, CreateView):
 
         units = Unit.objects.filter(
             active=True,
-        ).prefetch_related("modalities").order_by(
+        ).prefetch_related(
+            "modalities",
+            "treatment_techniques",
+        ).order_by(
             "id",
             "modalities",
+            "treatment_techniques",
         ).values_list(
             "id",
             "modalities",
+            "treatment_techniques",
         )
 
         modalities = defaultdict(list)
-        for unit, modality in units:
+        techniques = defaultdict(list)
+
+        for unit, modality, technique in units:
             modalities[unit].append(modality)
+            techniques[unit].append(technique)
         context['modalities'] = json.dumps(modalities, cls=QATrackJSONEncoder)
+        context['techniques'] = json.dumps(techniques, cls=QATrackJSONEncoder)
+        return context
+
+
+class EditFault(LoginRequiredMixin, UpdateView):
+
+    model = models.Fault
+    template_name = 'faults/fault_form.html'
+    form_class = forms.FaultForm
+
+    def form_valid(self, form):
+
+        self.get_context_data()
+
+        fault = form.save(commit=False)
+        fault.fault_type = models.FaultType.objects.get(code=form.cleaned_data['fault_type_field'])
+        fault.modified_by = self.request.user
+        fault.save()
+
+        comment = form.cleaned_data['comment']
+        if comment:
+            comment = Comment(
+                submit_date=timezone.now(),
+                user=self.request.user,
+                content_object=fault,
+                comment=comment,
+                site=get_current_site(self.request)
+            )
+            comment.save()
+
+        return HttpResponseRedirect(reverse('fault_list'))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        units = Unit.objects.filter(
+            active=True,
+        ).prefetch_related(
+            "modalities",
+            "treatment_techniques",
+        ).order_by(
+            "id",
+            "modalities",
+            "treatment_techniques",
+        ).values_list(
+            "id",
+            "modalities",
+            "treatment_techniques",
+        )
+
+        modalities = defaultdict(list)
+        techniques = defaultdict(list)
+
+        for unit, modality, technique in units:
+            modalities[unit].append(modality)
+            techniques[unit].append(technique)
+        context['modalities'] = json.dumps(modalities, cls=QATrackJSONEncoder)
+        context['techniques'] = json.dumps(techniques, cls=QATrackJSONEncoder)
         return context
 
 
@@ -211,7 +295,7 @@ def fault_type_autocomplete(request):
         if code == q:
             exact_match = ft_id
         else:
-            results.append({'id': ft_id, 'text': code})
+            results.append({'id': code, 'text': code})
 
     new_option = exact_match < 0
     if new_option:
@@ -219,15 +303,9 @@ def fault_type_autocomplete(request):
         results = [{'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q}] + results
     else:
         # put the exact match first in the list
-        results = [{'id': exact_match, 'text': q}] + results
+        results = [{'id': q, 'text': q}] + results
 
     return JsonResponse({'results': results})
-
-
-class EditFault(DetailView):
-
-    model = models.Fault
-    template_name = 'faults/fault_edit.html'
 
 
 class FaultDetails(FaultList):

@@ -5,7 +5,10 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _l
 from django_comments.models import Comment
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
+from qatrack.qatrack_core.utils import unique_slug_generator
 from qatrack.units import models as u_models
 
 
@@ -19,6 +22,7 @@ class FaultType(models.Model):
     )
     slug = models.SlugField(
         max_length=255,
+        editable=False,
         unique=True,
         help_text=_l("Unique URL friendly identifier made of lowercase characters, dashes, and underscores.")
     )
@@ -26,13 +30,24 @@ class FaultType(models.Model):
     description = models.TextField(
         _l("description"),
         help_text=_l("Enter a description for this fault type"),
+        blank=True,
     )
 
     class Meta:
         ordering = ("code",)
 
+    def save(self, *args, **kwargs):
+        self.slug = unique_slug_generator(self, self.code)
+        super().save(*args,**kwargs)
+
     def __str__(self):
         return self.code
+
+
+#@receiver(pre_save, sender=FaultType)
+#def create_fault_type_slug(sender, instance, *args, **kwargs):
+#    import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+#    instance.slug = unique_slug_generator(instance, instance.code)
 
 
 class FaultManager(models.Manager):
@@ -58,7 +73,17 @@ class Fault(models.Model):
         related_name="faults",
         null=True,
         blank=True,
-        help_text=_l("Select the modality being used when this fault occurred"),
+        help_text=_l("Select the modality being used when this fault occurred (optional)"),
+    )
+
+    treatment_technique = models.ForeignKey(
+        u_models.TreatmentTechnique,
+        verbose_name=_l("treatment technique"),
+        on_delete=models.SET_NULL,
+        related_name="faults",
+        null=True,
+        blank=True,
+        help_text=_l("Select the treatment technique being used when this fault occurred (optional)"),
     )
 
     fault_type = models.ForeignKey(

@@ -10,8 +10,11 @@ from qatrack.units.models import Modality
 class FaultTypeAdmin(BaseQATrackAdmin):
 
     list_display = ("code", "description")
-    prepopulated_fields = {'slug': ('code',)}
-    search_fields = ("name", "description",)
+    search_fields = (
+        "name",
+        "slug",
+        "description",
+    )
 
 
 class ModalityFilter(admin.SimpleListFilter):

@@ -22,6 +22,7 @@
 {% block extra_js %}
     <script type="text/javascript">
       var modalities = {{ modalities | safe }};
+      var techniques = {{ techniques | safe }};
       var fault_type_autocomplete = '{% url "fault_type_autocomplete" %}';
     </script>
 {% endblock extra_js %}
@@ -40,7 +41,11 @@
     <div class="row">
       <div class="col-md-3">
         <h3 class="no-margin-top">
-          {% trans "Log A New Fault" %}
+          {% if form.instance.id %}
+            {% trans "Edit Fault" %}: {{ form.instance }}
+          {% else %}
+            {% trans "Log A New Fault" %}
+          {% endif %}
         </h3>
       </div>
     </div>
@@ -64,17 +69,60 @@
                   {% include "_form_horizontal.html" with form=form %}
                 </div>
               </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <input class="btn btn-flat btn-primary pull-right" type="submit" value="{% trans "Log Fault" %}"/>
+                </div>
+              </div>
             </div>
         </div>
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-12">
-        <input class="btn btn-flat btn-primary pull-right" type="submit" value="{% trans "Log Fault" %}"/>
-      </div>
-    </div>
+
 
   </form>
+
+  {% if form.instance.id %}
+    <div id="box-comments" class="row">
+      <div class="col-sm-12">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-commenting-o fa-fw"></i>
+              {% trans "Comments" %}
+            </h3>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-md-12">
+                {% render_comment_list for fault %}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                {% get_comment_form for fault as form %}
+
+                <form id="comment-form" method="post">
+                  {% csrf_token %}
+                  <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                  {{ form.object_pk }}
+                  {{ form.content_type }}
+                  {{ form.security_hash }}
+                  {{ form.timestamp }}
+                  <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="{% trans "Add comment" %}" class="margin-bottom-20 form-control autosize"></textarea>
+                </form>
+                <div class="row">
+                  <div class="col-md-12">
+                    <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">{% trans "Post Comment" %}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 </div>
 {% endblock body %}

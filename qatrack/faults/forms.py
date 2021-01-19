@@ -1,7 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.text import gettext_lazy as _l
-from django.utils.text import slugify
 from form_utils.forms import BetterModelForm
 
 from qatrack.faults import models
@@ -34,27 +33,29 @@ class FaultForm(BetterModelForm):
 
     class Meta:
         model = models.Fault
-        fieldsets = [
-            ('hidden_fields', {
-                'fields': [],
-            }),
-            ('required_fields', {
-                'fields': [
-                    'occurred',
-                    'unit',
-                    'modality',
-                    'fault_type_field',
-                ],
-            }),
-            ('optional_fields', {
-                'fields': [
-                    'comment',
-                ]
-            })
+        fields = [
+            'occurred',
+            'unit',
+            'modality',
+            'treatment_technique',
+            'fault_type_field',
+            'comment',
         ]
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
+
+        instance = kwargs.get('instance')
+        if instance and instance.id:
+            # if we are editing an existing fault, we need to set up the initial
+            # choices otherwise the fault_type_field will be blank
+            self.initial['fault_type_field'] = instance.fault_type.code
+            self.fields['fault_type_field'].widget.choices = [
+                (instance.fault_type.code, instance.fault_type.code),
+            ]
+
+            self.fields.pop('comment')
 
         self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True)
 
@@ -67,21 +68,16 @@ class FaultForm(BetterModelForm):
                     label = "*%s*" % label.replace(NEW_FAULT_TYPE_MARKER, "")
                 self.fields[f].widget.choices = [(val, label)]
 
-        for f in ['comment']:
-            self.fields[f].widget.attrs['class'] += 'autosize'
-            self.fields[f].widget.attrs['cols'] = 8
+        if 'comment' in self.fields:
+            self.fields['comment'].widget.attrs['class'] += 'autosize'
+            self.fields['comment'].widget.attrs['cols'] = 8
 
     def clean_fault_type_field(self):
         fault_type = self.cleaned_data.get('fault_type_field')
-        if fault_type:
+        if fault_type and NEW_FAULT_TYPE_MARKER in fault_type:
             fault_type = fault_type.replace(NEW_FAULT_TYPE_MARKER, "")
-            fault_type, __ = models.FaultType.objects.get_or_create(
-                code=fault_type,
-                defaults={
-                    'description': '',
-                    'slug': slugify(fault_type),
-                }
-            )
+            models.FaultType.objects.get_or_create(code=fault_type)
+
         return fault_type
 
     def clean_unit(self):

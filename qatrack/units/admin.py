@@ -48,6 +48,15 @@ class UnitFormAdmin(ModelForm):
         )
     )
 
+    treatment_techniques = ModelMultipleChoiceField(
+        queryset=TreatmentTechnique.objects.all(),
+        required=False,
+        widget=FilteredSelectMultiple(
+            verbose_name=_l('Treatment Techniques'),
+            is_stacked=False
+        )
+    )
+
     class Meta:
         model = Unit
 
@@ -62,6 +71,7 @@ class UnitFormAdmin(ModelForm):
             'type',
             'site',
             'modalities',
+            'treatment_techniques',
         ]
         if settings.USE_SERVICE_LOG:
             fields.append('service_areas')
