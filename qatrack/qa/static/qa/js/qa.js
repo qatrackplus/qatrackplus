@@ -45,6 +45,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         return decodeURIComponent(results[2].replace(/\+/g, ' '));
     }
 
+    var $faultModalToggle = $(".fault-modal-toggle");
+    var $faultModal = $("#fault-modal");
+    var $faultForm = $faultModal.find("form");
+    var $saveFault = $("#save_fault").click(function(){
+        console.log("CLOSE");
+    });
+
     var $calcStatus = $(".qa-calc-status");
     var $calcStatusSpinners = $calcStatus.find("i");
     var $calcStatusContent = $calcStatus.find("span");
@@ -52,6 +59,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     var $autoSaveStatus = $(".qa-autosave-status");
     var $autoSaveStatusSpinners = $autoSaveStatus.find("i");
     var $autoSaveStatusContent = $autoSaveStatus.find("span");
+
 
     var $submit = $("#submit-qa");
 
@@ -1668,6 +1676,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             check: '<i class="fa fa-check"></i>',
             extra_class: 'warning'
         });
+
 
     });
 });

@@ -94,7 +94,7 @@ class Fault(models.Model):
     )
 
     occurred = models.DateTimeField(
-        verbose_name=_l("Date & Time fault occurred on"),
+        verbose_name=_l("Date & Time fault occurred"),
         default=timezone.now,
         help_text="When did this fault occur. " + settings.DATETIME_HELP,
         db_index=True

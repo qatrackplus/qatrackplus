@@ -280,6 +280,11 @@ class EditFault(LoginRequiredMixin, UpdateView):
         return context
 
 
+def fault_create_ajax(request):
+
+    return JsonResponse({'results': results})
+
+
 def fault_type_autocomplete(request):
 
     q = request.GET.get('q', '')

@@ -16,5 +16,6 @@ urlpatterns = [
     url(r'^type/(?P<slug>[\w-]+)/$', views.FaultTypeDetails.as_view(), name='fault_type_details'),
     url(r'^(?P<pk>\d+)?/$', views.FaultDetails.as_view(), name='fault_details'),
     url(r'^create/$', views.CreateFault.as_view(), name='fault_create'),
+    url(r'^create/ajax/$', views.fault_create_ajax, name='fault_create_ajax'),
     url(r'^edit/(?P<pk>\d+)?/$', views.EditFault.as_view(), name='fault_edit'),
 ]

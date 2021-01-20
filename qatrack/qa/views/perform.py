@@ -33,6 +33,7 @@ import scipy
 
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
+from qatrack.faults.forms import FaultForm
 from qatrack.contacts.models import Contact
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.dates import (
@@ -1336,6 +1337,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         if settings.USE_SERVICE_LOG and rtsqa_id is not None:
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
+
+        context['fault_form'] = FaultForm(initial={'unit': self.unit_test_col.unit.id})
 
         return context
 
