@@ -233,3 +233,54 @@ class TestTreatmentTechnique:
 
     def test_str(self):
         assert str(models.TreatmentTechnique(name="name")) == "name"
+
+
+class TestGetUnitInfo(TestCase):
+
+    def setUp(self):
+        self.url = reverse('get_unit_info')
+        utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+
+        self.u1 = utils.create_unit()
+        self.u2 = utils.create_unit()
+        self.tt1 = models.TreatmentTechnique.objects.create(name="t1")
+        self.tt2 = models.TreatmentTechnique.objects.create(name="t2")
+        self.u1.treatment_techniques.add(self.tt1)
+        self.u1.treatment_techniques.add(self.tt2)
+
+    def test_get_all(self):
+        resp = self.client.get(self.url)
+        expected = {
+            str(self.u1.pk): {
+                'modalities': list(self.u1.modalities.values_list("pk", flat=True)),
+                'treatment_techniques': [self.tt1.pk, self.tt2.pk]
+            },
+            str(self.u2.pk): {
+                'modalities': list(self.u2.modalities.values_list("pk", flat=True)),
+                'treatment_techniques': []
+            },
+        }
+        assert resp.json() == expected
+
+    def test_active_only(self):
+        self.u2.active = False
+        self.u2.save()
+        resp = self.client.get(self.url)
+        expected = {
+            str(self.u1.pk): {
+                'modalities': list(self.u1.modalities.values_list("pk", flat=True)),
+                'treatment_techniques': [self.tt1.pk, self.tt2.pk]
+            },
+        }
+        assert resp.json() == expected
+
+    def test_by_unit(self):
+        resp = self.client.get(self.url, data={"units[]": [self.u2.pk]})
+        expected = {
+            str(self.u2.pk): {
+                'modalities': list(self.u2.modalities.values_list("pk", flat=True)),
+                'treatment_techniques': []
+            },
+        }
+        assert resp.json() == expected

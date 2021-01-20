@@ -412,10 +412,12 @@ def get_unit_info(unit_ids=None, active_only=True):
         "treatment_techniques",
     )
 
-    unit_info = defaultdict(lambda: defaultdict(list))
+    unit_info = defaultdict(lambda: {'treatment_techniques': set(), 'modalities': set()})
 
     for unit, modality, technique in units:
-        unit_info[unit]['modalities'].append(modality)
-        unit_info[unit]['treatment_techniques'].append(technique)
+        if modality is not None:
+            unit_info[unit]['modalities'].add(modality)
+        if technique is not None:
+            unit_info[unit]['treatment_techniques'].add(technique)
 
     return unit_info
