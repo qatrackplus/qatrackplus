@@ -45,13 +45,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         return decodeURIComponent(results[2].replace(/\+/g, ' '));
     }
 
-    var $faultModalToggle = $(".fault-modal-toggle");
-    var $faultModal = $("#fault-modal");
-    var $faultForm = $faultModal.find("form");
-    var $saveFault = $("#save_fault").click(function(){
-        console.log("CLOSE");
-    });
-
     var $calcStatus = $(".qa-calc-status");
     var $calcStatusSpinners = $calcStatus.find("i");
     var $calcStatusContent = $calcStatus.find("span");

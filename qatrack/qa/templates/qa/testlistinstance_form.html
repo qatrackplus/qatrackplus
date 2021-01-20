@@ -19,6 +19,7 @@
 
   <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "faults/css/faults.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "icheck/css/blue.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "qatrack_core/css/sidebar.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
@@ -78,7 +79,7 @@
 {% endblock %}
 
 {% block require_javascript %}
-    require(['qa'], function() {
+    require(['qa', 'faults'], function() {
         {{ test_list.javascript.strip|safe }}
     });
 {% endblock require_javascript %}
@@ -926,7 +927,7 @@
 {% endblock loading_modal %}
 
 {% block extra_body %}
-<div id="fault-modal" class="modal fade" tabindex="-1" role="dialog">
+<div id="fault-modal" class="fault-modal modal fade" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -935,12 +936,18 @@
       </div>
       <div class="modal-body">
         <form id="fault-form"
-          data-create_url="{% url "fault_create_ajax" %}"
+          data-create-url="{% url "fault_create_ajax" %}"
           action=""
           novalidate
           autocomplete="off"
           class="form-horizontal"
         >
+          <div class="form-group">
+            <div id="modal-fault-message" class="col-sm-offset-4 col-sm-8">
+            </div>
+          </div>
+
+          {% csrf_token %}
           {% include "_form_horizontal.html" with form=fault_form %}
         </form>
       </div>

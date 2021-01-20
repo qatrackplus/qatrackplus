@@ -1,4 +1,5 @@
 import calendar
+from collections import defaultdict
 
 from django.conf import settings
 from django.db import models
@@ -389,3 +390,32 @@ class UnitAvailableTime(models.Model):
             uat = UnitAvailableTime(**kwargs)
 
         return uat
+
+
+def get_unit_info(unit_ids=None, active_only=True):
+    units = Unit.objects.all()
+    if active_only:
+        units = units.filter(active=True)
+    if unit_ids:
+        units = units.filter(pk__in=unit_ids)
+
+    units = units.prefetch_related(
+        "modalities",
+        "treatment_techniques",
+    ).order_by(
+        "id",
+        "modalities",
+        "treatment_techniques",
+    ).values_list(
+        "id",
+        "modalities",
+        "treatment_techniques",
+    )
+
+    unit_info = defaultdict(lambda: defaultdict(list))
+
+    for unit, modality, technique in units:
+        unit_info[unit]['modalities'].append(modality)
+        unit_info[unit]['treatment_techniques'].append(technique)
+
+    return unit_info

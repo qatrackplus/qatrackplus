@@ -12,6 +12,8 @@ NEW_FAULT_TYPE_MARKER = "newft:"
 
 class FaultForm(BetterModelForm):
 
+    prefix = "fault"
+
     comment = forms.CharField(
         widget=forms.Textarea,
         required=False,

@@ -20,11 +20,6 @@
 {% endblock extra_css %}
 
 {% block extra_js %}
-    <script type="text/javascript">
-      var modalities = {{ modalities | safe }};
-      var techniques = {{ techniques | safe }};
-      var fault_type_autocomplete = '{% url "fault_type_autocomplete" %}';
-    </script>
 {% endblock extra_js %}
 
 {% block require_javascript %}

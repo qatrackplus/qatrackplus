@@ -1,21 +1,20 @@
 from collections import defaultdict
 import json
-from django_comments.models import Comment
 
 from braces.views import LoginRequiredMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
+from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Count
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import resolve, reverse
-from django.utils.translation import gettext as _
 from django.utils import timezone
-from django.contrib.sites.shortcuts import get_current_site
+from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-from django.views.generic import UpdateView
-from django.views.generic import CreateView
+from django.views.generic import CreateView, UpdateView
+from django_comments.models import Comment
 from listable.views import (
     DATE_RANGE,
     LAST_14_DAYS,
@@ -172,55 +171,8 @@ class CreateFault(LoginRequiredMixin, CreateView):
     form_class = forms.FaultForm
 
     def form_valid(self, form):
-
-        self.get_context_data()
-
-        fault = form.save(commit=False)
-        fault.fault_type = models.FaultType.objects.get(code=form.cleaned_data['fault_type_field'])
-        fault.created_by = self.request.user
-        fault.modified_by = self.request.user
-        fault.save()
-
-        comment = form.cleaned_data['comment']
-        if comment:
-            comment = Comment(
-                submit_date=timezone.now(),
-                user=self.request.user,
-                content_object=fault,
-                comment=comment,
-                site=get_current_site(self.request)
-            )
-            comment.save()
-
+        save_valid_fault_form(form, self.request)
         return HttpResponseRedirect(reverse('fault_list'))
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        units = Unit.objects.filter(
-            active=True,
-        ).prefetch_related(
-            "modalities",
-            "treatment_techniques",
-        ).order_by(
-            "id",
-            "modalities",
-            "treatment_techniques",
-        ).values_list(
-            "id",
-            "modalities",
-            "treatment_techniques",
-        )
-
-        modalities = defaultdict(list)
-        techniques = defaultdict(list)
-
-        for unit, modality, technique in units:
-            modalities[unit].append(modality)
-            techniques[unit].append(technique)
-        context['modalities'] = json.dumps(modalities, cls=QATrackJSONEncoder)
-        context['techniques'] = json.dumps(techniques, cls=QATrackJSONEncoder)
-        return context
 
 
 class EditFault(LoginRequiredMixin, UpdateView):
@@ -230,25 +182,7 @@ class EditFault(LoginRequiredMixin, UpdateView):
     form_class = forms.FaultForm
 
     def form_valid(self, form):
-
-        self.get_context_data()
-
-        fault = form.save(commit=False)
-        fault.fault_type = models.FaultType.objects.get(code=form.cleaned_data['fault_type_field'])
-        fault.modified_by = self.request.user
-        fault.save()
-
-        comment = form.cleaned_data['comment']
-        if comment:
-            comment = Comment(
-                submit_date=timezone.now(),
-                user=self.request.user,
-                content_object=fault,
-                comment=comment,
-                site=get_current_site(self.request)
-            )
-            comment.save()
-
+        save_valid_fault_form(form, self.request)
         return HttpResponseRedirect(reverse('fault_list'))
 
     def get_context_data(self, **kwargs):
@@ -281,8 +215,48 @@ class EditFault(LoginRequiredMixin, UpdateView):
 
 
 def fault_create_ajax(request):
+    """Simple view to handle an ajax post of the FaultForm"""
 
-    return JsonResponse({'results': results})
+    form = forms.FaultForm(request.POST)
+
+    if form.is_valid():
+        fault = save_valid_fault_form(form, request)
+        fault_id = fault.id
+        msg = _("Fault ID %d was created" % fault_id)
+    else:
+        fault_id = None
+        msg = _("Please resolve the errors below and submit again")
+
+    results = {
+        'error': fault_id is None,
+        'errors': form.errors,
+        'message': msg,
+    }
+    return JsonResponse(results, encoder=QATrackJSONEncoder)
+
+
+def save_valid_fault_form(form, request):
+    """helper for EditFault, CreateFault, and create_ajax for processing FaultForm"""
+
+    fault = form.save(commit=False)
+    fault.fault_type = models.FaultType.objects.get(code=form.cleaned_data['fault_type_field'])
+    if not fault.id:
+        fault.created_by = request.user
+    fault.modified_by = request.user
+    fault.save()
+
+    comment = form.cleaned_data['comment']
+    if comment:
+        comment = Comment(
+            submit_date=timezone.now(),
+            user=request.user,
+            content_object=fault,
+            comment=comment,
+            site=get_current_site(request)
+        )
+        comment.save()
+
+    return fault
 
 
 def fault_type_autocomplete(request):
@@ -310,7 +284,7 @@ def fault_type_autocomplete(request):
         # put the exact match first in the list
         results = [{'id': q, 'text': q}] + results
 
-    return JsonResponse({'results': results})
+    return JsonResponse({'results': results}, encoder=QATrackJSONEncoder)
 
 
 class FaultDetails(FaultList):

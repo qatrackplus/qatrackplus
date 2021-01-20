@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 import pytz
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.units import forms
 from qatrack.units import models as u_models
 
@@ -80,7 +81,7 @@ def handle_unit_available_time(request):
 
     for unit in u_models.Unit.objects.filter(id__in=units):
         if day > unit.date_acceptance and len(uats.filter(unit=unit, date_changed=day)) == 0:
-            u = u_models.UnitAvailableTime.objects.create(
+            u_models.UnitAvailableTime.objects.create(
                 unit=unit,
                 date_changed=day,
                 hours_monday=timezone.timedelta(hours=int(hours['monday'][0]), minutes=int(hours['monday'][1])),
@@ -154,3 +155,8 @@ def delete_schedules(request):
     ).delete()
 
     return get_unit_available_time_data(request)
+
+
+def get_unit_info(request):
+    unit_info = u_models.get_unit_info()
+    return JsonResponse(unit_info, encoder=QATrackJSONEncoder)

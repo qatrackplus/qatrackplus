@@ -33,8 +33,8 @@ import scipy
 
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
-from qatrack.faults.forms import FaultForm
 from qatrack.contacts.models import Contact
+from qatrack.faults.forms import FaultForm
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.dates import (
     format_datetime,
