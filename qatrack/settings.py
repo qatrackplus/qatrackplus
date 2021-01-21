@@ -311,6 +311,7 @@ CACHE_SL_NOTIFICATION_TOTAL = 'sl-notification-total'
 CACHE_SERVICE_STATUS_COLOURS = 'service-status-colours'
 CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
 CACHE_AUTOREVIEW_RULESETS = "autoreviewrulesets"
+CACHE_UNREVIEWED_FAULT_COUNT = "unreviewed-fault-count"
 
 MAX_CACHE_TIMEOUT = None
 

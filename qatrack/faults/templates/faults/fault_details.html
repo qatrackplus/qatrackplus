@@ -129,6 +129,24 @@
                   {% endif %}
                 </dd>
               </dl>
+
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+
+              {% if perms.faults.can_review %}
+                <hr/>
+                <form id="review-form" action="{% url "fault_review" pk=fault.id %}" method="POST">
+                  {% csrf_token %}
+                  {% include "_form_horizontal.html" with form=review_form %}
+                  {% if fault.reviewed %}
+                    <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unapprove This Fault" %}</button>
+                  {% else %}
+                    <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Approve This Fault" %}</button>
+                  {% endif %}
+                </form>
+              {% endif %}
             </div>
           </div>
         </div>

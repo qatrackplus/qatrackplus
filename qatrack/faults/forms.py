@@ -91,3 +91,12 @@ class FaultForm(BetterModelForm):
             except u_models.Unit.DoesNotExist:  # pragma: nocover
                 raise ValidationError('Unit with id %s does not exist' % unit)
         return unit
+
+
+class ReviewFaultForm(BetterModelForm):
+
+    prefix = "fault"
+
+    class Meta:
+        model = models.Fault
+        fields = []

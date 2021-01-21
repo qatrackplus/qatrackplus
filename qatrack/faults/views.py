@@ -1,5 +1,6 @@
-from braces.views import LoginRequiredMixin
 from django.conf import settings
+from django.contrib import messages
+from django.views.decorators.http import require_POST
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Count
@@ -161,7 +162,18 @@ class FaultList(BaseListableView):
         return self.templates['fault_type'].render(c)
 
 
-class CreateFault(LoginRequiredMixin, CreateView):
+class UnreviewedFaultList(FaultList):
+
+    def get_queryset(self):
+        return super().get_queryset().filter(reviewed=None)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['page_title'] = _l("Unreviewed Faults")
+        return context
+
+
+class CreateFault(CreateView):
 
     model = models.Fault
     template_name = 'faults/fault_form.html'
@@ -172,7 +184,7 @@ class CreateFault(LoginRequiredMixin, CreateView):
         return HttpResponseRedirect(reverse('fault_list'))
 
 
-class EditFault(LoginRequiredMixin, UpdateView):
+class EditFault(UpdateView):
 
     model = models.Fault
     template_name = 'faults/fault_form.html'
@@ -261,7 +273,6 @@ def fault_type_autocomplete(request):
 
 class FaultDetails(FaultList):
 
-    model = models.Fault
     template_name = 'faults/fault_details.html'
 
     def get_queryset(self):
@@ -277,7 +288,30 @@ class FaultDetails(FaultList):
             "fault_type",
         )
         context['fault'] = get_object_or_404(qs, pk=self.kwargs['pk'])
+        if self.request.user.has_perm("faults.can_review"):
+            context['review_form'] = forms.ReviewFaultForm(instance=context['fault'])
         return context
+
+
+@require_POST
+def review_fault(request, pk):
+    fault = get_object_or_404(models.Fault.objects.all(), pk=pk)
+    form = forms.ReviewFaultForm(request.POST, instance=fault)
+    if form.is_valid():
+        fault = form.save(commit=False)
+        fault.modified_by = request.user
+        approve = fault.reviewed is None
+        fault.reviewed_by = request.user if approve else None
+        fault.reviewed = timezone.now() if approve else None
+        if approve:
+            messages.success(request, _("Successfully approved %(fault)s ") % {'fault': fault})
+        else:
+            messages.warning(request, _("Successfully unapproved %(fault)s ") % {'fault': fault})
+        fault.save()
+    else:
+        messages.error(_("Sorry, something went wrong trying to review this fault. It has not been updated"))
+
+    return HttpResponseRedirect(reverse('fault_details', kwargs={'pk': fault.pk}))
 
 
 class FaultsByUnit(FaultList):

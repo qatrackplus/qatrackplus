@@ -20,6 +20,7 @@ from qatrack.service_log.models import (
 )
 from qatrack.units.models import Unit
 
+cache.delete(settings.CACHE_UNREVIEWED_FAULT_COUNT)
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -86,6 +87,13 @@ def update_se_cache(*args, **kwargs):
     cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
     cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
     cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
+
+
+@receiver(post_save, sender=Fault)
+@receiver(post_delete, sender=Fault)
+def update_faults_cache(*args, **kwargs):
+    """When a fault is changed invalidate the default and review count"""
+    cache.delete(settings.CACHE_UNREVIEWED_FAULT_COUNT)
 
 
 @receiver(post_save, sender=UnitTestCollection)
@@ -189,7 +197,10 @@ def site(request):
         ),
     )
 
-    context['FAULTS_UNREVIEWED'] = Fault.objects.unreviewed().count()
+    context['FAULTS_UNREVIEWED'] = cache.get_or_set(
+        settings.CACHE_UNREVIEWED_FAULT_COUNT,
+        Fault.objects.unreviewed_count,
+    )
 
     context['USERS_IN_PROGRESS'] = get_user_count(
         request,

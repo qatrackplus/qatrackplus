@@ -5,8 +5,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _l
 from django_comments.models import Comment
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 
 from qatrack.qatrack_core.utils import unique_slug_generator
 from qatrack.units import models as u_models
@@ -38,22 +36,19 @@ class FaultType(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = unique_slug_generator(self, self.code)
-        super().save(*args,**kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.code
-
-
-#@receiver(pre_save, sender=FaultType)
-#def create_fault_type_slug(sender, instance, *args, **kwargs):
-#    import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
-#    instance.slug = unique_slug_generator(instance, instance.code)
 
 
 class FaultManager(models.Manager):
 
     def unreviewed(self):
         return self.filter(reviewed_by=None).order_by("-occurred")
+
+    def unreviewed_count(self):
+        return self.unreviewed().count()
 
 
 class Fault(models.Model):
@@ -131,6 +126,7 @@ class Fault(models.Model):
 
     class Meta:
         ordering = ("-occurred",)
+        permissions = (("can_review", _l("Can review faults")),)
 
     def __str__(self):
         return "Fault ID: %d" % self.pk
