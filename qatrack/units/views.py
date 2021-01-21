@@ -158,5 +158,6 @@ def delete_schedules(request):
 
 
 def get_unit_info(request):
-    unit_info = u_models.get_unit_info()
+    units = request.GET.get("units[]", [])
+    unit_info = u_models.get_unit_info(unit_ids=units)
     return JsonResponse(unit_info, encoder=QATrackJSONEncoder)
