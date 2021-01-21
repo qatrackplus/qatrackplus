@@ -1,6 +1,3 @@
-from collections import defaultdict
-import json
-
 from braces.views import LoginRequiredMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
@@ -185,34 +182,6 @@ class EditFault(LoginRequiredMixin, UpdateView):
         save_valid_fault_form(form, self.request)
         return HttpResponseRedirect(reverse('fault_list'))
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        units = Unit.objects.filter(
-            active=True,
-        ).prefetch_related(
-            "modalities",
-            "treatment_techniques",
-        ).order_by(
-            "id",
-            "modalities",
-            "treatment_techniques",
-        ).values_list(
-            "id",
-            "modalities",
-            "treatment_techniques",
-        )
-
-        modalities = defaultdict(list)
-        techniques = defaultdict(list)
-
-        for unit, modality, technique in units:
-            modalities[unit].append(modality)
-            techniques[unit].append(technique)
-        context['modalities'] = json.dumps(modalities, cls=QATrackJSONEncoder)
-        context['techniques'] = json.dumps(techniques, cls=QATrackJSONEncoder)
-        return context
-
 
 def fault_create_ajax(request):
     """Simple view to handle an ajax post of the FaultForm"""
@@ -245,7 +214,7 @@ def save_valid_fault_form(form, request):
     fault.modified_by = request.user
     fault.save()
 
-    comment = form.cleaned_data['comment']
+    comment = form.cleaned_data.get('comment', '')
     if comment:
         comment = Comment(
             submit_date=timezone.now(),
@@ -260,6 +229,9 @@ def save_valid_fault_form(form, request):
 
 
 def fault_type_autocomplete(request):
+    """Look for fault types matching users query.  If the fault type doesn't
+    exist, return it as a first option so user can select it and have it
+    created when they submit the form."""
 
     q = request.GET.get('q', '')
 
@@ -276,11 +248,11 @@ def fault_type_autocomplete(request):
         else:
             results.append({'id': code, 'text': code})
 
-    new_option = exact_match < 0
+    new_option = q and (exact_match < 0)
     if new_option:
         # allow user to create a new match
         results = [{'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q}] + results
-    else:
+    elif q:
         # put the exact match first in the list
         results = [{'id': q, 'text': q}] + results
 
@@ -325,7 +297,7 @@ class FaultsByUnit(FaultList):
         context = super().get_context_data(*args, **kwargs)
         unit = get_object_or_404(Unit, number=self.kwargs['unit_number'])
         context['unit'] = unit
-        context['page_title'] = "%s: %s" % (_("Faults for "), unit.site_unit_name())
+        context['page_title'] = "%s: %s" % (_("Faults for"), unit.site_unit_name())
         return context
 
 
@@ -350,8 +322,8 @@ class FaultsByUnitFaultType(FaultList):
         unit = get_object_or_404(Unit, number=self.kwargs['unit_number'])
         fault_type = get_object_or_404(models.FaultType, slug=self.kwargs['slug'])
         context['unit'] = unit
-        context['fault_type'] = unit
-        title = _("{fault_type} faults for {site_and_unit_name}").format(
+        context['fault_type'] = fault_type
+        title = _("{fault_type} faults for: {site_and_unit_name}").format(
             fault_type=fault_type,
             site_and_unit_name=unit.site_unit_name(),
         )
@@ -437,7 +409,7 @@ class FaultTypeDetails(FaultList):
 
     def get_queryset(self):
         return super().get_queryset().filter(
-            fault_type__code=self.kwargs['slug'],
+            fault_type__slug=self.kwargs['slug'],
         )
 
     def get_context_data(self, *args, **kwargs):

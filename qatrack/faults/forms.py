@@ -63,8 +63,9 @@ class FaultForm(BetterModelForm):
 
         for f in self.fields:
             self.fields[f].widget.attrs['class'] = 'form-control'
-            if f == 'fault_type_field' and self.data.get('fault_type_field'):
-                val = self.data.get('fault_type_field')
+            data_key = '%s-fault_type_field' % self.prefix
+            if f == 'fault_type_field' and self.data.get(data_key):
+                val = self.data.get(data_key)
                 label = val
                 if NEW_FAULT_TYPE_MARKER in label:
                     label = "*%s*" % label.replace(NEW_FAULT_TYPE_MARKER, "")
@@ -87,6 +88,6 @@ class FaultForm(BetterModelForm):
         if unit:
             try:
                 unit = u_models.Unit.objects.get(pk=unit)
-            except u_models.Unit.DoesNotExist:
+            except u_models.Unit.DoesNotExist:  # pragma: nocover
                 raise ValidationError('Unit with id %s does not exist' % unit)
         return unit
