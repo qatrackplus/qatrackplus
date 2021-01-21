@@ -1606,6 +1606,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.unit_test_collection.autosave_set.order_by("-created").select_related("modified_by")
         )
 
+        context['fault_form'] = FaultForm(initial={'unit': self.object.unit_test_collection.unit.id})
+
         return context
 
 

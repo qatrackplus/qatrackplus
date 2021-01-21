@@ -110,7 +110,7 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments'], function($, mo
                     result.message +
                     '</div>'
                 ).parent().addClass("has-success");
-                setTimeout(function(){$faultModal.modal('hide');}, 1000);
+                setTimeout(function(){$faultModal.modal('hide');}, 2000);
             }
             function faultError(result){
                 $.each(result.non_field_errors, function(k, v){
