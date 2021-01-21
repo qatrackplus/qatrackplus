@@ -82,7 +82,11 @@
       <div class="box">
         <div class="box-header">
           <i class="fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>
-          <h3 class="box-title">{{ fault_type.code }}: {% trans "Occurrences" %}</h3>
+          <h3 class="box-title">
+            {% blocktrans with fault_type_code=fault_type.code %}
+              Fault Type {{ fault_type_code }} Occurrences
+            {% endblocktrans %}
+          </h3>
         </div>
         <div class="box-body pad">
           {{ listable_table }}
