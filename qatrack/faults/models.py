@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _l
 from django_comments.models import Comment
 
 from qatrack.qatrack_core.utils import unique_slug_generator
+from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
 
 
@@ -95,6 +96,13 @@ class Fault(models.Model):
         help_text="When did this fault occur. " + settings.DATETIME_HELP,
         db_index=True
     )
+
+    #service_event_related = models.ManyToManyField(
+    #    sl_models.ServiceEvent,
+    #    blank=True,
+    #    verbose_name=_l('related service events'),
+    #    help_text=_l('Enter the service event IDs of any related service events.')
+    #)
 
     comments = GenericRelation(
         Comment,
