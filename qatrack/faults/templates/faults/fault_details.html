@@ -135,18 +135,26 @@
           <div class="row">
             <div class="col-md-12">
 
-              {% if perms.faults.can_review %}
                 <hr/>
                 <form id="review-form" action="{% url "fault_review" pk=fault.id %}" method="POST">
                   {% csrf_token %}
                   {% include "_form_horizontal.html" with form=review_form %}
-                  {% if fault.reviewed %}
-                    <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unapprove This Fault" %}</button>
-                  {% else %}
-                    <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Approve This Fault" %}</button>
+                  {% if perms.faults.can_delete %}
+                    <a class="btn btn-danger btn-flat"
+                       title="{% trans "This will redirect you to a page where you can permanently delete this fault" %}"
+                       href="{% url 'fault_delete' pk=fault.pk %}"
+                    >
+                      <i class="fa fa-trash-o"></i> {% trans "Delete" %}
+                    </a>
+                  {% endif %}
+                  {% if perms.faults.can_review %}
+                    {% if fault.reviewed %}
+                      <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unapprove This Fault" %}</button>
+                    {% else %}
+                      <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Approve This Fault" %}</button>
+                    {% endif %}
                   {% endif %}
                 </form>
-              {% endif %}
             </div>
           </div>
         </div>

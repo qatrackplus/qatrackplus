@@ -3,7 +3,7 @@
 {% load comments %}
 {% load static %}
 
-{% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
+{% block head_title %}Delete {{ object.test_list.name }} from {{ object.work_completed|date }}{% endblock %}
 
 {% block extra_css %}
   <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
@@ -84,9 +84,10 @@
                         </table>
                         <form class="form form-horizontal text-right" action="" method="post">{% csrf_token %}
                           <p>
-                            Are you sure you want to
-                            <strong>permanently</strong> delete {{ object.test_list.name }} from
-                            {{ object.work_completed|date }}?
+                            {% blocktrans test_list_name=object.test_list.name work_completed=object.work_completed|date %}
+                              Are you sure you want to <strong>permanently</strong> delete {{ test_list_name }}
+                              from {{ work_completed }}?
+                            {% endblocktrans %}
                           </p>
                           <button class="btn btn-danger btn-flat" type="submit"><i class="fa fa-trash-o"></i> Delete</button>
                           <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-default btn-flat">

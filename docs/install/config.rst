@@ -384,7 +384,7 @@ reference value.
 REVIEW_BULK
 ...........
 
-Set `REVIEW_BULK = True` to enable the :ref:`Bulk Review <qa_perform_bulk_review>` 
+Set `REVIEW_BULK = False` to disable the :ref:`Bulk Review <qa_perform_bulk_review>` 
 feature which allows users to update the review and approval status of multiple
 test list instances at the same time.
 

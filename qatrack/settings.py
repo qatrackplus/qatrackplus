@@ -573,7 +573,7 @@ ORDER_UNITS_BY = "number"
 REVIEW_DIFF_COL = False
 
 # Enable bulk review on Unreviewed pages
-REVIEW_BULK = False
+REVIEW_BULK = True
 
 # default display settings for test statuses
 TEST_STATUS_DISPLAY = {

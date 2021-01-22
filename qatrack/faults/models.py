@@ -95,7 +95,10 @@ class Fault(models.Model):
         db_index=True
     )
 
-    comments = GenericRelation(Comment)
+    comments = GenericRelation(
+        Comment,
+        object_id_field="object_pk",
+    )
 
     reviewed = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(

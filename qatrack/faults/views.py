@@ -1,17 +1,20 @@
+from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
-from django.views.decorators.http import require_POST
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Count
+from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-from django.views.generic import CreateView, UpdateView
+from django.views.decorators.http import require_POST
+from django.views.generic import CreateView, DeleteView, UpdateView
 from django_comments.models import Comment
 from listable.views import (
     DATE_RANGE,
@@ -164,35 +167,82 @@ class FaultList(BaseListableView):
 
 class UnreviewedFaultList(FaultList):
 
+    headers = FaultList.headers
+    headers["selected"] = mark_safe(
+        '<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")
+    )
+    search_fields = FaultList.search_fields
+    search_fields["selected"] = False
+    order_fields = FaultList.order_fields
+    order_fields['selected'] = False
+
     def get_queryset(self):
         return super().get_queryset().filter(reviewed=None)
+
+    def get_fields(self, request=None):
+        fields = super().get_fields(request=request)
+        if settings.REVIEW_BULK:
+            fields += ("selected",)
+
+        return fields
+
+    def selected(self, obj):
+        return '<input type="checkbox" class="test-selected" data-fault="%s" title="%s"/>' % (
+            obj.id,
+            _("Check to include this fault bulk setting approval statuses"),
+        )
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['page_title'] = _l("Unreviewed Faults")
+        context['bulk_review'] = settings.REVIEW_BULK
         return context
 
 
-class CreateFault(CreateView):
+class CreateFault(PermissionRequiredMixin, CreateView):
 
     model = models.Fault
     template_name = 'faults/fault_form.html'
     form_class = forms.FaultForm
+
+    permission_required = "faults.add_fault"
+    raise_exception = True
 
     def form_valid(self, form):
         save_valid_fault_form(form, self.request)
         return HttpResponseRedirect(reverse('fault_list'))
 
 
-class EditFault(UpdateView):
+class EditFault(PermissionRequiredMixin, UpdateView):
 
     model = models.Fault
     template_name = 'faults/fault_form.html'
     form_class = forms.FaultForm
 
+    permission_required = "faults.change_fault"
+    raise_exception = True
+
     def form_valid(self, form):
         save_valid_fault_form(form, self.request)
         return HttpResponseRedirect(reverse('fault_list'))
+
+
+class DeleteFault(PermissionRequiredMixin, DeleteView):
+
+    permission_required = "faults.delete_fault"
+    raise_exception = True
+
+    model = models.Fault
+
+    def get_success_url(self):
+        return self.request.GET.get("next", reverse("fault_list"))
+
+    @atomic
+    def delete(self, request, *args, **kwargs):
+        Comment.objects.for_model(models.Fault).filter(object_pk=kwargs['pk']).delete()
+        res = super().delete(self, request, *args, **kwargs)
+        messages.success(request, _("Successfully deleted Fault {fault_id}").format(fault_id=kwargs['pk']))
+        return res
 
 
 def fault_create_ajax(request):
@@ -312,6 +362,21 @@ def review_fault(request, pk):
         messages.error(_("Sorry, something went wrong trying to review this fault. It has not been updated"))
 
     return HttpResponseRedirect(reverse('fault_details', kwargs={'pk': fault.pk}))
+
+
+@require_POST
+@atomic
+def bulk_review(request):
+    faults = request.POST.getlist('faults')
+    faults = models.Fault.objects.unreviewed().filter(pk__in=faults)
+    count = faults.update(
+        modified_by=request.user,
+        reviewed_by=request.user,
+        reviewed=timezone.now(),
+    )
+    msg = _("Successfully reviewed %(count)s faults") % {'count': count}
+    messages.add_message(request=request, message=msg, level=messages.SUCCESS)
+    return JsonResponse({"ok": True})
 
 
 class FaultsByUnit(FaultList):

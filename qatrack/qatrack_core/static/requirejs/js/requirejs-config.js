@@ -111,6 +111,7 @@ require.config({
 
         //faults module:
         faults: siteConfig.STATIC_URL + 'faults/js/faults',
+        faultsbulkreview: siteConfig.STATIC_URL + 'faults/js/faultsbulkreview',
 
         //issue module:
         issues: siteConfig.STATIC_URL + 'issue_tracker/js/issues'
