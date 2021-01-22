@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _l
 
 # this import has to be here so that the signal handlers get registered
+from qatrack.notifications.faults import handlers as fault_handlers  # noqa: F401
 from qatrack.notifications.parts import handlers as part_handlers  # noqa: F401
 from qatrack.notifications.qccompleted import handlers as qccompleted_handlers  # noqa: F401
 from qatrack.notifications.qcreview import handlers as qcreview_handlers  # noqa: F401

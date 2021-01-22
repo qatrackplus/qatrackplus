@@ -112,3 +112,21 @@ class TestPartNoticeAdmin(TestCase):
             recipients=rg,
         )
         assert rg.name in self.admin.get_recipients(n)
+
+
+class TestPartCategoryGroup:
+
+    def test_str(self):
+        assert str(PartCategoryGroup(name="foo")) == "foo"
+
+
+class TestPartCategoryGroupAdmin(TestCase):
+
+    def setUp(self):
+        self.admin = admin.PartCategoryGroupAdmin(model=PartCategoryGroup, admin_site=AdminSite())
+
+    def test_get_categories(self):
+        pc = sl_utils.create_part_category("Test Cat")
+        pcg = PartCategoryGroup.objects.create(name="PCG")
+        pcg.part_categories.add(pc)
+        assert self.admin.get_categories(pcg) == "Test Cat"

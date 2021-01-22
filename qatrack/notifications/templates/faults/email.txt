@@ -1,4 +1,4 @@
-QATrack+ Fault Notice
+{% load i18n %}QATrack+ Fault Notice
 =====================
 
 Hello,

@@ -1,21 +1,14 @@
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth.models import Group
 from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 from django_q.models import Schedule
 
-from qatrack.accounts.tests.utils import create_user, create_group
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.faults import models
-from qatrack.notifications.models import (
-    FaultNotice,
-    RecipientGroup,
-    TestListGroup,
-    UnitGroup,
-)
-from qatrack.notifications.faults import admin
 from qatrack.faults.tests import utils as utils
+from qatrack.notifications.faults import admin
+from qatrack.notifications.models import FaultNotice, RecipientGroup, UnitGroup
 from qatrack.qa.tests import utils as qa_utils
 
 
@@ -39,10 +32,12 @@ class TestFaultNoticeAdmin(TestCase):
         self.admin = admin.FaultNoticeAdmin(model=FaultNotice, admin_site=AdminSite())
 
     def test_get_notification_type(self):
+        """Ensure admin notifcation_type works as expected"""
         n = FaultNotice(pk=1, notification_type=FaultNotice.LOGGED)
         assert "Notify when fault logged" in self.admin.get_notification_type(n)
 
     def test_get_units(self):
+        """Ensure admin notification units display works as expected"""
         u = qa_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
@@ -55,6 +50,7 @@ class TestFaultNoticeAdmin(TestCase):
         assert ug.name in self.admin.get_units(n)
 
     def test_get_recipients(self):
+        """Ensure admin notification recipients display works as expected"""
         rg = RecipientGroup.objects.create(name="RG")
         n = FaultNotice.objects.create(
             notification_type=FaultNotice.LOGGED,
@@ -68,7 +64,6 @@ class TestFaultNoticeEmails(TestCase):
     def setUp(self):
 
         self.tests = []
-
 
         self.unit = qa_utils.create_unit()
 
@@ -93,17 +88,18 @@ class TestFaultNoticeEmails(TestCase):
         Schedule.objects.all().delete()
 
     def test_email_sent(self):
+        """An email should be sent when a fault is created"""
 
         notification = FaultNotice.objects.create(
             notification_type=FaultNotice.LOGGED,
             recipients=self.recipients,
         )
         notification.save()
-        fault = utils.create_fault()
+        utils.create_fault()
         self.assertEqual(len(mail.outbox), 1)
 
-
     def test_email_not_sent_on_edit(self):
+        """An email should not be sent when a fault is edited"""
 
         fault = utils.create_fault()
         FaultNotice.objects.create(
@@ -114,6 +110,7 @@ class TestFaultNoticeEmails(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_email_sent_to_group_for_unit(self):
+        """An email should not be sent when when a fault is created for a unit belonging to a unit group"""
 
         FaultNotice.objects.create(
             notification_type=FaultNotice.LOGGED,
@@ -124,7 +121,7 @@ class TestFaultNoticeEmails(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_email_not_sent_to_group_for_excluded_unit(self):
-        """TLI is created on 2nd unit so no one should get an email"""
+        """Fault is created on 2nd unit so no one should get an email"""
 
         FaultNotice.objects.create(
             notification_type=FaultNotice.LOGGED,
@@ -176,4 +173,4 @@ class TestFaultNoticeModel:
 
     def test_str(self):
         n = FaultNotice(pk=1, notification_type=FaultNotice.LOGGED)
-        assert str(n) == "<FaultNotice(1, Follow up notification)>"
+        assert str(n) == "<FaultNotice(1, Notify when fault logged)>"
