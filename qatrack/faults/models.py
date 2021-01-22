@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _l
 from django_comments.models import Comment
@@ -130,6 +131,9 @@ class Fault(models.Model):
     class Meta:
         ordering = ("-occurred",)
         permissions = (("can_review", _l("Can review faults")),)
+
+    def get_absolute_url(self):
+        return reverse("fault_details", kwargs={"pk": self.pk})
 
     def __str__(self):
         return "Fault ID: %d" % self.pk

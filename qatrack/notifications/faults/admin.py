@@ -6,16 +6,13 @@ from qatrack.notifications import models
 from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 
-class ServiceEventReviewNoticeAdminForm(forms.ModelForm):
-    """Form for handling validation of ServiceEventReviewNotice creation/editing"""
+class FaultNoticeAdminForm(forms.ModelForm):
+    """Form for handling validation of QCCompletedNotice creation/editing"""
 
     class Meta:
-        model = models.ServiceEventReviewNotice
+        model = models.FaultNotice
         fields = (
             "notification_type",
-            "send_empty",
-            "recurrences",
-            "time",
             "recipients",
             "units",
         )
@@ -28,9 +25,9 @@ class ServiceEventReviewNoticeAdminForm(forms.ModelForm):
         )
 
 
-class ServiceEventReviewAdmin(BaseQATrackAdmin):
+class FaultNoticeAdmin(BaseQATrackAdmin):
 
-    list_display = ["get_notification_type", "get_recipients", "get_units", "send_empty"]
+    list_display = ["get_notification_type", "get_recipients", "get_units"]
     list_filter = ["notification_type", "recipients", "units"]
     search_fields = [
         "units__units__number",
@@ -46,11 +43,11 @@ class ServiceEventReviewAdmin(BaseQATrackAdmin):
         "recipients__groups__user__last_name",
     ]
 
-    form = ServiceEventReviewNoticeAdminForm
+    form = FaultNoticeAdminForm
 
     fieldsets = (
         (None, {
-            'fields': ["notification_type", "send_empty", "recurrences", "time"],
+            'fields': ["notification_type"],
         }),
         (
             "Recipients", {
@@ -102,4 +99,4 @@ class ServiceEventReviewAdmin(BaseQATrackAdmin):
     get_recipients.short_description = _l("Recipient Group")
 
 
-admin.site.register([models.ServiceEventReviewNotice], ServiceEventReviewAdmin)
+admin.site.register([models.FaultNotice], FaultNoticeAdmin)
