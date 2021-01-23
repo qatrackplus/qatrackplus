@@ -1,5 +1,6 @@
 import qatrack.notifications.common.admin
 import qatrack.notifications.faults.admin
+import qatrack.notifications.faults_review.admin
 import qatrack.notifications.parts.admin
 import qatrack.notifications.qccompleted.admin
 import qatrack.notifications.qcreview.admin
