@@ -97,12 +97,12 @@ class Fault(models.Model):
         db_index=True
     )
 
-    #service_event_related = models.ManyToManyField(
-    #    sl_models.ServiceEvent,
-    #    blank=True,
-    #    verbose_name=_l('related service events'),
-    #    help_text=_l('Enter the service event IDs of any related service events.')
-    #)
+    related_service_events = models.ManyToManyField(
+        sl_models.ServiceEvent,
+        blank=True,
+        verbose_name=_l('related service events'),
+        help_text=_l('Enter the service event IDs of any related service events.')
+    )
 
     comments = GenericRelation(
         Comment,

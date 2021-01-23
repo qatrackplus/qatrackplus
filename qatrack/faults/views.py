@@ -33,6 +33,7 @@ from listable.views import (
 from qatrack.faults import forms, models
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
+from qatrack.service_log import models as sl_models
 from qatrack.units.models import Unit
 
 
@@ -177,7 +178,7 @@ class UnreviewedFaultList(FaultList):
     order_fields['selected'] = False
 
     def get_queryset(self):
-        return super().get_queryset().filter(reviewed=None)
+        return super().get_queryset().filter(reviewed_by=None)
 
     def get_fields(self, request=None):
         fields = super().get_fields(request=request)
@@ -212,6 +213,17 @@ class CreateFault(PermissionRequiredMixin, CreateView):
         save_valid_fault_form(form, self.request)
         return HttpResponseRedirect(reverse('fault_list'))
 
+    def get_context_data(self, *args, **kwargs):
+        context_data = super().get_context_data(*args, **kwargs)
+        context_data['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
+        if self.request.method == 'POST':
+            data_key = "%s-related_service_events" % context_data['form'].prefix
+            qs = sl_models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist(data_key))
+            context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
+        else:
+            context_data['se_statuses'] = {}
+        return context_data
+
 
 class EditFault(PermissionRequiredMixin, UpdateView):
 
@@ -225,6 +237,20 @@ class EditFault(PermissionRequiredMixin, UpdateView):
     def form_valid(self, form):
         save_valid_fault_form(form, self.request)
         return HttpResponseRedirect(reverse('fault_list'))
+
+    def get_context_data(self, *args, **kwargs):
+        context_data = super().get_context_data(*args, **kwargs)
+        context_data['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
+        context_data['se_statuses'] = {}
+        if self.request.method == 'POST':
+            data_key = "%s-related_service_events" % context_data['form'].prefix
+            qs = sl_models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist(data_key))
+            context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
+        elif self.object:
+            context_data['se_statuses'] = {
+                se.id: se.service_status.id for se in self.object.related_service_events.all()
+            }
+        return context_data
 
 
 class DeleteFault(PermissionRequiredMixin, DeleteView):
@@ -273,8 +299,13 @@ def save_valid_fault_form(form, request):
     fault.fault_type = models.FaultType.objects.get(code=form.cleaned_data['fault_type_field'])
     if not fault.id:
         fault.created_by = request.user
+
     fault.modified_by = request.user
     fault.save()
+
+    related_service_events = form.cleaned_data.get('related_service_events', [])
+    sers = sl_models.ServiceEvent.objects.filter(pk__in=related_service_events)
+    fault.related_service_events.set(sers)
 
     comment = form.cleaned_data.get('comment', '')
     if comment:
@@ -358,7 +389,7 @@ def review_fault(request, pk):
         else:
             messages.warning(request, _("Successfully unapproved %(fault)s ") % {'fault': fault})
         fault.save()
-    else:
+    else:  # pragma: nocover
         messages.error(_("Sorry, something went wrong trying to review this fault. It has not been updated"))
 
     return HttpResponseRedirect(reverse('fault_details', kwargs={'pk': fault.pk}))

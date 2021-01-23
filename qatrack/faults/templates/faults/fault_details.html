@@ -130,6 +130,26 @@
                 </dd>
               </dl>
 
+              <h3>{% trans "Related Service Events" %}</h3>
+
+              <dl class="dl-horizontal">
+                <dt>{% trans "Service events" %}:</dt>
+                <dd>
+                  <div>
+                    {% for rel in fault.related_service_events.all %}
+
+                      {% if forloop.first %}<ul>{% endif %}
+                      <li>
+                        <a href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat margin-bottom-1" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
+                      </li>
+                      {% if forloop.last %}</ul>{% endif %}
+                    {% empty %}
+                      <em>{% trans "No related service events" %}</em>
+                    {% endfor %}
+                  </div>
+                </dd>
+              </dl>
+
             </div>
           </div>
           <div class="row">

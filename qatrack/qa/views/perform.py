@@ -1338,7 +1338,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 
-        context['fault_form'] = FaultForm(initial={'unit': self.unit_test_col.unit.id})
+        context['fault_form'] = FaultForm(
+            initial={'unit': self.unit_test_col.unit.id},
+            include_related_ses=False,
+        )
 
         return context
 
@@ -1606,7 +1609,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             self.object.unit_test_collection.autosave_set.order_by("-created").select_related("modified_by")
         )
 
-        context['fault_form'] = FaultForm(initial={'unit': self.object.unit_test_collection.unit.id})
+        context['fault_form'] = FaultForm(
+            initial={'unit': self.object.unit_test_collection.unit.id},
+            include_related_ses=False,
+        )
 
         return context
 

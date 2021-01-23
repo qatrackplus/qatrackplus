@@ -16,10 +16,15 @@
   <link href="{% static "flatpickr/css/flatpickr.css" %}?v={{ VERSION }}" rel="stylesheet">
   <link href="{% static "qatrack_core/css/flatpickr-custom.css" %}?v={{ VERSION }}" rel="stylesheet">
   <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "service_log/css/sl.css" %}?v={{ VERSION }}" rel="stylesheet">
   <link href="{% static "faults/css/faults.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
+  <script type="text/javascript">
+    var status_colours_dict = {{ status_tag_colours|safe }};
+    var se_statuses =  {{ se_statuses|safe }};
+  </script>
 {% endblock extra_js %}
 
 {% block require_javascript %}

@@ -1,4 +1,4 @@
-require(['jquery', 'moment', 'flatpickr', 'select2', 'comments'], function($, moment) {
+require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], function($, moment) {
     "use strict";
     $(document).ready(function () {
 
@@ -16,6 +16,8 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments'], function($, mo
         }
         var $faultForm = $faultModal.find("form");
         var $faultMessage = $("#modal-fault-message");
+
+
 
         function resetModalFaultForm(){
             $faultMessage.html("");
@@ -58,6 +60,8 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments'], function($, mo
 
             var $modality = $("#id_fault-modality").select2(s2config);
             var $technique = $("#id_fault-treatment_technique").select2(s2config);
+            var $related_se = $('#id_fault-related_service_events');
+            var initialLoad = true;
 
             var $faultType = $("#id_fault-fault_type_field").select2({
                 width: '100%',
@@ -99,6 +103,19 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments'], function($, mo
                 });
                 $technique.select2("destroy");
                 $technique.select2(s2config);
+
+
+                if (cur_unit){
+                    $related_se.prop('disabled', false);
+                    if (!initialLoad){
+                        $related_se.find('option').remove();
+                    }
+                }else{
+                    $related_se.prop('disabled', true).find('option').remove();
+                }
+
+                initialLoad = false;
+
             });
             $unit.change();
 
@@ -149,6 +166,65 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments'], function($, mo
                         faultError({'non_field_errors': ["Sorry, there was a server error."]});
                     }
                 });
+            });
+
+            // Service Events Related ------------------------------------------------------------------------------
+            function generate_related_result(res) {
+                if (res.loading) { return res.text; }
+                var colour = status_colours_dict[se_statuses[res.id]];
+                var $div = $('<div class="select2-result-repository clearfix"><span>' + res.text + '  (' + res.date + ') </span><span class="label smooth-border pull-right" style="border-color: ' + colour + ';">' + res.status + '</span></div>');
+                return $div;
+            }
+            function generate_related_selection(res, container) {
+                var colour = status_colours_dict[se_statuses[res.id]];
+                $(container).css('background-color', colour);
+                $(container).css('border-color', colour);
+                if (isTooBright(rgbaStringToArray(colour))) {
+                    $(container).css('color', 'black').children().css('color', 'black');
+                }
+                var $label = $('<span>' + res.text + '</span>');
+                return $label;
+            }
+            function process_related_results(data, params) {
+                var results = [];
+                for (var i in data.service_events) {
+                    var se_id = data.service_events[i][0],
+                        se_status_id = data.service_events[i][1],
+                        se_problem_description = data.service_events[i][2],
+                        se_date = moment(data.service_events[i][3]).format(siteConfig.MOMENT_DATETIME_FMT),
+                        se_status_name = data.service_events[i][4];
+                    results.push({id: se_id, text: se_id, title: se_problem_description, date: se_date, status: se_status_name});
+                    se_statuses[se_id] = se_status_id;
+                }
+                params.page = params.page || 1;
+                return {
+                    results: results,
+                    pagination: {
+                        more: (params.page * 30) < data.total_count
+                    }
+                };
+            }
+            $related_se.select2({
+
+                ajax: {
+                    url: QAURLs.SE_SEARCHER,
+                    dataType: 'json',
+                    delay: '500',
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                            unit_id: $unit.val(),
+                        };
+                    },
+                    processResults: process_related_results,
+                    cache: true
+                },
+                escapeMarkup: function (markup) { return markup; },
+                minimumInputLength: 1,
+                templateResult: generate_related_result,
+                templateSelection: generate_related_selection,
+                width: '100%'
             });
 
         }
