@@ -297,15 +297,25 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                         pk=self.request.GET.get('ib')).unit_test_collection.unit
                 elif self.request.GET.get('u'):
                     unit_field_value = u_models.Unit.objects.get(pk=self.request.GET.get('u'))
-                elif self.request.GET.get('set'):
-                    template = sl_models.ServiceEventTemplate.objects.get(
-                        pk=self.request.GET.get('set')
+                elif self.request.GET.get('se_schedule'):
+                    schedule = get_object_or_404(
+                        sl_models.ServiceEventSchedule, pk=self.request.GET.get('se_schedule')
                     )
-                    print("TODO: deal with this")
-                    unit_field_value = template.unit_service_area.unit
-
-                    utcs = qa_models.UnitTestCollection.return_to_service_test_lists.all()
-                    initial_utcs = [{'unit_test_collection': rts_utc} for rts_utc in utcs]
+                    template = schedule.service_event_template
+                    unit_field_value = schedule.unit_service_area.unit
+                    tl_ct = ContentType.objects.get_for_model(qa_models.TestList)
+                    tl_utcs = qa_models.UnitTestCollection.objects.filter(
+                        unit=unit_field_value,
+                        content_type=tl_ct,
+                        object_id__in=template.return_to_service_test_lists.values_list("pk", flat=True)
+                    )
+                    tlc_ct = ContentType.objects.get_for_model(qa_models.TestListCycle)
+                    tlc_utcs = qa_models.UnitTestCollection.objects.filter(
+                        unit=unit_field_value,
+                        content_type=tlc_ct,
+                        object_id__in=template.return_to_service_cycles.values_list("pk", flat=True)
+                    )
+                    initial_utcs = [{'unit_test_collection': rts_utc} for rts_utc in list(tl_utcs) + list(tlc_utcs)]
             except ObjectDoesNotExist:
                 pass
 
