@@ -50,6 +50,13 @@ class ModalitySerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class TreatmentTechniqueSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.TreatmentTechnique
+        fields = "__all__"
+
+
 class SiteSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
