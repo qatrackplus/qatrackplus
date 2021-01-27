@@ -430,3 +430,69 @@ class ServiceEventSummaryFilter(BaseServiceEventFilter):
 
 class ServiceEventDetailsFilter(BaseServiceEventFilter):
     pass
+
+
+class BaseFaultFilter(BaseReportFilterSet):
+
+    occurred = RelativeDateRangeFilter(
+        label=_l("Occurred"),
+        help_text=_l("Dates to include faults from"),
+    )
+
+    unit__site = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Site"),
+        null_label=_l("Other"),
+        queryset=umodels.Site.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all)"),
+    )
+
+    unit = django_filters.filters.MultipleChoiceFilter(
+        label=_l("Unit"),
+        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all)"),
+    )
+
+    modality = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Modality"),
+        queryset=umodels.Modality.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more modalities (leave blank to include all)"),
+    )
+
+    treatment_technique = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Treatment Technique"),
+        queryset=umodels.TreatmentTechnique.objects.all(),
+        help_text=_l(
+            "Use this filter to limit report to one or more treatment techniques (leave blank to include all)",
+        ),
+    )
+
+    review_status = django_filters.filters.ChoiceFilter(
+        label=_l("Review Status"),
+        choices=[
+            ("unreviewed", _l("Unreviewed Only")),
+            ("reviewed", _l("Reviewed Only")),
+        ],
+        help_text=_l(
+            "Use this filter to limit report to reviewed or unreviewed faults only (leave blank to include all)",
+        ),
+        initial="",
+    )
+
+    class Meta:
+        model = sl_models.ServiceEvent
+        fields = ["occurred", "unit__site", "unit", "modality", "treatment_technique"]
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.form.fields['unit'].choices = unit_site_unit_type_choices()
+        self.form.fields['occurred'].widget.attrs['class'] = "pastdate"
+        self.form.fields['occurred'].initial = "Last 365 days"
+
+
+class FaultSummaryFilter(BaseFaultFilter):
+    pass
+
+
+class FaultDetailsFilter(BaseFaultFilter):
+    pass

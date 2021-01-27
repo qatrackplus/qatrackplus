@@ -103,7 +103,7 @@ def handle_unit_available_time_edit(request):
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
-    days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]
+    days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]  # noqa: E501
 
     hours_mins = request.POST.get('hours_mins', None)
     if hours_mins:
@@ -158,6 +158,6 @@ def delete_schedules(request):
 
 
 def get_unit_info(request):
-    units = request.GET.get("units[]", [])
+    units = request.GET.getlist("units[]", [])
     unit_info = u_models.get_unit_info(unit_ids=units)
     return JsonResponse(unit_info, encoder=QATrackJSONEncoder)
