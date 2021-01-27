@@ -86,9 +86,10 @@ class Contact(models.Model):
         help_text=_l("Enter this persons email address"),
     )
 
-    phone_number = PhoneField(
+    phone_number = models.CharField(
         verbose_name=_l("phone number"),
         blank=True,
+        max_length=31,
         help_text=_l("Company phone number"),
     )
 
