@@ -281,6 +281,34 @@ if settings.USE_SERVICE_LOG:
         ),
     )
 
+PERMISSIONS += (
+    (
+        _l("Faults"),
+        (
+            (
+                'faults.add_fault',
+                _l("Can Add Faults"),
+                _l("Gives user the ability to log machine faults"),
+            ),
+            (
+                'faults.change_fault',
+                _l("Can Change Faults"),
+                _l("Gives user the ability to edit machine fault records"),
+            ),
+            (
+                'faults.delete_fault',
+                _l("Can Delete Faults"),
+                _l("Gives user the ability to delete machine fault records"),
+            ),
+            (
+                'faults.can_review',
+                _l("Can Review Faults"),
+                _l("Gives user the ability to review machine fault records"),
+            ),
+        ),
+    ),
+)
+
 
 def default_autoreviewruleset():
     return AutoReviewRuleSet.objects.filter(is_default=True).first()
