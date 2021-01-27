@@ -354,7 +354,7 @@ class ServiceEventForm(BetterModelForm):
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(queryset=models.ServiceArea.objects.all())
     service_area_field_fake = forms.ModelChoiceField(
-        queryset=models.ServiceArea.objects.all(), label='Service area', required=True
+        queryset=models.ServiceArea.objects.all(), label='Service area', required=False
     )
     duration_service_time = HoursMinDurationField(
         label=_l('Service time'), required=False,
@@ -669,7 +669,6 @@ class ServiceEventForm(BetterModelForm):
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
         self.fields['service_area_field'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
-        self.fields['service_area_field_fake'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
         self.fields['service_type'].required = not settings.SL_ALLOW_BLANK_SERVICE_TYPE
 
     def initial_values_helper(self):
