@@ -63,7 +63,7 @@ def send_email_to_users(
 
     try:
         message.send(fail_silently=False)
-    except:  # noqa: E722  # pragma: nocover
+    except Exception as e:  # noqa: E722  # pragma: nocover
         logger.exception("Error sending email.")
         if not fail_silently:
             raise

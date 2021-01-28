@@ -5,8 +5,9 @@ from django.conf import settings
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
-from qatrack.qa import models, utils
-from qatrack.qatrack_core.utils import format_as_date
+from qatrack.qa import models
+from qatrack.qatrack_core import scheduling
+from qatrack.qatrack_core.dates import format_as_date
 
 register = template.Library()
 
@@ -169,7 +170,7 @@ def as_due_date(unit_test_collection):
 @register.filter(expects_local_time=True)
 def as_qc_window(unit_test_collection):
 
-    start, end = utils.qc_window(unit_test_collection.due_date, unit_test_collection.frequency)
+    start, end = scheduling.qc_window(unit_test_collection.due_date, unit_test_collection.frequency)
     if start:
         start = format_as_date(start)
 

@@ -209,3 +209,6 @@ table.recurrence-calendar .body td.header {
 .report-note-content.empty{
   min-height: 100px;
 }
+#saved-reports > thead > tr > th:nth-child(3) {
+    min-width: 47px !important;
+}

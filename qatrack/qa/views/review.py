@@ -24,7 +24,7 @@ from django.views.generic import (
 )
 import pytz
 
-from qatrack.qatrack_core.utils import format_datetime
+from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
 from qatrack.service_log.models import (
     ReturnToServiceQA,
@@ -412,9 +412,8 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
     permission_required = "qa.can_review"
     raise_exception = True
 
-    @classmethod
-    def get_fields(cls):
-        fields = super().get_fields()
+    def get_fields(self, request=None):
+        fields = super().get_fields(request=request)
         if settings.REVIEW_BULK:
             fields += ("bulk_review_status", "selected")
 
@@ -487,7 +486,9 @@ class UnreviewedVisibleTo(Unreviewed):
         the user"""
 
     def get_queryset(self):
-        return models.TestListInstance.objects.your_unreviewed(self.request.user)
+        return models.TestListInstance.objects.your_unreviewed(self.request.user).annotate(
+            attachment_count=Count("attachment"),
+        )
 
     def get_page_title(self):
         return _("Unreviewed Test List Instances Visible To Your Groups")

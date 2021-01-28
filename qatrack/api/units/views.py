@@ -45,6 +45,13 @@ class ModalityViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
+class TreatmentTechniqueViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.TreatmentTechnique.objects.all().order_by('name')
+    serializer_class = serializers.TreatmentTechniqueSerializer
+    filterset_class = filters.TreatmentTechniqueFilter
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+
+
 class SiteViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Site.objects.all().order_by('name')
     serializer_class = serializers.SiteSerializer

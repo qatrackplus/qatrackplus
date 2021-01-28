@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _l
 
 from qatrack.parts import models as part_models
 from qatrack.qa import models as qa_models
-from qatrack.qatrack_core.utils import format_as_date
+from qatrack.qatrack_core.dates import format_as_date
 from qatrack.reports import filters
 from qatrack.reports.reports import BaseReport
 from qatrack.service_log import models

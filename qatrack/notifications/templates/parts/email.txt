@@ -1,0 +1,15 @@
+QATrack+ Low Inventory Part Notice
+==================================
+
+Hello,
+
+The following part is now below its low inventory threshold:
+
+Part Name: {{ part.name }}
+Part Number: {{ part.number }}
+Part Category: {% if part.category.name %}{{ part.category.name }}{% endif %}
+New / Used: {{ part.get_new_or_used_display }}
+Current Quantity: {{ part.quantity_current }}
+Notification Level: {{ part.quantity_min }}
+Current known locations: {% for psc in part.partstoragecollection_set.all %}
+    {{ psc.storage }}: {{ psc.quantity }}{% endfor %}

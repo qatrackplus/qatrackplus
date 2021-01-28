@@ -53,6 +53,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     var $autoSaveStatusSpinners = $autoSaveStatus.find("i");
     var $autoSaveStatusContent = $autoSaveStatus.find("span");
 
+
     var $submit = $("#submit-qa");
 
     function processing_on(){
@@ -1059,10 +1060,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
 
                     if (data.meta.work_started){
-                        $("#id_work_started").get(0)._flatpickr.setDate(data.meta.work_started, true);
+                        if (override_date)
+                            $("#id_work_started").get(0)._flatpickr.setDate(data.meta.work_started, true);
+                        else
+                            $("#id_work_started").val(data.meta.work_started);
                     }
                     if (data.meta.work_completed){
-                        $("#id_work_completed").get(0)._flatpickr.setDate(data.meta.work_completed, true);
+                        if (override_date)
+                            $("#id_work_completed").get(0)._flatpickr.setDate(data.meta.work_completed, true);
+                        else
+                            $("#id_work_completed").val(data.meta.work_completed);
                     }
 
                     $.Topic("valueChanged").subscribe(self.calculate_composites);
@@ -1103,6 +1110,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }
 
                 });
+                $.Topic("qaUpdated").publish();
 
             };
 
@@ -1495,6 +1503,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 minuteIncrement: 1,
                 dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 maxDate: work_completed_initial ? _.max([work_completed_initial, moment().valueOf()]) : moment().valueOf(),
+                allowInput: true,
                 onChange: function(selectedDates, dateStr, instance) {
 
                     if (dateStr === '') {
@@ -1509,6 +1518,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     $start_clear.fadeIn('fast');
                 }
             });
+            start_fp._input.addEventListener('blur', function (event) {
+                start_fp.setDate(start_fp._input.value, true);
+            }, true);
             $start_clear.click(function() {
                 start_fp.clear();
                 $(this).fadeOut('fast');
@@ -1520,6 +1532,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 minuteIncrement: 1,
                 minDate: $start_picker[0]._flatpickr.selectedDates[0],
+                allowInput: true,
                 onOpen: function(selectedDates, dateStr, instance) {
                     if (dateStr === '') {
                         instance.setDate(work_completed_initial ? work_completed_initial : moment().valueOf(), true);
@@ -1542,6 +1555,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     }
                 }
             });
+            complete_fp._input.addEventListener('blur', function (event) {
+                complete_fp.setDate(complete_fp._input.value, true);
+            }, true);
 
             $complete_clear.click(function() {
                 complete_fp.clear();
@@ -1653,6 +1669,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
             check: '<i class="fa fa-check"></i>',
             extra_class: 'warning'
         });
+
 
     });
 });

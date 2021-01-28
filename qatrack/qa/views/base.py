@@ -27,6 +27,7 @@ from listable.views import (
     BaseListableView,
 )
 
+from qatrack.attachments.views import listable_attachment_tags
 from qatrack.qa import models
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Unit
@@ -266,8 +267,7 @@ class UTCList(BaseListableView):
             'due_date': get_template("qa/due_date.html"),
         }
 
-    @classmethod
-    def get_fields(cls):
+    def get_fields(self, request=None):
 
         fields = (
             "actions",
@@ -449,8 +449,7 @@ class TestListInstances(BaseListableView):
     def get_page_title(self):
         return "All Test Collections"
 
-    @classmethod
-    def get_fields(cls):
+    def get_fields(self, request=None):
 
         fields = ("actions",)
 
@@ -556,4 +555,4 @@ class TestListInstances(BaseListableView):
         return template.render(c)
 
     def attachments(self, tli):
-        return '<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' if tli.attachment_count else ""
+        return listable_attachment_tags(tli)

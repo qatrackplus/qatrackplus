@@ -6,3 +6,6 @@ a.deletelink {
 .select2 {
     min-width: 200px;
 }
+.select2-container--default .select2-results__option[aria-disabled=true] {
+    display: none;
+}

@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^auth/', include('qatrack.api.auth.urls')),
     url(r'^comments/', include('qatrack.api.comments.urls')),
     url(r'^contenttypes/', include('qatrack.api.contenttypes.urls')),
+    url(r'^faults/', include('qatrack.api.faults.urls')),
     url(r'^parts/', include('qatrack.api.parts.urls')),
     url(r'^qa/', include('qatrack.api.qa.urls')),
     url(r'^qc/', include('qatrack.api.qa.urls')),

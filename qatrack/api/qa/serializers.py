@@ -20,8 +20,8 @@ from qatrack.api.comments.serializers import CommentSerializer
 from qatrack.attachments.models import Attachment
 from qatrack.qa import models, signals
 from qatrack.qa.views.perform import CompositePerformer, UploadHandler
+from qatrack.qatrack_core.dates import parse_date, parse_datetime
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
-from qatrack.qatrack_core.utils import parse_date, parse_datetime
 from qatrack.service_log import models as sl_models
 
 BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")
@@ -155,6 +155,7 @@ class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
     attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
     comments = CommentSerializer(many=True, required=False)
+    test_instances = TestInstanceSerializer(many=True, source="testinstance_set", required=False)
 
     site_url = serializers.SerializerMethodField(read_only=True)
 
@@ -363,7 +364,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     def type_okay(self, type_, val):
         if type_ in models.STRING_TYPES + models.DATE_TYPES and not isinstance(val, str):
-            return False
+            try:
+                json.dumps(val)
+            except Exception:
+                return False
         elif type_ in models.NUMERICAL_TYPES and not isinstance(val, Number):
             return False
         return True

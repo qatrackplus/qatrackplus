@@ -284,16 +284,16 @@ class TestListInstanceFilter(filters.FilterSet):
     class Meta:
         model = models.TestListInstance
         fields = {
-            "due_date": ['exact'],
+            "due_date": ['exact', "in"],
             "in_progress": ['exact'],
             "include_for_scheduling": ['exact'],
             "reviewed": ['exact'],
             "all_reviewed": ['exact'],
             "day": ['exact', 'in'],
-            "work_started": ['exact'],
-            "work_completed": ['exact'],
-            "created": ['exact'],
-            "modified": ['exact'],
+            "work_started": ['exact', "in"],
+            "work_completed": ['exact', "in"],
+            "created": ['exact', "in"],
+            "modified": ['exact', "in"],
         }
 
 

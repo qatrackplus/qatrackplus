@@ -9,7 +9,8 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
 import pytz
 
-from qatrack.qatrack_core.utils import format_as_date as fmt_date
+from qatrack.qatrack_core.dates import format_as_date as fmt_date
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.units import forms
 from qatrack.units import models as u_models
 
@@ -102,7 +103,7 @@ def handle_unit_available_time_edit(request):
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
-    days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]
+    days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]  # noqa: E501
 
     hours_mins = request.POST.get('hours_mins', None)
     if hours_mins:
@@ -154,3 +155,9 @@ def delete_schedules(request):
     ).delete()
 
     return get_unit_available_time_data(request)
+
+
+def get_unit_info(request):
+    units = request.GET.getlist("units[]", [])
+    unit_info = u_models.get_unit_info(unit_ids=units)
+    return JsonResponse(unit_info, encoder=QATrackJSONEncoder)

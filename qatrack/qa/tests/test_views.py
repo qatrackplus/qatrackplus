@@ -23,7 +23,7 @@ import qatrack.qa.views.base
 import qatrack.qa.views.charts
 import qatrack.qa.views.perform
 import qatrack.qa.views.review
-from qatrack.qatrack_core.utils import format_as_date
+from qatrack.qatrack_core.dates import format_as_date
 import qatrack.units.models as umodels
 
 from . import utils

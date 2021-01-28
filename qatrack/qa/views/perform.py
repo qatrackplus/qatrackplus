@@ -34,13 +34,14 @@ import scipy
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
+from qatrack.faults.forms import FaultForm
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
-from qatrack.qatrack_core.serializers import QATrackJSONEncoder
-from qatrack.qatrack_core.utils import (
+from qatrack.qatrack_core.dates import (
     format_datetime,
     parse_date,
     parse_datetime,
 )
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 
@@ -1337,6 +1338,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 
+        context['fault_form'] = FaultForm(
+            initial={'unit': self.unit_test_col.unit.id},
+            include_related_ses=False,
+        )
+
         return context
 
     def get_requested_day_to_perform(self):
@@ -1601,6 +1607,11 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context["autosaves"] = list(
             self.object.unit_test_collection.autosave_set.order_by("-created").select_related("modified_by")
+        )
+
+        context['fault_form'] = FaultForm(
+            initial={'unit': self.object.unit_test_collection.unit.id},
+            include_related_ses=False,
         )
 
         return context

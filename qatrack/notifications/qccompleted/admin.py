@@ -109,8 +109,12 @@ class QCCompletedAdmin(BaseQATrackAdmin):
 
     def get_notification_type(self, obj):
         if obj.notification_type == models.QCCompletedNotice.FOLLOW_UP:
-            return _("Follow up notification (after %(num_days)s days)") % {'num_days': obj.follow_up_days}
-        return obj.get_notification_type_display()
+            return _("#%(id)d - Follow up notification (after %(num_days)s days)") % {
+                'num_days': obj.follow_up_days, 'id': obj.id,
+            }
+        return "#%s - %s" % (obj.pk, obj.get_notification_type_display())
+    get_notification_type.admin_order_field = "notification_type"
+    get_notification_type.short_description = _l("Notification Type")
 
     def get_units(self, obj):
         return obj.units.name if obj.units else ""

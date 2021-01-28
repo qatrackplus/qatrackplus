@@ -103,10 +103,15 @@ require.config({
         sl_utils: siteConfig.STATIC_URL + 'service_log/js/sl_utils',
         service_event_down_time_list: siteConfig.STATIC_URL + 'service_log/js/service_event_down_time_list',
         down_time_summary: siteConfig.STATIC_URL + 'service_log/js/down_time_summary',
+        sl_se_template: siteConfig.STATIC_URL + 'service_log/js/sl_se_template',
 
         //parts module:
         p_part: siteConfig.STATIC_URL + 'parts/js/p_part',
         parts_reporting: siteConfig.STATIC_URL + 'parts/js/parts_reporting',
+
+        //faults module:
+        faults: siteConfig.STATIC_URL + 'faults/js/faults',
+        faultsbulkreview: siteConfig.STATIC_URL + 'faults/js/faultsbulkreview',
 
         //issue module:
         issues: siteConfig.STATIC_URL + 'issue_tracker/js/issues'
@@ -240,7 +245,7 @@ require.config({
 
         // qa module:
         qa: {
-            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils']
+            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils', 'flatpickr']
         },
 
         // service_log module

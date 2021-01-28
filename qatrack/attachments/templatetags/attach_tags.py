@@ -11,7 +11,7 @@ register = template.Library()
 
 
 @register.filter
-def attachment_link(attachment, absolute=False):
+def attachment_link(attachment, label=None, absolute=False):
     href = attachment.attachment.url
     if absolute:
         href = "%s://%s%s" % (settings.HTTP_OR_HTTPS, Site.objects.get_current().domain, href)
@@ -19,18 +19,19 @@ def attachment_link(attachment, absolute=False):
     kwargs = {
         'href': href,
         'title': attachment.comment or attachment.attachment.url,
-        'label': attachment.label or attachment.attachment.name.split("/")[-1],
+        'label': label or attachment.label or attachment.attachment.name.split("/")[-1],
     }
     return format_html('<a target="_blank" href="{href}" title="{title}">{label}</a>', **kwargs)
 
 
 @register.filter
-def attachment_img(attachment):
+def attachment_img(attachment, klass="qa-image"):
     kwargs = {
         'src': attachment.attachment.url,
         'alt': attachment.comment or attachment.label or attachment.attachment.url,
+        'klass': klass,
     }
-    return format_html('<img class="qa-image" src="{src}" alt="{alt}"/>', **kwargs)
+    return format_html('<img class="{klass}" src="{src}" alt="{alt}"/>', **kwargs)
 
 
 @register.filter

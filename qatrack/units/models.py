@@ -1,12 +1,14 @@
 import calendar
+from collections import defaultdict
 
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
+from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
-from qatrack.qatrack_core.utils import format_as_date as fmt_date
+from qatrack.qatrack_core.dates import format_as_date as fmt_date
 
 PHOTON = 'photon'
 ELECTRON = 'electron'
@@ -203,6 +205,29 @@ class Modality(models.Model):
         return self.name
 
 
+class TreatmentTechnique(models.Model):
+
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=255,
+        unique=True,
+        help_text=_l('Name of this treatment technique'),
+    )
+
+    objects = NameNaturalKeyManager()
+
+    class Meta:
+        verbose_name = _l("treatment technique")
+        verbose_name_plural = _l("treatment techniques")
+        ordering = ("name",)
+
+    def natural_key(self):
+        return (self.name,)
+
+    def __str__(self):
+        return self.name
+
+
 def weekday_count(start_date, end_date, uate_list):
     week = {}
     for i in range((end_date - start_date).days + 1):
@@ -241,6 +266,7 @@ class Unit(models.Model):
     )
 
     modalities = models.ManyToManyField(Modality)
+    treatment_techniques = models.ManyToManyField(TreatmentTechnique)
 
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
@@ -249,6 +275,9 @@ class Unit(models.Model):
 
     def __str__(self):
         return self.name
+
+    def site_unit_name(self):
+        return "%s :: %s" % (_("Other") if not self.site else self.site.name, self.name)
 
     def get_potential_time(self, date_from, date_to):
 
@@ -361,3 +390,34 @@ class UnitAvailableTime(models.Model):
             uat = UnitAvailableTime(**kwargs)
 
         return uat
+
+
+def get_unit_info(unit_ids=None, active_only=True):
+    units = Unit.objects.all()
+    if active_only:
+        units = units.filter(active=True)
+    if unit_ids:
+        units = units.filter(pk__in=unit_ids)
+
+    units = units.prefetch_related(
+        "modalities",
+        "treatment_techniques",
+    ).order_by(
+        "id",
+        "modalities",
+        "treatment_techniques",
+    ).values_list(
+        "id",
+        "modalities",
+        "treatment_techniques",
+    )
+
+    unit_info = defaultdict(lambda: {'treatment_techniques': set(), 'modalities': set()})
+
+    for unit, modality, technique in units:
+        if modality is not None:
+            unit_info[unit]['modalities'].add(modality)
+        if technique is not None:
+            unit_info[unit]['treatment_techniques'].add(technique)
+
+    return unit_info

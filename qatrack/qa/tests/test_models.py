@@ -11,6 +11,7 @@ from django_comments.models import Comment
 import pytest
 
 from qatrack.qa import models
+from qatrack.qatrack_core import scheduling
 
 from . import utils
 
@@ -980,11 +981,11 @@ class TestUnitTestCollection(TestCase):
 
         utc = utils.create_unit_test_collection(frequency=None, null_frequency=True)
 
-        self.assertEqual(models.NO_DUE_DATE, utc.due_status())
+        self.assertEqual(scheduling.NO_DUE_DATE, utc.due_status())
         utc.set_due_date(now - timezone.timedelta(days=1))
 
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-        self.assertEqual(utc.due_status(), models.OVERDUE)
+        self.assertEqual(utc.due_status(), scheduling.OVERDUE)
 
     def test_daily_due_status(self):
         now = timezone.now()
@@ -993,9 +994,14 @@ class TestUnitTestCollection(TestCase):
 
         utc = utils.create_unit_test_collection(frequency=daily)
 
-        self.assertEqual(models.NO_DUE_DATE, utc.due_status())
+        self.assertEqual(scheduling.NO_DUE_DATE, utc.due_status())
 
-        daily_statuses = ((-2, models.OVERDUE), (-1, models.OVERDUE), (0, models.NOT_DUE), (1, models.NOT_DUE))
+        daily_statuses = (
+            (-2, scheduling.OVERDUE),
+            (-1, scheduling.OVERDUE),
+            (0, scheduling.NOT_DUE),
+            (1, scheduling.NOT_DUE),
+        )
         for delta, due_status in daily_statuses:
             wc = now + timezone.timedelta(days=delta)
             utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
@@ -1009,13 +1015,13 @@ class TestUnitTestCollection(TestCase):
         weekly = utils.create_frequency(interval=7, window_end=2)
         utc = utils.create_unit_test_collection(frequency=weekly)
 
-        self.assertEqual(models.NO_DUE_DATE, utc.due_status())
+        self.assertEqual(scheduling.NO_DUE_DATE, utc.due_status())
 
-        weekly_statuses = ((-10, models.OVERDUE),
-                           (-8, models.DUE),
-                           (-7, models.DUE),
-                           (-6, models.NOT_DUE),
-                           (1, models.NOT_DUE))
+        weekly_statuses = ((-10, scheduling.OVERDUE),
+                           (-8, scheduling.DUE),
+                           (-7, scheduling.DUE),
+                           (-6, scheduling.NOT_DUE),
+                           (1, scheduling.NOT_DUE))
         for delta, due_status in weekly_statuses:
             wc = now + timezone.timedelta(days=delta)
             utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
@@ -1039,7 +1045,7 @@ class TestUnitTestCollection(TestCase):
             utc = utils.create_unit_test_collection(frequency=weekly)
             utc.set_due_date(utc_2am() + timezone.timedelta(hours=12))
             utc = models.UnitTestCollection.objects.get(pk=utc.pk)
-            self.assertEqual(utc.due_status(), models.NOT_DUE)
+            self.assertEqual(utc.due_status(), scheduling.NOT_DUE)
 
     def test_set_due_date(self):
 

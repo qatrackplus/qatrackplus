@@ -12,7 +12,7 @@ from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
-from qatrack.qatrack_core.utils import format_as_date, format_datetime
+from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.service_log import models, views
 from qatrack.service_log.tests import utils as sl_utils
 
@@ -208,7 +208,7 @@ class TestCreateServiceEvent(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(self.default_ses, response.context_data['form'].initial['service_status'])
-        self.assertTrue(response.context_data['form'].fields['service_area_field'].widget.attrs['disabled'])
+        self.assertTrue(response.context_data['form'].fields['service_area_field_fake'].widget.attrs['disabled'])
         self.assertTrue(response.context_data['form'].fields['service_event_related_field'].widget.attrs['disabled'])
         self.assertTrue(response.context_data['form'].fields['initiated_utc_field'].widget.attrs['disabled'])
 
@@ -451,7 +451,6 @@ class TestCreateServiceEvent(TestCase):
         response = self.client.post(self.url, data=data)
 
         assert 'service_type' not in response.context_data['form'].errors
-
 
     def test_unreviewed_rtsqa(self):
 
@@ -778,7 +777,7 @@ class TestServiceLogViews(TestCase):
 
     def test_unit_sa_utc(self):
 
-        tl_to_find = models.UnitTestCollection.objects.filter(unit=self.u3)
+        tl_to_find = qa_models.UnitTestCollection.objects.filter(unit=self.u3)
         sa_to_find = models.ServiceArea.objects.filter(units=self.u3)
 
         data = {'unit_id': self.u3.id}
@@ -848,3 +847,129 @@ class TestServiceLogViews(TestCase):
         self.assertTrue('%s,%s,0,1,1.00,0.00,1.00,0.00,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
         self.assertTrue('%s,%s,0,2,2.00,0.00,2.00,0.00,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
         self.assertTrue('Totals:,0.0,3,3.00,0.00,3.00,0.00,3' in csv)
+
+
+class TestServiceEventTemplateSearcher(TestCase):
+
+    def setUp(self):
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.url = reverse('se_template_searcher')
+        self.utc = qa_utils.create_unit_test_collection()
+        self.unit = self.utc.unit
+
+    def create_template(self, name, service_type=None, service_area=None):
+        return models.ServiceEventTemplate.objects.create(
+            name=name,
+            service_type=service_type,
+            service_area=service_area,
+            created_by=self.user,
+            modified_by=self.user,
+        )
+
+    def test_no_filters(self):
+        """No filters, so all templates should be returned"""
+        self.create_template("1")
+        self.create_template("2")
+        resp = self.client.get(self.url, data={'unit': self.unit.id})
+        assert len(resp.json()) == models.ServiceEventTemplate.objects.count()
+
+    def test_with_service_type(self):
+        """If we filter for service type, the searcher should only return
+        templates where the service_type is correct"""
+
+        # one template with correct service type
+        st1 = sl_utils.create_service_type()
+        t1 = self.create_template("1", service_type=st1)
+
+        # one template with incorrect service type
+        st2 = sl_utils.create_service_type()
+        self.create_template("2", service_type=st2)
+
+        # one template with no service_type
+        self.create_template("3")
+
+        resp = self.client.get(self.url, data={'unit': self.unit.id, 'service_type': st1.pk})
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]['id'] == t1.id
+
+    def test_with_service_area(self):
+        """If we filter for service area, the searcher should only return
+        templates where the service_area is correct"""
+
+        # one template with correct service type
+        sa1 = sl_utils.create_service_area()
+        t1 = self.create_template("1", service_area=sa1)
+        sl_utils.create_unit_service_area(
+            unit=self.unit,
+            service_area=sa1,
+        )
+
+        # one template with incorrect service area
+        sa2 = sl_utils.create_service_area()
+        self.create_template("2", service_area=sa2)
+
+        # one template with no service_area
+        self.create_template("3")
+
+        resp = self.client.get(self.url, data={'unit': self.unit.id, 'service_area': sa1.pk})
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]['id'] == t1.id
+
+    def test_with_rts(self):
+        """If we filter for a unit, the searcher should only return
+        templates where the return to service test lists are all
+        assigned to that unit."""
+
+        tl1 = qa_utils.create_test_list()
+        tl2 = qa_utils.create_test_list()
+        u1 = qa_utils.create_unit()
+        qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
+
+        # one template with RTS that is assigned to the unit
+        t1 = self.create_template("1")
+        t1.return_to_service_test_lists.add(tl1)
+
+        # one template with RTS that is not assigned to the unit
+        t2 = self.create_template("2")
+        t2.return_to_service_test_lists.add(tl2)
+
+        # one template with not RTS
+        t3 = self.create_template("3")
+
+        resp = self.client.get(self.url, data={'unit': u1.pk})
+        data = resp.json()
+        assert len(data) == 2
+        assert [t['id'] for t in data] == [t1.id, t3.id]
+
+    def test_with_rts_and_service_type(self):
+        """If we filter for a unit, and service type, the searcher should only return
+        templates where the return to service test lists are all
+        assigned to that unit and the template has the correct service_type."""
+
+        st = sl_utils.create_service_type()
+        tl1 = qa_utils.create_test_list()
+        tl2 = qa_utils.create_test_list()
+        u1 = qa_utils.create_unit()
+        qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
+
+        # one template with RTS that is assigned to the unit
+        t1 = self.create_template("1", service_type=st)
+        t1.return_to_service_test_lists.add(tl1)
+
+        # one template with RTS that is not assigned to the unit
+        t2 = self.create_template("2", service_type=st)
+        t2.return_to_service_test_lists.add(tl2)
+
+        # one template with no RTS and correct service_type
+        t3 = self.create_template("3", service_type=st)
+
+        # one template with no RTS and no service_type
+        self.create_template("4")
+
+        resp = self.client.get(self.url, data={'unit': u1.pk, 'service_type': st.pk})
+        data = resp.json()
+        assert len(data) == 2
+        assert [t['id'] for t in data] == [t1.id, t3.id]

@@ -40,8 +40,12 @@
 #listable-table-sl_list_all > tbody > tr > td:nth-child(2),
 #listable-table-sl_list_by_status > thead > tr > th:nth-child(2),
 #listable-table-sl_list_by_status > tbody > tr > td:nth-child(2),
-#listable-table-sl_list_review_required > tbody > tr > td:nth-child(2),
+#listable-table-sl_list_review_required > tbody > tr > th:nth-child(2),
 #listable-table-sl_list_review_required > tbody > tr > td:nth-child(2) {
+    width: 50px;
+}
+#listable-table-interlock_list > tbody > tr > th:nth-child(2),
+#listable-table-interlock_list > tbody > tr > td:nth-child(2) {
     width: 50px;
 }
 #listable-table-vendor_list > thead > tr > th:nth-child(2) {
@@ -162,4 +166,12 @@ body.sidebar-mini.sidebar-collapse > div.wrapper > aside.main-sidebar > section.
 }
 h3.has-error {
     color: #dd4b39;
+}
+
+#submit_cover {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: #fff;
+    z-index: 1000;
 }

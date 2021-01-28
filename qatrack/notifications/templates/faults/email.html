@@ -1,0 +1,72 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% load i18n %}
+{% block title%}QATrack+ Fault Notice{% endblock %}
+{% block preheader %}QATrack+ Fault Notice{% endblock %}
+{% block extra_css %}
+  th.header {
+    font-weight: bold;
+  }
+  thead th.header {
+    text-align: center;
+    background: #eee;
+  }
+  tbody th.header,
+  tbody td.header {
+    padding-right: 10px;
+    text-align: right;
+  }
+{% endblock %}
+{% block content %}
+<p>{% trans "Hello" %},</p>
+<p>
+  {% trans "The following fault was just logged:" %}:
+</p>
+<table>
+  <tbody>
+    <tr>
+      <th class="header">{% trans "Fault" %}:</th>
+      <td>
+        <a href="{{ domain }}{{ fault.get_absolute_url }}"
+            title="{% trans "Click to view on the site" %}"
+        >
+        {{ fault }}
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Fault Type" %}:</th>
+      <td>{{ fault.fault_type }}</td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Occurred" %}:</th>
+      <td>{{ fault.occurred }}</td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Unit" %}:</th>
+      <td>{{ fault.unit.site_unit_name }}</td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Modality" %}:</th>
+      <td>
+        {% if fault.modality %}
+          {{ fault.modality }}
+        {% else %}
+          {% trans "Not Specified" %}
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <th class="header">{% trans "Treatment Technique" %}:</th>
+      <td>
+        {% if fault.treatment_technique %}
+          {{ fault.treatment_technique }}
+        {% else %}
+          {% trans "Not Specified" %}
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+{% endblock content %}

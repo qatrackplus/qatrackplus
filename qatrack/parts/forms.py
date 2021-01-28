@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist
 from django.utils.encoding import force_text
+from django.utils.translation import gettext as _
 from form_utils.forms import BetterModelForm
 
 from qatrack.parts import models as p_models
@@ -66,7 +67,9 @@ class PartUsedForm(forms.ModelForm):
                     ).values_list('storage_id', 'quantity'))
                     s_qs = p_models.Storage.objects.filter(id__in=s_dict.keys())
                     self.fields['from_storage'].queryset = s_qs
-                    self.fields['from_storage'].choices = [(None, '----------')] + [(s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs]
+                    self.fields['from_storage'].choices = [(None, '----------')] + [
+                        (s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs
+                    ]
 
         else:
             self.initial['part'] = self.instance.part
@@ -86,7 +89,8 @@ class PartUsedForm(forms.ModelForm):
             s_qs = p_models.Storage.objects.filter(id__in=s_dict.keys())
             self.fields['from_storage'].queryset = s_qs
             # Edit choices to insert quantity of part in storage
-            self.fields['from_storage'].choices = [(None, '----------')] + [(s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs]
+            self.fields['from_storage'].choices = [(None, '----------')
+                                                   ] + [(s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs]
 
         self.fields['part'].widget.attrs['data-prefix'] = self.prefix
 
@@ -144,6 +148,18 @@ class PartForm(BetterModelForm):
         help_text=p_models.Part._meta.get_field('cost').help_text,
         required=False,
     )
+
+    part_attachments = forms.FileField(
+        label="Attachments",
+        max_length=150,
+        required=False,
+        widget=forms.FileInput(attrs={
+            'multiple': '',
+            'class': 'file-upload',
+            'style': 'display:none',
+        })
+    )
+    part_attachments_delete_ids = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = p_models.Part
@@ -320,7 +336,32 @@ class PartStorageCollectionForm(forms.ModelForm):
 
         return cleaned_data
 
+    def clean_quantity(self):
+        quantity = self.cleaned_data['quantity']
+        if quantity < 0:
+            self.add_error('quantity', 'Quantity must be greater than 0')
+        return quantity
 
-PartStorageCollectionFormset = forms.inlineformset_factory(
+
+BasePartStorageCollectionFormset = forms.inlineformset_factory(
     p_models.Part, p_models.PartStorageCollection, form=PartStorageCollectionForm, extra=3
 )
+
+
+class PartStorageCollectionFormset(BasePartStorageCollectionFormset):
+
+    def clean(self):
+        if any(self.errors):
+            return
+
+        locations = []
+
+        for form in self.forms:
+            room = form.cleaned_data.get('room')
+            loc = form.cleaned_data.get('location')
+            if room is None or (self.can_delete and self._should_delete_form(form)):
+                continue
+
+            if (room, loc) in locations:
+                raise ValidationError(_("Duplicated storage locations are not allowed"))
+            locations.append((room, loc))

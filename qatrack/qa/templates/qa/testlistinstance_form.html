@@ -19,6 +19,7 @@
 
   <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "faults/css/faults.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "icheck/css/blue.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "qatrack_core/css/sidebar.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
@@ -78,7 +79,7 @@
 {% endblock %}
 
 {% block require_javascript %}
-    require(['qa'], function() {
+    require(['qa', 'faults'], function() {
         {{ test_list.javascript.strip|safe }}
     });
 {% endblock require_javascript %}
@@ -714,7 +715,7 @@
 
     {% else %}
         <div id="box-comments" class="row">
-          <a id="comments-anchor"><a/>
+          <a id="comments-anchor"></a>
             <div class="col-sm-12">
                 <div class="box">
                     <div class="box-header">
@@ -889,6 +890,14 @@
                   </li>
                 {% endif %}
 
+                <li class="divider"></li>
+                <li title="{% trans "Click to log a new fault" %}" class="primary toggle-element">
+                  <a class="fault-modal-toggle" href="#" data-target="#fault-modal" data-toggle="modal">
+                    <i class="fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>
+                    <span>{% trans "Log Fault" %}</span>
+                  </a>
+                </li>
+
             </ul>
 
         </section>
@@ -898,7 +907,7 @@
 
 {% block loading_modal %}
     <div class="loading-modal ">
-        <div class="center">
+        <div class="loading-modal-center">
             <div>
                 <span class="loading-logo">QAT</span>
                 <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
@@ -916,6 +925,47 @@
         </div>
     </div>
 {% endblock loading_modal %}
+
+{% block extra_body %}
+<div id="fault-modal" class="fault-modal modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{% trans "Log a new fault" %}</h4>
+      </div>
+      <div class="modal-body">
+        <form id="fault-form"
+          data-create-url="{% url "fault_create_ajax" %}"
+          action=""
+          novalidate
+          autocomplete="off"
+          class="form-horizontal"
+        >
+          <div class="form-group">
+            <div id="modal-fault-message" class="col-sm-offset-4 col-sm-8">
+            </div>
+          </div>
+
+          {% csrf_token %}
+          {% include "_form_horizontal.html" with form=fault_form %}
+        </form>
+      </div>
+      <div class="modal-footer">
+
+        <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal">
+          <i class="fa fa-ban"></i>
+          {% trans "Cancel" %}
+        </button>
+        <button id="save_fault" type="button" class="btn btn-flat btn-primary">
+          <i class="fa fa-save"></i>
+          {% trans "Log Fault" %}
+        </button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+{% endblock %}
 
 {% block end_body_extra_script %}
 

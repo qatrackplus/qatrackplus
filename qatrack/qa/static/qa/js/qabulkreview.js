@@ -57,10 +57,16 @@ require(['jquery', 'lodash'], function ($, _) {
         return false;
     });
 
+    var headers = _.map($("#listable-table-unreviewed").find("thead tr:first th"), function(el){
+        return el.innerText.toLowerCase();
+    });
+    var siteIdx = headers.indexOf("site");
+    var unitIdx = headers.indexOf("unit");
+    var testListNameIdx = headers.indexOf("test list name");
+    var statusIdx = headers.indexOf("");
+
     $("#submit-review").click(function(){
-        var unitIdx = 1;
-        var testListNameIdx = 3;
-        var statusIdx = 8;
+
         var $tableBody = $("#instance-summary tbody");
 
         var $rows = $("#listable-table-unreviewed tbody tr td select option:selected").filter(function(i, v){
@@ -71,7 +77,8 @@ require(['jquery', 'lodash'], function ($, _) {
         $rows.each(function(idx, el){
             var $el = $(el);
             var children = $el.children();
-            var unit = children[unitIdx].innerText;
+            var site = siteIdx >= 0 ? (children[siteIdx].innerText || "Other") + ": " : "";
+            var unit = site + children[unitIdx].innerText;
             var tl = children[testListNameIdx].innerText;
             var statusVal = $(children[statusIdx]).find("option:selected ").val();
             var statusText = $(children[statusIdx]).find("option:selected ").text();
@@ -112,7 +119,7 @@ require(['jquery', 'lodash'], function ($, _) {
 
         $.ajax({
             type:"POST",
-            url: '/qc/session/review/bulk/',
+            url: QAURLs.TLI_BULK_REVIEW,
             data: data,
             dataType:"json",
             success: function (result) {

@@ -17,6 +17,7 @@ from .forms import UnitAvailableTimeForm
 from .models import (
     Modality,
     Site,
+    TreatmentTechnique,
     Unit,
     UnitAvailableTime,
     UnitClass,
@@ -47,6 +48,15 @@ class UnitFormAdmin(ModelForm):
         )
     )
 
+    treatment_techniques = ModelMultipleChoiceField(
+        queryset=TreatmentTechnique.objects.all(),
+        required=False,
+        widget=FilteredSelectMultiple(
+            verbose_name=_l('Treatment Techniques'),
+            is_stacked=False
+        )
+    )
+
     class Meta:
         model = Unit
 
@@ -61,6 +71,7 @@ class UnitFormAdmin(ModelForm):
             'type',
             'site',
             'modalities',
+            'treatment_techniques',
         ]
         if settings.USE_SERVICE_LOG:
             fields.append('service_areas')
@@ -81,7 +92,7 @@ class UnitFormAdmin(ModelForm):
         def vendor_unit_type(ut):
             return "%s :: %s" % (ut.vendor.name if ut.vendor else "Other", ut.name)
 
-        unit_types = UnitType.objects.order_by("vendor__name", "name")
+        unit_types = UnitType.objects.select_related("vendor").order_by("vendor__name", "name")
         choices = [(v, list(uts)) for (v, uts) in groupby(unit_types, key=vendor_name)]
         choices = [(v, [(ut.id, vendor_unit_type(ut)) for ut in uts]) for (v, uts) in choices]
         choices = [("", "---------")] + choices
@@ -101,7 +112,7 @@ class UnitFormAdmin(ModelForm):
             unit = self.instance
 
             for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
-                if ServiceEvent.all_objects.filter(unit_service_area=usa).exists():
+                if ServiceEvent.objects.filter(unit_service_area=usa).exists():
                     data_copy = self.data.copy()
                     data_copy.setlist(
                         'service_areas',
@@ -218,8 +229,13 @@ class SiteAdmin(BaseQATrackAdmin):
     )
 
 
+class TreatmentTechniqueAdmin(BaseQATrackAdmin):
+    list_display = ("name",)
+
+
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
 admin.site.register(Modality, ModalityAdmin)
 admin.site.register(Site, SiteAdmin)
 admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)
+admin.site.register([TreatmentTechnique], TreatmentTechniqueAdmin)

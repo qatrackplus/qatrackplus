@@ -243,6 +243,7 @@ INSTALLED_APPS = [
     'listable',
     'genericdropdown',
     'recurrence',
+    'phone_field',
     'widget_tweaks',
     'dynamic_raw_id',
     'mptt',
@@ -257,6 +258,7 @@ INSTALLED_APPS = [
     'qatrack.issue_tracker',
     'qatrack.service_log',
     'qatrack.parts',
+    'qatrack.faults',
     'qatrack.attachments',
     'qatrack.reports',
     'admin_views',
@@ -309,16 +311,14 @@ CACHE_SL_NOTIFICATION_TOTAL = 'sl-notification-total'
 CACHE_SERVICE_STATUS_COLOURS = 'service-status-colours'
 CACHE_ACTIVE_UTCS_FOR_UNIT_ = 'active_utcs_for_unit_{}'
 CACHE_AUTOREVIEW_RULESETS = "autoreviewrulesets"
+CACHE_UNREVIEWED_FAULT_COUNT = "unreviewed-fault-count"
 
 MAX_CACHE_TIMEOUT = None
 
-CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
-
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': CACHE_LOCATION,
-        'TIMEOUT': MAX_CACHE_TIMEOUT,
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'qatrack_cache_table',
     }
 }
 
@@ -463,37 +463,29 @@ LOGGING = {
         },
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "debug.log"),
-            'when': 'D',  # this specifies the interval
-            'interval': 7,  # defaults to 1, only necessary for other values
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
         'migrate': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "migrate.log"),
-            'when': 'D',  # this specifies the interval
-            'interval': 7,  # defaults to 1, only necessary for other values
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
         'django-q': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "django-q.log"),
-            'when': 'D',  # this specifies the interval
-            'interval': 7,  # defaults to 1, only necessary for other values
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
         'auth': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "auth.log"),
-            'when': 'D',  # this specifies the interval
-            'interval': 1,  # defaults to 1, only necessary for other values
             'backupCount': 1,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
@@ -592,7 +584,7 @@ ORDER_UNITS_BY = "number"
 REVIEW_DIFF_COL = False
 
 # Enable bulk review on Unreviewed pages
-REVIEW_BULK = False
+REVIEW_BULK = True
 
 # default display settings for test statuses
 TEST_STATUS_DISPLAY = {
@@ -637,6 +629,7 @@ DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 USE_SERVICE_LOG = True
 USE_PARTS = True
 USE_ISSUES = False  # internal development issue tracker
+USE_SERVICE_TEMPLATES = True
 
 DELETE_REASONS = (
     ('Duplicate', 'Duplicate'),
@@ -692,7 +685,10 @@ if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
 if os.name.lower() == "nt":
     CHROME_PATH = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"'
 else:
-    CHROME_PATH = "/usr/bin/chromium-browser"
+    CHROME_PATH = ""
+    for path in ["/usr/bin/chromium", "/usr/bin/chromium-browser"]:
+        if os.path.exists(path):
+            CHROME_PATH = path
 
 
 # ------------------------------------------------------------------------------
@@ -705,7 +701,7 @@ from .local_settings import *  # noqa: F403, F401
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
 # Parts must be used with service log
-USE_PARTS = USE_PARTS or USE_SERVICE_LOG
+USE_PARTS = USE_PARTS and USE_SERVICE_LOG
 
 
 # ------------------------------------------------------------------------------
@@ -723,6 +719,7 @@ for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT, LOG_ROOT, TMP_REPORT_ROOT):
     if not os.path.isdir(d):
         os.mkdir(d)
 
+CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 IS_FILE_CACHE = CACHES['default']['BACKEND'] == 'django.core.cache.backends.filebased.FileBasedCache'
 if IS_FILE_CACHE and not os.path.isdir(CACHE_LOCATION):
     os.mkdir(CACHE_LOCATION)
@@ -797,5 +794,4 @@ Q_CLUSTER = {
     'cpu_affinity': 1,
     'label': 'Django Q',
     'orm': 'default',
-    'sync': os.name.lower() == "nt",
 }

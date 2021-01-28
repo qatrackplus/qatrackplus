@@ -87,8 +87,9 @@ class ServiceEventReviewAdmin(BaseQATrackAdmin):
         )
 
     def get_notification_type(self, obj):
-        disp = "#%s - %s" % (obj.pk, obj.get_notification_type_display())
-        return disp
+        return "#%s - %s" % (obj.pk, obj.get_notification_type_display())
+    get_notification_type.admin_order_field = "notification_type"
+    get_notification_type.short_description = _l("Notification Type")
 
     def get_units(self, obj):
         return obj.units.name if obj.units else ""

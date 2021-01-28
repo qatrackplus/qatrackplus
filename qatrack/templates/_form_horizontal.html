@@ -5,13 +5,13 @@
 {% endfor %}
 
 {% if form.non_field_errors %}
-<div class="form-group">
-  <div class="alert alert-danger" role="alert">
-    {% for error in form.non_field_errors %}
-      {{ error }}
-    {% endfor %}
+  <div class="form-group">
+    <div class="alert alert-danger" role="alert">
+      {% for error in form.non_field_errors %}
+        {{ error }}
+      {% endfor %}
+    </div>
   </div>
-</div>
 {% endif %}
 
 {% for field in form.visible_fields %}

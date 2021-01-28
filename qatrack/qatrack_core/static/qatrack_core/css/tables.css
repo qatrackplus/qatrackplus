@@ -80,7 +80,7 @@ table.table > thead > tr > th > span > div > ul > li.active > a:hover,
     width: 100% !important;
     /*min-width: 100px;*/
     box-sizing: border-box;
-    -webkit-box-sizing:border-box;
+    -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
 }
 
@@ -98,4 +98,13 @@ table.table-valign-middle > tfoot > tr > td {
 }
 .table > tbody > tr > td {
     border-top-color: transparent;
+}
+#listable-table-suppliers_list > thead > tr > th:nth-child(1) {
+    width: 100px;
+}
+#listable-table-suppliers_list > thead > tr > th:nth-child(2) {
+    width: 150px;
+}
+#listable-table-suppliers_list > thead > tr > th:nth-child(3) {
+    width: 150px;
 }

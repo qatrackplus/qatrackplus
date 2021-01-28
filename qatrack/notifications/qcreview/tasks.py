@@ -9,7 +9,7 @@ from qatrack.notifications.models import QCReviewNotice
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger('django-q')
 
 
 def run_review_notices():

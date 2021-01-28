@@ -13,7 +13,7 @@ from qatrack.qatrack_core.tasks import (
 from qatrack.reports.models import ReportSchedule
 from qatrack.reports.reports import CONTENT_TYPES
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger('django-q')
 
 
 @qatrack_task_wrapper

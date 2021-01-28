@@ -44,6 +44,9 @@ The fields are as follows:
   specific part number.
 * **Storage (optional)** List the :term:`Rooms` and :term:`Location`\s where the
   part is located and how many are available in that location.
+* **Attachments (optional)** Add attachments such as pdfs or images relevant to
+  this part.  Images will be shown inline in the parts listing pages and on 
+  the parts details page.
 
 
 Once you have entered the fields click `Add Part and enter Another` to save

@@ -1,4 +1,5 @@
 import json
+from random import Random
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -9,6 +10,7 @@ from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.formats import get_format
 
+from qatrack.faults.models import Fault
 from qatrack.parts.models import PartStorageCollection, PartUsed
 from qatrack.qa.models import TestListInstance, UnitTestCollection
 from qatrack.service_log.models import (
@@ -18,6 +20,7 @@ from qatrack.service_log.models import (
 )
 from qatrack.units.models import Unit
 
+cache.delete(settings.CACHE_UNREVIEWED_FAULT_COUNT)
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
 cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
 cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -86,6 +89,13 @@ def update_se_cache(*args, **kwargs):
     cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
+@receiver(post_save, sender=Fault)
+@receiver(post_delete, sender=Fault)
+def update_faults_cache(*args, **kwargs):
+    """When a fault is changed invalidate the default and review count"""
+    cache.delete(settings.CACHE_UNREVIEWED_FAULT_COUNT)
+
+
 @receiver(post_save, sender=UnitTestCollection)
 @receiver(post_delete, sender=UnitTestCollection)
 def update_active_unit_test_collections_for_unit_utc(*args, **kwargs):
@@ -121,6 +131,7 @@ def site(request):
         'SELF_REGISTER': settings.ACCOUNTS_SELF_REGISTER,
         'USE_ADFS': settings.USE_ADFS,
         'VERSION': settings.VERSION,
+        'CSS_VERSION': Random().randint(1, 1000) if settings.DEBUG else settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
@@ -132,6 +143,7 @@ def site(request):
         'USE_SERVICE_LOG': settings.USE_SERVICE_LOG,
         'USE_PARTS': settings.USE_PARTS,
         'USE_ISSUES': settings.USE_ISSUES,
+        'USE_SERVICE_TEMPLATES': settings.USE_SERVICE_TEMPLATES,
 
         # JavaScript Date Formats
         'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
@@ -184,6 +196,11 @@ def site(request):
                 context['SE_RTS_UNREVIEWED_QA_COUNT'],
             )
         ),
+    )
+
+    context['FAULTS_UNREVIEWED'] = cache.get_or_set(
+        settings.CACHE_UNREVIEWED_FAULT_COUNT,
+        Fault.objects.unreviewed_count,
     )
 
     context['USERS_IN_PROGRESS'] = get_user_count(

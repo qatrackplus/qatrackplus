@@ -1,0 +1,244 @@
+{% extends "service_log/sl_base.html" %}
+
+{% load qa_tags %}
+{% load listable %}
+{% load i18n %}
+{% load comments %}
+{% load static %}
+
+{% block head_title %}{% trans "Fault Type" %}: {{ fault_type.code }}{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{% static "datepicker/css/bootstrap-datepicker.min.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "multiselect/css/bootstrap.multiselect.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "faults/css/faults.css" %}?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    {% autoescape off %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+    {% endautoescape %}
+{% endblock %}
+
+{% block require_javascript %}
+    require(['listable', 'faults']);
+{% endblock require_javascript %}
+
+{% block body %}
+
+<div class="max-width-lg">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header"></div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-sm-6">
+              <h3>{% trans "Fault Details" %}</h3>
+
+              <dl class="dl-horizontal">
+
+                <dt>{% trans "Fault" %}:</dt>
+                <dd>{{ fault }}</dt>
+
+                <dt>{% trans "Occurred" %}:</dt>
+                <dd>{{ fault.occurred }}</dt>
+
+                <dt>{% trans "Site" %}:</dt>
+                <dd>
+                  {% if fault.unit.site %}
+                    {{ fault.unit.site }}
+                  {% else %}
+                    {% trans "Other" %}
+                  {% endif %}
+                </dd>
+
+                <dt>{% trans "Unit" %}:</dt>
+                <dd>
+                  <a
+                    href="{% url "fault_list_by_unit" unit_number=fault.unit.number %}"
+                    title="{% trans "Click to view all faults on this unit" %}"
+                  >
+                    {{ fault.unit }}
+                  </a>
+                </dd>
+
+                <dt>{% trans "Modality / Beam" %}:</dt>
+                <dd>
+                  {% if fault.modality %}
+                    {{ fault.modality }}
+                  {% else %}
+                    {% trans "Not Specified" %}
+                  {% endif %}
+                </dd>
+
+                <dt>{% trans "Treatment Technique" %}:</dt>
+                <dd>
+                  {% if fault.treatment_technique %}
+                    {{ fault.treatment_technique }}
+                  {% else %}
+                    {% trans "Not Specified" %}
+                  {% endif %}
+                </dd>
+
+                <dt>{% trans "Created" %}:</dt>
+                <dd>
+                  {{ fault.created_by}} @ {{ fault.created }}
+                </dd>
+
+                <dt>{% trans "Last Modified"  %}:</dt>
+                <dd>
+                  {{ fault.modified_by}} @ {{ fault.modified }}
+                </dd>
+
+                <dt>{% trans "Reviewed" %}:</dt>
+                <dd>
+                  {% if fault.reviewed_by %}
+                    {{ fault.reviewed_by}} @ {{ fault.reviewed }}
+                  {% else %}
+                    <em>{% trans "Unreviewed" %}</em>
+                  {% endif %}
+                </dd>
+
+              </dl>
+            </div>
+            <div class="col-sm-6">
+
+              <h3>{% trans "Fault Type" %}</h3>
+
+              <dl class="dl-horizontal">
+                <dt>{% trans "Code" %}:</dt>
+                <dd>
+                  <a
+                    href="{% url "fault_type_details" slug=fault.fault_type.slug %}"
+                    title="{% trans "Click to view details of this fault type" %}">
+                    {{ fault.fault_type.code }}
+                  </a>
+                </dd>
+
+                <dt>{% trans "Description" %}:</dt>
+                <dd class="fault_type_description">
+                  {% if fault.fault_type.description %}
+                    {{ fault.fault_type.description }}
+                  {% else %}
+                    <em>{% trans "No description available" %}</em>
+                  {% endif %}
+                </dd>
+              </dl>
+
+              <h3>{% trans "Related Service Events" %}</h3>
+
+              <dl class="dl-horizontal">
+                <dt>{% trans "Service events" %}:</dt>
+                <dd>
+                  <div>
+                    {% for rel in fault.related_service_events.all %}
+
+                      {% if forloop.first %}<ul>{% endif %}
+                      <li>
+                        <a href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat margin-bottom-1" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
+                      </li>
+                      {% if forloop.last %}</ul>{% endif %}
+                    {% empty %}
+                      <em>{% trans "No related service events" %}</em>
+                    {% endfor %}
+                  </div>
+                </dd>
+              </dl>
+
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+
+                <hr/>
+                <form id="review-form" action="{% url "fault_review" pk=fault.id %}" method="POST">
+                  {% csrf_token %}
+                  {% include "_form_horizontal.html" with form=review_form %}
+                  {% if perms.faults.can_delete %}
+                    <a class="btn btn-danger btn-flat"
+                       title="{% trans "This will redirect you to a page where you can permanently delete this fault" %}"
+                       href="{% url 'fault_delete' pk=fault.pk %}"
+                    >
+                      <i class="fa fa-trash-o"></i> {% trans "Delete" %}
+                    </a>
+                  {% endif %}
+                  {% if perms.faults.can_review %}
+                    {% if fault.reviewed %}
+                      <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unapprove This Fault" %}</button>
+                    {% else %}
+                      <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Approve This Fault" %}</button>
+                    {% endif %}
+                  {% endif %}
+                </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="box-comments" class="row">
+    <div class="col-sm-12">
+      <div class="box">
+        <div class="box-header">
+          <h3 class="box-title">
+            <i class="fa fa-commenting-o fa-fw"></i>
+            {% trans "Comments" %}
+          </h3>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-md-12">
+              {% render_comment_list for fault %}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              {% get_comment_form for fault as form %}
+
+              <form id="comment-form" method="post">
+                {% csrf_token %}
+                <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                {{ form.object_pk }}
+                {{ form.content_type }}
+                {{ form.security_hash }}
+                {{ form.timestamp }}
+                <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="{% trans "Add comment" %}" class="margin-bottom-20 form-control autosize"></textarea>
+              </form>
+              <div class="row">
+                <div class="col-md-12">
+                  <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">{% trans "Post Comment" %}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header">
+          <i class="fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>
+          <h3 class="box-title">
+            {% blocktrans with fault_type_code=fault.fault_type.code %}
+              Other Occurrences of fault type {{ fault_type_code }}
+            {% endblocktrans %}
+          </h3>
+        </div>
+        <div class="box-body pad">
+          {{ listable_table }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}

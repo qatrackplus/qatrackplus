@@ -10,7 +10,7 @@ from django_q.tasks import schedule
 
 from qatrack.qatrack_core.utils import today_start_end
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger('django-q')
 
 
 def qatrack_task_wrapper(func):

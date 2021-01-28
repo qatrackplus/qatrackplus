@@ -233,7 +233,8 @@ class TestTestListInstanceAdmin(TestCase):
         self.tli = qa_utils.create_test_list_instance()
         self.usa = sl_utils.create_unit_service_area(unit=self.tli.unit_test_collection.unit)
         self.se = sl_utils.create_service_event(
-            unit_service_area=self.usa, add_test_list_instance_initiated_by=self.tli
+            unit_service_area=self.usa,
+            add_test_list_instance_initiated_by=self.tli,
         )
         sl_utils.create_return_to_service_qa(add_test_list_instance=self.tli)
 

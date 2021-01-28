@@ -48,6 +48,7 @@ Major Features
       specific units or test lists.
     * New QC Scheduling & Unreviewed QC Notices.
     * Service event creation & update notices.
+    * Parts low inventory notices.
 
 * A new :ref:`Autosave <auto_save>` feature has been implemented to
   automatically save test list instance data temporarily to prevent data loss
@@ -157,7 +158,8 @@ UI Changes
 * Test Instance points with comments associated with them are now highlighed in
   charts
 
-* Listing for selectin
+* Keyboard entry of dates is now permitted for Work Started & Work Completed dates
+  when performing QC
 
 * New dropdown on Unit selection buttons to allow selecting QC to perform based
   on Test categories.
@@ -251,6 +253,16 @@ Service Log & Parts
   optionally allow users to submit ServiceEvents without a ServiceType set
   explicitly.
 
+* Parts Supplier details have been expanded to include phone numbers, website,
+  address and contact information
+
+* Part supplier details pages have been added to show what parts are available
+  from each supplier as well as company & contact details.
+
+* You may now add attachments & images to Parts.  Images will be shown inline
+  in the parts listing table and parts detail pages.
+
+
 Authentication
 ^^^^^^^^^^^^^^
 
@@ -282,12 +294,16 @@ Authentication
   now have a :ref:`default group flag <auth_groups>`.  Anytime a user logs into
   QATrack+, they will automatically be added to any group with this flag set.
 
-
 Other Minor Features & Bugs Fixed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fixed bug with control charts and null valued / skipped tests. #506
 * Fixed bug with selecting Test List Cycle days from sidebar menu
+
+* QATrack+ by default will now use the database for caching rather than the
+  filesystem.  This should have comparable or better performance and eliminate
+  the occassional 500 errors generated on Windows servers due to file
+  permissions & access issues.
 
 
 Deprecations & Discontinuations

@@ -19,7 +19,7 @@ import numpy
 
 from qatrack.qa.control_chart import control_chart
 from qatrack.qa.utils import SetEncoder
-from qatrack.qatrack_core.utils import (
+from qatrack.qatrack_core.dates import (
     format_as_date,
     format_datetime,
     parse_date,
@@ -614,10 +614,11 @@ class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
         writer.writerow(header1)
         writer.writerow(header2)
 
+        tz = timezone.get_current_timezone()
         for row_set in context['rows']:
             row = []
             for date, val, ref in row_set:
-                date = format_datetime(date) if date != "" else ""
+                date = format_datetime(date.astimezone(tz)) if date else ""
                 row.extend([date, val, ref])
             writer.writerow(row)
 

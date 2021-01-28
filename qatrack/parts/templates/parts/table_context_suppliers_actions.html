@@ -1,6 +1,18 @@
 {% load qa_tags %}
 {% load i18n %}
-{#<div style="min-width: 85px;">#}
-{#    <a class="btn btn-primary btn-xs btn-flat" href="{% url 'part_edit' p.pk %}{% if next %}?next={{ next }}{% endif %}">Edit</a>#}
-{#</div>#}
-TODO
+<a
+  class="btn btn-default btn-xs btn-flat"
+  href="{% url 'supplier_details' supplier.pk %}{% if next %}?next={{ next }}{% endif %}"
+>
+  {% trans "View" %}
+</a>
+
+{% if request.user.is_staff and perms.parts.change_supplier %}
+  <a
+    class="btn btn-default btn-xs btn-flat"
+    href="{% url 'admin:parts_supplier_change' object_id=supplier.pk %}"
+    title="{% trans "Click to edit this supplier details" %}"
+  >
+    {% trans "Edit" %}
+  </a>
+{% endif %}

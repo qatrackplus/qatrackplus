@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.timezone import timedelta
 from django.utils.translation import gettext as _
 
+from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import HoursMinDurationField
 from qatrack.units import models as u_models
 
@@ -152,6 +153,40 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
 
     choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
     choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
+    if include_empty:
+        choices = [("", "---------")] + choices
+
+    return choices
+
+
+def unit_site_service_area_choices(include_empty=False, include_unspecified=False):
+    """Return unit service areas grouped by site and unit, suitable for using as optgroups for select inputs"""
+
+    def unit_service_area(usa):
+        return "%s :: %s" % (usa.unit.name, usa.service_area.name)
+
+    def service_area(usa):
+        return usa.service_area.name
+
+    def site_unit_name(usa):
+        return "%s :: %s" % (usa.unit.site.name if usa.unit.site else "Other", usa.unit.name)
+
+    usas = sl_models.UnitServiceArea.objects.select_related(
+        "unit__site",
+        "unit",
+        "service_area",
+    )
+    if not include_unspecified:
+        usas = usas.exclude(service_area__name=sl_models.ServiceArea.BLANK_SA_NAME)
+
+    usas = usas.order_by(
+        "unit__site__name",
+        "unit__%s" % settings.ORDER_UNITS_BY,
+        "service_area__name",
+    )
+
+    choices = [(site, list(units)) for (site, units) in groupby(usas, key=site_unit_name)]
+    choices = [(site, [(usa.id, service_area(usa)) for usa in units]) for (site, units) in choices]
     if include_empty:
         choices = [("", "---------")] + choices
 

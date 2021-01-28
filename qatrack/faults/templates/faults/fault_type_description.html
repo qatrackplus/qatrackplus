@@ -1,0 +1,10 @@
+{% load i18n %}
+<div style="min-width: 285px;">
+  {% if fault_type.description %}
+    <abbr class="might-overflow" title="{{ fault_type.description }}" data-title="{% trans "Fault Type Description" %}">
+      {{ fault_type.description|truncatechars:120 }}
+    </abbr>
+  {% else %}
+    <em>{% trans "No description available" %}</em>
+  {% endif %}
+</div>

@@ -5,7 +5,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework_filters import backends
 
 from qatrack.api.service_log import filters, serializers
-from qatrack.qatrack_core.utils import format_datetime
+from qatrack.qatrack_core.dates import format_datetime
 from qatrack.service_log import models
 
 

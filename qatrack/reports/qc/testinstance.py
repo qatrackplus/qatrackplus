@@ -27,6 +27,8 @@ class TestInstanceDetailsReport(BaseReport):
     template = "reports/qc/testinstance_details.html"
     formats = ORDERED_CONTENT_TYPES
 
+    __test__ = False  # supress pytest warning
+
     def filter_form_valid(self, filter_form):
 
         ntis = self.filter_set.qs.count()

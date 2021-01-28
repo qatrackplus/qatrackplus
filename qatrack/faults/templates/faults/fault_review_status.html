@@ -1,0 +1,12 @@
+{% load i18n %}
+
+{% if interlock.reviewed %}
+  <span data-timestamp="{{ interlock.reviewed|date:"U"}}">
+    <abbr
+        title="{% blocktrans with reviewed_by=interlock.created_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}">
+      {{ interlock.reviewed }}
+    </abbr>
+  </span>
+{% else %}
+  <em>{% trans "Unreviewed " %}
+{% endif %}

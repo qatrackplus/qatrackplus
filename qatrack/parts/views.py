@@ -3,10 +3,13 @@ from collections import defaultdict
 from braces.views import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
+from django.forms.utils import timezone
 from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import resolve, reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import DetailView
@@ -14,6 +17,8 @@ from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import ModelFormMixin, ProcessFormView
 from listable.views import SELECT_MULTI, TEXT, BaseListableView
 
+from qatrack.attachments.models import Attachment
+from qatrack.attachments.views import listable_attachment_tags
 from qatrack.parts import forms as p_forms
 from qatrack.parts import models as p_models
 
@@ -105,11 +110,26 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(instance=self.object, prefix='supplier')  # noqa: E501
             context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(instance=self.object, prefix='storage')  # noqa: E501
 
+        context_data['attachments'] = self.object.attachment_set.all() if self.object else []
         return context_data
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, _('Please correct the errors below.'))
         return super().form_invalid(form)
+
+    def edit_part_attachments(self, part):
+        for idx, f in enumerate(self.request.FILES.getlist('part_attachments')):
+            Attachment.objects.create(
+                attachment=f,
+                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                label=f.name,
+                part=part,
+                created_by=self.request.user
+            )
+
+        a_ids = self.request.POST.get('part_attachments_delete_ids', '').split(',')
+        if a_ids != ['']:
+            Attachment.objects.filter(id__in=a_ids).delete()
 
     def form_valid(self, form):
 
@@ -170,6 +190,8 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
                 psc_instance.save()
                 part.set_quantity_current()
 
+        self.edit_part_attachments(part)
+
         if 'submit_add_another' in self.request.POST:
             return HttpResponseRedirect(reverse('part_new'))
         return HttpResponseRedirect(reverse('parts_list'))
@@ -183,6 +205,7 @@ class PartDetails(DetailView):
 
 class PartsList(BaseListableView):
 
+    page_title = _l("All Parts")
     model = p_models.Part
     template_name = 'parts/parts_list.html'
     paginate_by = 50
@@ -200,6 +223,7 @@ class PartsList(BaseListableView):
         'quantity_min',
         'part_category__name',
         'locations',
+        'attachments',
     )
 
     headers = {
@@ -211,6 +235,7 @@ class PartsList(BaseListableView):
         'quantity_min': _l('Min Quantity'),
         'locations': _l("Locations"),
         'part_category__name': _l('Category'),
+        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
     }
 
     widgets = {
@@ -222,6 +247,7 @@ class PartsList(BaseListableView):
         'quantity_current': None,
         'locations': None,
         'part_category__name': SELECT_MULTI,
+        'attachments': None,
     }
 
     search_fields = {
@@ -229,31 +255,21 @@ class PartsList(BaseListableView):
         'quantity_current': False,
         'quantity_min': False,
         'locations': False,
+        'attachments': False,
     }
 
     order_fields = {
         'actions': False,
         'part_category__name': False,
         'locations': "partstoragecollection__storage__room__site__name",
+        "attachments": "attachment_count",
     }
 
     select_related = ('part_category',)
+    prefetch_related = ("attachment_set",)
 
     def get_icon(self):
         return 'fa-cog'
-
-    def get_page_title(self, f=None):
-        if not f:
-            return _l("All Parts")
-        to_return = _l("Parts")
-        filters = f.split('_')
-        for filt in filters:
-            [key, val] = filt.split('-')
-            if key == 'qcqm':
-                if val == 'lt':
-                    to_return += ' - ' + _("Low Inventory")
-
-        return to_return
 
     def get(self, request, *args, **kwargs):
         if self.kwarg_filters is None:
@@ -262,22 +278,7 @@ class PartsList(BaseListableView):
 
     def get_queryset(self):
         qs = super(PartsList, self).get_queryset()
-
-        if self.kwarg_filters is None:
-            self.kwarg_filters = self.request.GET.get('f', None)
-
-        if self.kwarg_filters is not None:
-            filters = self.kwarg_filters.split('_')
-            query_kwargs = {}
-            for filt in filters:
-                [key, val] = filt.split('-')
-                if key == 'qcqm':
-                    if val == 'lt':
-                        qs = qs.filter(quantity_current__lt=F('quantity_min'))
-
-            qs = qs.filter(**query_kwargs)
-
-        return qs
+        return qs.annotate(attachment_count=Count("attachment"))
 
     def format_col(self, field, obj):
         col = super(PartsList, self).format_col(field, obj)
@@ -288,11 +289,7 @@ class PartsList(BaseListableView):
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
-        f = self.request.GET.get('f', False)
-        context['kwargs'] = {'f': f} if f else {}
-        if f == 'qcqm-lt':
-            context['print_parts'] = True
-        context['page_title'] = self.get_page_title(f)
+        context['page_title'] = self.page_title
         return context
 
     def actions(self, p):
@@ -328,9 +325,11 @@ class PartsList(BaseListableView):
         tmp_cache = defaultdict(list)
         for part_id, quantity, loc, site_name, room_name in psc:
             site = "%s:" % site_name if site_name else ""
-            text = '<div style="display: inline-block; white-space: nowrap;">%s%s:%s <span class="badge">%d</span></div>' % (
-                site, room_name, loc or "", quantity
-            )
+            text = (
+                '<div style="display: inline-block; white-space: nowrap;">'
+                '%s%s:%s <span class="badge">%d</span>'
+                '</div>'
+            ) % (site, room_name, loc or "", quantity)
             tmp_cache[part_id].append(text)
 
         self._parts_locations_cache = {}
@@ -339,6 +338,18 @@ class PartsList(BaseListableView):
 
     def part_number(self, part):
         return part.part_number or "<em>N/A</em>"
+
+    def attachments(self, part):
+        return listable_attachment_tags(part)
+
+
+class LowInventoryPartsList(PartsList):
+
+    page_title = _l("Low Inventory Parts")
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(quantity_current__lt=F('quantity_min'))
 
 
 class SuppliersList(BaseListableView):
@@ -352,57 +363,63 @@ class SuppliersList(BaseListableView):
 
     fields = (
         'actions',
-        'pk',
         'name',
-        'notes'
+        'phone_number',
+        'get_website_tag',
     )
 
     headers = {
         'actions': _l('Actions'),
-        'pk': _l('ID'),
         'name': _l('Name'),
-        'notes': _l('Notes'),
+        'phone_number': _l("Phone Number"),
+        'get_website_tag': _l("Website"),
     }
 
     widgets = {
         'actions': None,
-        'pk': TEXT,
         'name': TEXT,
-        'notes': TEXT,
+        'phone_number': TEXT,
+        'website': TEXT,
     }
 
     search_fields = {
         'actions': False,
+        'get_website_tag': 'website',
     }
 
     order_fields = {
         'actions': False,
-        'notes': False
+        'get_website_tag': 'website',
     }
-
-    def get_icon(self):
-        return 'fa-microchip'
-
-    def get_page_title(self, f=None):
-        if not f:
-            return _l("All Suppliers")
-
-    def format_col(self, field, obj):
-        col = super(SuppliersList, self).format_col(field, obj)
-        return col
 
     def get_context_data(self, *args, **kwargs):
         context = super(SuppliersList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
-        context['icon'] = self.get_icon()
-        f = self.request.GET.get('f', False)
-        context['kwargs'] = {'f': f} if f else {}
-        context['page_title'] = self.get_page_title(f)
+        context['icon'] = 'fa-microchip'
+        context['page_title'] = _l("All Suppliers")
         return context
 
-    def actions(self, p):
+    def actions(self, supplier):
         template = get_template('parts/table_context_suppliers_actions.html')
-        mext = reverse('parts_list')
-        c = {'p': p, 'request': self.request, 'next': mext}
+        mext = reverse('suppliers_list')
+        c = {
+            'supplier': supplier,
+            'request': self.request,
+            'next': mext,
+            'perms': PermWrapper(self.request.user),
+        }
         return template.render(c)
+
+
+class SupplierDetails(PartsList):
+
+    template_name = 'parts/supplier_details.html'
+
+    def get_queryset(self):
+        return super().get_queryset().filter(partsuppliercollection__supplier__id=self.kwargs['pk'])
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['supplier'] = get_object_or_404(p_models.Supplier, pk=self.kwargs['pk'])
+        return context

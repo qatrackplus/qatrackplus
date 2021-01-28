@@ -1,11 +1,15 @@
 
-require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], function ($, moment, autosize) {
+require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], function ($, _, moment, autosize) {
 
     $(document).ready(function () {
 
         var $part_category = $('#id_part_category'),
             $cost = $('#id_cost'),
-            $quantity_min = $('#id_quantity_min');
+            $quantity_min = $('#id_quantity_min'),
+            $attachInput = $('#id_part_attachments'),
+            $attach_deletes = $('.attach-delete'),
+            $attach_delete_ids = $('#id_part_attachments_delete_ids'),
+            $attach_names = $('#part-attachment-names');
 
         autosize($('textarea.autosize'));
 
@@ -92,7 +96,7 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
                 error: function (e, data) {
                     console.log('ErROr');
                 }
-            })
+            });
         }
         function template_location(data) {
             var $result = $("<span></span>");
@@ -114,7 +118,7 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
                     id: '__new__' + params.term,
                     text: params.term,
                     newOption: true
-                }
+                };
             },
             templateResult: template_location,
             tags: true,
@@ -132,7 +136,25 @@ require(['jquery', 'moment', 'autosize', 'select2', 'sl_utils', 'inputmask'], fu
                 $(this).prop('disabled', false);
             }
         });
-        
+
+        $attachInput.on("change", function(){
+            var fnames = _.map(this.files, function(f){
+                return '<tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' + f.name + '</td></tr>';
+            }).join("");
+            $attach_names.html(fnames);
+        });
+
+        $attach_deletes.change(function() {
+            var deletes = [];
+            $.each($attach_deletes, function(i, v) {
+                var el = $(v);
+                if (el.prop('checked')) {
+                    deletes.push(el.val());
+                }
+            });
+            $attach_delete_ids.val(deletes.join(','));
+        });
+
     });
 
 });

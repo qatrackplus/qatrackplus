@@ -3,6 +3,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _l
 
 # this import has to be here so that the signal handlers get registered
+from qatrack.notifications.faults import handlers as faults_handlers  # noqa: F401
+from qatrack.notifications.faults_review import \
+    handlers as faults_review_handlers  # noqa: F401
+from qatrack.notifications.parts import handlers as part_handlers  # noqa: F401
 from qatrack.notifications.qccompleted import handlers as qccompleted_handlers  # noqa: F401
 from qatrack.notifications.qcreview import handlers as qcreview_handlers  # noqa: F401
 from qatrack.notifications.qcscheduling import handlers as qcscheduling_handlers  # noqa: F401
@@ -65,6 +69,8 @@ class TestListGroup(models.Model):
             "Select which Test Lists should be included in this notification group."
         ),
     )
+
+    __test__ = False  # supress pytest warning
 
     def __str__(self):
         return self.name

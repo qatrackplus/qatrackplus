@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django_comments.models import Comment
 
-from qatrack.qatrack_core.utils import format_as_date, format_datetime
+from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.reports import filters
 from qatrack.reports.reports import BaseReport, format_user
 from qatrack.reports.service_log.summary import ServiceEventReportMixin

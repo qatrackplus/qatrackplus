@@ -1,0 +1,63 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% load i18n %}
+{% block title %}{% trans "QATrack+ Faults Review Notice" %}{% endblock %}
+{% block preheader %}{% trans "QATrack+ Faults Review Notice" %}{% endblock %}
+{% block extra_css %}
+  th.header {
+    font-weight: bold;
+    text-align: left;
+  }
+  thead th.header {
+    text-align: left;
+    border-bottom: 1px solid #ccc;
+  }
+  thead th {
+    font-weight: bold;
+    text-align: center;
+  }
+  tbody th.header {
+    padding-right: 10px;
+  }
+
+  thead th.header.unreviewed-count,
+  tbody td.unreviewed-count {
+    text-align: center;
+    width: 15%;
+  }
+{% endblock %}
+
+{% block content %}
+
+<p>{% trans "Hello" %},</p>
+<p>
+  The following Units have Faults <a href="{{ domain }}{% url "fault_list_unreviewed" %}">Awaiting Review</a>.
+</p>
+<table style="border: none;" cellspacing="0" cellpadding="0">
+  <thead>
+    <tr>
+      <th class="header">{% trans "Unit" %}</th>
+      <th class="header">{% trans "Fault Type" %}</th>
+      <th class="header">{% trans "Count" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% regroup notice.faults_by_unit_fault_type by unit__name as unit_groups %}
+    {% for unit, unit_fault_types in unit_groups %}
+      {% for unit_fault_type in unit_fault_types %}
+        <tr>
+          {% if forloop.first %}
+            <th class="header">{{ unit }}</th>
+          {% else %}
+            <td>&nbsp;</td>
+          {% endif %}
+          <td>{{ unit_fault_type.fault_type__code }}</td>
+          <td class="unreviewed-count">
+            {{ unit_fault_type.fault_type__code__count }}
+          </td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

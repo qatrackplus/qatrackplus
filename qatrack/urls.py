@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^core/', include('qatrack.qatrack_core.urls')),
     url(r'^servicelog/', include('qatrack.service_log.urls')),
     url(r'^parts/', include('qatrack.parts.urls')),
+    url(r'^faults/', include('qatrack.faults.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
 
     # Uncomment the next line to enable the admin:

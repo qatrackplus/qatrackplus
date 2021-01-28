@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.test.utils import override_settings
-
+import pytest
 from qatrack.accounts import models
 from qatrack.accounts.admin import AdminFilter
 from qatrack.accounts.backends import (
@@ -16,16 +16,19 @@ from qatrack.qa.tests import utils
 class TestCleanUsername:
 
     def test_no_clean(self):
+        ldap = pytest.importorskip("ldap")  # noqa:F841,F811
         backend = ADBack()
         assert backend.clean_username("foo") == "foo"
 
     @override_settings(AD_CLEAN_USERNAME=lambda x: x.lower())
     def test_clean(self):
+        ldap = pytest.importorskip("ldap")  # noqa:F841,F811
         backend = ADBack()
         assert backend.clean_username("Foo") == "foo"
 
     @override_settings(AD_CLEAN_USERNAME=None, AD_CLEAN_USERNAME_STRING="Foo/")
     def test_replace(self):
+        ldap = pytest.importorskip("ldap")  # noqa:F841,F811
         backend = ADBack()
         assert backend.clean_username("Foo/bar") == "bar"
 

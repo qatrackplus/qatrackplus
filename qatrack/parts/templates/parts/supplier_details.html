@@ -1,0 +1,156 @@
+{% extends "service_log/sl_base.html" %}
+
+{% load qa_tags %}
+{% load listable %}
+{% load i18n %}
+{% load static %}
+
+{% block head_title %}{% trans "Supplier" %}: {{ supplier.name }}{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{% static "datepicker/css/bootstrap-datepicker.min.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "multiselect/css/bootstrap.multiselect.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    {% autoescape off %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+    {% endautoescape %}
+{% endblock %}
+
+{% block require_javascript %}
+    require(['listable']);
+{% endblock require_javascript %}
+
+{% block body %}
+
+<div class="max-width-lg">
+  <div class="row">
+    <div class="col-md-3">
+      <h3 class="no-margin-top">{% trans "Supplier Details" %}: {{ supplier.name }}</h3>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header"></div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-sm-6">
+
+              <dl class="dl-horizontal">
+
+                <dt>{% trans "Name" %}:</dt>
+                <dd>{{ supplier.name }}</dd>
+
+                <dt>{% trans "Website" %}:</dt>
+                <dd>
+                  {% if supplier.website %}
+                    <a href="{{ supplier.website }}" title="{% trans "Click to visit this suppliers website" %}">
+                      {{ supplier.website }}
+                    </a>
+                  {% else %}
+                    <em>N/A</em>
+                  {% endif %}
+                </dd>
+
+                <dt>{% trans "Phone Number" %}:</dt>
+                <dd>{% firstof supplier.phone_number "<em>N/A</em>" %}</dd>
+
+                <dt>{% trans "Address" %}:</dt>
+                <dd><div class="pre-base">{{ supplier.address }}</div></dd>
+              </dl>
+            </div>
+            <div class="col-sm-6">
+              <h4>{% trans "Contacts" %}</h4>
+              {% for contact in supplier.contact_set.all %}
+                <dl class="dl-horizontal">
+
+                  <dt>{% trans "First Name" %}:</dt>
+                  <dd>{{ contact.first_name }}</dd>
+
+                  <dt>{% trans "Last Name" %}:</dt>
+                  <dd>{{ contact.last_name }}</dd>
+
+                  <dt>{% trans "Email" %}:</dt>
+                  <dd>
+                    {% if contact.email %}
+                      <a href="mailto:{{ contact.email }}"
+                        title="{% trans "Click to email this contact" %}"
+                      >
+                        {{ contact.email }}
+                      </a>
+                    {% else %}
+                      <em>N/A</em>
+                    {% endif %}
+                  </dd>
+
+                  <dt>{% trans "Phone" %}:</dt>
+                  <dd>{% firstof contact.phone_number "<em>N/A</em>" %}</dd>
+
+                  {% if user.is_staff and perms.parts.change_contact %}
+                    <dt></dt>
+                    <dd>
+                      <a
+                        href="{% url 'admin:parts_supplier_change' object_id=supplier.id %}"
+                        title="{% trans "Click to edit this contacts details" %}"
+                        class="btn btn-flat btn-default btn-xs"
+                      >
+                        {% trans "Edit" %}
+                      </a>
+                    </dd>
+                  {% endif %}
+                </dl>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="row display-flex">
+            <div class="col-md-6">
+              {% if supplier.notes %}{% spaceless %}
+                <dl class="height-100 margin-0">
+                  <dt>{% trans "Notes" %}:</dt>
+                  <dd class="text-display pre height-100-40">{{ supplier.notes }}</dd>
+                </dl>{% endspaceless %}
+              {% endif %}
+            </div>
+          </div>
+          <div class="row display-flex">
+            <div class="col-md-12">
+              {% if user.is_staff and perms.parts.change_supplier %}
+                <a
+                  href="{% url 'admin:parts_supplier_change' object_id=supplier.id %}"
+                  title="{% trans "Click to edit this supplier details" %}"
+                  class="btn btn-flat btn-default pull-right"
+                >
+                  {% trans "Edit" %}
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header">
+          <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
+          <h3 class="box-title">{{ supplier.name }}: {% trans "Parts" %}</h3>
+        </div>
+        <div class="box-body pad">
+          {{ listable_table }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}
+

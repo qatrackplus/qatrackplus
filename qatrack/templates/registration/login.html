@@ -56,7 +56,7 @@
       <div id="sso-wrapper" class="{% if form.errors %}hidden{% endif %}">
         <div class="form-group">
           <a href="{% url "django_auth_adfs:login" %}"
-            class="btn btn-info"
+            class="btn btn-info btn-flat"
             title="{% trans "Click to login to using your organizations single sign on functionality" %}"
             >
             {% trans "Login with Single Sign On" %}
@@ -76,7 +76,7 @@
         {% endif %}
 
         <div class="form-actions">
-          <button type="submit" class="btn btn-info">{% trans "Log in" %}</button>
+          <button type="submit" class="btn btn-info btn-flat">{% trans "Log in" %}</button>
         </div>
 
       </form>

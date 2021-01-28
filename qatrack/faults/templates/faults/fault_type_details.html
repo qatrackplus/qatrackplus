@@ -1,0 +1,99 @@
+{% extends "service_log/sl_base.html" %}
+
+{% load qa_tags %}
+{% load listable %}
+{% load i18n %}
+{% load static %}
+
+{% block head_title %}{% trans "Fault Type" %}: {{ fault_type.code }}{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{% static "datepicker/css/bootstrap-datepicker.min.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "multiselect/css/bootstrap.multiselect.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "faults/css/faults.css" %}?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    {% autoescape off %}
+        {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
+    {% endautoescape %}
+{% endblock %}
+
+{% block require_javascript %}
+    require(['listable']);
+{% endblock require_javascript %}
+
+{% block body %}
+
+<div class="max-width-lg">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header"></div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-sm-6">
+              <h3>{% trans "Fault Type Details" %}: {{ fault_type.code }}</h3>
+
+              <dl class="dl-horizontal">
+
+                <dt>{% trans "Code" %}:</dt>
+                <dd>{{ fault_type.code }}</dd>
+
+                <dt>{% trans "Description" %}:</dt>
+                <dd class="fault_type_description">
+                  {% if fault_type.description %}
+                    {{ fault_type.description }}
+                  {% else %}
+                    <em>{% trans "No description available" %}</em>
+                  {% endif %}
+                <dd>
+              </dl>
+            </div>
+            <div class="col-sm-6">
+
+              <h3>{% trans "Unit Occurrences" %}</h3>
+
+              <dl class="dl-horizontal">
+                {% for unit_data in unit_faults %}
+                  <dt>{{ unit_data.unit__name }}:</dt>
+                  <dd>
+                    {{ unit_data.unit_count }}
+                    (<a
+                      href="{% url "fault_list_by_unit_type" unit_number=unit_data.unit__number slug=fault_type.slug %}"
+                      title="{% trans "Click to view all faults of this type on this unit" %}"
+                    >{% trans "View" %}</a>)
+                  </dd>
+                {% endfor %}
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header">
+          <i class="fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>
+          <h3 class="box-title">
+            {% blocktrans with fault_type_code=fault_type.code %}
+              Fault Type {{ fault_type_code }} Occurrences
+            {% endblocktrans %}
+          </h3>
+        </div>
+        <div class="box-body pad">
+          {{ listable_table }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}

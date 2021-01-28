@@ -181,7 +181,7 @@ class BootstrapCategoryTree(BaseTree):
             "cat_tree_id",
             "cat_level",
             "cat_name",
-        ).distinct()  # yapf: disable
+        )#.distinct()  # yapf: disable
 
     def setup_categories(self):
         """Set up category maps for use generating the tree"""
