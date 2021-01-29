@@ -37,7 +37,7 @@ class TestQCCompletedNoticeAdmin(TestCase):
         self.admin = admin.QCCompletedAdmin(model=QCCompletedNotice, admin_site=AdminSite())
 
     def test_trim(self):
-        assert admin.trim("foobarbaz", 5) == "fo..."
+        assert admin.trim("foobarbaz", 5) == "foob…"
 
     def has_error(self, resp, err):
         return any(err in e for err_list in resp.context_data['errors'] for e in err_list)

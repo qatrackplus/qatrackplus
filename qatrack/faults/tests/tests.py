@@ -7,6 +7,7 @@ from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django_comments.models import Comment
+import pytest
 
 from qatrack.faults import admin, forms, views
 from qatrack.faults.models import Fault, FaultType
@@ -15,6 +16,8 @@ from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.service_log.tests import utils as sl_utils
 from qatrack.units import models as u_models
+
+pytestmark = pytest.mark.filterwarnings("error")
 
 
 class TestFaultType:

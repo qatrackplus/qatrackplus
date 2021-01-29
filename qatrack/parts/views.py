@@ -278,7 +278,7 @@ class PartsList(BaseListableView):
 
     def get_queryset(self):
         qs = super(PartsList, self).get_queryset()
-        return qs.annotate(attachment_count=Count("attachment"))
+        return qs.order_by("part_number").annotate(attachment_count=Count("attachment"))
 
     def format_col(self, field, obj):
         col = super(PartsList, self).format_col(field, obj)

@@ -509,7 +509,7 @@ class FaultTypeList(BaseListableView):
         }
 
     def get_queryset(self):
-        return super().get_queryset().annotate(
+        return super().get_queryset().order_by("code").annotate(
             count=Count("fault"),
         )
 

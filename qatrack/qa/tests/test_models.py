@@ -15,6 +15,7 @@ from qatrack.qatrack_core import scheduling
 
 from . import utils
 
+pytestmark = pytest.mark.filterwarnings("error")
 
 def utc_2am():
     return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), timezone.utc)

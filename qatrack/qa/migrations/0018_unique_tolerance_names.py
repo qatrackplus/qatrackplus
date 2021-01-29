@@ -12,7 +12,9 @@ def remove_duplicate_tolerances(apps, schema):
     UnitTestInfoChange = apps.get_model('qa', 'UnitTestInfoChange')
     UnitTestInfo = apps.get_model('qa', 'UnitTestInfo')
 
-    duplicates = Tolerance.objects.values('name').annotate(name_count=models.Count('name')).filter(name_count__gt=1)
+    duplicates = Tolerance.objects.order_by(
+        *Tolerance._meta.ordering,
+    ).values('name').annotate(name_count=models.Count('name')).filter(name_count__gt=1)
 
     for d in duplicates:
         tolerances = Tolerance.objects.filter(name=d['name'])

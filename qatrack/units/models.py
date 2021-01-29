@@ -331,6 +331,9 @@ class Unit(models.Model):
             self.number = next_available
         super().save(*args, **kwargs)
 
+    def get_available_times_list(self):
+        return [uat.to_dict() for uat in self.unitavailabletime_set.all()]
+
 
 class UnitAvailableTimeEdit(models.Model):
     """
@@ -377,6 +380,18 @@ class UnitAvailableTime(models.Model):
 
     def __str__(self):
         return 'Available time schedule change'
+
+    def to_dict(self):
+        return {
+            'date_changed': '{:02d}-{:02d}-{}'.format(self.date_changed.day, self.date_changed.month, self.date_changed.year),
+            'hours_sunday': self.hours_sunday,
+            'hours_monday': self.hours_monday,
+            'hours_tuesday': self.hours_tuesday,
+            'hours_wednesday': self.hours_wednesday,
+            'hours_thursday': self.hours_thursday,
+            'hours_friday': self.hours_friday,
+            'hours_saturday': self.hours_saturday,
+        }
 
     @staticmethod
     def available_times_on_unit_acceptance(unit_id):

@@ -65,7 +65,7 @@ class TestSelectReport(TestCase):
     def test_invalid_report_valid_filter(self):
         data = {
             'root-report_type': 'testlistinstance_summary',
-            'root-report_format': None,
+            'root-report_format': "",
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
             'reportnote_set-INITIAL_FORMS': 0,
             'reportnote_set-TOTAL_FORMS': 0,
@@ -77,7 +77,7 @@ class TestSelectReport(TestCase):
     def test_invalid_report_invalid_filter(self):
         data = {
             'root-report_type': 'testlistinstance_summary',
-            'root-report_format': None,
+            'root-report_format': "",
             'work_completed': '',
             'reportnote_set-INITIAL_FORMS': 0,
             'reportnote_set-TOTAL_FORMS': 0,
@@ -95,8 +95,8 @@ class TestSelectReport(TestCase):
             'work_completed': '01 Jan 2000 - 01 Feb 2000',
             'reportnote_set-INITIAL_FORMS': 0,
             'reportnote_set-TOTAL_FORMS': 1,
-            'reportnote_set-0-report': None,
-            'reportnote_set-0-id': None,
+            'reportnote_set-0-report': "",
+            'reportnote_set-0-id': "",
         }
         resp = self.client.post(self.url, data)
         # everything valid, so this should be report rendering context now, rather than forms

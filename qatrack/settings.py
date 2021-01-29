@@ -243,7 +243,6 @@ INSTALLED_APPS = [
     'listable',
     'genericdropdown',
     'recurrence',
-    'phone_field',
     'widget_tweaks',
     'dynamic_raw_id',
     'mptt',
@@ -496,6 +495,11 @@ LOGGING = {
             'handlers': ['file', 'console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': True,
+        },
+        'django.utils.autoreload': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
         },
         'django.server': {
             'handlers': ['console', 'mail_admins'],

@@ -1,12 +1,14 @@
 from django.db.models import Q
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+import pytest
 
 from qatrack.parts import models as p_models
 from qatrack.parts import views as p_views
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.service_log.tests import utils as sl_utils
 
+pytestmark = pytest.mark.filterwarnings("error")
 
 class TestCreatePart(TestCase):
 

@@ -662,6 +662,10 @@ table ul.multiselect-container.dropdown-menu {
   width: 0;
 }
 
+.input-group .input-group-addon.btn-default {
+    background-color: #f4f4f4;
+}
+
 .listable-image {
   max-width: 600px;
   max-height: 400px;

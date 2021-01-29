@@ -20,12 +20,12 @@
     <link href="{% static "bootstrap/css/bootstrap.css" %}?v={{ VERSION }}" rel="stylesheet">
     <link href="{% static "adminlte/css/admin-lte.css" %}?v={{ VERSION }}" rel="stylesheet">
     <link href="{% static "adminlte/css/skins/skin-black-dark.css" %}?v={{ VERSION }}" rel="stylesheet">
-    <link href="{% static "qatrack_core/css/custom-adminlte.css" %}?v={{ VERSION }}" rel="stylesheet">
-    <link href="{% static "qatrack_core/css/custom-fontawesome.css" %}?v={{ VERSION }}" rel="stylesheet">
-    <link href="{% static "qatrack_core/css/base.css" %}?v={{VERSION}}" rel="stylesheet">
-    <link href="{% static "qatrack_core/css/print.css" %}?v={{VERSION}}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-adminlte.css" %}?v={{ CSS_VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-fontawesome.css" %}?v={{ CSS_VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/base.css" %}?v={{ CSS_VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/print.css" %}?v={{ CSS_VERSION }}" rel="stylesheet">
       {% block extra_css %}{% endblock extra_css %}
-      <link href="{% static "qatrack_core/css/site.css" %}?v={{VERSION}}" rel="stylesheet">
+      <link href="{% static "qatrack_core/css/site.css" %}?v={{ CSS_VERSION }}" rel="stylesheet">
     {% endblock style_base %}
 
     <script type="text/javascript">
@@ -36,6 +36,7 @@
             DEBUG: '{{ DEBUG }}',
             USE_SQL_REPORTS: '{{ USE_SQL_REPORTS }}',
 
+            MOMENT_DATE_DATA_FMT: '{{ MOMENT_DATE_DATA_FMT }}',
             MOMENT_DATE_FMT: '{{ MOMENT_DATE_FMT }}',
             MOMENT_DATETIME_FMT: '{{ MOMENT_DATETIME_FMT }}',
             FLATPICKR_DATE_FMT: '{{ FLATPICKR_DATE_FMT }}',
@@ -594,7 +595,6 @@
                     </ul>
                   </li>
                 {% endif %}
-                {% endif %}
 
                 {% if perms.fault.add_fault or perms.fault.view_fault or perms.fault.review_fault %}
                   <li class="dropdown">
@@ -653,7 +653,7 @@
                   </li>
                 {% endif %}
 
-                {% if perms.reports.can_create_sql_reports or perms.reports.can_run_sql_reports or perms.reports.can_create_reports or perms.reports.can_run_reports or perms.qa.can_view_charts or USE_SERVICE_LOG and user.is_staff %}
+                {% if perms.reports.can_create_sql_reports or perms.reports.can_run_sql_reports or perms.reports.can_create_reports or perms.reports.can_run_reports or perms.qa.can_view_charts or user.is_staff %}
                   <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                       {% trans "Trends and Analysis" %}
@@ -853,7 +853,7 @@
           {% else %}
             <ul class="control-sidebar-menu">
               <li>
-                <a href="{% url 'auth_login' %}" class="margin-left-10 control-sidebar-subheading">
+                <a href="{% url 'login' %}" class="margin-left-10 control-sidebar-subheading">
                   <i class="fa fa-sign-in fa-fw"></i>
                   {% trans "Login" %}
                 </a>

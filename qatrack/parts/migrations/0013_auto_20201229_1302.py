@@ -2,7 +2,6 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import phone_field.models
 
 
 class Migration(migrations.Migration):
@@ -19,7 +18,7 @@ class Migration(migrations.Migration):
                 ('first_name', models.CharField(help_text='Enter this persons first name', max_length=64, verbose_name='first name')),
                 ('last_name', models.CharField(help_text='Enter this persons last name', max_length=64, verbose_name='last name')),
                 ('email', models.EmailField(help_text='Enter this persons email address', max_length=254, verbose_name='email')),
-                ('phone_number', phone_field.models.PhoneField(blank=True, help_text='Company phone number', max_length=31, verbose_name='phone number')),
+                ('phone_number', models.CharField(blank=True, help_text='Contact phone number', max_length=31, verbose_name='phone number')),
             ],
             options={
                 'verbose_name': 'Contact',
@@ -34,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='supplier',
             name='phone_number',
-            field=phone_field.models.PhoneField(blank=True, help_text='Company phone number', max_length=31, verbose_name='phone number'),
+            field=models.CharField(blank=True, help_text='Company phone number', max_length=31, verbose_name='phone number'),
         ),
         migrations.AddField(
             model_name='supplier',
@@ -55,4 +54,8 @@ class Migration(migrations.Migration):
             name='contact',
             unique_together={('first_name', 'last_name', 'supplier')},
         ),
+        # migrations.AlterUniqueTogether(
+        #     name='partsuppliercollection',
+        #     unique_together=None,
+        # ),
     ]

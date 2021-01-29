@@ -1825,7 +1825,7 @@ class TestEditTestListInstance(TestCase):
     def test_no_value(self):
 
         self.base_data.update({
-            "testinstance_set-0-value": None,
+            "testinstance_set-0-value": "",
         })
 
         response = self.client.post(self.url, data=self.base_data)

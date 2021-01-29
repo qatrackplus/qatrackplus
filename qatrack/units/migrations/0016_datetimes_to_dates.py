@@ -1,7 +1,5 @@
 
 from django.db import migrations, models
-from django.conf import settings
-
 
 def migrate_datetimes_to_date(apps, schema_editor):
 
@@ -71,9 +69,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unitavailabletimeedit',
             name='date',
-            field=models.DateField(
-                null=True
-            ),
+            field=models.DateField(null=True),
         ),
         migrations.RenameField(
             model_name='unitavailabletime',
@@ -83,20 +79,29 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unitavailabletime',
             name='date_changed',
-            field=models.DateField(
-                null=True
-            ),
-        ),
-        migrations.AlterUniqueTogether(
-            name='unitavailabletime',
-            unique_together=None,
-        ),
-        migrations.AlterUniqueTogether(
-            name='unitavailabletimeedit',
-            unique_together=None,
+            field=models.DateField(null=True),
         ),
 
         migrations.RunPython(migrate_datetimes_to_date),
+
+        migrations.AlterField(
+            model_name='unit',
+            name='date_acceptance',
+            field=models.DateField(
+                verbose_name="Acceptance date",
+                help_text='Changing acceptance date will delete unit available times that occur before it'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='unitavailabletimeedit',
+            name='date',
+            field=models.DateField(help_text='Date of available time change'),
+        ),
+        migrations.AlterField(
+            model_name='unitavailabletime',
+            name='date_changed',
+            field=models.DateField(blank=True, help_text='Date the units available time changed or will change', )
+        ),
 
         migrations.RemoveField(
             model_name='unit',
@@ -114,43 +119,5 @@ class Migration(migrations.Migration):
             model_name='unitavailabletime',
             name='date_changed_old',
         ),
-
-        migrations.AlterField(
-            model_name='unit',
-            name='date_acceptance',
-            field=models.DateField(
-                verbose_name="Acceptance date",
-                help_text='Changing acceptance date will delete unit available times that occur before it'
-            ),
-        ),
-        migrations.AlterField(
-            model_name='unitavailabletimeedit',
-            name='date',
-            field=models.DateField(
-                help_text='Date of available time change'
-            ),
-        ),
-        migrations.AlterField(
-            model_name='unitavailabletime',
-            name='date_changed',
-            field=models.DateField(
-                blank=True, help_text='Date the units available time changed or will change',
-            )
-        ),
-
-        migrations.AlterUniqueTogether(
-            name='unitavailabletime',
-            unique_together=set([('unit', 'date_changed')]),
-        ),
-        migrations.AlterUniqueTogether(
-            name='unitavailabletimeedit',
-            unique_together=set([('unit', 'date')]),
-        ),
     ]
 
-    # def apply(self, project_state, schema_editor, collect_sql=False):
-    #
-    #     if settings.DATABASES['default']['ENGINE'] == "sql_server.pyodbc":
-    #         return super().apply(project_state, schema_editor, collect_sql=collect_sql)
-    #     else:
-    #         return project_state

@@ -6,7 +6,6 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-from phone_field import PhoneField
 
 from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
@@ -24,9 +23,10 @@ class Supplier(models.Model):
         verbose_name=_l("address"),
         blank=True,
     )
-    phone_number = PhoneField(
+    phone_number = models.CharField(
         verbose_name=_l("phone number"),
         blank=True,
+        max_length=31,
         help_text=_l("Company phone number"),
     )
     website = models.URLField(
@@ -90,7 +90,7 @@ class Contact(models.Model):
         verbose_name=_l("phone number"),
         blank=True,
         max_length=31,
-        help_text=_l("Company phone number"),
+        help_text=_l("Contact phone number"),
     )
 
     class Meta:

@@ -1,5 +1,5 @@
 -r base.txt
 CherryPy==18.0.1
-django-pyodbc-azure==2.1.0.0
+django-mssql-backend==2.8.1
 pyreadline
 pywin32>=220

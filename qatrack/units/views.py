@@ -30,7 +30,7 @@ def get_unit_available_time_data(request):
                     'hours': uate.hours
                 } for uate in u.unitavailabletimeedit_set.all()
             },
-            'available_times': list(u.unitavailabletime_set.all().values())
+            'available_times': u.get_available_times_list(),
         } for u in unit_qs
     }
 
