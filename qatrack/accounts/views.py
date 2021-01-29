@@ -16,8 +16,7 @@ from django.template.loader import get_template
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView
 from django_auth_adfs.views import OAuth2CallbackView
-from registration.backends.simple.views import RegistrationView
-
+from django_registration.backends.one_step.views import RegistrationView
 
 from qatrack.accounts.forms import (
     ChangePasswordForm,

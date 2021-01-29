@@ -258,7 +258,7 @@ class WindowsIntegratedAuthenticationBackend(ModelBackend):
                 user = self.configure_user(user)
         else:
             try:
-                user = User.objects.get(user)
+                user = User.objects.get(username=username)
             except User.DoesNotExist:
                 pass
         return user

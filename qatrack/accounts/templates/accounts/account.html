@@ -38,7 +38,7 @@
 
         <div class="box-body">
             {% if user.is_anonymous %}
-                <em><a href="{% url "auth_login" %}">Log in</a> to see your account details</em>
+                <em><a href="{% url "login" %}">Log in</a> to see your account details</em>
             {% else %}
 
                 <dl class="dl-horizontal">
