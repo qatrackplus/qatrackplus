@@ -130,6 +130,7 @@ def site(request):
     context = {
         'SELF_REGISTER': settings.ACCOUNTS_SELF_REGISTER,
         'USE_ADFS': settings.USE_ADFS,
+        'ACCOUNTS_PASSWORD_RESET': settings.ACCOUNTS_PASSWORD_RESET,
         'VERSION': settings.VERSION,
         'CSS_VERSION': Random().randint(1, 1000) if settings.DEBUG else settings.VERSION,
         'BUG_REPORT_URL': settings.BUG_REPORT_URL,

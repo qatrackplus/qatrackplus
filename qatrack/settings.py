@@ -368,6 +368,7 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_ACTIVATION_DAYS = 7
 ACCOUNTS_SELF_REGISTER = False
 ACCOUNTS_CLEAN_USERNAME = None
+ACCOUNTS_PASSWORD_RESET = True
 
 
 # active directory settings (not required if only using ModelBackend
