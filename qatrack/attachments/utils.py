@@ -2,9 +2,9 @@ import io
 import os
 
 from PIL import Image
+import imageio
 from matplotlib.figure import Figure
 import pydicom
-import scipy.misc
 
 
 def imsave(obj, fname):
@@ -22,7 +22,7 @@ def imsave(obj, fname):
     fmt = os.path.splitext(fname)[-1].strip('.')
     data = io.BytesIO()
     try:
-        scipy.misc.imsave(data, obj, format=fmt)
+        imageio.imwrite(data, obj, format=fmt)
         reseek(obj, data)
         return data.read()
     except:
@@ -41,7 +41,7 @@ def imsave(obj, fname):
             pixels = obj.pixel_array
         except AttributeError:
             pixels = pydicom.read_file(obj, force=True).pixel_array
-        scipy.misc.imsave(data, pixels, format=fmt)
+        imageio.imwrite(data, pixels, format=fmt)
         reseek(obj, data)
         return data.read()
     except:
