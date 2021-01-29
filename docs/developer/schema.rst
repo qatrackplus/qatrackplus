@@ -7,7 +7,6 @@ Below you will find a database schema diagram for v0.3.0 of QATrack+.
 
 .. figure:: images/qatrack_schema_0.3.0.svg
    :alt: QATrack+ v0.3.0 schema
-   :scale: 10%
 
    The QATrack+ v0.3.0 schema (click to view full size or right click and view
    in new tab to view full size)

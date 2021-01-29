@@ -42,6 +42,32 @@ to complete.
 
    Choose a test list to perform
 
+
+.. _qa_tree_views:
+
+Tree Views
+..........
+
+In addition to the `Choose Unit` method for selecting a test list, QATrack+ has
+two "Tree Views" that present the QC available to perform in a tree structure grouped
+either by Unit & Frequency, or by Unit, Frequency, and Category.  These views
+are found in the `Perform QC` menu:
+
+.. figure:: images/tree_view_menu.png
+   :alt: The menu options for selecting a tree view
+
+   The menu options for selecting a tree view
+
+
+An example of the Unit, Frequency, and Category view is shown here:
+
+
+.. figure:: images/category_tree_view.png
+   :alt: An example of a Unit, Frequency, Category tree view
+
+   An example of a Unit, Frequency, Category tree view
+
+
 Performing a test list
 ----------------------
 

@@ -472,7 +472,7 @@ Email host settings
 * `EMAIL_HOST` should be set to the SMTP host you are using (e.g.
   'smtp.gmail.com' or 'smtp.mail.your.hospital')
 
-* `EMAIL_HOST_USER`  this is the default username of the account to access the
+* `EMAIL_HOST_USER`  this is the default email address of the account to access the
   SMTP server
 
 * `EMAIL_HOST_PASSWORD` this is the default account of the account to access
@@ -510,6 +510,9 @@ and for an unsecured connection:
     EMAIL_USE_TLS = False
     EMAIL_PORT = 25
 
+
+.. _email_notification_settings:
+
 Notification specific settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -517,7 +520,7 @@ These settings allow you to override the default notification settings in your
 local_settings.py file:
 
 
-* `EMAIL_NOTIFICATION_SENDER` name to use in the email "From" address
+* `EMAIL_NOTIFICATION_SENDER` email address to use in QATrack+ emails "From" address
 
 * `EMAIL_NOTIFICATION_SUBJECT_TEMPLATE` allows you to override the default
   template to use for rendering the email subject line (see below)

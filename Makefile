@@ -39,7 +39,7 @@ docs:
 	cd docs && make html
 
 docs-autobuild:
-	sphinx-autobuild docs docs/_build/html -p 8008
+	sphinx-autobuild docs docs/_build/html -p 8009
 
 qatrack_daemon.conf:
 	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/apache/apache24_daemon.conf > qatrack.conf

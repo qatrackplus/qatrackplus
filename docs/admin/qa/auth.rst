@@ -63,7 +63,7 @@ up an `Active Directory Group to QATrack+ Group Map` with the following settings
    Creating a group mapping from Active Directory Groups to QATrack+ Groups
 
 
-.. _ad_qualifying_groups:
+.. _auth_ad_qualifying_groups:
 
 Qualifying Groups for Membership
 ................................

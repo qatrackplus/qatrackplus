@@ -14,6 +14,5 @@ Performing and reviewing QC
    deleting_qa_data
    qa_overview
    charts
-   paper_backup_forms
 
 

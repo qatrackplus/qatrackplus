@@ -29,6 +29,10 @@ Fill in the fields as follows:
 
 * **Color** Service Event Statuses can have different colours associated with them.
 
+* **Order** You may set an explit order for each Service Event Status.  When
+  the user selects a status from a dropdown menu in the UI, the statuses will
+  be displayed according to their order.
+
 
 Examples
 --------

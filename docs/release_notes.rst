@@ -28,6 +28,9 @@ Non backwards compatible changes
 * Upload tests can not have reference/tolerance values set.  Allowing this originally
   was an implementation oversight.
 
+* :ref:`EMAIL_NOTIFICATION_SENDER <email_notification_settings>` must be set to 
+  a valid email address, not just a name.
+
 
 Major Features
 ^^^^^^^^^^^^^^
@@ -53,6 +56,9 @@ Major Features
 * A new :ref:`Autosave <auto_save>` feature has been implemented to
   automatically save test list instance data temporarily to prevent data loss
   when a user mistakingly navigates away from the page while entering QC data.
+
+* A new :ref:`Users & Groups Page <users_groups_app>` has been added to simplify
+  the management of Group membership and group permissions.
 
 
 Tests & Test Lists
@@ -110,8 +116,8 @@ Tests & Test Lists
 * Frequency dropdown lists when choosing a unit to perform QC on will now only
   show *Ad Hoc* if that unit has ad hoc test lists assigned
 
-* There are new Tree Views available (under the Perform QC menu) for
-  viewing/selecting QC assigned to units.  
+* There are new :ref:`Tree Views <qa_tree_views>` available (under the Perform QC
+  menu) for viewing/selecting QC assigned to units.  
 
 Review & Approval
 ^^^^^^^^^^^^^^^^^
@@ -264,6 +270,8 @@ Service Log & Parts
 
 * You may now add attachments & images to Parts.  Images will be shown inline
   in the parts listing table and parts detail pages.
+
+* :ref:`Service Log Status <sl_statuses>` now have an order field to allow you 
 
 
 Authentication
