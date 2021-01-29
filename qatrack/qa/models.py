@@ -234,52 +234,51 @@ PERMISSIONS = (
     ),
 )
 
-if settings.USE_SERVICE_LOG:
-    PERMISSIONS += (
+PERMISSIONS += (
+    (
+        _l("Service Log"),
         (
-            _l("Service Log"),
             (
-                (
-                    'service_log.perform_returntoserviceqa',
-                    _l("Can perform Return To Service QC"),
-                    _l("Allow user to perform qa linked to service events."),
+                'service_log.perform_returntoserviceqa',
+                _l("Can perform Return To Service QC"),
+                _l("Allow user to perform qa linked to service events."),
+            ),
+            (
+                'service_log.view_returntoserviceqa',
+                _l("Can view existing Return To Service QC"),
+                _l("Allow user to view qa linked to service events."),
+            ),
+            (
+                'service_log.add_serviceevent',
+                _l("Can create service event"),
+                _l("Allows user to create new service events."),
+            ),
+            (
+                'service_log.view_serviceevent',
+                _l("Can view service events"),
+                _l("Allows user to view existing service events."),
+            ),
+            (
+                'service_log.review_serviceevent',
+                _l("Can review service events"),
+                _l(
+                    "Allows user to change status of service events "
+                    "to statuses with \'is review required = false\'."
                 ),
-                (
-                    'service_log.view_returntoserviceqa',
-                    _l("Can view existing Return To Service QC"),
-                    _l("Allow user to view qa linked to service events."),
-                ),
-                (
-                    'service_log.add_serviceevent',
-                    _l("Can create service event"),
-                    _l("Allows user to create new service events."),
-                ),
-                (
-                    'service_log.view_serviceevent',
-                    _l("Can view service events"),
-                    _l("Allows user to view existing service events."),
-                ),
-                (
-                    'service_log.review_serviceevent',
-                    _l("Can review service events"),
-                    _l(
-                        "Allows user to change status of service events "
-                        "to statuses with \'is review required = false\'."
-                    ),
-                ),
-                (
-                    'parts.add_part',
-                    _l("Can add part"),
-                    _l("Allow user to enter new parts."),
-                ),
-                (
-                    'parts.view_part',
-                    _l("Can view parts"),
-                    _l("Allow user to view existing parts"),
-                ),
-            )
-        ),
-    )
+            ),
+            (
+                'parts.add_part',
+                _l("Can add part"),
+                _l("Allow user to enter new parts."),
+            ),
+            (
+                'parts.view_part',
+                _l("Can view parts"),
+                _l("Allow user to view existing parts"),
+            ),
+        )
+    ),
+)
 
 PERMISSIONS += (
     (

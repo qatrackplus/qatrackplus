@@ -381,7 +381,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
         self.fields['service_events'].widget.attrs.update({'class': 'select2'})
 
-        if self.instance.pk and settings.USE_SERVICE_LOG:
+        if self.instance.pk:
             se_ids = []
             rtsqa_ids = []
             for rtsqa in self.instance.rtsqa_for_tli.all():
@@ -392,7 +392,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
             self.fields['service_events'].queryset = se_qs
             self.initial['service_events'] = se_qs
 
-        elif self.rtsqa_id and settings.USE_SERVICE_LOG:
+        elif self.rtsqa_id:
             rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id)
             self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
             self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)

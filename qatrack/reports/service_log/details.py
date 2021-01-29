@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
@@ -92,9 +91,8 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     rts_comments.append((user, format_datetime(dt), comment))
 
                 parts = []
-                if settings.USE_PARTS:
-                    for part_used in se.partused_set.all():
-                        parts.append((part_used.part.name, str(part_used.from_storage or ""), part_used.quantity))
+                for part_used in se.partused_set.all():
+                    parts.append((part_used.part.name, str(part_used.from_storage or ""), part_used.quantity))
 
                 attachments = []
                 for a in se.attachment_set.all():
@@ -130,7 +128,6 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                 })
 
         context['sites_data'] = sites_data
-        context['use_parts'] = settings.USE_PARTS
 
         return context
 

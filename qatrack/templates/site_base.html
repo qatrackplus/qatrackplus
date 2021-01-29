@@ -34,9 +34,7 @@
             VERSION: '{{ VERSION }}',
             STATIC_URL: '{% static "" %}',
             DEBUG: '{{ DEBUG }}',
-            USE_SERVICE_LOG: '{{ USE_SERVICE_LOG }}',
-            USE_PARTS: '{{ USE_PARTS }}',
-            USE_SQL_REPORTS: '{{ USE_PARTS }}',
+            USE_SQL_REPORTS: '{{ USE_SQL_REPORTS }}',
 
             MOMENT_DATE_FMT: '{{ MOMENT_DATE_FMT }}',
             MOMENT_DATETIME_FMT: '{{ MOMENT_DATETIME_FMT }}',
@@ -217,7 +215,7 @@
                           {% trans "QC Treeview: Unit, Frequency, Category" %}
                         </a>
                       </li>
-                      {% if USE_SERVICE_LOG and perms.service_log.perform_returntoserviceqa %}
+                      {% if perms.service_log.perform_returntoserviceqa %}
                         <li class="divider"></li>
                         <li class="nav-header">{% trans "Service Log" %}</li>
                         <li class="hover-parent">
@@ -406,199 +404,196 @@
                   </li>
                 {% endif %}
 
-                {% if USE_SERVICE_LOG %}
-                  {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent or perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa or perms.parts.add_part or perms.parts.view_part %}
-                    <li class="dropdown">
-                      <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        {% trans "Service Log" %}
+                {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent or perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa or perms.parts.add_part or perms.parts.view_part %}
+                  <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                      {% trans "Service Log" %}
 
-                        <span
-                          title="{% blocktrans %}There are currently {{ SL_NOTIFICATION_TOTAL }} Service Log Action Items {% endblocktrans %}"
-                          class="label {% if SL_NOTIFICATION_TOTAL == 0%}label-success{% else %}label-warning{% endif %} unreviewed-count-wrapper"
-                        >
-                          {{ SL_NOTIFICATION_TOTAL }}
-                        </span>
-                        <b class="caret"></b>
-                      </a>
-                      <ul class="dropdown-menu" role="menu">
+                      <span
+                        title="{% blocktrans %}There are currently {{ SL_NOTIFICATION_TOTAL }} Service Log Action Items {% endblocktrans %}"
+                        class="label {% if SL_NOTIFICATION_TOTAL == 0%}label-success{% else %}label-warning{% endif %} unreviewed-count-wrapper"
+                      >
+                        {{ SL_NOTIFICATION_TOTAL }}
+                      </span>
+                      <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
 
-                        <li>
-                          <a href="{% url "sl_dash" %}" title="{% trans "Service Log dashboard" %}">
-                            <i class="fa fa-th fa-lg fa-fw" aria-hidden="true"></i>
-                            {% trans "Service Log Dashboard" %}
-                          </a>
-                        </li>
+                      <li>
+                        <a href="{% url "sl_dash" %}" title="{% trans "Service Log dashboard" %}">
+                          <i class="fa fa-th fa-lg fa-fw" aria-hidden="true"></i>
+                          {% trans "Service Log Dashboard" %}
+                        </a>
+                      </li>
 
-                        {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent %}
+                      {% if perms.service_log.add_serviceevent or perms.service_log.view_serviceevent or perms.service_log.review_serviceevent %}
 
-                          <li class="divider"></li>
+                        <li class="divider"></li>
 
-                          <li class="nav-header">{% trans "Service Events" %}</li>
+                        <li class="nav-header">{% trans "Service Events" %}</li>
 
-                          {% if perms.service_log.add_serviceevent %}
-                            <li class="hover-parent"><a href="{% url "sl_new" %}" title="{% trans "Create a new service event" %}">
-                              <i class="fa fa-stack fa-lg fa-fw">
-                                <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
-                              </i>
-                              {% trans "Enter New Service Event" %}
-                              </a>
-                            </li>
-                            <li>
-                              <a href="{% url "sl_unit_new" %}" title="{% trans "Create a new service event for a unit" %}">
-                                <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
-                                {% trans "Choose Unit For New Service Event" %}
-                              </a>
-                            </li>
-                          {% endif %}
-                          {% if perms.service_log.view_serviceevent %}
-                            <li class="hover-parent">
-                              <a href="{% url "sl_list_all" %}" title="{% trans "View service events for a unit" %}">
-                                <i class="fa fa-stack fa-lg fa-fw">
-                                  <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                  <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main "></i>
-                                </i>
-                                {% trans "View All Service Events" %}
-                              </a>
-                            </li>
-
-                            {% if DEFAULT_SE_STATUS %}
-                              <li class="hover-parent">
-                                <a href="{% url 'sl_list_by_status' pk=DEFAULT_SE_STATUS.id %}" title="{% blocktrans with service_event_status=DEFAULT_SE_STATUS.name %}View service events that are {{ service_event_status }}{% endblocktrans %}">
-                                  <i class="fa fa-stack fa-lg fa-fw">
-                                      <i class="fa fa-wrench fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
-                                      <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
-                                  </i>
-                                  View {{ DEFAULT_SE_STATUS.name }}
-                              </a></li>
-                            {% endif %}
-
-                          {% endif %}
-                          {% if perms.service_log.review_serviceevent %}
-                            <li class="hover-parent">
-                              <a href="{% url 'sl_list_review_required' %}" title="{% trans "View service events that require review" %}">
-                                <i class="fa fa-stack fa-lg fa-fw">
-                                  <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                  <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
-                                </i>
-                                <span title="{% trans "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                    <span class="total-unreviewed-count">{{ SE_NEEDING_REVIEW_COUNT }}</span>
-                                </span>
-                                {% trans "Service Events Needing Review" %}
-                              </a>
-                            </li>
-                          {% endif %}
-
-                          <li class="divider"></li>
-                          <li class="nav-header">{% trans "Service Event Schedules" %}</li>
-
+                        {% if perms.service_log.add_serviceevent %}
+                          <li class="hover-parent"><a href="{% url "sl_new" %}" title="{% trans "Create a new service event" %}">
+                            <i class="fa fa-stack fa-lg fa-fw">
+                              <i class="fa fa-wrench fa-stack-custom-main"></i>
+                              <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                            </i>
+                            {% trans "Enter New Service Event" %}
+                            </a>
+                          </li>
+                          <li>
+                            <a href="{% url "sl_unit_new" %}" title="{% trans "Create a new service event for a unit" %}">
+                              <i class="fa fa-cubes fa-lg fa-fw" aria-hidden="true"></i>
+                              {% trans "Choose Unit For New Service Event" %}
+                            </a>
+                          </li>
+                        {% endif %}
+                        {% if perms.service_log.view_serviceevent %}
                           <li class="hover-parent">
-                            <a href="{% url "se_schedule_list_all" %}" title="{% trans "View all service event schedules" %}">
+                            <a href="{% url "sl_list_all" %}" title="{% trans "View service events for a unit" %}">
                               <i class="fa fa-stack fa-lg fa-fw">
                                 <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                <i class="fa fa-clock-o fa-stack-custom-sub upper-left hover-sub-primary"></i>
+                                <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main "></i>
                               </i>
-                              {% trans "Service Event Schedules" %}
+                              {% trans "View All Service Events" %}
                             </a>
                           </li>
 
-                        {% endif %}
-                        {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
-
-                          <li class="divider"></li>
-
-                          <li class="nav-header">{% trans "Return To Service QC" %}</li>
-                          {% if perms.service_log.view_returntoserviceqa %}
+                          {% if DEFAULT_SE_STATUS %}
                             <li class="hover-parent">
-                              <a href="{% url "rtsqa_list_all" %}" title="{% trans "View all return to service qa" %}">
+                              <a href="{% url 'sl_list_by_status' pk=DEFAULT_SE_STATUS.id %}" title="{% blocktrans with service_event_status=DEFAULT_SE_STATUS.name %}View service events that are {{ service_event_status }}{% endblocktrans %}">
                                 <i class="fa fa-stack fa-lg fa-fw">
-                                  <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
-                                  <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                                    <i class="fa fa-wrench fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
+                                    <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main hover-sub-not" style="color: {{ DEFAULT_SE_STATUS.colour }};"></i>
                                 </i>
-                                {% trans "View All Return To Service" %}
-                              </a>
-                            </li>
-                          {% endif %}
-
-                          {% if perms.service_log.perform_returntoserviceqa %}
-                            <li class="hover-parent">
-                              <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service qa" %}">
-                                <i class="fa fa-stack fa-lg fa-fw">
-                                  <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
-                                  <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
-                                </i>
-                                <span title="{% trans "There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                  <span class="total-unreviewed-count">{{SE_RTS_INCOMPLETE_QA_COUNT}}</span>
-                                </span>
-                                {% trans "View All Incomplete Return To Service" %}
-                              </a>
-                            </li>
-                          {% endif %}
-
-                          {% if perms.qa.can_review %}
-                            <li>
-                              <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
-                                <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                                <span title="{% trans "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
-                                  <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>
-                                </span>
-                                {% trans "Unreviewed Return To Service" %}
-                              </a>
-                            </li>
+                                View {{ DEFAULT_SE_STATUS.name }}
+                            </a></li>
                           {% endif %}
 
                         {% endif %}
-
-
-                        {% if USE_PARTS %}
-                          {% if perms.parts.add_part or perms.view_part %}
-                            <li class="divider"></li>
-                            <li class="nav-header">{% trans "Parts" %}</li>
-                            {% if perms.parts.add_part %}
-                              <li class="hover-parent">
-                                <a href="{% url "part_new" %}" title="{% trans "Enter new part" %}">
-                                  <i class="fa fa-stack fa-lg fa-fw">
-                                    <i class="fa fa-cog fa-stack-custom-main"></i>
-                                    <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
-                                  </i>
-                                  {% trans "Enter New Part" %}
-                                </a>
-                              </li>
-                            {% endif %}
-
-                            {% if perms.parts.view_part %}
-                              <li>
-                                <a href="{% url "parts_list" %}" title="{% trans "Enter new part" %}">
-                                  <i class="fa fa-stack fa-lg fa-fw">
-                                      <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main"></i>
-                                  </i>
-                                  {% trans "View All Parts" %}
-                                </a>
-                              </li>
-                              <li class="hover-parent">
-                                <a href="{% url "low_inventory_parts_list" %}" title="{% trans "Low Inventory Parts" %}">
-                                  <i class="fa fa-stack fa-lg fa-fw">
-                                    <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main hover-sub-danger"></i>
-                                  </i>
-                                  {% trans "View Low Inventory Parts" %}
-                                </a>
-                              </li>
-                            {% endif %}
-                            {% if perms.parts.view_supplier %}
-                              <li class="hover-parent">
-                                <a href="{% url "suppliers_list" %}" title="{% trans "View Part Suppliers" %}">
-                                  <i class="fa fa-stack fa-lg fa-fw">
-                                      <i class="fa fa-microchip fa-flip-horizontal fa-stack-custom-main"></i>
-                                  </i>
-                                  {% trans "View All Suppliers" %}
-                                </a>
-                              </li>
-                            {% endif %}
-                          {% endif %}
+                        {% if perms.service_log.review_serviceevent %}
+                          <li class="hover-parent">
+                            <a href="{% url 'sl_list_review_required' %}" title="{% trans "View service events that require review" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
+                              </i>
+                              <span title="{% trans "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                  <span class="total-unreviewed-count">{{ SE_NEEDING_REVIEW_COUNT }}</span>
+                              </span>
+                              {% trans "Service Events Needing Review" %}
+                            </a>
+                          </li>
                         {% endif %}
-                      </ul>
-                    </li>
-                  {% endif %}
+
+                        <li class="divider"></li>
+                        <li class="nav-header">{% trans "Service Event Schedules" %}</li>
+
+                        <li class="hover-parent">
+                          <a href="{% url "se_schedule_list_all" %}" title="{% trans "View all service event schedules" %}">
+                            <i class="fa fa-stack fa-lg fa-fw">
+                              <i class="fa fa-wrench fa-stack-custom-main"></i>
+                              <i class="fa fa-clock-o fa-stack-custom-sub upper-left hover-sub-primary"></i>
+                            </i>
+                            {% trans "Service Event Schedules" %}
+                          </a>
+                        </li>
+
+                      {% endif %}
+                      {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
+
+                        <li class="divider"></li>
+
+                        <li class="nav-header">{% trans "Return To Service QC" %}</li>
+                        {% if perms.service_log.view_returntoserviceqa %}
+                          <li class="hover-parent">
+                            <a href="{% url "rtsqa_list_all" %}" title="{% trans "View all return to service qa" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                              </i>
+                              {% trans "View All Return To Service" %}
+                            </a>
+                          </li>
+                        {% endif %}
+
+                        {% if perms.service_log.perform_returntoserviceqa %}
+                          <li class="hover-parent">
+                            <a href="{% url 'rtsqa_list_incomplete' %}" title="{% trans "View all incomplete return to service qa" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+                              </i>
+                              <span title="{% trans "There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                <span class="total-unreviewed-count">{{SE_RTS_INCOMPLETE_QA_COUNT}}</span>
+                              </span>
+                              {% trans "View All Incomplete Return To Service" %}
+                            </a>
+                          </li>
+                        {% endif %}
+
+                        {% if perms.qa.can_review %}
+                          <li>
+                            <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
+                              <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
+                              <span title="{% trans "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                                <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>
+                              </span>
+                              {% trans "Unreviewed Return To Service" %}
+                            </a>
+                          </li>
+                        {% endif %}
+
+                      {% endif %}
+
+
+                      {% if perms.parts.add_part or perms.view_part %}
+                        <li class="divider"></li>
+                        <li class="nav-header">{% trans "Parts" %}</li>
+                        {% if perms.parts.add_part %}
+                          <li class="hover-parent">
+                            <a href="{% url "part_new" %}" title="{% trans "Enter new part" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                <i class="fa fa-cog fa-stack-custom-main"></i>
+                                <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+                              </i>
+                              {% trans "Enter New Part" %}
+                            </a>
+                          </li>
+                        {% endif %}
+
+                        {% if perms.parts.view_part %}
+                          <li>
+                            <a href="{% url "parts_list" %}" title="{% trans "Enter new part" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                  <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main"></i>
+                              </i>
+                              {% trans "View All Parts" %}
+                            </a>
+                          </li>
+                          <li class="hover-parent">
+                            <a href="{% url "low_inventory_parts_list" %}" title="{% trans "Low Inventory Parts" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                <i class="fa fa-cogs fa-flip-horizontal fa-stack-custom-main hover-sub-danger"></i>
+                              </i>
+                              {% trans "View Low Inventory Parts" %}
+                            </a>
+                          </li>
+                        {% endif %}
+                        {% if perms.parts.view_supplier %}
+                          <li class="hover-parent">
+                            <a href="{% url "suppliers_list" %}" title="{% trans "View Part Suppliers" %}">
+                              <i class="fa fa-stack fa-lg fa-fw">
+                                  <i class="fa fa-microchip fa-flip-horizontal fa-stack-custom-main"></i>
+                              </i>
+                              {% trans "View All Suppliers" %}
+                            </a>
+                          </li>
+                        {% endif %}
+                      {% endif %}
+                    </ul>
+                  </li>
+                {% endif %}
                 {% endif %}
 
                 {% if perms.fault.add_fault or perms.fault.view_fault or perms.fault.review_fault %}
@@ -692,10 +687,10 @@
                           </li>
                         {% endif %}
                       {% endif %}
-                      {% if perms.qa.can_view_charts and USE_SERVICE_LOG and user.is_staff %}
+                      {% if perms.qa.can_view_charts and user.is_staff %}
                         <li class="divider"></li>
                       {% endif %}
-                      {% if USE_SERVICE_LOG and user.is_staff %}
+                      {% if user.is_staff %}
                         <li class="hover-parent">
                           <a href="{% url "se_down_time" %}" title="{% trans "View service event durations and lost time" %}">
                             <i class="fa fa-stack fa-fw fa-lg">
@@ -831,16 +826,14 @@
                     {% trans "Admin" %}
                   </a>
                 </li>
-                {% if USE_SERVICE_LOG %}
-                  <li class="hover-parent">
-                    <a href="{% url 'unit_available_time' %}" class="margin-left-10 control-sidebar-subheading">
-                      <i class="fa fa-stack fa-fw">
-                        <i class="fa fa-cubes fa-stack-custom-main"></i>
-                      </i>
-                      {% trans "Unit Available Times" %}
-                    </a>
-                  </li>
-                {% endif %}
+                <li class="hover-parent">
+                  <a href="{% url 'unit_available_time' %}" class="margin-left-10 control-sidebar-subheading">
+                    <i class="fa fa-stack fa-fw">
+                      <i class="fa fa-cubes fa-stack-custom-main"></i>
+                    </i>
+                    {% trans "Unit Available Times" %}
+                  </a>
+                </li>
 
                 {% if perms.auth.change_group %}
                   <li>

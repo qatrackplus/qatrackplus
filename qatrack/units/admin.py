@@ -1,6 +1,5 @@
 from itertools import groupby
 
-from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ChoiceField, ModelForm, ModelMultipleChoiceField
@@ -30,15 +29,14 @@ class UnitFormAdmin(ModelForm):
 
     type = ChoiceField(label=_l("Unit Type"))
 
-    if settings.USE_SERVICE_LOG:
-        service_areas = ModelMultipleChoiceField(
-            queryset=ServiceArea.objects.all(),
-            required=False,
-            widget=FilteredSelectMultiple(
-                verbose_name=_l('Service areas'),
-                is_stacked=False
-            )
+    service_areas = ModelMultipleChoiceField(
+        queryset=ServiceArea.objects.all(),
+        required=False,
+        widget=FilteredSelectMultiple(
+            verbose_name=_l('Service areas'),
+            is_stacked=False
         )
+    )
     modalities = ModelMultipleChoiceField(
         queryset=Modality.objects.all(),
         required=False,
@@ -69,18 +67,17 @@ class UnitFormAdmin(ModelForm):
             'date_acceptance',
             'active',
             'type',
+            'is_serviceable',
             'site',
             'modalities',
             'treatment_techniques',
+            'service_areas',
         ]
-        if settings.USE_SERVICE_LOG:
-            fields.append('service_areas')
-            fields.insert(8, 'is_serviceable')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if settings.USE_SERVICE_LOG and self.instance and self.instance.pk:
+        if self.instance and self.instance.pk:
             self.fields['service_areas'].initial = self.instance.service_areas.all()
 
         if Site.objects.count() == 1 and not self.instance.pk:
@@ -134,15 +131,14 @@ class UnitFormAdmin(ModelForm):
         unit = super().save(commit=commit)
         unit.save()
 
-        if settings.USE_SERVICE_LOG:
-            service_areas = self.cleaned_data['service_areas']
+        service_areas = self.cleaned_data['service_areas']
 
-            for sa in service_areas:
-                UnitServiceArea.objects.get_or_create(unit=unit, service_area=sa)
+        for sa in service_areas:
+            UnitServiceArea.objects.get_or_create(unit=unit, service_area=sa)
 
-            for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
-                if not ServiceEvent.objects.filter(unit_service_area=usa).exists():
-                    usa.delete()
+        for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
+            if not ServiceEvent.objects.filter(unit_service_area=usa).exists():
+                usa.delete()
 
         return unit
 
@@ -168,8 +164,7 @@ class UnitAdmin(BaseQATrackAdmin):
 
     save_as = True
 
-    if settings.USE_SERVICE_LOG:
-        inlines = [UnitAvailableTimeInline]
+    inlines = [UnitAvailableTimeInline]
 
     class Media:
         js = (

@@ -1,6 +1,5 @@
 import time
 
-from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -304,8 +303,7 @@ class LiveQATests(BaseQATests):
         self.driver.find_element_by_id('id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element_by_id('id_number').send_keys(objects['Unit']['number'])
         self.driver.find_element_by_id('id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
-        if settings.USE_SERVICE_LOG:
-            self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
+        self.driver.find_element_by_css_selector('#id_service_areas_add_all_link').click()
         self.select_by_index("id_type", 1)
         # self.driver.find_element_by_id('id_modalities_add_all_link').click()
         # self.driver.find_element_by_id('id_hours_monday').send_keys('800')

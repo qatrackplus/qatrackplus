@@ -5,7 +5,6 @@ import json
 import textwrap
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
 from django.db.utils import ProgrammingError
@@ -390,7 +389,7 @@ class BaseChartView(View):
         statuses = self.request.GET.getlist("statuses[]", [])
         service_types = self.request.GET.getlist("service_types[]", [])
 
-        show_events = self.request.GET.get('show_events') == 'true' and settings.USE_SERVICE_LOG
+        show_events = self.request.GET.get('show_events') == 'true'
         # se_types = self.request.GET.getlist('service_types[]', [])
 
         if not (tests and test_lists and units and statuses):

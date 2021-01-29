@@ -88,10 +88,8 @@ class Command(BaseCommand):
 
             # Handle Service Log items:
             #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
-
-            if settings.USE_SERVICE_LOG:
-                for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=tli):
-                    ServiceLog.objects.log_rtsqa_changes(user, se)
+            for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=tli):
+                ServiceLog.objects.log_rtsqa_changes(user, se)
 
             # Set utc due dates
             tli.unit_test_collection.set_due_date()

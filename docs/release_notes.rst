@@ -202,7 +202,6 @@ Admin Changes
   UnitTestInfo's change log
 
 
-
 API Changes
 ^^^^^^^^^^^
 
@@ -238,6 +237,10 @@ API Changes
 
 Service Log & Parts
 ^^^^^^^^^^^^^^^^^^^
+
+* The `USE_SERVICE_LOG` and `USE_PARTS` settings have been removed.  Permissions
+  are suitable for hiding the UI elements if you don't want to use service log
+  or parts, but having these settings can complicate some views and testing.
 
 * Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group
   Linker required when submitting a ServiceEvent.
@@ -280,6 +283,9 @@ Authentication
 
 * A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
   added to control whether users are allowed to register their own accounts.
+
+* A new :ref:`ACCOUNTS_PASSWORD_RESET <accounts_password_reset>` setting has been
+  added to control whether users are allowed to reset or change their own passwords.
 
 * Users can now automatically be added to QATrack+ groups based
   on their AD group memberships using . :ref:`Active Directory Groups to QATrack+ Group Map <auth_ad_groups>`'s

@@ -243,6 +243,12 @@ The meaning of the individual keys is as follows:
 Other Settings
 ~~~~~~~~~~~~~~
 
+.. _accounts_password_reset:
+
+When `ACCOUNTS_PASSWORD_RESET = True` users will be able to reset or change their
+passwords on their own. This only applies to the normal QATrack+ authentication 
+backend, and not the LDAP or ADFS backends. Default is `True`.
+
 .. _accounts_self_register:
 
 ACCOUNTS_SELF_REGISTER
@@ -402,17 +408,6 @@ TESTPACK_TIMEOUT
 
 Change the number of elapsed seconds before exporting a TestPack will time out.
 Default is 30.
-
-USE_SERVICE_LOG
-...............
-
-Set `USE_SERVICE_LOG` to `False` in order to disable Service Log
-
-USE_PARTS
-.........
-
-Set `USE_PARTS` to `False` in order to disable the Parts app (Service Log
-requires `USE_PARTS = True`).
 
 USE_SQL_REPORTS
 ...............

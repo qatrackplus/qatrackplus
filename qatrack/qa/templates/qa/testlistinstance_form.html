@@ -299,7 +299,7 @@
                 </div>
             </div>
 
-            {% if USE_SERVICE_LOG and form.instance.pk %}
+            {% if form.instance.pk %}
                 {% if perms.service_log.add_serviceevent or service_events_ib|length > 0 %}
                     <div class="col-sm-{{ top_divs_span }}">
                         <div id="box-serviceevents">
@@ -400,7 +400,7 @@
                         </div>
                     </div>
                 {% endif %}
-            {% elif USE_SERVICE_LOG and rtsqa_id %}
+            {% elif rtsqa_id %}
                 <div class="col-sm-{{ top_divs_span }}">
                     <div id="box-serviceevents">
                         <div class="box">

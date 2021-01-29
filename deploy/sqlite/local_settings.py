@@ -25,12 +25,6 @@ DATABASES['readonly'] = DATABASES['default']
 # Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
 ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
 
-# Set to False to disable the Service Log functionality
-USE_SERVICE_LOG = True
-
-# Set to False to disable the Parts Log functionality
-USE_PARTS = True
-
 # Set to False to disable the SQL Query Tool
 USE_SQL_REPORTS =  True
 

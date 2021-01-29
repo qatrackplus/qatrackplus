@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.signals import (
@@ -277,18 +276,17 @@ def on_autoreviewrule_save(*args, **kwargs):
         models.update_autoreviewruleset_cache()
 
 
-if settings.USE_SERVICE_LOG:
-    @receiver(comment_was_posted, sender=Comment)
-    def check_approved_statuses(*args, **kwargs):
+@receiver(comment_was_posted, sender=Comment)
+def check_approved_statuses(*args, **kwargs):
 
-        if 'edit_tli' in kwargs and kwargs['edit_tli']:
-            tli_id = kwargs['comment'].object_pk
-            tli = models.TestListInstance.objects.get(pk=tli_id)
+    if 'edit_tli' in kwargs and kwargs['edit_tli']:
+        tli_id = kwargs['comment'].object_pk
+        tli = models.TestListInstance.objects.get(pk=tli_id)
 
-            default_status = sl_models.ServiceEventStatus.get_default()
-            for f in tli.rtsqa_for_tli.all():
-                if not f.service_event.service_status.is_review_required:
-                    f.service_event.service_status = default_status
-                    f.service_event.datetime_status_changed = timezone.now()
-                    f.service_event.user_status_changed_by = None
-                    f.service_event.save()
+        default_status = sl_models.ServiceEventStatus.get_default()
+        for f in tli.rtsqa_for_tli.all():
+            if not f.service_event.service_status.is_review_required:
+                f.service_event.service_status = default_status
+                f.service_event.datetime_status_changed = timezone.now()
+                f.service_event.user_status_changed_by = None
+                f.service_event.save()

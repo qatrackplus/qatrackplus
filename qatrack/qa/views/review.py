@@ -142,15 +142,14 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         changed_se = review_test_list_instance(test_list_instance, test_instances, statuses, self.request.user)
 
-        if settings.USE_SERVICE_LOG:
-            if len(changed_se) > 0 and self.from_se:
-                msg = _(
-                    'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-                ) % {
-                    'service_event_ids': ', '.join(str(x) for x in changed_se),
-                    'serviceeventstatus_name': ServiceEventStatus.get_default().name,
-                }
-                messages.add_message(request=self.request, level=messages.INFO, message=msg)
+        if len(changed_se) > 0 and self.from_se:
+            msg = _(
+                'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+            ) % {
+                'service_event_ids': ', '.join(str(x) for x in changed_se),
+                'serviceeventstatus_name': ServiceEventStatus.get_default().name,
+            }
+            messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
         if self.from_se:
             return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
@@ -226,10 +225,9 @@ def review_test_list_instance(test_list_instance, test_instances, status_pks, re
         test_list_instance.all_reviewed = False
         test_list_instance.save()
 
-        if settings.USE_SERVICE_LOG:
-            changed_se = test_list_instance.update_service_event_statuses()
+        changed_se = test_list_instance.update_service_event_statuses()
 
-    if settings.USE_SERVICE_LOG and initially_requires_reviewed != still_requires_review:
+    if initially_requires_reviewed != still_requires_review:
         for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
             ServiceLog.objects.log_rtsqa_changes(review_user, se)
 

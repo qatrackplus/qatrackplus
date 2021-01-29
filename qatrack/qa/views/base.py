@@ -151,17 +151,16 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
 
-        if settings.USE_SERVICE_LOG:
-            rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=self.object)
-            se_rtsqa = []
-            for f in rtsqas:
-                if f.service_event not in se_rtsqa:
-                    se_rtsqa.append(f.service_event)
+        rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=self.object)
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
 
-            context['service_events_rtsqa'] = se_rtsqa
+        context['service_events_rtsqa'] = se_rtsqa
 
-            se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
-            context['service_events_ib'] = se_ib
+        se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
+        context['service_events_ib'] = se_ib
 
         return context
 
@@ -502,17 +501,13 @@ class TestListInstances(BaseListableView):
     def actions(self, tli):
         template = self.templates['actions']
 
-        if settings.USE_SERVICE_LOG:
-            rtsqas = tli.rtsqa_for_tli.all()
-            se_rtsqa = []
-            for f in rtsqas:
-                if f.service_event not in se_rtsqa:
-                    se_rtsqa.append(f.service_event)
+        rtsqas = tli.rtsqa_for_tli.all()
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
 
-            se_ib = tli.serviceevents_initiated.all()
-        else:
-            se_ib = []
-            se_rtsqa = []
+        se_ib = tli.serviceevents_initiated.all()
 
         c = {
             'instance': tli,
@@ -524,7 +519,6 @@ class TestListInstances(BaseListableView):
             'show_rtsqa_se': True,
             'rtsqa_for_se': se_rtsqa,
             'num_rtsqa_se': len(se_rtsqa),
-            'USE_SERVICE_LOG': settings.USE_SERVICE_LOG
         }
         return template.render(c)
 

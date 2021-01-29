@@ -523,115 +523,111 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         $('select.rtsqa-utc').change();
 
         // Parts formset --------------------------------------------------------------------------------------
-        if (siteConfig.USE_PARTS == 'True') {
-
-            function process_part_results(data, params) {
-                var results = [];
-                for (var i in data.data) {
-                    var p_id = data.data[i][0],
-                        p_number = data.data[i][1],
-                        p_alt_number = data.data[i][2],
-                        p_description = data.data[i][3],
-                        p_qty_current = data.data[i][4];
-                    results.push({
-                        id: p_id,
-                        text: p_alt_number ? p_number + ' (' + p_alt_number + ') - ' + p_description : p_number + ' - ' + p_description,
-                        title: p_qty_current + ' in storage'
-                    });
-                }
-                params.page = params.page || 1;
-                return {
-                    results: results,
-                    pagination: {
-                        more: (params.page * 30) < data.data.length
-                    }
-                };
-            }
-
-            var part_select2 = {
-                ajax: {
-                    url: QAURLs.PARTS_SEARCHER,
-                    dataType: 'json',
-                    delay: '500',
-                    data: function (params) {
-                        return {
-                            q: params.term, // search term
-                            page: params.page,
-                        };
-                    },
-                    success: function(res) {
-                        console.log(res);
-                    },
-                    processResults: process_part_results,
-                    cache: true
-                },
-                escapeMarkup: function (markup) { return markup; },
-                placeholder: '-------',
-                minimumInputLength: 1,
-                width: '100%',
-                allowClear: true
-            };
-
-            function parts_used_changed() {
-                var prefix = $(this).attr('data-prefix'),
-                    p_id = $(this).val();
-
-                $.ajax({
-                    url: QAURLs.PARTS_STORAGE_SEARCHER,
-                    data: {'p_id': p_id},
-                    success: function (res) {
-                        var $s = $('#id_' + prefix + '-from_storage');
-
-                        $s.find('option:not(:first)').remove();
-
-                        if (res.data !== '__clear__') {
-                            for (var i in res.data) {
-                                var psc = res.data[i];
-                                var text = (psc[1] ? psc[1] + ' - ' : '') + psc[2] + (psc[3] ? (' - ' + psc[3]) : '') + ' (' + psc[4] + ')',
-                                    title = (psc[1] ? 'Site: ' + psc[1] + '\n' : '') +
-                                        'Room: ' + psc[2] + '\n' +
-                                        (psc[4] ? 'Location: ' + psc[3] + '\n' : '') +
-                                        'Quantity left: ' + psc[4];
-                                $s.append($('<option></option>').attr('value', psc[0]).text(text).attr('title', title));
-                            }
-                        }
-                    }
+        function process_part_results(data, params) {
+            var results = [];
+            for (var i in data.data) {
+                var p_id = data.data[i][0],
+                    p_number = data.data[i][1],
+                    p_alt_number = data.data[i][2],
+                    p_description = data.data[i][3],
+                    p_qty_current = data.data[i][4];
+                results.push({
+                    id: p_id,
+                    text: p_alt_number ? p_number + ' (' + p_alt_number + ') - ' + p_description : p_number + ' - ' + p_description,
+                    title: p_qty_current + ' in storage'
                 });
             }
+            params.page = params.page || 1;
+            return {
+                results: results,
+                pagination: {
+                    more: (params.page * 30) < data.data.length
+                }
+            };
+        }
 
-            $parts_used_parts.select2(part_select2);
-            $parts_used_parts.change(parts_used_changed);
-            // $parts_used_parts.change();
+        var part_select2 = {
+            ajax: {
+                url: QAURLs.PARTS_SEARCHER,
+                dataType: 'json',
+                delay: '500',
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        page: params.page,
+                    };
+                },
+                success: function(res) {
+                    console.log(res);
+                },
+                processResults: process_part_results,
+                cache: true
+            },
+            escapeMarkup: function (markup) { return markup; },
+            placeholder: '-------',
+            minimumInputLength: 1,
+            width: '100%',
+            allowClear: true
+        };
 
-            $parts_used_from_storage.select2({
+        function parts_used_changed() {
+            var prefix = $(this).attr('data-prefix'),
+                p_id = $(this).val();
+
+            $.ajax({
+                url: QAURLs.PARTS_STORAGE_SEARCHER,
+                data: {'p_id': p_id},
+                success: function (res) {
+                    var $s = $('#id_' + prefix + '-from_storage');
+
+                    $s.find('option:not(:first)').remove();
+
+                    if (res.data !== '__clear__') {
+                        for (var i in res.data) {
+                            var psc = res.data[i];
+                            var text = (psc[1] ? psc[1] + ' - ' : '') + psc[2] + (psc[3] ? (' - ' + psc[3]) : '') + ' (' + psc[4] + ')',
+                                title = (psc[1] ? 'Site: ' + psc[1] + '\n' : '') +
+                                    'Room: ' + psc[2] + '\n' +
+                                    (psc[4] ? 'Location: ' + psc[3] + '\n' : '') +
+                                    'Quantity left: ' + psc[4];
+                            $s.append($('<option></option>').attr('value', psc[0]).text(text).attr('title', title));
+                        }
+                    }
+                }
+            });
+        }
+
+        $parts_used_parts.select2(part_select2);
+        $parts_used_parts.change(parts_used_changed);
+        // $parts_used_parts.change();
+
+        $parts_used_from_storage.select2({
+            placeholder: '-------',
+            minimumResultsForSearch: 10,
+            width: '100%',
+            allowClear: true
+        });
+
+        $('#add-part').click(function() {
+
+            var empty_part_form = $('#empty-parts-form').html(),
+                $part_index = $('#id_parts-TOTAL_FORMS'),
+                part_index = $part_index.val();
+
+            $('#parts-used-tbody').append(empty_part_form.replace(/__prefix__/g, part_index));
+
+            var $parts_part = $('#id_parts-' + part_index + '-part');
+            $parts_part.select2(part_select2);
+            $parts_part.change(parts_used_changed);
+            $('#id_parts-' + part_index + '-from_storage').select2({
                 placeholder: '-------',
                 minimumResultsForSearch: 10,
                 width: '100%',
                 allowClear: true
             });
 
-            $('#add-part').click(function() {
-
-                var empty_part_form = $('#empty-parts-form').html(),
-                    $part_index = $('#id_parts-TOTAL_FORMS'),
-                    part_index = $part_index.val();
-
-                $('#parts-used-tbody').append(empty_part_form.replace(/__prefix__/g, part_index));
-
-                var $parts_part = $('#id_parts-' + part_index + '-part');
-                $parts_part.select2(part_select2);
-                $parts_part.change(parts_used_changed);
-                $('#id_parts-' + part_index + '-from_storage').select2({
-                    placeholder: '-------',
-                    minimumResultsForSearch: 10,
-                    width: '100%',
-                    allowClear: true
-                });
-
-                $part_index.val(parseInt(part_index) + 1);
-            });
-
-        }
+            $part_index.val(parseInt(part_index) + 1);
+        });
 
         // // initiated by -------------------------------------------------------------------------------------
         if ($tli_initiated_by.val() === '') {

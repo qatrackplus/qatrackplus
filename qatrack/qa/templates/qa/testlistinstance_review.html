@@ -128,7 +128,7 @@
                     </div>
                   </div>
                 {% endif %}
-                {% if USE_SERVICE_LOG and not from_se %}
+                {% if not from_se %}
                   <div class="row">
                     <label class="col-md-8">
                       {% if perms.service_log.add_serviceevent %}

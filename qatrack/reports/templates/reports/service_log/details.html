@@ -190,27 +190,25 @@
               </tr>
             {% endfor %}
 
-            {% if use_parts %}
-              {% for part, storage, quantity in se.parts %}
-                <tr>
-                  {% if forloop.first %}
-                    <th class="text-right" rowspan="{{ se.parts|length }}" colspan="2">
-                      {% trans "Parts Used" %}:
-                    </th>
-                  {% endif %}
-                  <td colspan="2">{{ part }}</td>
-                  <td colspan="2">
-                    {% if storage %}{{ storage }}{% else %}<em>{% trans "Storage not specified" %}{% endif %}
-                  </td>
-                  <td colspan="1">{{ quantity }}</td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <th class="text-right" colspan="2">{% trans "Parts Used" %}:</th>
-                  <td colspan="5"><em>{% trans "No Parts Used" %}</em></td>
-                </tr>
-              {% endfor %}
-            {% endif %}
+            {% for part, storage, quantity in se.parts %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ se.parts|length }}" colspan="2">
+                    {% trans "Parts Used" %}:
+                  </th>
+                {% endif %}
+                <td colspan="2">{{ part }}</td>
+                <td colspan="2">
+                  {% if storage %}{{ storage }}{% else %}<em>{% trans "Storage not specified" %}{% endif %}
+                </td>
+                <td colspan="1">{{ quantity }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="2">{% trans "Parts Used" %}:</th>
+                <td colspan="5"><em>{% trans "No Parts Used" %}</em></td>
+              </tr>
+            {% endfor %}
 
             <tr>
               <th class="text-right" colspan="2">{% trans "Attachments" %}:</th>

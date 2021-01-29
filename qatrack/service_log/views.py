@@ -63,6 +63,8 @@ from listable.views import (
 )
 
 from qatrack.attachments.models import Attachment
+from qatrack.parts import forms as p_forms
+from qatrack.parts import models as p_models
 from qatrack.qa import models as qa_models
 from qatrack.qa.templatetags import qa_tags
 from qatrack.qa.views.base import generate_review_status_context
@@ -80,10 +82,6 @@ from qatrack.service_log import forms
 from qatrack.service_log import models as sl_models
 from qatrack.service_log import signals  # NOQA: F401
 from qatrack.units import models as u_models
-
-if settings.USE_PARTS:
-    from qatrack.parts import forms as p_forms
-    from qatrack.parts import models as p_models
 
 
 def get_time_display(dt):
@@ -348,12 +346,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 ),
                 # initial=initial_utcs
             )
-            if settings.USE_PARTS:
-                context_data['part_used_formset'] = p_forms.PartUsedFormset(
-                    self.request.POST,
-                    instance=self.object,
-                    prefix='parts'
-                )
+            context_data['part_used_formset'] = p_forms.PartUsedFormset(
+                self.request.POST,
+                instance=self.object,
+                prefix='parts'
+            )
         else:
 
             context_data['hours_formset'] = forms.HoursFormset(instance=self.object, prefix='hours')
@@ -377,8 +374,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 ),
                 initial=initial_utcs
             )
-            if settings.USE_PARTS:
-                context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
+            context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
 
         context_data['attachments'] = self.object.attachment_set.all() if self.object else []
 
@@ -431,13 +427,10 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         hours_formset = context["hours_formset"]
         rtsqa_formset = context["rtsqa_formset"]
 
-        if settings.USE_PARTS:
-            parts_formset = context['part_used_formset']
-            if not parts_formset or not parts_formset.is_valid():
-                messages.add_message(self.request, messages.ERROR, _('Please correct the Parts error below.'))
-                return self.render_to_response(context)
-        else:
-            parts_formset = None
+        parts_formset = context['part_used_formset']
+        if not parts_formset or not parts_formset.is_valid():
+            messages.add_message(self.request, messages.ERROR, _('Please correct the Parts error below.'))
+            return self.render_to_response(context)
 
         hours_valid = hours_formset.is_valid()
         rtsqa_valid = rtsqa_formset.is_valid()
@@ -554,117 +547,115 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     f_instance.service_event = service_event
                 f_instance.save()
 
-        if settings.USE_PARTS:
+        for p_form in parts_formset:
 
-            for p_form in parts_formset:
+            if not p_form.has_changed():
+                continue
 
-                if not p_form.has_changed():
-                    continue
+            delete = p_form.cleaned_data.get('DELETE')
+            is_new = p_form.instance.id is None
 
-                delete = p_form.cleaned_data.get('DELETE')
-                is_new = p_form.instance.id is None
+            pu_instance = p_form.instance
 
-                pu_instance = p_form.instance
+            initial_p = p_form.initial.get('part', None)
+            if delete:
+                current_p = p_form.initial['part']
+            else:
+                current_p = p_form.cleaned_data['part']
 
-                initial_p = p_form.initial.get('part', None)
-                if delete:
-                    current_p = p_form.initial['part']
-                else:
-                    current_p = p_form.cleaned_data['part']
+            initial_s = p_form.initial.get('from_storage', None)
+            current_s = p_form.cleaned_data.get('from_storage', None)
 
-                initial_s = p_form.initial.get('from_storage', None)
-                current_s = p_form.cleaned_data.get('from_storage', None)
+            try:
+                current_psc = p_models.PartStorageCollection.objects.get(
+                    part=current_p, storage=current_s
+                ) if current_s else None
+            except ObjectDoesNotExist:
+                current_psc = p_models.PartStorageCollection(
+                    part=current_p, storage=current_s, quantity=0
+                )
+            try:
+                initial_psc = p_models.PartStorageCollection.objects.get(
+                    part=initial_p, storage=initial_s
+                ) if initial_s and initial_p else None
+            except ObjectDoesNotExist:
+                initial_psc = None
 
-                try:
-                    current_psc = p_models.PartStorageCollection.objects.get(
-                        part=current_p, storage=current_s
-                    ) if current_s else None
-                except ObjectDoesNotExist:
-                    current_psc = p_models.PartStorageCollection(
-                        part=current_p, storage=current_s, quantity=0
-                    )
-                try:
-                    initial_psc = p_models.PartStorageCollection.objects.get(
-                        part=initial_p, storage=initial_s
-                    ) if initial_s and initial_p else None
-                except ObjectDoesNotExist:
-                    initial_psc = None
+            initial_qty = 0 if is_new else p_form.initial['quantity']
+            current_qty = p_form.cleaned_data.get('quantity', initial_qty)
+            change = current_qty - initial_qty
 
-                initial_qty = 0 if is_new else p_form.initial['quantity']
-                current_qty = p_form.cleaned_data.get('quantity', initial_qty)
-                change = current_qty - initial_qty
+            if delete and not is_new:
+                if current_psc:
+                    qty = pu_instance.quantity
+                    current_psc.quantity += qty
 
-                if delete and not is_new:
                     if current_psc:
-                        qty = pu_instance.quantity
-                        current_psc.quantity += qty
-
-                        if current_psc:
-                            current_psc.save()
-
-                        if initial_psc:
-                            initial_psc.save()
-
-                    pu_instance.delete()
-                    continue
-
-                elif p_form.has_changed():
-
-                    if is_new:
-                        pu_instance.service_event = service_event
-
-                    # If parts storage changed
-                    if 'from_storage' in p_form.changed_data:
-
-                        if initial_psc:
-                            initial_psc.quantity += initial_qty
-                            initial_psc.save()
-                        if current_psc:
-                            current_psc.quantity -= current_qty
-                            current_psc.save()
-                        pu_instance.from_storage = current_psc.storage if current_psc else None
-
-                    # Edge case if part changed and storage didn't
-                    elif 'part' in p_form.changed_data and current_psc:
-
-                        if initial_s:
-                            if not initial_psc and change < 0:
-                                initial_psc = p_models.PartStorageCollection(
-                                    part=initial_p,
-                                    storage=initial_s,
-                                    quantity=-change
-                                )
-                                current_psc.save()
-                            initial_psc.quantity += initial_qty
-                            initial_psc.save()
-
-                        current_psc.quantity -= current_qty
                         current_psc.save()
 
-                    # Else if just quantity changed
-                    elif 'quantity' in p_form.changed_data:
+                    if initial_psc:
+                        initial_psc.save()
 
-                        if current_psc:
-                            current_psc.quantity -= change
-                            current_psc.save()
-                        # If trying to put a part back to storage with no part storage collection
-                        elif current_s and change < 0:
-                            current_psc = p_models.PartStorageCollection(
-                                part=current_p,
-                                storage=current_s,
+                pu_instance.delete()
+                continue
+
+            elif p_form.has_changed():
+
+                if is_new:
+                    pu_instance.service_event = service_event
+
+                # If parts storage changed
+                if 'from_storage' in p_form.changed_data:
+
+                    if initial_psc:
+                        initial_psc.quantity += initial_qty
+                        initial_psc.save()
+                    if current_psc:
+                        current_psc.quantity -= current_qty
+                        current_psc.save()
+                    pu_instance.from_storage = current_psc.storage if current_psc else None
+
+                # Edge case if part changed and storage didn't
+                elif 'part' in p_form.changed_data and current_psc:
+
+                    if initial_s:
+                        if not initial_psc and change < 0:
+                            initial_psc = p_models.PartStorageCollection(
+                                part=initial_p,
+                                storage=initial_s,
                                 quantity=-change
                             )
                             current_psc.save()
+                        initial_psc.quantity += initial_qty
+                        initial_psc.save()
 
-                    pu_instance.save()
-                    if current_p.set_quantity_current():
-                        messages.add_message(
-                            request=self.request,
-                            level=messages.INFO,
-                            message='Part %s is low (%s left in stock).' % (str(current_p), current_p.quantity_current)
+                    current_psc.quantity -= current_qty
+                    current_psc.save()
+
+                # Else if just quantity changed
+                elif 'quantity' in p_form.changed_data:
+
+                    if current_psc:
+                        current_psc.quantity -= change
+                        current_psc.save()
+                    # If trying to put a part back to storage with no part storage collection
+                    elif current_s and change < 0:
+                        current_psc = p_models.PartStorageCollection(
+                            part=current_p,
+                            storage=current_s,
+                            quantity=-change
                         )
-                    if initial_p:
-                        initial_p.set_quantity_current()
+                        current_psc.save()
+
+                pu_instance.save()
+                if current_p.set_quantity_current():
+                    messages.add_message(
+                        request=self.request,
+                        level=messages.INFO,
+                        message='Part %s is low (%s left in stock).' % (str(current_p), current_p.quantity_current)
+                    )
+                if initial_p:
+                    initial_p.set_quantity_current()
 
         self.generate_logs(new, form, rtsqa_formset)
         self.edit_se_attachments(service_event)

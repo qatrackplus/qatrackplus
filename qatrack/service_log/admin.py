@@ -1,5 +1,4 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.db.models import Count, Max
 from django.utils.translation import gettext as _
@@ -448,16 +447,12 @@ class ServiceEventTemplateAdmin(SaveUserQATrackAdmin):
     ]
 
 
-if settings.USE_SERVICE_LOG:
-    admin.site.register(ServiceArea, ServiceAreaAdmin)
-    admin.site.register(ServiceEvent, ServiceEventAdmin)
-    admin.site.register(ServiceType, ServiceTypeAdmin)
-    admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
-    admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
-    admin.site.register(GroupLinker, GroupLinkerAdmin)
-
-    if settings.USE_SERVICE_TEMPLATES:
-        admin.site.register(ServiceEventSchedule, ServiceEventScheduleAdmin)
-        admin.site.register(ServiceEventTemplate, ServiceEventTemplateAdmin)
-
-    admin.site.register([ThirdParty], BaseQATrackAdmin)
+admin.site.register(ServiceArea, ServiceAreaAdmin)
+admin.site.register(ServiceEvent, ServiceEventAdmin)
+admin.site.register(ServiceType, ServiceTypeAdmin)
+admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
+admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
+admin.site.register(GroupLinker, GroupLinkerAdmin)
+admin.site.register(ServiceEventSchedule, ServiceEventScheduleAdmin)
+admin.site.register(ServiceEventTemplate, ServiceEventTemplateAdmin)
+admin.site.register([ThirdParty], BaseQATrackAdmin)

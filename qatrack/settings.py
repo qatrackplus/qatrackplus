@@ -626,10 +626,7 @@ DEFAULT_COLOURS = [
 ]
 DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
-USE_SERVICE_LOG = True
-USE_PARTS = True
 USE_ISSUES = False  # internal development issue tracker
-USE_SERVICE_TEMPLATES = True
 
 DELETE_REASONS = (
     ('Duplicate', 'Duplicate'),
@@ -699,9 +696,6 @@ from .local_settings import *  # noqa: F403, F401
 
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
-
-# Parts must be used with service log
-USE_PARTS = USE_PARTS and USE_SERVICE_LOG
 
 
 # ------------------------------------------------------------------------------

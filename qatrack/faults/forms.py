@@ -1,5 +1,4 @@
 from django import forms
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.text import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
@@ -57,7 +56,7 @@ class FaultForm(BetterModelForm):
 
     def __init__(self, *args, **kwargs):
 
-        include_related_ses = kwargs.pop("include_related_ses", True) and settings.USE_SERVICE_LOG
+        include_related_ses = kwargs.pop("include_related_ses", True)
 
         super().__init__(*args, **kwargs)
 

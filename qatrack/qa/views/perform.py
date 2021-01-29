@@ -1195,32 +1195,31 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
 
-        if settings.USE_SERVICE_LOG:
-            # service_events = form.cleaned_data.get('service_events', False)
-            rtsqa_id = form.cleaned_data['rtsqa_id']
+        # service_events = form.cleaned_data.get('service_events', False)
+        rtsqa_id = form.cleaned_data['rtsqa_id']
 
-            # is there an existing rtsqa being linked?
-            if rtsqa_id:
-                rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
-                rtsqa.test_list_instance = self.object
-                rtsqa.save()
+        # is there an existing rtsqa being linked?
+        if rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            rtsqa.test_list_instance = self.object
+            rtsqa.save()
 
-                sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, rtsqa.service_event)
+            sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, rtsqa.service_event)
 
-                # If tli needs review, update 'Unreviewed RTS QC' counter
-                if not self.object.all_reviewed:
-                    cache.delete(settings.CACHE_RTS_QA_COUNT)
+            # If tli needs review, update 'Unreviewed RTS QC' counter
+            if not self.object.all_reviewed:
+                cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-            changed_se = self.object.update_all_reviewed()
+        changed_se = self.object.update_all_reviewed()
 
-            if len(changed_se) > 0:
-                msg = _(
-                    'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-                ) % {
-                    'service_event_ids': ', '.join(str(x) for x in changed_se),
-                    'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
-                }
-                messages.add_message(request=self.request, level=messages.INFO, message=msg)
+        if len(changed_se) > 0:
+            msg = _(
+                'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+            ) % {
+                'service_event_ids': ', '.join(str(x) for x in changed_se),
+                'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
+            }
+            messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
         auto = form.cleaned_data.get("autosave_id")
         if auto:
@@ -1237,7 +1236,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             _("Successfully submitted %(test_list_name)s ") % {'test_list_name': self.object.test_list.name}
         )
 
-        if settings.USE_SERVICE_LOG and form.cleaned_data['initiate_service']:
+        if form.cleaned_data['initiate_service']:
             return HttpResponseRedirect('%s?ib=%s' % (reverse('sl_new'), self.object.id))
 
         return HttpResponseRedirect(self.get_success_url())
@@ -1313,13 +1312,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         context["contacts"] = list(Contact.objects.all().order_by("name"))
 
         rtsqa_id = None
-        if settings.USE_SERVICE_LOG:
-            rtsqa_id = self.request.GET.get('rtsqa', None)
-            if rtsqa_id:
-                rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
-                context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
-                context['rtsqa_id'] = rtsqa_id
-                context['rtsqa_for_se'] = rtsqa.service_event
+        rtsqa_id = self.request.GET.get('rtsqa', None)
+        if rtsqa_id:
+            rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
+            context['se_statuses'] = {rtsqa.service_event.id: rtsqa.service_event.service_status.id}
+            context['rtsqa_id'] = rtsqa_id
+            context['rtsqa_for_se'] = rtsqa.service_event
 
         context['attachments'] = (
             context['test_list'].attachment_set.all() |
@@ -1334,7 +1332,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         )
         if has_perms:
             context['top_divs_span'] += 1
-        if settings.USE_SERVICE_LOG and rtsqa_id is not None:
+        if rtsqa_id is not None:
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 
@@ -1434,20 +1432,19 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
             #     rtsqa.test_list_instance = self.object
             #     rtsqa.save()
-            if settings.USE_SERVICE_LOG:
-                changed_se = self.object.update_all_reviewed()
+            changed_se = self.object.update_all_reviewed()
 
-                if len(changed_se) > 0:
-                    msg = _(
-                        'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-                    ) % {
-                        'service_event_ids': ', '.join(str(x) for x in changed_se),
-                        'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
-                    }
-                    messages.add_message(request=self.request, level=messages.INFO, message=msg)
-                if initially_requires_reviewed != self.object.all_reviewed:
-                    for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
-                        sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
+            if len(changed_se) > 0:
+                msg = _(
+                    'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+                ) % {
+                    'service_event_ids': ', '.join(str(x) for x in changed_se),
+                    'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
+                }
+                messages.add_message(request=self.request, level=messages.INFO, message=msg)
+            if initially_requires_reviewed != self.object.all_reviewed:
+                for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
+                    sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
 
             if not self.object.in_progress:
                 try:
@@ -1596,7 +1593,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             context['top_divs_span'] += 1
         if len(context['attachments']) > 0:
             context['top_divs_span'] += 1
-        if settings.USE_SERVICE_LOG and (context['form'].instance.pk or context['rtsqa_id'] is not None):
+        if context['form'].instance.pk or context['rtsqa_id'] is not None:
             context['top_divs_span'] += 1
         context['top_divs_span'] = int(12 / context['top_divs_span']) if context['top_divs_span'] > 0 else 12
 

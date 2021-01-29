@@ -28,13 +28,6 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
 USE_X_FORWARDED_HOST = True
 
-# Set to False to disable the Service Log functionality
-USE_SERVICE_LOG = True
-
-# Set to False to disable the Parts Log functionality
-USE_PARTS = True
-
-
 # If you host your QATrack+ instance at a non root url (e.g. 12.345.678.9/qatrack)
 # then you need to uncomment (and possibly modify) the following settings
 # FORCE_SCRIPT_NAME = "/qatrack"

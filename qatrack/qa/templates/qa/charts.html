@@ -233,42 +233,40 @@
                         </div>
 
 
-                        {% if USE_SERVICE_LOG %}
-                            <div id="service-log-box" class="chart-options-subbox">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="title">
-                                            Service Log Data
-                                        </div>
+                        <div id="service-log-box" class="chart-options-subbox">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="title">
+                                        Service Log Data
                                     </div>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="form-group">
-                                            <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
-                                            <div class="col-sm-2">
-                                                <input id="show_events" type="checkbox" checked>
-                                            </div>
-                                        </div>
-
-                                        <div id="status-container" class="form-group">
-                                            <label for="status-selector" class="col-sm-4">Service Types</label>
-                                            <div class="col-sm-8">
-                                                <select id="service-type-selector" multiple>
-                                                    {% for st in service_types %}
-                                                        <option id="status-{{st.pk}}" value="{{st.pk}}" selected="selected">
-                                                            {{st.name}}
-                                                        </option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
-                        {% endif %}
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
+                                        <div class="col-sm-2">
+                                            <input id="show_events" type="checkbox" checked>
+                                        </div>
+                                    </div>
+
+                                    <div id="status-container" class="form-group">
+                                        <label for="status-selector" class="col-sm-4">Service Types</label>
+                                        <div class="col-sm-8">
+                                            <select id="service-type-selector" multiple>
+                                                {% for st in service_types %}
+                                                    <option id="status-{{st.pk}}" value="{{st.pk}}" selected="selected">
+                                                        {{st.name}}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
 
                     </div>
                 </div>

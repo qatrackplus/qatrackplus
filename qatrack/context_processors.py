@@ -140,10 +140,7 @@ def site(request):
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
         'DEBUG': settings.DEBUG,
         'USE_SQL_REPORTS': settings.USE_SQL_REPORTS,
-        'USE_SERVICE_LOG': settings.USE_SERVICE_LOG,
-        'USE_PARTS': settings.USE_PARTS,
         'USE_ISSUES': settings.USE_ISSUES,
-        'USE_SERVICE_TEMPLATES': settings.USE_SERVICE_TEMPLATES,
 
         # JavaScript Date Formats
         'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
