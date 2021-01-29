@@ -334,7 +334,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             elif type_ == models.DATE and slug in validated_data['tests']:
                 d['date_value'] = parse_date(d.pop('value', ""))
             elif type_ == models.DATETIME and slug in validated_data['tests']:
-                d['datetime_value'] = parse_datetime(d.pop('value', ""))
+                dt = parse_datetime(d.pop('value', ""))
+                dt = timezone.make_aware(dt) if dt and timezone.is_naive(dt) else dt
+                d['datetime_value'] = dt
             elif type_ == models.UPLOAD and slug in validated_data['tests']:
                 # remove base64 data
                 d.pop('value', "")
