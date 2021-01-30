@@ -14,23 +14,6 @@ Acknowledgements
 Details of the v0.3.1 release
 .............................
 
-Non backwards compatible changes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Composite Tests will now raise an error if they return anything other than a
-  numerical value, None, or an empty string ("").  Previously it was possible
-  to return e.g.a string which would have resulted in the test being skipped.
-  If you were relying on this behaviour, you need to switch to using a
-  :ref:`String Composite/JSON <qa_string_comp_json>` test type instead.
-
-* The `day` key is now required when performing a Test List Cycle via the API
-
-* Upload tests can not have reference/tolerance values set.  Allowing this originally
-  was an implementation oversight.
-
-* :ref:`EMAIL_NOTIFICATION_SENDER <email_notification_settings>` must be set to 
-  a valid email address, not just a name.
-
 
 Major Features
 ^^^^^^^^^^^^^^
@@ -52,13 +35,37 @@ Major Features
     * New QC Scheduling & Unreviewed QC Notices.
     * Service event creation & update notices.
     * Parts low inventory notices.
+    * Machine faults
 
 * A new :ref:`Autosave <auto_save>` feature has been implemented to
   automatically save test list instance data temporarily to prevent data loss
   when a user mistakingly navigates away from the page while entering QC data.
 
-* A new :ref:`Users & Groups Page <users_groups_app>` has been added to simplify
+* A new :ref:`Users & Groups Page <auth_users_groups_app>` has been added to simplify
   the management of Group membership and group permissions.
+
+* A new :ref:`Fault log feature <fault_log>` for recording machine faults.
+
+* You can now create :ref:`Service Event Templates and schedule them
+  <sl_template_schedules>` in a similar manner to scheduling QC work.
+
+
+Non backwards compatible changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Composite Tests will now raise an error if they return anything other than a
+  numerical value, None, or an empty string ("").  Previously it was possible
+  to return e.g.a string which would have resulted in the test being skipped.
+  If you were relying on this behaviour, you need to switch to using a
+  :ref:`String Composite/JSON <qa_string_comp_json>` test type instead.
+
+* The `day` key is now required when performing a Test List Cycle via the API
+
+* Upload tests can not have reference/tolerance values set.  Allowing this originally
+  was an implementation oversight.
+
+* :ref:`EMAIL_NOTIFICATION_SENDER <email_notification_settings>` must be set to 
+  a valid email address, not just a name.
 
 
 Tests & Test Lists
@@ -141,6 +148,10 @@ Units & Unit Types
 
 * A new :ref:`Collapse <unit_type>` option has been added to the Unit Type model
   to allow collapsing less frequency used unit types in user interface.
+
+* Units can now have :ref:`Treatment Techniques <units_techniques>` configured
+  for use with the :ref:`fault log <fault_log>`.
+
 
 UI Changes
 ^^^^^^^^^^
@@ -273,6 +284,10 @@ Service Log & Parts
 
 * :ref:`Service Log Status <sl_statuses>` now have an order field to allow you 
 
+* You can now create :ref:`Service Event Templates and schedule them
+  <sl_template_schedules>` in a similar manner to scheduling QC work.
+
+* There is now an app for :ref:`logging machine faults <fault_log>`.
 
 Authentication
 ^^^^^^^^^^^^^^

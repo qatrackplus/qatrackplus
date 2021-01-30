@@ -1,11 +1,17 @@
 .. _qa_auth:
 
+
 Managing Users and Groups
 =========================
 
 Access to various QATrack+ features for users is defined based on which groups
 a user belongs to and which permissions have been assigned to their groups, or
 to their user account specifically.
+
+The text below discusses how to manage users and groups from within the
+QATrack+ admin area.  As of version 0.3.1 there is also now a more convient
+:ref:`Groups & Permissions page <auth_users_groups_app>` for managing group
+memberships and common permissions.
 
 
 .. _auth_groups:
@@ -196,6 +202,10 @@ sets for groups are given below:.
 -  **service_log \| service event \| Can review service events** *Allows user to change status of service events to statuses with \'is review required = false\'.*
 -  **parts \| part \| Can add part** *Allows a user to enter new parts*
 -  **parts \| part \| Can view parts** *Allows a user to view existing parts*
+-  **faults \| fault \| Can add fault** *Allows a user to log a machine fault*
+-  **faults \| fault \| Can change fault** *Allows a user to edit an existing fault*
+-  **faults \| fault \| Can delete fault** *Allows a user to delete an existing fault*
+-  **faults \| fault \| Can review faults** *Allows a user to review faults*
 
 
 
@@ -209,6 +219,7 @@ therapist) is:
 -  qa \| test list instance \| Can perform subset of tests (optional)
 -  qa \| test list instance \| Can view previously completed instances
    (optional)
+-  faults \| fault \| Can add fault
 
 .. figure:: images/auth/minimal_permissions.png
    :alt: Minimal set of permissions
@@ -235,6 +246,7 @@ following:
 -  qa \| test list instance \| Can view previously completed instances
 -  qa \| test list instance \| Can change test list instance
 -  qa \| unit test info \| Can view Refs and Tols
+-  faults \| fault \| Can add fault
 
 .. figure:: images/auth/tech_permissions.png
    :alt: Physics Techs Permissions
@@ -313,3 +325,7 @@ typical permission set might look like the following:
 -  service_log \| service event \| Can review service events
 -  parts \| part \| Can add part
 -  parts \| part \| Can view parts
+-  faults \| fault \| Can add fault
+-  faults \| fault \| Can change fault
+-  faults \| fault \| Can delete fault
+-  faults \| fault \| Can review faults

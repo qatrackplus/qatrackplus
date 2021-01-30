@@ -42,6 +42,20 @@ definition of a 6MV photon beam is illustrated below.
 
 Click **Save** when you are finished.
 
+.. _units_techniques:
+
+Defining a Treatment Technique
+------------------------------
+
+From the main administrators page click the **Treatment Techniques** link from the
+**Units** section.
+
+This page lists all the existing (if any) treatment techniques. To add a new
+technique click the **Add treatment technique** button at the top right.
+
+From here just enter the name of the treatment technique type you want to
+define.  Click **Save** when you are finished.  
+
 Defining a new unit class
 -------------------------
 
@@ -116,6 +130,8 @@ of which are described below:
 * Unit Type - *Select the type of unit this is*
 * Is serviceable - *Set to true to make this unit selectable in Service Events*
 * Site - *If you have multiple sites configured, choose the site this unit is located at*
+* Modalities - *Select any modalities that are currently available on this machine. These are used in conjunction with the fault log functionality*
+* Treatment Techniques - *Select any treatment techniques that are currently available on this machine. These are used in conjunction with the fault log functionality*
 * Service Areas - *Select all the service areas available for this unit (e.g. Linac, kv Imaging, MV Imaging etc)*
 * Available Time on date of acceptance - *The number of clinical hours that the unit is available on a day to day basis*
 * Unit Schedule - *Set the number of hours this unit is available and the effective date. See below for an example*

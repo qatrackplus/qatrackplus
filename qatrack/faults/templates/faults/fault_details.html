@@ -174,6 +174,12 @@
                       <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Approve This Fault" %}</button>
                     {% endif %}
                   {% endif %}
+                  {% if perms.faults.change_fault %}
+                    <a class="btn btn-default btn-flat pull-right" style="margin-right: 5px"
+                      href="{% url 'fault_edit' fault.pk %}{% if next %}?next={{ next }}{% endif %}"
+                      title="{% blocktrans %}Edit details of {{ fault }}{% endblocktrans %}"
+                    >{% trans "Edit" %}</a>
+                  {% endif %}
                 </form>
             </div>
           </div>

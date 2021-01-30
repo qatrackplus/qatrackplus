@@ -5,7 +5,7 @@ Administrators Guide
 
 
 Introduction
------------------------
+------------
 
 The admin guide is intended for use by anyone who will be responsible for
 configuring tests and test lists, modifying references & tolerances or managing
@@ -53,4 +53,5 @@ Admin Guide Contents
    units/guide
    qa/guide
    service_log/guide
+   faults/guide
 

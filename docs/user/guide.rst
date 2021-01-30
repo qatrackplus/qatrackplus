@@ -11,7 +11,9 @@ Users Guide
    :maxdepth: 2
    :caption: Contents:
 
+   auth/guide
    qa/guide
    service_log/guide
+   faults/guide
    units/guide
    reports/guide
