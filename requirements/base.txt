@@ -1,7 +1,7 @@
 -e git+https://github.com/randlet/django-genericdropdown.git@473ff52610af659f7d2a3616a6e3322e21673b4d#egg=django_genericdropdown
 -e git+https://github.com/randlet/django-listable.git@django_21_dynamic_request#egg=django_listable
 -e git+https://github.com/randlet/django-recurrence.git@b3a73e8e03952107e58382922fec37aead31fd6f#egg=django-recurrence
--e git+https://github.com/randlet/django-sql-explorer.git@196e1f5af2abed61f504878b89a0719ae0901ed8#egg=django-sql-explorer
+-e git+https://github.com/randlet/django-sql-explorer.git@12802fe83f9c45fd0bbe9610cb442dcfc5666d44#egg=django-sql-explorer
 -e git+https://github.com/qatrackplus/django-q.git@qatrackplus#egg=django-q
 black==19.10b0
 Django==2.2.17

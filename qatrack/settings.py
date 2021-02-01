@@ -668,16 +668,17 @@ EXPLORER_CONNECTIONS = {'Default': 'readonly'}
 EXPLORER_DEFAULT_CONNECTION = 'readonly'
 EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = ['auth_', 'qa', 'service_log', 'units', 'parts']
 EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken', 'sessions_']
-EXPLORER_ENABLE_TASKS = False
+EXPLORER_TASKS_ENABLED = False
+EXPLORER_ASYNC_SCHEMA = False
 EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE', 'SCHEMA', 'GRANT', 'OWNER TO']  # noqa: E501
 
 
-def EXPLORER_PERMISSION_CHANGE(user):
-    return user.has_perm("qa.can_create_sql_reports")
+def EXPLORER_PERMISSION_CHANGE(request):
+    return request.user.has_perm("qa.can_create_sql_reports")
 
 
-def EXPLORER_PERMISSION_VIEW(user):
-    return user.has_perm("qa.can_run_sql_reports")
+def EXPLORER_PERMISSION_VIEW(request):
+    return request.user.has_perm("qa.can_run_sql_reports")
 
 
 if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
