@@ -405,7 +405,7 @@
                                 </div>
                               {% endif %}
                             {% else %}
-                              {% if perms.qa.add_testlistinstance %}
+                              {% if perms.qa.add_testlistinstance and user|visible_utc:f.unit_test_collection %}
                                 <div class="btn-group">
                                   <a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}"
                                       class="btn btn-xs btn-default btn-flat"

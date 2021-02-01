@@ -16,7 +16,7 @@ from django.db.models import Count, Q, QuerySet
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
-from django.template.defaultfilters import filesizeformat
+from django.template.defaultfilters import filesizeformat, register
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -1369,6 +1369,11 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         }
 
         return reverse("qa_by_frequency_unit", kwargs=kwargs)
+
+    @staticmethod
+    @register.filter
+    def visible_utc(user, unit_test_collection):
+        return unit_test_collection.visible_to.all().intersection(user.groups.all()).exists()
 
 
 class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
