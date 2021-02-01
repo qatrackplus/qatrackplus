@@ -25,6 +25,7 @@ class IssuePriorityStatusAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
+            "admin/js/jquery.init.js",
             'jquery/js/jquery.min.js',
             'colorpicker/js/bootstrap-colorpicker.min.js',
             'qatrack_core/js/admin_colourpicker.js',

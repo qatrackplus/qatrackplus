@@ -261,7 +261,8 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
 
     class Media:
         js = (
-            "js/jquery-1.7.1.min.js",
+            'admin/js/jquery.init.js',
+            'jquery/js/jquery.min.js',
             "select2/js/select2.js",
             "js/unittestinfo_admin.js",
         )
@@ -835,8 +836,10 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
 
     class Media:
         js = (
+            "admin/js/jquery.init.js",
+            'jquery/js/jquery.min.js',
             "js/jquery-ui.init.js",
-            "js/jquery-ui.min.js",
+            "js/jquery-ui.js",
             "js/m2m_drag_admin_testlist.js",
             "js/admin_description_editor.js",
             "ace/ace.js",
@@ -1029,7 +1032,8 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
 
     class Media:
         js = (
-            "js/jquery-1.7.1.min.js",
+            'admin/js/jquery.init.js',
+            'jquery/js/jquery.min.js',
             "js/test_admin.js",
             "js/admin_description_editor.js",
             "ace/ace.js",
@@ -1246,6 +1250,7 @@ class UnitTestCollectionAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
+            'jquery/js/jquery.min.js',
             "js/jquery-ui.init.js",
             "js/jquery-ui.min.js",
             "js/select2.min.js",
@@ -1278,6 +1283,8 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATra
 
     class Media:
         js = (
+            'admin/js/jquery.init.js',
+            'jquery/js/jquery.min.js',
             "js/jquery-ui.init.js",
             "js/jquery-ui.min.js",
             "js/collapsed_stacked_inlines.js",
@@ -1314,7 +1321,8 @@ class FrequencyAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            "js/jquery-1.7.1.min.js",
+            'admin/js/jquery.init.js',
+            'jquery/js/jquery.min.js',
             "js/jquery-ui.min.js",
             "moment/js/moment.min.js",
             "moment/js/moment-timezone-with-data.min.js",
@@ -1365,6 +1373,7 @@ class StatusAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
+            'admin/js/jquery.init.js',
             "jquery/js/jquery.min.js",
             "colorpicker/js/bootstrap-colorpicker.min.js",
             "qatrack_core/js/admin_colourpicker.js",
@@ -1481,7 +1490,8 @@ class ToleranceAdmin(BasicSaveUserAdmin):
 
     class Media:
         js = (
-            "jquery/js/jquery.min.js",
+            "admin/js/jquery.init.js",
+            'jquery/js/jquery.min.js',
             "js/tolerance_admin.js",
         )
 

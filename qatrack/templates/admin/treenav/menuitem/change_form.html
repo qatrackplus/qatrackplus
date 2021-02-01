@@ -27,7 +27,7 @@
                 $('input#id_object_id').hide();
                 $('input#id_object_id').after('<select id="generic_object_id"></select>');
 
-                jQuery('#generic_object_id').select2({
+                $('#generic_object_id').select2({
                     width: '350px',
                     selectOnClose: true,
                     minimumResultsForSearch: 10,
@@ -64,7 +64,7 @@
 
             })
 
-        })(django.jQuery);
+        })($);
 
 
     </script>

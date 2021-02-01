@@ -66,7 +66,8 @@ class PartNoticeAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            "jquery/js/jquery.min.js",
+            'admin/js/jquery.init.js',
+            'jquery/js/jquery.min.js',
             "select2/js/select2.js",
             "js/notification_admin.js",
         )
@@ -106,7 +107,8 @@ class PartCategoryGroupAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            "jquery/js/jquery.min.js",
+            'admin/js/jquery.init.js',
+            'jquery/js/jquery.min.js',
             "select2/js/select2.js",
             "js/notification_admin.js",
         )

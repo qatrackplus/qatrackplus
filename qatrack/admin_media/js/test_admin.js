@@ -74,11 +74,9 @@ $(document).ready(function() {
     $("#id_type").change(toggle_test_type);
     toggle_test_type();
 
-    var isNotIE78 = jQuery.support.leadingWhitespace;
     var element = $("#id_calculation_procedure");
 
-    if (isNotIE78 && element.length > 0){
-        // IE7-8 explode with Ace editor sigh
+    if (element.length > 0){
 
         var calcProcedure = element.hide();
         calcProcedure.after('<div style="width: 50%; " id="calc-procedure-editor" class="colM aligned vLargeTextField"></div>');

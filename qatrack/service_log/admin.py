@@ -119,6 +119,7 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
 
     class Media:
         js = (
+            'admin/js/jquery.init.js',
             "jquery/js/jquery.min.js",
             "colorpicker/js/bootstrap-colorpicker.min.js",
             "qatrack_core/js/admin_colourpicker.js",
@@ -357,7 +358,8 @@ class ServiceEventScheduleAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            "js/jquery-1.7.1.min.js",
+            "admin/js/jquery.init.js",
+            'jquery/js/jquery.min.js',
             "select2/js/select2.js",
             "js/serviceeventschedule_admin.js",
         )

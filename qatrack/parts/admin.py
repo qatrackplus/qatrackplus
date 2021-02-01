@@ -90,7 +90,11 @@ class RoomAdmin(BaseQATrackAdmin):
     del_storage_response = None
 
     class Media:
-        js = ('autosize/js/autosize.min.js',)
+        js = (
+            "admin/js/jquery.init.js",
+            'jquery/js/jquery.min.js',
+            'autosize/js/autosize.min.js',
+        )
 
     def get_queryset(self, request):
         if request.method == 'POST':
@@ -141,7 +145,10 @@ class SupplierAdmin(BaseQATrackAdmin):
     inlines = [ContactInline]
 
     class Media:
-        js = ('autosize/js/autosize.min.js',)
+        js = (
+            'admin/js/jquery.init.js',
+            'autosize/js/autosize.min.js',
+        )
 
     def get_website(self, obj):
         return obj.get_website_tag()

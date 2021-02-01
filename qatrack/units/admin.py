@@ -168,6 +168,7 @@ class UnitAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
+            'admin/js/jquery.init.js',
             'jquery/js/jquery.min.js',
             'inputmask/js/jquery.inputmask.bundle.min.js',
         )
