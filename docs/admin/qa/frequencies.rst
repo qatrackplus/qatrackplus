@@ -8,7 +8,7 @@ frequency with which it should be performed. This frequency determines when a
 test list is show as being due/overdue on a unit.
 
 Frequencies can be configured from the main admin page by clicking on
-the **Frequencis** link in the **QA** section.
+the **Frequencies** link in the **QA** section.
 
 Example configurations are shown below for **Daily** and **Monthly**
 frequencies.
