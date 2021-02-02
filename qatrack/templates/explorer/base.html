@@ -6,20 +6,23 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'select2/css/select2.min.css' %}?v={{ VERSION }}" />
-    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}?v={{ VERSION }}" />
-    <link rel="stylesheet" href="{% static 'pivottable/css/pivot.min.css' %}?v={{ VERSION }}" />
+    <link rel="stylesheet" href="{% static 'explorer/css/codemirror.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'explorer/css/pivot.min.css' %}" />
     <link rel="stylesheet" href="{% static 'c3/css/c3.min.css' %}?v={{VERSION}}" />
-    <link rel="stylesheet" href="{% static 'explorer/explorer.css' %}?v={{ VERSION }}" />
+    <link rel="stylesheet" href="{% static 'explorer/css/explorer.css' %}" />
     <link rel="stylesheet" href="{% static 'explorer/css/qat-explorer.css' %}?v={{ VERSION }}" />
     <link rel="stylesheet" href="{% static 'qatrack_core/css/sidebar.css' %}?v={{VERSION}}" />
 {% endblock extra_css %}
 
 {% block extra_js %}
+  <script type="text/javascript">
+      queryId = "{% firstof query.id 'new' %}";
+      csrfCookieName = "{% firstof csrf_cookie_name 'csrftoken' %}"
+  </script>
 {% endblock extra_js %}
 
 {% block require_javascript %}
     require(['list', 'explorer', 'codemirror', 'codemirror/mode/sql/sql', 'codemirror/addon/comment/comment'], function(list, explorer, CodeMirror) {
-      queryId = "{% firstof query.id 'new' %}";
       {% block sql_explorer_scripts %}
       {% endblock %}
     });
