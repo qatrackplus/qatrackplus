@@ -71,7 +71,7 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
 
             $.ajax({
                 type: 'POST',
-                url: QAURLs.TLI_REVIEW + '/' + rtsqa_form + '/' + tli_id + '/',
+                url: QAURLs.TLI_REVIEW + rtsqa_form + '/' + tli_id + '/',
                 data: data,
                 success: function (res) {
                     QAURLs.returnYourChoice(res.rtsqa_form, res.tli_id);

@@ -73,8 +73,9 @@ urlpatterns = [
         review.TestListInstanceDelete.as_view(),
         name="delete_test_list_instance"
     ),
+    url(r"^session/review/$", review.Unreviewed.as_view(), name="unreviewed-alt"),
     url(
-        r"^session/review(?:/(?P<rtsqa_form>[a-zA-Z0-9-_]+)/)?(?:/(?P<pk>\d+))?/$",
+        r"^session/review(?:(?:/(?P<rtsqa_form>[a-zA-Z0-9-_]+))?(?:/(?P<pk>\d+)))?/$",
         review.ReviewTestListInstance.as_view(),
         name="review_test_list_instance"
     ),

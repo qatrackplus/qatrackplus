@@ -1957,6 +1957,27 @@ class TestReviewTestListInstance(TestCase):
         tli = models.TestListInstance.objects.get(pk=self.tli.pk)
         self.assertFalse(tli.all_reviewed)
 
+    def test_review_tli_url(self):
+        tli = models.TestListInstance.objects.get(pk=self.tli.pk)
+        urls = [
+            "/qc/session/review/%s/" % (tli.pk),
+            "/qc/session/review/%s" % (tli.pk),
+            "/qc/session/review/rtsqa-0/%s/" % (tli.pk),
+            "/qc/session/review/rtsqa-0/%s" % (tli.pk),
+        ]
+        for url in urls:
+            resp = self.client.get(url, follow=True)
+            assert resp.status_code == 200
+
+    def test_review_tli_url_reverse(self):
+        urls = [
+            ("/qc/session/review/", {}),
+            ("/qc/session/review/1/", {'pk': 1}),
+            ("/qc/session/review/rtsqa-0/1/", {'pk': 1, 'rtsqa_form': 'rtsqa-0'}),
+        ]
+        for url, kwargs in urls:
+            assert reverse("review_test_list_instance", kwargs=kwargs) == url
+
 
 @freeze_time("2018-01-26 23:00")
 class TestDueDateOverView(TestCase):
