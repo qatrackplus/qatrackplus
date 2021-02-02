@@ -62,19 +62,28 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
             var $technique = $("#id_fault-treatment_technique").select2(s2config);
             var $related_se = $('#id_fault-related_service_events');
             var initialLoad = true;
+            var $unit = $("#id_fault-unit");
 
             var $faultType = $("#id_fault-fault_type_field").select2({
                 width: '100%',
                 dropdownParent: s2config.dropdownParent,
                 ajax: {
                     url: QAURLs.FAULT_TYPE_AUTOCOMPLETE,
-                    dataType: 'json'
+                    dataType: 'json',
+                    data: function(params){
+                        return {
+                            q: params.term,
+                            unit: $unit.val(),
+                            suggestions: 1
+                        };
+                    }
                 },
                 placeholder: '-----------',
                 allowClear: true,
-                minimumInputLength: 2
+                minimumInputLength: 2,
+                selectOnClose: true
             });
-            var $unit = $("#id_fault-unit").select2(s2config).change(function(){
+            $unit.select2(s2config).change(function(){
                 var cur_unit = parseInt($unit.val(), 10);
                 var unit_modalities = [];
                 if (cur_unit in unitInfo){

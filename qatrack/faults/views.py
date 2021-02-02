@@ -7,6 +7,7 @@ from django.db.models import Count
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
+from django.template.defaultfilters import truncatechars
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils import timezone
@@ -327,19 +328,21 @@ def fault_type_autocomplete(request):
     created when they submit the form."""
 
     q = request.GET.get('q', '')
-
     qs = models.FaultType.objects.filter(
         code__icontains=q,
-    ).order_by("code").values_list("id", "code")
+    ).order_by("code")
+
+    qs = qs.values_list("id", "code", "description")
 
     results = []
 
     exact_match = -1
-    for ft_id, code in qs:
+    for ft_id, code, description in qs:
         if code == q:
             exact_match = ft_id
         else:
-            results.append({'id': code, 'text': code})
+            text = "%s: %s" % (code, truncatechars(description, 80))
+            results.append({'id': code, 'text': text})
 
     new_option = q and (exact_match < 0)
     if new_option:

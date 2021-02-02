@@ -17,7 +17,6 @@ class FaultType(models.Model):
     code = models.CharField(
         _l("code"),
         max_length=255,
-        unique=True,
         help_text=_l('Enter the fault code or number'),
     )
     slug = models.SlugField(
