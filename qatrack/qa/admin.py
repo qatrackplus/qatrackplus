@@ -257,7 +257,6 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
     ]
     readonly_fields = ("reference", "test", "unit", "history")
     search_fields = ("test__name", "test__display_name", "test__slug", "unit__name")
-    # list_select_related = ['reference', 'tolerance', 'test', 'unit']
 
     class Media:
         js = (
@@ -839,7 +838,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
             "admin/js/jquery.init.js",
             'jquery/js/jquery.min.js',
             "js/jquery-ui.init.js",
-            "js/jquery-ui.js",
+            "js/jquery-ui.min.js",
             "js/m2m_drag_admin_testlist.js",
             "js/admin_description_editor.js",
             "ace/ace.js",
