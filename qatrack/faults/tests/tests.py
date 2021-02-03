@@ -516,21 +516,21 @@ class TestFaultTypeAutocomplete(TestCase):
 
         fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
         results = self.client.get(self.url, {'q': 'ft 2'}).json()['results']
-        assert results == [{'id': fts[2].code, 'text': fts[2].code}]
+        assert results == [{'id': fts[2].code, 'text': "ft 2: No description available"}]
 
     def test_query_exact_match_plus_others(self):
         """If query matches a fault types exactly, plus matches others, all
         should be returned, but the exact match should be first"""
 
-        FaultType.objects.create(code="ft 212"),
+        FaultType.objects.create(code="ft 212", description="description"),
         FaultType.objects.create(code="ft 21"),
         FaultType.objects.create(code="ft 213"),
 
         results = self.client.get(self.url, {'q': 'ft 21'}).json()['results']
         assert results == [
-            {'id': "ft 21", 'text': "ft 21"},
-            {'id': "ft 212", 'text': "ft 212"},
-            {'id': "ft 213", 'text': "ft 213"},
+            {'id': "ft 21", 'text': "ft 21: No description available"},
+            {'id': "ft 212", 'text': "ft 212: description"},
+            {'id': "ft 213", 'text': "ft 213: No description available"},
         ]
 
 

@@ -336,21 +336,21 @@ def fault_type_autocomplete(request):
 
     results = []
 
-    exact_match = -1
+    exact_match = None
     for ft_id, code, description in qs:
+        text = "%s: %s" % (code, truncatechars(description, 80) or _("No description available"))
         if code == q:
-            exact_match = ft_id
+            exact_match = text
         else:
-            text = "%s: %s" % (code, truncatechars(description, 80))
             results.append({'id': code, 'text': text})
 
-    new_option = q and (exact_match < 0)
+    new_option = q and exact_match is None
     if new_option:
         # allow user to create a new match
         results = [{'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q}] + results
     elif q:
         # put the exact match first in the list
-        results = [{'id': q, 'text': q}] + results
+        results = [{'id': q, 'text': exact_match}] + results
 
     return JsonResponse({'results': results}, encoder=QATrackJSONEncoder)
 
