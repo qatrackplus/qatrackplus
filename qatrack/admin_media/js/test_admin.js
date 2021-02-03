@@ -13,61 +13,41 @@ function toggle_formatting(test_type){
     }
 }
 
-function toggle_test_type(){
-    var val = $("#id_type").find("option:selected").val();
-
-    toggle_formatting(val);
-
-    // this is ugly and error prone. Should be refactored
-    if (val == "constant"){
-        $(".field-constant_value, .field-hidden").show();
-        $(".field-calculation_procedure,.field-wrap_low,.field-wrap_high,.field-choices, .field-display_image, .field-skip_without_comment").not(".errors").hide();
-        $(".field-chart_visibility").prop("checked", true).show();
-        $("#id_flag_when").val("").parents(".field-flag_when").hide();
-    }else if (val == "wraparound"){
-        $(".field-wrap_low, .field-wrap_high").show();
-        $(".field-constant_value, .field-choices, .field-display_image, .field-skip_without_comment, .field-hidden").not(".errors").hide();
-        $(".field-chart_visibility").prop("checked", true).show();
-        $("#id_flag_when").val("").parents(".field-flag_when").hide();
-    }else if (val == "composite" || val === "scomposite" ){
-        $(".field-calculation_procedure, .field-hidden, .field-display_image").show();
-        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-skip_without_comment").not(".errors").hide();
-        if (val === "scomposite"){
-            $(".field-chart_visibility").prop("checked", false).hide();
-        }else{
-            $(".field-chart_visibility").prop("checked", true).show();
-        }
-        $("#id_flag_when").val("").parents(".field-flag_when").hide();
-    }else if (val == "string" || val == "date" || val == "datetime"){
-        $(".field-skip_without_comment, .field-require_comment").show();
-        $(".field-constant_value, .field-hidden").hide();
-        $(".field-choices, .field-display_image").not(".errors").hide();
-        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
-        $(".field-chart_visibility").prop("checked", false).hide();
-        $("#id_flag_when").val("").parents(".field-flag_when").hide();
-    }else if (val === "upload"){
-        $(".field-calculation_procedure, .field-display_image, .field-skip_without_comment").show();
-        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-hidden").not(".errors").hide();
-        $(".field-chart_visibility").prop("checked", false).hide();
-        $("#id_flag_when").val("").parents(".field-flag_when").hide();
-    }else if (val == "multchoice"){
-        $(".field-choices, .field-skip_without_comment, .field-require_comment").show();
-        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-display_image, .field-hidden").not(".errors").hide();
-        $(".field-chart_visibility").prop("checked", false).hide();
-        $("#id_flag_when").val("").parents(".field-flag_when").hide();
-    }else if (val == "boolean"){
-        $(".field-flag_when").show();
-        $(".field-skip_without_comment, .field-require_comment").show();
-        //$(".field-calculation_procedure").not(".errors").hide();
-        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
-        $(".field-chart_visibility").prop("checked", true).show();
+function toggle_not_required_field(field_class, not_required_for_test_types, test_type){
+    if (not_required_for_test_types.indexOf(test_type) >= 0){
+        $(field_class).not('errors').hide();
     }else{
-        $(".field-skip_without_comment, .field-require_comment").show();
-        //$(".field-calculation_procedure").not(".errors").hide();
-        $(".field-constant_value, .field-wrap_high, .field-wrap_low, .field-choices, .field-display_image, .field-hidden").not(".errors").hide();
-        $(".field-chart_visibility").prop("checked", true).show();
-        $("#id_flag_when").val("").parents(".field-flag_when").hide();
+        $(field_class).show();
     }
+}
+
+function toggle_required_field(selector, required_for_test_types, test_type){
+    if (required_for_test_types.indexOf(test_type) >= 0){
+        $(selector).show();
+    }else{
+        $(selector).not('errors').hide();
+    }
+}
+
+function toggle_test_type(){
+    var test_type = $("#id_type").find("option:selected").val();
+
+    toggle_required_field(".field-formatting", ["constant", "composite", "simple", "wraparound"], test_type);
+    toggle_not_required_field(".field-calculation_procedure", ["constant"], test_type);
+    toggle_not_required_field(".field-skip_without_comment", ["constant", "composite", "scomposite"], test_type);
+    toggle_required_field(".field-constant_value", ["constant"], test_type);
+    toggle_required_field(".field-hidden", ["constant", "composite", "scomposite"], test_type);
+    toggle_required_field(".field-display_image", ["upload", "composite", "scomposite"], test_type);
+    toggle_required_field(".field-choices", ["multchoice"], test_type);
+    toggle_required_field(".field-wrap_low,.field-wrap_high", ["wraparound"], test_type);
+    toggle_required_field(".field-flag_when", ["boolean"], test_type);
+
+    var not_visible_in_charts = ["scomposite", "date", "datetime", "multchoice", "upload"];
+    $(".field-chart_visibility").find("input[type=checkbox]").prop(
+        "checked",
+        not_visible_in_charts.indexOf(test_type) < 0
+    );
+    toggle_not_required_field(".field-chart_visibility", not_visible_in_charts, test_type);
 }
 
 $(document).ready(function() {
@@ -85,7 +65,7 @@ $(document).ready(function() {
         var session = calcProcedureEditor.getSession();
 
         calcProcedureEditor.setValue(calcProcedure.val());
-        session.setMode( "ace/mode/python");
+        session.setMode("ace/mode/python");
         session.setTabSize(4);
         session.setUseSoftTabs(true);
         calcProcedureEditor.on('blur', function(){
