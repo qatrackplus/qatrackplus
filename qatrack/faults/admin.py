@@ -56,7 +56,7 @@ class FaultAdmin(SaveUserQATrackAdmin):
         "fault_type",
     )
 
-    select_related = [
+    list_select_related = [
         "modality",
         "fault_type",
         "unit",
