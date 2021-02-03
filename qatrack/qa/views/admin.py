@@ -16,6 +16,8 @@ from formtools.preview import FormPreview
 
 from qatrack.qa import models
 from qatrack.qa.testpack import add_testpack, create_testpack
+from qatrack.units.forms import unit_site_unit_type_choices
+from qatrack.units.models import Unit
 
 logger = logging.getLogger('qatrack')
 
@@ -23,10 +25,11 @@ logger = logging.getLogger('qatrack')
 class CopyReferencesAndTolerancesForm(forms.Form):
     """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
 
-    source_unit = forms.ModelChoiceField(
+    source_unit = forms.TypedChoiceField(
         label=_l("Source Unit"),
-        queryset=models.Unit.objects.all(),
         help_text=_("Choose the unit to copy references and tolerances from"),
+        coerce=int,
+        required=True,
     )
     content_type = forms.ChoiceField(
         label=_l("Copy from TestList or TestListCycle"),
@@ -34,23 +37,27 @@ class CopyReferencesAndTolerancesForm(forms.Form):
             ('', '---------'),
             ('testlist', _l('TestList')),
             ('testlistcycle', _l('TestListCycle')),
-        )
+        ),
+        required=True,
     )
 
     # Populate the source testlist field
     source_testlist = forms.ChoiceField(choices=[], label=_l('Source testlist(cycle)'))
 
     # Populate the dest_unit field
-    dest_unit = forms.ModelChoiceField(
+    dest_unit = forms.TypedChoiceField(
         label=_l("Destination Unit"),
         help_text=_("Choose the unit to copy references and tolerances to"),
-        queryset=models.Unit.objects.all(),
+        coerce=int,
+        required=True,
     )
 
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 
+        self.fields['source_unit'].choices = unit_site_unit_type_choices(include_empty=True)
+        self.fields['dest_unit'].choices = unit_site_unit_type_choices(include_empty=True)
         testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
         testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
         choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
@@ -61,15 +68,50 @@ class CopyReferencesAndTolerancesForm(forms.Form):
         source_unit = self.cleaned_data.get("source_unit")
         source_testlist = self.cleaned_data.get("source_testlist")
         dest_unit = self.cleaned_data.get("dest_unit")
-        ctype = ContentType.objects.get(model=self.cleaned_data.get("content_type"))
-
-        try:
-            source_utc = models.UnitTestCollection.objects.get(
-                unit=source_unit, object_id=source_testlist, content_type=ctype
-            )
-        except models.UnitTestCollection.DoesNotExist:
-            raise ValidationError(_('Invalid value'), code='invalid')
+        ctype = self.cleaned_data.get("content_type")
+        ctype = ContentType.objects.get(model=ctype)
+        source_utc = models.UnitTestCollection.objects.get(
+            unit=source_unit,
+            object_id=source_testlist,
+            content_type=ctype,
+        )
         source_utc.copy_references(dest_unit)
+
+    def clean_content_type(self):
+        ct = self.cleaned_data.get('content_type')
+        if not ct:
+            self.add_error("content_type", _("This field is required"))
+        return ct
+
+    def clean_source_unit(self):
+        unit = self.cleaned_data.get('source_unit')
+        if unit:
+            return Unit.objects.get(pk=unit)
+
+    def clean_dest_unit(self):
+        unit = self.cleaned_data.get('dest_unit')
+        if unit:
+            return Unit.objects.get(pk=unit)
+
+    def clean(self):
+
+        source_unit = self.cleaned_data.get("source_unit")
+        source_testlist = self.cleaned_data.get("source_testlist")
+        dest_unit = self.cleaned_data.get("dest_unit")
+        if source_unit and source_unit == dest_unit:
+            self.add_error("dest_unit", _("The source and destination units must be different"))
+        ctype = self.cleaned_data.get("content_type")
+        if ctype and source_unit and source_testlist:
+            ctype = ContentType.objects.get(model=ctype)
+
+            try:
+                models.UnitTestCollection.objects.get(
+                    unit=source_unit, object_id=source_testlist, content_type=ctype,
+                )
+            except models.UnitTestCollection.DoesNotExist:
+                self.add_error("source_testlist", _("The selected test list does not exist on the source unit"))
+
+        return self.cleaned_data
 
 
 class CopyReferencesAndTolerances(FormPreview):
@@ -84,7 +126,9 @@ class CopyReferencesAndTolerances(FormPreview):
         if not request.POST:
             return context
 
-        form.full_clean()
+        if not form.is_valid():
+            return context
+
         cleaned_data = form.cleaned_data
 
         source_unit = cleaned_data.get("source_unit")
@@ -97,19 +141,17 @@ class CopyReferencesAndTolerances(FormPreview):
         source_testlist = ModelClass.objects.get(pk=source_testlist_pk)
         all_tests = source_testlist.all_tests()
 
-        dest_utis = models.UnitTestInfo.objects.filter(
-            test__in=all_tests, unit=dest_unit
-        ).select_related(
-            "reference", "tolerance", "test"
+        utis = models.UnitTestInfo.objects.filter(test__in=all_tests).select_related(
+            "reference",
+            "tolerance",
+            "test",
         ).order_by("test")
 
-        source_utis = models.UnitTestInfo.objects.filter(
-            test__in=all_tests, unit=source_unit
-        ).select_related(
-            "reference", "tolerance"
-        ).order_by("test")
-
-        context["dest_source_utis"] = list(zip(dest_utis, source_utis))
+        dest_utis = utis.filter(unit=dest_unit)
+        source_utis = utis.filter(unit=source_unit)
+        source_utis = {uti.test.pk: uti for uti in source_utis}
+        dest_source_utis = [(dest_uti, source_utis[dest_uti.test.pk]) for dest_uti in dest_utis]
+        context["dest_source_utis"] = dest_source_utis
         context["source_test_list"] = source_testlist
         context["source_unit"] = source_unit
         context["dest_unit"] = dest_unit
