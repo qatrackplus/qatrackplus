@@ -17,7 +17,7 @@ django-coverage==1.2.4
 django-crispy-forms==1.6.0
 django-debug-toolbar==2.0
 django-dynamic-raw-id==2.8
-django-extensions==2.1.4
+django-extensions==3.1.0
 django-filter==2.1.0
 django-form-utils==1.0.3
 django-formtools==2.1
@@ -35,7 +35,7 @@ markdown==2.6.11
 matplotlib==2.2.2
 numpy==1.20
 pandas<=1.1.5
-pep8==1.7.0
+pep8==1.7.1
 pydicom==2.1.2
 pylinac-qatrackplus==2.3.1.5
 pynliner==0.8.0
