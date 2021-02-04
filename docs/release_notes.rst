@@ -334,12 +334,18 @@ Other Minor Features & Bugs Fixed
   the occassional 500 errors generated on Windows servers due to file
   permissions & access issues.
 
+* Some python packages have been updated
+    * pydicom updated to 2.1.2
+    * numpy updated to 1.20.0
+    * matplotlib updated to 3.3.4
+    * scipy updated to 1.5.4
+
 
 Deprecations & Discontinuations
 ...............................
 
-* Python 3.4: As of March 2019, Python 3.4 is no longer receiving updates and
-  therefore QATrack+ will no longer be supporting Python 3.4 installations.
+* Python 3.4 & 3.5: Python 3.4 & 3.5 are no longer receiving updates and
+  therefore QATrack+ will no longer be supporting those Python versions.
 
 * The settings `AD_DEBUG` & `AD_DEBUG_FILE` are no longer used.  Instead,
   information is now logged to an 'auth.log' file.

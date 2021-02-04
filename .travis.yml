@@ -14,8 +14,9 @@ addons:
   postgresql: "9.6"
 
 python:
-  - "3.5"
   - "3.6"
+  - "3.7"
+  - "3.8"
 
 env:
   - DJANGO=2.1 DB=sqlite

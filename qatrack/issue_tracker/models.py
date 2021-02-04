@@ -1,12 +1,12 @@
 
 import re
 
+from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
-from django.contrib.auth.models import User
 
-re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
-color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
+re_255 = r'([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+color_re = re.compile(r'^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + r',(0(\.[0-9][0-9]?)?|1)\)$')
 validate_color = RegexValidator(color_re, 'Enter a valid color.', 'invalid')
 
 

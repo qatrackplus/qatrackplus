@@ -16,7 +16,7 @@ from django.db.models import Count, Q, QuerySet
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
-from django.template.defaultfilters import filesizeformat, register
+from django.template.defaultfilters import register
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -43,6 +43,7 @@ from qatrack.qatrack_core.dates import (
     parse_datetime,
 )
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
+from qatrack.qatrack_core.templatetags.qatrack_tags import filesizeformat
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Site, Unit
 

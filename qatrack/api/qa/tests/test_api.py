@@ -480,8 +480,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -511,8 +516,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'r').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': upload_data,
             'filename': "tmp.json",
@@ -539,8 +549,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'comment': "test comment",
@@ -602,8 +617,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -833,8 +853,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -866,8 +891,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = json.loads(open(filepath, 'rb').read().decode())
+        upload_data = {
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }
         upload_data['baz']['baz1'] = "edited content"
         self.data['tests']['file_upload'] = {
             'value': json.dumps(upload_data),
@@ -906,8 +936,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",

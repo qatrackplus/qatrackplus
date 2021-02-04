@@ -7,6 +7,7 @@ import random
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.files.uploadedfile import SimpleUploadedFile
 import django.forms
 from django.test import TestCase
 from django.test.client import RequestFactory
@@ -1606,12 +1607,20 @@ result = json.load(FILE)
         self.test_list = utils.create_test_list()
         utils.create_test_list_membership(self.test_list, self.test)
 
-        fname = os.path.join(os.path.dirname(__file__), "TESTRUNNER_test_file.json")
-        self.test_file = open(fname, "r")
+        content = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
+        self.test_file = SimpleUploadedFile("TESTRUNNER_test_file.json", content)
+
         self.unit_test_info = utils.create_unit_test_info(test=self.test)
         self.client.login(username="user", password="password")
 
     def tearDown(self):
+
         import glob
         for f in glob.glob(os.path.join(settings.TMP_UPLOAD_ROOT, "TESTRUNNER*")):
             try:
@@ -1627,6 +1636,7 @@ result = json.load(FILE)
                     print(">>> Could not delete %s because %s" % (a, e))
 
     def test_upload_fname_exists(self):
+        #test_file = SimpleUploadedFile(self.fname, b"[]")
         response = self.client.post(
             self.url, {
                 "test_id": self.test.pk,
@@ -1640,6 +1650,7 @@ result = json.load(FILE)
         self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data['attachment']["name"])
 
     def test_invalid_test_id(self):
+        #test_file = SimpleUploadedFile(self.fname, b"[]")
         response = self.client.post(self.url, {
             "test_id": 200,
             "upload": self.test_file,
@@ -1651,6 +1662,7 @@ result = json.load(FILE)
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
     def test_invalid_test(self):
+        #test_file = SimpleUploadedFile(self.fname, b"[]")
         self.test.calculation_procedure = "result = 1/0"
         self.test.save()
         response = self.client.post(
@@ -1666,6 +1678,8 @@ result = json.load(FILE)
         self.assertIn("Invalid Test", data["errors"][0])
 
     def test_upload_results(self):
+        #test_file = SimpleUploadedFile(self.fname, b"[]")
+
         response = self.client.post(self.url, {
             "test_id": self.test.pk,
             "upload": self.test_file,

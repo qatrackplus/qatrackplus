@@ -2,8 +2,8 @@
 # routines for fitting histograms
 
 import numpy as np
-import scipy.stats
 from scipy.optimize import curve_fit
+import scipy.stats
 
 np.seterr("ignore")
 
@@ -18,7 +18,7 @@ def gauss_fit(data, freq, bins, binwidth):
     binwidth = width of bin (float, not an array)
     """
     x = bincenters(bins)
-    norm = np.float(np.size(data) * binwidth)
+    norm = float(np.size(data) * binwidth)
 
     initGuess = [norm, np.mean(data), np.std(data)]
     optParam, cov = curve_fit(gauss_pdf, x, freq, initGuess)
