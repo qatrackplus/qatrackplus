@@ -1,10 +1,10 @@
 {% load i18n %}
 
-{% if interlock.reviewed %}
-  <span data-timestamp="{{ interlock.reviewed|date:"U"}}">
+{% if fault.reviewed %}
+  <span data-timestamp="{{ fault.reviewed|date:"U"}}">
     <abbr
-        title="{% blocktrans with reviewed_by=interlock.created_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}">
-      {{ interlock.reviewed }}
+        title="{% blocktrans with reviewed_by=fault.created_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}">
+      {{ fault.reviewed }}
     </abbr>
   </span>
 {% else %}

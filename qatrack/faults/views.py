@@ -72,6 +72,9 @@ class FaultList(BaseListableView):
     search_fields = {
         'actions': False,
         'review_status': 'reviewed',
+        'get_fault_type': 'fault_type__code',
+        'get_occurred': 'occurred',
+        'get_id': 'id',
     }
 
     order_fields = {
@@ -500,7 +503,6 @@ class FaultTypeList(BaseListableView):
 
     order_fields = {
         'actions': False,
-        'description': False,
     }
 
     def __init__(self, *args, **kwargs):

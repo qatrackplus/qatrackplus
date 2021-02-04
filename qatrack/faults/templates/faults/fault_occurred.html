@@ -1,7 +1,7 @@
 {% load i18n %}
-<span data-timestamp="{{ interlock.occurred_on|date:"U"}}">
+<span data-timestamp="{{ fault.occurred_on|date:"U"}}">
   <abbr
-      title="{% blocktrans with created_by=interlock.created_by modified_by=interlock.modified_by %}Created by {{ created_by }}, Last modified by {{ modified_by }}{% endblocktrans %}">
-    {{ interlock.occurred_on }}
+      title="{% blocktrans with created_by=fault.created_by modified_by=fault.modified_by %}Created by {{ created_by }}, Last modified by {{ modified_by }}{% endblocktrans %}">
+    {{ fault.occurred }}
   </abbr>
 </span>
