@@ -9,7 +9,7 @@ DATABASES = {
         'NAME': 'qatrackdb',
         'USER': 'sa',
         'PASSWORD': 'Password12!',
-        'HOST': 'localhost\SQL2014',
+        'HOST': 'localhost\SQL2019',
         'PORT': '',
         'OPTIONS': {}
     }
