@@ -83,7 +83,7 @@
                         </table>
                         <form class="form form-horizontal text-right" action="" method="post">{% csrf_token %}
                           <p>
-                            {% blocktrans test_list_name=object.test_list.name work_completed=object.work_completed|date %}
+                            {% blocktrans with test_list_name=object.test_list.name work_completed=object.work_completed|date %}
                               Are you sure you want to <strong>permanently</strong> delete {{ test_list_name }}
                               from {{ work_completed }}?
                             {% endblocktrans %}
