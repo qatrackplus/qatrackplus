@@ -1,5 +1,7 @@
 build: false
 
+image: Visual Studio 2019
+
 environment:
 
   SQLSERVER_ENV_SQLSERVER_HOST: localhost
@@ -19,15 +21,6 @@ environment:
     - PYTHON: "C:\\Python39"
       #- PYTHON: "C:\\Python36-x64"
 
-    #services:
-    #  - mssql2014rs           # start SQL Server 2014 Express
-    #  - mssql2014rs         # start SQL Server 2014 Express and Reporting Services
-    #  - mssql2012sp1        # start SQL Server 2012 SP1 Express
-    #  - mssql2012sp1rs      # start SQL Server 2012 SP1 Express and Reporting Services
-    #  - mssql2008r2sp2      # start SQL Server 2008 R2 SP2 Express
-    #- mssql2008r2sp2rs    # start SQL Server 2008 R2 SP2 Express and Reporting Services
-
-
 cache:
   - '%LOCALAPPDATA%\pip\Cache'
 
@@ -36,6 +29,7 @@ init:
   - "ECHO %PYTHON%"
 
 install:
+  - choco install googlechrome  --ignore-checksums -y
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python --version"
   - cmd: copy /Y deploy\win\appveyor_mssql.py qatrack\local_settings.py
@@ -47,5 +41,6 @@ build_script:
   - sqlcmd -S localhost,1433 -U sa -P Password12! -Q "CREATE DATABASE qatrackdb" -d "master"
 
 test_script:
+  - python manage.py migrate
   - pytest -x -m "not selenium"
 

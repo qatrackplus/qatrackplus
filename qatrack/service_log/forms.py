@@ -330,13 +330,12 @@ class ModelSelectWithOptionTitles(forms.Select):
         super().__init__(attrs=attrs, choices=choices)
         self.model = model
         self.title_variable = title_variable
-        self.title_variables = dict(self.model.objects.values_list("pk", self.title_variable))
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
         if value in [None, '']:
             title = '-----'
         elif self.title_variable is not None and self.model is not None:
-            title = self.title_variables.get('value', '')
+            title = getattr(self.model.objects.get(pk=value), self.title_variable)
         else:
             title = ''
         if attrs is None:

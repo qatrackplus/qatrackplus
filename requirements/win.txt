@@ -2,4 +2,4 @@
 CherryPy==18.0.1
 django-mssql-backend==2.8.1
 pyreadline
-pywin32>=220
+pywin32>=300

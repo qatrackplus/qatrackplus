@@ -9,10 +9,11 @@ DATABASES = {
         'NAME': 'qatrackdb',
         'USER': 'sa',
         'PASSWORD': 'Password12!',
-        'HOST': 'localhost\SQL2019',
+        'HOST': 'localhost\\SQL2019',
         'PORT': '',
         'OPTIONS': {}
     }
 }
+DATABASES['readonly'] = DATABASES['default']
 
 ALLOWED_HOSTS = ['*']

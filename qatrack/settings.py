@@ -685,13 +685,23 @@ if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
     from .docker_settings import *  # NOQA
 
 
+CHROME_PATH = ""
 if os.name.lower() == "nt":
-    CHROME_PATH = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"'
+    user = os.getlogin()
+    chrome_paths = [
+        r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"',
+        r'"C:\Program Files\Google\Chrome\Application\chrome.exe"',
+        r'"C:\Documents and Settings\%s\Local Settings\Application Data\Google\Chrome\Application\chrome.exe"' % user,
+        r'"C:\Program Files (x86)\Google\Application\chrome.exe"',
+        r'"C:\Documents and Settings\%s\Local Settings\Application Data\Google\Chrome\chrome.exe"' % user,
+    ]
 else:
-    CHROME_PATH = ""
-    for path in ["/usr/bin/chromium", "/usr/bin/chromium-browser"]:
-        if os.path.exists(path):
-            CHROME_PATH = path
+    chrome_paths = ["/usr/bin/chromium", "/usr/bin/chromium-browser"]
+
+
+for path in chrome_paths:
+    if os.path.exists(path):
+        CHROME_PATH = path
 
 
 # ------------------------------------------------------------------------------
