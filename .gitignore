@@ -57,4 +57,4 @@ questions_*
 src/*.egg-info
 tmp/
 db/
-generate_ro_privileges.sql
+./generate_ro_privileges.sql
