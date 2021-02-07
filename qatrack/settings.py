@@ -696,7 +696,13 @@ if os.name.lower() == "nt":
         r'"C:\Documents and Settings\%s\Local Settings\Application Data\Google\Chrome\chrome.exe"' % user,
     ]
 else:
-    chrome_paths = ["/usr/bin/chromium", "/usr/bin/chromium-browser"]
+    # unfortunately in Ubuntu 20, chromium is installed as a snap and won't
+    # run headless as the www-data user.  Use Google Chrome instead
+    chrome_paths = [
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+    ]
 
 
 for path in chrome_paths:

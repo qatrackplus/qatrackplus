@@ -47,11 +47,12 @@ this deployment. Install install them as follows:
 
     sudo apt install make build-essential python3-dev python3-tk python3-venv
 
-You will also need the Chromium browser installed for generating PDF reports:
+You will also need the Chrome browser installed for generating PDF reports:
 
 .. code-block:: bash
 
-    sudo apt install chromium-browser
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    sudo apt install ./google-chrome-stable_current_amd64.deb
 
 
 Installing and configuring Git and checking out the QATrack+ Source Code
@@ -82,6 +83,8 @@ QATrack+.  To checkout the code enter the following commands:
     mkdir -p ~/web
     cd web
     git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
+    cd qatrackplus
+    git checkout v0.3.1
 
 
 Installing a Database System
@@ -119,7 +122,7 @@ Now edit /etc/postgresql/12/main/pg_hba.conf (use your favourite editor, e.g.
 `sudo nano /etc/postgresql/12/main/pg_hba.conf` (note, if you have a different
 version of Postgres installed, then you would need to change the 12 in that
 path e.g. /etc/postgresql/9.3/main/pg_hba.conf) and scroll down to the bottom
-and change the instances of `peer` to `md5` so it looks like:
+and change `peer` to `md5` for the `local all all` entry so it looks like:
 
 .. code-block:: bash
 
@@ -334,6 +337,7 @@ which should show output like:
     accounts
         [ ] 0001_initial
         [ ] 0002_activedirectorygroupmap_defaultgroup
+        [ ] 0003_auto_20210207_1027
 
 If you were able to connect to your database, we can now create the tables in
 our database and install the default data:

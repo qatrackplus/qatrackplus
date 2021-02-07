@@ -100,11 +100,13 @@ Make sure your existing packages are up to date
     sudo apt update
     sudo apt upgrade
 
-You will also need the Chromium browser installed for generating PDF reports:
+
+You will also need the Chrome browser installed for generating PDF reports:
 
 .. code-block:: console
 
-    sudo apt install chromium-browser
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    sudo apt install ./google-chrome-stable_current_amd64.deb
 
 
 Check out the latest version of QATrack+
