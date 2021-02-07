@@ -1,6 +1,5 @@
-CREATE USER qatrack_reports WITH PASSWORD 'qatrackpass';
-GRANT CONNECT ON DATABASE qatrackplus TO qatrack_reports;
-\c qatrackplus
+GRANT CONNECT ON DATABASE qatrackplus031 TO qatrack_reports;
+\c qatrackplus031
 GRANT USAGE ON SCHEMA public TO qatrack_reports;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO qatrack_reports;
 GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO qatrack_reports;

@@ -4,7 +4,7 @@ DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'qatrackplus',
+        'NAME': 'qatrackplus031',
         'USER': '',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
         'PASSWORD': '',
         'HOST':
@@ -13,7 +13,7 @@ DATABASES = {
     },
     'default': {
         'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'qatrackplus',
+        'NAME': 'qatrackplus031',
         'USER': 'qatrack_reports',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
@@ -94,7 +94,7 @@ TEST_STATUS_DISPLAY_SHORT = {
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
-EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SENDER = "qatrack@yourmailhost.com"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"

@@ -12,3 +12,4 @@ DATABASES = {
         'PORT': '',
     }
 }
+DATABASES['readonly'] = DATABASES['default']

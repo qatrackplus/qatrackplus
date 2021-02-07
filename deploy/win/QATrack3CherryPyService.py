@@ -20,7 +20,7 @@ from qatrack import wsgi
 import win32service
 import win32serviceutil
 
-VENV_DIRECTORY = "C:/deploy/venvs/qatrack3/"
+VENV_DIRECTORY = "C:/deploy/venvs/qatrack31/"
 DEPLOY_DIRECTORY = "C:/deploy/qatrackplus/"
 PORT = 8080
 
@@ -57,7 +57,7 @@ class QATrack030Service(win32serviceutil.ServiceFramework):
 
     _svc_name_ = "QATrack030CherryPyService"
 
-    _svc_display_name_ = "QATrack 030 CherryPy Service"
+    _svc_display_name_ = "QATrack 031 CherryPy Service"
 
     _exe_name_ = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'pythonservice.exe')
 

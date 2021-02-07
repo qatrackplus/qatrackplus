@@ -3,18 +3,18 @@ DEBUG = False
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
-        'NAME': 'qatrackplus',  # Or path to database file if using sqlite3.
-        'USER': 'qatrack',  # Not used with sqlite3.
-        'PASSWORD': 'qatrackpass',  # Not used with sqlite3.
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'qatrackplus031',
+        'USER': 'qatrack',
+        'PASSWORD': 'qatrackpass',
         'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     },
     'readonly': {
-        'ENGINE': 'django.db.backends.mysql',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
-        'NAME': 'qatrackplus',  # Or path to database file if using sqlite3.
-        'USER': 'qatrack_reports',  # Not used with sqlite3.
-        'PASSWORD': 'qatrackpass',  # Not used with sqlite3.
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'qatrackplus031',
+        'USER': 'qatrack_reports',
+        'PASSWORD': 'qatrackpass',
         'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
@@ -92,7 +92,7 @@ TEST_STATUS_DISPLAY_SHORT = {
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
-EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SENDER = "qatrack@yourmailhost.com"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"

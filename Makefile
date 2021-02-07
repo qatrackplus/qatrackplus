@@ -42,11 +42,19 @@ docs-autobuild:
 	sphinx-autobuild docs docs/_build/html -p 8009
 
 qatrack_daemon.conf:
+	sudo a2enmod headers
+	sudo a2enmod proxy
 	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/apache/apache24_daemon.conf > qatrack.conf
 	sudo mv qatrack.conf /etc/apache2/sites-available/qatrack.conf
 	sudo ln -sf /etc/apache2/sites-available/qatrack.conf /etc/apache2/sites-enabled/qatrack.conf
 	sudo usermod -a -G $(USER) www-data
 	sudo service apache2 restart
+
+supervisor.conf:
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/django-q.conf > django-q.conf
+	sudo mv django-q.conf /etc/supervisor/conf.d/
+	sudo supervisorctl reread
+	sudo supervisorctl update
 
 schema:
 	python ./manage.py graph_models -a -g \
@@ -59,4 +67,5 @@ run:
 __cleardb__:
 	python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"
 
-.PHONY: test test_simple test_broker yapf flake8 help docs-autobuild docs qatrack_daemon.conf schema run __demo__ __cleardb__
+.PHONY: test test_simple yapf flake8 help docs-autobuild docs \
+	qatrack_daemon.conf supervisor.conf schema run __cleardb__ mysql-ro-rights
