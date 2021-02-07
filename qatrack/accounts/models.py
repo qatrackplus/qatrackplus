@@ -7,7 +7,7 @@ class ActiveDirectoryGroupMap(models.Model):
 
     ad_group = models.CharField(
         _l("Active Directory Group"),
-        max_length=256,
+        max_length=255,
         unique=True,
         help_text=_l("Enter the name of the group from your Active Directory Server."),
     )
