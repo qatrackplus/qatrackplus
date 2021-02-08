@@ -1,3 +1,5 @@
+.. _linux_install_031:
+
 New Installation of QATrack+ v0.3.1 on Ubuntu Linux
 ===================================================
 
@@ -19,8 +21,8 @@ If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
 * :ref:`Upgrading an existing v0.3.0 installation to v0.3.1
-  <upgrading_030_to_031>`. 
-*  :ref:`Upgrading an existing v0.2.X installation to v0.3.1 <upgrading_02X_to_031>`. 
+  <linux_upgrading_030_to_031>`. 
+*  :ref:`Upgrading an existing v0.2.X installation to v0.3.1 <linux_upgrading_02X_to_031>`. 
 
 The steps we will be undertaking are:
 

@@ -1,4 +1,4 @@
-.. _upgrading_030_to_031:
+.. _linux_upgrading_030_to_031:
 
 
 Upgrading an existing v0.3.0 installation to v0.3.1
@@ -12,7 +12,7 @@ Upgrading an existing v0.3.0 installation to v0.3.1
 
 This guide will walk you through upgrading your existing v0.3.0 installation to
 v0.3.1.  If you currently have a 0.2.x version of QATrack+, you first need to
-follow the :ref:`instructions to upgrade to 0.3.0 <upgrading_02x_to_031>`,
+follow the :ref:`instructions to upgrade to 0.3.0 <linux_upgrading_02x_to_031>`,
 before carrying out these instructions.
 
 .. contents::

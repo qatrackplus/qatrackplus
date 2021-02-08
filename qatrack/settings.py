@@ -689,11 +689,11 @@ CHROME_PATH = ""
 if os.name.lower() == "nt":
     user = os.getlogin()
     chrome_paths = [
-        r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"',
-        r'"C:\Program Files\Google\Chrome\Application\chrome.exe"',
-        r'"C:\Documents and Settings\%s\Local Settings\Application Data\Google\Chrome\Application\chrome.exe"' % user,
-        r'"C:\Program Files (x86)\Google\Application\chrome.exe"',
-        r'"C:\Documents and Settings\%s\Local Settings\Application Data\Google\Chrome\chrome.exe"' % user,
+        r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
+        r'C:\Program Files\Google\Chrome\Application\chrome.exe',
+        r'C:\Documents and Settings\%s\Local Settings\Application Data\Google\Chrome\Application\chrome.exe' % user,
+        r'C:\Program Files (x86)\Google\Application\chrome.exe',
+        r'C:\Documents and Settings\%s\Local Settings\Application Data\Google\Chrome\chrome.exe' % user,
     ]
 else:
     # unfortunately in Ubuntu 20, chromium is installed as a snap and won't

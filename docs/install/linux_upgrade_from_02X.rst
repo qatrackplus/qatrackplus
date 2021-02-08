@@ -1,4 +1,4 @@
-.. _upgrading_02X_to_031:
+.. _linux_upgrading_02X_to_031:
 
 
 Upgrading an existing v0.2.X installation to v0.3.1

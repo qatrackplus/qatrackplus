@@ -5,19 +5,24 @@ DATABASES = {
     'default': {
         'ENGINE': 'sql_server.pyodbc',
         'NAME': 'qatrackplus031',
-        'USER': '',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
-        'PASSWORD': '',
-        'HOST':
-            '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
+        'USER': 'qatrack',
+        'PASSWORD': 'qatrackpass',
+        'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+        'OPTIONS': {
+            'driver': 'ODBC Driver 13 for SQL Server'
+        },
     },
-    'default': {
+    'readonly': {
         'ENGINE': 'sql_server.pyodbc',
         'NAME': 'qatrackplus031',
         'USER': 'qatrack_reports',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+        'OPTIONS': {
+            'driver': 'ODBC Driver 13 for SQL Server'
+        },
     }
 }
 

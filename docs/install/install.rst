@@ -22,11 +22,17 @@ be expensive!).
 
 .. toctree::
    :maxdepth: 2
-   :caption: Officially Supported Platforms
+   :caption: Ubuntu Linux
 
    linux
    linux_upgrade_from_030
    linux_upgrade_from_02X
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Windows Server
+
    win
 
 
