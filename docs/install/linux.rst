@@ -9,10 +9,11 @@ New Installation of QATrack+ v0.3.1 on Ubuntu Linux
 
 This guide is going to walk you through installing everything required to run
 QATrack+ on an Ubuntu 20.04 LTS (Focal Fossa) server with Python 3.8, Apache
-2.4 as the web server and PostgreSQL 12 (MySQL 8.0) as the database.
-Installation instructions should be similar on other Ubuntu systems. Similar
-steps will also likely work on other Linux distributions but those
-distributions are not officially supported or tested.
+2.4 as the web server and PostgreSQL 12 (MySQL 8.0) as the database.  The
+instructions have also been tested on Ubuntu 18.04 and installation
+instructions should be similar on other Ubuntu systems. Similar steps will also
+likely work on other Linux distributions but those distributions are not
+officially supported or tested.
 
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
