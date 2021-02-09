@@ -34,6 +34,8 @@ be expensive!).
    :caption: Windows Server
 
    win
+   win_upgrade_from_030
+   win_upgrade_from_02X
 
 
 Note there is no official support for the platforms listed below.  That doesn't

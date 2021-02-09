@@ -14,11 +14,11 @@ New Installation
 ----------------
 
 This guide is going to walk you through installing QATrack+ on a Windows Server
-2019 server with IIS 10 serving static assets (images, javascript and
+2016-2019 server with IIS serving static assets (images, javascript and
 stylesheets) and acting as a reverse proxy for a CherryPy web server which
-serves our Django application (QATrack+).  SQL Server 2019 will be used as the
-database. If you are upgrading an existing installation, please see the sections
-below on upgrading from v0.2.8 or v0.2.9.
+serves our Django application (QATrack+).  The instructions have been tested
+with SQL Server 2016 & 2019 database. If you are upgrading an existing
+installation, please see the sections below on upgrading from v0.2.8 or v0.2.9.
 
 
 .. note::
@@ -36,24 +36,15 @@ The steps we will be undertaking are:
 
 
 Install Google Chrome
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 If you want to be able to generate or schedule PDF reports, you need to have
 Google Chrome installed.  Download and install Chrome here: https://www.google.com/chrome/index.html
 
-
-Installing git
-~~~~~~~~~~~~~~
-
-Go to http://git-scm.com and download the latest version of git (msysgit) for
-Windows (Git-2.30.0 at the time of writing).  Run the installer.  I just leave
-all the settings on the defaults but you are free to modify them if you like.
-
-
 .. _install_py3_win:
 
 Installing Python 3
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Go to http://www.python.org/downloads/ and download the latest Python 3.9.X
 (3.9.1 at the time of writing) 64 bit version (e.g. the "Windows installer
@@ -65,6 +56,14 @@ On the second page of the installer, leave the defaults and click "Next".
 
 On the third page, make sure you have "Install for all users" selected (this
 is important!) before clicking "Install".
+
+
+Installing git and checking out the QATrack+ Source Code
+--------------------------------------------------------
+
+Go to http://git-scm.com and download the latest version of git (msysgit) for
+Windows (Git-2.30.0 at the time of writing).  Run the installer.  I just leave
+all the settings on the defaults but you are free to modify them if you like.
 
 
 Checkout the latest release of QATrack+ source code from BitBucket
@@ -82,7 +81,7 @@ check out the source code, use the following commands:
 
 
 Setting up our Python environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 Ensure you have python3 installed correctly and on your PATH by running:
 
@@ -122,19 +121,19 @@ We're now ready to install all the libraries QATrack+ depends on.
 
 
 Creating a database with SQL Server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Ensure ODBC Driver 13.1 is installed
-....................................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order for QATrack+ to connect to your database, you need to have the `ODBC
 Driver 13.1` installed.  Visit
 https://www.microsoft.com/en-us/download/details.aspx?id=53339 and download and
-install the driver.
+install the driver (64 bit).
 
 
 Ensure `SQL Server Authentication` is enabled
-.............................................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Open SQL Server Management Studio and connect to 'localhost' or another
 database server.
@@ -146,7 +145,7 @@ right click on your server again and click `Restart`.
 
 
 Create a new database
-.....................
+~~~~~~~~~~~~~~~~~~~~~
 
 In the Object Explorer frame, right click the Databases folder and select "New
 Database...".
@@ -253,7 +252,7 @@ our new database from the command prompt:
 
 
 Configuring CherryPy to Serve QATrack+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 In order to have QATack+ start when you reboot your server, or restart after a
 crash, we will run QATrack+ with a CherryPy server installed as a Windows
@@ -293,7 +292,7 @@ QATrackCherryPyService configuration dialogue).
 
 
 Setting up IIS
-~~~~~~~~~~~~~~
+--------------
 
 To start open up the Internet Information Services (IIS) application. We are
 going to use IIS for two purposes: first, it is going to serve all of our
@@ -312,7 +311,7 @@ install the Web Platform Installer first).
 After installing these modules, you will need to close & re-open IIS.
 
 Enabling Proxy in Application Request Routing
-.............................................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Application Request Routing needs to have the proxy setting enabled. To do
 this, click on the top level server in the left side panel, and then double
@@ -321,7 +320,7 @@ click the `Application Request Routing` icon. In the `Actions` panel click the
 the other settings the same and click `Apply` and then `Back to ARR Cache`.
 
 Enabling Static Content Serving in IIS
-......................................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 IIS is not always set up to serve static content. To enable this, open the
 Server Manager software, click Manage, then `Add Roles and Features` then
@@ -413,8 +412,47 @@ service was installed correctly and is running.
     running on a server.
 
 
+Setting up Django Q
+-------------------
+
+As of version 0.3.1, some features in QATrack+ rely on a separate long running
+process which looks after periodic and background tasks like sending out
+scheduled notices and reports.  We are going to use Windows Task Scheduler
+to run the Django Q task processing cluster. 
+
+Open the Windows Task Scheduler application and click `Create Task`. Give the
+task a name of "QATrack+ Django Q Cluster".  Click the `Change User or
+Group...` button and in the `Enter the object name to select` box put
+`SYSTEM`, then click `Check Names` and `OK` On the `Triggers` tab, click
+`New...` and in the `Begin the task:` dropdown select `At startup` and then
+click `OK`.
+
+Now go to the `Actions` tab and click `New...`.  In the `Program/script:` box
+enter `C:\deploy\venvs\qatrack31\Scripts\python.exe`. In the `Add arguments
+(optional)`: field enter `manage.py qcluster`, and in the `Start in
+(optional):` field put `C:\deploy\qatrackplus`  (no trailing slash!).
+
+Click OK, then right click on the task and select `Run`.  Go back
+to your PowerShell window (or open a new one) and confirm your task
+cluster is running which should show something like:
+
+.. code-block:: console
+
+     Host            Id      State    Pool    TQ       RQ       RC    Up
+
+    YOUR-SERVER    e0474f3f  Idle     2       0        0        0     0:05:53
+
+         ORM default     Queued    0    Success   48   Failures       0
+
+                         [Press q to quit]
+
+If the line between `Host` and `ORM default` is blank then there is a problem
+with the Windows Task you created.
+
+
+
 What Next
-~~~~~~~~~
+---------
 
 * Check the :ref:`the settings page <qatrack-config>` for any available
   customizations you want to add to your QATrack+ installation (don't forget to
@@ -427,7 +465,7 @@ What Next
 
 
 Wrap Up
-~~~~~~~
+-------
 
 This guide shows only one of many possible method of deploying QATrack+ on
 Windows.  It is very similar to what is used at The Ottawa Hospital Cancer

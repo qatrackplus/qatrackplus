@@ -26,7 +26,7 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', "YOUR_HOST_NAME_HERE"]
 
 # needs to be set to True when running behind reverse proxy (normal deploy)
 # set to False when not running behind reverse proxy
