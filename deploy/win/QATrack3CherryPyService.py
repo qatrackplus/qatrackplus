@@ -55,7 +55,7 @@ class QATrack030Service(win32serviceutil.ServiceFramework):
 
     """NT Service."""
 
-    _svc_name_ = "QATrack030CherryPyService"
+    _svc_name_ = "QATrack031CherryPyService"
 
     _svc_display_name_ = "QATrack 031 CherryPy Service"
 

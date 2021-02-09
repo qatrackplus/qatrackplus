@@ -15,6 +15,18 @@ Details of the v0.3.1 release
 .............................
 
 
+Deprecations & Discontinuations
+...............................
+
+* Python 3.4 & 3.5, 3.6: Python 3.4 & 3.5 are no longer receiving updates and
+  therefore QATrack+ will no longer be supporting those Python versions. It is
+  also recommended that Python 3.7-3.10 be used on Windows as it simplifies
+  the install process.
+
+* The settings `AD_DEBUG` & `AD_DEBUG_FILE` are no longer used.  Instead,
+  information is now logged to an 'auth.log' file.
+
+
 Major Features
 ^^^^^^^^^^^^^^
 
@@ -345,15 +357,6 @@ Other Minor Features & Bugs Fixed
     * matplotlib updated to 3.3.4
     * scipy updated to 1.5.4
 
-
-Deprecations & Discontinuations
-...............................
-
-* Python 3.4 & 3.5: Python 3.4 & 3.5 are no longer receiving updates and
-  therefore QATrack+ will no longer be supporting those Python versions.
-
-* The settings `AD_DEBUG` & `AD_DEBUG_FILE` are no longer used.  Instead,
-  information is now logged to an 'auth.log' file.
 
 
 QATrack+ v0.3.0.18 Release Notes

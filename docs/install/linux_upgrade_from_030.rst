@@ -99,8 +99,8 @@ And add readonly roles to the database:
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 0.3.1, runs on Python 3.6, 3.7, 3.8, & 3.9 Check your version of
-python3 with the command:
+Version 0.3.1, runs on Python 3.6, 3.7, 3.8, & 3.9. Check your version of
+Python 3 with the command:
 
 .. code-block:: bash
 

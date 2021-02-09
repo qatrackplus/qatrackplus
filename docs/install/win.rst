@@ -17,8 +17,14 @@ This guide is going to walk you through installing QATrack+ on a Windows Server
 2016-2019 server with IIS serving static assets (images, javascript and
 stylesheets) and acting as a reverse proxy for a CherryPy web server which
 serves our Django application (QATrack+).  The instructions have been tested
-with SQL Server 2016 & 2019 database. If you are upgrading an existing
-installation, please see the sections below on upgrading from v0.2.8 or v0.2.9.
+with SQL Server 2016 & 2019 database
+
+If you are upgrading an existing QATrack+ installation, please see
+one of the following pages:
+
+* :ref:`Upgrading an existing v0.3.0 installation to v0.3.1
+  <win_upgrading_030_to_031>`. 
+*  :ref:`Upgrading an existing v0.2.X installation to v0.3.1 <win_upgrading_02X_to_031>`. 
 
 
 .. note::
@@ -456,7 +462,8 @@ What Next
 
 * Check the :ref:`the settings page <qatrack-config>` for any available
   customizations you want to add to your QATrack+ installation (don't forget to
-  restart your QATrack CherryPy Service after changing any settings!)
+  restart both your QATrack CherryPy Service, and Django Q cluster via the task
+  scheduler after changing any settings!)
 
 * Automate the :ref:`backup of your QATrack+ installation <qatrack_backup>`.
 
