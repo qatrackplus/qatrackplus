@@ -230,9 +230,14 @@ API Changes
     - permissions or user_set data present in the Groups list view
     - first_name, last_name, date_joined, permissions in the User List view
     - Fields other than name, number, or site in the Unit list
+
   * Bugs with filtering for exact matches of search strings have been resolved.
 
   * First Name & Last Name have been added to the user-list api view
+
+  * When dependencies of a composite test are skipped and the composite test itself
+    is not skipped, an error letting the user know to skip the composite test
+    explicitly is now shown.
 
 * The UnitTestCollection API results now include "next_day" and "next_test_list"
   parameters to make it simple to determine which test list is to be performed

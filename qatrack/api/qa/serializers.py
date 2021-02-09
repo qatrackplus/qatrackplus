@@ -325,7 +325,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             if type_ in auto_types and not self.autovalue_ok(validated_val, provided_val):
                 invalid_autos.append(slug)
-            elif type_ in auto_types and not self.type_okay(type_, validated_val):
+            elif type_ in auto_types and not self.type_okay(type_, validated_val) and not skipped:
                 wrong_types.append(slug)
 
             d = validated_data['tests'][slug]
@@ -348,7 +348,15 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             msgs.append("Missing data for tests: %s" % ', '.join(missing))
 
         if wrong_types:
-            msgs.append("Wrong value type (number/string) for tests: %s" % ', '.join(wrong_types))
+            msg = '\n'.join([
+                "Wrong value type (number/string) for tests: %s" % ', '.join(wrong_types),
+                (
+                    "If these are composite tests with missing dependencies, "
+                    "they should be marked as skipped in your request "
+                    "(e.g. {'tests': {'%s': {'skipped': True}}})" % wrong_types[0]
+                ),
+            ])
+            msgs.append(msg)
 
         if invalid_autos:
             msgs.append(

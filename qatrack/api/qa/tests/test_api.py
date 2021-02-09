@@ -227,6 +227,51 @@ class TestTestListInstanceAPI(APITestCase):
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
         assert tic.value == self.data['tests']['test1']['value'] + self.data['tests']['test2']['value']
 
+    def test_create_composite_skipped_all_dependencies_comp_not_skipped(self):
+        """
+        Add a composite test to our test list.  Submitting with its dependencies
+        skipped should result in an error and mention it is missing dependencies
+        and needs to be skipped
+        """
+
+        utils.create_test_list_membership(self.test_list, self.tc)
+        self.data['tests']['test1'] = {'value': None, 'skipped': True}
+        self.data['tests']['test2'] = {'value': None, 'skipped': True}
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "missing dependencies" in response.json()['non_field_errors'][0]
+
+    def test_create_composite_skipped_one_dependency_comp_not_skipped(self):
+        """
+        Add a composite test to our test list.  Submitting with one dependency
+        skipped should result in an error and mention it is missing dependencies
+        and needs to be skipped
+        """
+
+        utils.create_test_list_membership(self.test_list, self.tc)
+        self.data['tests']['test1'] = {'value': None, 'skipped': True}
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "missing dependencies" in response.json()['non_field_errors'][0]
+
+    def test_create_composite_skipped_all_dependencies_comp_skipped(self):
+        """
+        Add a composite test to our test list.  Submitting with one dependency
+        skipped should result in an error and mention it is missing dependencies
+        and needs to be skipped
+        """
+
+        utils.create_test_list_membership(self.test_list, self.tc)
+        self.data['tests']['test1'] = {'value': None, 'skipped': True}
+        self.data['tests']['test2'] = {'value': None, 'skipped': True}
+        self.data['tests']['testc'] = {'skipped': True}
+        response = self.client.post(self.create_url, self.data)
+        assert response.statu_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 1
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        assert tic.pass_fail == models.NOT_DONE
+
     def test_create_date_composite(self):
         """
         Add a date composite test to our test list.  Submitting without data
