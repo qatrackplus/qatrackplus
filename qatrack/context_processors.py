@@ -242,4 +242,4 @@ def get_sl_notification_total(request, se_unreviewed, rts_incomplete, rts_unrevi
         ('service_log.perform_returntoserviceqa', rts_incomplete),
         ('qa.can_review', rts_unreviewed),
     ]
-    return sum(count for perm, count in perms if request.user.has_perm(perm))
+    return sum(count for perm, count in perms if hasattr(request, 'user') and request.user.has_perm(perm))
