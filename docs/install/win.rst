@@ -273,9 +273,9 @@ PowerShell and click "Run as Administrator") and run the following commands:
     cd C:\deploy
     .\venvs\qatrack31\Scripts\Activate.ps1
     cd qatrackplus
-    cp deploy\win\QATrack3CherryPyService.py .
-    python QATrack3CherryPyService.py --startup=auto install
-    python QATrack3CherryPyService.py start
+    cp deploy\win\QATrack31CherryPyService.py .
+    python QATrack31CherryPyService.py --startup=auto install
+    python QATrack31CherryPyService.py start
 
 
 Open the Windows Services dialog and confirm the `QATrack 031 CherryPy Service`
@@ -429,14 +429,33 @@ to run the Django Q task processing cluster.
 Open the Windows Task Scheduler application and click `Create Task`. Give the
 task a name of "QATrack+ Django Q Cluster".  Click the `Change User or
 Group...` button and in the `Enter the object name to select` box put
-`SYSTEM`, then click `Check Names` and `OK` On the `Triggers` tab, click
+`SYSTEM`, then click `Check Names` and `OK`.
+
+.. figure:: images/win/qcluster_task.png
+    :alt: QCluster Task
+
+    QCluster Task
+
+
+On the `Triggers` tab, click
 `New...` and in the `Begin the task:` dropdown select `At startup` and then
 click `OK`.
+
+.. figure:: images/win/qcluster_trigger.png
+    :alt: QCluster Trigger
+
+    QCluster Trigger
 
 Now go to the `Actions` tab and click `New...`.  In the `Program/script:` box
 enter `C:\deploy\venvs\qatrack31\Scripts\python.exe`. In the `Add arguments
 (optional)`: field enter `manage.py qcluster`, and in the `Start in
 (optional):` field put `C:\deploy\qatrackplus`  (no trailing slash!).
+
+.. figure:: images/win/qcluster_action.png
+    :alt: QCluster Action
+
+    QCluster Action
+
 
 Click OK, then right click on the task and select `Run`.  Go back
 to your PowerShell window (or open a new one) and confirm your task
