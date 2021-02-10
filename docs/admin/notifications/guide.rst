@@ -17,6 +17,8 @@ specific time.  Currently the availble notification types are:
 
 * :ref:`Part Notices <notifications-part>`
 
+* :ref:`Fault Logged Notices <notifications-fault-logged>`
+
 Configuring Notifications
 -------------------------
 
@@ -418,6 +420,75 @@ Recipients (required):
 Part Category Group filter (optional):
     If you want this notification to only pertain to specific part categories, select a
     Part Category Group filter.
+
+
+Click `Save` once you have configured the notification the way you want.
+
+
+.. _notifications-fault-logged:
+
+Fault Logged Notices
+--------------------
+
+There is currently one Fault Logged notice type:
+
+    * *Notify when fault logged*  Use these alerts to get an email whenever a
+      user logs a fault.
+
+
+To create a new `Fault Logged Notice` click through the `Fault Logged Notices`
+section of the Notification admin section and then on the next page click `Add
+Fault Logged Notice` and then fill out the fields:
+
+Notification Type (required):
+    Select the notification type you want to create
+
+Recipients (required):
+    Select the recipient group you want this notification sent to.
+
+Unit Group filter (optional):
+    If you want this notification to only pertain to specific units, select a
+    Unit Group filter.
+
+
+
+Click `Save` once you have configured the notification the way you want.
+
+
+.. _notifications-fault-review:
+
+Fault Review Notices
+--------------------
+
+There is currently only one subtype of Fault Review Notice:
+
+    * *Notify about Faults awaiting review*:  This is a scheduled
+      notification that can be sent to remind staff that there are currently 
+      logged Faults awaiting review.
+
+
+To create a new `Fault Review Notice` click through the `Fault Review Notices`
+section of the Notification admin section and then on the next page click `Add
+Fault Review Notice` and then fill out the fields:
+
+Notification Type (required):
+    Select the notification type you want to create
+
+Send Empty (required):
+    Should this notice be sent even if there are no Faults to currently notify about?
+
+Recurrences (required):
+    Create a recurrence rule to define the days you want this notice sent.
+
+Time of day (required):
+    Select the time of day you want the notice sent.
+
+Recipients (required):
+    Select the recipient group you want this notification sent to.
+
+Unit Group filter (optional):
+    If you want this notification to only pertain to specific units, select a
+    Unit Group filter.
 
 
 Click `Save` once you have configured the notification the way you want.

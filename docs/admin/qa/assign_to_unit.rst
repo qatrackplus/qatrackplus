@@ -29,7 +29,7 @@ assigned to be performed on an *ad-hoc* basis.
 Due Date & Auto Schedule
 ------------------------
 
-Here you can manaully set the initial due date/time for a test list on a unit.
+Here you can manually set the initial due date/time for a test list on a unit.
 You can also leave this blank if you like and the test list will show up as
 being *Not Due*.
 
@@ -40,7 +40,7 @@ a unit.
 Assigned To
 -----------
 
-The group of users that is generally responsible for performing the the lists.
+The group of users that is generally responsible for performing the lists.
 Note that the **Assigned To** property is used for display only and users not
 part of the **Assigned To** group will still be able to see and perform the
 test list.

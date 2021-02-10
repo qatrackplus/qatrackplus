@@ -183,6 +183,48 @@ which will take you to the `Create Service Event` page described above with the
 reviewing.
 
 
+.. _service_log_use_template:
+
+Using a Service Event Template
+..............................
+
+If your administrator has :ref:`configured service event templates
+<sl_template_schedules>` then when you select the Unit you want to enter a
+Service Event for, the `Template` input will be activated and you can select
+one of the templates available to perform on that unit.
+
+.. figure:: images/select_template.png
+   :alt: Selecting a service event template
+
+   Selecting a service event template
+
+This will auto populate any fields that have been configured in the template
+including the Return To Service QC.
+
+.. _service_log_scheduled_template:
+
+Performing a Scheduled Service Event
+....................................
+
+Scheduled Service Events can be accessed throught the `Service Log -> Service
+Event Schedules` menu:
+
+
+.. figure:: images/scheduled_se_menu.png
+   :alt: Navigating to the Scheduled Service Event Lists
+
+   Navigating to the Scheduled Service Event Lists
+
+On the next page, select the Service Event Template you want to perform.
+Clicking the `Perform` button will take you the form for entering a new Service
+Event with the appropriate Service Event Template field and the other template
+fields pre-populated for you.  
+
+If you are performing this Service Event Template outside of your normally
+scheduled time, you can deselect the `Include for Scheduling` field and the due
+date for this scheduled template will not be updated when you submit it.
+
+
 .. _service_log_dashboard:
 
 Service Log Dashboard
