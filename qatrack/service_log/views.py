@@ -1,4 +1,5 @@
-from collections import OrderedDict
+import calendar
+import collections
 import csv
 from itertools import groupby
 
@@ -61,6 +62,7 @@ from listable.views import (
     YESTERDAY,
     BaseListableView,
 )
+import pytz
 
 from qatrack.attachments.models import Attachment
 from qatrack.parts import forms as p_forms
@@ -1478,7 +1480,7 @@ def handle_unit_down_time(request):
     response['Content-Disposition'] = 'attachment; filename="qatrack_unit_uptime.csv"'
     response['Content-Type'] = 'text/csv; charset=utf-8'
 
-    totals = OrderedDict({'potential': 0})
+    totals = collections.OrderedDict({'potential': 0})
 
     writer = csv.writer(response)
     rows = [
@@ -1849,6 +1851,115 @@ class DueAndOverdue(ServiceEventScheduleList):
         today = timezone.now().astimezone(timezone.get_current_timezone()).date()
         qs = super().get_queryset()
         return qs.exclude(due_date=None).filter(due_date__lte=today)
+
+
+class DueDateOverview(PermissionRequiredMixin, TemplateView):
+    """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
+
+    template_name = "service_log/overview_by_due_date.html"
+    permission_required = ["service_log.review_serviceevent"]
+    raise_exception = True
+
+    DUE_DISPLAY_ORDER = (
+        ("overdue", _l("Due & Overdue")),
+        ("this_week", _l("Due This Week")),
+        ("next_week", _l("Due Next Week")),
+        ("this_month", _l("Due This Month")),
+        ("next_month", _l("Due Next Month")),
+    )
+
+    def check_permissions(self, request):
+        for perm in self.get_permission_required(request):
+            if request.user.has_perm(perm):
+                return True
+        return False
+
+    def get_queryset(self):
+
+        qs = sl_models.ServiceEventSchedule.objects.filter(
+            active=True,
+            unit_service_area__unit__active=True
+        ).select_related(
+            "last_instance",
+            "frequency",
+            "service_event_template",
+            "unit_service_area",
+            "unit_service_area__service_area",
+            "unit_service_area__unit",
+            "assigned_to",
+        ).exclude(due_date=None).order_by(
+            "frequency__nominal_interval",
+            "unit_service_area__unit__number",
+            "service_event_template__name",
+        )
+
+        return qs.distinct()
+
+    def get_context_data(self):
+        """Group all Service Event Schedules"""
+
+        context = super().get_context_data()
+
+        qs = self.get_queryset()
+
+        tz = pytz.timezone(settings.TIME_ZONE)
+        now = timezone.now().astimezone(tz)
+        today = now.date()
+        friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
+        next_friday = friday + timezone.timedelta(days=7)
+        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        if calendar.isleap(now.year) and now.month == 2:
+            month_end += timezone.timedelta(days=1)
+        next_month_start = month_end + timezone.timedelta(days=1)
+        next_month_end = tz.localize(
+            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
+        ).date()
+
+        due = collections.defaultdict(list)
+
+        units = set()
+        service_areas = set()
+        freqs = set()
+        groups = set()
+
+        for sch in qs:
+            due_date = sch.due_date.astimezone(tz).date()
+            if due_date <= today:
+                due["overdue"].append(sch)
+            elif due_date <= friday:
+                if sch.last_instance is None or sch.last_instance.work_completed.astimezone(tz).date() != today:
+                    due["this_week"].append(sch)
+            elif due_date <= next_friday:
+                due["next_week"].append(sch)
+            elif due_date <= month_end:
+                due["this_month"].append(sch)  # pragma: nocover
+            elif due_date <= next_month_end:
+                due["next_month"].append(sch)
+
+            units.add(str(sch.unit_service_area.unit))
+            service_areas.add(str(sch.unit_service_area.service_area.name))
+            freqs.add(str(sch.frequency or _("Ad Hoc")))
+            groups.add(str(sch.assigned_to))
+
+        ordered_due_lists = []
+        for key, display in self.DUE_DISPLAY_ORDER:
+            ordered_due_lists.append((key, display, due[key]))
+        context["due"] = ordered_due_lists
+        context["units"] = sorted(units)
+        context["service_areas"] = sorted(service_areas)
+        context["freqs"] = sorted(freqs)
+        context["groups"] = sorted(groups)
+        context['user_groups'] = '-user' in self.request.path
+
+        return context
+
+
+class DueDateOverviewUser(DueDateOverview):
+
+    permission_required = ["service_log.review_serviceevent"]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(visible_to__in=self.request.user.groups.all())
 
 
 def service_log_report(request, pk):

@@ -1,0 +1,197 @@
+{% extends "site_base.html" %}
+{% load i18n %}
+{% load qa_tags %}
+{% load listable %}
+{% load static %}
+
+{% block head_title %}{% trans "Scheduled Service Events Overview by Due Date" %}{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static "listable/css/jquery.dataTables.bootstrap.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "datepicker/css/bootstrap-datepicker.min.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "multiselect/css/bootstrap.multiselect.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{ VERSION }}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    {% autoescape off %}
+    {% endautoescape %}
+{% endblock %}
+
+{% block require_javascript %}
+
+require(['moment', 'listablestatic'], function(moment, listable){
+$(document).ready(function(){
+  var filters = [
+    {type: "text"},
+    {
+      type: "select",
+      multiple: "multiple",
+      values: [
+        {% for unit in units %}
+        {value: "{{ unit }}", label: "{{ unit }}" }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      bRegex: true
+    },
+    {
+      type: "select",
+      multiple: "multiple",
+      values: [
+        {% for sa in sas %}
+        {value: "{{ sa }}", label: "{{ sa }}" }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      bRegex: true
+    },
+    {type: "text"},
+    {
+      type: "select",
+      multiple: "multiple",
+      values: [
+        {% for freq in freqs %}
+        {value: "{{ freq }}", label: "{{ freq }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      bRegex: true
+    },
+    {
+      type: "select",
+      multiple: "multiple",
+      values: [
+        {% for group in groups %}
+            {value: "{{ group }}", label: "{{ group }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      bRegex: true
+    }
+  ];
+  $(".overview-table").each(function(i, e){
+    var id = $(this).attr("id");
+    var Listable = {
+        "DOM": "<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>",
+        "autoWidth": false,
+        "columnDefs": [null, null, null, {'sType': "span-timestamp"}, null, null],
+        "columnFilterDefs": filters,
+        "cookie": "dt-" + i +"_" + id + "_",
+        "cookiePrefix": "dt-" + i + "_",
+        "cssInpschlass": "btn-flat btn-sm input-sm full-width",
+        "cssTableClass": "table table-hover table-condensed",
+        "displayLength": 10,
+        "order": [[2, 'asc']],
+        paginate: false,
+        "paginationType": "bootstrap3",
+        "stateSave": true,
+        "tableId": "#" + id
+    };
+
+    listableStatic(Listable, moment);
+
+  });
+
+  });
+
+});
+{% endblock require_javascript %}
+
+{% block body %}
+  <div class="row">
+    <div class="col-md-12">
+      {% if user_groups %}
+        <h4 class="box-title">
+          <i class="fa fa-calendar fa-fw" aria-hidden="true"></i>
+          {% trans "Scheduled Service Events Overview By Due Date For Your Groups" %}
+        </h4>
+        <p>
+          {% trans "View which scheduled service events (visible to your groups) are due or coming due soon" %}
+        </p>
+      {% else %}
+        <h4 class="box-title">
+          <i class="fa fa-calendar fa-fw" aria-hidden="true"></i>
+          {% trans "Scheduled Service Events Overview By Due Date" %}
+        </h4>
+        <p>{% trans "View which scheduled service events are due or coming due soon" %}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% for key, display, schs in due %}
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">{{display}} {% if schs%}({{schs|length}}){%endif%}</h3>
+          </div>
+          <div class="box-body row due-status-container">
+            <div class="col-md-12">
+              {% if schs %}
+                <div class="due-status-lists">
+                  <table id="table-{{ key }}" class="table-responsive table-hover overview-table">
+                    <thead>
+                      <tr>
+                        <th><b>{% trans "Name" %}</b></th>
+                        <th><b>{% trans "Unit" %}</b></th>
+                        <th><b>{% trans "Service Area" %}</b></th>
+                        <th><b>{% trans "Due Date" %}</b></th>
+                        <th><b>{% trans "Freq" %}</b></th>
+                        <th><b>{% trans "Assigned To" %}</b></th>
+                      </tr>
+                      <tr>
+                        <th><b>{% trans "Name" %}</b></th>
+                        <th><b>{% trans "Unit" %}</b></th>
+                        <th><b>{% trans "Service Area" %}</b></th>
+                        <th><b>{% trans "Due Date" %}</b></th>
+                        <th><b>{% trans "Freq" %}</b></th>
+                        <th><b>{% trans "Assigned To" %}</b></th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {% for sch in schs %}
+                        <tr>
+                          <td>
+                            <a title="Perform {{sch.service_event_template.name}} on {{sch.unit_service_area.unit.name}}"
+                              href="{% url 'sl_new' %}?se_schedule={{ se_schedule.pk }}&next={{request.path|cut:"data/"}}"
+                            >
+                              {{sch.service_event_template.name}}
+                            </a>
+                          </td>
+                          <td>
+                            {{sch.unit_service_area.unit.name}}
+                          </td>
+                          <td>
+                            {{sch.unit_service_area.service_area.name}}
+                          </td>
+                          <td class="pad-r-10">
+                              {{sch|as_due_date}}
+                          </td>
+                          <td >
+                            {% firstof sch.frequency.name "Ad Hoc" %}
+                          </td>
+                          <td>
+                            {{ sch.assigned_to.name }}
+                          </td>
+                        </tr>
+                      {% endfor %}
+
+                    </tbody>
+                    </table>
+                </div>
+              {% else %}
+                <em>{% blocktrans %}Nothing {{display }}{% endblocktrans %}</em>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+
+{% endblock %}
+
+{% block end_body_extra_script %}
+
+{% endblock %}

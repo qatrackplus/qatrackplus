@@ -32,4 +32,6 @@ urlpatterns = [
     url(r'^templates/searcher/$', views.service_event_template_searcher, name='se_template_searcher'),
     url(r'^event/schedule/all/$', views.ServiceEventScheduleList.as_view(), name='se_schedule_list_all'),
     url(r'^event/schedule/due-and-overdue/$', views.DueAndOverdue.as_view(), name='se_schedule_due'),
+    url(r'^event/schedule/due-dates/$', views.DueDateOverview.as_view(), name='se_schedule_overview_due_dates'),
+    url(r'^event/schedule/due-dates-user/$', views.DueDateOverview.as_view(), name='se_schedule_overview_due_dates_user'),
 ]

@@ -505,6 +505,22 @@
                           </a>
                         </li>
 
+                        {% if perms.service_log.review_serviceevent %}
+                          <li>
+                            <a href="{% url "se_schedule_overview_due_dates" %}" title="{% trans "View Service Event Schedules grouped by due date" %}">
+                              <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
+                              {% trans "By Due Status - All" %}
+                            </a>
+                          </li>
+
+                          <li>
+                            <a href="{% url "se_schedule_overview_due_dates_user" %}" title="{% trans "View Service Event Schedules for groups you belong to" %}">
+                              <i class="fa fa-calendar-check-o fa-lg fa-fw" aria-hidden="true"></i>
+                              {% trans "By Due Status - Your Groups" %}
+                            </a>
+                          </li>
+                        {% endif %}
+
                       {% endif %}
                       {% if perms.qa.can_review or service_log.view_returntoserviceqa or perms.service_log.perform_returntoserviceqa %}
 
