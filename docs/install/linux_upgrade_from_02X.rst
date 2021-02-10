@@ -1,8 +1,8 @@
 .. _linux_upgrading_02X_to_031:
 
 
-Upgrading an existing v0.2.X installation to v0.3.1
-===================================================
+Upgrading an existing Linux v0.2.X installation to v0.3.1
+=========================================================
 
 
 .. note::
@@ -168,7 +168,7 @@ Now confirm your restore worked:
     sudo mysql --password=qatrackpass --database qatrackplus -e "SELECT COUNT(*) from qa_testlistinstance;"
 
 
-Assuming your database restoration was successfull, you may now proceed with
+Assuming your database restoration was successful, you may now proceed with
 upgrading the database to v0.3.0.
 
 
@@ -300,7 +300,8 @@ Migrating 0.2.9 to 0.3.0
 Check out QATrack+ version 0.3.0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we need to checkout the QATrack+ v0.3.0 source code:
+In order to upgrade our 0.2.9 installation to 0.3.0, first we need to checkout
+the QATrack+ v0.3.0 source code:
 
 .. code-block:: bash
 
@@ -378,4 +379,4 @@ Next Steps
 ----------
 
 Now that you have upgraded to 0.3.0, you should proceed directly to
-:ref:`upgrading to v0.3.1 from v0.3.0 <upgrading_030_to_031>`;
+:ref:`upgrading to v0.3.1 from v0.3.0 <linux_upgrading_030_to_031>`;

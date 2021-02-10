@@ -1,8 +1,8 @@
 .. _linux_upgrading_030_to_031:
 
 
-Upgrading an existing v0.3.0 installation to v0.3.1
-===================================================
+Upgrading an existing Linux v0.3.0 installation to v0.3.1
+=========================================================
 
 .. note::
 
