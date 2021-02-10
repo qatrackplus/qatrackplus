@@ -118,7 +118,7 @@ server (or for example your CherryPy service).
 Active Directory Federation Services (ADFS)
 -------------------------------------------
 
-As of version 0.3.1 comes with an ADFS backend for Single Sign On (SSO).  This
+As of version 3.1.0 comes with an ADFS backend for Single Sign On (SSO).  This
 can provide a convenient way for your users to log into QATrack+ using their
 hospital network login.
 

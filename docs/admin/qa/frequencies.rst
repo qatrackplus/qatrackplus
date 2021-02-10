@@ -14,10 +14,10 @@ Frequencies can be configured from the main admin page by clicking on the
 How Frequencies work
 --------------------
 
-Prior to version 0.3.1, QATrack+ used an "offset" system for deciding whether a
+Prior to version 3.1.0, QATrack+ used an "offset" system for deciding whether a
 test list is not due, due or overdue. Anytime a test list was performed, its
 due date was set a certain number of days (the `Due Interval`) from todays
-date.  While this method of scheduling is still possible, v0.3.1 introduced a
+date.  While this method of scheduling is still possible, v3.1.0 introduced a
 more flexible scheduling system based on recurrence rules (RFC 5545) similar to
 what you would find in other calendar applications. Recurrence rules allow you
 to specify schedules like "Every Mon, Wed, Fri", "The First Monday of Every
@@ -62,7 +62,7 @@ Lets look at a couple of examples to demonstrate this system:
    currently set to Dec 1st.  A user performs the test list on Nov 14th.  In
    this case, since no Start Interval is defined, the due date will be set
    forward 28 days to to Dec 12th.  This is analogous to the offset system used
-   in versions prior to v0.3.1.
+   in versions prior to v3.1.0.
 
 
 Due Dates in the User Interface

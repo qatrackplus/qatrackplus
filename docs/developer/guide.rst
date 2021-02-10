@@ -24,13 +24,12 @@ or have questions about using git or contributing code then please post to the
 In order to develop for QATrack+ you first need to make sure you have a few
 requirements installed.
 
-Python 3.4+
+Python 3.6+
 ~~~~~~~~~~~
 
-QATrack+ is developed using Python 3 (at least Python 3.4, preferably 3.5+).
-Depending on your operating system, Python 3 may already be installed but if
-not you can find instructions for installing the proper version on
-https://python.org.
+QATrack+ is developed using Python 3 (Python 3.6-3.9).  Depending on your
+operating system, Python 3 may already be installed but if not you can find
+instructions for installing the proper version on https://python.org.
 
 Git
 ~~~
@@ -154,10 +153,10 @@ QATrack+.
 Internationalization & Translation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As of version 0.3.1, all strings and templates in QATrack+ should be marked for
-translation. This will allow for QATrack+ to be made avaialable in multiple
-languages.  For discussion of how to mark templates and strings for translation
-please read the `Django docs on translation
+Please mark all strings and templates in QATrack+ for translation. This will
+allow for QATrack+ to be made avaialable in multiple languages.  For discussion
+of how to mark templates and strings for translation please read the `Django
+docs on translation
 <https://docs.djangoproject.com/en/1.11/topics/i18n/translation/>`__.
 
 
@@ -346,11 +345,11 @@ QATrack+ but still wants to help the project out.  Here are a couple of ways
 that you can contribute to the QATrack+ project without doing any software
 development:
 
-* **Translations:** Starting in QATrack+ v0.3.1, QATrack+ will have the
-  infrastructure in place to support languages other than English.  We will be
-  making translation files available so that the community can create
-  translation files for their native languages. Please get in touch with
-  randy@multileaf.ca if you are able to help out with this task!
+* **Translations:** Starting in QATrack+ v3.1.0 (sorry this didn't happen yet),
+  QATrack+ will have the infrastructure in place to support languages other
+  than English.  We will be making translation files available so that the
+  community can create translation files for their native languages. Please get
+  in touch with randy@multileaf.ca if you are able to help out with this task!
 
 * **Tutorials:** :ref:`Tutorials <tutorials>` are a great way for newcomers to
   learn their way around QATrack+.  If you have an idea for a tutorial, we

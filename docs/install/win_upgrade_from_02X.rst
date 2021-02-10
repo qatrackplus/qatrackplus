@@ -1,7 +1,7 @@
-.. _win_upgrading_02X_to_031:
+.. _win_upgrading_02X_to_31:
 
 
-Upgrading an existing Windows v0.2.X installation to v0.3.1
+Upgrading an existing Windows v0.2.X installation to v3.1.0
 ===========================================================
 
 This document will walk you through migrating an existing v0.2.X version of
@@ -129,7 +129,7 @@ folder and click New Login...  Set the login name to 'qatrack', select SQL
 Server Authentication. Enter 'qatrackpass' (or whatever you like) for the
 password fields and uncheck Enforce Password Policy. Click OK.
 
-Back in the Object Explorer frame, expand the qatrackplus031 database, right
+Back in the Object Explorer frame, expand the qatrackplus31 database, right
 click on Security and select New->User.
 
 Enter 'qatrack' as the User name and Login name and then in the Database Role
@@ -430,4 +430,4 @@ Next Steps
 ----------
 
 Now that you have upgraded to 0.3.0, you should proceed directly to
-:ref:`upgrading to v0.3.1 from v0.3.0 <win_upgrading_030_to_031>`;
+:ref:`upgrading to v3.1.0 from v0.3.0 <win_upgrading_030_to_31>`;

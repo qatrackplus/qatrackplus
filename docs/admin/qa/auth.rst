@@ -9,7 +9,7 @@ a user belongs to and which permissions have been assigned to their groups, or
 to their user account specifically.
 
 The text below discusses how to manage users and groups from within the
-QATrack+ admin area.  As of version 0.3.1 there is also now a more convient
+QATrack+ admin area.  As of version 3.1.0 there is also now a more convient
 :ref:`Groups & Permissions page <auth_users_groups_app>` for managing group
 memberships and common permissions.
 
@@ -48,7 +48,7 @@ Once you are finished, click **Save**.
 Active Directory Group to QATrack+ Groups Map
 ---------------------------------------------
 
-As of version 0.3.1 QATrack+ now has a method of automatically assigning users
+As of version 3.1.0 QATrack+ now has a method of automatically assigning users
 to QATrack+ groups based on the Active Directory (AD) groups they belong to.
 This mapping of AD groups to QATrack+ groups is done in the 
 `Authentication and Authorization Backend Settings -> Active Directory Group to

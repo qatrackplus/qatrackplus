@@ -10,7 +10,7 @@ Query Tool
     in it's :ref:`DATABASES <databases>` setting.
 
 
-As of version 0.3.1 QATrack+ has a tool for creating, running, and storing SQL
+As of version 3.1.0 QATrack+ has a tool for creating, running, and storing SQL
 database queries/reports. To access the tool, select the **Query Tool** option
 from the `Trends & Analysis` menu.
 

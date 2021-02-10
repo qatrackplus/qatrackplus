@@ -4,7 +4,7 @@ DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'qatrackplus031',
+        'NAME': 'qatrackplus31',
         'USER': 'qatrack',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
@@ -15,7 +15,7 @@ DATABASES = {
     },
     'readonly': {
         'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'qatrackplus031',
+        'NAME': 'qatrackplus31',
         'USER': 'qatrack_reports',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)

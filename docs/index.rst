@@ -1,16 +1,9 @@
-.. danger::
-
-   This document is for version 0.3.1 which has not been released for general
-   use yet!  See https://docs.qatrackplus.com/en/latest/ for documentation of
-   the latest release.
-
-
 Welcome to QATrack+'s documentation!
 ====================================
 
 
-About QATrack+
---------------
+About QATrack+ v3.1.0
+---------------------
 
 QATrack+ is a fully configurable, free, and open source (MIT License) web
 application for managing QC data for radiation therapy and medical imaging

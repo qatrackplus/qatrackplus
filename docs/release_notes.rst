@@ -1,18 +1,28 @@
 Release Notes
 =============
 
-QATrack+ v0.3.1 Release Notes
+QATrack+ v3.1.0 Release Notes
 -----------------------------
 
-.. _release_notes_031:
+.. _release_notes_31:
 
 
 Acknowledgements
-................
+~~~~~~~~~~~~~~~~
 
+Thank you to the many people who suggested new features, contributed bug
+reports, and helped out testing this release. Thank you also to all of you who
+waited patiently and provided words of encouragement in the 2 years since the
+last major QATrack+ release!
 
-Details of the v0.3.1 release
-.............................
+Details of the v3.1.0 release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+New version numbering
+.....................
+
+Given that QATrack+ is now a mature and featureful application, we are
+eliminating the `0.` from the version number and moving from v0.3.0 to v3.1.0.
 
 
 Deprecations & Discontinuations
@@ -51,7 +61,7 @@ Major Features
 
 * A new :ref:`Autosave <auto_save>` feature has been implemented to
   automatically save test list instance data temporarily to prevent data loss
-  when a user mistakingly navigates away from the page while entering QC data.
+  when a user mistakenly navigates away from the page while entering QC data.
 
 * A new :ref:`Users & Groups Page <auth_users_groups_app>` has been added to simplify
   the management of Group membership and group permissions.
@@ -67,7 +77,7 @@ Non backwards compatible changes
 
 * Composite Tests will now raise an error if they return anything other than a
   numerical value, None, or an empty string ("").  Previously it was possible
-  to return e.g.a string which would have resulted in the test being skipped.
+  to return e.g. a string which would have resulted in the test being skipped.
   If you were relying on this behaviour, you need to switch to using a
   :ref:`String Composite/JSON <qa_string_comp_json>` test type instead.
 
@@ -99,7 +109,7 @@ Tests & Test Lists
 * A new "Display Name" field has been added to tests.  This is an optional
   field where you can add text describing how a test should be displayed when
   performing or reviewing. Having a separate name & display name allows you to
-  create tests with descriptive names that are easy to find in the admin aread,
+  create tests with descriptive names that are easy to find in the admin area,
   but use a more succinct name when performing a Test List. If left blank, the
   test name will be used.
 
@@ -130,7 +140,7 @@ Tests & Test Lists
 * Setting the `Warning message` field to blank on a `TestList` will now prevent
   a warning message/banner from being shown when tests are at action level.
 
-* Calculated tests are now included in Paper Backup Forms by default
+* Calculated tests are now included in Paper Backup Forms (now a Report) by default
 
 * Frequency dropdown lists when choosing a unit to perform QC on will now only
   show *Ad Hoc* if that unit has ad hoc test lists assigned
@@ -223,7 +233,7 @@ Admin Changes
 
 * Inline links to edit and delete foreign key choices have been disabled in all
   QATrack+ admin models. Editing or deleting a foreign key object here has
-  always been a poor workflow and can be confusing to users.
+  always been a poor workflow that lead to confusion for users.
 
 * Setting multiple references & tolerances now allows removing tolerances.
 
@@ -264,7 +274,6 @@ API Changes
 
 * It is now possible to perform a test and not have the due date advanced by
   setting `"include_for_scheduling": False,` in your API post data.
-  
 
 * The `day` key is now required when performing a Test List Cycle via the API
 
@@ -383,7 +392,7 @@ QATrack+ v0.3.0.15 Release Notes
   the top most category name will be shown to allow better visual
   separation of groups of categories.  Currently this defaults to False
   to maintain current behaviour but this will default to True for the
-  v0.3.1 release.
+  v3.1.0 release.
 
 Upgrading to v0.3.0.15 from v0.3.0
 ..................................

@@ -219,7 +219,7 @@ Progress QC sessions for the current test list.
 Auto Save
 ~~~~~~~~~
 
-As of version 0.3.1, QATrack+ now auto-saves your data in the background 
+As of version 3.1.0, QATrack+ now auto-saves your data in the background 
 every time you enter a new test result.  This helps prevent data loss
 in the case that a user mistakenly navigates away from a test list page without
 submiting the data, or due to a browser crash, power failure, etc.

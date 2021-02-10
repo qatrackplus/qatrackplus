@@ -1,11 +1,11 @@
-.. _win_upgrading_030_to_031:
+.. _win_upgrading_030_to_31:
 
-Upgrading an existing Windows v0.3.0 installation to v0.3.1
+Upgrading an existing Windows v0.3.0 installation to v3.1.0
 ===========================================================
 
 This guide will walk you through upgrading your existing v0.3.0 installation to
-v0.3.1.  If you currently have a 0.2.x version of QATrack+, you first need to
-follow the :ref:`instructions to upgrade to 0.3.0 <win_upgrading_02x_to_031>`,
+v3.1.0.  If you currently have a 0.2.x version of QATrack+, you first need to
+follow the :ref:`instructions to upgrade to 0.3.0 <win_upgrading_02x_to_31>`,
 before carrying out these instructions.
 
 These instructions assume you are using Windows Server 2016-2019 and SQL Server
@@ -93,7 +93,7 @@ Database`
 In the `Source` section leave your existing database as the source in the
 `Database` section selected.
 
-In the `Destination` section edit the `Database` field to `qatrackplus031`. This
+In the `Destination` section edit the `Database` field to `qatrackplus31`. This
 will ensure you are not overwriting your old database.
 
 .. figure:: images/win/destination.png
@@ -133,7 +133,7 @@ click New Login...  Set the login name to 'qatrack_reports', select SQL Server
 Authentication. Enter 'qatrackpass' (or whatever you like) for the password
 fields and uncheck Enforce Password Policy. Click OK.
 
-Back in the Object Explorer frame, expand the qatrackplus031 database, right
+Back in the Object Explorer frame, expand the qatrackplus31 database, right
 click on Security and select New->User.
 
 Enter 'qatrack_reports' as the User name and Login name and then in the
@@ -143,7 +143,7 @@ Database Role Membership page select 'db_datareader'.  Click OK.
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 0.3.1, runs best on Python 3.7, 3.8, & 3.9 (3.6 works ok but installing
+Version 3.1.0, runs best on Python 3.7, 3.8, & 3.9 (3.6 works ok but installing
 dependencies is more complicated). Check your version of Python 3 by opening a
 PowerShell prompt and entering:
 
@@ -156,16 +156,16 @@ a more up to date version of Python before proceeding (see https://python.org).
 You will need to re-open your PowerShell Window after installing Pyton.
 
 
-Checking out version 0.3.1
+Checking out version 3.1.0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we must check out the code for version 0.3.1 in a PowerShell window:
+First we must check out the code for version 3.1.0 in a PowerShell window:
 
 .. code-block:: console
 
     cd C:\deploy\qatrackplus
     git fetch origin
-    git checkout v0.3.1
+    git checkout v3.1.0
 
 
 Setting up our Python environment (including virtualenv)
@@ -218,7 +218,7 @@ looks similar to this:
     DATABASES = {
         'default': {
             'ENGINE': 'sql_server.pyodbc',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack',
             'PASSWORD': 'qatrackpass',
             'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
@@ -229,7 +229,7 @@ looks similar to this:
         },
         'readonly': {
             'ENGINE': 'sql_server.pyodbc',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
@@ -298,7 +298,7 @@ PowerShell and click "Run as Administrator") and run the following commands:
 Open the Windows Services dialog and confirm the `QATrack 31 CherryPy Service`
 is installed and has a status of `Running`.  
 
-Your QATrack+ 0.3.1 installation is now installed as a Windows Service running
+Your QATrack+ 3.1.0 installation is now installed as a Windows Service running
 on port 8080 (see note below).  You may also wish to configure the service to
 email you in the event of a crash (see the Recovery tab of the
 QATrackCherryPyService configuration dialogue).
@@ -313,7 +313,7 @@ QATrackCherryPyService configuration dialogue).
 Setting up Django Q
 -------------------
 
-As of version 0.3.1, some features in QATrack+ rely on a separate long running
+As of version 3.1.0, some features in QATrack+ rely on a separate long running
 process which looks after periodic and background tasks like sending out
 scheduled notices and reports.  We are going to use Windows Task Scheduler
 to run the Django Q task processing cluster. 
@@ -370,8 +370,8 @@ with the Windows Task you created.
 What Next
 ---------
 
-* Make sure you have read the :ref:`release notes for version 0.3.1
-  <release_notes_031>` carefully.  There are some new :ref:`settings
+* Make sure you have read the :ref:`release notes for version 3.1.0
+  <release_notes_31>` carefully.  There are some new :ref:`settings
   <qatrack-config>` you may want to adjust.
 
 * Since the numpy, scipy, pylinac, pydicom, & matplotlib libraries have been
@@ -379,7 +379,7 @@ What Next
   restore functionality.
 
 * Adjust your :ref:`backup script <qatrack_backup>` so that it is now backing
-  up the `qatrackplus031` database instead of the version 0.3.0 database!
+  up the `qatrackplus31` database instead of the version 0.3.0 database!
 
 
 Last Word

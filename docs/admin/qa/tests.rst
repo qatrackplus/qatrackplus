@@ -521,7 +521,7 @@ described above with the exception that the calculated value should be a
 string rather than a number. An example Composite String test is shown
 below.
 
-As of v0.3.1 you may now also return a `JSON serializable Python dictionary
+As of v3.1.0 you may now also return a `JSON serializable Python dictionary
 <https://pythontic.com/serialization/json/introduction>`__.  This allows you to
 e.g. pre-calculate values for other composite tests, or store more complex
 datatypes in the database.
@@ -649,7 +649,7 @@ Setting Default Initial Values for Non-Calculated Tests
     Defaults are currently only applied for Test Lists performed via the
     web user interface and not through the API.
 
-Similar to calculated tests, as of version 0.3.1, you can now use the
+Similar to calculated tests, as of version 3.1.0, you can now use the
 calculation procedure field to set an initial default value for a test that can
 be overridden by the user.
 

@@ -4,7 +4,7 @@ Machine Fault Log
 =================
 
 In order to help you keep track of any machine issues, QATrack+ allows you to
-record machine faults using the fault log introduced in version 0.3.1. Faults
+record machine faults using the fault log introduced in version 3.1.0. Faults
 can either be logged directly on the page when performing QC work, or using the
 standalone page for entering faults.
 

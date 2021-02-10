@@ -1,7 +1,7 @@
-.. _linux_upgrading_030_to_031:
+.. _linux_upgrading_030_to_31:
 
 
-Upgrading an existing Linux v0.3.0 installation to v0.3.1
+Upgrading an existing Linux v0.3.0 installation to v3.1.0
 =========================================================
 
 .. note::
@@ -11,8 +11,8 @@ Upgrading an existing Linux v0.3.0 installation to v0.3.1
 
 
 This guide will walk you through upgrading your existing v0.3.0 installation to
-v0.3.1.  If you currently have a 0.2.x version of QATrack+, you first need to
-follow the :ref:`instructions to upgrade to 0.3.0 <linux_upgrading_02x_to_031>`,
+v3.1.0.  If you currently have a 0.2.x version of QATrack+, you first need to
+follow the :ref:`instructions to upgrade to 0.3.0 <linux_upgrading_02x_to_31>`,
 before carrying out these instructions.
 
 .. contents::
@@ -60,16 +60,16 @@ also confirm your backup step above worked.
 
 .. code-block:: bash
 
-    sudo -u postgres psql -c "CREATE DATABASE qatrackplus031;"
-    sudo -u postgres psql -d qatrackplus031 < backup-0.3.0-$(date -I).sql
+    sudo -u postgres psql -c "CREATE DATABASE qatrackplus31;"
+    sudo -u postgres psql -d qatrackplus31 < backup-0.3.0-$(date -I).sql
     # postgres (# it's ok if you see an error "role "qatrack" already exists here)
     sudo -u postgres psql -c "CREATE USER qatrack with PASSWORD 'qatrackpass';"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE qatrackplus031 to qatrack;"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE qatrackplus31 to qatrack;"
 
     # or for MySQL (omit the -p if your mysql installation doesn't require a password for root)
-    sudo mysql -p -e "CREATE DATABASE qatrackplus031;"
-    sudo mysql -p --database=qatrackplus031 < backup-0.3.0-$(date -I).sql
-    sudo mysql -p -e "GRANT ALL ON qatrackplus031.* TO 'qatrack'@'localhost';"
+    sudo mysql -p -e "CREATE DATABASE qatrackplus31;"
+    sudo mysql -p --database=qatrackplus31 < backup-0.3.0-$(date -I).sql
+    sudo mysql -p -e "GRANT ALL ON qatrackplus31.* TO 'qatrack'@'localhost';"
     sudo mysql -p -e "CREATE USER 'qatrack_reports'@'localhost' IDENTIFIED BY 'qatrackpass';"
 
 
@@ -78,10 +78,10 @@ Now confirm your restore worked:
 .. code-block:: bash
 
     # postgres: Should show Count=1234 or similar
-    PGPASSWORD=qatrackpass psql -U qatrack -d qatrackplus031 -c "SELECT COUNT(*) from qa_testlistinstance;"
+    PGPASSWORD=qatrackpass psql -U qatrack -d qatrackplus31 -c "SELECT COUNT(*) from qa_testlistinstance;"
 
     # mysql: Should show Count=1234 or similar
-    sudo mysql --password=qatrackpass --database qatrackplus031 -e "SELECT COUNT(*) from qa_testlistinstance;"
+    sudo mysql --password=qatrackpass --database qatrackplus31 -e "SELECT COUNT(*) from qa_testlistinstance;"
 
 
 And add readonly roles to the database:
@@ -99,7 +99,7 @@ And add readonly roles to the database:
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 0.3.1, runs on Python 3.6, 3.7, 3.8, & 3.9. Check your version of
+Version 3.1.0, runs on Python 3.6, 3.7, 3.8, & 3.9. Check your version of
 Python 3 with the command:
 
 .. code-block:: bash
@@ -136,7 +136,7 @@ following commands:
 
     cd ~/web/qatrackplus
     git fetch origin
-    git checkout v0.3.1
+    git checkout v3.1.0
 
 
 Setting up our Python environment (including virtualenv)
@@ -195,7 +195,7 @@ looks similar to this:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack',
             'PASSWORD': 'qatrackpass',
             'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
@@ -203,7 +203,7 @@ looks similar to this:
         },
         'readonly': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
@@ -216,7 +216,7 @@ looks similar to this:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack',
             'PASSWORD': 'qatrackpass',
             'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
@@ -224,7 +224,7 @@ looks similar to this:
         },
         'readonly': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
@@ -266,11 +266,11 @@ follows:
 
     # or MySQL if you set a password during install
     sudo mysql -u root -p -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql -u root -p --database qatrackplus031 < grant_ro_privileges.sql
+    sudo mysql -u root -p --database qatrackplus31 < grant_ro_privileges.sql
 
     # or MySQL if you did not set a password during install
     sudo mysql -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql --database qatrackplus031 < grant_ro_privileges.sql
+    sudo mysql --database qatrackplus31 < grant_ro_privileges.sql
 
 
 You also need to create a cachetable in the database:
@@ -290,7 +290,7 @@ Apache to serve:
 Setting up Django Q
 ~~~~~~~~~~~~~~~~~~~~
 
-As of version 0.3.1, some features in QATrack+ rely on a separate long running
+As of version 3.1.0, some features in QATrack+ rely on a separate long running
 process which looks after periodic and background tasks like sending out
 scheduled notices and reports.  We are going to use 
 `Supervisor <http://supervisord.org>`_ to look after running this process
@@ -373,8 +373,8 @@ You should now be able to log into your server at http://yourserver/!
 What Next
 ---------
 
-* Make sure you have read the :ref:`release notes for version 0.3.1
-  <release_notes_031>` carefully.  There are some new :ref:`settings
+* Make sure you have read the :ref:`release notes for version 3.1.0
+  <release_notes_31>` carefully.  There are some new :ref:`settings
   <qatrack-config>` you may want to adjust.
 
 * Since the numpy, scipy, pylinac, pydicom, & matplotlib libraries have been
@@ -382,7 +382,7 @@ What Next
   restore functionality.
 
 * Adjust your :ref:`backup script <qatrack_backup>` so that it is now backing
-  up the `qatrackplus031` database instead of the version 0.3.0 database!
+  up the `qatrackplus31` database instead of the version 0.3.0 database!
 
 
 Last Word

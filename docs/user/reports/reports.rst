@@ -3,7 +3,7 @@
 Reports
 =======
 
-As of version 0.3.1 QATrack+ has a tool for generating and scheduling reports
+As of version 3.1.0 QATrack+ has a tool for generating and scheduling reports
 in PDF/Excel/CSV formats.  To access the tool, select the **Reports** option
 from the `Trends & Analysis` menu.
 

@@ -1,4 +1,4 @@
-.. _win_install_031:
+.. _win_install_31:
 
 Installing and Deploying QATrack+ on Windows Server
 ===================================================
@@ -22,9 +22,9 @@ with SQL Server 2016 & 2019 database
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
-* :ref:`Upgrading an existing v0.3.0 installation to v0.3.1
-  <win_upgrading_030_to_031>`. 
-*  :ref:`Upgrading an existing v0.2.X installation to v0.3.1 <win_upgrading_02X_to_031>`. 
+* :ref:`Upgrading an existing v0.3.0 installation to v3.1.0
+  <win_upgrading_030_to_31>`. 
+*  :ref:`Upgrading an existing v0.2.X installation to v3.1.0 <win_upgrading_02X_to_31>`. 
 
 
 .. note::
@@ -106,7 +106,7 @@ We're now ready to install all the libraries QATrack+ depends on.
     .\venvs\qatrack31\Scripts\Activate.ps1
     python -m pip install --upgrade pip
     cd qatrackplus
-    git checkout v0.3.1
+    git checkout v3.1.0
     pip install -r requirements\win.txt
     python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
     python manage.py collectstatic
@@ -156,7 +156,7 @@ Create a new database
 In the Object Explorer frame, right click the Databases folder and select "New
 Database...".
 
-Enter 'qatrackplus031' as the database name and click OK.
+Enter 'qatrackplus31' as the database name and click OK.
 
 Back in the Object Explorer frame, right click on the main Server Security
 folder and click New Login...  Set the login name to 'qatrack', select SQL
@@ -168,7 +168,7 @@ click New Login...  Set the login name to 'qatrack_reports', select SQL Server
 Authentication. Enter 'qatrackpass' (or whatever you like) for the password
 fields and uncheck Enforce Password Policy. Click OK.
 
-Back in the Object Explorer frame, expand the qatrackplus031 database, right
+Back in the Object Explorer frame, expand the qatrackplus31 database, right
 click on Security and select New->User.
 
 Enter 'qatrack' as the User name and Login name and then in the Database Role
@@ -176,7 +176,7 @@ Membership region select 'db_ddladmin', 'db_datawriter',
 'db_datareader' and 'db_owner'.  Click OK.
 
 Now add the readonly database user for the query tool. In the Object Explorer
-frame, expand the qatrackplus031 database, right click on Security and select
+frame, expand the qatrackplus31 database, right click on Security and select
 New->User.
 
 Enter 'qatrack_reports' as the User name and Login name and then in the
@@ -204,7 +204,7 @@ way you set up your database above.
     DATABASES = {
         'default': {
             'ENGINE': 'sql_server.pyodbc',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
             'PASSWORD': 'qatrackpass',
             'HOST': '', # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
@@ -215,7 +215,7 @@ way you set up your database above.
         },
         'readonly': {
             'ENGINE': 'sql_server.pyodbc',
-            'NAME': 'qatrackplus031',
+            'NAME': 'qatrackplus31',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '',
@@ -278,7 +278,7 @@ PowerShell and click "Run as Administrator") and run the following commands:
     python QATrack31CherryPyService.py start
 
 
-Open the Windows Services dialog and confirm the `QATrack 031 CherryPy Service`
+Open the Windows Services dialog and confirm the `QATrack 31 CherryPy Service`
 is installed and has a status of `Running`.   Next open a browser on the server
 and navigate to http://localhost:8080/ and ensure you see a plain login form
 there (it won't look like this once we're finished!). If not, check the
@@ -421,7 +421,7 @@ service was installed correctly and is running.
 Setting up Django Q
 -------------------
 
-As of version 0.3.1, some features in QATrack+ rely on a separate long running
+As of version 3.1.0, some features in QATrack+ rely on a separate long running
 process which looks after periodic and background tasks like sending out
 scheduled notices and reports.  We are going to use Windows Task Scheduler
 to run the Django Q task processing cluster. 

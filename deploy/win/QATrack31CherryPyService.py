@@ -55,9 +55,9 @@ class QATrack030Service(win32serviceutil.ServiceFramework):
 
     """NT Service."""
 
-    _svc_name_ = "QATrack031CherryPyService"
+    _svc_name_ = "QATrack31CherryPyService"
 
-    _svc_display_name_ = "QATrack 031 CherryPy Service"
+    _svc_display_name_ = "QATrack 31 CherryPy Service"
 
     _exe_name_ = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'pythonservice.exe')
 

@@ -4,7 +4,7 @@ DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'qatrackplus031',
+        'NAME': 'qatrackplus31',
         'USER': 'qatrack',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
@@ -12,7 +12,7 @@ DATABASES = {
     },
     'readonly': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'qatrackplus031',
+        'NAME': 'qatrackplus31',
         'USER': 'qatrack_reports',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.

@@ -1,7 +1,7 @@
 #### Start Configuration Section #####################
 
 # database name to backup
-$db_name = "qatrackplus031"
+$db_name = "qatrackplus31"
 
 # directory to place backups, should be remote directory if possible!
 $backup_dir = "C:\deploy\backups\"
