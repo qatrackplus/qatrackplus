@@ -1841,6 +1841,16 @@ class ServiceEventScheduleList(BaseListableView):
         return utc.frequency.name if utc.frequency else 'Ad Hoc'
 
 
+class DueAndOverdue(ServiceEventScheduleList):
+
+    page_title = _l("Due & Overdue Service Event Schedules")
+
+    def get_queryset(self):
+        today = timezone.now().astimezone(timezone.get_current_timezone()).date()
+        qs = super().get_queryset()
+        return qs.exclude(due_date=None).filter(due_date__lte=today)
+
+
 def service_log_report(request, pk):
 
     se = get_object_or_404(sl_models.ServiceEvent, id=pk)

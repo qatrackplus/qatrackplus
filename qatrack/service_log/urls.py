@@ -31,4 +31,5 @@ urlpatterns = [
     url(r'^templates/create_ajax/$', views.CreateServiceEventTemplateAjax.as_view(), name='create_se_template'),
     url(r'^templates/searcher/$', views.service_event_template_searcher, name='se_template_searcher'),
     url(r'^event/schedule/all/$', views.ServiceEventScheduleList.as_view(), name='se_schedule_list_all'),
+    url(r'^event/schedule/due-and-overdue/$', views.DueAndOverdue.as_view(), name='se_schedule_due'),
 ]

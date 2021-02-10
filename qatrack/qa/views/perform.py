@@ -1765,7 +1765,7 @@ class DueAndOverdue(UTCList):
     def get_queryset(self):
         today = timezone.now().astimezone(timezone.get_current_timezone()).date()
         qs = super().get_queryset()
-        return qs.exclude(due_date=None).filter(due_date__lt=today)
+        return qs.exclude(due_date=None).filter(due_date__lte=today)
 
 
 class UnitFrequencyList(FrequencyList):

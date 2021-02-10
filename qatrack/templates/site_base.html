@@ -498,6 +498,11 @@
                             </i>
                             {% trans "Service Event Schedules" %}
                           </a>
+
+                          <a href="{% url "se_schedule_due" %}" title="{% trans "View Service Event Schedules that are currently due and overdue" %}">
+                            <i class="fa fa-clock-o fa-lg fa-fw" aria-hidden="true"></i>
+                            {% trans "Due & Overdue" %}
+                          </a>
                         </li>
 
                       {% endif %}
