@@ -941,7 +941,7 @@ class ServiceEventsBaseList(BaseListableView):
             'work_description',
         )
 
-        if request and request.user.has_perm('view_serviceeventstatus'):
+        if request and request.user.has_perm('service_log.view_serviceeventstatus'):
             fields += ('service_status__name',)
 
         return fields
