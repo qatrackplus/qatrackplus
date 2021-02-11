@@ -11,6 +11,8 @@ from qatrack.notifications.qccompleted import handlers as qccompleted_handlers  
 from qatrack.notifications.qcreview import handlers as qcreview_handlers  # noqa: F401
 from qatrack.notifications.qcscheduling import handlers as qcscheduling_handlers  # noqa: F401
 from qatrack.notifications.service_log import handlers as service_log_handlers  # noqa: F401
+from qatrack.notifications.service_log_scheduling import \
+    handlers as service_log_scheduling_handlers  # noqa: F401
 from qatrack.qa.models import TestList
 from qatrack.units.models import Unit
 

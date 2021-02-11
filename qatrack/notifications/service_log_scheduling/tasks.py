@@ -5,7 +5,7 @@ from django.utils import timezone
 from django_q.models import Schedule
 from django_q.tasks import schedule
 
-from qatrack.notifications.models import QCSchedulingNotice
+from qatrack.notifications.models import ServiceEventSchedulingNotice
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
@@ -15,21 +15,21 @@ logger = logging.getLogger('django-q')
 def run_scheduling_notices():
 
     run_periodic_scheduler(
-        QCSchedulingNotice,
-        "run_scheduling_notices",
-        schedule_scheduling_notice,
+        ServiceEventSchedulingNotice,
+        "run_service_log_scheduling_notices",
+        schedule_service_event_scheduling_notice,
         time_field="time",
         recurrence_field="recurrences",
     )
 
 
-def schedule_scheduling_notice(notice, send_time):
+def schedule_service_event_scheduling_notice(notice, send_time):
 
-    logger.info("Scheduling notification %s for %s" % (notice.pk, send_time))
+    logger.info("Service Event Scheduling notification %s for %s" % (notice.pk, send_time))
     name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
 
     schedule(
-        "qatrack.notifications.qcscheduling.tasks.send_scheduling_notice",
+        "qatrack.notifications.service_log_scheduling.tasks.send_scheduling_notice",
         notice.id,
         name,
         name=name,
@@ -42,38 +42,38 @@ def schedule_scheduling_notice(notice, send_time):
 
 def send_scheduling_notice(notice_id, task_name=""):
 
-    notice = QCSchedulingNotice.objects.filter(id=notice_id).first()
+    notice = ServiceEventSchedulingNotice.objects.filter(id=notice_id).first()
 
     if notice:
 
         if not notice.send_required():
-            logger.info("Send of QCSchedulingNotice %s requested, but no QC to notify about" % notice_id)
+            logger.info("Send of ServiceEventSchedulingNotice %s requested, but no Service Event Schedules to notify about" % notice_id)  # noqa: E501
             return
 
         recipients = notice.recipients.recipient_emails()
         if not recipients:
-            logger.info("Send of QCSchedulingNotice %s requested, but no recipients" % notice_id)
+            logger.info("Send of ServiceEventSchedulingNotice %s requested, but no recipients" % notice_id)
             return
     else:
-        logger.info("Send of QCSchedulingNotice %s requested, but no such QCSchedulingNotice exists" % notice_id)
+        logger.info("Send of ServiceEventSchedulingNotice %s requested, but no such ServiceEventSchedulingNotice exists" % notice_id)  # noqa: E501
         return
 
     try:
         send_email_to_users(
             recipients,
-            "qcscheduling/email.html",
+            "service_log_scheduling/email.html",
             context={'notice': notice},
-            subject_template="qcscheduling/subject.txt",
-            text_template="qcscheduling/email.txt",
+            subject_template="service_log_scheduling/subject.txt",
+            text_template="service_log_scheduling/email.txt",
         )
-        logger.info("Sent QCSchedulingNotice %s at %s" % (notice_id, timezone.now()))
+        logger.info("Sent ServiceEventSchedulingNotice %s at %s" % (notice_id, timezone.now()))
         try:
             Schedule.objects.get(name=task_name).delete()
         except:  # noqa: E722  # pragma: nocover
             logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
     except:  # noqa: E722  # pragma: nocover
         logger.exception(
-            "Error sending email for QCSchedulingNotice %s at %s." % (notice_id, timezone.now())
+            "Error sending email for ServiceEventSchedulingNotice %s at %s." % (notice_id, timezone.now())
         )
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)

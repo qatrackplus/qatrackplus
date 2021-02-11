@@ -7,9 +7,6 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.notifications import models
-import qatrack.notifications.qccompleted.admin as qccadmin  # noqa: F401
-import qatrack.notifications.qcscheduling.admin as qcsadmin  # noqa: F401
-import qatrack.notifications.service_log.admin as slsadmin  # noqa: F401
 from qatrack.qatrack_core.admin import BaseQATrackAdmin
 
 

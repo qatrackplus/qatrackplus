@@ -15,6 +15,8 @@ specific time.  Currently the availble notification types are:
 
 * :ref:`Service Event Notices <notifications-serviceevent>`
 
+* :ref:`Service Event Scheduling Notices <notifications-serviceevent-scheduling>`
+
 * :ref:`Part Notices <notifications-part>`
 
 * :ref:`Fault Logged Notices <notifications-fault-logged>`
@@ -352,6 +354,67 @@ Click `Save` once you have configured the notification the way you want.
     :alt: Filling out the fields for a Service Event notice.
 
     Filling out the fields for a Service Event notice.
+
+
+.. _notifications-serviceevent-scheduling:
+
+Service Event Scheduling Notices
+--------------------------------
+
+These scheduled notices are available to help you keep on top of which Service
+Event Schedules are due and when. There are four sub types of notifications that
+can be configured:
+
+    * *Notify About All Service Event Schedule Due Dates*  This notification
+      will send an email that contains all of the currently scheduled service
+      events and when they are due.
+
+    * *Notify about Scheduled Service Events Currently Due & Overdue* This
+      notification will send a notice about scheduled service events that are
+      currently Due or Overdue.
+
+    * *Notify About Scheduled Service Events Currently Due & Overdue, and
+      Upcoming Due Dates* This notification allows you to select a future time
+      period (e.g. 7 days) and sends an email about which scheduled service
+      events are currently Due, Overdue, or will become Due in that time period.
+
+    * *Notify About Scheduled Service Events Upcoming Due Dates Only* This
+      notification allows you to select a future time period (e.g. 7 days) and
+      sends an email about which scheduled service events will become Due in
+      that time period.
+
+
+To create a new `Service Event Scheduling Notice` click through the `Service
+Event Scheduling Notices` section of the Notification admin section and then on
+the next page click `Add Service Event Scheduling Notice` and then fill out the
+fields:
+
+Notification Type (required):
+    Select the notification type you want to create
+
+Send Empty (required):
+    Should this notice be sent even if there is no QC to currently notify about?
+
+Recurrences (required):
+    Create a recurrence rule to define the days you want this notice sent.
+
+Time of day (required):
+    Select the time of day you want the notice sent.
+
+Future Days:
+    Select the number of days for which you want to include upcoming due dates
+    for QC.  For example, to get a notification containing QC coming due in the
+    next week, set future days to 7.
+
+Recipients (required):
+    Select the recipient group you want this notification sent to.
+
+Unit Group filter (optional):
+    If you want this notification to only pertain to specific units, select a
+    Unit Group filter.
+
+
+Click `Save` once you have configured the notification the way you want.
 
 
 Service Event Review Notices

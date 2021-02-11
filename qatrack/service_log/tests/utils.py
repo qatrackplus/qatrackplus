@@ -91,6 +91,51 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
     return se
 
 
+def create_service_event_template(name=None, service_type=None, service_area=None,
+                                  problem_description="", work_description="",
+                                  created_by=None):
+
+    if name is None:
+        name = 'name_%04d' % get_next_id(models.ServiceEventTemplate.objects.order_by('id').last())
+
+    if created_by is None:
+        created_by = qa_utils.create_user()
+
+    template, _ = models.ServiceEventTemplate.objects.get_or_create(
+        name=name,
+        service_area=service_area,
+        service_type=service_type,
+        problem_description=problem_description,
+        work_description=work_description,
+        created_by=created_by,
+        modified_by=created_by,
+    )
+
+    return template
+
+
+def create_service_event_schedule(service_event_template=None, unit_service_area=None,
+                                  frequency=None, assigned_to=None):
+
+    if service_event_template is None:
+        service_event_template = create_service_event_template()
+
+    if unit_service_area is None:
+        unit_service_area = create_unit_service_area()
+
+    if assigned_to is None:
+        assigned_to = qa_utils.create_group()
+
+    ses, _ = models.ServiceEventSchedule.objects.get_or_create(
+        service_event_template=service_event_template,
+        unit_service_area=unit_service_area,
+        assigned_to=assigned_to,
+        frequency=frequency,
+    )
+
+    return ses
+
+
 def create_third_party(vendor=None, first_name=None, last_name=None):
 
     if vendor is None:

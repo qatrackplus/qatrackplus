@@ -1,0 +1,18 @@
+Hello,
+
+{% spaceless %}
+{% if notice.is_all %}The following service event schedules have due dates shown below.
+{% elif notice.is_due %}The following service event schedules are currently due or overdue.
+{% elif notice.is_upcoming_and_due %}
+{% if notice.future_days == 0 %}The following service event schedules are currently due, overdue.{% else %}The following tests lists are currently due, overdue, or coming due in the next {{ notice.future_days }} days.{% endif %}
+{% elif notice.is_upcoming %}{% if notice.future_days == 0 %}The following tests lists are due today.{% else %}The following tests lists coming due in the next {{ notice.future_days }} days.{% endif %}
+{% endif %}
+{% endspaceless %}
+{% regroup notice.schedules_to_notify by unit_service_area as schedules %}
+{% for unit_service_area, unit_service_area_schedules in schedules %}
+Unit: {{ unit_service_area.unit.name }}
+Service Area: {{ unit_service_area.service_area.name }}
+========================================================
+{% for schedule in unit_service_area_schedules %}{{ schedule.service_event_template.name }} : {% if schedule.due_date %}{{ schedule.due_date | date }}{% else %}Ad Hoc{% endif %}
+{% endfor %}
+{% endfor %}

@@ -7,3 +7,4 @@ import qatrack.notifications.qcreview.admin
 import qatrack.notifications.qcscheduling.admin
 import qatrack.notifications.service_log.admin
 import qatrack.notifications.service_log_review.admin
+import qatrack.notifications.service_log_scheduling.admin
