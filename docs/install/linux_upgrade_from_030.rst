@@ -136,7 +136,7 @@ following commands:
 
     cd ~/web/qatrackplus
     git fetch origin
-    git checkout v3.1.0
+    git checkout v3.1.0RC1
 
 
 Setting up our Python environment (including virtualenv)

@@ -165,7 +165,7 @@ First we must check out the code for version 3.1.0 in a PowerShell window:
 
     cd C:\deploy\qatrackplus
     git fetch origin
-    git checkout v3.1.0
+    git checkout v3.1.0RC1
 
 
 Setting up our Python environment (including virtualenv)

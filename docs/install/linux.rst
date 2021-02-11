@@ -87,7 +87,7 @@ QATrack+.  To checkout the code enter the following commands:
     cd web
     git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
     cd qatrackplus
-    git checkout v3.1.0
+    git checkout v3.1.0RC1
 
 
 Installing a Database System

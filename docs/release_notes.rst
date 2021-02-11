@@ -367,6 +367,16 @@ Other Minor Features & Bugs Fixed
     * scipy updated to 1.5.4
 
 
+What didn't make it into this release?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Translations** Unfortunately there is still quite a bit of work to be done
+  in order to get QATrack+ translated into other languages.  Translations are
+  currently low on the developers priority list so without outside
+  contributions it is hard to say when this will be completed. However,
+  incremental progress is being made in this direction and templates
+  and strings are gradually getting marked for translation.
+
 
 QATrack+ v0.3.0.18 Release Notes
 --------------------------------
