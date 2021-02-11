@@ -989,5 +989,8 @@ class ServiceEventSchedule(SchedulingMixin, models.Model):
         except ServiceEvent.DoesNotExist:
             pass
 
+    def get_absolute_url(self):
+        return "%s?se_schedule=%s" % (reverse("sl_new"), self.pk)
+
     def __str__(self):
         return 'Service Schedule for {}'.format(self.service_event_template)

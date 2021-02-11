@@ -94,7 +94,7 @@ class TestListInstanceFilter(BaseReportFilterSet):
         label=_l("Site"),
         null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all sites)"),
     )
 
     unit_test_collection__unit = django_filters.filters.MultipleChoiceFilter(
@@ -106,14 +106,14 @@ class TestListInstanceFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all units)"),
+        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
     )
 
     unit_test_collection__assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
         help_text=_l(
-            "Use this filter to limit report to one or more QC performing groups (leave blank to include all units)"
+            "Use this filter to limit report to one or more QC performing groups (leave blank to include all groups)"
         ),
     )
 
@@ -169,7 +169,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
         help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all units)"
+            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
         ),
     )
 
@@ -177,7 +177,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         label=_l("Site"),
         null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all sites)"),
     )
 
     unit = django_filters.filters.MultipleChoiceFilter(
@@ -189,7 +189,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all units)"),
+        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
     )
 
     active = django_filters.filters.BooleanFilter(
@@ -256,6 +256,33 @@ class UnitTestCollectionFilterDetailsMixin:
         return (_("Active Only"), det)
 
 
+class ServiceEventScheduleFilterDetailsMixin:
+
+    def get_unit_service_area__unit__site_details(self, val):
+        sites = [x.name if x != "null" else "Other" for x in val]
+        return ("Site(s)", ", ".join(sites))
+
+    def get_unit_service_area__unit_details(self, val):
+        units = models.Unit.objects.select_related("site").filter(pk__in=val)
+        units = ('%s - %s' % (u.site.name if u.site else _("Other"), u.name) for u in units)
+        return ("Unit(s)", ', '.join(units))
+
+    def get_unit_service_area__service_area_details(self, val):
+        service_areas = [sa.name for sa in val]
+        return ("Service Area(s)", ', '.join(service_areas))
+
+    def get_frequency_details(self, val):
+        freqs = [x.name if x != "null" else "Ad Hoc" for x in val]
+        return ("Frequencies", ", ".join(freqs))
+
+    def get_active_details(self, val):
+        if val is None:
+            det = _("Either")
+        else:
+            det = [_("No"), _("Yes")][val]
+        return (_("Active Only"), det)
+
+
 class SchedulingFilter(BaseReportFilterSet):
 
     due_date = RelativeDateRangeFilter(
@@ -267,7 +294,7 @@ class SchedulingFilter(BaseReportFilterSet):
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
         help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all units)"
+            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
         ),
     )
 
@@ -275,7 +302,7 @@ class SchedulingFilter(BaseReportFilterSet):
         label=_l("Site"),
         null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all sites)"),
     )
 
     unit = django_filters.filters.MultipleChoiceFilter(
@@ -287,7 +314,7 @@ class SchedulingFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all units)"),
+        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
     )
 
     active = django_filters.filters.BooleanFilter(
@@ -330,7 +357,7 @@ class TestDataFilter(BaseReportFilterSet):
         label=_l("Site"),
         null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all sites)"),
     )
 
     unit_test_info__unit = django_filters.filters.MultipleChoiceFilter(
@@ -386,24 +413,24 @@ class BaseServiceEventFilter(BaseReportFilterSet):
         label=_l("Site"),
         null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all)"),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include sites)"),
     )
 
     unit_service_area__unit = django_filters.filters.MultipleChoiceFilter(
         label=_l("Unit"),
-        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all)"),
+        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all units)"),
     )
 
     unit_service_area__service_area = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Area"),
         queryset=sl_models.ServiceArea.objects.order_by("name").all(),
-        help_text=_l("Use this filter to limit report to one or more service areas (leave blank to include all)"),
+        help_text=_l("Use this filter to limit report to one or more service areas (leave blank to include all service areas)"),
     )
 
     service_type = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Type"),
         queryset=sl_models.ServiceType.objects.order_by("name").all(),
-        help_text=_l("Use this filter to limit report to one or more service types (leave blank to include all)"),
+        help_text=_l("Use this filter to limit report to one or more service types (leave blank to include all service types)"),
     )
 
     class Meta:
@@ -432,6 +459,78 @@ class ServiceEventDetailsFilter(BaseServiceEventFilter):
     pass
 
 
+class ScheduledServiceEventFilter(BaseReportFilterSet):
+
+    assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Assigned To"),
+        queryset=models.Group.objects.order_by("name"),
+        help_text=_l(
+            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
+        ),
+    )
+
+    unit_service_area__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Site"),
+        null_label=_l("Other"),
+        queryset=umodels.Site.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all sites)"),
+    )
+
+    unit_service_area__unit = django_filters.filters.MultipleChoiceFilter(
+        label=_l("Unit"),
+        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all units)"),
+    )
+
+    unit_service_area__service_area = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Service Area"),
+        queryset=sl_models.ServiceArea.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more Service Areas (leave blank to include all service areas)"),
+    )
+
+    service_event_template = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Site"),
+        null_label=_l("Other"),
+        queryset=umodels.Site.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
+    )
+
+    frequency = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Frequency"),
+        queryset=models.Frequency.objects.all(),
+        null_label=_l("Ad Hoc"),
+        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all units)"),
+    )
+
+    active = django_filters.filters.BooleanFilter(
+        label=_l("Active"),
+        help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
+        initial='2',
+    )
+
+    class Meta:
+        model = sl_models.ServiceEventSchedule
+        fields = [
+            "unit_service_area__unit__site",
+            "unit_service_area__unit",
+            "unit_service_area__service_area",
+            "service_event_template",
+            "frequency",
+            "assigned_to",
+            "active"
+        ]
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices()
+        self.form.fields['active'].widget.choices = (
+            ('1', _('Both')),
+            ('2', _('Yes')),
+            ('3', _('No')),
+        )
+
+
 class BaseFaultFilter(BaseReportFilterSet):
 
     occurred = RelativeDateRangeFilter(
@@ -443,25 +542,25 @@ class BaseFaultFilter(BaseReportFilterSet):
         label=_l("Site"),
         null_label=_l("Other"),
         queryset=umodels.Site.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all)"),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all sites)"),
     )
 
     unit = django_filters.filters.MultipleChoiceFilter(
         label=_l("Unit"),
-        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all)"),
+        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all units)"),
     )
 
     modality = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Modality"),
         queryset=umodels.Modality.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more modalities (leave blank to include all)"),
+        help_text=_l("Use this filter to limit report to one or more modalities (leave blank to include all modalities)"),
     )
 
     treatment_technique = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Treatment Technique"),
         queryset=umodels.TreatmentTechnique.objects.all(),
         help_text=_l(
-            "Use this filter to limit report to one or more treatment techniques (leave blank to include all)",
+            "Use this filter to limit report to one or more treatment techniques (leave blank to include all techniques)",
         ),
     )
 

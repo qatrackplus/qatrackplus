@@ -109,7 +109,11 @@ class ServiceEventSchedulingNotice(models.Model):
         if self.units_id:
             schedules = schedules.filter(unit_service_area__unit__in=self.units.units.all())
 
-        return schedules.order_by("unit_service_area__unit__%s" % settings.ORDER_UNITS_BY, "due_date")
+        return schedules.order_by(
+            "unit_service_area__unit__%s" % settings.ORDER_UNITS_BY,
+            "unit_service_area__service_area__name",
+            "due_date",
+        )
 
     def all(self):
         return self.schedules().exclude(due_date=None)

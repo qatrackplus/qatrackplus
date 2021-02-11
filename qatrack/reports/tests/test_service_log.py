@@ -307,3 +307,143 @@ class TestServiceTimesReport(TestCase):
         rep.report_format = "xlsx"
         context = rep.get_context()
         rep.to_table(context)
+
+
+class TestDueDateReport(TestCase):
+
+    def test_get_queryset(self):
+        assert (
+            sl.NextScheduledServiceEventsDueDatesReport().get_queryset().model._meta.model_name ==
+            "serviceeventschedule"
+        )
+
+    def test_next_due_dates_get_filename(self):
+        assert (
+            sl.NextScheduledServiceEventsDueDatesReport().get_filename('pdf') ==
+            'next-due-dates-for-scheduled-service-events.pdf'
+        )
+
+    def test_next_due_and_overdue_filename(self):
+        assert (
+            sl.DueAndOverdueServiceEventScheduleReport().get_filename('pdf') ==
+            'due-and-overdue-scheduled-service-events.pdf'
+        )
+
+    def test_get_unit__site_details(self):
+        site = USite.objects.create(name="site")
+        sites = sl.NextScheduledServiceEventsDueDatesReport().get_unit_service_area__unit__site_details([site, 'null'])
+        assert sites == ('Site(s)', 'site, Other')
+
+    def test_get_unit_details(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        units = sl.NextScheduledServiceEventsDueDatesReport().get_unit_service_area__unit_details([unit.pk])
+        assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
+
+    def test_generate_next_due_dates_html(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        usa = sl_utils.create_unit_service_area(unit=unit)
+        sch = sl_utils.create_service_event_schedule(unit_service_area=usa)
+        sch.due_date = timezone.now() + timezone.timedelta(days=1)
+        sch.save()
+        rep = sl.NextScheduledServiceEventsDueDatesReport()
+        rep.report_format = "pdf"
+        rep.to_html()
+
+    def test_generate_due_and_overdue_html(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        usa = sl_utils.create_unit_service_area(unit=unit)
+        sch = sl_utils.create_service_event_schedule(unit_service_area=usa)
+        sch.due_date = timezone.now() - timezone.timedelta(days=1)
+        sch.save()
+
+        rep = sl.DueAndOverdueServiceEventScheduleReport()
+        rep.report_format = "pdf"
+        rep.to_html()
+
+    def test_to_table(self):
+
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        usa = sl_utils.create_unit_service_area(unit=unit)
+        sch1 = sl_utils.create_service_event_schedule(unit_service_area=usa)
+        sch1.due_date = timezone.now() - timezone.timedelta(days=1)
+        sch1.save()
+
+        unit2 = utils.create_unit(site=None)
+        usa2 = sl_utils.create_unit_service_area(unit=unit2)
+        sl_utils.create_service_event_schedule(unit_service_area=usa2)
+
+        rep = sl.NextScheduledServiceEventsDueDatesReport()
+        rep.report_format = "csv"
+        context = rep.get_context()
+        table = rep.to_table(context)
+
+        header_count = table.count([
+            _("Unit"),
+            _("Service Area"),
+            _("Template Name"),
+            _("Frequency"),
+            _("Due Date"),
+            _("Window"),
+            _("Assigned To"),
+            _("Perform")
+        ])
+        assert header_count == 2
+
+
+class TestAssignedTemplatesReport(TestCase):
+
+    def test_get_queryset(self):
+        assert sl.ScheduledTemplatesReport().get_queryset().model._meta.model_name == "serviceeventschedule"
+
+    def test_get_filename(self):
+        assert sl.ScheduledTemplatesReport().get_filename('pdf') == 'service-event-template-assignment-summary.pdf'
+
+    def test_get_unit_service_area__unit__site_details(self):
+        site = USite.objects.create(name="site")
+        sites = sl.ScheduledTemplatesReport().get_unit_service_area__unit__site_details([site, 'null'])
+        assert sites == ('Site(s)', 'site, Other')
+
+    def test_get_unit_service_area__unit_details(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        units = sl.ScheduledTemplatesReport().get_unit_service_area__unit_details([unit.pk])
+        assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
+
+    def test_generate_summary_html(self):
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        usa = sl_utils.create_unit_service_area(unit=unit)
+        sl_utils.create_service_event_schedule(unit_service_area=usa)
+        rep = sl.ScheduledTemplatesReport()
+        rep.report_format = "pdf"
+        rep.to_html()
+
+    def test_to_table(self):
+
+        site = USite.objects.create(name="site")
+        unit = utils.create_unit(site=site)
+        usa = sl_utils.create_unit_service_area(unit=unit)
+        sl_utils.create_service_event_schedule(unit_service_area=usa)
+
+        usa2 = sl_utils.create_unit_service_area()
+        sl_utils.create_service_event_schedule(unit_service_area=usa2)
+
+        rep = sl.ScheduledTemplatesReport(report_opts={'active': True})
+        rep.report_format = "csv"
+        context = rep.get_context()
+        table = rep.to_table(context)
+
+        header_row = table.index([
+            _("Site"),
+            _("Unit"),
+            _("Service Area"),
+            _("Template Name"),
+            _("Frequency"),
+            _("Assigned To"),
+            _("Link"),
+        ])
+        assert len(table[header_row + 1:]) == 2

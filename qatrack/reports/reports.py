@@ -33,6 +33,11 @@ ORDERED_CONTENT_TYPES = [CSV, PDF, XLS]
 
 
 def register_class(target_class):
+    if target_class.__name__ in REPORT_REGISTRY:
+        msg = "Trying to register %s but a class with the name %s already exists in the report registry" % (
+            target_class, target_class.__name__
+        )
+        raise ValueError(msg)
     REPORT_REGISTRY[target_class.__name__] = target_class
 
 
