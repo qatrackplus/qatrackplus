@@ -13,7 +13,7 @@ from qatrack.units import models as umodels
 class ScheduledTemplatesReport(filters.ServiceEventScheduleFilterDetailsMixin, BaseReport):
 
     report_type = "scheduled-templates-summary"
-    name = _l("Service Event Template Assignment Summary")
+    name = _l("Scheduled Service Event Assignment Summary")
     filter_class = filters.ScheduledServiceEventFilter
     description = mark_safe(_l(
         "This report includes a summary of all service event templates assigned to "

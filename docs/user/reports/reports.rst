@@ -75,6 +75,21 @@ The report types currently available in QATrack+ are:
       This report summarizes the service time, lost time, and uptime 
       percentages for selected Sites & Units over a given time period.
 
+    * :ref:`Scheduled Service Event Assignment Summary
+      <reports-service_log_assignment_summary>` This report lists all service
+      event templates assigned to the selected sites, units, frequencies and
+      groups.
+
+* Service Event Scheduling:
+
+    * :ref:`Next Due Dates for Scheduled Service Events
+      <reports-service_event_due_dates>`: This report shows scheduled service
+      events whose next due date fall in the selected time period.
+
+    * :ref:`Due and Overdue Scheduled Service Events
+      <reports-service_event_due>`: This report shows scheduled service events
+      which are currently due or overdue
+
 
 If there are other reports you would like to see please file an issue For
 custom reporting please submit an `issue on BitBucket
@@ -630,6 +645,33 @@ Service Area (optional)
     Filter your results to one or more :ref:`Service Areas <sl_service_areas>`'s.
 
 
+.. _reports-service_log_assignment_summary:
+
+Service Log Assignment Summary
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This report lists all scheduled service event templates currently assigned for
+the selected sites, units, frequencies and groups.
+
+The filters available for this report are:
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Frequency (optional)
+    Filter your results to those scheduled with a specific :ref:`frequency
+    <qa_frequencies>` (e.g. Monthly).
+
+Assigned To (optional)
+    Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
+
+Active (optional)
+    Select whether you want to include assignments which are active, inactive or both.
+
+
 .. _reports-service_event_times:
 
 Service Event Times
@@ -663,3 +705,63 @@ Service Area (optional)
     Filter your results to one or more :ref:`Service Areas <sl_service_areas>`'s.
     (Note if you filter by Service Areas, overall uptime percentages can not be calculated)
 
+
+Service Event Scheduling
+........................
+
+.. _reports-service_event_due_dates:
+
+Next Due Dates for Scheduled Service Events
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This report shows QC tests whose next due date fall in the selected (future)
+time period.
+
+The filters available for this report are:
+
+Time Period (required)
+    Select the period you want to include due dates for.
+
+Assigned To (optional)
+    Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Frequency (optional)
+    Filter your results to those scheduled with a specific :ref:`frequency
+    <qa_frequencies>` (e.g. Monthly).
+
+Active (optional)
+    Select whether you want to include assignments which are active, inactive
+    or both.
+
+
+.. _reports-service_event_due:
+
+Due and Overdue Scheduled Service Events
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This report shows Scheduled Service Events which are currently due and overdue.
+
+The filters available for this report are:
+
+Site (optional)
+    Filter your results to one or more :ref:`Site <unit_site>`'s.
+    select them here.
+
+Unit (optional)
+    Filter your results to one or more :ref:`Unit <units_admin>`'s.
+
+Service Area (optional):
+    Filter your results to one or more :ref:`Service Areas <sl_service_areas>`'s.
+
+Assigned To (optional)
+    Filter your results to those assigned to a specific :ref:`group <auth_groups>`.
+
+Active (optional)
+    Select whether you want to include assignments which are active, inactive
+    or both.

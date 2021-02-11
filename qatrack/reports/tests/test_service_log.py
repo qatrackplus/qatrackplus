@@ -400,7 +400,7 @@ class TestAssignedTemplatesReport(TestCase):
         assert sl.ScheduledTemplatesReport().get_queryset().model._meta.model_name == "serviceeventschedule"
 
     def test_get_filename(self):
-        assert sl.ScheduledTemplatesReport().get_filename('pdf') == 'service-event-template-assignment-summary.pdf'
+        assert sl.ScheduledTemplatesReport().get_filename('pdf') == 'scheduled-service-event-assignment-summary.pdf'
 
     def test_get_unit_service_area__unit__site_details(self):
         site = USite.objects.create(name="site")
