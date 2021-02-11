@@ -266,7 +266,7 @@ class TestTestListInstanceAPI(APITestCase):
         self.data['tests']['test2'] = {'value': None, 'skipped': True}
         self.data['tests']['testc'] = {'skipped': True}
         response = self.client.post(self.create_url, self.data)
-        assert response.statu_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_201_CREATED
         assert models.TestListInstance.objects.count() == 1
         assert models.TestInstance.objects.count() == self.ntests + 1
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
