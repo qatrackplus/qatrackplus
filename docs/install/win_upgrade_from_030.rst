@@ -125,11 +125,15 @@ Add A Readonly User to Your New Database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Your existing QATrack+ database user should still be present on your new
-database, however, we also need to add a readonly database for this version of
-QATrack+.
+database, however, you should ensure they have the correct rights.  In the
+Object Explorer from expand the qatrackplus31 database, then expand the
+`Security` and `Users` folders, then right click on the `qatrack` user and
+select `Properties`.  Under the Database Role Membership region select
+`db_ddladmin`, `db_datawriter`, `db_datareader` and `db_owner`.  Click OK.
 
-In the Object Explorer frame, right click on the main Security folder and
-click New Login...  Set the login name to 'qatrack_reports', select SQL Server
+We also need to add a readonly database for this version of QATrack+.  In the
+Object Explorer frame, right click on the main Security folder and click New
+Login...  Set the login name to 'qatrack_reports', select SQL Server
 Authentication. Enter 'qatrackpass' (or whatever you like) for the password
 fields and uncheck Enforce Password Policy. Click OK.
 
