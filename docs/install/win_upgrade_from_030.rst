@@ -203,6 +203,7 @@ can take a few minutes!):
 
     cd C:\deploy\qatrackplus
     pip install -r requirements\win.txt
+    python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
 
 
 Configuration of QATrack+
