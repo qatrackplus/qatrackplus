@@ -17,7 +17,7 @@ def create_freq_schedule(apps, schema):
     for f in Frequency.objects.all():
         rule = recurrence.Rule(recurrence.DAILY, interval=f.due_interval)
         f.recurrences = recurrence.Recurrence(rrules=[rule], dtstart=from_)
-        f.overdue_interval = f.overdue_interval - f.nominal_interval
+        f.overdue_interval = max(1, f.overdue_interval - f.nominal_interval)
         f.nominal_interval = calc_nominal_interval(f)
         f.save()
 
