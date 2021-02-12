@@ -447,9 +447,9 @@ click `OK`.
     QCluster Trigger
 
 Now go to the `Actions` tab and click `New...`.  In the `Program/script:` box
-enter `C:\deploy\venvs\qatrack31\Scripts\python.exe`. In the `Add arguments
+enter `C:\\deploy\\venvs\\qatrack31\\Scripts\\python.exe`. In the `Add arguments
 (optional)`: field enter `manage.py qcluster`, and in the `Start in
-(optional):` field put `C:\deploy\qatrackplus`  (no trailing slash!).
+(optional):` field put `C:\\deploy\\qatrackplus`  (no trailing slash!).
 
 .. figure:: images/win/qcluster_action.png
     :alt: QCluster Action
@@ -457,9 +457,9 @@ enter `C:\deploy\venvs\qatrack31\Scripts\python.exe`. In the `Add arguments
     QCluster Action
 
 
-Click OK, then right click on the task and select `Run`.  Go back
-to your PowerShell window (or open a new one) and confirm your task
-cluster is running which should show something like:
+Click OK, then right click on the task and select `Run`.  Go back to your
+PowerShell window (or open a new one) and confirm your task cluster is running
+with `python manage.py qmonitor` which should show something like:
 
 .. code-block:: console
 
