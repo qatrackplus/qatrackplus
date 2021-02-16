@@ -218,8 +218,8 @@ restore you should do so now:
     sudo tar xzf qatrack-uploads.tgz
 
 
-Use your favourite text editor to create a local_settings.py file with the
-following contents:
+Use your favourite text editor to create a local_settings.py file in
+`~/web/qatrackplus/qatrack/` with the following contents:
 
 
 .. code-block:: python

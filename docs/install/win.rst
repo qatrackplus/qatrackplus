@@ -109,7 +109,6 @@ We're now ready to install all the libraries QATrack+ depends on.
     git checkout v3.1.0RC1
     pip install -r requirements\win.txt
     python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
-    python manage.py collectstatic
 
 .. warning::
 
@@ -254,6 +253,7 @@ our new database from the command prompt:
     python manage.py migrate
     python manage.py createsuperuser
     python manage.py createcachetable
+    python manage.py collectstatic
     Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
 
 
