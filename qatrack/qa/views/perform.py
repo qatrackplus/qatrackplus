@@ -104,7 +104,12 @@ class CompositeUtils:
         self.meta = meta
         self.test_list = test_list
         self.comments = comments
+
+        # incoming skip settings
         self.skips = skips
+
+        # tests that were skipped by calculation procedure
+        self.changed_skips = {}
 
     def set_comment(self, comment):
         self.context["__comment__"] = comment
@@ -113,10 +118,15 @@ class CompositeUtils:
         return self.comments.get(slug, "")
 
     def set_skip(self, slug, skip):
-        self.skips[slug] = skip
+        """A composite calc can set the skip state of a given test by calling
+        UTILS.set_skip(slug, state)."""
+        self.changed_skips[slug] = skip
 
     def get_skip(self, slug):
-        return self.skips.get(slug, False)
+        """Retrieve the current skip state of a test.  If the skip was set in
+        another composite calc, it will return that value, otherwise it will
+        return the current front end skip state"""
+        return self.changed_skips.get(slug, self.skips.get(slug, False))
 
     def write_file(self, fname, obj):
 
@@ -357,7 +367,7 @@ class UploadHandler:
             results["success"] = True
             results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
             results["comment"] = self.calculation_context.get("__comment__")
-            results["skips"] = self.calculation_context['UTILS'].skips
+            results["skips"] = self.calculation_context['UTILS'].changed_skips
         except models.Test.DoesNotExist:
             results["errors"].append(_("Test with that ID does not exist"))
         except Exception:
@@ -494,7 +504,7 @@ class Upload(JSONResponseMixin, View):
             results["success"] = True
             results["user_attached"] = list(self.calculation_context.get("__user_attached__", []))
             results["comment"] = self.calculation_context.get("__comment__")
-            results["skips"] = self.calculation_context['UTILS'].skips
+            results["skips"] = self.calculation_context['UTILS'].changed_skips
         except models.Test.DoesNotExist:
             results["errors"].append(_("Test with that ID does not exist"))
         except Exception:
@@ -686,7 +696,7 @@ class CompositePerformer:
 
                 del self.calculation_context['__user_attached__'][:]
 
-        skips = self.calculation_context['UTILS'].skips
+        skips = self.calculation_context['UTILS'].changed_skips
 
         cleanup_matplotlib()
 

@@ -379,7 +379,10 @@ When your script (calculation procedure) is executed, it has access to
 
     - **UTILS.set_comment(** "*your comment here*" **)** sets the comment for the current test
 
-    - **UTILS.set_skip(** *macro_name* **, True|False )** set skip status of a test
+    - **UTILS.set_skip(** *macro_name* **, True|False )** set skip status of a
+      test. Please note that if a user alters the skip state of the same test
+      before the composite calculation is complete, their selection will be
+      overridden by the results of the composite test.
 
     - **UTILS.get_skip(** *macro_name* **)** returns boolean indicating whether or not a given test is currently skipped.
 

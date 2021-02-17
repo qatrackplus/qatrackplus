@@ -586,11 +586,7 @@ class TestComposite(TestCase):
                     "comment": None,
                 },
             },
-            'skips': {
-                'testc': False,
-                'test1': False,
-                'test2': False,
-            },
+            'skips': {},
             "success": True
         }
         self.assertDictEqual(values, expected)
@@ -732,7 +728,7 @@ class TestComposite(TestCase):
     def test_set_skip(self):
 
         ts = utils.create_test(name="test_skip", test_type=models.COMPOSITE)
-        ts.calculation_procedure = "UTILS.set_skip('test1', True)\nresult = 1"
+        ts.calculation_procedure = "UTILS.set_skip('test1', True)\nUTILS.set_skip('test2', False)\nresult = 1"
         ts.save()
         utils.create_test_list_membership(self.test_list, ts)
         utils.create_unit_test_info(test=ts, unit=self.unit)
@@ -750,7 +746,7 @@ class TestComposite(TestCase):
                 'test_skip': False,
                 'testc': False,
                 'test1': False,
-                'test2': False,
+                'test2': True,
             },
         }
         request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
@@ -777,8 +773,6 @@ class TestComposite(TestCase):
                 },
             },
             'skips': {
-                'test_skip': False,
-                'testc': False,
                 'test1': True,
                 'test2': False,
             },
@@ -1636,7 +1630,6 @@ result = json.load(FILE)
                     print(">>> Could not delete %s because %s" % (a, e))
 
     def test_upload_fname_exists(self):
-        #test_file = SimpleUploadedFile(self.fname, b"[]")
         response = self.client.post(
             self.url, {
                 "test_id": self.test.pk,
@@ -1650,7 +1643,6 @@ result = json.load(FILE)
         self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data['attachment']["name"])
 
     def test_invalid_test_id(self):
-        #test_file = SimpleUploadedFile(self.fname, b"[]")
         response = self.client.post(self.url, {
             "test_id": 200,
             "upload": self.test_file,
@@ -1662,7 +1654,6 @@ result = json.load(FILE)
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
     def test_invalid_test(self):
-        #test_file = SimpleUploadedFile(self.fname, b"[]")
         self.test.calculation_procedure = "result = 1/0"
         self.test.save()
         response = self.client.post(
@@ -1678,8 +1669,6 @@ result = json.load(FILE)
         self.assertIn("Invalid Test", data["errors"][0])
 
     def test_upload_results(self):
-        #test_file = SimpleUploadedFile(self.fname, b"[]")
-
         response = self.client.post(self.url, {
             "test_id": self.test.pk,
             "upload": self.test_file,
