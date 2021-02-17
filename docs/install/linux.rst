@@ -36,6 +36,10 @@ occuring before proceeding with the next step!  You can seek help on the on the
 Prerequisites
 -------------
 
+These install steps should be done using a regular user account.  They will not
+work if you are currently logged in as 'root'.  If you have don't have a
+regular user account you should set one up before continuing.
+
 Make sure your existing packages are up to date:
 
 .. code-block:: bash
