@@ -678,7 +678,6 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         };
 
         if (test_info.test.type == 'upload') {
-
             self.dropzone = new Dropzone('#upload-button-' + test_info.test.id, {
 
                 url: QAURLs.UPLOAD_URL,
@@ -690,7 +689,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 paramName: "upload",
                 replaceFileInput: false,
                 params: {
-                    'csrfmiddlewaretoken': csrf_token,
+                    'csrfmiddlewaretoken': $.qatrack.getCsrfToken(),
                     "test_id": self.test_info.test.id,
                     "meta": JSON.stringify(get_meta_data()),
                     "test_list_id": self.test_list_id,

@@ -15,6 +15,12 @@ define(["jquery"], function ($){
         }
         return cookieValue;
     }
+    $.qatrack = $.qatrack || {
+        getCookie: getCookie,
+        getCsrfToken: function(){
+            return getCookie('csrftoken');
+        }
+    };
 
     function csrfSafeMethod(method) {
         // these HTTP methods do not require CSRF protection
