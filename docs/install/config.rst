@@ -339,6 +339,7 @@ CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
 Set the `CONSTANT_PRECISION` setting to adjust the precision for which
 :ref:`Constant test type <qa_test_types>` values are displayed. (default 8)
 
+
 DEFAULT_NUMBER_FORMAT
 .....................
 
@@ -381,6 +382,11 @@ FORCE_SCRIPT_NAME = '/qatrack'
 LOGIN_EXEMPT_URLS = [r"^qatrack/favicon.ico$", r"^qatrack/accounts/", r"qatrack/api/*", r"^qatrack/oauth2/*"]
 LOGIN_REDIRECT_URL = 'qatrack/'
 LOGIN_URL = "/qatrack/accounts/login/"
+
+MAX_TESTS_PER_TESTLIST
+......................
+
+Sets the maximum number of tests per test list. Default is `MAX_TESTS_PER_TESTLIST = 200`
 
 
 NHIST

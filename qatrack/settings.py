@@ -660,6 +660,7 @@ COMPOSITE_MAX_LINE_LENGTH = 88
 
 AUTOSAVE_DAYS_TO_KEEP = 30
 
+MAX_TESTS_PER_TESTLIST = 250
 # SQL Explorer Settings
 
 USE_SQL_REPORTS = False
@@ -718,6 +719,10 @@ from .local_settings import *  # noqa: F403, F401
 
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
+
+
+_MAX_FIELDS_PER_TEST = 5  # value, json_value, user_attached, skipped, extra value for bool
+DATA_UPLOAD_MAX_NUMBER_FIELDS = max(MAX_TESTS_PER_TESTLIST * _MAX_FIELDS_PER_TEST, 1000)
 
 
 # ------------------------------------------------------------------------------

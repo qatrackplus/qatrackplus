@@ -3,6 +3,7 @@ import re
 from admin_views.admin import AdminViews
 from django import VERSION
 from django.apps import apps
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import options, widgets
 from django.contrib.admin.models import CHANGE, LogEntry
@@ -490,6 +491,12 @@ class TestListAdminForm(forms.ModelForm):
         child_ids = [x[1] for x in self.data.items() if rechild.findall(x[0]) and x[1]]
         for tl in models.TestList.objects.filter(id__in=child_ids):
             slugs.extend(tl.all_tests().values_list("slug", flat=True))
+
+        if len(slugs) > settings.MAX_TESTS_PER_TESTLIST:
+            msg = _(
+                "This test list has {test_count} tests but the maximum number allowed is {max_tests}."
+            ).format(test_count=len(slugs), max_tests=settings.MAX_TESTS_PER_TESTLIST)
+            raise forms.ValidationError(msg)
 
         duplicates = list(set([sn for sn in slugs if slugs.count(sn) > 1]))
         if duplicates:

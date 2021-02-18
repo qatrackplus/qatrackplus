@@ -148,6 +148,9 @@ Tests & Test Lists
 * There are new :ref:`Tree Views <qa_tree_views>` available (under the Perform QC
   menu) for viewing/selecting QC assigned to units.  
 
+* There is a new  `MAX_TESTS_PER_TESTLIST` setting (default is 250 tests per
+  test list)
+
 Review & Approval
 ^^^^^^^^^^^^^^^^^
 

@@ -8,6 +8,7 @@ from django.db.models import Count, Q
 from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, TransactionTestCase
+from django.test.utils import override_settings
 from django.urls import reverse
 
 from qatrack.accounts.tests.utils import create_group, create_user
@@ -615,6 +616,13 @@ class TestTestListAdmin(TestCase):
         data = self.data
         form = modelform_factory(qa_models.TestList, form=qa_admin.TestListAdminForm, exclude=['tests'])(data=data)
         self.assertTrue(form.is_valid())
+
+    @override_settings(MAX_TESTS_PER_TESTLIST=0)
+    def test_too_many_tests(self):
+        data = self.data
+        form = modelform_factory(qa_models.TestList, form=qa_admin.TestListAdminForm, exclude=['tests'])(data=data)
+        assert not form.is_valid()
+        assert any("the maximum number allowed is 0" in err for err in form.errors['__all__'])
 
     def test_duplicate_macros(self):
         data = self.data
