@@ -686,3 +686,11 @@ table ul.multiselect-container.dropdown-menu {
   -moz-box-shadow: 0 0 30px 5px #999;
   -webkit-box-shadow: 0 0 30px 5px #999;
 }
+
+.alert a.btn {
+
+  box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  text-decoration: none;
+}

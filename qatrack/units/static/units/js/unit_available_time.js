@@ -1,19 +1,5 @@
 require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
 
-    var csrftoken = $("[name=csrfmiddlewaretoken]").val();
-    function csrfSafeMethod(method) {
-        // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-
-    $.ajaxSetup({
-        beforeSend: function (xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
-
     var tz = moment.tz.guess();
 
     var _ctrl_pressed = false,

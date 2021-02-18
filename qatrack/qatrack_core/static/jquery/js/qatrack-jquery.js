@@ -1,11 +1,11 @@
-define(["jquery"], function (jQuery){
+define(["jquery"], function ($){
 
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             var cookies = document.cookie.split(';');
             for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
+                var cookie = $.trim(cookies[i]);
                 // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
@@ -15,7 +15,6 @@ define(["jquery"], function (jQuery){
         }
         return cookieValue;
     }
-    var csrf_token = getCookie('csrftoken');
 
     function csrfSafeMethod(method) {
         // these HTTP methods do not require CSRF protection
@@ -37,6 +36,12 @@ define(["jquery"], function (jQuery){
 
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
+            /* note we grab the token before every request rather than at load
+             * time in case we're logged out with say a perform QA page still loaded.
+             * If the user logs back in in another tab then we can grab the fresh
+             * csrftoken from the cookie so our ajax requests on the perform QA
+             * tab won't get 403'd due to csrf token validation failing */
+            var csrf_token = getCookie('csrftoken');
             if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
                 // Send the token to same-origin, relative URLs only.
                 // Send the token only if the method warrants CSRF protection
@@ -46,4 +51,5 @@ define(["jquery"], function (jQuery){
         }
     });
 
+    return $;
 });

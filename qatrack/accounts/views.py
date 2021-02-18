@@ -11,6 +11,7 @@ from django.contrib.auth.views import (
 from django.contrib.sites.models import Site
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import gettext as _
@@ -112,3 +113,9 @@ class QATrackOAuth2CallbackView(OAuth2CallbackView):
             messages.error(request, msg)
             return redirect(settings.LOGIN_URL)
         return result
+
+
+def ping(request):
+    return JsonResponse({
+        'logged_in': request.user.is_authenticated,
+    })

@@ -1,6 +1,6 @@
 // Regrets: Not using a more robust front end library here :(
 
-require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_utils', 'inputmask', 'site_base', 'comments'], function ($, _, moment, autosize) {
+require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_utils', 'inputmask', 'site_base', 'comments', 'ping'], function ($, _, moment, autosize) {
 
     $(document).ready(function() {
 

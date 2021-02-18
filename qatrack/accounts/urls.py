@@ -7,6 +7,7 @@ from qatrack.accounts import views
 from qatrack.qatrack_core.views import handle_404
 
 urlpatterns = [
+    url(r'^ping/$', views.ping, name="ping"),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name="auth_logout"),
     url(r'^details/$', views.AccountDetails.as_view(), name="account-details"),
 

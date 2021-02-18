@@ -48,7 +48,7 @@ require.config({
         icheck: siteConfig.STATIC_URL + 'icheck/js/icheck.min',
         inputmask: siteConfig.STATIC_URL + 'inputmask/js/jquery.inputmask.bundle.min',
         jquery: siteConfig.STATIC_URL + 'jquery/js/jquery.min',
-        ajaxsetup: siteConfig.STATIC_URL + 'jquery/js/ajaxSetup',
+        "qatrack-jquery": siteConfig.STATIC_URL + 'jquery/js/qatrack-jquery',
         'jquery-ui': siteConfig.STATIC_URL + 'jqueryui/js/jquery-ui.min',
         'jquery-ui-sql': siteConfig.STATIC_URL + 'explorer/js/jquery-ui.min',
         'jquery-cookie': siteConfig.STATIC_URL + 'explorer/js/jquery.cookie.min',
@@ -71,6 +71,7 @@ require.config({
         sidebar: siteConfig.STATIC_URL + 'qatrack_core/js/sidebar',
         site_base: siteConfig.STATIC_URL + 'qatrack_core/js/base',
         comments: siteConfig.STATIC_URL + 'qatrack_core/js/comments',
+        ping: siteConfig.STATIC_URL + 'qatrack_core/js/ping',
         listablestatic: siteConfig.STATIC_URL + 'qatrack_core/js/listableStatic',
 
         // accounts module:
@@ -169,7 +170,8 @@ require.config({
             ]
         },
         flatpickr: {
-            exports: 'Flatpickr'
+            exports: 'Flatpickr',
+            deps: ['jquery']
         },
         floatthead: {
             deps: ['jquery']
@@ -184,6 +186,9 @@ require.config({
             exports: '$'
         },
         "jquery-cookie": {
+            deps: ['jquery']
+        },
+        "qatrack-jquery": {
             deps: ['jquery']
         },
         listable: {
@@ -240,18 +245,19 @@ require.config({
 
         // reports module:
         reports: {
-            deps: ['jquery', 'ajaxsetup', 'lodash', 'moment', 'select2', 'jquery-ui', 'datepicker', 'daterangepicker']
+            deps: ['jquery', 'lodash', 'moment', 'select2', 'jquery-ui', 'datepicker', 'daterangepicker']
         },
 
         // qa module:
         qa: {
-            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils', 'flatpickr']
+            deps: ['jquery', 'qautils', 'site_base', 'lodash', 'daterangepicker', 'sidebar', 'datatables', 'datatables.columnFilter', 'inputmask', 'select2', 'sl_utils', 'flatpickr', 'ping']
         },
 
         // service_log module
         sl_utils: {
             deps: ['jquery', 'site_base', 'bootstrap']
         }
+
     },
     map: {
         'reports': {
@@ -260,6 +266,14 @@ require.config({
         '*': {
             'datatables.net': siteConfig.STATIC_URL + 'datatables/1.10/js/datatables.min.js',
             'datatables.net-bs': siteConfig.STATIC_URL + 'datatables/1.10/DataTables-1.10.18/js/dataTables.bootstrap.min.js',
+
+            /* when any module requests jquery give it qatrack-jquery instead.
+             * qatrack-jquery sets up ajax calls with the Django CSRF token */
+            'jquery': 'qatrack-jquery'
+        },
+        'qatrack-jquery': {
+            /* when qatrack-jquery requires jquery, give it the real deal */
+            jquery: 'jquery'
         }
     }
 });
