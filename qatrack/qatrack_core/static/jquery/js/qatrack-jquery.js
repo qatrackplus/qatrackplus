@@ -19,6 +19,13 @@ define(["jquery"], function ($){
         getCookie: getCookie,
         getCsrfToken: function(){
             return getCookie('csrftoken');
+        },
+        updateCsrfTokenInputs: function(){
+            // Update all CSRF Token inputs on the page
+            // Necessary in order to submit a form after a user was logged out/back in
+            // in a different tab
+            var token = $.qatrack.getCsrfToken();
+            $("input[name=csrfmiddlewaretoken]").val(token);
         }
     };
 

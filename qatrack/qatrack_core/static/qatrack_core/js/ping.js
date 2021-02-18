@@ -19,6 +19,7 @@ require(['jquery'], function($) {
     window.userIsAuthenticated = true;
 
     function setAuthenticatedState(authenticated){
+        var changedState = authenticated !== window.userIsAuthenticated;
         window.userIsAuthenticated = authenticated;
         if (window.userIsAuthenticated && loggedOutMessageShown){
             $(".logout-alert").remove();
@@ -26,6 +27,11 @@ require(['jquery'], function($) {
         }else if (!window.userIsAuthenticated && !loggedOutMessageShown){
             $(".content-header").append(loggedOutMessage);
             loggedOutMessageShown = true;
+        }
+
+        if (changedState && window.userIsAuthenticated){
+            // update csrf tokens whenever user gets logged back in
+            $.qatrack.updateCsrfTokenInputs();
         }
     }
     function ping(){
