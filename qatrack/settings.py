@@ -674,11 +674,11 @@ EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO',
 
 
 def EXPLORER_PERMISSION_CHANGE(request):
-    return request.user.has_perm("qa.can_create_sql_reports")
+    return request.user.has_perm("reports.can_create_sql_reports")
 
 
 def EXPLORER_PERMISSION_VIEW(request):
-    return request.user.has_perm("qa.can_run_sql_reports")
+    return request.user.has_perm("reports.can_run_sql_reports")
 
 
 if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:

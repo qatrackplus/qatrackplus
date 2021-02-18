@@ -276,6 +276,11 @@ PERMISSIONS += (
                 _l("Can view parts"),
                 _l("Allow user to view existing parts"),
             ),
+            (
+                'parts.add_partused',
+                _l("Can Add Part Used"),
+                _l("Allow user to add parts used in service events"),
+            ),
         )
     ),
 )
