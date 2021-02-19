@@ -431,6 +431,13 @@ AUTH_ADFS = {
 # the site admins on every HTTP 500 error.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+def skip_requests(record):
+    skip = (
+        record.args[0].startswith("GET /static/") or
+        record.args[0].startswith("GET /accounts/ping/")
+    )
+    return not skip
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -440,6 +447,10 @@ LOGGING = {
         },
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue'
+        },
+        'skip_requests': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': skip_requests,
         }
     },
     'formatters': {
@@ -503,6 +514,7 @@ LOGGING = {
         },
         'django.server': {
             'handlers': ['console', 'mail_admins'],
+            'filters': ['skip_requests'],
             'level': 'DEBUG',
             'propagate': False,
         },
