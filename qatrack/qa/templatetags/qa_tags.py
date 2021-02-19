@@ -3,11 +3,12 @@ import collections
 from django import template
 from django.conf import settings
 from django.template.loader import get_template
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from qatrack.qa import models
 from qatrack.qatrack_core import scheduling
-from qatrack.qatrack_core.dates import format_as_date
+from qatrack.qatrack_core.dates import end_of_day, format_as_date, start_of_day
 
 register = template.Library()
 
@@ -110,8 +111,22 @@ def tolerance_for_reference(tol, ref):
 @register.simple_tag
 def history_display(history, unit, test_list, test, frequency=None):
     template = get_template("qa/history.html")
+
+    # Set start / end dates of 1 year, or the span of the history elements, whichever is larger
+    one_year = timezone.timedelta(days=365)
+    end_date = end_of_day(timezone.now())
+    start_date = start_of_day(end_date - one_year)
+    if history:
+        start_date = history[-1][0].work_completed
+        end_date = history[0][0].work_completed
+        hist_covers_less_than_1_year = end_date - start_date < one_year
+        if hist_covers_less_than_1_year:
+            start_date = end_date - one_year
+    date_range = "%s - %s" % (format_as_date(start_date), format_as_date(end_date))
+
     c = {
         "history": history,
+        "date_range": date_range,
         "unit": unit,
         "test_list": test_list,
         "test": test,

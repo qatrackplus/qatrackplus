@@ -200,6 +200,12 @@ UI Changes
 * Test Instance points with comments associated with them are now highlighed in
   charts
 
+* Clicking on a chart link beside a tests history will now set the date range
+  for the chart to the larger of a span of 1 year, or span between the first
+  and last history items.  This results in a chart of say the last 5 years of
+  data for an annual QA item rather than just the single point from the most
+  recent year.
+
 * Keyboard entry of dates is now permitted for Work Started & Work Completed dates
   when performing QC
 

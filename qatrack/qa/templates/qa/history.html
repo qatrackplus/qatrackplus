@@ -37,6 +37,8 @@
   {% if test.is_upload or test.is_string_type or not test.chart_visibility %}
 
   {% else %}
-    <a title="{% trans "View chart of this data" %}" target="_blank" href="{% url 'charts' %}?units={{unit.pk}}&tests={{test.pk}}&test_lists={{test_list.pk}}&frequencies={% if frequency %}{{ frequency.id }}{% else %}0{% endif %}"><i class="fa fa-area-chart"></i></a>
+    <a title="{% trans "View chart of this data" %}"
+      target="_blank"
+      href="{% url 'charts' %}?units={{unit.pk}}&tests={{test.pk}}&test_lists={{test_list.pk}}&date_range={{date_range|urlencode}}&frequencies={% if frequency %}{{ frequency.id }}{% else %}0{% endif %}"><i class="fa fa-area-chart"></i></a>
   {% endif %}
 {% endif %}
