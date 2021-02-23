@@ -5,6 +5,29 @@ from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.admin import BaseQATrackAdmin, BasicSaveUserAdmin
 from qatrack.reports.models import ReportSchedule, SavedReport
+from qatrack.reports.reports import report_type_choices
+
+
+class SavedReportForm(forms.ModelForm):
+
+    report_type = forms.ChoiceField()
+
+    class Meta:
+
+        model = SavedReport
+        fields = (
+            "title",
+            "report_type",
+            "report_format",
+            "include_signature",
+            "filters",
+            "visible_to",
+        )
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+        self.fields['report_type'].choices = report_type_choices()
 
 
 class SavedReportAdmin(BaseQATrackAdmin):
@@ -27,6 +50,15 @@ class SavedReportAdmin(BaseQATrackAdmin):
         "created_by__username",
         "modified_by__username",
     ]
+
+    readonly_fields = [
+        "created_by",
+        "created",
+        "modified_by",
+        "modified",
+    ]
+
+    form = SavedReportForm
 
     def has_add_permission(self, request):
         return False

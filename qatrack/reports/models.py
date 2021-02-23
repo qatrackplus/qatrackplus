@@ -29,7 +29,7 @@ class SavedReport(models.Model):
         default=True,
     )
 
-    filters = JSONField(blank=True, editable=False)
+    filters = JSONField(blank=True, editable=True)
 
     visible_to = models.ManyToManyField(
         Group,
