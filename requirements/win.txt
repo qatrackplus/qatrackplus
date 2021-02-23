@@ -1,5 +1,6 @@
 -r base.txt
 CherryPy==18.0.1
 django-mssql-backend==2.8.1
+-e git+https://github.com/qatrackplus/django-mssql-backend.git@fix_invalid_order_by#egg=django-mssql-backend
 pyreadline
 pywin32>=300
