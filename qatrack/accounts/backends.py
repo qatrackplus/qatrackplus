@@ -90,8 +90,11 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             if qualified_groups:
                 if len(set(qualified_groups) & set(user_attrs['member_of'])) == 0:
                     self.logger.info(
-                        "successfully authenticated: %s but they don't belong to a qualified group (%s)" %
-                        (username, ', '.join(qualified_groups))
+                        (
+                            "successfully authenticated: %s but they don't belong to a qualified group. "
+                            "Qualified Groups: %s AD member_of: %s"
+                        ) %
+                        (username, ', '.join(qualified_groups), ', '.join(user_attrs['member_of']))
                     )
                     return None
 
