@@ -1587,6 +1587,9 @@ class TestList(TestCollectionInterface, TestPackMixin):
         )
         self.utcs.update(name=self.name)
 
+    def get_absolute_url(self):
+        return reverse("admin:qa_testlist_change", args=(self.pk,))
+
 
 class Sublist(models.Model):
 
