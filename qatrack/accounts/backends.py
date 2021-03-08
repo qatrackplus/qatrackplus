@@ -139,13 +139,18 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             'first_name': first_name,
         }
 
-        member_of = result.get(settings.AD_LU_MEMBER_OF, [""])[0]
-        if isinstance(member_of, bytes):
-            member_of = member_of.decode()
+        memberships = set()
 
-        # member of comes in format like CN=TestGroup,CN=Users,DC=foo,DC=example,DC=com
-        member_of = [x.split("=")[1] for x in member_of.split(",") if "cn=" in x.lower()]
-        attrs['member_of'] = member_of
+        for member_of in result.get(settings.AD_LU_MEMBER_OF, [""]):
+            if isinstance(member_of, bytes):
+                member_of = member_of.decode()
+            # member of comes in format like CN=TestGroup,CN=Users,DC=foo,DC=example,DC=com
+            for m in member_of.split(","):
+                if "cn=" not in m.lower():
+                    continue
+                memberships.add(m.split("=")[1])
+
+        attrs['member_of'] = memberships
 
         return attrs
 
