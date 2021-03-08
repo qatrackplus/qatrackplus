@@ -352,13 +352,13 @@ Next, lets make sure Apache can write to our logs and media directories:
     sudo chmod ug+rwxs qatrack/media
 
 Now we can update our default Apache config file so that it points to the
-correct virtualenv.  Edit `/etc/apache2/sites-available/qatrack.conf` and
-find the `WSGIDaemonProcess` line and update the `python-home` variable so
-that it points to `/venvs/qatrack31`:
+correct virtualenv.  Edit `/etc/apache2/sites-available/qatrack.conf` and find
+the `WSGIDaemonProcess` line and update the `python-home` variable so that it
+points to `/venvs/qatrack31` and includes the `application-group` directive.
 
 .. code-block:: apache
 
-    WSGIDaemonProcess qatrackplus python-home=/home/YOURUSERNAMEHERE/venvs/qatrack31 python-path=/home/YOURUSERNAMEHERE/web/qatrackplus
+    WSGIDaemonProcess qatrackplus python-home=/home/YOURUSERNAMEHERE/venvs/qatrack31 python-path=/home/YOURUSERNAMEHERE/web/qatrackplus application-group=%{GLOBAL}
 
 and finally restart Apache:
 
