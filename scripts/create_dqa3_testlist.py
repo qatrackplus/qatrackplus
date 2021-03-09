@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db import transaction
+from django.db.utils import IntegrityError
 from django.utils.text import slugify  # noqa: #402
 
 from qatrack.qa import models
@@ -81,7 +82,7 @@ def create_dqa3(mode, beam):
             )
 
             test_list_name = f"Daily QA3 Results: {beam}"
-            print(f"\tCreating Test List: {test_list_name}")
+            print(f"Creating Test List: {test_list_name}")
             test_list, _ = models.TestList.objects.get_or_create(
                 name=test_list_name,
                 slug=slugify(test_list_name),
@@ -130,5 +131,10 @@ def create_dqa3(mode, beam):
                 url = '%s://%s%s' % (settings.HTTP_OR_HTTPS, domain, test_list.get_absolute_url())
                 print("Created '%s' Test List (%s)" % (test_list.name, url))
 
+    except IntegrityError:
+        print(
+            "\tThere was a conflict with an existing Test List slug or "
+            "Test name when trying to create this test list."
+        )
     except Rollback:
         pass
