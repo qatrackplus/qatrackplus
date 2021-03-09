@@ -966,6 +966,7 @@ class Test(models.Model, TestPackMixin):
             (COMPOSITE, SIMPLE),
             (COMPOSITE, CONSTANT),
             (COMPOSITE, WRAPAROUND),
+            (COMPOSITE, STRING_COMPOSITE),
 
             (SIMPLE, WRAPAROUND),
             (SIMPLE, CONSTANT),
