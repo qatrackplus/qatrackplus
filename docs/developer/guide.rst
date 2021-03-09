@@ -44,28 +44,27 @@ installed it is recommended you go through a git tutorial to learn about git
 branches, commiting code and pull requests. There are many tutorials available
 online including a `tutorial by the Django team
 <https://dont-be-afraid-to-commit.readthedocs.io/en/latest/>`__ as well as
-tutorials on `BitBucket <https://www.atlassian.com/git/tutorials>`__ and
-`GitHub <https://try.github.io/>`__.
+a tutorial on and `GitHub <https://try.github.io/>`__.
 
 
-BitBucket
-~~~~~~~~~
+GitHub
+~~~~~~
 
-The QATrack+ project currently uses `BitBucket <https://bitbucket.org>`__ for
+The QATrack+ project currently uses `GitHub <https://github.com>`__ for
 hosting its source code repository.  In general, to contribute code to QATrack+
-you will need to create a fork of QATrack+ on BitBucket, make your changes,
+you will need to create a fork of QATrack+ on GitHub, make your changes,
 then make a pull request to the main QATrack+ project.
 
 Creating a fork of QATrack+
 ...........................
 
-Creating a fork of QATrack+ is explained in the `BitBucket documentation
-<https://confluence.atlassian.com/bitbucket/forking-a-repository-221449527.html>`__.
+Creating a fork of QATrack+ is explained in the `GitHub documentation
+<https://guides.github.com/activities/forking/>`__.
 
 Cloning your fork to your local system
 ......................................
 
-Once you have created a fork of QATrack+ on BitBucket, you will want to
+Once you have created a fork of QATrack+ on GitHub, you will want to
 download your fork to your local system to work on. This can either be done
 using the command line or one of the graphical git apps that are available.
 This page assumes you are using bash on linux or the Git Bash shell on Windows.
@@ -333,7 +332,7 @@ The author of the code (or potentially their employer) retains the copyright of
 their work even when contributing code to QATrack+.  However, unless specified
 otherwies, by submitting code to the QATrack+ project you agree to have it
 distributed using the same `MIT license
-<https://bitbucket.org/tohccmedphys/qatrackplus/src/master/LICENSE>`__ as
+<https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ as
 QATrack+ uses.
 
 

@@ -72,8 +72,8 @@ Windows (Git-2.30.0 at the time of writing).  Run the installer.  I just leave
 all the settings on the defaults but you are free to modify them if you like.
 
 
-Checkout the latest release of QATrack+ source code from BitBucket
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Checkout the latest release of QATrack+ source code from GitHub
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Open a Windows PowerShell terminal and then create a directory for QATrack+ and
 check out the source code, use the following commands:
@@ -82,7 +82,7 @@ check out the source code, use the following commands:
 
     mkdir C:\deploy
     cd C:\deploy
-    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
+    git clone https://github.com/qatrackplus/qatrackplus.git
 
 
 

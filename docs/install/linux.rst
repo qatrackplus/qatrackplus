@@ -79,8 +79,8 @@ and then configure git (substituting your name and email address!)
    git config --global user.name "randlet"
    git config --global user.email randy@multileaf.ca
 
-Check out the QATrack+ source code from BitBucket
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Check out the QATrack+ source code from GitHub
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that we have git installed we can proceed to grab the latest version of
 QATrack+.  To checkout the code enter the following commands:
@@ -89,7 +89,7 @@ QATrack+.  To checkout the code enter the following commands:
 
     mkdir -p ~/web
     cd web
-    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
+    git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
     git checkout v3.1.0RC1
 

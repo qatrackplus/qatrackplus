@@ -107,7 +107,7 @@ Bugs or Feature Requests
 ------------------------
 
 If you have a bug to report or a feature to request please use the
-:issues:`BitBucket Issues <>` page.
+:issues:`GitHub Issues <>` page.
 
 Mailing List, General Questions, Discussions or Support?
 --------------------------------------------------------

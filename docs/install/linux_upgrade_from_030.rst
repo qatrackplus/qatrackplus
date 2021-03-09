@@ -124,6 +124,7 @@ following commands:
 .. code-block:: bash
 
     cd ~/web/qatrackplus
+    git remote set-url origin https://github.com/qatrackplus/qatrackplus.git
     git fetch origin
     git checkout v3.1.0RC1
 

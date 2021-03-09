@@ -92,8 +92,8 @@ The report types currently available in QATrack+ are:
 
 
 If there are other reports you would like to see please file an issue For
-custom reporting please submit an `issue on BitBucket
-<https://bitbucket.org/tohccmedphys/qatrackplus/issues/>`_.
+custom reporting please submit an `issue on GitHub
+<https://github.com/qatrackplus/qatrackplus/issues/>`_.
 
 
 Creating a New Report

@@ -24,6 +24,14 @@ New version numbering
 Given that QATrack+ is now a mature and featureful application, we are
 eliminating the `0.` from the version number and moving from v0.3.0 to v3.1.0.
 
+Moving to GitHub
+................
+
+QATrack+ is migrating from BitBucket to
+[GitHub](https://github.com/qatrackplus/qatrackplus/).  As part of your update
+process you will be instructed to update your `origin` url (`git remote set-url
+origin https://github.com/qatrackplus/qatrackplus.git`).
+
 
 Deprecations & Discontinuations
 ...............................

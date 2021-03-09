@@ -31,7 +31,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 
 VERSION = "3.1.0RC1"
-BUG_REPORT_URL = "https://bitbucket.org/tohccmedphys/qatrackplus/issues/new"
+BUG_REPORT_URL = "https://github.com/qatrackplus/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
 # Python dotted path to the WSGI application used by Django's runserver.
@@ -431,12 +431,13 @@ AUTH_ADFS = {
 # the site admins on every HTTP 500 error.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-def skip_requests(record):
+def skip_requests(record):  # noqa: E302
     skip = (
         record.args[0].startswith("GET /static/") or
         record.args[0].startswith("GET /accounts/ping/")
     )
     return not skip
+
 
 LOGGING = {
     'version': 1,
