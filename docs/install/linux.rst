@@ -91,7 +91,7 @@ QATrack+.  To checkout the code enter the following commands:
     cd web
     git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
-    git checkout v3.1.0RC2
+    git checkout v3.1.0RC2.1
 
 
 Installing a Database System
