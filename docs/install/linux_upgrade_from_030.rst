@@ -84,17 +84,6 @@ Now confirm your restore worked:
     sudo mysql --password=qatrackpass --database qatrackplus31 -e "SELECT COUNT(*) from qa_testlistinstance;"
 
 
-And add readonly roles to the database:
-
-.. code-block:: bash
-
-    # postgres
-    sudo -u postgres psql < deploy/postgres/create_ro_role.sql
-
-    # mysql
-    sudo mysql -p < deploy/mysql/create_ro_role.sql
-
-
 
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
