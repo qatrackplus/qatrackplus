@@ -119,11 +119,11 @@ Glossary
 
     RTS
 
-       See :term:`Return to Service QC`
+       See :term:`Return To Service QC`
 
     RTS QC
 
-       See :term:`Return to Service QC`
+       See :term:`Return To Service QC`
 
     Service Area
 

@@ -46,7 +46,7 @@ to complete.
 .. _qa_tree_views:
 
 Tree Views
-..........
+~~~~~~~~~~
 
 In addition to the `Choose Unit` method for selecting a test list, QATrack+ has
 two "Tree Views" that present the QC available to perform in a tree structure grouped
