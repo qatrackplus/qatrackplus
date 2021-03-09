@@ -422,7 +422,7 @@ QATrack+ v0.3.0.15 Release Notes
   v3.1.0 release.
 
 Upgrading to v0.3.0.15 from v0.3.0
-..................................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you haven't upgraded to v0.3.0 yet see instructions for v0.3.0 below.  If
 you've already upgraded to v0.3.0 then to upgrade to v0.3.0.15:
@@ -564,7 +564,7 @@ a patch to v0.3.0 that fixes a few minor issues.
 
 
 Upgrading to v0.3.0.13 from v0.3.0
-..................................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you haven't upgraded to v0.3.0 yet see instructions for v0.3.0 below.  If
 you've already upgraded to v0.3.0 then to upgrade to v0.3.0.13:
@@ -591,7 +591,7 @@ the largest update to QATrack+ since the initial release in 2012. Details of
 QATrack+ v0.3.0 are included below.
 
 Acknowledgements
-................
+~~~~~~~~~~~~~~~~
 
 Many thanks to Ryan Bottema & Crystal Angers at The Ottawa Hospital for all
 their work on the development and implementation of the new Service Log app
@@ -710,7 +710,7 @@ Details of the v0.3.0 release
 
 
 Upgrading to v0.3.0
-...................
+~~~~~~~~~~~~~~~~~~~
 
 For instructions on upgrading to QATrack+ 0.3.0 please see the installation
 docs for your platform.
@@ -834,7 +834,7 @@ issues tracker
 <https://bitbucket.org/tohccmedphys/qatrackplus/issues?milestone=0.2.9>`_!
 
 Deprecation Notices
-...................
+~~~~~~~~~~~~~~~~~~~
 
 As QATrack+, Python & Django and the web continue to evolve, occassionally we need to deprecate some of the versions of Python & web browsers we support.
 The next major release of QATrack+ will no longer officially support the following items:
@@ -843,7 +843,7 @@ The next major release of QATrack+ will no longer officially support the followi
 - IE7-IE10 (IE 11+ Only): IE7-IE10 are no longer supported by Microsoft and we will no longer be testing these platforms.
 
 Upgrade Instructions
-....................
+~~~~~~~~~~~~~~~~~~~~
 
 For instructions on how to upgrade from v0.2.8 `please see the wiki <https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.9/release-notes.md>`_
 
@@ -969,7 +969,7 @@ Here's a list of some of the changes in this release:
 
 
 Upgrading to v0.2.8
-...................
+~~~~~~~~~~~~~~~~~~~
 
 *Note: If any of these steps results in an error, \*stop\* and figure out why before
 carrying on to the next step!*
@@ -1006,7 +1006,7 @@ on running QATrack+ with IIS, FastCGI and Windows Integrated Authentication.
 Thanks Eric!
 
 New Features & Bugs Fixed
-.........................
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Three new `test types
   <https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/test.md>`_ have
@@ -1073,7 +1073,7 @@ New Features & Bugs Fixed
 
 
 Upgrading to v0.2.7
-...................
+~~~~~~~~~~~~~~~~~~~
 
 _Note: If any of these steps results in an error, stop and figure out why before
 carrying on to the next step!_
@@ -1117,7 +1117,7 @@ v0.2.6 includes a number of bug fixes
 Thank you to Eric Reynard and Darcy Mason for their bug reports.
 
 New Features
-............
+~~~~~~~~~~~~
 
 * You can now manually override the due date for a Test List on a Unit
 * You can `turn off the auto scheduling <https://bitbucket.org/tohccmedphys/qatrackplus/wiki/admin/assign_to_unit.md>`_ of due dates for Test Lists on
@@ -1158,7 +1158,7 @@ New Features
 * majority of code now conforms with pep8
 
 Bug Fixes
-.........
+~~~~~~~~~
 
 * Unique Char fields limited to a length of 255 to fix issue with
   MySQL
@@ -1179,7 +1179,7 @@ Bug Fixes
 
 
 To upgrade from v0.2.5
-......................
+~~~~~~~~~~~~~~~~~~~~~~
 
 **Note: this release introduces some database shema changes.  BACK UP YOUR
 DATABASE BEFORE ATTEMPTING THIS UPGRADE**
@@ -1243,7 +1243,7 @@ to do the following:
 6. python manage.py migrate qa
 
 New Features
-............
+~~~~~~~~~~~~
 
 * added South migrations
 * added description field to TestInstance Status models (displayed in tooltips
@@ -1253,7 +1253,7 @@ New Features
 
 
 Bug Fixes and Clean Up
-......................
+~~~~~~~~~~~~~~~~~~~~~~
 
 * removed `salmonella <https://github.com/lincolnloop/django-salmonella>`_ urls
   from urls.py
@@ -1267,7 +1267,7 @@ QATrack+ v0.2.3 Release Notes
 This release has a number of small features and bug fixes included.
 
 New Features
-............
+~~~~~~~~~~~~
 
 * Greatly improved permissions system.  Group/user specific permissions are no
   longer only controlled by the is_staff flag
@@ -1278,7 +1278,7 @@ New Features
 
 
 Bug Fixes
-.........
+~~~~~~~~~
 
 * Fixed js null bug when charting (see `issue #189
   <https://bitbucket.org/randlet/qatrack/issue/189/js-exception-on-generate-chart>`_)

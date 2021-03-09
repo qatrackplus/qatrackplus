@@ -232,7 +232,7 @@ Service Log Dashboard
 
 The `Service Log Dashboard` provides you with an overview of the current status
 of all Service Events, including which events need review, which events have
-:term:`Return to Service QC` incomplete or unreviewed and a list of recent
+:term:`Return To Service QC` incomplete or unreviewed and a list of recent
 activities.
 
 .. figure:: images/sl_dashboard.png

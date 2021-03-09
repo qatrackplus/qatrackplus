@@ -95,7 +95,7 @@ the Unit can be released for clinical duty:
 
 The physicist now clicks `Save` and the are ready to make the output
 adjustment. Note that the Service Log Dashboard will now show 1 incomplete
-:term:`Return to Service QC` and 1 Service Event needing review.
+:term:`Return To Service QC` and 1 Service Event needing review.
 
 
 .. figure:: images/dash.png

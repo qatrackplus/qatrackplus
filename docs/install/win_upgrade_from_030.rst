@@ -170,7 +170,7 @@ First we must check out the code for version 3.1.0 in a PowerShell window:
     cd C:\deploy\qatrackplus
     git remote set-url origin https://github.com/qatrackplus/qatrackplus.git
     git fetch origin
-    git checkout v3.1.0RC1
+    git checkout v3.1.0RC2
 
 
 Setting up our Python environment (including virtualenv)
