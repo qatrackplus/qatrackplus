@@ -8,7 +8,7 @@ About QATrack+ v3.1.0
 QATrack+ is a fully configurable, free, and open source (MIT License) web
 application for managing QC data for radiation therapy and medical imaging
 equipment. QATrack+ is used in `many hospitals and clinics around the world
-<http://qatrackplus.com/#whos-using>`!
+<http://qatrackplus.com/#whos-using>`_!
 
 QATrack+ is a replacement for error prone spreadsheets and other in-house
 databases. It brings structure and organization to your QA program while
