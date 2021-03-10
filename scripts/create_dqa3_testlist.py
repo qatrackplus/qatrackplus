@@ -86,8 +86,10 @@ def create_dqa3(mode, beam):
             test_list, _ = models.TestList.objects.get_or_create(
                 name=test_list_name,
                 slug=slugify(test_list_name),
-                created_by=user,
-                modified_by=user,
+                defaults={
+                    "created_by": user,
+                    "modified_by": user,
+                },
             )
 
             for param_idx, param in enumerate(params):
@@ -103,16 +105,18 @@ def create_dqa3(mode, beam):
                 test_name = f"DQA3 Results: {name}"
                 slug = slugify(param).lower().replace("-", "_")
                 print(f"\tCreating Test: {test_name} ({slug})")
-                test = models.Test.objects.create(
+                test, _ = models.Test.objects.get_or_create(
                     name=test_name,
                     display_name=name,
                     slug=slug,
-                    description="",
-                    category=cat,
                     type=models.SIMPLE if param not in string_tests else models.STRING,
-                    created_by=user,
-                    modified_by=user,
-                    formatting="%.3f" if param not in string_tests else "",
+                    defaults={
+                        "created_by": user,
+                        "modified_by": user,
+                        "formatting": "%.3f" if param not in string_tests else "",
+                        "category": cat,
+                        "description": "",
+                    },
                 )
                 models.TestListMembership.objects.get_or_create(
                     test=test,
