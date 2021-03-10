@@ -36,7 +36,7 @@ function RunBackup($backup_type){
     $backup_db_file = "$backup_loc\$db_name-script.bak"
     If(Test-path $backup_db_file) {Remove-item $backup_db_file}
     $query = "BACKUP DATABASE $db_name TO DISK='$backup_db_file'"
-    Invoke-Sqlcmd -ServerInstance localhost –QUERY “$query"
+    Invoke-Sqlcmd -ServerInstance localhost –QUERY "$query"
 
     # now backup the uploads files
     $source = "$qatrack_dir\qatrack\media\uploads"
