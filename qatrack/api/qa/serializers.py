@@ -419,11 +419,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         test_qs = self.tl.all_tests().values_list("id", "slug", "type", "constant_value")
 
-        has_calculated = False
+        has_composite = False
         uploads = []
         for pk, slug, type_, cv in test_qs:
-
-            has_calculated = has_calculated or type_ in models.CALCULATED_TYPES
 
             if type_ == models.CONSTANT:
                 # here we get data for the test (comments etc) and make sure the constant value
@@ -438,6 +436,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 d = validated_data['tests'].get(slug, {})
                 uploads.append((pk, slug, d))
             elif type_ in models.CALCULATED_TYPES:
+                has_composite = True
                 if slug not in validated_data['tests']:
                     validated_data['tests'][slug] = {'value': ''}
                 elif 'value' not in validated_data['tests'][slug]:
@@ -448,7 +447,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         user = self.context['request'].user
 
-        if has_calculated:
+        if has_composite or uploads:
 
             comp_calc_data = self.data_to_composite(validated_data)
             for pk, slug, d in uploads:
@@ -482,20 +481,21 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 comp_calc_data['tests'][slug] = test_data['result']
                 comp_calc_data.pop('test_id', None)
 
-            results = CompositePerformer(user, comp_calc_data).calculate()
-            if not results['success']:  # pragma: no cover
-                raise serializers.ValidationError(', '.join(results.get("errors", [])))
+            if has_composite:
+                results = CompositePerformer(user, comp_calc_data).calculate()
+                if not results['success']:  # pragma: no cover
+                    raise serializers.ValidationError(', '.join(results.get("errors", [])))
 
-            for slug, test_data in results['results'].items():
-                if test_data['error']:
-                    raise serializers.ValidationError("Error with %s test: %s" % (slug, test_data['error']))
+                for slug, test_data in results['results'].items():
+                    if test_data['error']:
+                        raise serializers.ValidationError("Error with %s test: %s" % (slug, test_data['error']))
 
-                data = validated_data['tests'].get(slug, {})
-                data['comment'] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
-                data['value'] = test_data['value']
-                validated_data['tests'][slug] = data
+                    data = validated_data['tests'].get(slug, {})
+                    data['comment'] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
+                    data['value'] = test_data['value']
+                    validated_data['tests'][slug] = data
 
-                self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
+                    self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
 
         return validated_data
 
