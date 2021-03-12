@@ -140,6 +140,7 @@ class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
+    attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
     class Meta:
         model = models.TestInstance
         fields = "__all__"

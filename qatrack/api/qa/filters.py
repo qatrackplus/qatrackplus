@@ -1,9 +1,11 @@
 import django.forms.widgets as widgets
 import rest_framework_filters as filters
 
+from qatrack.api.attachments.filters import AttachmentFilter
 from qatrack.api.auth.filters import Group, GroupFilter, User, UserFilter
 from qatrack.api.filters import MaxDateFilter, MinDateFilter
 from qatrack.api.units.filters import UnitFilter
+from qatrack.attachments.models import Attachment
 from qatrack.qa import models
 from qatrack.units.models import Unit
 
@@ -253,6 +255,12 @@ class UnitTestCollectionFilter(filters.FilterSet):
 
 class TestListInstanceFilter(filters.FilterSet):
 
+    attachments = filters.RelatedFilter(
+        AttachmentFilter,
+        field_name="attachment",
+        queryset=Attachment.objects.all(),
+    )
+
     unit_test_collection = filters.RelatedFilter(
         UnitTestCollectionFilter,
         field_name="unit_test_collection",
@@ -338,6 +346,11 @@ class SublistFilter(filters.FilterSet):
 
 class TestInstanceFilter(filters.FilterSet):
 
+    attachments = filters.RelatedFilter(
+        AttachmentFilter,
+        field_name="attachment",
+        queryset=Attachment.objects.all(),
+    )
     status = filters.RelatedFilter(
         TestInstanceStatusFilter,
         field_name="status",
