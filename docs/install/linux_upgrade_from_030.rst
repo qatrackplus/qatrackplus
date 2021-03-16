@@ -126,7 +126,7 @@ following commands:
     cd ~/web/qatrackplus
     git remote set-url origin https://github.com/qatrackplus/qatrackplus.git
     git fetch origin
-    git checkout v3.1.0RC3
+    git checkout v3.1.0RC4
 
 
 Setting up our Python environment (including virtualenv)
