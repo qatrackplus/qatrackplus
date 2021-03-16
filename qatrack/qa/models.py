@@ -2234,6 +2234,14 @@ class TestListInstance(models.Model):
         help_text=_l("Used in cooperation with Boolean Tests to highligh this TestListInstance"),
         default=False,
     )
+    user_key = models.CharField(
+        help_text=_("Optional field that can be used to ensure uniqueness when posting results via the API"),
+        unique=True,
+        null=True,
+        blank=True,
+        max_length=255,
+        default=None,
+    )
 
     include_for_scheduling = models.BooleanField(
         help_text=_l("Should this instance be considered when calculating due dates?"),

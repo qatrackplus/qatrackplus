@@ -269,8 +269,8 @@ Uploading Data
 --------------
 
 The real power of the API is the ability to complete TestLists programatically.
-In order to demonstrate the API, we will submit two number entries via the API to perform a test list
-that adds two numbers together shown here:
+In order to demonstrate the API, we will submit two number entries via the API
+to perform a test list that adds two numbers together shown here:
 
 .. image:: testlist.png
 
@@ -298,6 +298,7 @@ A script that will find the above test list, and submit the data is shown here:
         'include_for_scheduling': True,
         'work_started': "2018-07-6 10:00",
         'work_completed': "2018-07-6 11:00",  # optional
+        'user_key': "12345",  # optional, allows you ensure uniqueness of results
         'comment': "test list comment",  # optional
         'tests': {
             'number_1': {'value': 1, 'comment': "hello number 1"}, # comment is optional
@@ -460,6 +461,44 @@ Similar to File Upload test types, you can add arbitrary attachments to your Tes
             },
         ],
     }
+
+
+Preventing Duplicate Entries with the user_key field
+....................................................
+
+When uploading data in an automated fashion via the API, you may want to ensure
+that your script or program is not uploading the same data twice.  To
+facilitate this, the TestListInstance API allows you to specify a unique "User
+Key".  The User Key has a uniqueness constraint enforced at the database level
+and posting data with a duplicated `user_key` will result in an HTTP 400 error
+code with a message "test list instance with this user key already exists". To
+set the `user_key` for a test list instance include a unique identifier with
+your json data.  
+
+.. code:: python
+
+    data = {
+        'unit_test_collection': utc_url,
+        ...
+        'user_key': "some unique identifier",  # optional, allows you ensure uniqueness of results
+        'tests': {
+            ...
+        },
+    }
+
+
+How you choose the user_key is up to you but it is stored as a text field with
+a maximum length of 255 characters. Examples of user_key's might be:
+
+
+* A Test List Name and Database Row ID:  "Test List Name: 1234"
+* A Test List Name, Unit Name, and Timestamp: "SomeTestListName:Unit 123:2021-03-16 12:34"
+* An MD5 hash of a file: 
+
+    .. code:: python
+
+        import hashlib
+        user_key = hashlib.md5(open("some-file.dcm", "rb").read()).hexdigest()
 
 
 FAQ

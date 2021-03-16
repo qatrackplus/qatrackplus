@@ -298,6 +298,7 @@ class TestListInstanceFilter(filters.FilterSet):
             "reviewed": ['exact'],
             "all_reviewed": ['exact'],
             "day": ['exact', 'in'],
+            "user_key": ['exact'],
             "work_started": ['exact', "in"],
             "work_completed": ['exact', "in"],
             "created": ['exact', "in"],

@@ -61,6 +61,14 @@
                                     <dt>Performed By :</dt>
                                     <dd>{{tli.created_by}}</dd>
 
+                                    <dt>User Key:</dt>
+                                    <dd>
+                                      {% if tli.user_key %}
+                                        {{tli.user_key }}
+                                      {% else %}
+                                        <em>{% trans "Not set" %}</em>
+                                      {% endif %}
+                                    </dd>
                                </dl>
                             </div>
                             <div class="col-md-4">

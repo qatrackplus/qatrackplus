@@ -141,6 +141,7 @@ class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
 
 class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
     attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
+
     class Meta:
         model = models.TestInstance
         fields = "__all__"
@@ -291,7 +292,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                     'skipped': True,
                 }
 
-        for key in ["work_completed", "work_started", "in_progress", "include_for_scheduling"]:
+        for key in ["work_completed", "work_started", "in_progress", "include_for_scheduling", "user_key"]:
             data[key] = data.get(key, getattr(self.instance, key))
 
     def validate(self, data):
@@ -658,6 +659,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         instance.work_completed = validated_data['work_completed']
         instance.work_started = validated_data['work_started']
         instance.in_progress = validated_data['in_progress']
+        instance.user_key = validated_data.get('user_key')
         instance.include_for_scheduling = validated_data['include_for_scheduling']
 
         instance.modified_by = user

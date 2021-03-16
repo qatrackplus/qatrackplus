@@ -800,6 +800,14 @@ class TestTestListInstanceAPI(APITestCase):
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").comment == "new comment"
 
+    def test_user_key_updated(self):
+        self.data['user_key'] = "1234"
+        resp = self.client.post(self.create_url, self.data)
+        new_data = {'user_key': "5678"}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        assert models.TestListInstance.objects.latest("pk").user_key == "5678"
+
     def test_skip_preserved(self):
         self.data['tests']['test1'] = {'skipped': True}
         resp = self.client.post(self.create_url, self.data)
@@ -1026,6 +1034,16 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.patch(resp.data['url'], new_data)
         tli.refresh_from_db()
         assert tli.attachment_set.count() == 2
+
+    def test_create_unique(self):
+        self.data['user_key'] = "1234"
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.latest("pk").user_key == "1234"
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "test list instance with this user key already exists." in response.json()['user_key']
 
 
 class TestPerformTestListCycleAPI(APITestCase):
