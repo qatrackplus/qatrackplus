@@ -24,9 +24,24 @@ require(['jquery'], function($) {
         if (window.userIsAuthenticated && loggedOutMessageShown){
             $(".logout-alert").remove();
             loggedOutMessageShown = false;
+            $("button[type=submit]").each(function(idx, el){
+                var $el = $(el);
+                $el.attr({
+                    'disabled': false,
+                    'title': $el.data("orig-title")
+                });
+            });
         }else if (!window.userIsAuthenticated && !loggedOutMessageShown){
             $(".content-header").append(loggedOutMessage);
             loggedOutMessageShown = true;
+            $("button[type=submit]").each(function(idx, el){
+                var $el = $(el);
+                $el.data("orig-title", $el.attr("title"));
+                $el.attr({
+                    'disabled': true,
+                    'title': 'Please wait until QATrack+ can reach the server before submitting'
+                });
+            });
         }
 
         if (changedState && window.userIsAuthenticated){
