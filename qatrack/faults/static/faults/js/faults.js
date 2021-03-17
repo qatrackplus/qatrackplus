@@ -220,17 +220,19 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                     dataType: 'json',
                     delay: '500',
                     data: function (params) {
-                        return {
-                            q: params.term, // search term
+                        var term = params.term === undefined ? "" : params.term;
+                        var dat = {
+                            q: term, // search term
                             page: params.page,
                             unit_id: $unit.val(),
                         };
+                        return dat;
                     },
                     processResults: process_related_results,
                     cache: true
                 },
                 escapeMarkup: function (markup) { return markup; },
-                minimumInputLength: 1,
+                minimumInputLength: 0,
                 templateResult: generate_related_result,
                 templateSelection: generate_related_selection,
                 width: '100%'
