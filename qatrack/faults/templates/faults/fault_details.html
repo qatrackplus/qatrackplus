@@ -6,7 +6,7 @@
 {% load comments %}
 {% load static %}
 
-{% block head_title %}{% trans "Fault Type" %}: {{ fault_type.code }}{% endblock %}
+{% block head_title %}{% trans "Fault Type" %}: {{ fault.fault_type.code }}{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
