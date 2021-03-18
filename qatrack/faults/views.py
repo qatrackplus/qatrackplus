@@ -53,7 +53,6 @@ class FaultList(BaseListableView):
         'unit__site__name': _l("Site"),
         'unit__name': _l("Unit"),
         'modality__name': _l("Modality"),
-        'treatment_technique__name': _l("Technique"),
         'get_occurred': _l("Occurred On"),
     }
 
@@ -64,7 +63,6 @@ class FaultList(BaseListableView):
         'unit__site__name': SELECT_MULTI,
         'unit__name': SELECT_MULTI,
         'modality__name': SELECT_MULTI,
-        'treatment_technique__name': SELECT_MULTI,
         'get_occurred': DATE_RANGE,
         'review_status': DATE_RANGE,
     }
@@ -94,10 +92,12 @@ class FaultList(BaseListableView):
         "unit__site",
         "unit",
         "modality",
-        "treatment_technique",
-        "reviewed_by",
         "created_by",
         "modified_by",
+    ]
+
+    prefetch_related = [
+        "faultreviewinstance_set",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -135,7 +135,6 @@ class FaultList(BaseListableView):
         fields += (
             "unit__name",
             "modality__name",
-            "treatment_technique__name",
             "review_status",
         )
         return fields
@@ -371,12 +370,21 @@ class FaultDetails(FaultList):
         qs = models.Fault.objects.select_related(
             "created_by",
             "modified_by",
-            "reviewed_by",
             "fault_type",
+        ).prefetch_related(
+            "faultreviewinstance_set",
         )
         context['fault'] = get_object_or_404(qs, pk=self.kwargs['pk'])
-        if self.request.user.has_perm("faults.can_review"):
+
+        review_groups = models.FaultReviewGroup.objects.order_by("required", "group__name")
+        context['review_groups'] = review_groups
+        can_review = self.request.user.has_perm("faults.can_review")
+        if review_groups:
+            can_review &= len(set(review_groups) & set(self.request.user.groups.all())) > 0
+
+        if can_review:
             context['review_form'] = forms.ReviewFaultForm(instance=context['fault'])
+
         return context
 
 

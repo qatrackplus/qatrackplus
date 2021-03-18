@@ -59,13 +59,13 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
             });
 
             var $modality = $("#id_fault-modality").select2(s2config);
-            var $technique = $("#id_fault-treatment_technique").select2(s2config);
             var $related_se = $('#id_fault-related_service_events');
             var initialLoad = true;
             var $unit = $("#id_fault-unit");
 
             var $faultType = $("#id_fault-fault_type_field").select2({
                 width: '100%',
+                multiple: true,
                 dropdownParent: s2config.dropdownParent,
                 ajax: {
                     url: QAURLs.FAULT_TYPE_AUTOCOMPLETE,
@@ -98,21 +98,6 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                 });
                 $modality.select2("destroy");
                 $modality.select2(s2config);
-
-                var unit_techniques = [];
-                if (cur_unit in unitInfo){
-                    unit_techniques = unitInfo[cur_unit].treatment_techniques;
-                }
-                $technique.val("");
-                $technique.find("option").each(function(i, opt){
-                    var $opt = $(opt);
-                    var tech_id = parseInt($(opt).val());
-                    var enable = unit_techniques.indexOf(tech_id) >= 0 || tech_id === "";
-                    $opt.prop('disabled', !enable);
-                });
-                $technique.select2("destroy");
-                $technique.select2(s2config);
-
 
                 if (cur_unit){
                     $related_se.prop('disabled', false);

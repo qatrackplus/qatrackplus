@@ -1,12 +1,17 @@
 {% load i18n %}
 
-{% if fault.reviewed %}
-  <span data-timestamp="{{ fault.reviewed|date:"U"}}">
+{% for fri in fault.faultreviewinstance_set.all %}
+  <span data-timestamp="{{ fri.reviewed|date:"U"}}">
     <abbr
-        title="{% blocktrans with reviewed_by=fault.created_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}">
+      {% if fri.fault_review_group %}
+        title="{% blocktrans with reviewed_by=fri.reviewed_by group=fri.fault_review_group %}Reviewed by {{ group }} group member {{ reviewed_by }}{% endblocktrans %}"
+      {% else %}
+        title="{% blocktrans with reviewed_by=fri.reviewed_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}"
+      {% endif %}
+    >
       {{ fault.reviewed }}
     </abbr>
   </span>
-{% else %}
+{% empty %}
   <em>{% trans "Unreviewed " %}
-{% endif %}
+{% endfor %}

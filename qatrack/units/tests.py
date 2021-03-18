@@ -229,12 +229,6 @@ class TestUnitAvailableTimeEdit(TestCase):
         assert models.UnitAvailableTimeEdit.objects.first().hours == timezone.timedelta(hours=2)
 
 
-class TestTreatmentTechnique:
-
-    def test_str(self):
-        assert str(models.TreatmentTechnique(name="name")) == "name"
-
-
 class TestGetUnitInfo(TestCase):
 
     def setUp(self):
@@ -244,21 +238,15 @@ class TestGetUnitInfo(TestCase):
 
         self.u1 = utils.create_unit()
         self.u2 = utils.create_unit()
-        self.tt1 = models.TreatmentTechnique.objects.create(name="t1")
-        self.tt2 = models.TreatmentTechnique.objects.create(name="t2")
-        self.u1.treatment_techniques.add(self.tt1)
-        self.u1.treatment_techniques.add(self.tt2)
 
     def test_get_all(self):
         resp = self.client.get(self.url)
         expected = {
             str(self.u1.pk): {
                 'modalities': list(self.u1.modalities.values_list("pk", flat=True)),
-                'treatment_techniques': [self.tt1.pk, self.tt2.pk]
             },
             str(self.u2.pk): {
                 'modalities': list(self.u2.modalities.values_list("pk", flat=True)),
-                'treatment_techniques': []
             },
         }
         assert resp.json() == expected
@@ -270,7 +258,6 @@ class TestGetUnitInfo(TestCase):
         expected = {
             str(self.u1.pk): {
                 'modalities': list(self.u1.modalities.values_list("pk", flat=True)),
-                'treatment_techniques': [self.tt1.pk, self.tt2.pk]
             },
         }
         assert resp.json() == expected
@@ -280,7 +267,6 @@ class TestGetUnitInfo(TestCase):
         expected = {
             str(self.u2.pk): {
                 'modalities': list(self.u2.modalities.values_list("pk", flat=True)),
-                'treatment_techniques': []
             },
         }
         assert resp.json() == expected

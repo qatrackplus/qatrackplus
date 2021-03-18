@@ -82,9 +82,6 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
                     'unit_name': fault.unit.name,
                     'fault_type': fault.fault_type.code,
                     'modality': fault.modality.name if fault.modality else _("Not specified"),
-                    'treatment_technique': (
-                        fault.treatment_technique.name if fault.treatment_technique else _("Not specified")
-                    ),
                     'created_by': format_user(fault.created_by),
                     'created': format_datetime(fault.created),
                     'modified_by': format_user(fault.modified_by),
@@ -113,7 +110,6 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Created By"),
             _("Created Date"),
             _("Modified By"),
@@ -143,7 +139,6 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
                     fault['unit_name'],
                     fault['fault_type'],
                     fault['modality'],
-                    fault['treatment_technique'],
                     fault['created_by'].split("(")[0],
                     fault['created'],
                     fault['modified_by'].split("(")[0],

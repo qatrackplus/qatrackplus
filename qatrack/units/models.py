@@ -205,29 +205,6 @@ class Modality(models.Model):
         return self.name
 
 
-class TreatmentTechnique(models.Model):
-
-    name = models.CharField(
-        verbose_name=_l("name"),
-        max_length=255,
-        unique=True,
-        help_text=_l('Name of this treatment technique'),
-    )
-
-    objects = NameNaturalKeyManager()
-
-    class Meta:
-        verbose_name = _l("treatment technique")
-        verbose_name_plural = _l("treatment techniques")
-        ordering = ("name",)
-
-    def natural_key(self):
-        return (self.name,)
-
-    def __str__(self):
-        return self.name
-
-
 def weekday_count(start_date, end_date, uate_list):
     week = {}
     for i in range((end_date - start_date).days + 1):
@@ -266,7 +243,6 @@ class Unit(models.Model):
     )
 
     modalities = models.ManyToManyField(Modality)
-    treatment_techniques = models.ManyToManyField(TreatmentTechnique)
 
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
@@ -416,23 +392,18 @@ def get_unit_info(unit_ids=None, active_only=True):
 
     units = units.prefetch_related(
         "modalities",
-        "treatment_techniques",
     ).order_by(
         "id",
         "modalities",
-        "treatment_techniques",
     ).values_list(
         "id",
         "modalities",
-        "treatment_techniques",
     )
 
-    unit_info = defaultdict(lambda: {'treatment_techniques': set(), 'modalities': set()})
+    unit_info = defaultdict(lambda: {'modalities': set()})
 
-    for unit, modality, technique in units:
+    for unit, modality in units:
         if modality is not None:
             unit_info[unit]['modalities'].add(modality)
-        if technique is not None:
-            unit_info[unit]['treatment_techniques'].add(technique)
 
     return unit_info

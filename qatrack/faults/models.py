@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.urls import reverse
@@ -47,7 +47,7 @@ class FaultType(models.Model):
 class FaultManager(models.Manager):
 
     def unreviewed(self):
-        return self.filter(reviewed_by=None).order_by("-occurred")
+        return self.filter(faultreviewinstance=None).order_by("-occurred")
 
     def unreviewed_count(self):
         return self.unreviewed().count()
@@ -65,22 +65,12 @@ class Fault(models.Model):
 
     modality = models.ForeignKey(
         u_models.Modality,
-        verbose_name=_l("modality"),
+        verbose_name=_l("treatment/imaging technique or modality"),
         on_delete=models.SET_NULL,
         related_name="faults",
         null=True,
         blank=True,
-        help_text=_l("Select the modality being used when this fault occurred (optional)"),
-    )
-
-    treatment_technique = models.ForeignKey(
-        u_models.TreatmentTechnique,
-        verbose_name=_l("treatment technique"),
-        on_delete=models.SET_NULL,
-        related_name="faults",
-        null=True,
-        blank=True,
-        help_text=_l("Select the treatment technique being used when this fault occurred (optional)"),
+        help_text=_l("Select the treatment/imaging modality being used when this fault occurred (optional)"),
     )
 
     fault_type = models.ForeignKey(
@@ -109,16 +99,6 @@ class Fault(models.Model):
         object_id_field="object_pk",
     )
 
-    reviewed = models.DateTimeField(null=True, blank=True)
-    reviewed_by = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        editable=False,
-        null=True,
-        blank=True,
-        related_name="fault_reviewer",
-    )
-
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         User,
@@ -145,3 +125,48 @@ class Fault(models.Model):
 
     def __str__(self):
         return "Fault ID: %d" % self.pk
+
+
+class FaultReviewGroup(models.Model):
+
+    group = models.OneToOneField(
+        Group,
+        verbose_name=_l("group"),
+        on_delete=models.PROTECT,
+        help_text=_l("Select the group responsible for reviewing a fault"),
+        unique=True,
+    )
+
+    required = models.BooleanField(
+        _l("required"),
+        help_text=_l("Is review by this group required in order to consider a fault reviewed"),
+        default=True,
+    )
+
+
+class FaultReviewInstance(models.Model):
+
+    reviewed = models.DateTimeField(
+        verbose_name=_l("review date & time"),
+        auto_now_add=True,
+        editable=False,
+    )
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        editable=False,
+        related_name="faults_reviewed",
+    )
+
+    fault = models.ForeignKey(
+        Fault,
+        verbose_name=_l("fault"),
+        on_delete=models.CASCADE,
+    )
+
+    fault_review_group = models.ForeignKey(
+        FaultReviewGroup,
+        verbose_name=_l("fault review group instance"),
+        on_delete=models.SET_NULL,
+        null=True,
+    )

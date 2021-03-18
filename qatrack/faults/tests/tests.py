@@ -261,7 +261,6 @@ class TestCRUDFault(TestCase):
     def test_valid_create(self):
         """Test that creating a fault with all options set works"""
 
-        technique = u_models.TreatmentTechnique.objects.create(name='technique')
         ft = FaultType.objects.create(code="fault type")
 
         usa = sl_utils.create_unit_service_area(unit=self.unit)
@@ -271,7 +270,6 @@ class TestCRUDFault(TestCase):
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-treatment_technique": technique.pk,
             "fault-fault_type_field": ft.code,
             "fault-comment": "test comment",
             "fault-related_service_events": [se.pk],
@@ -289,14 +287,12 @@ class TestCRUDFault(TestCase):
     def test_invalid_create(self):
         """Test that trying to create a fault with no unit doesn't work"""
 
-        technique = u_models.TreatmentTechnique.objects.create(name='technique')
         ft = FaultType.objects.create(code="fault type")
 
         data = {
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": '',
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-treatment_technique": technique.pk,
             "fault-fault_type_field": ft.code,
             "fault-comment": "test comment",
         }
@@ -308,13 +304,10 @@ class TestCRUDFault(TestCase):
     def test_valid_create_new_fault_type(self):
         """Test that creating a fault with all options set works"""
 
-        technique = u_models.TreatmentTechnique.objects.create(name='technique')
-
         data = {
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-treatment_technique": technique.pk,
             "fault-fault_type_field": "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, "fault type"),
             "fault-comment": "test comment",
         }
@@ -332,7 +325,6 @@ class TestCRUDFault(TestCase):
         FaultType.objects.create(code="fault type")
 
         fault = self.create_fault()
-        assert fault.treatment_technique is None
 
         edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
         se = sl_utils.create_service_event()
@@ -344,12 +336,13 @@ class TestCRUDFault(TestCase):
     def test_valid_edit(self):
         """Test that editing a fault and modifying a field works"""
 
-        technique = u_models.TreatmentTechnique.objects.create(name='technique')
-
         FaultType.objects.create(code="fault type")
 
         fault = self.create_fault()
-        assert fault.treatment_technique is None
+        assert fault.modality is None
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
 
         edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
         se = sl_utils.create_service_event()
@@ -358,8 +351,7 @@ class TestCRUDFault(TestCase):
         data = {
             "fault-occurred": format_datetime(fault.occurred),
             "fault-unit": fault.unit.id,
-            "fault-modality": '',
-            "fault-treatment_technique": technique.pk,
+            "fault-modality": modality.pk,
             "fault-fault_type_field": fault.fault_type.code,
             "fault-comment": "",
             "fault-related_service_events": [se.pk],
@@ -368,18 +360,18 @@ class TestCRUDFault(TestCase):
         resp = self.client.post(edit_url, data)
         assert resp.status_code == 302
         fault.refresh_from_db()
-        assert fault.treatment_technique == technique
+        assert fault.modality == modality
         assert resp.url == self.list_url
 
     def test_invalid_edit(self):
         """Test that editing a fault and modifying a field works"""
 
-        technique = u_models.TreatmentTechnique.objects.create(name='technique')
+        modality = u_models.Modality.objects.create(name="modality")
 
         FaultType.objects.create(code="fault type")
 
         fault = self.create_fault()
-        assert fault.treatment_technique is None
+        assert fault.modality is None
 
         edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
         se = sl_utils.create_service_event()
@@ -388,8 +380,7 @@ class TestCRUDFault(TestCase):
         data = {
             "fault-occurred": format_datetime(fault.occurred),
             "fault-unit": '',
-            "fault-modality": '',
-            "fault-treatment_technique": technique.pk,
+            "fault-modality": modality.pk,
             "fault-fault_type_field": fault.fault_type.code,
             "fault-comment": "",
             "fault-related_service_events": [se.pk],
@@ -401,14 +392,12 @@ class TestCRUDFault(TestCase):
     def test_create_ajax_valid(self):
         """Test that creating a fault via ajax (e.g. from perform test list instance page) works"""
 
-        technique = u_models.TreatmentTechnique.objects.create(name='technique')
         ft = FaultType.objects.create(code="fault type")
 
         data = {
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-treatment_technique": technique.pk,
             "fault-fault_type_field": ft.code,
             "fault-comment": "test comment",
         }
@@ -421,14 +410,12 @@ class TestCRUDFault(TestCase):
     def test_create_ajax_invalid(self):
         """Test that creating a fault via ajax with missing field works"""
 
-        technique = u_models.TreatmentTechnique.objects.create(name='technique')
         ft = FaultType.objects.create(code="fault type")
 
         data = {
             "fault-occurred": "",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-treatment_technique": technique.pk,
             "fault-fault_type_field": ft.code,
             "fault-comment": "test comment",
         }

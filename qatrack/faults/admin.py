@@ -45,8 +45,6 @@ class FaultAdmin(SaveUserQATrackAdmin):
         "modality",
         "fault_type",
         "occurred",
-        "reviewed",
-        "reviewed_by",
     )
 
     list_filter = (
@@ -68,5 +66,14 @@ class FaultAdmin(SaveUserQATrackAdmin):
     name.admin_order_field = "pk"
 
 
+class FaultReviewGroupAdmin(BaseQATrackAdmin):
+
+    list_display = ("group", "required")
+    search_fields = (
+        "group__name",
+    )
+
+
 admin.site.register([models.FaultType], FaultTypeAdmin)
 admin.site.register([models.Fault], FaultAdmin)
+admin.site.register([models.FaultReviewGroup], FaultReviewGroupAdmin)

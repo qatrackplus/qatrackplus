@@ -48,7 +48,6 @@ class FaultForm(BetterModelForm):
             'occurred',
             'unit',
             'modality',
-            'treatment_technique',
             'fault_type_field',
             'related_service_events',
             'comment',

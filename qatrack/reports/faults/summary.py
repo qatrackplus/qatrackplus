@@ -24,7 +24,6 @@ class FaultReportMixin:
             "modified_by",
             "reviewed_by",
             "modality",
-            "treatment_technique",
         ).prefetch_related(
             "related_service_events",
         )
@@ -124,9 +123,6 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
                     'fault_type': fault.fault_type.code,
                     'unit_name': fault.unit.name,
                     'modality': fault.modality.name if fault.modality else _("Not specified"),
-                    'treatment_technique': (
-                        fault.treatment_technique.name if fault.treatment_technique else _("Not specified")
-                    ),
                     'occurred': format_datetime(fault.occurred),
                     'link': self.make_url(fault.get_absolute_url(), plain=True),
                 })
@@ -148,7 +144,6 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Link"),
         ]
 
@@ -163,7 +158,6 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
                     fault['unit_name'],
                     fault['fault_type'],
                     fault['modality'],
-                    fault['treatment_technique'],
                     fault['link'],
                 ]
 

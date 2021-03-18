@@ -118,7 +118,6 @@ class TestFaultSummaryReport(TestCase):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Link"),
         ])
         # should be one fault after header
@@ -189,7 +188,6 @@ class TestFaultDetailsReport(TestCase):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Created By"),
             _("Created Date"),
             _("Modified By"),
