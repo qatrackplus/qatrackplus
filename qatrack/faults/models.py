@@ -73,11 +73,11 @@ class Fault(models.Model):
         help_text=_l("Select the treatment/imaging modality being used when this fault occurred (optional)"),
     )
 
-    fault_type = models.ForeignKey(
+    fault_types = models.ManyToManyField(
         FaultType,
-        on_delete=models.PROTECT,
-        verbose_name=_l("fault type"),
-        help_text=_l("Select the fault type that occurred"),
+        verbose_name=_l("fault types"),
+        help_text=_l("Select the fault types that occurred"),
+        related_name="faults",
     )
 
     occurred = models.DateTimeField(

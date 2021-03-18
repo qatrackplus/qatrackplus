@@ -694,3 +694,8 @@ table ul.multiselect-container.dropdown-menu {
   -webkit-box-shadow: none !important;
   text-decoration: none;
 }
+
+hr.tight {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}

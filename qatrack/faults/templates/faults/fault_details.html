@@ -6,7 +6,7 @@
 {% load comments %}
 {% load static %}
 
-{% block head_title %}{% trans "Fault Type" %}: {{ fault.fault_type.code }}{% endblock %}
+{% block head_title %}{% blocktrans with fault_id=fault.id %}Fault ID {{ fault_id }}{% endblocktrans %}{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
@@ -97,38 +97,51 @@
 
                 <dt>{% trans "Reviewed" %}:</dt>
                 <dd>
-                  {% if fault.reviewed_by %}
-                    {{ fault.reviewed_by}} @ {{ fault.reviewed }}
-                  {% else %}
-                    <em>{% trans "Unreviewed" %}</em>
-                  {% endif %}
+
+                  {% for fri in fault.faultreviewinstance_set.all %}
+                    <span data-timestamp="{{ fri.reviewed|date:"U"}}">
+                      <abbr
+                        {% if fri.fault_review_group %}
+                          title="{% blocktrans with reviewed_by=fri.reviewed_by group=fri.fault_review_group %}Reviewed by {{ group }} group member {{ reviewed_by }}{% endblocktrans %}"
+                        {% else %}
+                          title="{% blocktrans with reviewed_by=fri.reviewed_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}"
+                        {% endif %}
+                      >
+                        {{ fault.reviewed }}
+                      </abbr>
+                    </span>
+                  {% empty %}
+                    <em>{% trans "Unreviewed " %}</em>
+                  {% endfor %}
                 </dd>
 
               </dl>
             </div>
             <div class="col-sm-6">
 
-              <h3>{% trans "Fault Type" %}</h3>
+              <h3>{% trans "Fault Types" %}</h3>
 
-              <dl class="dl-horizontal">
-                <dt>{% trans "Code" %}:</dt>
-                <dd>
-                  <a
-                    href="{% url "fault_type_details" slug=fault.fault_type.slug %}"
-                    title="{% trans "Click to view details of this fault type" %}">
-                    {{ fault.fault_type.code }}
-                  </a>
-                </dd>
+              {% for fault_type in fault.fault_types.all %}
+                <dl class="dl-horizontal margin-bottom-10">
+                  <dt>{% trans "Code" %}:</dt>
+                  <dd>
+                    <a
+                      href="{% url "fault_type_details" slug=fault_type.slug %}"
+                      title="{% trans "Click to view details of this fault type" %}">
+                      {{ fault_type.code }}
+                    </a>
+                  </dd>
 
-                <dt>{% trans "Description" %}:</dt>
-                <dd class="fault_type_description">
-                  {% if fault.fault_type.description %}
-                    {{ fault.fault_type.description }}
-                  {% else %}
-                    <em>{% trans "No description available" %}</em>
-                  {% endif %}
-                </dd>
-              </dl>
+                  <dt>{% trans "Description" %}:</dt>
+                  <dd class="fault_type_description">
+                    {% if fault_type.description %}
+                      {{ fault_type.description }}
+                    {% else %}
+                      <em>{% trans "No description available" %}</em>
+                    {% endif %}
+                  </dd>
+                </dl>
+              {% endfor %}
 
               <h3>{% trans "Related Service Events" %}</h3>
 

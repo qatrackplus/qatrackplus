@@ -63,7 +63,7 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
             var initialLoad = true;
             var $unit = $("#id_fault-unit");
 
-            var $faultType = $("#id_fault-fault_type_field").select2({
+            var $faultType = $("#id_fault-fault_types_field").select2({
                 width: '100%',
                 multiple: true,
                 dropdownParent: s2config.dropdownParent,

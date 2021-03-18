@@ -4,6 +4,7 @@ from django.utils.text import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
 
 from qatrack.faults import models
+from qatrack.qatrack_core.forms import MultipleCharField
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.units import models as u_models
@@ -28,10 +29,10 @@ class FaultForm(BetterModelForm):
         required=True,
     )
 
-    fault_type_field = forms.CharField(
+    fault_types_field = MultipleCharField(
         label=_l("Fault Type"),
         help_text=_l("Select the fault type that occurred, or enter a new fault type code"),
-        widget=forms.Select(),
+        widget=forms.SelectMultiple(),
         required=True,
     )
 
@@ -48,7 +49,7 @@ class FaultForm(BetterModelForm):
             'occurred',
             'unit',
             'modality',
-            'fault_type_field',
+            'fault_types_field',
             'related_service_events',
             'comment',
         ]
@@ -65,11 +66,9 @@ class FaultForm(BetterModelForm):
         instance = kwargs.get('instance')
         if instance and instance.id:
             # if we are editing an existing fault, we need to set up the initial
-            # choices otherwise the fault_type_field will be blank
-            self.initial['fault_type_field'] = instance.fault_type.code
-            self.fields['fault_type_field'].widget.choices = [
-                (instance.fault_type.code, instance.fault_type.code),
-            ]
+            # choices otherwise the fault_types_field will be blank
+            self.initial['fault_types_field'] = [ft.code for ft in instance.fault_types.all()]
+            self.fields['fault_types_field'].widget.choices = [(ft.code, ft.code) for ft in instance.fault_types.all()]
 
             self.fields.pop('comment')
 
@@ -98,26 +97,33 @@ class FaultForm(BetterModelForm):
 
             # since we are dynamically grabbing fault type, we need to set the initial
             # choices to whatever user had it set to
-            data_key = '%s-fault_type_field' % self.prefix
-            if f == 'fault_type_field' and self.data.get(data_key):
-                val = self.data.get(data_key)
-                label = val
-                if NEW_FAULT_TYPE_MARKER in label:
-                    # if the user submitted a new fault type, add asteriks to the label
-                    label = "*%s*" % label.replace(NEW_FAULT_TYPE_MARKER, "")
-                self.fields[f].widget.choices = [(val, label)]
+            data_key = '%s-fault_types_field' % self.prefix
+            if f == 'fault_types_field':
+
+                if self.data and self.data.getlist(data_key):
+                    choices = []
+                    for val in self.data.getlist(data_key):
+                        label = val
+                        if NEW_FAULT_TYPE_MARKER in label:
+                            # if the user submitted a new fault type, add asteriks to the label
+                            label = "*%s*" % label.replace(NEW_FAULT_TYPE_MARKER, "")
+                        choices.append((val, label))
+                    self.fields[f].widget.choices = choices
 
         if 'comment' in self.fields:
             self.fields['comment'].widget.attrs['class'] += 'autosize'
             self.fields['comment'].widget.attrs['cols'] = 8
 
-    def clean_fault_type_field(self):
-        fault_type = self.cleaned_data.get('fault_type_field')
-        if fault_type and NEW_FAULT_TYPE_MARKER in fault_type:
-            fault_type = fault_type.replace(NEW_FAULT_TYPE_MARKER, "")
-            models.FaultType.objects.get_or_create(code=fault_type)
+    def clean_fault_types_field(self):
+        fault_types = self.cleaned_data.get('fault_types_field')
+        cleaned_fault_types = []
+        for fault_type in fault_types:
+            if fault_type and NEW_FAULT_TYPE_MARKER in fault_type:
+                fault_type = fault_type.replace(NEW_FAULT_TYPE_MARKER, "")
+                models.FaultType.objects.get_or_create(code=fault_type)
+            cleaned_fault_types.append(fault_type)
 
-        return fault_type
+        return cleaned_fault_types
 
     def clean_unit(self):
         unit = self.cleaned_data.get('unit')

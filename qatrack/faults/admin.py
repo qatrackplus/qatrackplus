@@ -43,7 +43,7 @@ class FaultAdmin(SaveUserQATrackAdmin):
         site_name,
         "unit",
         "modality",
-        "fault_type",
+        "get_fault_types",
         "occurred",
     )
 
@@ -51,19 +51,25 @@ class FaultAdmin(SaveUserQATrackAdmin):
         SiteFilter,
         "unit",
         ModalityFilter,
-        "fault_type",
+        "fault_types",
     )
 
     list_select_related = [
         "modality",
-        "fault_type",
         "unit",
         "unit__site",
+    ]
+
+    list_prefetch_related = [
+        "fault_types"
     ]
 
     def name(self, obj):
         return str(obj)
     name.admin_order_field = "pk"
+
+    def get_fault_types(self, obj):
+        return "FAULT TYPES"
 
 
 class FaultReviewGroupAdmin(BaseQATrackAdmin):

@@ -9,7 +9,7 @@ from django.utils import timezone
 from django_comments.models import Comment
 
 from qatrack.faults import admin, forms, views
-from qatrack.faults.models import Fault, FaultType
+from qatrack.faults.models import Fault, FaultType, FaultReviewGroup
 from qatrack.faults.tests import utils
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.dates import format_datetime
@@ -36,7 +36,6 @@ class TestFaultAdmin(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
 
     def test_name(self):
@@ -46,14 +45,11 @@ class TestFaultAdmin(TestCase):
         assert adm.name(il) == str(il)
 
     def test_modality_filter_lookups(self):
-        Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
+        site = AdminSite()
+        adm = admin.FaultAdmin(Fault, site)
+        modality = u_models.Modality.objects.create(name="modality")
+        lookups = admin.ModalityFilter(None, {}, Fault, adm).lookups(None, adm)
+        assert list(lookups) == [(modality.pk, modality.name)]
 
 
 class TestModalityFilter(TestCase):
@@ -73,42 +69,20 @@ class TestModalityFilter(TestCase):
 
     def test_filter(self):
         """If user filters by modality, only faults with that modality should be returned"""
-        Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-        correct_modality = Fault.objects.create(
-            unit=self.unit,
-            modality=self.modality,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-        )
+
+        f = utils.create_fault(unit=self.unit, user=self.user, fault_type=self.fault_type)
+
+        correct_modality = utils.create_fault(
+            unit=self.unit, user=self.user, fault_type=f.fault_types.first(), modality=self.modality)
+
         with mock.patch.object(self.mf, "value", return_value=self.modality.id):
             qs = self.mf.queryset(None, Fault.objects.all())
             assert list(qs) == [correct_modality]
 
     def test_no_filter(self):
         """If there is no modality filter, all faults should be returned"""
-        Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-        Fault.objects.create(
-            unit=self.unit,
-            modality=self.modality,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-        )
+        utils.create_fault(unit=self.unit, user=self.user, fault_type=self.fault_type)
+        utils.create_fault(unit=self.unit, user=self.user, fault_type=self.fault_type)
         with mock.patch.object(self.mf, "value", return_value=None):
             qs = self.mf.queryset(None, Fault.objects.all())
             assert list(qs) == list(Fault.objects.all())
@@ -124,20 +98,9 @@ class TestFaultManager(TestCase):
     def test_unreviewed(self):
         """Two Faults created, only the unreviewed should be returned by the unreviewed manager"""
 
-        Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-        unreviewed = Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-        )
+        utils.create_fault_review()
+        unreviewed = utils.create_fault()
+
         assert Fault.objects.unreviewed().count() == 1
         assert Fault.objects.unreviewed().all()[0].pk == unreviewed.pk
 
@@ -152,26 +115,15 @@ class TestFaultList(TestCase):
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
 
-    def create_fault(self):
-
-        Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-
     def test_load_page(self):
         """Initial page load should work ok"""
-        self.create_fault()
+        utils.create_fault()
         resp = self.client.get(self.url, {})
         assert resp.status_code == 200
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
-        self.create_fault()
+        utils.create_fault()
         resp = self.client.get(self.url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         assert len(resp.json()['aaData']) == 1
 
@@ -191,7 +143,7 @@ class TestFaultList(TestCase):
         """If more than one site exists, there should be a noneornull filter for Other sites"""
         site = qa_utils.create_site()
         qa_utils.create_unit(name="second unit", site=site)
-        self.create_fault()
+        utils.create_fault()
         filters = views.FaultList().get_filters('unit__site__name')
         assert filters == [('noneornull', 'Other')]
 
@@ -208,9 +160,6 @@ class TestUnreviewedFaultList(TestCase):
 
     def test_get_queryset(self):
         utils.create_fault()
-        f2 = utils.create_fault()
-        f2.reviewed_by = self.user
-        f2.save()
         qs = views.UnreviewedFaultList().get_queryset().all()
         assert qs.count() == 1
 
@@ -230,25 +179,13 @@ class TestUnreviewedFaultList(TestCase):
 class TestCRUDFault(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         self.create_url = reverse("fault_create")
         self.list_url = reverse("fault_list")
         self.ajax_url = reverse("fault_create_ajax")
-        user = User.objects.create_superuser("faultuser", "a@b.com", "password")
-        self.client.force_login(user)
-
-    def create_fault(self):
-
-        return Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
+        self.user = User.objects.create_superuser("faultuser", "a@b.com", "password")
+        self.client.force_login(self.user)
 
     def test_load_create_page(self):
         """Initial page load should work ok"""
@@ -270,7 +207,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-fault_type_field": ft.code,
+            "fault-fault_types_field": [ft.code],
             "fault-comment": "test comment",
             "fault-related_service_events": [se.pk],
         }
@@ -293,7 +230,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": '',
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-fault_type_field": ft.code,
+            "fault-fault_types_field": [ft.code],
             "fault-comment": "test comment",
         }
 
@@ -308,7 +245,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-fault_type_field": "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, "fault type"),
+            "fault-fault_types_field": ["%s%s" % (forms.NEW_FAULT_TYPE_MARKER, "fault type")],
             "fault-comment": "test comment",
         }
 
@@ -319,12 +256,33 @@ class TestCRUDFault(TestCase):
         assert resp.url == self.list_url
         assert Comment.objects.count() == 1
 
+    def test_valid_create_new_fault_type_multiple(self):
+        """Test that creating a fault with all options set works"""
+
+        data = {
+            "fault-occurred": "20 Jan 2021 17:59",
+            "fault-unit": self.unit.id,
+            "fault-modality": self.unit.modalities.all().first().pk,
+            "fault-fault_types_field": [
+                "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, "fault type 1"),
+                "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, "fault type 2"),
+            ],
+            "fault-comment": "test comment",
+        }
+
+        FaultType.objects.all().delete()
+        resp = self.client.post(self.create_url, data)
+        assert FaultType.objects.count() == 2
+        assert resp.status_code == 302
+        assert resp.url == self.list_url
+        assert Comment.objects.count() == 1
+
     def test_valid_edit_load(self):
         """Test that editing a fault and modifying a field works"""
 
         FaultType.objects.create(code="fault type")
 
-        fault = self.create_fault()
+        fault = utils.create_fault()
 
         edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
         se = sl_utils.create_service_event()
@@ -338,7 +296,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = self.create_fault()
+        fault = utils.create_fault()
         assert fault.modality is None
 
         modality = u_models.Modality.objects.create(name="modality")
@@ -352,7 +310,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": format_datetime(fault.occurred),
             "fault-unit": fault.unit.id,
             "fault-modality": modality.pk,
-            "fault-fault_type_field": fault.fault_type.code,
+            "fault-fault_types_field": [fault.fault_types.first().code],
             "fault-comment": "",
             "fault-related_service_events": [se.pk],
         }
@@ -370,7 +328,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = self.create_fault()
+        fault = utils.create_fault()
         assert fault.modality is None
 
         edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
@@ -381,7 +339,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": format_datetime(fault.occurred),
             "fault-unit": '',
             "fault-modality": modality.pk,
-            "fault-fault_type_field": fault.fault_type.code,
+            "fault-fault_types_field": [fault.fault_types.first().code],
             "fault-comment": "",
             "fault-related_service_events": [se.pk],
         }
@@ -398,7 +356,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": "20 Jan 2021 17:59",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-fault_type_field": ft.code,
+            "fault-fault_types_field": [ft.code],
             "fault-comment": "test comment",
         }
 
@@ -416,7 +374,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": "",
             "fault-unit": self.unit.id,
             "fault-modality": self.unit.modalities.all().first().pk,
-            "fault-fault_type_field": ft.code,
+            "fault-fault_types_field": [ft.code],
             "fault-comment": "test comment",
         }
 
@@ -427,7 +385,7 @@ class TestCRUDFault(TestCase):
     def test_valid_delete(self):
         """Test that deleting a fault works"""
 
-        fault = self.create_fault()
+        fault = utils.create_fault()
         delete_url = reverse("fault_delete", kwargs={'pk': fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
@@ -441,20 +399,21 @@ class TestCRUDFault(TestCase):
         review_url = reverse("fault_review", kwargs={'pk': fault.pk})
         resp = self.client.post(review_url)
         assert resp.status_code == 302
-        fault.refresh_from_db()
-        assert fault.reviewed_by_id is not None
-        assert fault.reviewed is not None
+        assert fault.faultreviewinstance_set.first() is not None
 
     def test_unreview_fault(self):
-        fault = self.create_fault()
+        fault = utils.create_fault_review().fault
         review_url = reverse("fault_review", kwargs={'pk': fault.pk})
         resp = self.client.post(review_url)
         assert resp.status_code == 302
         fault.refresh_from_db()
-        assert fault.reviewed_by_id is None
-        assert fault.reviewed is None
+        assert fault.faultreviewinstance_set.first() is None
 
     def test_review_bulk(self):
+        group = qa_utils.create_group("group")
+        self.user.groups.add(group)
+        frg = FaultReviewGroup.objects.create(group=group)
+
         f1 = utils.create_fault()
         f2 = utils.create_fault()
         review_url = reverse("fault_bulk_review")
@@ -464,10 +423,9 @@ class TestCRUDFault(TestCase):
         assert resp.json()['ok']
         f1.refresh_from_db()
         f2.refresh_from_db()
-        assert f1.reviewed_by_id is not None
-        assert f1.reviewed is not None
-        assert f2.reviewed_by_id is not None
-        assert f2.reviewed is not None
+        assert f1.faultreviewinstance_set.count() > 0
+        assert f1.faultreviewinstance_set.first().fault_review_group == frg
+        assert f2.faultreviewinstance_set.count() > 0
 
 
 class TestFaultTypeAutocomplete(TestCase):
@@ -523,27 +481,38 @@ class TestFaultDetails(TestCase):
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
-        self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
 
-    def create_fault(self):
-        return Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-
     def test_load_page(self):
         """Initial page load should work ok"""
-        fault = self.create_fault()
+        fault_type = FaultType.objects.create(code="ABC", slug="abc")
+        fault = utils.create_fault(fault_type=fault_type)
         url = reverse("fault_details", kwargs={'pk': fault.pk})
         resp = self.client.get(url)
         assert resp.status_code == 200
         assert resp.context['fault'].id == fault.id
+
+    def test_queryset_fault_superset(self):
+        """get_queryset should return all faults which have one or more faults
+        in common with the current fault"""
+
+        ft1 = FaultType.objects.create(code="A", slug="a")
+        ft2 = FaultType.objects.create(code="B", slug="b")
+        ft3 = FaultType.objects.create(code="C", slug="c")
+        f1 = utils.create_fault(fault_type=[ft1, ft2, ft3])
+        f2 = utils.create_fault(fault_type=[ft2])
+        f3 = utils.create_fault(fault_type=[ft3])
+
+        from django.test import RequestFactory
+
+        url = reverse("fault_details", kwargs={'pk': f1.pk})
+        req = RequestFactory().get(url, pk=f1.pk)
+        req.user = self.user
+        view = views.FaultDetails()
+        view.kwargs = {'pk': f1.pk}
+        qs = list(view.get_queryset())
+        assert all(f in qs for f in [f1, f2, f3])
 
 
 class TestFaultsByUnit(TestCase):
@@ -555,20 +524,10 @@ class TestFaultsByUnit(TestCase):
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
 
-    def create_fault(self, unit=None):
-
-        return Fault.objects.create(
-            unit=unit or self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
 
     def test_load_page(self):
         """Initial page load should work ok"""
-        fault = self.create_fault()
+        fault = utils.create_fault()
         url = reverse("fault_list_by_unit", kwargs={'unit_number': fault.unit.number})
         resp = self.client.get(url, {})
         assert resp.status_code == 200
@@ -577,9 +536,9 @@ class TestFaultsByUnit(TestCase):
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
-        fault1 = self.create_fault()
+        fault1 = utils.create_fault()
         u2 = qa_utils.create_unit()
-        self.create_fault(unit=u2)
+        utils.create_fault(unit=u2)
         url = reverse("fault_list_by_unit", kwargs={'unit_number': fault1.unit.number})
         resp = self.client.get(url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         assert len(resp.json()['aaData']) == 1
@@ -600,33 +559,22 @@ class TestFaultsByUnitFaultType(TestCase):
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
 
-    def create_fault(self, fault_type=None):
-
-        return Fault.objects.create(
-            unit=self.unit,
-            fault_type=fault_type or self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-
     def test_load_page(self):
         """Initial page load should work ok"""
-        fault = self.create_fault()
-        kwargs = {'unit_number': fault.unit.number, 'slug': fault.fault_type.slug}
+        fault = utils.create_fault()
+        kwargs = {'unit_number': fault.unit.number, 'slug': fault.fault_types.first().slug}
         url = reverse("fault_list_by_unit_type", kwargs=kwargs)
         resp = self.client.get(url, {})
         assert resp.status_code == 200
         assert resp.context['unit'].pk == fault.unit.pk
-        assert resp.context['fault_type'].pk == fault.fault_type.pk
+        assert resp.context['fault_type'].pk == fault.fault_types.first().pk
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
-        fault1 = self.create_fault()
+        fault1 = utils.create_fault()
         ft = FaultType.objects.create(code="new ft")
-        self.create_fault(fault_type=ft)
-        kwargs = {'unit_number': fault1.unit.number, 'slug': fault1.fault_type.slug}
+        utils.create_fault(fault_type=ft)
+        kwargs = {'unit_number': fault1.unit.number, 'slug': fault1.fault_types.first().slug}
         url = reverse("fault_list_by_unit_type", kwargs=kwargs)
         resp = self.client.get(url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         assert len(resp.json()['aaData']) == 1
@@ -649,26 +597,15 @@ class TestFaultTypeList(TestCase):
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
 
-    def create_fault(self):
-
-        Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-
     def test_load_page(self):
         """Initial page load should work ok"""
-        self.create_fault()
+        utils.create_fault()
         resp = self.client.get(self.url, {})
         assert resp.status_code == 200
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
-        self.create_fault()
+        utils.create_fault(fault_type=self.fault_type)
         resp = self.client.get(self.url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         assert len(resp.json()['aaData']) == 1
 
@@ -682,28 +619,17 @@ class TestFaultTypeDetails(TestCase):
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
 
-    def create_fault(self):
-
-        return Fault.objects.create(
-            unit=self.unit,
-            fault_type=self.fault_type,
-            created_by=self.user,
-            modified_by=self.user,
-            reviewed_by=self.user,
-            reviewed=timezone.now(),
-        )
-
     def test_load_page(self):
         """Initial page load should work ok"""
-        fault = self.create_fault()
-        url = reverse("fault_type_details", kwargs={'slug': fault.fault_type.slug})
+        fault = utils.create_fault(fault_type=self.fault_type)
+        url = reverse("fault_type_details", kwargs={'slug': fault.fault_types.first().slug})
         resp = self.client.get(url, {})
         assert resp.status_code == 200
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
-        fault = self.create_fault()
-        url = reverse("fault_type_details", kwargs={'slug': fault.fault_type.slug})
+        fault = utils.create_fault(fault_type=self.fault_type)
+        url = reverse("fault_type_details", kwargs={'slug': fault.fault_types.first().slug})
         resp = self.client.get(url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         assert len(resp.json()['aaData']) == 1
 
