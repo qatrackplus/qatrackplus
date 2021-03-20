@@ -99,17 +99,15 @@
                 <dd>
 
                   {% for fri in fault.faultreviewinstance_set.all %}
-                    <span data-timestamp="{{ fri.reviewed|date:"U"}}">
-                      <abbr
+                    {% if forloop.first %}<ul class="list-unstyled">{% endif %}
+                      <li>
                         {% if fri.fault_review_group %}
-                          title="{% blocktrans with reviewed_by=fri.reviewed_by group=fri.fault_review_group %}Reviewed by {{ group }} group member {{ reviewed_by }}{% endblocktrans %}"
-                        {% else %}
-                          title="{% blocktrans with reviewed_by=fri.reviewed_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}"
+                          {{ fri.fault_review_group.group.name }}:
                         {% endif %}
-                      >
-                        {{ fault.reviewed }}
-                      </abbr>
-                    </span>
+                        {{ fri.reviewed_by }}
+                        @ {{ fri.reviewed }}
+                      </li>
+                    {% if forloop.last %}</ul>{% endif %}
                   {% empty %}
                     <em>{% trans "Unreviewed " %}</em>
                   {% endfor %}
@@ -151,7 +149,7 @@
                   <div>
                     {% for rel in fault.related_service_events.all %}
 
-                      {% if forloop.first %}<ul>{% endif %}
+                      {% if forloop.first %}<ul class="list-unstyled">{% endif %}
                       <li>
                         <a href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat margin-bottom-1" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
                       </li>

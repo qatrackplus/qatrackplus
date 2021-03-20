@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.utils.text import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
@@ -114,6 +115,8 @@ class FaultForm(BetterModelForm):
             self.fields['comment'].widget.attrs['class'] += 'autosize'
             self.fields['comment'].widget.attrs['cols'] = 8
 
+        frgs = models.FaultReviewGroup.objects.select_related("group").order_by("group__name")
+
     def clean_fault_types_field(self):
         fault_types = self.cleaned_data.get('fault_types_field')
         cleaned_fault_types = []
@@ -133,6 +136,35 @@ class FaultForm(BetterModelForm):
             except u_models.Unit.DoesNotExist:  # pragma: nocover
                 raise ValidationError('Unit with id %s does not exist' % unit)
         return unit
+
+
+class ReviewForm(forms.Form):
+
+    group = forms.CharField(
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}),
+    )
+
+    reviewed_by = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        help_text=_l("Select the user from this group who reviewed this fault"),
+        required=False,
+    )
+
+    class Meta:
+        fields = ["group", "reviewed_by", "required"]
+
+    def __init__(self, *args, **kwargs):
+        fault_review_group = kwargs.pop("fault_review_group")
+        self.instance = kwargs.pop("instance", None)
+        if self.instance:
+            kwargs['initial'] = {
+                'group': self.instance.fault_review_group.group.name,
+                'reviewed_by': self.instance.reviewed_by,
+            }
+        super().__init__(*args, **kwargs)
+        self.fields['group'].initial = fault_review_group.group.name
+        self.fields['reviewed_by'].required = fault_review_group.required
+        self.fields['reviewed_by'].queryset = fault_review_group.group.user_set.all()
 
 
 class ReviewFaultForm(BetterModelForm):

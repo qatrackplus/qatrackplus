@@ -212,8 +212,31 @@ class CreateFault(PermissionRequiredMixin, CreateView):
     permission_required = "faults.add_fault"
     raise_exception = True
 
+    @atomic
     def form_valid(self, form):
-        save_valid_fault_form(form, self.request)
+
+        context = self.get_context_data()
+        reviews_valid = all(f.is_valid() for f in context['review_forms'])
+        if not reviews_valid:
+            return self.render_to_response(context)
+
+        fault = save_valid_fault_form(form, self.request)
+        reviewed = timezone.now()
+        for review_form in context['review_forms']:
+            reviewed_by = review_form.cleaned_data['reviewed_by']
+            if not reviewed_by:
+                continue
+
+            frg = models.FaultReviewGroup.objects.filter(
+                group__name=review_form.cleaned_data['group'],
+            ).first()
+            models.FaultReviewInstance.objects.create(
+                reviewed=reviewed,
+                reviewed_by=reviewed_by,
+                fault=fault,
+                fault_review_group=frg,
+            )
+
         return HttpResponseRedirect(reverse('fault_list'))
 
     def get_context_data(self, *args, **kwargs):
@@ -225,6 +248,15 @@ class CreateFault(PermissionRequiredMixin, CreateView):
             context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
         else:
             context_data['se_statuses'] = {}
+
+        frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
+        context_data['review_forms'] = []
+        for idx, frg in enumerate(frgs):
+            if self.request.method == 'POST':
+                frg_form = forms.ReviewForm(self.request.POST, fault_review_group=frg, prefix="review-form-%d" % idx)
+            else:
+                frg_form = forms.ReviewForm(fault_review_group=frg, prefix="review-form-%d" % idx)
+            context_data['review_forms'].append(frg_form)
         return context_data
 
 
@@ -237,8 +269,43 @@ class EditFault(PermissionRequiredMixin, UpdateView):
     permission_required = "faults.change_fault"
     raise_exception = True
 
+    @atomic
     def form_valid(self, form):
-        save_valid_fault_form(form, self.request)
+
+        context = self.get_context_data()
+
+        reviews_valid = all(f.is_valid() for f in context['review_forms'])
+        if not reviews_valid:
+            return self.render_to_response(context)
+
+        fault = save_valid_fault_form(form, self.request)
+
+        reviewed = timezone.now()
+        for review_form in context['review_forms']:
+
+            frg = models.FaultReviewGroup.objects.filter(
+                group__name=review_form.cleaned_data['group'],
+            ).first()
+
+            reviewed_by = review_form.cleaned_data['reviewed_by']
+
+            update_existing_review = review_form.instance is not None
+            if update_existing_review:
+                reviewer_changed = review_form.instance.reviewed_by != reviewed_by
+                if reviewer_changed and not reviewed_by:
+                    review_form.instance.delete()
+                elif reviewer_changed:
+                    review_form.instance.reviewed = reviewed
+                    review_form.instance.reviewed_by = reviewed_by
+                    review_form.instance.save()
+            elif reviewed_by:
+                models.FaultReviewInstance.objects.create(
+                    reviewed=reviewed,
+                    reviewed_by=reviewed_by,
+                    fault=fault,
+                    fault_review_group=frg,
+                )
+
         return HttpResponseRedirect(reverse('fault_list'))
 
     def get_context_data(self, *args, **kwargs):
@@ -253,6 +320,21 @@ class EditFault(PermissionRequiredMixin, UpdateView):
             context_data['se_statuses'] = {
                 se.id: se.service_status.id for se in self.object.related_service_events.all()
             }
+
+        frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
+
+        # if there are existing reviews we will use those to populate the initial data
+        fris = {}
+        for fri in self.object.faultreviewinstance_set.exclude(fault_review_group=None):
+            fris[fri.fault_review_group.group.name] = fri
+
+        context_data['review_forms'] = []
+        for idx, frg in enumerate(frgs):
+            data = self.request.POST if self.request.method == "POST" else None
+            instance = fris.get(frg.group.name)
+            frg_form = forms.ReviewForm(data, instance=instance, fault_review_group=frg, prefix="review-form-%d" % idx)
+            context_data['review_forms'].append(frg_form)
+
         return context_data
 
 
@@ -332,7 +414,7 @@ def fault_type_autocomplete(request):
     exist, return it as a first option so user can select it and have it
     created when they submit the form."""
 
-    q = request.GET.get('q', '')
+    q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, "")
     qs = models.FaultType.objects.filter(
         code__icontains=q,
     ).order_by("code")
@@ -343,19 +425,21 @@ def fault_type_autocomplete(request):
 
     exact_match = None
     for ft_id, code, description in qs:
-        text = "%s: %s" % (code, truncatechars(description, 80) or _("No description available"))
+        description = description or ''
+        text = "%s: %s" % (code, truncatechars(description, 80)) if description else code
         if code == q:
-            exact_match = text
+            exact_match = (text, description)
         else:
-            results.append({'id': code, 'text': text})
+            results.append({'id': code, 'text': text, 'description': description, 'code': code})
 
     new_option = q and exact_match is None
     if new_option:
         # allow user to create a new match
-        results = [{'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q}] + results
+        new_result = {'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q, 'code': q, 'description': ''}
+        results = [new_result] + results
     elif q:
         # put the exact match first in the list
-        results = [{'id': q, 'text': exact_match}] + results
+        results = [{'id': q, 'code': q, 'text': exact_match[0], 'description': exact_match[1]}] + results
 
     return JsonResponse({'results': results}, encoder=QATrackJSONEncoder)
 
