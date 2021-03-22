@@ -48,7 +48,6 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                 minuteIncrement: 1,
                 dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 allowInput: true,
-                defaultDate: moment().format(siteConfig.MOMENT_DATETIME_FMT),
                 onOpen: [
                     function(selectedDates, dateStr, instance) {
                         if (dateStr === '') {
