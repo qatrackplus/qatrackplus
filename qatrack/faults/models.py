@@ -12,6 +12,21 @@ from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
 
 
+def can_review_faults(user):
+    """
+     users can review faults if one of the the following applies:
+        a) No fault review groups exist and they have can_review permissions
+        b) Fault review groups exist, they are a member of one, and they have
+           review permissions
+    """
+
+    can_review = user.has_perm("faults.can_review")
+    review_groups = [frg.group for frg in FaultReviewGroup.objects.select_related("group")]
+    if review_groups:
+        can_review = can_review and len(set(review_groups) & set(user.groups.all())) > 0
+    return can_review
+
+
 class FaultType(models.Model):
 
     code = models.CharField(
@@ -122,6 +137,45 @@ class Fault(models.Model):
 
     def get_absolute_url(self):
         return reverse("fault_details", kwargs={"pk": self.pk})
+
+    def review_complete(self):
+        details = self.review_details()
+        at_least_one_done = False
+        required_completed = True
+        for rg, user, date, required in details:
+            at_least_one_done = at_least_one_done or user
+            if required:
+                required_completed = required_completed and user
+        return at_least_one_done and required_completed
+
+    def review_details(self):
+        review_groups = FaultReviewGroup.objects.order_by("-required", "group__name")
+        review_group_instances = self.faultreviewinstance_set.order_by(
+            "-fault_review_group__required",
+            "fault_review_group__group__name",
+        ).select_related(
+            "fault_review_group",
+            "fault_review_group__group",
+        )
+        if review_groups:
+
+            review_group_instances_by_group = {}
+
+            for frgi in review_group_instances:
+                if frgi.fault_review_group_id:
+                    review_group_instances_by_group[frgi.fault_review_group_id] = frgi
+
+            review_details = []
+            for review_group in review_groups:
+                review_group_instance = review_group_instances_by_group.get(review_group.id)
+                reviewed = review_group_instance.reviewed if review_group_instance else None
+                reviewed_by = review_group_instance.reviewed_by if review_group_instance else None
+                review_details.append((review_group.group.name, reviewed_by, reviewed, review_group.required))
+
+        else:
+            review_details = [(None, frgi.reviewed_by, frgi.reviewed, False) for frgi in review_group_instances]
+
+        return review_details
 
     def __str__(self):
         return "Fault ID: %d" % self.pk

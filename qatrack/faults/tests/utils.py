@@ -50,7 +50,11 @@ def create_fault_review_group(group=None, required=True):
 def create_fault_review(fault=None, review_group=None, reviewed_by=None, reviewed=None):
 
     reviewed = reviewed or timezone.now()
-    review_group = review_group or create_fault_review_group()
+    if review_group is False:
+        review_group = None
+    elif review_group is None:
+        review_group = create_fault_review_group()
+
     fault = fault or create_fault()
     reviewed_by = reviewed_by or qa_utils.create_user()
 

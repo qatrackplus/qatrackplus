@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.faults import models
@@ -61,7 +62,7 @@ class FaultAdmin(SaveUserQATrackAdmin):
     ]
 
     list_prefetch_related = [
-        "fault_types"
+        Prefetch("fault_types", queryset=models.FaultType.objects.order_by("code")),
     ]
 
     def name(self, obj):
@@ -69,7 +70,7 @@ class FaultAdmin(SaveUserQATrackAdmin):
     name.admin_order_field = "pk"
 
     def get_fault_types(self, obj):
-        return "FAULT TYPES"
+        return ", ".join(ft.code for ft in obj.fault_types.all())
 
 
 class FaultReviewGroupAdmin(BaseQATrackAdmin):

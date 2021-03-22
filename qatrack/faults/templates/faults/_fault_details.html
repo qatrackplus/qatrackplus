@@ -1,0 +1,122 @@
+{% load i18n %}
+
+<div class="row">
+
+  <div class="col-sm-6">
+    <h3>{% trans "Fault Details" %}</h3>
+
+    <dl class="dl-horizontal">
+
+      <dt>{% trans "Fault" %}:</dt>
+      <dd>{{ fault }}</dt>
+
+      <dt>{% trans "Occurred" %}:</dt>
+      <dd>{{ fault.occurred }}</dt>
+
+      <dt>{% trans "Site" %}:</dt>
+      <dd>
+        {% if fault.unit.site %}
+          {{ fault.unit.site }}
+        {% else %}
+          {% trans "Other" %}
+        {% endif %}
+      </dd>
+
+      <dt>{% trans "Unit" %}:</dt>
+      <dd>
+        <a
+          href="{% url "fault_list_by_unit" unit_number=fault.unit.number %}"
+          title="{% trans "Click to view all faults on this unit" %}"
+        >
+          {{ fault.unit }}
+        </a>
+      </dd>
+
+      <dt>{% trans "Modality / Beam" %}:</dt>
+      <dd>
+        {% if fault.modality %}
+          {{ fault.modality }}
+        {% else %}
+          {% trans "Not Specified" %}
+        {% endif %}
+      </dd>
+
+      <dt>{% trans "Created" %}:</dt>
+      <dd>
+        {{ fault.created_by}} @ {{ fault.created }}
+      </dd>
+
+      <dt>{% trans "Last Modified"  %}:</dt>
+      <dd>
+        {{ fault.modified_by}} @ {{ fault.modified }}
+      </dd>
+
+      <dt>{% trans "Reviewed" %}:</dt>
+      <dd>
+        {% for group, reviewed_by, reviewed, required in fault.review_details %}
+          {% if forloop.first %}<ul class="list-unstyled">{% endif %}
+            <li>
+              {% if group %}{{ group }}{% if required %}*{% endif %}: {% endif %}
+              {% if reviewed_by %}
+                {{ reviewed_by }} @ {{ reviewed }}
+              {% else %}
+                <em>{% trans "Unreviewed " %}</em>
+              {% endif %}
+            </li>
+          {% if forloop.last %}</ul>{% endif %}
+        {% empty %}
+          <em>{% trans "Unreviewed " %}</em>
+        {% endfor %}
+      </dd>
+
+    </dl>
+  </div>
+  <div class="col-sm-6">
+
+    <h3>{% trans "Fault Types" %}</h3>
+
+    {% for fault_type in fault.fault_types.all %}
+      <dl class="dl-horizontal margin-bottom-10">
+        <dt>{% trans "Code" %}:</dt>
+        <dd>
+          <a
+            href="{% url "fault_type_details" slug=fault_type.slug %}"
+            title="{% trans "Click to view details of this fault type" %}">
+            {{ fault_type.code }}
+          </a>
+        </dd>
+
+        <dt>{% trans "Description" %}:</dt>
+        <dd class="fault_type_description">
+          {% if fault_type.description %}
+            {{ fault_type.description }}
+          {% else %}
+            <em>{% trans "No description available" %}</em>
+          {% endif %}
+        </dd>
+      </dl>
+    {% endfor %}
+
+    <h3>{% trans "Related Service Events" %}</h3>
+
+    <dl class="dl-horizontal">
+      <dt>{% trans "Service events" %}:</dt>
+      <dd>
+        <div>
+          {% for rel in fault.related_service_events.all %}
+
+            {% if forloop.first %}<ul class="list-unstyled">{% endif %}
+            <li>
+              <a href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat margin-bottom-1" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
+            </li>
+            {% if forloop.last %}</ul>{% endif %}
+          {% empty %}
+            <em>{% trans "No related service events" %}</em>
+          {% endfor %}
+        </div>
+      </dd>
+    </dl>
+
+  </div>
+
+</div>

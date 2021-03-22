@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.text import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
@@ -115,8 +115,6 @@ class FaultForm(BetterModelForm):
             self.fields['comment'].widget.attrs['class'] += 'autosize'
             self.fields['comment'].widget.attrs['cols'] = 8
 
-        frgs = models.FaultReviewGroup.objects.select_related("group").order_by("group__name")
-
     def clean_fault_types_field(self):
         fault_types = self.cleaned_data.get('fault_types_field')
         cleaned_fault_types = []
@@ -138,7 +136,7 @@ class FaultForm(BetterModelForm):
         return unit
 
 
-class ReviewForm(forms.Form):
+class InlineReviewForm(forms.Form):
 
     group = forms.CharField(
         widget=forms.TextInput(attrs={'readonly': 'readonly'}),

@@ -1,15 +1,14 @@
 from unittest import mock
 
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
-from django.utils import timezone
 from django_comments.models import Comment
 
 from qatrack.faults import admin, forms, views
-from qatrack.faults.models import Fault, FaultType, FaultReviewGroup
+from qatrack.faults.models import Fault, FaultType, FaultReviewGroup, can_review_faults
 from qatrack.faults.tests import utils
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.dates import format_datetime
@@ -31,6 +30,49 @@ class TestFault(TestCase):
         fault = utils.create_fault()
         assert fault.get_absolute_url() == "/faults/%d/" % fault.pk
 
+    def test_review_details_no_reviews_no_review_groups(self):
+        fault = utils.create_fault()
+        assert fault.review_details() == []
+
+    def test_review_details_no_review_groups(self):
+        review = utils.create_fault_review(review_group=False)
+        assert review.fault.review_details() == [(None, review.reviewed_by, review.reviewed, False)]
+
+    def test_review_complete_required_not_complete(self):
+        utils.create_fault_review_group()
+        rg_not_required = utils.create_fault_review_group(required=False)
+        review = utils.create_fault_review(review_group=rg_not_required)
+        assert not review.fault.review_complete()
+
+    def test_review_complete_required_complete(self):
+        rg_required = utils.create_fault_review_group()
+        utils.create_fault_review_group(required=False)
+        review = utils.create_fault_review(review_group=rg_required)
+        assert review.fault.review_complete()
+
+
+class TestCanReviewFaults(TestCase):
+
+    def test_no_review_groups(self):
+
+        user = qa_utils.create_user()
+        p = Permission.objects.get(name="Can review faults")
+        user.user_permissions.add(p)
+        assert can_review_faults(user)
+
+    def test_with_review_groups_no_perm(self):
+        utils.create_fault_review_group()
+        user = qa_utils.create_user()
+        assert not can_review_faults(user)
+
+    def test_with_review_groups_with_perm(self):
+        frg = utils.create_fault_review_group()
+        user = qa_utils.create_user()
+        p = Permission.objects.get(name="Can review faults")
+        user.user_permissions.add(p)
+        user.groups.add(frg.group)
+        assert can_review_faults(user)
+
 
 class TestFaultAdmin(TestCase):
 
@@ -50,6 +92,14 @@ class TestFaultAdmin(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         lookups = admin.ModalityFilter(None, {}, Fault, adm).lookups(None, adm)
         assert list(lookups) == [(modality.pk, modality.name)]
+
+    def test_get_fault_types(self):
+        ft1 = utils.create_fault_type()
+        ft2 = utils.create_fault_type()
+        fault = utils.create_fault(fault_type=[ft1, ft2])
+        site = AdminSite()
+        adm = admin.FaultAdmin(Fault, site)
+        assert adm.get_fault_types(fault) == ', '.join(sorted([ft1.code, ft2.code]))
 
 
 class TestModalityFilter(TestCase):
@@ -218,6 +268,87 @@ class TestCRUDFault(TestCase):
         assert Comment.objects.count() == 1
         assert list(Fault.objects.latest('pk').related_service_events.values_list("id", flat=True)) == [se.id]
 
+    def test_valid_create_with_review(self):
+        """Test that creating a fault with all options and a reviewer set works"""
+
+        ft = FaultType.objects.create(code="fault type")
+
+        rev_group = utils.create_fault_review_group()
+        self.user.groups.add(rev_group.group)
+
+        usa = sl_utils.create_unit_service_area(unit=self.unit)
+        se = sl_utils.create_service_event(unit_service_area=usa)
+
+        data = {
+            "fault-occurred": "20 Jan 2021 17:59",
+            "fault-unit": self.unit.id,
+            "fault-modality": self.unit.modalities.all().first().pk,
+            "fault-fault_types_field": [ft.code],
+            "fault-comment": "test comment",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": self.user.pk,
+        }
+
+        resp = self.client.post(self.create_url, data)
+        assert resp.status_code == 302
+        assert resp.url == self.list_url
+        assert Comment.objects.count() == 1
+        f = Fault.objects.latest('pk')
+        assert f.faultreviewinstance_set.count() == 1
+        assert list(f.related_service_events.values_list("id", flat=True)) == [se.id]
+
+    def test_valid_create_with_invalid_review(self):
+        """Test that creating a fault with all options and an invalid reviewer does not work"""
+
+        ft = FaultType.objects.create(code="fault type")
+
+        rev_group = utils.create_fault_review_group()
+        self.user.groups.add(rev_group.group)
+
+        usa = sl_utils.create_unit_service_area(unit=self.unit)
+        se = sl_utils.create_service_event(unit_service_area=usa)
+
+        data = {
+            "fault-occurred": "20 Jan 2021 17:59",
+            "fault-unit": self.unit.id,
+            "fault-modality": self.unit.modalities.all().first().pk,
+            "fault-fault_types_field": [ft.code],
+            "fault-comment": "test comment",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": "",
+        }
+
+        resp = self.client.post(self.create_url, data)
+        assert resp.status_code == 200
+        assert resp.context['review_forms'][0].errors
+
+    def test_valid_create_with_no_reviewers(self):
+        """Test that creating a fault with all options and an no reviewers works if review group is not required"""
+
+        ft = FaultType.objects.create(code="fault type")
+
+        rev_group = utils.create_fault_review_group(required=False)
+        self.user.groups.add(rev_group.group)
+
+        usa = sl_utils.create_unit_service_area(unit=self.unit)
+        se = sl_utils.create_service_event(unit_service_area=usa)
+
+        data = {
+            "fault-occurred": "20 Jan 2021 17:59",
+            "fault-unit": self.unit.id,
+            "fault-modality": self.unit.modalities.all().first().pk,
+            "fault-fault_types_field": [ft.code],
+            "fault-comment": "test comment",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": "",
+        }
+
+        resp = self.client.post(self.create_url, data)
+        assert resp.status_code == 302
+
     def test_dont_include_related(self):
         assert 'related_service_events' not in forms.FaultForm(include_related_ses=False).fields
 
@@ -347,6 +478,183 @@ class TestCRUDFault(TestCase):
         resp = self.client.post(edit_url, data)
         assert resp.status_code == 200
 
+    def test_edit_with_new_reviews(self):
+        """Test that editing a fault and adding a reviewer works"""
+
+        FaultType.objects.create(code="fault type")
+
+        fault = utils.create_fault(user=self.user)
+        rev_group = utils.create_fault_review_group()
+        self.user.groups.add(rev_group.group)
+        assert fault.modality is None
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
+
+        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        se = sl_utils.create_service_event()
+        fault.related_service_events.add(se)
+
+        data = {
+            "fault-occurred": format_datetime(fault.occurred),
+            "fault-unit": fault.unit.id,
+            "fault-modality": modality.pk,
+            "fault-fault_types_field": [fault.fault_types.first().code],
+            "fault-comment": "",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": fault.created_by.pk,
+        }
+
+        assert fault.faultreviewinstance_set.count() == 0
+        resp = self.client.post(edit_url, data)
+        assert resp.status_code == 302
+        fault.refresh_from_db()
+        assert fault.faultreviewinstance_set.count() == 1
+        assert fault.modality == modality
+        assert resp.url == self.list_url
+
+    def test_edit_with_invalid_reviews(self):
+        """Test that editing a fault and adding a reviewer works"""
+
+        FaultType.objects.create(code="fault type")
+
+        fault = utils.create_fault(user=self.user)
+        rev_group = utils.create_fault_review_group()
+        self.user.groups.add(rev_group.group)
+        assert fault.modality is None
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
+
+        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        se = sl_utils.create_service_event()
+        fault.related_service_events.add(se)
+
+        data = {
+            "fault-occurred": format_datetime(fault.occurred),
+            "fault-unit": fault.unit.id,
+            "fault-modality": modality.pk,
+            "fault-fault_types_field": [fault.fault_types.first().code],
+            "fault-comment": "",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": "",
+        }
+
+        assert fault.faultreviewinstance_set.count() == 0
+        resp = self.client.post(edit_url, data)
+        assert resp.status_code == 200
+        assert resp.context['review_forms'][0].errors['reviewed_by']
+
+    def test_edit_with_existing_reviews(self):
+        """Test that editing a fault with existing reviewer works"""
+
+        FaultType.objects.create(code="fault type")
+
+        fault = utils.create_fault(user=self.user)
+        rev_group = utils.create_fault_review_group()
+        utils.create_fault_review(fault=fault, review_group=rev_group, reviewed_by=self.user)
+        self.user.groups.add(rev_group.group)
+        assert fault.modality is None
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
+
+        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        se = sl_utils.create_service_event()
+        fault.related_service_events.add(se)
+
+        data = {
+            "fault-occurred": format_datetime(fault.occurred),
+            "fault-unit": fault.unit.id,
+            "fault-modality": modality.pk,
+            "fault-fault_types_field": [fault.fault_types.first().code],
+            "fault-comment": "",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": fault.created_by.pk,
+        }
+
+        assert fault.faultreviewinstance_set.count() == 1
+        resp = self.client.post(edit_url, data)
+        assert resp.status_code == 302
+        fault.refresh_from_db()
+        assert fault.faultreviewinstance_set.count() == 1
+        assert fault.modality == modality
+        assert resp.url == self.list_url
+
+    def test_edit_with_changed_reviews(self):
+        """Test that editing a fault with existing reviewer works"""
+
+        FaultType.objects.create(code="fault type")
+
+        fault = utils.create_fault(user=self.user)
+        rev_group = utils.create_fault_review_group()
+        utils.create_fault_review(fault=fault, review_group=rev_group, reviewed_by=self.user)
+        self.user.groups.add(rev_group.group)
+        new_u = qa_utils.create_user()
+        new_u.groups.add(rev_group.group)
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
+
+        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        se = sl_utils.create_service_event()
+        fault.related_service_events.add(se)
+
+        data = {
+            "fault-occurred": format_datetime(fault.occurred),
+            "fault-unit": fault.unit.id,
+            "fault-modality": modality.pk,
+            "fault-fault_types_field": [fault.fault_types.first().code],
+            "fault-comment": "",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": new_u.pk,
+        }
+
+        assert list(fault.faultreviewinstance_set.values_list("reviewed_by_id", flat=True)) == [self.user.pk]
+        resp = self.client.post(edit_url, data)
+        assert resp.status_code == 302
+        fault.refresh_from_db()
+        assert fault.faultreviewinstance_set.count() == 1
+        assert list(fault.faultreviewinstance_set.values_list("reviewed_by_id", flat=True)) == [new_u.pk]
+
+    def test_edit_with_removed_reviews(self):
+        """Test that editing a fault with existing reviewer works"""
+
+        FaultType.objects.create(code="fault type")
+
+        fault = utils.create_fault(user=self.user)
+        rev_group = utils.create_fault_review_group(required=False)
+        utils.create_fault_review(fault=fault, review_group=rev_group, reviewed_by=self.user)
+        self.user.groups.add(rev_group.group)
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
+
+        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        se = sl_utils.create_service_event()
+        fault.related_service_events.add(se)
+
+        data = {
+            "fault-occurred": format_datetime(fault.occurred),
+            "fault-unit": fault.unit.id,
+            "fault-modality": modality.pk,
+            "fault-fault_types_field": [fault.fault_types.first().code],
+            "fault-comment": "",
+            "fault-related_service_events": [se.pk],
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": "",
+        }
+
+        assert list(fault.faultreviewinstance_set.values_list("reviewed_by_id", flat=True)) == [self.user.pk]
+        resp = self.client.post(edit_url, data)
+        assert resp.status_code == 302
+        fault.refresh_from_db()
+        assert fault.faultreviewinstance_set.count() == 0
+
     def test_create_ajax_valid(self):
         """Test that creating a fault via ajax (e.g. from perform test list instance page) works"""
 
@@ -450,7 +758,8 @@ class TestFaultTypeAutocomplete(TestCase):
 
         results = self.client.get(self.url, {'q': 'new'}).json()['results']
         assert len(results) == 1
-        assert results[0] == {'id': '%snew' % forms.NEW_FAULT_TYPE_MARKER, 'text': "*new*"}
+        expected = {'id': '%snew' % forms.NEW_FAULT_TYPE_MARKER, 'text': "*new*", 'code': 'new', 'description': ''}
+        assert results[0] == expected
 
     def test_query_exact_match_only(self):
         """If query matches a fault types exactly, and is not a match for any
@@ -458,7 +767,13 @@ class TestFaultTypeAutocomplete(TestCase):
 
         fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
         results = self.client.get(self.url, {'q': 'ft 2'}).json()['results']
-        assert results == [{'id': fts[2].code, 'text': "ft 2: No description available"}]
+        expected = [{
+            'id': fts[2].code,
+            'text': "ft 2",
+            'code': fts[2].code,
+            'description': ''
+        }]
+        assert results == expected
 
     def test_query_exact_match_plus_others(self):
         """If query matches a fault types exactly, plus matches others, all
@@ -470,9 +785,9 @@ class TestFaultTypeAutocomplete(TestCase):
 
         results = self.client.get(self.url, {'q': 'ft 21'}).json()['results']
         assert results == [
-            {'id': "ft 21", 'text': "ft 21: No description available"},
-            {'id': "ft 212", 'text': "ft 212: description"},
-            {'id': "ft 213", 'text': "ft 213: No description available"},
+            {'id': "ft 21", 'text': "ft 21", 'code': "ft 21", 'description': ''},
+            {'id': "ft 212", 'text': "ft 212: description", 'code': "ft 212", 'description': 'description'},
+            {'id': "ft 213", 'text': "ft 213", 'code': "ft 213", 'description': ''},
         ]
 
 
@@ -523,7 +838,6 @@ class TestFaultsByUnit(TestCase):
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
-
 
     def test_load_page(self):
         """Initial page load should work ok"""

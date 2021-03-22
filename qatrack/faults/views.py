@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import Count
+from django.db.models import Count, Max
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -77,7 +77,7 @@ class FaultList(BaseListableView):
 
     order_fields = {
         'actions': False,
-        'review_status': 'reviewed',
+        'review_status': 'review_count',
         'get_fault_types': 'fault_types__code',
         'get_occurred': 'occurred',
     }
@@ -110,6 +110,11 @@ class FaultList(BaseListableView):
             'review_status': get_template("faults/fault_review_status.html"),
             'fault_types': get_template("faults/fault_types.html"),
         }
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            review_count=Max("faultreviewinstance"),
+        )
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -181,7 +186,7 @@ class UnreviewedFaultList(FaultList):
     order_fields['selected'] = False
 
     def get_queryset(self):
-        return super().get_queryset().filter(faultreviewinstance=None)
+        return super().get_queryset().filter(review_count=None)
 
     def get_fields(self, request=None):
         fields = super().get_fields(request=request)
@@ -252,10 +257,9 @@ class CreateFault(PermissionRequiredMixin, CreateView):
         frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
         context_data['review_forms'] = []
         for idx, frg in enumerate(frgs):
-            if self.request.method == 'POST':
-                frg_form = forms.ReviewForm(self.request.POST, fault_review_group=frg, prefix="review-form-%d" % idx)
-            else:
-                frg_form = forms.ReviewForm(fault_review_group=frg, prefix="review-form-%d" % idx)
+            prefix = "review-form-%d" % idx
+            data = self.request.POST if self.request.method == "POST" else None
+            frg_form = forms.InlineReviewForm(data, fault_review_group=frg, prefix=prefix)
             context_data['review_forms'].append(frg_form)
         return context_data
 
@@ -331,8 +335,9 @@ class EditFault(PermissionRequiredMixin, UpdateView):
         context_data['review_forms'] = []
         for idx, frg in enumerate(frgs):
             data = self.request.POST if self.request.method == "POST" else None
+            prefix = "review-form-%d" % idx
             instance = fris.get(frg.group.name)
-            frg_form = forms.ReviewForm(data, instance=instance, fault_review_group=frg, prefix="review-form-%d" % idx)
+            frg_form = forms.InlineReviewForm(data, instance=instance, fault_review_group=frg, prefix=prefix)
             context_data['review_forms'].append(frg_form)
 
         return context_data
@@ -461,15 +466,10 @@ class FaultDetails(FaultList):
             "faultreviewinstance_set",
             "fault_types",
         )
+
         context['fault'] = get_object_or_404(qs, pk=self.kwargs['pk'])
 
-        review_groups = models.FaultReviewGroup.objects.order_by("required", "group__name")
-        context['review_groups'] = review_groups
-        can_review = self.request.user.has_perm("faults.can_review")
-        if review_groups:
-            can_review &= len(set(review_groups) & set(self.request.user.groups.all())) > 0
-
-        if can_review:
+        if models.can_review_faults(self.request.user):
             context['review_form'] = forms.ReviewFaultForm(instance=context['fault'])
 
         return context
