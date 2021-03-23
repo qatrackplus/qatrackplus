@@ -6,8 +6,7 @@ Hello,
 The following fault was just logged:
 
 Fault: {{ fault }}
-Fault Type: {{ fault.fault_type.code }}
+Fault Types: {{ fault.fault_types_display }}
 Occurred: {{ fault.occurred }}
 Unit: {{ fault.unit.site_unit_name }}
-Modality: {% if fault.modality %}{{ fault.modality }}{% else %}{% trans "Not Specified" %}{% endif %}
-Treatment Technique: {% if fault.treatment_technique %}{{ fault.treatment_technique }}{% else %}{% trans "Not Specified" %}{% endif %}
+Treatment Technique / Modality: {% if fault.modality %}{{ fault.modality }}{% else %}{% trans "Not Specified" %}{% endif %}

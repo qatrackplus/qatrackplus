@@ -51,9 +51,9 @@
           {% else %}
             <td>&nbsp;</td>
           {% endif %}
-          <td>{{ unit_fault_type.fault_type__code }}</td>
+          <td>{{ unit_fault_type.fault_types__code }}</td>
           <td class="unreviewed-count">
-            {{ unit_fault_type.fault_type__code__count }}
+            {{ unit_fault_type.fault_types__code__count }}
           </td>
         </tr>
       {% endfor %}

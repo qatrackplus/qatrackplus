@@ -177,6 +177,9 @@ class Fault(models.Model):
 
         return review_details
 
+    def fault_types_display(self):
+        return ','.join(ft.code for ft in self.fault_types.order_by("code"))
+
     def __str__(self):
         return "Fault ID: %d" % self.pk
 

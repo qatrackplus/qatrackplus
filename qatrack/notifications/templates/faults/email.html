@@ -35,8 +35,8 @@
       </td>
     </tr>
     <tr>
-      <th class="header">{% trans "Fault Type" %}:</th>
-      <td>{{ fault.fault_type }}</td>
+      <th class="header">{% trans "Fault Types" %}:</th>
+      <td>{{ fault.fault_types_display }}</td>
     </tr>
     <tr>
       <th class="header">{% trans "Occurred" %}:</th>
@@ -47,20 +47,10 @@
       <td>{{ fault.unit.site_unit_name }}</td>
     </tr>
     <tr>
-      <th class="header">{% trans "Modality" %}:</th>
+      <th class="header">{% trans "Modality / Treatment Technique" %}:</th>
       <td>
         {% if fault.modality %}
           {{ fault.modality }}
-        {% else %}
-          {% trans "Not Specified" %}
-        {% endif %}
-      </td>
-    </tr>
-    <tr>
-      <th class="header">{% trans "Treatment Technique" %}:</th>
-      <td>
-        {% if fault.treatment_technique %}
-          {{ fault.treatment_technique }}
         {% else %}
           {% trans "Not Specified" %}
         {% endif %}

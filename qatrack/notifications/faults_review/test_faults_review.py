@@ -95,22 +95,21 @@ class TestFaultsReviewModel(TestCase):
         expected = [
             {
                 'unit__name': self.unit1.name,
-                'fault_type__code': self.fault1.fault_type.code,
+                'fault_types__code': self.fault1.fault_types.first().code,
                 'unit__name__count': 1,
-                'fault_type__code__count': 1,
+                'fault_types__code__count': 1,
             },
             {
                 'unit__name': self.unit2.name,
-                'fault_type__code': self.fault2.fault_type.code,
+                'fault_types__code': self.fault2.fault_types.first().code,
                 'unit__name__count': 1,
-                'fault_type__code__count': 1,
+                'fault_types__code__count': 1,
             },
         ]
         assert list(notice.faults_by_unit_fault_type()) == expected
 
     def test_upcoming_both_unreviewed_unit_group(self):
-        self.fault2.reviewed_by = self.user
-        self.fault2.save()
+        utils.create_fault_review(fault=self.fault2, reviewed_by=self.user)
 
         notice = FaultsReviewNotice.objects.create(
             recipients=self.recipients,
@@ -121,9 +120,9 @@ class TestFaultsReviewModel(TestCase):
         expected = [
             {
                 'unit__name': self.unit1.name,
-                'fault_type__code': self.fault1.fault_type.code,
+                'fault_types__code': self.fault1.fault_types.first().code,
                 'unit__name__count': 1,
-                'fault_type__code__count': 1,
+                'fault_types__code__count': 1,
             },
         ]
         assert list(notice.faults_by_unit_fault_type()) == expected
@@ -185,8 +184,8 @@ class TestFaultsReviewEmails(TestCase):
         assert "QATrack+ Unreviewed Faults Notice:" in mail.outbox[0].subject
 
     def test_send_notice_not_empty(self):
-        self.faults1.reviewed_by
-        Fault.objects.update(reviewed_by=self.user)
+        for fault in Fault.objects.all():
+            utils.create_fault_review(fault=fault, reviewed_by=self.user)
         tasks.send_faultsreview_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert len(mail.outbox) == 0
