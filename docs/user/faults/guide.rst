@@ -49,6 +49,9 @@ Next, fill out the form on the New Fault Page:
 * **Comment** Add any comments you think might be useful for anyone reviewing
   the fault.
 
+* **Reviewers** If your administrator has configured :ref:`Fault Review Groups
+  <fault_review_groups>` you will be able to select the users who were notified
+  of this fault.
 
 Click **Log Fault** once you've finished entering the data.
 
@@ -81,9 +84,15 @@ automatically close after the fault is logged successfully.
 Reviewing Faults
 ----------------
 
-After submitting a fault, it will be in an unreviewed state.  In order to mark
-faults as reviewed select the **Unreviewed** menu item from the **Faults**
-menu.
+.. note::
+
+    In order to review faults after they are logged, the user will need to 
+    belong to a group with the `Can review faults` permission.
+
+If your administrator has *not* configured :ref:`Fault Review Groups
+<fault_review_groups>` then after submitting a fault, it will be in an
+unreviewed state.  In order to mark faults as reviewed select the
+**Unreviewed** menu item from the **Faults** menu.
 
 .. figure:: images/unreviewed-faults-menu.png
    :alt: Location of the unreviewed faults menu
@@ -109,3 +118,13 @@ same type of fault at the bottom of the page.
 
    Reviewing fault details
 
+
+Fault Notifications
+-------------------
+
+There are two types of notifications you can set up for faults:
+
+#. :ref:`notifications-fault-logged`: to notifiy people when a fault is first
+   logged.
+#. :ref:`notifications-fault-review`: to periodically notify people when there
+   are unreviewed faults.
