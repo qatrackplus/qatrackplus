@@ -181,22 +181,22 @@ class UnitType(models.Model):
 class Modality(models.Model):
     """Treatment modalities
 
-    defines available treatment modalities for a given :model:`unit1`
+    defines available treatment & imaging modalities and techniques  for a given :model:`unit1`
 
     """
 
     name = models.CharField(
         _l('Name'),
         max_length=255,
-        help_text=_l('Descriptive name for this modality'),
+        help_text=_l('Descriptive name for this treatment or imaging modality.'),
         unique=True
     )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
-        verbose_name = _l("modality")
-        verbose_name_plural = _l('modalities')
+        verbose_name = _l("treatment and imaging modality")
+        verbose_name_plural = _l('treatment and imaging modalities')
 
     def natural_key(self):
         return (self.name,)
@@ -359,7 +359,8 @@ class UnitAvailableTime(models.Model):
 
     def to_dict(self):
         return {
-            'date_changed': '{:02d}-{:02d}-{}'.format(self.date_changed.day, self.date_changed.month, self.date_changed.year),
+            'date_changed': '{:02d}-{:02d}-{}'.format(
+                self.date_changed.day, self.date_changed.month, self.date_changed.year),
             'hours_sunday': self.hours_sunday,
             'hours_monday': self.hours_monday,
             'hours_tuesday': self.hours_tuesday,

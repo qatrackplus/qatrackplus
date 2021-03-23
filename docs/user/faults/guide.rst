@@ -32,11 +32,10 @@ Next, fill out the form on the New Fault Page:
    Entering a new fault
 
 * **Date & Time fault occurred** Enter approximately when the fault took place
-* **Unit, Modality, & Treatment Technique*** When you select the Unit the fault
-  occurred on, the **Modality** & **Treatment Technique** drop downs will be
-  populated with any Modality & Treatment options :ref:`configured for your
-  unit <units_admin>`.  The **Modality** and **Treatment Technique** fields
-  are optional.
+* **Unit, Modality*** When you select the Unit the fault occurred on, the
+  **Treatment or Imaging Modality** drop downs will be populated with any
+  treatment or imaging modality options :ref:`configured for your unit
+  <units_admin>`.  The **Modality** field is optional.
 * **Fault Type** After typing the first two characters of the **Fault type**,
   the drop down will be populated with any matching Fault Type codes already in
   the Fault type database.  If the fault code does not already exist in the

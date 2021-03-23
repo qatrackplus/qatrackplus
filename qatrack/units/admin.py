@@ -39,8 +39,9 @@ class UnitFormAdmin(ModelForm):
     modalities = ModelMultipleChoiceField(
         queryset=Modality.objects.all(),
         required=False,
+        label=_l('Treatment and Imaging Modalities'),
         widget=FilteredSelectMultiple(
-            verbose_name=_l('Modalities'),
+            verbose_name=_l('Treatment and Imaging Modalities'),
             is_stacked=False
         )
     )

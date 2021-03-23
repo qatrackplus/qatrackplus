@@ -80,12 +80,12 @@ class Fault(models.Model):
 
     modality = models.ForeignKey(
         u_models.Modality,
-        verbose_name=_l("treatment/imaging technique or modality"),
+        verbose_name=_l("treatment or imaging modality"),
         on_delete=models.SET_NULL,
         related_name="faults",
         null=True,
         blank=True,
-        help_text=_l("Select the treatment/imaging modality being used when this fault occurred (optional)"),
+        help_text=_l("Select the treatment or imaging modality being used when this fault occurred (optional)"),
     )
 
     fault_types = models.ManyToManyField(
