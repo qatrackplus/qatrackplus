@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -12,10 +12,10 @@ from qatrack.qatrack_core.email import send_email_to_users
 logger = logging.getLogger('qatrack')
 
 
-@receiver(post_save, sender=models.Fault)
-def on_fault_created(sender, instance, created, **kwargs):
+@receiver(m2m_changed, sender=models.Fault.fault_types.through)
+def on_fault_created(sender, instance, action, **kwargs):
 
-    if not created:
+    if action != "post_add":
         # don't send when edited
         return
 

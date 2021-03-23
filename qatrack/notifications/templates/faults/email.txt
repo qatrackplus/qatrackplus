@@ -9,4 +9,4 @@ Fault: {{ fault }}
 Fault Types: {{ fault.fault_types_display }}
 Occurred: {{ fault.occurred }}
 Unit: {{ fault.unit.site_unit_name }}
-Treatment Technique / Modality: {% if fault.modality %}{{ fault.modality }}{% else %}{% trans "Not Specified" %}{% endif %}
+Treatment or Imaging Modality: {% if fault.modality %}{{ fault.modality }}{% else %}{% trans "Not Specified" %}{% endif %}
