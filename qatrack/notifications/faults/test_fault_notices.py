@@ -1,6 +1,7 @@
 from django.contrib.admin.sites import AdminSite
 from django.core import mail
 from django.test import TestCase
+from django.contrib.auth.models import User
 from django.urls import reverse
 from django_q.models import Schedule
 
@@ -97,6 +98,31 @@ class TestFaultNoticeEmails(TestCase):
         notification.save()
         utils.create_fault()
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_email_sent_after_create(self):
+        notification = FaultNotice.objects.create(
+            notification_type=FaultNotice.LOGGED,
+            recipients=self.recipients,
+        )
+        notification.save()
+        create_url = reverse("fault_create")
+        user = User.objects.create_superuser("faultuser", "a@b.com", "password")
+        self.client.force_login(user)
+        ft1 = models.FaultType.objects.create(code="fault type 1")
+        ft2 = models.FaultType.objects.create(code="fault type 2")
+
+        data = {
+            "fault-occurred": "20 Jan 2021 17:59",
+            "fault-unit": self.unit.id,
+            "fault-modality": self.unit.modalities.all().first().pk,
+            "fault-fault_types_field": [ft1.code, ft2.code],
+            "fault-comment": "",
+            "fault-related_service_events": [],
+        }
+
+        resp = self.client.post(create_url, data)
+        assert resp.status_code == 302
+        assert len(mail.outbox) == 1
 
     def test_email_not_sent_on_edit(self):
         """An email should not be sent when a fault is edited"""

@@ -444,6 +444,7 @@ class TestCRUDFault(TestCase):
         FaultType.objects.create(code="fault type")
 
         fault = utils.create_fault()
+        ft2 = utils.create_fault_type()
         assert fault.modality is None
 
         modality = u_models.Modality.objects.create(name="modality")
@@ -457,7 +458,7 @@ class TestCRUDFault(TestCase):
             "fault-occurred": format_datetime(fault.occurred),
             "fault-unit": fault.unit.id,
             "fault-modality": modality.pk,
-            "fault-fault_types_field": [fault.fault_types.first().code],
+            "fault-fault_types_field": [fault.fault_types.first().code, ft2.code],
             "fault-comment": "",
             "fault-related_service_events": [se.pk],
         }
@@ -466,6 +467,41 @@ class TestCRUDFault(TestCase):
         assert resp.status_code == 302
         fault.refresh_from_db()
         assert fault.modality == modality
+        assert fault.fault_types.count() == 2
+        assert resp.url == self.list_url
+
+    def test_valid_edit_remove_ft(self):
+        """Test that editing a fault and modifying a field works"""
+
+        FaultType.objects.create(code="fault type")
+
+        ft1 = utils.create_fault_type()
+        ft2 = utils.create_fault_type()
+        fault = utils.create_fault(fault_type=[ft1, ft2])
+        assert fault.modality is None
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
+
+        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        se = sl_utils.create_service_event()
+        fault.related_service_events.add(se)
+
+        data = {
+            "fault-occurred": format_datetime(fault.occurred),
+            "fault-unit": fault.unit.id,
+            "fault-modality": modality.pk,
+            "fault-fault_types_field": [ft2.code],
+            "fault-comment": "",
+            "fault-related_service_events": [se.pk],
+        }
+
+        assert fault.fault_types.count() == 2
+        resp = self.client.post(edit_url, data)
+        assert resp.status_code == 302
+        fault.refresh_from_db()
+        assert fault.modality == modality
+        assert fault.fault_types.count() == 1
         assert resp.url == self.list_url
 
     def test_invalid_edit(self):

@@ -15,7 +15,8 @@ logger = logging.getLogger('qatrack')
 @receiver(m2m_changed, sender=models.Fault.fault_types.through)
 def on_fault_created(sender, instance, action, **kwargs):
 
-    if action != "post_add":
+    is_edit = instance.fault_types.count() > 0
+    if action != "pre_add" or is_edit:
         # don't send when edited
         return
 
@@ -25,7 +26,12 @@ def on_fault_created(sender, instance, action, **kwargs):
     if not recipients:
         return
 
-    context = {'fault': fault}
+    # don't use fault fault.fault_types because we are using 'pre_add' and they
+    # haven't actually been added to the model yet
+    fts = ', '.join(
+        models.FaultType.objects.filter(pk__in=kwargs['pk_set']).order_by("code").values_list("code", flat=True)
+    )
+    context = {'fault': fault, 'fault_types': fts}
 
     try:
         send_email_to_users(
