@@ -78,7 +78,7 @@ class FaultAdmin(SaveUserQATrackAdmin):
     name.admin_order_field = "pk"
 
     def get_fault_types(self, obj):
-        return ", ".join(ft.code for ft in obj.fault_types.all())
+        return ", ".join(ft.code for ft in obj.fault_types.order_by("code"))
     get_fault_types.order_field = "fault_types__code"
     get_fault_types.short_description = _l("Fault Types")
 

@@ -50,6 +50,13 @@ class TestFault(TestCase):
         review = utils.create_fault_review(review_group=rg_required)
         assert review.fault.review_complete()
 
+    def test_fault_type_display(self):
+        ft1 = utils.create_fault_type()
+        ft2 = utils.create_fault_type()
+        f = utils.create_fault(fault_type=[ft1, ft2])
+        qs = FaultType.objects.order_by("code").values_list("code", flat=True)
+        assert f.fault_types_display() == ', '.join(qs)
+
 
 class TestCanReviewFaults(TestCase):
 
@@ -86,6 +93,14 @@ class TestFaultAdmin(TestCase):
         il = Fault(pk=1)
         assert adm.name(il) == str(il)
 
+    def test_get_qs(self):
+        site = AdminSite()
+        adm = admin.FaultAdmin(Fault, site)
+        ft1 = utils.create_fault_type()
+        ft2 = utils.create_fault_type()
+        utils.create_fault(fault_type=[ft1, ft2])
+        assert adm.get_queryset(None).count() == 1
+
     def test_modality_filter_lookups(self):
         site = AdminSite()
         adm = admin.FaultAdmin(Fault, site)
@@ -99,7 +114,8 @@ class TestFaultAdmin(TestCase):
         fault = utils.create_fault(fault_type=[ft1, ft2])
         site = AdminSite()
         adm = admin.FaultAdmin(Fault, site)
-        assert adm.get_fault_types(fault) == ', '.join(sorted([ft1.code, ft2.code]))
+        qs = fault.fault_types.order_by("code").values_list("code", flat=True)
+        assert adm.get_fault_types(fault) == ', '.join(qs)
 
 
 class TestModalityFilter(TestCase):
@@ -659,6 +675,8 @@ class TestCRUDFault(TestCase):
         """Test that creating a fault via ajax (e.g. from perform test list instance page) works"""
 
         ft = FaultType.objects.create(code="fault type")
+        rev_group = utils.create_fault_review_group(required=False)
+        self.user.groups.add(rev_group.group)
 
         data = {
             "fault-occurred": "20 Jan 2021 17:59",
@@ -666,6 +684,8 @@ class TestCRUDFault(TestCase):
             "fault-modality": self.unit.modalities.all().first().pk,
             "fault-fault_types_field": [ft.code],
             "fault-comment": "test comment",
+            "review-form-0-group": rev_group.group.name,
+            "review-form-0-reviewed_by": self.user.pk,
         }
 
         resp = self.client.post(self.ajax_url, data=data)

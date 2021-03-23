@@ -194,6 +194,20 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                         $field.after($error_div);
                     });
                 });
+                $.each(result.review_errors, function(field, errs) {
+                    if (Object.keys(errs).length === 0){
+                        return;
+                    }
+                    var $field = $('#id_review-form-' + field + '-reviewed_by');
+                    var $form_group = $field.parents('.form-group');
+
+                    $form_group.addClass('has-error');
+
+                    $.each(errs, function(err_idx, err) {
+                        var $error_div = $('<p class="help-block text-center error-message">' + err + '</p>');
+                        $field.parent().append($error_div);
+                    });
+                });
             }
             $saveFault.click(function(){
                 resetModalFaultForm();

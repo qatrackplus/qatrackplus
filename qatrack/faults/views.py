@@ -226,21 +226,7 @@ class CreateFault(PermissionRequiredMixin, CreateView):
             return self.render_to_response(context)
 
         fault = save_valid_fault_form(form, self.request)
-        reviewed = timezone.now()
-        for review_form in context['review_forms']:
-            reviewed_by = review_form.cleaned_data['reviewed_by']
-            if not reviewed_by:
-                continue
-
-            frg = models.FaultReviewGroup.objects.filter(
-                group__name=review_form.cleaned_data['group'],
-            ).first()
-            models.FaultReviewInstance.objects.create(
-                reviewed=reviewed,
-                reviewed_by=reviewed_by,
-                fault=fault,
-                fault_review_group=frg,
-            )
+        save_valid_review_forms(context['review_forms'], fault)
 
         return HttpResponseRedirect(reverse('fault_list'))
 
@@ -366,8 +352,18 @@ def fault_create_ajax(request):
 
     form = forms.FaultForm(request.POST)
 
-    if form.is_valid():
+    frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
+    review_forms = []
+    for idx, frg in enumerate(frgs):
+        prefix = "review-form-%d" % idx
+        frg_form = forms.InlineReviewForm(request.POST, fault_review_group=frg, prefix=prefix)
+        review_forms.append(frg_form)
+
+    review_forms_valid = all(f.is_valid() for f in review_forms)
+
+    if form.is_valid() and review_forms_valid:
         fault = save_valid_fault_form(form, request)
+        save_valid_review_forms(review_forms, fault)
         fault_id = fault.id
         msg = _("Fault ID %d was created" % fault_id)
     else:
@@ -377,6 +373,7 @@ def fault_create_ajax(request):
     results = {
         'error': fault_id is None,
         'errors': form.errors,
+        'review_errors': [f.errors for f in review_forms],
         'message': msg,
     }
     return JsonResponse(results, encoder=QATrackJSONEncoder)
@@ -412,6 +409,24 @@ def save_valid_fault_form(form, request):
         comment.save()
 
     return fault
+
+
+def save_valid_review_forms(forms, fault):
+    reviewed = timezone.now()
+    for review_form in forms:
+        reviewed_by = review_form.cleaned_data['reviewed_by']
+        if not reviewed_by:
+            continue
+
+        frg = models.FaultReviewGroup.objects.filter(
+            group__name=review_form.cleaned_data['group'],
+        ).first()
+        models.FaultReviewInstance.objects.create(
+            reviewed=reviewed,
+            reviewed_by=reviewed_by,
+            fault=fault,
+            fault_review_group=frg,
+        )
 
 
 def fault_type_autocomplete(request):
