@@ -2,11 +2,13 @@ from unittest import mock
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User, Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 from django_comments.models import Comment
 
+from qatrack.attachments.models import Attachment
 from qatrack.faults import admin, forms, views
 from qatrack.faults.models import Fault, FaultType, FaultReviewGroup, can_review_faults
 from qatrack.faults.tests import utils
@@ -284,6 +286,31 @@ class TestCRUDFault(TestCase):
         assert Comment.objects.count() == 1
         assert list(Fault.objects.latest('pk').related_service_events.values_list("id", flat=True)) == [se.id]
 
+    def test_valid_create_attach(self):
+        """Test that creating a fault with all options set works"""
+
+        ft = FaultType.objects.create(code="fault type")
+
+        usa = sl_utils.create_unit_service_area(unit=self.unit)
+        se = sl_utils.create_service_event(unit_service_area=usa)
+
+        test_file = SimpleUploadedFile("TESTRUNNER_test_file.json", b"{}")
+        data = {
+            "fault-occurred": "20 Jan 2021 17:59",
+            "fault-unit": self.unit.id,
+            "fault-modality": self.unit.modalities.all().first().pk,
+            "fault-fault_types_field": [ft.code],
+            "fault-comment": "test comment",
+            "fault-related_service_events": [se.pk],
+            "fault-attachments": [test_file],
+        }
+
+        resp = self.client.post(self.create_url, data)
+        assert resp.status_code == 302
+        assert resp.url == self.list_url
+        assert Attachment.objects.count() == 1
+        assert Attachment.objects.get(fault=Fault.objects.latest("pk"))
+
     def test_valid_create_with_review(self):
         """Test that creating a fault with all options and a reviewer set works"""
 
@@ -469,6 +496,40 @@ class TestCRUDFault(TestCase):
         assert fault.modality == modality
         assert fault.fault_types.count() == 2
         assert resp.url == self.list_url
+
+    def test_valid_edit_remove_attach(self):
+        """Test that editing a fault and modifying a field works"""
+
+        FaultType.objects.create(code="fault type")
+
+        fault = utils.create_fault()
+        test_file = SimpleUploadedFile("TESTRUNNER_test_file.json", b"{}")
+        attach = Attachment.objects.create(fault=fault, attachment=test_file, created_by=self.user)
+        assert fault.attachment_set.count() == 1
+        ft2 = utils.create_fault_type()
+        assert fault.modality is None
+
+        modality = u_models.Modality.objects.create(name="modality")
+        fault.unit.modalities.add(modality)
+
+        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        se = sl_utils.create_service_event()
+        fault.related_service_events.add(se)
+
+        data = {
+            "fault-occurred": format_datetime(fault.occurred),
+            "fault-unit": fault.unit.id,
+            "fault-modality": modality.pk,
+            "fault-fault_types_field": [fault.fault_types.first().code, ft2.code],
+            "fault-comment": "",
+            "fault-related_service_events": [se.pk],
+            "fault-attachments_delete_ids": [attach.id, ''],
+        }
+
+        resp = self.client.post(edit_url, data)
+        assert resp.status_code == 302
+        fault.refresh_from_db()
+        assert fault.attachment_set.count() == 0
 
     def test_valid_edit_remove_ft(self):
         """Test that editing a fault and modifying a field works"""

@@ -14,6 +14,11 @@ standalone page for entering faults.
 Entering a new fault
 --------------------
 
+.. note::
+
+    Only units with the "Is Serviceable" flag set will be shown in the Unit's
+    drop down.
+
 In order to enter a new machine fault, select the **Enter a new fault** option
 from the **Fault Log** menu at the top of the page.
 

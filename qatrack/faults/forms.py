@@ -44,6 +44,18 @@ class FaultForm(BetterModelForm):
         help_text=models.Fault._meta.get_field('related_service_events').help_text,
     )
 
+    attachments = forms.FileField(
+        label="Attachments",
+        max_length=150,
+        required=False,
+        widget=forms.FileInput(attrs={
+            'multiple': '',
+            'class': 'file-upload',
+            'style': 'display:none',
+        })
+    )
+    attachments_delete_ids = forms.CharField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = models.Fault
         fields = [
@@ -91,7 +103,7 @@ class FaultForm(BetterModelForm):
                 if not self.data['%s-unit' % self.prefix]:
                     self.fields['related_service_events'].widget.attrs.update({'disabled': True})
 
-        self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True)
+        self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True, serviceable_only=True)
 
         for f in self.fields:
             self.fields[f].widget.attrs['class'] = 'form-control'

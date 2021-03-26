@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load attach_tags %}
 
 <div class="row">
 
@@ -120,3 +121,32 @@
   </div>
 
 </div>
+{% if fault.attachment_set.exists %}
+  <div class="row">
+    <div class="col-sm-12">
+      <h3>{% trans "Attachments" %}</h3>
+
+      <dl class="dl-horizontal">
+
+        <dt>{% trans "Files" %}:</dt>
+        <dd>
+          <ul class="list-unstyled">
+            {% for attach in fault.attachment_set.all %}
+              <li>{{ attach | attachment_link }}</li>
+            {% endfor %}
+          </ul>
+        </dd>
+      </dl>
+
+      {% for attach in fault.attachment_set.all %}
+        {% if attach.is_image %}
+          <div class="col-sm-4">
+            <div class="attach-inline-image-box">
+              {{ attach | attachment_img:"attach-inline-image" }}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}

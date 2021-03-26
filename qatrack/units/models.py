@@ -384,10 +384,12 @@ class UnitAvailableTime(models.Model):
         return uat
 
 
-def get_unit_info(unit_ids=None, active_only=True):
+def get_unit_info(unit_ids=None, active_only=True, serviceable_only=False):
     units = Unit.objects.all()
     if active_only:
         units = units.filter(active=True)
+    if serviceable_only:
+        units = units.filter(is_serviceable=True)
     if unit_ids:
         units = units.filter(pk__in=unit_ids)
 

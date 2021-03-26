@@ -1,4 +1,4 @@
-require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], function($, moment) {
+require(['jquery', 'lodash', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], function($, lodash, moment) {
     "use strict";
     $(document).ready(function () {
 
@@ -17,8 +17,6 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
         var $faultForm = $faultModal.find("form");
         var $faultMessage = $("#modal-fault-message");
 
-
-
         function resetModalFaultForm(){
             $faultMessage.html("");
             $faultModal.find(".has-error").removeClass("has-error");
@@ -29,6 +27,7 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
         $.ajax({
             type: "GET",
             url: QAURLs.UNIT_INFO,
+            data: {'serviceable_only': true},
             success: function(data){
                 unitInfo = data;
                 configureFaults();
@@ -301,6 +300,30 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
             var $reviewRequiredBy = $("#id_fault-review_required_by").select2(s2config);
 
             $(".reviewed-by-select").select2(s2config);
+
+
+            var $attachInput = $('#id_fault-attachments'),
+                $attach_deletes = $('.attach-delete'),
+                $attach_delete_ids = $('#id_fault-attachments_delete_ids'),
+                $attach_names = $('#attachment-names');
+
+            $attachInput.on("change", function(){
+                var fnames = _.map(this.files, function(f){
+                    return '<tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' + f.name + '</td></tr>';
+                }).join("");
+                $attach_names.html(fnames);
+            });
+
+            $attach_deletes.change(function() {
+                var deletes = [];
+                $.each($attach_deletes, function(i, v) {
+                    var el = $(v);
+                    if (el.prop('checked')) {
+                        deletes.push(el.val());
+                    }
+                });
+                $attach_delete_ids.val(deletes.join(','));
+            });
         }
     });
 });

@@ -1,5 +1,6 @@
 {% extends "site_base.html" %}
 
+{% load attach_tags %}
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load comments %}
@@ -34,7 +35,7 @@
 {% block body %}
 
 <div class="max-width-lg">
-  <form action="" method="post" novalidate>
+  <form action="" method="post" novalidate enctype="multipart/form-data">
 
     {% csrf_token %}
 
@@ -68,7 +69,7 @@
                 <div class="col-md-12 form-horizontal">
                   <fieldset>
                     <legend>{% trans "Fault Details" %}</legend>
-                    {% include "_form_horizontal.html" with form=form %}
+                    {% include "_form_horizontal.html" with form=form include_attach_table=1 %}
                   </fieldset>
                 </div>
               </div>
@@ -164,4 +165,5 @@
     </div>
   {% endif %}
 </div>
+
 {% endblock body %}

@@ -31,6 +31,7 @@ from listable.views import (
     BaseListableView,
 )
 
+from qatrack.attachments.models import Attachment
 from qatrack.faults import forms, models
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
@@ -410,6 +411,19 @@ def save_valid_fault_form(form, request):
             site=get_current_site(request)
         )
         comment.save()
+
+    for f in request.FILES.getlist('fault-attachments'):
+        Attachment.objects.create(
+            attachment=f,
+            comment="Uploaded %s by %s" % (timezone.now(), request.user.username),
+            label=f.name,
+            fault=fault,
+            created_by=request.user
+        )
+
+    a_ids = [a for a in request.POST.getlist('fault-attachments_delete_ids', '') if a]
+    if a_ids:
+        Attachment.objects.filter(id__in=a_ids).delete()
 
     return fault
 

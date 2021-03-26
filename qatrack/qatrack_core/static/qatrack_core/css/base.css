@@ -695,7 +695,19 @@ table ul.multiselect-container.dropdown-menu {
   text-decoration: none;
 }
 
-hr.tight {
-  margin-top: 5px;
-  margin-bottom: 10px;
+
+.attach-inline-image {
+    width: 100%;
+    height: auto;
+}
+
+.attach-inline-image-box {
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    width: auto;
+    height: auto;
+    display: inline-block;
+    vertical-align: top;
 }
