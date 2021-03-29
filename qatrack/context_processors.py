@@ -140,6 +140,7 @@ def site(request):
         'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
         'DEBUG': settings.DEBUG,
+        'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,
         'USE_SQL_REPORTS': settings.USE_SQL_REPORTS,
         'USE_ISSUES': settings.USE_ISSUES,
 

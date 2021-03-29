@@ -18,7 +18,7 @@ define(["jquery"], function ($){
     $.qatrack = $.qatrack || {
         getCookie: getCookie,
         getCsrfToken: function(){
-            return getCookie('csrftoken');
+            return getCookie(siteConfig.CSRF_COOKIE_NAME);
         },
         updateCsrfTokenInputs: function(){
             // Update all CSRF Token inputs on the page
@@ -54,7 +54,7 @@ define(["jquery"], function ($){
              * If the user logs back in in another tab then we can grab the fresh
              * csrftoken from the cookie so our ajax requests on the perform QA
              * tab won't get 403'd due to csrf token validation failing */
-            var csrf_token = getCookie('csrftoken');
+            var csrf_token = getCookie(siteConfig.CSRF_COOKIE_NAME);
             if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
                 // Send the token to same-origin, relative URLs only.
                 // Send the token only if the method warrants CSRF protection
