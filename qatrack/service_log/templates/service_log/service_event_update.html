@@ -262,7 +262,6 @@
         </div>
       </div>
 
-
       <div class="row">
         <div class="col-md-4">
           <div class="box">
@@ -628,6 +627,7 @@
 
                       </tbody>
 
+                    {% if perms.parts.add_partused %}
                       <tfoot>
                       <tr>
                         <td colspan="4">
@@ -635,6 +635,7 @@
                         </td>
                       </tr>
                       </tfoot>
+                    {% endif %}
 
                     </table>
                   </div>

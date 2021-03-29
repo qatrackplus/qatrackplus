@@ -50,6 +50,7 @@ class PartUsedForm(forms.ModelForm):
         fields = ('part', 'from_storage', 'quantity')
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
         super(PartUsedForm, self).__init__(*args, **kwargs)
 
         is_new = self.instance.id is None

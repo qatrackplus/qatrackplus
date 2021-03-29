@@ -351,7 +351,8 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             context_data['part_used_formset'] = p_forms.PartUsedFormset(
                 self.request.POST,
                 instance=self.object,
-                prefix='parts'
+                prefix='parts',
+                form_kwargs={'user': self.request.user}
             )
         else:
 
@@ -376,7 +377,11 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 ),
                 initial=initial_utcs
             )
-            context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
+            context_data['part_used_formset'] = p_forms.PartUsedFormset(
+                instance=self.object,
+                prefix='parts',
+                form_kwargs={'user': self.request.user}
+            )
 
         context_data['attachments'] = self.object.attachment_set.all() if self.object else []
 
@@ -429,10 +434,13 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         hours_formset = context["hours_formset"]
         rtsqa_formset = context["rtsqa_formset"]
 
-        parts_formset = context['part_used_formset']
-        if not parts_formset or not parts_formset.is_valid():
-            messages.add_message(self.request, messages.ERROR, _('Please correct the Parts error below.'))
-            return self.render_to_response(context)
+        if self.user.has_perm('parts.add_partused'):
+            parts_formset = context['part_used_formset']
+            if not parts_formset or not parts_formset.is_valid():
+                messages.add_message(self.request, messages.ERROR, _('Please correct the Parts error below.'))
+                return self.render_to_response(context)
+        else:
+            parts_formset = []
 
         hours_valid = hours_formset.is_valid()
         rtsqa_valid = rtsqa_formset.is_valid()
