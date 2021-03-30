@@ -143,6 +143,7 @@ def site(request):
         'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,
         'USE_SQL_REPORTS': settings.USE_SQL_REPORTS,
         'USE_ISSUES': settings.USE_ISSUES,
+        'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,
 
         # JavaScript Date Formats
         'MOMENT_DATE_DATA_FMT': get_format("MOMENT_DATE_DATA_FMT"),

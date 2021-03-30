@@ -132,7 +132,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         first_name = result.get(settings.AD_LU_GIVEN_NAME, [""])[0]
         email = email.decode('utf-8') if isinstance(email, bytes) else email
         last_name = last_name.decode('utf-8') if isinstance(last_name, bytes) else last_name
-        first_name = last_name.decode('utf-8') if isinstance(last_name, bytes) else last_name
+        first_name = first_name.decode('utf-8') if isinstance(first_name, bytes) else first_name
         attrs = {
             'email': email,
             'last_name': last_name,
