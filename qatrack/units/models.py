@@ -181,45 +181,22 @@ class UnitType(models.Model):
 class Modality(models.Model):
     """Treatment modalities
 
-    defines available treatment modalities for a given :model:`unit1`
+    defines available treatment & imaging modalities and techniques  for a given :model:`unit1`
 
     """
 
     name = models.CharField(
         _l('Name'),
         max_length=255,
-        help_text=_l('Descriptive name for this modality'),
+        help_text=_l('Descriptive name for this treatment or imaging modality.'),
         unique=True
     )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
-        verbose_name = _l("modality")
-        verbose_name_plural = _l('modalities')
-
-    def natural_key(self):
-        return (self.name,)
-
-    def __str__(self):
-        return self.name
-
-
-class TreatmentTechnique(models.Model):
-
-    name = models.CharField(
-        verbose_name=_l("name"),
-        max_length=255,
-        unique=True,
-        help_text=_l('Name of this treatment technique'),
-    )
-
-    objects = NameNaturalKeyManager()
-
-    class Meta:
-        verbose_name = _l("treatment technique")
-        verbose_name_plural = _l("treatment techniques")
-        ordering = ("name",)
+        verbose_name = _l("treatment and imaging modality")
+        verbose_name_plural = _l('treatment and imaging modalities')
 
     def natural_key(self):
         return (self.name,)
@@ -266,7 +243,6 @@ class Unit(models.Model):
     )
 
     modalities = models.ManyToManyField(Modality)
-    treatment_techniques = models.ManyToManyField(TreatmentTechnique)
 
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
@@ -383,7 +359,8 @@ class UnitAvailableTime(models.Model):
 
     def to_dict(self):
         return {
-            'date_changed': '{:02d}-{:02d}-{}'.format(self.date_changed.day, self.date_changed.month, self.date_changed.year),
+            'date_changed': '{:02d}-{:02d}-{}'.format(
+                self.date_changed.day, self.date_changed.month, self.date_changed.year),
             'hours_sunday': self.hours_sunday,
             'hours_monday': self.hours_monday,
             'hours_tuesday': self.hours_tuesday,
@@ -407,32 +384,29 @@ class UnitAvailableTime(models.Model):
         return uat
 
 
-def get_unit_info(unit_ids=None, active_only=True):
+def get_unit_info(unit_ids=None, active_only=True, serviceable_only=False):
     units = Unit.objects.all()
     if active_only:
         units = units.filter(active=True)
+    if serviceable_only:
+        units = units.filter(is_serviceable=True)
     if unit_ids:
         units = units.filter(pk__in=unit_ids)
 
     units = units.prefetch_related(
         "modalities",
-        "treatment_techniques",
     ).order_by(
         "id",
         "modalities",
-        "treatment_techniques",
     ).values_list(
         "id",
         "modalities",
-        "treatment_techniques",
     )
 
-    unit_info = defaultdict(lambda: {'treatment_techniques': set(), 'modalities': set()})
+    unit_info = defaultdict(lambda: {'modalities': set()})
 
-    for unit, modality, technique in units:
+    for unit, modality in units:
         if modality is not None:
             unit_info[unit]['modalities'].add(modality)
-        if technique is not None:
-            unit_info[unit]['treatment_techniques'].add(technique)
 
     return unit_info

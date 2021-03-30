@@ -6,9 +6,17 @@ from django_comments.models import Comment
 
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports import filters
-from qatrack.reports.faults.summary import FaultReportMixin
+from qatrack.reports.faults.summary import FaultReportMixin, format_fault_types
 from qatrack.reports.reports import BaseReport, format_user
 from qatrack.units import models as umodels
+
+
+def format_review_users(fault):
+    return ', '.join(format_user(fri.reviewed_by) for fri in fault.faultreviewinstance_set.all())
+
+
+def format_review_dates(fault):
+    return ', '.join(format_datetime(fri.reviewed) for fri in fault.faultreviewinstance_set.all())
 
 
 class FaultDetailsReport(FaultReportMixin, BaseReport):
@@ -25,7 +33,7 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
 
     template = "reports/faults/details.html"
 
-    MAX_FAULTS = 200
+    MAX_FAULTS = 2000
 
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or "fault-details"), report_format)
@@ -39,9 +47,9 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
         reviewed = form.cleaned_data.get("review_status")
         qs = self.filter_set.qs
         if reviewed == "unreviewed":
-            qs = qs.filter(reviewed_by=None)
+            qs = qs.filter(faultreviewinstance=None)
         elif reviewed == "reviewed":
-            qs = qs.exclude(reviewed_by=None)
+            qs = qs.exclude(faultreviewinstance=None)
 
         sites = qs.order_by(
             "unit__site__name",
@@ -80,17 +88,14 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
                     'occurred': format_datetime(fault.occurred),
                     'site': site.name if site else "",
                     'unit_name': fault.unit.name,
-                    'fault_type': fault.fault_type.code,
+                    'fault_type': format_fault_types(fault),
                     'modality': fault.modality.name if fault.modality else _("Not specified"),
-                    'treatment_technique': (
-                        fault.treatment_technique.name if fault.treatment_technique else _("Not specified")
-                    ),
                     'created_by': format_user(fault.created_by),
                     'created': format_datetime(fault.created),
                     'modified_by': format_user(fault.modified_by),
                     'modified': format_datetime(fault.modified),
-                    'reviewed_by': format_user(fault.reviewed_by),
-                    'reviewed': format_datetime(fault.reviewed),
+                    'reviewed_by': format_review_users(fault),
+                    'reviewed': format_review_dates(fault),
                     'related_ses': related_ses,
                     'comments': comments,
                     'link': self.make_url(fault.get_absolute_url(), plain=True),
@@ -113,7 +118,6 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Created By"),
             _("Created Date"),
             _("Modified By"),
@@ -143,7 +147,6 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
                     fault['unit_name'],
                     fault['fault_type'],
                     fault['modality'],
-                    fault['treatment_technique'],
                     fault['created_by'].split("(")[0],
                     fault['created'],
                     fault['modified_by'].split("(")[0],

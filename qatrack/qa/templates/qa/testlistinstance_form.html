@@ -6,6 +6,7 @@
 {% load attach_tags %}
 {% load comments %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block head_title %}{% spaceless %}
     {% if test_list_instance %}
@@ -940,7 +941,6 @@
           action=""
           novalidate
           autocomplete="off"
-          class="form-horizontal"
         >
           <div class="form-group">
             <div id="modal-fault-message" class="col-sm-offset-4 col-sm-8">
@@ -948,7 +948,42 @@
           </div>
 
           {% csrf_token %}
-          {% include "_form_horizontal.html" with form=fault_form %}
+          <div class="row">
+            <div class="col-md-12 form-horizontal">
+              <fieldset>
+                {% include "_form_horizontal.html" with form=fault_form %}
+              </fieldset>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 form-horizontal">
+              <fieldset>
+                {% for review_form in review_forms %}
+                  <div class="form-group {% if review_form.errors %}has-error{% endif %}">
+                    <label class="col-sm-3 control-label" for="{{ review_form.group.id_for_label }}">
+                      {{ review_form.group.label }} {% if review_form.reviewed_by.field.required %}*{% endif %}
+                    </label>
+                    <div class="col-sm-3">
+                      {{ review_form.group|add_class:"form-control input-sm" }}
+                    </div>
+                    <label class="col-sm-3 control-label" for="{{ review_form.reviewed_by.id_for_label }}">
+                      {{ review_form.reviewed_by.label }}
+                    </label>
+                    <div class="col-sm-3">
+                      {{ review_form.reviewed_by|add_class:"form-control input-sm reviewed-by-select" }}
+                      {% if review_form.errors.reviewed_by %}
+                        <div class="help-block error-message">
+                          {% for err in review_form.errors.reviewed_by %}
+                            {{ err }}
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </fieldset>
+            </div>
+          </div>
         </form>
       </div>
       <div class="modal-footer">

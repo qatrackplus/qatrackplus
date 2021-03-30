@@ -1,4 +1,6 @@
+{% load i18n %}
 {% load widget_tweaks %}
+{% load attach_tags %}
 
 {% for hidden_field in form.hidden_fields %}
   {{ hidden_field }}
@@ -42,7 +44,37 @@
         {{ field.label }}{% if field.field.required %}*{% endif %}
       </label>
       <div class="col-sm-8">
-        {% render_field field class+="form-control input-sm" %}
+
+
+        {% if field|field_type == "filefield" %}
+          {% if include_attach_table %}
+            <table id="attach-table" class="table table-responsive table-condensed" style="margin-bottom: 5px">
+              <thead>
+                <tr>
+                  <th>Filename</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if form.instance.id %}
+                  {% for attach in form.instance.attachment_set.all %}
+                    <tr>
+                      <td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td>
+                      <td align="center"><input type="checkbox" name="attach-{{ attach.id }}-DELETE" id="attach-{{ attach.id }}-DELETE" class="attach-delete" value="{{ attach.id }}"></td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
+              </tbody>
+              <tfoot id="attachment-names"></tfoot>
+            </table>
+          {% endif %}
+          <label class="qa-input btn btn-default btn-sm btn-flat pull-right" title="{% trans "Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)" %}">
+            {% trans "Browse" %}
+            {{ field }}
+          </label>
+        {% else %}
+          {% render_field field class+="form-control input-sm" %}
+        {% endif %}
         {% if field.help_text %}
           <small class="form-text text-muted">{{ field.help_text }}</small>
         {% endif %}

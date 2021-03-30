@@ -16,7 +16,6 @@ from .forms import UnitAvailableTimeForm
 from .models import (
     Modality,
     Site,
-    TreatmentTechnique,
     Unit,
     UnitAvailableTime,
     UnitClass,
@@ -40,17 +39,9 @@ class UnitFormAdmin(ModelForm):
     modalities = ModelMultipleChoiceField(
         queryset=Modality.objects.all(),
         required=False,
+        label=_l('Treatment and Imaging Modalities'),
         widget=FilteredSelectMultiple(
-            verbose_name=_l('Modalities'),
-            is_stacked=False
-        )
-    )
-
-    treatment_techniques = ModelMultipleChoiceField(
-        queryset=TreatmentTechnique.objects.all(),
-        required=False,
-        widget=FilteredSelectMultiple(
-            verbose_name=_l('Treatment Techniques'),
+            verbose_name=_l('Treatment and Imaging Modalities'),
             is_stacked=False
         )
     )
@@ -70,7 +61,6 @@ class UnitFormAdmin(ModelForm):
             'is_serviceable',
             'site',
             'modalities',
-            'treatment_techniques',
             'service_areas',
         ]
 
@@ -225,13 +215,8 @@ class SiteAdmin(BaseQATrackAdmin):
     )
 
 
-class TreatmentTechniqueAdmin(BaseQATrackAdmin):
-    list_display = ("name",)
-
-
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
 admin.site.register(Modality, ModalityAdmin)
 admin.site.register(Site, SiteAdmin)
 admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)
-admin.site.register([TreatmentTechnique], TreatmentTechniqueAdmin)

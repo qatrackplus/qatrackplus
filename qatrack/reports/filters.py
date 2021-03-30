@@ -556,14 +556,6 @@ class BaseFaultFilter(BaseReportFilterSet):
         help_text=_l("Use this filter to limit report to one or more modalities (leave blank to include all modalities)"),
     )
 
-    treatment_technique = django_filters.filters.ModelMultipleChoiceFilter(
-        label=_l("Treatment Technique"),
-        queryset=umodels.TreatmentTechnique.objects.all(),
-        help_text=_l(
-            "Use this filter to limit report to one or more treatment techniques (leave blank to include all techniques)",
-        ),
-    )
-
     review_status = django_filters.filters.ChoiceFilter(
         label=_l("Review Status"),
         choices=[
@@ -578,7 +570,7 @@ class BaseFaultFilter(BaseReportFilterSet):
 
     class Meta:
         model = sl_models.ServiceEvent
-        fields = ["occurred", "unit__site", "unit", "modality", "treatment_technique"]
+        fields = ["occurred", "unit__site", "unit", "modality"]
 
     def __init__(self, *args, **kwargs):
 

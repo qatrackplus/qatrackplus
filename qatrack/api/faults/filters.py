@@ -3,11 +3,10 @@ import rest_framework_filters as filters
 from qatrack.api.filters import MaxDateFilter, MinDateFilter
 from qatrack.api.units.filters import (
     ModalityFilter,
-    TreatmentTechniqueFilter,
     UnitFilter,
 )
 from qatrack.faults import models
-from qatrack.units.models import Modality, TreatmentTechnique, Unit
+from qatrack.units.models import Modality, Unit
 
 
 class FaultTypeFilter(filters.FilterSet):
@@ -27,11 +26,6 @@ class FaultFilter(filters.FilterSet):
         queryset=models.FaultType.objects.all(),
     )
     unit = filters.RelatedFilter(UnitFilter, field_name='unit', queryset=Unit.objects.all())
-    treatment_technique = filters.RelatedFilter(
-        TreatmentTechniqueFilter,
-        field_name='treatment_technique',
-        queryset=TreatmentTechnique.objects.all(),
-    )
 
     modality = filters.RelatedFilter(
         ModalityFilter,
@@ -48,5 +42,4 @@ class FaultFilter(filters.FilterSet):
             "occurred": ['exact', "in"],
             "created": ['exact', "in"],
             "modified": ['exact', "in"],
-            "reviewed": ['exact', "in"],
         }

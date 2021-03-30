@@ -21,6 +21,8 @@ specific time.  Currently the availble notification types are:
 
 * :ref:`Fault Logged Notices <notifications-fault-logged>`
 
+* :ref:`Fault Review Notices <notifications-fault-review>`
+
 Configuring Notifications
 -------------------------
 

@@ -182,8 +182,7 @@ Units & Unit Types
 * A new :ref:`Collapse <unit_type>` option has been added to the Unit Type model
   to allow collapsing less frequency used unit types in user interface.
 
-* Units can now have :ref:`Treatment Techniques <units_techniques>` configured
-  for use with the :ref:`fault log <fault_log>`.
+* Unit modalities are now labeled as `Treatment or Imaging Modality`
 
 
 UI Changes

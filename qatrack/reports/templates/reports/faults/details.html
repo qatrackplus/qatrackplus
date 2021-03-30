@@ -10,52 +10,56 @@
     {% for site, faults in sites_data %}
     <h2>{% trans "Site" %} :: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
       {% for fault in faults %}
-        <h4>{% blocktrans with fault_id=fault.id %}Fault #{{ fault_id }}{% endblocktrans %}</h4>
-
         <table class="table table-condensed table-bordered">
           <thead>
-            <tr class="active">
-              <th style="width: 12%">{% trans "Occurred" %}</th>
-              <th style="width: 12%">{% trans "Unit" %}<div></div></th>
-              <th>{% trans "Fault Type" %}</th>
-              <th>{% trans "Modality" %}</th>
-              <th>{% trans "Treatment Technique" %}</th>
+            <tr class="active" style="width: 25%">
+              <th class="text-right">{% trans "Fault #" %}</th>
+              <td colspan="3">{{ fault.id }}</td>
             </tr>
           </thead>
           <tbody>
             <tr class="page">
-              <td>
-                <a href="{{ fault.link }}" title="{% trans "Click to view this fault" %}" target="_blank">
-                  {{ fault.occurred }}
-                </a>
-              </td>
-              <td>{{ fault.unit_name }}</td>
-              <td>{{ fault.modality }}</td>
-              <td>{{ fault.treatment_technique }}</td>
+              <th class="text-right" style="width: 20%">{% trans "Occurred" %}:</th>
+              <td colspan="3">{{ fault.occurred }}</td>
             </tr>
 
             <tr>
-              <th class="text-right" colspan="2">{% trans "Created By" %}:</th>
+              <th class="text-right">{% trans "Unit" %}:</th>
+              <td colspan="3">{{ fault.unit_name }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Fault Types" %}:</th>
+              <td colspan="3">{{ fault.fault_type }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Modality" %}:</th>
+              <td colspan="3">{{ fault.modality }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Created By" %}:</th>
               <td colspan="2">{{ fault.created_by }}</td>
-              <td colspan="2">{{ fault.created }}</td>
+              <td>{{ fault.created }}</td>
             </tr>
 
             <tr>
-              <th class="text-right" colspan="2">{% trans "Last Modified By" %}:</th>
+              <th class="text-right">{% trans "Last Modified By" %}:</th>
               <td colspan="2">{{ fault.modified_by }}</td>
-              <td colspan="2">{{ fault.modified }}</td>
+              <td>{{ fault.modified }}</td>
             </tr>
 
             <tr>
-              <th class="text-right" colspan="2">{% trans "Reviewed By" %}:</th>
+              <th class="text-right">{% trans "Reviewed By" %}:</th>
               <td colspan="2">{{ fault.reviewed_by }}</td>
-              <td colspan="2">{{ fault.reviewed }}</td>
+              <td>{{ fault.reviewed }}</td>
             </tr>
 
             {% for service_event_id, service_date, link in fault.related_ses %}
               <tr>
                 {% if forloop.first %}
-                  <th class="text-right" rowspan="{{ fault.related_ses|length }}" colspan="2">
+                  <th class="text-right" rowspan="{{ fault.related_ses|length }}">
                     {% trans "Related Service Events" %}:
                   </th>
                 {% endif %}
@@ -66,36 +70,35 @@
                     {% endblocktrans %}
                   </a>
                 </td>
-                <td colspan="2">{{ service_date }}</td>
+                <td>{{ service_date }}</td>
               </tr>
             {% empty %}
               <tr>
-                <th class="text-right" colspan="2">{% trans "Related Service Events" %}:</th>
-                <td colspan="4"><em>{% trans "No associated Service Events" %}</em></td>
+                <th class="text-right" colspan="1">{% trans "Related Service Events" %}:</th>
+                <td colspan="3"><em>{% trans "No associated Service Events" %}</em></td>
               </tr>
             {% endfor %}
 
             {% for user, dt, comment in fault.comments %}
               <tr>
                 {% if forloop.first %}
-                  <th class="text-right" rowspan="{{ fault.comments|length }}" colspan="2">
+                  <th class="text-right" rowspan="{{ fault.comments|length }}" colspan="1">
                     {% trans "Comments" %}:
                   </th>
                 {% endif %}
                 <td colspan="1">{{ dt }}</td>
                 <td colspan="1">{{ user }}</td>
-                <td colspan="2">{{ comment }}</td>
+                <td colspan="1">{{ comment }}</td>
               </tr>
             {% empty %}
               <tr>
-                <th class="text-right" colspan="2">{% trans "Comments" %}:</th>
+                <th class="text-right" colspan="1">{% trans "Comments" %}:</th>
                 <td colspan="3"><em>{% trans "No Comments" %}</em></td>
               </tr>
             {% endfor %}
 
           </tbody>
         </table>
-        <hr/>
       {% endfor %}
     {% endfor %}
   </div>

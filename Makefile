@@ -5,6 +5,9 @@ DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 cover:
 	py.test --reuse-db --cov-report term-missing --cov ./ ${args}
 
+cover-module:
+	py.test --cov-report term-missing --cov ./${module} ${module}
+
 cover-mo:
 	py.test --reuse-db --cov-report term-missing:skip-covered --cov ./ ${args}
 

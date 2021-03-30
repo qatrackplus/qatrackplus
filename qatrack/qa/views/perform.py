@@ -35,7 +35,8 @@ import scipy
 from qatrack.attachments.models import Attachment
 from qatrack.attachments.utils import imsave, to_bytes
 from qatrack.contacts.models import Contact
-from qatrack.faults.forms import FaultForm
+from qatrack.faults.forms import FaultForm, InlineReviewForm
+from qatrack.faults.models import FaultReviewGroup
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.dates import (
     format_datetime,
@@ -1356,6 +1357,13 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             include_related_ses=False,
         )
 
+        frgs = FaultReviewGroup.objects.order_by("-required", "group__name")
+        context['review_forms'] = []
+        for idx, frg in enumerate(frgs):
+            prefix = "review-form-%d" % idx
+            frg_form = InlineReviewForm(fault_review_group=frg, prefix=prefix)
+            context['review_forms'].append(frg_form)
+
         return context
 
     def get_requested_day_to_perform(self):
@@ -1630,6 +1638,13 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             initial={'unit': self.object.unit_test_collection.unit.id},
             include_related_ses=False,
         )
+
+        frgs = FaultReviewGroup.objects.order_by("-required", "group__name")
+        context['review_forms'] = []
+        for idx, frg in enumerate(frgs):
+            prefix = "review-form-%d" % idx
+            frg_form = InlineReviewForm(fault_review_group=frg, prefix=prefix)
+            context['review_forms'].append(frg_form)
 
         return context
 

@@ -10,7 +10,6 @@ class FaultSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             "unit",
             "modality",
-            "treatment_technique",
             "fault_type",
             "occurred",
         ]

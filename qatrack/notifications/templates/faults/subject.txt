@@ -1,1 +1,1 @@
-QATrack+ Fault {{ fault.unit.site_unit_name }} {{ fault.fault_type.code }}: {% now "DATE_FORMAT" %}
+QATrack+ Fault {{ fault.unit.site_unit_name }} {{ fault.fault_types_display }}: {% now "DATE_FORMAT" %}

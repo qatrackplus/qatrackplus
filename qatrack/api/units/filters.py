@@ -57,15 +57,6 @@ class ModalityFilter(filters.FilterSet):
         }
 
 
-class TreatmentTechniqueFilter(filters.FilterSet):
-
-    class Meta:
-        model = models.TreatmentTechnique
-        fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-        }
-
-
 class UnitFilter(filters.FilterSet):
 
     type = filters.RelatedFilter(UnitTypeFilter, field_name='type', queryset=models.UnitType.objects.all())

@@ -1,4 +1,4 @@
-require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], function($, moment) {
+require(['jquery', 'lodash', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], function($, lodash, moment) {
     "use strict";
     $(document).ready(function () {
 
@@ -17,8 +17,6 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
         var $faultForm = $faultModal.find("form");
         var $faultMessage = $("#modal-fault-message");
 
-
-
         function resetModalFaultForm(){
             $faultMessage.html("");
             $faultModal.find(".has-error").removeClass("has-error");
@@ -29,6 +27,7 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
         $.ajax({
             type: "GET",
             url: QAURLs.UNIT_INFO,
+            data: {'serviceable_only': true},
             success: function(data){
                 unitInfo = data;
                 configureFaults();
@@ -48,7 +47,6 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                 minuteIncrement: 1,
                 dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
                 allowInput: true,
-                defaultDate: moment().format(siteConfig.MOMENT_DATETIME_FMT),
                 onOpen: [
                     function(selectedDates, dateStr, instance) {
                         if (dateStr === '') {
@@ -59,13 +57,38 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
             });
 
             var $modality = $("#id_fault-modality").select2(s2config);
-            var $technique = $("#id_fault-treatment_technique").select2(s2config);
             var $related_se = $('#id_fault-related_service_events');
             var initialLoad = true;
             var $unit = $("#id_fault-unit");
 
-            var $faultType = $("#id_fault-fault_type_field").select2({
+            function addFaultDescriptions(selected){
+                selected.sort(function(s){ return s.code;});
+                var $ftds = $("#fault-type-descriptions");
+                var newCodes = $.map(selected, function(el){return el.code || el.text;});
+
+                var existingCodes = $ftds.find("dt").each(function(idx, el){
+                    var $el = $(el);
+                    var loc = newCodes.indexOf($el.text());
+                    if (loc < 0){
+                        $el.next("dd").remove();
+                        $el.remove();
+                    }else{
+                        newCodes.splice(loc, 1);
+                        selected.splice(loc, 1);
+                    }
+
+                });
+                $.each(selected, function(idx, el){
+                    var fts = '';
+                    fts += '<dt>' + el.code + '</dt>';
+                    fts += '<dd>' + (el.description || "<em>No Description Available</em>") + '</dd>';
+                    $ftds.append(fts);
+                });
+            }
+
+            var $faultType = $("#id_fault-fault_types_field").select2({
                 width: '100%',
+                multiple: true,
                 dropdownParent: s2config.dropdownParent,
                 ajax: {
                     url: QAURLs.FAULT_TYPE_AUTOCOMPLETE,
@@ -82,7 +105,35 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                 allowClear: true,
                 minimumInputLength: 2,
                 selectOnClose: true
+            }).on("change", function(evt){
+                addFaultDescriptions($faultType.select2('data'));
             });
+
+            var alreadySelected = $faultType.val();
+            if (alreadySelected){
+                var completed = [];
+                $.each(alreadySelected, function(idx, val){
+                    $.ajax({
+                        type: 'GET',
+                        url: QAURLs.FAULT_TYPE_AUTOCOMPLETE,
+                        dataType: 'json',
+                        data: {
+                            q: val,
+                            unit: $unit.val(),
+                            suggestions: 1
+                        }
+                    }).then(function(data){
+                        var opt = data.results[0];
+                        completed.push(opt);
+                        if (completed.length === alreadySelected.length){
+                            addFaultDescriptions(completed);
+                        }
+                    });
+                });
+            }
+
+            $faultType.parent().append('<dl class="dl-horizontal" id="fault-type-descriptions"></dl>');
+
             $unit.select2(s2config).change(function(){
                 var cur_unit = parseInt($unit.val(), 10);
                 var unit_modalities = [];
@@ -98,21 +149,6 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                 });
                 $modality.select2("destroy");
                 $modality.select2(s2config);
-
-                var unit_techniques = [];
-                if (cur_unit in unitInfo){
-                    unit_techniques = unitInfo[cur_unit].treatment_techniques;
-                }
-                $technique.val("");
-                $technique.find("option").each(function(i, opt){
-                    var $opt = $(opt);
-                    var tech_id = parseInt($(opt).val());
-                    var enable = unit_techniques.indexOf(tech_id) >= 0 || tech_id === "";
-                    $opt.prop('disabled', !enable);
-                });
-                $technique.select2("destroy");
-                $technique.select2(s2config);
-
 
                 if (cur_unit){
                     $related_se.prop('disabled', false);
@@ -157,6 +193,20 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                         $field.after($error_div);
                     });
                 });
+                $.each(result.review_errors, function(field, errs) {
+                    if (Object.keys(errs).length === 0){
+                        return;
+                    }
+                    var $field = $('#id_review-form-' + field + '-reviewed_by');
+                    var $form_group = $field.parents('.form-group');
+
+                    $form_group.addClass('has-error');
+
+                    $.each(errs, function(err_idx, err) {
+                        var $error_div = $('<p class="help-block text-center error-message">' + err + '</p>');
+                        $field.parent().append($error_div);
+                    });
+                });
             }
             $saveFault.click(function(){
                 resetModalFaultForm();
@@ -180,9 +230,18 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
             // Service Events Related ------------------------------------------------------------------------------
             function generate_related_result(res) {
                 if (res.loading) { return res.text; }
+                var description = res.title.slice(0, 80);
+                if (res.title.length > 80){
+                    description += "...";
+                }
+
+                description = '<em>' + description + '</em>';
                 var colour = status_colours_dict[se_statuses[res.id]];
-                var $div = $('<div class="select2-result-repository clearfix"><span>' + res.text + '  (' + res.date + ') </span><span class="label smooth-border pull-right" style="border-color: ' + colour + ';">' + res.status + '</span></div>');
-                return $div;
+                var sel = '<div class="select2-result-repository clearfix">';
+                sel += '<span>' + res.text + '  (' + res.date + ')</span>' + ': ' + description;
+                sel += '<span class="label smooth-border pull-right" style="border-color: ' + colour + ';">' + res.status + '</span>';
+                sel += '</div>';
+                return $(sel);
             }
             function generate_related_selection(res, container) {
                 var colour = status_colours_dict[se_statuses[res.id]];
@@ -191,7 +250,7 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                 if (isTooBright(rgbaStringToArray(colour))) {
                     $(container).css('color', 'black').children().css('color', 'black');
                 }
-                var $label = $('<span>' + res.text + '</span>');
+                var $label = $('<span title="' + res.title +'">' + res.text + '  (' + res.date + ')</span>');
                 return $label;
             }
             function process_related_results(data, params) {
@@ -238,6 +297,33 @@ require(['jquery', 'moment', 'flatpickr', 'select2', 'comments', 'sl_utils'], fu
                 width: '100%'
             });
 
+            var $reviewRequiredBy = $("#id_fault-review_required_by").select2(s2config);
+
+            $(".reviewed-by-select").select2(s2config);
+
+
+            var $attachInput = $('#id_fault-attachments'),
+                $attach_deletes = $('.attach-delete'),
+                $attach_delete_ids = $('#id_fault-attachments_delete_ids'),
+                $attach_names = $('#attachment-names');
+
+            $attachInput.on("change", function(){
+                var fnames = _.map(this.files, function(f){
+                    return '<tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>' + f.name + '</td></tr>';
+                }).join("");
+                $attach_names.html(fnames);
+            });
+
+            $attach_deletes.change(function() {
+                var deletes = [];
+                $.each($attach_deletes, function(i, v) {
+                    var el = $(v);
+                    if (el.prop('checked')) {
+                        deletes.push(el.val());
+                    }
+                });
+                $attach_delete_ids.val(deletes.join(','));
+            });
         }
     });
 });

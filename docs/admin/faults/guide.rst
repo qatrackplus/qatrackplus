@@ -42,3 +42,33 @@ Typically you would edit faults using the :ref:`Fault Log application
 interface if you prefer.
 
 
+.. _fault_review_groups:
+
+Fault Review Groups
+-------------------
+
+By adding one or more `Fault Review Groups`, the person logging the
+fault/interlock can select the people who were informed of the fault at the
+time the fault is logged.  A fault logged with one or more reviewers selected
+will be considered reviewed and will not appear in the unreviewed fault list.
+Selecting a review user for a `Fault Review Group`\s can either be required or
+optional.
+
+
+For example if you add two `Fault Review Group`\s, one for an Electronics
+group, and one for a Physics group:
+
+.. figure:: images/fault-review-groups.png
+   :alt: Fault Review Group Admin
+
+   Fault Review Group Admin
+
+then when a user is logging a new fault, the form will include a reviewers
+section at the bottom:
+
+.. figure:: images/log-fault-with-reviewers.png
+   :alt: Logging a fault with reviewers
+
+   Logging a fault with reviewers
+
+

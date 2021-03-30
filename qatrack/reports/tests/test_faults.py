@@ -93,14 +93,11 @@ class TestFaultSummaryReport(TestCase):
 
         unit2 = utils.create_unit()
         fault2 = fault_utils.create_fault(unit=unit2)
-        user = sl_utils.create_user()
-        fault2.reviewed_by = user
-        fault2.reviewed = timezone.now()
-        fault2.save()
+        fault_rev = fault_utils.create_fault_review(fault=fault2)
         comment = Comment(
             submit_date=timezone.now(),
-            user=user,
-            content_object=fault2,
+            user=fault_rev.reviewed_by,
+            content_object=fault_rev.fault,
             comment="comment",
             site=get_current_site(None)
         )
@@ -118,7 +115,6 @@ class TestFaultSummaryReport(TestCase):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Link"),
         ])
         # should be one fault after header
@@ -189,7 +185,6 @@ class TestFaultDetailsReport(TestCase):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Created By"),
             _("Created Date"),
             _("Modified By"),
@@ -204,12 +199,7 @@ class TestFaultDetailsReport(TestCase):
 
     def test_reviewed_filter(self):
 
-        site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
-        fault1 = fault_utils.create_fault(unit=unit1)
-        fault1.reviewed = timezone.now()
-        fault1.reviewed_by = sl_utils.create_user()
-        fault1.save()
+        fault_utils.create_fault_review()
         rep = faults.FaultDetailsReport(report_opts={'review_status': "reviewed"})
         rep.report_format = "csv"
         context = rep.get_context()

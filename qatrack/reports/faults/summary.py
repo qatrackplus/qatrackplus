@@ -11,22 +11,27 @@ from qatrack.reports.reports import BaseReport
 from qatrack.units import models as umodels
 
 
+def format_fault_types(fault):
+    return ', '.join(ft.code for ft in fault.fault_types.all())
+
+
 class FaultReportMixin:
 
     category = _l("Faults")
 
     def get_queryset(self):
         return models.Fault.objects.select_related(
-            "fault_type",
             "unit",
             "unit__site",
             "created_by",
             "modified_by",
-            "reviewed_by",
             "modality",
-            "treatment_technique",
         ).prefetch_related(
+            "fault_types",
             "related_service_events",
+            "faultreviewinstance_set",
+            "faultreviewinstance_set__reviewed_by",
+            "faultreviewinstance_set__fault_review_group",
         )
 
     def filter_form_valid(self, filter_form):
@@ -62,12 +67,14 @@ class FaultReportMixin:
             "unit__%s" % settings.ORDER_UNITS_BY,
             "occurred",
         ).select_related(
-            "fault_type",
             "created_by",
             "modified_by",
-            "reviewed_by",
         ).prefetch_related(
+            "fault_types",
             "related_service_events",
+            "faultreviewinstance_set",
+            "faultreviewinstance_set__reviewed_by",
+            "faultreviewinstance_set__fault_review_group",
         )
 
         return faults
@@ -84,7 +91,7 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
 
     template = "reports/faults/summary.html"
 
-    MAX_FAULTS = 300
+    MAX_FAULTS = 3000
 
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or "faults-summary"), report_format)
@@ -98,9 +105,9 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
         reviewed = form.cleaned_data.get("review_status")
         qs = self.filter_set.qs
         if reviewed == "unreviewed":
-            qs = qs.filter(reviewed_by=None)
+            qs = qs.filter(faultreviewinstance=None)
         elif reviewed == "reviewed":
-            qs = qs.exclude(reviewed_by=None)
+            qs = qs.exclude(faultreviewinstance=None)
 
         sites = qs.order_by(
             "unit__site__name",
@@ -121,12 +128,9 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
             for fault in self.get_faults_for_site(qs, site):
                 sites_data[-1][-1].append({
                     'id': fault.id,
-                    'fault_type': fault.fault_type.code,
+                    'fault_type': format_fault_types(fault),
                     'unit_name': fault.unit.name,
                     'modality': fault.modality.name if fault.modality else _("Not specified"),
-                    'treatment_technique': (
-                        fault.treatment_technique.name if fault.treatment_technique else _("Not specified")
-                    ),
                     'occurred': format_datetime(fault.occurred),
                     'link': self.make_url(fault.get_absolute_url(), plain=True),
                 })
@@ -148,7 +152,6 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
             _("Unit"),
             _("Fault Type"),
             _("Modality"),
-            _("Treatment Technique"),
             _("Link"),
         ]
 
@@ -163,7 +166,6 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
                     fault['unit_name'],
                     fault['fault_type'],
                     fault['modality'],
-                    fault['treatment_technique'],
                     fault['link'],
                 ]
 

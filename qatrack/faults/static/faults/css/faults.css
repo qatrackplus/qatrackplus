@@ -6,3 +6,6 @@ dd.fault_type_description {
     display: none;
 }
 
+#fault-modal .modal-dialog {
+  width: 800px;
+}

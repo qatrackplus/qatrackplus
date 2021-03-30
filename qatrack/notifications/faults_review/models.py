@@ -83,7 +83,7 @@ class FaultsReviewNotice(models.Model):
 
         return faults.order_by(
             "unit__%s" % settings.ORDER_UNITS_BY,
-            "fault_type__code",
+            "fault_types__code",
         )
 
     def faults_by_unit_fault_type(self):
@@ -91,13 +91,13 @@ class FaultsReviewNotice(models.Model):
         faults = self.faults()
         return faults.values(
             "unit__name",
-            "fault_type__code",
+            "fault_types__code",
         ).order_by(
             "unit__name",
-            "fault_type__code",
+            "fault_types__code",
         ).annotate(
             Count("unit__name"),
-            Count("fault_type__code"),
+            Count("fault_types__code"),
         )
 
     def send_required(self):

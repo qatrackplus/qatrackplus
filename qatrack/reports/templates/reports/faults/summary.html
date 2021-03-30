@@ -12,11 +12,10 @@
       <table class="table table-condensed table-bordered {% if not include_description %}table-striped{% endif %}">
         <thead>
           <tr class="{% if include_description %}active{% endif %}">
-            <th style="width: 12%">{% trans "Occurred" %}</th>
-            <th style="width: 12%">{% trans "Unit" %}<div></div></th>
-            <th>{% trans "Fault Type" %}</th>
-            <th>{% trans "Modality" %}</th>
-            <th>{% trans "Treatment Technique" %}</th>
+            <th style="width: 25%">{% trans "Occurred" %}</th>
+            <th style="width: 25%">{% trans "Unit" %}<div></div></th>
+            <th style="width: 25%">{% trans "Fault Types" %}</th>
+            <th style="width: 25%">{% trans "Modality" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -31,7 +30,6 @@
               <td>{{ fault.unit_name }}</td>
               <td>{{ fault.fault_type }}</td>
               <td>{{ fault.modality }}</td>
-              <td>{{ fault.treatment_technique }}</td>
             </tr>
 
           {% endfor %}

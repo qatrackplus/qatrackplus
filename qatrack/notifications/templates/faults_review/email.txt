@@ -7,6 +7,6 @@ The following Units currently have unreviewed Faults:
 
 Unit: {{ unit }}
 ===================================
-{% for fault_type in unit_fault_types %}{{ unit_fault_type.fault_type__code }} : {{ unit_fault_type.fault_type__code__count }} Unreviewed
+{% for fault_type in unit_fault_types %}{{ unit_fault_type.fault_types__code }} : {{ unit_fault_type.fault_types__count }} Unreviewed
 {% endfor %}
 {% endfor %}

@@ -15,6 +15,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
+import qatrack.faults.models as faultsm
 import qatrack.parts.models as partsm
 import qatrack.qa.models as qam
 import qatrack.service_log.models as slm
@@ -93,6 +94,7 @@ class Attachment(models.Model):
     testlistinstance = models.ForeignKey(qam.TestListInstance, on_delete=models.CASCADE, null=True, blank=True)
     serviceevent = models.ForeignKey(slm.ServiceEvent, on_delete=models.CASCADE, null=True, blank=True)
     part = models.ForeignKey(partsm.Part, on_delete=models.CASCADE, null=True, blank=True)
+    fault = models.ForeignKey(faultsm.Fault, on_delete=models.CASCADE, null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False)
@@ -105,6 +107,7 @@ class Attachment(models.Model):
         "testlistinstance",
         "serviceevent",
         "part",
+        "fault",
     ]
 
     @property

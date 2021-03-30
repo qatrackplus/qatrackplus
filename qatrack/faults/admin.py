@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.faults import models
@@ -11,7 +12,7 @@ class FaultTypeAdmin(BaseQATrackAdmin):
 
     list_display = ("code", "description")
     search_fields = (
-        "name",
+        "code",
         "slug",
         "description",
     )
@@ -43,30 +44,53 @@ class FaultAdmin(SaveUserQATrackAdmin):
         site_name,
         "unit",
         "modality",
-        "fault_type",
+        "get_fault_types",
         "occurred",
-        "reviewed",
-        "reviewed_by",
     )
 
     list_filter = (
         SiteFilter,
         "unit",
         ModalityFilter,
-        "fault_type",
+        "fault_types",
     )
 
     list_select_related = [
         "modality",
-        "fault_type",
         "unit",
         "unit__site",
     ]
+
+    search_fields = [
+        "id",
+        "modality__name",
+        "fault_types__code",
+        "fault_types__description",
+    ]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related(
+            Prefetch("fault_types", queryset=models.FaultType.objects.order_by("code")),
+        )
 
     def name(self, obj):
         return str(obj)
     name.admin_order_field = "pk"
 
+    def get_fault_types(self, obj):
+        return ", ".join(ft.code for ft in obj.fault_types.order_by("code"))
+    get_fault_types.order_field = "fault_types__code"
+    get_fault_types.short_description = _l("Fault Types")
+
+
+class FaultReviewGroupAdmin(BaseQATrackAdmin):
+
+    list_display = ("group", "required")
+    search_fields = (
+        "group__name",
+    )
+
 
 admin.site.register([models.FaultType], FaultTypeAdmin)
 admin.site.register([models.Fault], FaultAdmin)
+admin.site.register([models.FaultReviewGroup], FaultReviewGroupAdmin)

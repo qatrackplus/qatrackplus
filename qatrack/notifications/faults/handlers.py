@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -12,10 +12,11 @@ from qatrack.qatrack_core.email import send_email_to_users
 logger = logging.getLogger('qatrack')
 
 
-@receiver(post_save, sender=models.Fault)
-def on_fault_created(sender, instance, created, **kwargs):
+@receiver(m2m_changed, sender=models.Fault.fault_types.through)
+def on_fault_created(sender, instance, action, **kwargs):
 
-    if not created:
+    is_edit = instance.fault_types.count() > 0
+    if action != "pre_add" or is_edit:
         # don't send when edited
         return
 
@@ -25,7 +26,12 @@ def on_fault_created(sender, instance, created, **kwargs):
     if not recipients:
         return
 
-    context = {'fault': fault}
+    # don't use fault fault.fault_types because we are using 'pre_add' and they
+    # haven't actually been added to the model yet
+    fts = ', '.join(
+        models.FaultType.objects.filter(pk__in=kwargs['pk_set']).order_by("code").values_list("code", flat=True)
+    )
+    context = {'fault': fault, 'fault_types': fts}
 
     try:
         send_email_to_users(
