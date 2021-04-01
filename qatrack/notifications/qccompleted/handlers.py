@@ -52,6 +52,7 @@ def email_on_testlist_save(*args, **kwargs):
         "tolerance_tests": tolerance,
         "test_list_instance": test_list_instance,
         "notice_type": "completed",
+        "custom_domain": getattr(settings, "EMAIL_NOTIFICATION_CUSTOM_DOMAIN")
     }
 
     template = getattr(settings, "EMAIL_NOTIFICATION_TEMPLATE", "notification_email.html")

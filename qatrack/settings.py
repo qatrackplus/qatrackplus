@@ -345,6 +345,7 @@ EMAIL_NOTIFICATION_SENDER = "notifications@qatrackplus.com"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
+EMAIL_NOTIFICATION_CUSTOM_DOMAIN = False
 
 EMAIL_FAIL_SILENTLY = True
 EMAIL_HOST = ""  # e.g. 'smtp.gmail.com'
