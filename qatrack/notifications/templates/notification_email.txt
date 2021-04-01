@@ -13,7 +13,7 @@ You are receiving this notice because the following test list was just completed
 Test List : {{test_list_instance.test_list.name}}
 Unit      : {{test_list_instance.unit_test_collection.unit.name}}
 Date      : {{test_list_instance.work_completed }}
-Link      : {% if custom_domain %}{{ custom_domain }}{% else %}{% if 'http' not in domain %}http://{% endif %}{{ domain }}{% endif %}{{ test_list_instance.get_absolute_url }}
+Link      : {% if 'http' not in domain %}http://{% endif %}{{ domain }}{{ test_list_instance.get_absolute_url }}
 
 {% if failing_tests %}
 Failing Tests

@@ -49,19 +49,11 @@
       Link:
     </th>
     <td>
-      {% if custom_domain %}
-        <a href="{{ custom_domain }}{{ test_list_instance.get_absolute_url }}"
-          title="Click to view on the site"
-        >
-          {{ custom_domain }}{{ test_list_instance.get_absolute_url }}
-        </a>
-      {% else %}
         <a href="{% if 'http' not in domain %}http://{% endif %}{{ domain }}{{ test_list_instance.get_absolute_url }}"
           title="Click to view on the site"
         >
           {% if 'http' not in domain %}http://{% endif %}{{ domain }}{{ test_list_instance.get_absolute_url }}
         </a>
-      {% endif %}
     </td>
   </tr>
   {% if test_list_instance.comments.exists %}
