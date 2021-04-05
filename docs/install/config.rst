@@ -370,8 +370,8 @@ warning message that will be shown when a performed test is at action level.
 If `DEFAULT_WARNING_MESSAGE = ""` then the default will be to not show any
 warning message when a test is at action level.
 
-FORCE_SCRIPT_NAME, LOGIN_EXEMPT_URLS, LOGIN_REDIRECT_URL, LOGIN_URL
-...................................................................
+FORCE_SCRIPT_NAME, LOGIN_REDIRECT_URL, LOGIN_URL, STATIC_URL, MEDIA_URL, UPLOADS_URL
+....................................................................................
 
 If you deploy QATrack+ at a non root url (e.g. http://5.5.5.5/qatrack/) then you need to
 set these settings as follows:
@@ -379,9 +379,20 @@ set these settings as follows:
 .. code-block:: python
 
     FORCE_SCRIPT_NAME = '/qatrack'
-    LOGIN_EXEMPT_URLS = [r"^qatrack/favicon.ico$", r"^qatrack/accounts/", r"qatrack/api/*", r"^qatrack/oauth2/*"]
     LOGIN_REDIRECT_URL = 'qatrack/'
     LOGIN_URL = "/qatrack/accounts/login/"
+
+If you've also changed the directory IIS is serving static media from, you may need to adjust the static and media
+urls as well:
+
+
+.. code-block:: python
+
+    # just an example, change according to how you have configured IIS
+    MEDIA_URL = '/qatrack_media/'
+    UPLOADS_URL = MEDIA_URL + 'uploads/'
+    STATIC_URL = '/qatrack_static/'
+
 
 MAX_TESTS_PER_TESTLIST
 ......................

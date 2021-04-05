@@ -29,12 +29,12 @@ If your QATrack+ server exists on a virtual machine, now would be a great time
 to take a snapshot of your VM in case you need to restore it later!  Consult
 with your IT department on how to do this.
 
-Ensure ODBC Driver 13.1 is installed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ensure ODBC Driver 17 (or 13.1) is installed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order for QATrack+ to connect to your database, you need to have the `ODBC
-Driver 13.1` installed.  Visit
-https://www.microsoft.com/en-us/download/details.aspx?id=53339 and download and
+Driver 17` installed.  Visit
+https://www.microsoft.com/en-us/download/details.aspx?id=56567 and download and
 install the driver (64 bit).
 
 Install Google Chrome
@@ -230,7 +230,7 @@ looks similar to this:
             'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
             'PORT': '',  # Set to empty string for default. Not used with sqlite3.
             'OPTIONS': {
-                'driver': 'ODBC Driver 13 for SQL Server'
+                'driver': 'ODBC Driver 17 for SQL Server'
             },
         },
         'readonly': {
@@ -241,7 +241,7 @@ looks similar to this:
             'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
             'PORT': '',  # Set to empty string for default. Not used with sqlite3.
             'OPTIONS': {
-                'driver': 'ODBC Driver 13 for SQL Server'
+                'driver': 'ODBC Driver 17 for SQL Server'
             },
         }
     }

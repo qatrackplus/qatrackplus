@@ -277,7 +277,7 @@ contents:
             'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
             'PORT': '',  # Set to empty string for default. Not used with sqlite3.
             'OPTIONS': {
-                'driver': 'ODBC Driver 13 for SQL Server'
+                'driver': 'ODBC Driver 17 for SQL Server'
             },
         },
     }

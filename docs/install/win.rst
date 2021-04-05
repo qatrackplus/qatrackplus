@@ -129,12 +129,12 @@ We're now ready to install all the libraries QATrack+ depends on.
 Creating a database with SQL Server
 -----------------------------------
 
-Ensure ODBC Driver 13.1 is installed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ensure ODBC Driver 17 (or 13.1) is installed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order for QATrack+ to connect to your database, you need to have the `ODBC
-Driver 13.1` installed.  Visit
-https://www.microsoft.com/en-us/download/details.aspx?id=53339 and download and
+Driver 17` installed.  Visit
+https://www.microsoft.com/en-us/download/details.aspx?id=56567 and download and
 install the driver (64 bit).
 
 
@@ -210,7 +210,7 @@ way you set up your database above.
             'HOST': '', # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
             'PORT': '', # Set to empty string for default. Not used with sqlite3.
             'OPTIONS': {
-                'driver': 'ODBC Driver 13 for SQL Server'
+                'driver': 'ODBC Driver 17 for SQL Server'
             },
         },
         'readonly': {
@@ -221,7 +221,7 @@ way you set up your database above.
             'HOST': '',
             'PORT': '',
             'OPTIONS': {
-                'driver': 'ODBC Driver 13 for SQL Server'
+                'driver': 'ODBC Driver 17 for SQL Server'
             },
         }
     }
