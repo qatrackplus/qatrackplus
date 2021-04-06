@@ -54,9 +54,6 @@ class QATrackUserAdmin(UserAdmin):
 
         return super(QATrackUserAdmin, self).has_change_permission(request, obj=obj)
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=obj, **kwargs)
         if obj and 'is_staff' in form.base_fields:
