@@ -119,14 +119,14 @@ class Fault(models.Model):
         User,
         on_delete=models.PROTECT,
         editable=False,
-        related_name="fault_events_created",
+        related_name="faults_created",
     )
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         editable=False,
-        related_name="fault_events_modified",
+        related_name="faults_modified",
     )
 
     objects = FaultManager()
