@@ -208,7 +208,6 @@ can take a few minutes!):
 
     cd C:\deploy\qatrackplus
     pip install -r requirements\win.txt
-    python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
 
 
 Configuration of QATrack+
@@ -296,6 +295,7 @@ PowerShell and click "Run as Administrator") and run the following commands:
     cd C:\deploy
     .\venvs\qatrack31\Scripts\Activate.ps1
     cd qatrackplus
+    python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
     cp deploy\win\QATrack31CherryPyService.py .
     python QATrack31CherryPyService.py --startup=auto install
     python QATrack31CherryPyService.py start

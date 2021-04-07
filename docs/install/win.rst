@@ -108,7 +108,6 @@ We're now ready to install all the libraries QATrack+ depends on.
     cd qatrackplus
     git checkout v3.1.0RC4
     pip install -r requirements\win.txt
-    python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
 
 
 .. warning::
@@ -275,6 +274,7 @@ PowerShell and click "Run as Administrator") and run the following commands:
     .\venvs\qatrack31\Scripts\Activate.ps1
     cd qatrackplus
     cp deploy\win\QATrack31CherryPyService.py .
+    python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
     python QATrack31CherryPyService.py --startup=auto install
     python QATrack31CherryPyService.py start
 
