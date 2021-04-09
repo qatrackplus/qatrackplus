@@ -95,10 +95,9 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
 
     def get_queryset(self, request):
 
-        qs = self.model.objects.get_queryset()
+        qs = self.model.all_objects.get_queryset()
 
-        # we need this from the superclass method
-        ordering = self.ordering or ()  # otherwise we might try to *None, which is bad ;)
+        ordering = self.ordering or ()
         if ordering:
             qs = qs.order_by(*ordering)
 
