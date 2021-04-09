@@ -1677,6 +1677,7 @@ class InProgress(TestListInstances):
         return _("In Progress Test Lists")
 
 
+@transaction.atomic
 def autosave(request):
 
     try:
