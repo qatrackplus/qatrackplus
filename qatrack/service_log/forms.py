@@ -351,9 +351,9 @@ class ServiceEventForm(BetterModelForm):
     serviceable_units = models.Unit.objects.filter(is_serviceable=True)
     unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=True)
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
-    service_area_field = forms.ModelChoiceField(queryset=models.ServiceArea.objects.all())
+    service_area_field = forms.ModelChoiceField(queryset=models.ServiceArea.objects.all(), required=True)
     service_area_field_fake = forms.ModelChoiceField(
-        queryset=models.ServiceArea.objects.all(), label='Service area', required=False
+        queryset=models.ServiceArea.objects.all(), label='Service area', required=True,
     )
     duration_service_time = HoursMinDurationField(
         label=_l('Service time'), required=False,
@@ -387,7 +387,8 @@ class ServiceEventForm(BetterModelForm):
     )
     service_type = forms.ModelChoiceField(
         queryset=models.ServiceType.objects.filter(is_active=True), label=_l('Service type'),
-        widget=ModelSelectWithOptionTitles(model=models.ServiceType, title_variable='description')
+        widget=ModelSelectWithOptionTitles(model=models.ServiceType, title_variable='description'),
+        required=True,
     )
     service_status = forms.ModelChoiceField(
         help_text=models.ServiceEvent._meta.get_field('service_status').help_text,
@@ -667,9 +668,6 @@ class ServiceEventForm(BetterModelForm):
         self.fields['problem_description'].widget.attrs['placeholder'] = 'required'
         self.fields['initiated_utc_field'].widget.attrs.update({'data-link': reverse('tli_select')})
 
-        self.fields['service_area_field'].required = not settings.SL_ALLOW_BLANK_SERVICE_AREA
-        self.fields['service_type'].required = not settings.SL_ALLOW_BLANK_SERVICE_TYPE
-
     def initial_values_helper(self):
 
         # if url param 'ib' is included. For prefilling initiated by field
@@ -796,15 +794,6 @@ class ServiceEventForm(BetterModelForm):
         if unit_field and "unit_field_fake" in self.errors:
             del self.errors['unit_field_fake']
 
-        if unit_field and settings.SL_ALLOW_BLANK_SERVICE_AREA and not self.cleaned_data.get('service_area_field'):
-            # If SA can be blank, then make sure appropriate SA and USA's exist
-            sa = models.ServiceArea.blank_service_area()
-            models.UnitServiceArea.objects.get_or_create(
-                unit=self.cleaned_data['unit_field'],
-                service_area_id=sa.id,
-            )
-            self.cleaned_data['service_area_field'] = sa
-
         if 'initiated_utc_field' in self._errors:
             del self._errors['initiated_utc_field']
 
@@ -839,19 +828,10 @@ class ServiceEventForm(BetterModelForm):
         if self.instance.pk and ('unit_field' not in self.cleaned_data or self.cleaned_data['unit_field'] is None):
             self.cleaned_data['unit_field'] = self.instance.unit_service_area.unit
 
-        if settings.SL_ALLOW_BLANK_SERVICE_TYPE and not self.cleaned_data.get('service_type'):
-            self.cleaned_data['service_type'] = models.ServiceType.blank_service_type()
-
         return self.cleaned_data
 
     def clean_unit_field_fake(self):
         return self.cleaned_data.get('unit_field')
-
-    def clean_service_type(self):
-        st = self.cleaned_data.get('service_type')
-        if not st:
-            return models.ServiceType.blank_service_type()
-        return st
 
 
 class ServiceEventDeleteForm(forms.ModelForm):

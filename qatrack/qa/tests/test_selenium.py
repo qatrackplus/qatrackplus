@@ -622,6 +622,8 @@ class TestPerformQC(BaseQATests):
         )
 
         sl_utils.create_service_event_status(is_default=True)
+        sl_utils.create_unit_service_area(self.utc.unit)
+        sl_utils.create_service_type()
 
     def test_ok_on_load(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
@@ -656,14 +658,6 @@ class TestPerformQC(BaseQATests):
         self.click_by_css_selector("body")
         time.sleep(0.2)
 
-    def fill_se(self):
-
-        time.sleep(0.2)
-        self.driver.execute_script("$('#id_datetime_service').focus()")
-        time.sleep(0.3)
-        self.click_by_css_selector(".today")
-        time.sleep(0.2)
-        self.send_keys("id_problem_description", "Problem!")
 
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
@@ -765,7 +759,6 @@ class TestPerformQC(BaseQATests):
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
         assert models.TestListInstance.objects.unreviewed().count() == 0
 
-    @override_settings(SL_ALLOW_BLANK_SERVICE_AREA=True, SL_ALLOW_BLANK_SERVICE_TYPE=True)
     def test_perform_and_initiate_se(self):
         """Ensure that we can go through a full perform->review cycle"""
 
@@ -775,7 +768,15 @@ class TestPerformQC(BaseQATests):
 
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
-        self.fill_se()
+        time.sleep(0.2)
+        self.driver.execute_script("$('#id_datetime_service').focus()")
+        time.sleep(0.3)
+        self.click_by_css_selector(".today")
+        time.sleep(0.2)
+        self.select_by_index("id_service_area_field_fake", 1)
+        time.sleep(0.2)
+        self.select_by_index("id_service_type", 1)
+        self.send_keys("id_problem_description", "Problem!")
         self.click("save-se")
         time.sleep(0.2)
         assert models.TestListInstance.objects.first().serviceevents_initiated.count() == 1

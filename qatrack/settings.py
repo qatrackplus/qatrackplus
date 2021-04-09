@@ -663,8 +663,6 @@ DEFAULT_AVAILABLE_TIMES = {
     'hours_saturday': datetime.timedelta(hours=0, minutes=0),
 }
 
-SL_ALLOW_BLANK_SERVICE_AREA = False
-SL_ALLOW_BLANK_SERVICE_TYPE = False
 PARTS_ALLOW_BLANK_PART_NUM = False
 
 TESTPACK_TIMEOUT = 30

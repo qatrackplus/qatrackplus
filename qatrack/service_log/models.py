@@ -42,8 +42,6 @@ LOG_TYPES = (
 
 class ServiceArea(models.Model):
 
-    BLANK_SA_NAME = "Not specified"
-
     name = models.CharField(
         _l("name"),
         max_length=32,
@@ -64,13 +62,6 @@ class ServiceArea(models.Model):
 
     def natural_key(self):
         return (self.name,)
-
-    @classmethod
-    def blank_service_area(cls):
-        """Create an actual ServiceArea to represent service events without
-        a specific service area selected"""
-        sa, __ = cls.objects.get_or_create(name=ServiceArea.BLANK_SA_NAME)
-        return sa
 
     def __str__(self):
         return self.name
@@ -105,18 +96,7 @@ class UnitServiceArea(models.Model):
         return '%s :: %s' % (self.unit.name, self.service_area.name)
 
 
-class ServiceTypeManager(NameNaturalKeyManager):
-
-    def get_queryset(self, *args, **kwargs):
-        qs = super().get_queryset(*args, **kwargs)
-        if settings.SL_ALLOW_BLANK_SERVICE_TYPE:
-            qs = qs.exclude(name=ServiceType.BLANK_ST_NAME)
-        return qs
-
-
 class ServiceType(models.Model):
-
-    BLANK_ST_NAME = "Not specified"
 
     name = models.CharField(
         _l("name"),
@@ -148,13 +128,6 @@ class ServiceType(models.Model):
 
     def natural_key(self):
         return (self.name,)
-
-    @classmethod
-    def blank_service_type(cls):
-        """Create an actual ServiceType to represent service events without
-        a specific service type selected"""
-        st, __ = cls.objects.get_or_create(name=ServiceType.BLANK_ST_NAME)
-        return st
 
     def __str__(self):
         return self.name

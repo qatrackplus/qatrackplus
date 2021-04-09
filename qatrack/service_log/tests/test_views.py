@@ -4,7 +4,6 @@ from django.contrib.auth.models import Permission, User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from django.test import RequestFactory, TestCase
-from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -353,8 +352,6 @@ class TestCreateServiceEvent(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
-    @override_settings(SL_ALLOW_BLANK_SERVICE_AREA=False)
-    @override_settings(SL_ALLOW_BLANK_SERVICE_TYPE=False)
     def test_required_fields(self):
 
         data = {
@@ -390,67 +387,6 @@ class TestCreateServiceEvent(TestCase):
             'service_status'
         ]:
             self.assertTrue(e in response.context_data['form'].errors)
-
-    @override_settings(SL_ALLOW_BLANK_SERVICE_AREA=True)
-    def test_blank_sa_ok(self):
-
-        data = {
-
-            'datetime_service': '',
-            'unit_field': '',
-            'unit_field_fake': '',
-            'service_area_field': '',
-            'service_type': '',
-            'problem_description': '',
-            'service_status': '',
-
-            'hours-INITIAL_FORMS': 0,
-            'hours-MAX_NUM_FORMS': 1000,
-            'hours-TOTAL_FORMS': 1,
-            'hours-MIN_NUM_FORMS': 0,
-            'parts-INITIAL_FORMS': 0,
-            'parts-MAX_NUM_FORMS': 1000,
-            'parts-TOTAL_FORMS': 1,
-            'parts-MIN_NUM_FORMS': 0,
-            'rtsqa-INITIAL_FORMS': 0,
-            'rtsqa-MAX_NUM_FORMS': 1000,
-            'rtsqa-TOTAL_FORMS': 1,
-            'rtsqa-MIN_NUM_FORMS': 0,
-        }
-
-        response = self.client.post(self.url, data=data)
-
-        assert 'service_area_field' not in response.context_data['form'].errors
-
-    @override_settings(SL_ALLOW_BLANK_SERVICE_TYPE=True)
-    def test_blank_st_ok(self):
-
-        data = {
-            'datetime_service': '',
-            'unit_field': '',
-            'unit_field_fake': '',
-            'service_area_field': '',
-            'service_type': '',
-            'problem_description': '',
-            'service_status': '',
-
-            'hours-INITIAL_FORMS': 0,
-            'hours-MAX_NUM_FORMS': 1000,
-            'hours-TOTAL_FORMS': 1,
-            'hours-MIN_NUM_FORMS': 0,
-            'parts-INITIAL_FORMS': 0,
-            'parts-MAX_NUM_FORMS': 1000,
-            'parts-TOTAL_FORMS': 1,
-            'parts-MIN_NUM_FORMS': 0,
-            'rtsqa-INITIAL_FORMS': 0,
-            'rtsqa-MAX_NUM_FORMS': 1000,
-            'rtsqa-TOTAL_FORMS': 1,
-            'rtsqa-MIN_NUM_FORMS': 0,
-        }
-
-        response = self.client.post(self.url, data=data)
-
-        assert 'service_type' not in response.context_data['form'].errors
 
     def test_unreviewed_rtsqa(self):
 
