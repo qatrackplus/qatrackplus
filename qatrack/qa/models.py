@@ -1588,6 +1588,18 @@ class TestList(TestCollectionInterface, TestPackMixin):
         )
         self.utcs.update(name=self.name)
 
+    def _full_delete(self):
+        """Deletes test list, sublists, all tests etc. Use with caution!"""
+
+        tests = self.all_tests()
+        TestListInstance.objects.filter(test_list=self).delete()
+        UnitTestInfo.objects.filter(test__in=tests).delete()
+        self.all_tests().delete()
+        for child in self.children.all():
+            child.delete()
+
+        self.delete()
+
     def get_absolute_url(self):
         return reverse("admin:qa_testlist_change", args=(self.pk,))
 
