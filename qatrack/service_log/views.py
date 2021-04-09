@@ -307,19 +307,21 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     tl_utcs = qa_models.UnitTestCollection.objects.filter(
                         unit=unit_field_value,
                         content_type=tl_ct,
-                        object_id__in=template.return_to_service_test_lists.values_list("pk", flat=True)
+                        object_id__in=template.return_to_service_test_lists.values_list("pk", flat=True),
+                        active=True,
                     )
                     tlc_ct = ContentType.objects.get_for_model(qa_models.TestListCycle)
                     tlc_utcs = qa_models.UnitTestCollection.objects.filter(
                         unit=unit_field_value,
                         content_type=tlc_ct,
-                        object_id__in=template.return_to_service_cycles.values_list("pk", flat=True)
+                        object_id__in=template.return_to_service_cycles.values_list("pk", flat=True),
+                        active=True,
                     )
                     initial_utcs = [{'unit_test_collection': rts_utc} for rts_utc in list(tl_utcs) + list(tlc_utcs)]
             except ObjectDoesNotExist:
                 pass
 
-        extra_rtsqa_forms = 2 if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
+        extra_rtsqa_forms = max(2, len(initial_utcs) + 1) if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
         if self.request.method == 'POST':
 
             context_data['hours_formset'] = forms.HoursFormset(
