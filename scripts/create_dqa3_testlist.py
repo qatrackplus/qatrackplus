@@ -19,11 +19,11 @@ def run(*args):
         mode, beam = args
 
     if nargs_wrong or mode not in ["db", "testpack"]:
-        print("Usage 'python manage.py runscript create_dqa3_testpack --script-args {testpack,db} {beam}")
+        print("Usage 'python manage.py runscript create_dqa3_testlist --script-args {testpack,db} {beam}")
         print("To create a test list:")
-        print("    'python manage.py runscript create_dqa3_testpack --script-args testpack 6X'")
+        print("    'python manage.py runscript create_dqa3_testlist --script-args testpack 6X'")
         print("To create a test pack:")
-        print("    'python manage.py runscript create_dqa3_testpack --script-args db 12E'")
+        print("    'python manage.py runscript create_dqa3_testlist --script-args db 12E'")
     else:
         create_dqa3(mode, beam)
 
