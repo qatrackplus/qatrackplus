@@ -6,6 +6,10 @@ Installing & Deploying QATrack+ with Docker
     This is a developmental install method. It is quite simple to get up and
     running but has not been battle tested in production yet!
 
+.. warning::
+
+    This install method has not yet been updated for version 3.1.X
+
 
 Prerequisites by OS
 -------------------
@@ -157,7 +161,7 @@ terminal.
 Git
 ...
 
-To retrieve files from bitbucket you will need git installed by running the
+To retrieve files from github you will need git installed by running the
 following:
 
 .. code-block:: console
@@ -196,7 +200,7 @@ the following:
 
 .. code-block:: console
 
-    git clone https://bitbucket.org/tohccmedphys/qatrackplus.git
+    git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
 
 
@@ -351,7 +355,7 @@ You can also single press `Ctrl + C` within the server terminal that you ran
 Update server
 ~~~~~~~~~~~~~
 
-To update the server from bitbucket run:
+To update the server from github run:
 
 .. code-block:: console
 

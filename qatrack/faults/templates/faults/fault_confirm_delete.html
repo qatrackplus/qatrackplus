@@ -1,0 +1,49 @@
+{% extends "site_base.html" %}
+{% load i18n %}
+{% load qa_tags %}
+{% load static %}
+
+{% block head_title %}Delete {{ object.occurrence }} {{ object.fault_type.code }}{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block extra_js %}
+{% endblock %}
+
+{% block require_javascript %}
+{% endblock require_javascript %}
+
+{% block body %}
+
+<div class="max-width-lg">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+
+          {% include "faults/_fault_details.html" %}
+
+          <div class="row">
+            <div class="col-md-12">
+              <form class="form form-horizontal text-right" action="" method="post">
+                {% csrf_token %}
+                <p>
+                  {% trans "Are you sure you want to <strong>permanently</strong> this fault?" %}
+                </p>
+                <button class="btn btn-danger btn-flat" type="submit"><i class="fa fa-trash-o"></i> Delete</button>
+                <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-default btn-flat">
+                  <i class="fa fa-ban"></i> Cancel
+                </a>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

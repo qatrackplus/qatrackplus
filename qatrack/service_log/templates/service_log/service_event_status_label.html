@@ -1,2 +1,10 @@
+{% load i18n %}
 
 <span class="label smooth-border" style="border-color: {{ colour }}; font-size: {{ size }}px;">{{ name }}</span>
+
+{% if se and perms.service_log.view_serviceevent %}
+  <a class="pull-right"
+    href="{% url 'sl_details' se.pk %}?next={{ request.path|cut:"data/" }}"
+    title="{% trans "Click to view details of this Service Event" %}"
+  ><i class="fa fa-search-plus"></i></a>
+{% endif %}

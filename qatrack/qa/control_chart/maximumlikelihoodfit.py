@@ -16,7 +16,7 @@ def gauss_fit(data, binwidth=None):
     if binwidth is None:
         norm = 1
     else:
-        norm = np.float(np.size(data) * binwidth)
+        norm = float(np.size(data) * binwidth)
     mean = np.mean(data)
     std = np.std(data)
 
@@ -33,7 +33,7 @@ def gamma_fit(data, binwidth):
     if binwidth is None:
         norm = 1
     else:
-        norm = np.float(np.size(data) * binwidth)
+        norm = float(np.size(data) * binwidth)
 
     # for large k where the Gaussian distribution is approached,
     # k = np.power(np.mean(data), 2.) / np.power(np.std(data), 2.)

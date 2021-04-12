@@ -1,13 +1,14 @@
 {% extends "site_base.html" %}
-{#{% load staticfiles %}#}
+{% load i18n %}
 {% load qa_tags %}
 {% load comments %}
+{% load static %}
 
-{% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
+{% block head_title %}Delete {{ object.test_list.name }} from {{ object.work_completed|date }}{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -64,29 +65,28 @@
                               <td>A total of {{ object.testinstance_set.count }} Test Instances</td>
                               <td><strong>Yes</strong></td>
                             </tr>
-                            {% if USE_SERVICE_LOG %}
-                                {% for rts in object.rtsqa_for_tli.all %}
-                                  <tr class="warning">
-                                    <td>Return To Service QA Assignment</td>
-                                    <td>{{ rts.unit_test_collection.name }} assigned by {{ rts.user_assigned_by }} on {{ rts.datetime_assigned }}</td>
-                                    <td>No</td>
-                                  </tr>
-                                {% endfor %}
-                                {% for se in object.serviceevents_initiated.all %}
-                                  <tr class="warning">
-                                    <td>Service Event</td>
-                                    <td>Area: {{ se.unit_service_area }}, Type: {{ se.service_type.name }}, Service Date {{ se.datetime_service |date }}</td>
-                                    <td>No</td>
-                                  </tr>
-                                {% endfor %}
-                            {% endif %}
+                            {% for rts in object.rtsqa_for_tli.all %}
+                              <tr class="warning">
+                                <td>Return To Service QC Assignment</td>
+                                <td>{{ rts.unit_test_collection.name }} assigned by {{ rts.user_assigned_by }} on {{ rts.datetime_assigned }}</td>
+                                <td>No</td>
+                              </tr>
+                            {% endfor %}
+                            {% for se in object.serviceevents_initiated.all %}
+                              <tr class="warning">
+                                <td>Service Event</td>
+                                <td>Area: {{ se.unit_service_area }}, Type: {{ se.service_type.name }}, Service Date {{ se.datetime_service |date }}</td>
+                                <td>No</td>
+                              </tr>
+                            {% endfor %}
                           </tbody>
                         </table>
                         <form class="form form-horizontal text-right" action="" method="post">{% csrf_token %}
                           <p>
-                            Are you sure you want to
-                            <strong>permanently</strong> delete {{ object.test_list.name }} from
-                            {{ object.work_completed|date }}?
+                            {% blocktrans with test_list_name=object.test_list.name work_completed=object.work_completed|date %}
+                              Are you sure you want to <strong>permanently</strong> delete {{ test_list_name }}
+                              from {{ work_completed }}?
+                            {% endblocktrans %}
                           </p>
                           <button class="btn btn-danger btn-flat" type="submit"><i class="fa fa-trash-o"></i> Delete</button>
                           <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-default btn-flat">

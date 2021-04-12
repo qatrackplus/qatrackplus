@@ -4,28 +4,34 @@ DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'qatrackplus',
-        'USER': '',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
-        'PASSWORD': '',
-        'HOST':
-            '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
+        'NAME': 'qatrackplus31',
+        'USER': 'qatrack',
+        'PASSWORD': 'qatrackpass',
+        'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+        'OPTIONS': {
+            'driver': 'ODBC Driver 13 for SQL Server'
+        },
+    },
+    'readonly': {
+        'ENGINE': 'sql_server.pyodbc',
+        'NAME': 'qatrackplus31',
+        'USER': 'qatrack_reports',
+        'PASSWORD': 'qatrackpass',
+        'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+        'OPTIONS': {
+            'driver': 'ODBC Driver 13 for SQL Server'
+        },
     }
 }
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', "YOUR_HOST_NAME_HERE"]
 
 # needs to be set to True when running behind reverse proxy (normal deploy)
 # set to False when not running behind reverse proxy
 # Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
 USE_X_FORWARDED_HOST = True
-
-# Set to False to disable the Service Log functionality
-USE_SERVICE_LOG = True
-
-# Set to False to disable the Parts Log functionality
-USE_PARTS = True
-
 
 # If you host your QATrack+ instance at a non root url (e.g. 12.345.678.9/qatrack)
 # then you need to uncomment (and possibly modify) the following settings
@@ -93,7 +99,7 @@ TEST_STATUS_DISPLAY_SHORT = {
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
-EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SENDER = "qatrack@yourmailhost.com"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"

@@ -1,12 +1,12 @@
 
 import re
 
+from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
-from django.contrib.auth.models import User
 
-re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
-color_re = re.compile('^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + ',(0(\.[0-9][0-9]?)?|1)\)$')
+re_255 = r'([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+color_re = re.compile(r'^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + r',(0(\.[0-9][0-9]?)?|1)\)$')
 validate_color = RegexValidator(color_re, 'Enter a valid color.', 'invalid')
 
 
@@ -64,7 +64,7 @@ class Issue(models.Model):
     issue_type = models.ForeignKey(IssueType, on_delete=models.PROTECT)
     issue_priority = models.ForeignKey(IssuePriority, null=True, on_delete=models.PROTECT)
     issue_tags = models.ManyToManyField(IssueTag, blank=True, help_text='If desired, add multiple tags to this issue')
-    issue_status = models.ForeignKey(IssueStatus, null=True, help_text='Current status of this issue')
+    issue_status = models.ForeignKey(IssueStatus, on_delete=models.PROTECT, null=True, help_text='Current status of this issue')
     user_submitted_by = models.ForeignKey(User, on_delete=models.PROTECT)
 
     datetime_submitted = models.DateTimeField()

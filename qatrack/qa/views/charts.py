@@ -5,7 +5,6 @@ import json
 import textwrap
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
 from django.db.utils import ProgrammingError
@@ -19,13 +18,17 @@ import numpy
 
 from qatrack.qa.control_chart import control_chart
 from qatrack.qa.utils import SetEncoder
+from qatrack.qatrack_core.dates import (
+    format_as_date,
+    format_datetime,
+    parse_date,
+)
 from qatrack.service_log import models as sl_models
-from qatrack.units.models import Unit
+from qatrack.units.models import Site, Unit
 
 from .. import models
 
 numpy.seterr(all='raise')
-
 
 
 JSON_CONTENT_TYPE = "application/json"
@@ -112,7 +115,11 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'categories': models.Category.objects.all(),
             'statuses': models.TestInstanceStatus.objects.all(),
             'service_types': sl_models.ServiceType.objects.all(),
-            'units': Unit.objects.values('pk', 'name', 'active'),
+            'sites': [{
+                "pk": "",
+                "name": "Other"
+            }] + list(Site.objects.values('pk', 'name')),
+            'units': Unit.objects.values('pk', 'name', 'active', 'site_id'),
             'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),
             'active_unit_test_list': self.get_active_test_lists()
         }
@@ -178,12 +185,12 @@ class ChartView(PermissionRequiredMixin, TemplateView):
     def set_tests(self):
         """self.tests is set to all tests that are chartable"""
 
-        self.tests = models.Test.objects.order_by(
-            "name"
-        ).filter(
-            chart_visibility=True
-        ).values(
-            "pk", "category", "name", "description",
+        self.tests = models.Test.objects.order_by("name").filter(chart_visibility=True).values(
+            "pk",
+            "category",
+            "name",
+            "display_name",
+            "description",
         )
 
 
@@ -213,7 +220,7 @@ class BaseChartView(View):
         max_len = 0
         cols = []
 
-        r = lambda ref: ref if ref is not None else ""
+        r = lambda ref: ref if ref is not None else ""  # noqa: E731
 
         # collect all data in 'date/value/ref triplets
         for name, data in self.plot_data['series'].items():
@@ -255,8 +262,9 @@ class BaseChartView(View):
         d_string = self.request.GET.get('date_range', '').replace('%20', ' ')
 
         if d_string:
-            d_from = timezone.datetime.strptime(d_string.split(' - ')[0], '%d %b %Y')
-            d_to = timezone.datetime.strptime(d_string.split(' - ')[1], '%d %b %Y')
+            from_, to = d_string.split(' - ')
+            d_from = parse_date(from_)
+            d_to = parse_date(to)
         else:
             d_from = default_from
             d_to = default_to
@@ -281,7 +289,26 @@ class BaseChartView(View):
 
             use_percent = has_percent_tol or (has_no_tol and ref_is_not_zero)
 
-            if use_percent:
+            if ti.unit_test_info.test.type == models.WRAPAROUND:
+
+                t = ti.unit_test_info.test
+                ref = ti.reference.value
+
+                if ti.value > ref:
+                    wrap_distance = (t.wrap_high - ti.value) + (ref - t.wrap_low)
+                    direct_distance = ti.value - ref
+                    direct_closer = direct_distance <= wrap_distance
+                    value = direct_distance if direct_closer else -wrap_distance
+                elif ti.value < ref:
+                    wrap_distance = (ti.value - t.wrap_low) + (t.wrap_high - ref)
+                    direct_distance = ref - ti.value
+                    direct_closer = direct_distance <= wrap_distance
+                    value = -direct_distance if direct_closer else wrap_distance
+                else:
+                    value = ti.value
+                ref_value = 0
+
+            elif use_percent:
 
                 value = 100 * (ti.value - ti.reference.value) / ti.reference.value
                 ref_value = 0.
@@ -292,8 +319,28 @@ class BaseChartView(View):
             value = ti.value
             ref_value = ti.reference.value if ti.reference is not None else None
 
+        comment = ""
+        tli_comments = list(ti.test_list_instance.comments.all())
+        if ti.comment or tli_comments:
+
+            comments = []
+            if ti.comment:
+                comments.append(
+                    "<strong>%s - %s:</strong> %s" %
+                    (format_as_date(ti.created), ti.created_by.username, ti.comment)
+                )
+            for c in sorted(tli_comments, key=lambda c: c.submit_date):
+                user = c.user or ti.created_by
+                comments.append(
+                    "<strong>%s - %s:</strong> %s" % (format_as_date(c.submit_date), user.username, c.comment)
+                )
+            comment = '<br/>'.join(comments)
+
         point = {
-            "act_high": None, "act_low": None, "tol_low": None, "tol_high": None,
+            "act_high": None,
+            "act_low": None,
+            "tol_low": None,
+            "tol_high": None,
             "date": self.convert_date(timezone.make_naive(ti.work_completed, local_tz)),
             "display_date": ti.work_completed,
             "value": value,
@@ -301,8 +348,12 @@ class BaseChartView(View):
             "reference": ref_value,
             "orig_reference": ti.reference.value if ti.reference else None,
             'test_instance_id': ti.id,
-            'test_list_instance': {'date': ti.test_list_instance.created, 'id': ti.test_list_instance.id}
-
+            'test_instance_comment': comment,
+            'test_list_instance': {
+                'date': ti.test_list_instance.created,
+                'id': ti.test_list_instance.id,
+                'flagged': ti.test_list_instance.flagged
+            }
         }
 
         if ti.tolerance is not None and ref_value is not None:
@@ -321,10 +372,7 @@ class BaseChartView(View):
     def get_plot_data(self):
         """Retrieve all :model:`qa.TestInstance` data requested."""
 
-        self.plot_data = {
-            'series': {},
-            'events': []
-        }
+        self.plot_data = {'series': {}, 'events': []}
 
         now = timezone.now()
         dates = self.get_date(now, now - timezone.timedelta(days=365))
@@ -341,7 +389,7 @@ class BaseChartView(View):
         statuses = self.request.GET.getlist("statuses[]", [])
         service_types = self.request.GET.getlist("service_types[]", [])
 
-        show_events = self.request.GET.get('show_events') == 'true' and settings.USE_SERVICE_LOG
+        show_events = self.request.GET.get('show_events') == 'true'
         # se_types = self.request.GET.getlist('service_types[]', [])
 
         if not (tests and test_lists and units and statuses):
@@ -369,6 +417,9 @@ class BaseChartView(View):
                 ).select_related(
                     "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
                     'test_list_instance', 'test_list_instance__test_list'
+                ).prefetch_related(
+                    "test_list_instance__comments",
+                    "test_list_instance__comments__user",
                 ).order_by(
                     "work_completed"
                 )
@@ -391,10 +442,12 @@ class BaseChartView(View):
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
                 ).select_related(
-                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status", 'test_list_instance'
-                ).order_by(
-                    "work_completed"
-                )
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                    'test_list_instance'
+                ).prefetch_related(
+                    "test_list_instance__comments",
+                    "test_list_instance__comments__user",
+                ).order_by("work_completed")
                 if tis:
                     tli = tis.first().test_list_instance
                     name = "%s :: %s%s" % (u.name, t.name, " (relative to ref)" if relative else "")
@@ -413,10 +466,13 @@ class BaseChartView(View):
                 datetime_service__lte=to_date,
                 service_type__in=service_types
             ).select_related(
-                'unit_service_area__unit', 'unit_service_area__service_area', 'service_type', 'test_list_instance_initiated_by'
+                'unit_service_area__unit',
+                'unit_service_area__service_area',
+                'service_type',
+                'test_list_instance_initiated_by',
             ).prefetch_related(
                 'returntoserviceqa_set',
-                'returntoserviceqa_set__test_list_instance'
+                'returntoserviceqa_set__test_list_instance',
             ).order_by('datetime_service')
 
             for se in ses:
@@ -441,7 +497,10 @@ class BaseChartView(View):
                     'work_description': se.work_description,
                     'problem_description': se.problem_description,
                     'unit': {'id': se.unit_service_area.unit_id, 'name': se.unit_service_area.unit.name},
-                    'service_area': {'id': se.unit_service_area.service_area_id, 'name': se.unit_service_area.service_area.name},
+                    'service_area': {
+                        'id': se.unit_service_area.service_area_id,
+                        'name': se.unit_service_area.service_area.name,
+                    },
                 })
 
         # self.plot_data['test_list_names'] = test_list_names
@@ -472,7 +531,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         """look for a number in GET and convert it to the given datatype"""
         try:
             v = dtype(self.request.GET.get(param, default))
-        except:
+        except:  # noqa: E507
             v = default
         return v
 
@@ -494,14 +553,15 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             self.get_number_from_request("width", 700) / dpi,
             self.get_number_from_request("height", 480) / dpi,
         )
-        canvas = FigureCanvas(fig)
+        FigureCanvas(fig)
         dates, data = [], []
 
         if context["plot_data"]['series'] and list(context["plot_data"]['series'].values()):
             name, series = list(context["plot_data"]['series'].items())[0]
             points = series['series_data']
-            if points:
-                dates, data = list(zip(*[(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]))
+            non_null_points = [(ti["date"], ti["value"]) for ti in points if ti['value'] is not None]
+            if non_null_points:
+                dates, data = list(zip(*non_null_points))
 
         n_baseline_subgroups = self.get_number_from_request("n_baseline_subgroups", 2, dtype=int)
         n_baseline_subgroups = max(2, n_baseline_subgroups)
@@ -518,7 +578,9 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
             fig.savefig(buf, format="png")
         else:
             try:
-                control_chart.display(fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates)
+                control_chart.display(
+                    fig, numpy.array(data), subgroup_size, n_baseline_subgroups, fit=include_fit, dates=dates
+                )
                 fig.autofmt_xdate()
                 fig.savefig(buf, format="png")
             except (RuntimeError, OverflowError, TypeError) as e:  # pragma: nocover
@@ -538,7 +600,6 @@ class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
 
     def render_to_response(self, context):
         import csv
-        from django.utils import formats
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="qatrackexport.csv"'
 
@@ -552,10 +613,11 @@ class ExportCSVView(PermissionRequiredMixin, JSONResponseMixin, BaseChartView):
         writer.writerow(header1)
         writer.writerow(header2)
 
+        tz = timezone.get_current_timezone()
         for row_set in context['rows']:
             row = []
             for date, val, ref in row_set:
-                date = formats.date_format(date, "DATETIME_FORMAT") if date is not "" else ""
+                date = format_datetime(date.astimezone(tz)) if date else ""
                 row.extend([date, val, ref])
             writer.writerow(row)
 

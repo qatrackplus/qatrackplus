@@ -1,0 +1,28 @@
+{% extends "explorer/base.html" %}
+{% load i18n %}
+
+{% block sql_explorer_content %}
+  <form method="post">{% csrf_token %}
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="form-group">
+          <div class="alert alert-info">
+            {% blocktrans with query_title=object.title %}
+              Are you sure you want to delete "{{ query_title }}" ?
+            {% endblocktrans %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="form-group">
+          <button type="submit" class="btn btn-danger">
+            <i class="fa fa-trash"></i>
+            {% trans "Delete Query" %}
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+{%  endblock %}

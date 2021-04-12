@@ -189,7 +189,7 @@ your other test values automatically populated as well as the image shown:
 
     Test list values after file upload
 
-Click *Submit QA Results* and you are done!
+Click *Submit QC Results* and you are done!
 
 Performing the Test List via the API
 ------------------------------------

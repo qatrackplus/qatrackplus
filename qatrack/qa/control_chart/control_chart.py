@@ -1,15 +1,16 @@
 # range (c) Dan La Russa & Randy Taylor
 # functions for pre-formatted control chart
 import datetime
-import numpy as np
-import matplotlib.gridspec as gridspec
+
 import matplotlib.dates
+from matplotlib.font_manager import FontProperties
+import matplotlib.gridspec as gridspec
+from matplotlib.ticker import NullFormatter
+import numpy as np
+
+from . import histogram as htg
 from . import leastsquaresfit as lsqfit
 from . import maximumlikelihoodfit as mlefit
-from . import histogram as htg
-
-from matplotlib.ticker import NullFormatter
-from matplotlib.font_manager import FontProperties
 
 # Set some values:
 
@@ -34,9 +35,10 @@ XPOS_MULT = 0.7  # adjust the relative x-position of histogram strings
 YPOS_MULT = 0.1  # adjust the relative y-position of histogram string (cntrl chrt only)
 
 # Histogram limits:
-NBIN_THRESH = 10 # minimum number of bins.
-                 # Note that not all bins will have events, and so
-                 # there still may be fewer than NBIN_THRESH displayed
+# minimum number of bins.
+# Note that not all bins will have events, and so
+# there still may be fewer than NBIN_THRESH displayed
+NBIN_THRESH = 10
 
 # Formats for raw data:
 BC = '#36648B'  # baseline data color
@@ -142,10 +144,10 @@ def display(fig, x, sgSize, baseline, dates=None, fit=False):
 
     # process data for plotting
     sg, xbar, sgNum = get_subgroups(x, sgSize, dates)  # sg = subgroup of size sgSize
-    r = get_ranges(sg, sgSize)                 # sgNum = index of subgroup
-                                               # xbar = mean of a sub group, sg
-                                               # range data
-
+    # sgNum = index of subgroup
+    # xbar = mean of a sub group, sg
+    # range data
+    r = get_ranges(sg, sgSize)
     # calculate control chart limits
     xbar_thresh, range_thresh = get_param(sg, xbar, r, baseline, sgSize)
 
@@ -161,7 +163,7 @@ def display(fig, x, sgSize, baseline, dates=None, fit=False):
     if fit:
         try:
             cc_fits = generate_fit(xbar, axHistD, freq, bins, binwidth)
-        except:
+        except Exception:
             # unable to find valid fit
             cc_fits = []
     else:
@@ -180,7 +182,7 @@ def display(fig, x, sgSize, baseline, dates=None, fit=False):
     if fit:
         try:
             rc_fits = generate_fit(r, axHistR, freq, bins, binwidth)
-        except:
+        except Exception:
             rc_fits = []
     else:
         rc_fits = []
@@ -431,7 +433,7 @@ def get_param(sg, xbar, r, bl, n):
 
     Ac = [np.mean(xbar[0: bl]), np.mean(xbar[0: bl])]
 
-    bias_corr = np.float(len(r[0:bl])) / np.float(len(r[0:bl]) - 1)
+    bias_corr = float(len(r[0:bl])) / float(len(r[0:bl]) - 1)
     Rc = [np.mean(r[0: bl]) * bias_corr, np.mean(r[0: bl])*bias_corr]
 
     Afactor = 3.0 * Rc[0] / (d2 * np.sqrt(n))
@@ -459,9 +461,9 @@ def get_param(sg, xbar, r, bl, n):
 
 def get_dvalues(n):
 
-    dtwo = [1.128, 1.128, 1.693, 2.059, 2.326, 2.534, 2.704, 2.847, 2.970, 3.078, 3.173, 3.258, 3.336, 3.407, 3.472, 3.735, 3.931, 4.086, 4.322, 4.498, 5.015]
+    dtwo = [1.128, 1.128, 1.693, 2.059, 2.326, 2.534, 2.704, 2.847, 2.970, 3.078, 3.173, 3.258, 3.336, 3.407, 3.472, 3.735, 3.931, 4.086, 4.322, 4.498, 5.015]  # noqa: #501
 
-    dthree = [0.8525, 0.8525, 0.8884, 0.8798, 0.8641, 0.8480, 0.8332, 0.8198, 0.8078, 0.7971, 0.7873, 0.7785, 0.7704, 0.7630, 0.7562, 0.7287, 0.7084, 0.6927, 0.6692, 0.6521, 0.6052]
+    dthree = [0.8525, 0.8525, 0.8884, 0.8798, 0.8641, 0.8480, 0.8332, 0.8198, 0.8078, 0.7971, 0.7873, 0.7785, 0.7704, 0.7630, 0.7562, 0.7287, 0.7084, 0.6927, 0.6692, 0.6521, 0.6052]  # noqa: #501
 
     ndata = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 40, 50, 100]
 

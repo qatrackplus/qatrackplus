@@ -16,5 +16,6 @@ router.register(r'grouplinker', views.GroupLinkerViewSet)
 router.register(r'grouplinkerinstance', views.GroupLinkerInstanceViewSet)
 
 urlpatterns = [
+    url(r"^searcher/service_event/$", views.service_event_searcher, name='service_event_searcher'),
     url(r'^', include(router.urls)),
 ]

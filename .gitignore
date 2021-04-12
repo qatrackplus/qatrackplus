@@ -36,7 +36,7 @@ emails/
 env
 fixtures/dev
 ldap.debug
-lib
+/lib
 lib64
 qatrack/local_settings.py
 qatrack/local_test_settings.py
@@ -48,6 +48,7 @@ qatrack/accel_migration_tool/local_accel_settings.py
 qatrack/assets
 qatrack/cache/cache_data
 qatrack/media/uploads
+qatrack/media/reports
 qatrack/qa/static/css/site.css
 qatrack/qatrack_core/static/qatrack_core/css/site.css
 qatrack/static
@@ -55,3 +56,5 @@ qatrack/wsgi.py
 questions_*
 src/*.egg-info
 tmp/
+db/
+./generate_ro_privileges.sql

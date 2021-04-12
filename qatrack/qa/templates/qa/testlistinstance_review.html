@@ -1,13 +1,15 @@
 {% extends "site_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block head_title %}{{tli.work_completed|date}} {{tli.test_list.name}} Details{% endblock %}
@@ -22,520 +24,609 @@
             var rtsqa_form = "{{ rtsqa_form|safe }}";
             var from_se = "{{ from_se|safe }}" === "True";
             var tli_id = "{{ test_list_instance.id|safe }}";
-
         </script>
     {% endif %}
 {% endblock extra_js %}
 
 {% block body %}
-    {% with tli=test_list_instance %}
-        <form class="review-test-list" id="qa-review" method="POST" action="">
-            {% csrf_token %}
-            {{ form }}
+  {% with tli=test_list_instance %}
+  <form class="review-test-list" id="qa-review" method="POST" action="">
+    {% csrf_token %}
+    {{ form }}
 
-                <div id="box-details" class="row">
-                    <div class="col-md-12">
-                        <div class="box">
+    <div id="box-details" class="row">
+      <div class="col-md-12">
+        <div class="box">
 
-                            <div class="box-header">
-                                <h3 class="box-title">
-                                    <i class="fa fa-asterisk fa-fw" aria-hidden="true"></i>
-                                    {{tli.work_completed|date}} {{tli.test_list.name}} Details
-                                </h3>
-                            </div>
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-asterisk fa-fw" aria-hidden="true"></i>
+              {{tli.work_completed|date}} {{tli.test_list.name}} Details
+            </h3>
+          </div>
 
-                            <div class="box-body">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <dl class="dl-horizontal">
-                                            <dt>Unit :</dt>
-                                            <dd>{{tli.unit_test_collection.unit.name}}</dd>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-md-4">
+                <dl class="dl-horizontal">
+                  <dt>{% trans "Unit" %}:</dt>
+                  <dd>{{tli.unit_test_collection.unit.name}}</dd>
 
-                                            {% if tli.unit_test_collection.content_type.id == cycle_ct %}
-                                                <dt>Test List Cycle :</dt>
-                                                <dd>{{tli.unit_test_collection.tests_object.name}}</dd>
-                                            {% endif %}
+                  {% if tli.unit_test_collection.content_type.id == cycle_ct %}
+                    <dt>{% trans "Test List Cycle" %}:</dt>
+                    <dd>{{tli.unit_test_collection.tests_object.name}}</dd>
+                  {% endif %}
 
-                                            <dt>Test List :</dt>
-                                            <dd>
-                                                {{tli.test_list.name}}
-                                            </dd>
+                  <dt>{% trans "Test List" %}:</dt>
+                  <dd>
+                    {{tli.test_list.name}}
+                  </dd>
 
-                                            <dt>Performed By :</dt>
-                                            <dd>{{tli.created_by}}</dd>
+                  <dt>{% trans "Performed By" %}:</dt>
+                  <dd>{{tli.created_by}}</dd>
 
-                                            {% comment %}<dt>Actions:</dt>
-                                            <dd>
+                  <dt>{% trans "User Key" %}:</dt>
+                  <dd>
+                    {% if tli.user_key %}
+                      {{tli.user_key }}
+                    {% else %}
+                      <em>{% trans "Not set" %}</em>
+                    {% endif %}
+                  </dd>
 
-                                            </dd>{% endcomment %}
-                                        </dl>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <dl class="dl-horizontal">
+                </dl>
+              </div>
+              <div class="col-md-4">
+                <dl class="dl-horizontal">
 
-                                            <dt>Work Started :</dt>
-                                            <dd>{{tli.work_started}}</dd>
+                  <dt>{% trans "Work Started" %}:</dt>
+                  <dd>{{tli.work_started}}</dd>
 
-                                            <dt>Work Completed :</dt>
-                                            <dd>
-                                                {% if tli.in_progress %}
-                                                    <span class="label label-warning">
-                                                        <em>In Progress</em>
-                                                    </span>
-                                                {% else %}
-                                                    <span class="label label-success">
-                                                        {{tli.work_completed}}
-                                                    </span>
-                                                {% endif %}
-                                            </dd>
+                  <dt>{% trans "Work Completed" %}:</dt>
+                  <dd>
+                    {% if tli.in_progress %}
+                      <span class="label label-warning">
+                        <em>{% trans "In Progress" %}</em>
+                      </span>
+                    {% else %}
+                      <span class="label label-success">
+                        {{tli.work_completed}}
+                      </span>
+                    {% endif %}
+                  </dd>
 
-                                            <dt>Duration :</dt>
-                                            <dd>
-                                                {% if not tli.in_progress%}
-                                                    {{tli.duration|as_time_delta}}
-                                                {% else %}
-                                                    <em>In Progress</em>
-                                                {% endif %}
-                                            </dd>
+                  <dt>{% trans "Duration" %}:</dt>
+                  <dd>
+                    {% if not tli.in_progress%}
+                      {{tli.duration|as_time_delta}}
+                    {% else %}
+                    <em>{% trans "In Progress" %}</em>
+                    {% endif %}
+                  </dd>
 
-                                            <dt>Last Modification :</dt>
-                                            <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
+                  <dt>Previous Due Date:</dt>
+                  <dd>
+                    {% if tli.due_date %}
+                      <abbr title="Due date when this test list was performed">{{ tli.due_date }}</abbr>
+                    {% else %}
+                      <em>No due date set</em>
+                    {% endif %}
+                  </dd>
 
-                                            <dt>Last Review:</dt>
-                                            <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}}{% endif %}</dd>
+                  <dt>Scheduled:</dt>
+                  <dd>
+                    {% if tli.include_for_scheduling %}
+                      <abbr title="This instance is included when calculating due dates">Yes</abbr>
+                    {% else %}
+                      <abbr title="This instance is not considered when calculating due dates">No</abbr>
+                    {% endif %}
+                  </dd>
 
-                                       </dl>
-                                    </div>
-                                    <div class="col-md-4">
-                                        {% if USE_SERVICE_LOG and not from_se %}
-                                            <div class="row">
-                                                <label class="col-md-8">
-                                                    {% if perms.service_log.add_serviceevent %}
-                                                        <div class="btn-group">
-                                                            <a class="btn btn-default btn-xs btn-flat hover-parent"
-                                                               title="Create new service event initiated by this test list"
-                                                               href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}"
-                                                            >
-                                                                <i class="fa fa-stack fa-fw">
-                                                                    <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                                                    <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
-                                                                </i>
-                                                                {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
-                                                            </a>
-                                                            <a class="btn btn-flat btn-xs btn-default new-tab-link"
-                                                               href="{% url 'sl_new' %}?ib={{ tli.pk }}"
-                                                               target="_blank"
-                                                               title="New tab: Create new service event initiated by this test list"
-                                                            >
-                                                                <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                            </a>
-                                                        </div>
-                                                    {% endif %}
-                                                    {% if service_events_ib|length > 0 %}Service events initiated:{% endif %}
-                                                </label>
-                                                <div class="col-md-4">
-                                                    {% for se in service_events_ib %}
-                                                        {% if perms.service_log.view_serviceevent %}
-                                                            <div class="btn-group">
-                                                                <a href="{% url 'sl_details' pk=se.id %}"
-                                                                   class="btn btn-xs btn-flat service-event-btn"
-                                                                   data-bgcolour="{{ se.service_status.colour }}"
-                                                                   title="View service event"
-                                                                >{{ se.id }}</a>
-                                                                <a class="btn btn-flat btn-xs btn-default new-tab-link service-event-btn"
-                                                                   href="{% url 'sl_details' pk=se.id %}"
-                                                                   target="_blank"
-                                                                   data-bgcolour="{{ se.service_status.colour }}"
-                                                                   title="New tab: view service event"
-                                                                >
-{#                                                                    <i class="fa fa-external-link-square" aria-hidden="true"></i>#}
-                                                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                                </a>
-                                                            </div>
-                                                        {% else %}
-                                                            <div>{{ se.id }}</div>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </div>
-                                            </div>
+                  <dt>{% trans "Last Modification" %}:</dt>
+                  <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
 
-                                            {% if service_events_rtsqa|length > 0 %}
-                                                <div class="row margin-top-10">
-                                                    <label class="col-md-8">
-                                                        RTS QA for Service Events:
-                                                    </label>
-                                                    <div class="col-md-4">
-                                                        {% for se in service_events_rtsqa %}
-                                                            {% if perms.service_log.view_serviceevent %}
-                                                                <div class="btn-group">
-                                                                    <a href="{% url 'sl_details' pk=se.id %}"
-                                                                       class="btn btn-xs btn-flat btn-default service-event-btn"
-                                                                       data-bgcolour="{{ se.service_status.colour }}"
-                                                                       title="View service event"
-                                                                    >{{ se.id }}</a>
-                                                                    <a class="btn btn-xs new-tab-link btn-flat btn-default service-event-btn"
-                                                                       href="{% url 'sl_details' pk=se.id %}"
-                                                                       target="_blank"
-                                                                       data-bgcolour="{{ se.service_status.colour }}"
-                                                                       title="New tab: view service event"
-                                                                    >
-{#                                                                        <i class="fa fa-external-link-square" aria-hidden="true"></i>#}
-                                                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                                    </a>
-                                                                </div>
-                                                            {% else %}
-                                                                <div>{{ se.id }}</div>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    </div>
-                                                </div>
-                                            {% endif %}
-                                        {% endif %}
+                  <dt>{% trans "Last Review" %}:</dt>
+                  <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}}{% endif %}</dd>
 
-                                    </div>
-                                </div>
-                                {% if tli.test_list.description %}
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <dl class="dl-horizontal">
-                                                <dt>Description:</dt>
-                                            </dl>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            {% spaceless %}
-                                                <div class="col-lg-12">
-                                                    <div class="text-display pre">{{tli.test_list.description.strip|safe}}</div>
-                                                </div>
-                                            {% endspaceless %}
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
+                </dl>
+              </div>
+              <div class="col-md-4">
+                {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
+                  <div class="row">
+                    <div class="col-sm-12">
+                      {% include "qa/testlistinstance_pdf_button.html" with tli=tli %}
                     </div>
-                </div>
-
-                <div id="box-review" class="row">
-                    <div class="col-md-12">
-                        <div class="box">
-
-                            <div class="box-header">
-                                <h3 class="box-title">
-                                    <i class="fa fa-search-plus fa-fw" aria-hidden="true"></i>
-                                    Review {{tli.work_completed|date}} {{tli.test_list.name}}
-                                </h3>
-                                {% if cycle_name %}
-                                    <div><em>From cycle : {{ cycle_name }}</em></div>
-                                {% endif %}
-                            </div>
-
-                            <div class="box-body">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <table id="review-table" class="table table-bordered table-responsive table-condensed" >
-                                            <thead>
-                                                <tr>
-                                                    <th>Test<div></div></th>
-                                                    <th class="review-value">Value</th>
-                                                    <th class="review-ref">Reference</th>
-                                                    {% if REVIEW_DIFF_COL %}
-                                                        <th class="review-diff">Difference</th>
-                                                    {% endif %}
-                                                    <th class="qa-comment">Comment</th>
-                                                    <th class="qa-history">History<br/>
-                                                        {% for d in history_dates %}
-                                                            <span class="history-label" title="{{d}}">{{d|date:"dMy"}}</span>
-                                                        {% endfor %}
-                                                        <div></div>
-                                                    </th>
-                                                    <th class="review-status">
-                                                        Status<br/>
-
-                                                        {% if perms.qa.can_review %}
-                                                        <div class="input-append">
-                                                        <select name="bulk-status" id="bulk-status" class="input-medium">
-                                                            <option value="" selected="selected">---</option>
-
-                                                            {% for status in statuses %}
-                                                                <option title="{% if status.description %}{{status.description}}{% else %}No description available{%endif%}" value="{{status.pk}}">{{status.name}}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        </div>
-                                                        {% endif %}
-                                                    </th>
-                                                    {% if perms.qa.can_review %}
-                                                    <th class="review-selected">Selected<br/><input class="test-selected-toggle" type="checkbox" checked="checked"/></th>
-                                                    {% endif %}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {{ formset.management_form }}
-
-                                                {% for ti_form in formset %}
-                                                    {% with borders.starts|lookup:forloop.counter0 as delim %}
-                                                      {% if delim and delim.class == "sublist" %}
-                                                        <tr class="{{delim.class }}">
-                                                          <td colspan="2">
-                                                            {% if delim.description %}
-                                                              <a class="show-sublist-details" href="#">
-                                                                {{ delim.name }}
-                                                              </a>
-                                                            {% else %}
-                                                                {{ delim.name }}
-                                                            {% endif %}
-                                                        </td>
-                                                        <td colspan="{% qa_table_colspan perms offset=2 %}">&nbsp;</td>
-                                                      </tr>
-                                                      {% endif %}
-                                                    {% endwith %}
-
-                                                    {% with ti=ti_form.instance test=ti_form.instance.unit_test_info.test %}
-                                                    <tr class="qa-valuerow" data-prefix="{{ ti_form.prefix }}">
-                                                        <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
-                                                        <td class="bar-container test-name"><div class="comment-bar"><div class="padding-left-5 padding-bottom-8">{{ti.unit_test_info.test.name}}</div></div></td>
-                                                        <td class="review-value">
-
-                                                            {% if test.is_upload %}
-                                                                {{ti.value_display|safe|truncatechars_html:9}}
-                                                            {% else %}
-                                                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
-                                                                    {% with ti.pass_fail as status %}
-                                                                        {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
-                                                                            {% if status == 'tolerance' %}
-                                                                                <i class="pull-left icon-warning-sign"></i>
-                                                                            {% elif status == 'action' %}
-                                                                                <i class="pull-left icon-minus-sign"></i>
-                                                                            {% endif %}
-                                                                        {% endif %}
-                                                                    {% endwith %}
-                                                                    {{ti.value_display|safe}}
-                                                                </span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td class="review-ref">
-                                                            {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
-                                                        </td>
-                                                        {% if REVIEW_DIFF_COL %}
-                                                            <td class="review-diff">
-                                                                {% if not ti.string_value %}{{ti.diff_display}}{% endif %}
-                                                            </td>
-                                                        {% endif %}
-                                                        <td class="qa-showcmt">
-                                                            {% if ti.comment %}
-                                                                <a href="#!" class="revealcomment" title="{{ ti.comment }}"><i class="fa fa-commenting"></i></a>
-                {#                                            {% else %}#}
-                {#                                                <em>No comment</em>#}
-                                                            {% endif %}
-                                                        </td>
-                                                        <td class="qa-history">
-                                                            {% history_display ti_form.history test_list_instance.unit_test_collection.unit test_list_instance.test_list ti.unit_test_info.test unit_test_collection.frequency %}
-                                                        </td>
-                                                        {% if perms.qa.can_review %}
-                                                        {# note we render this manually to prevent the Django ORM from running a query for every form #}
-                                                        <td class="review-status">
-                                                            <select name="testinstance_set-{{forloop.counter0}}-status" id="id_testinstance_set-{{forloop.counter0}}-status" class="input-medium">
-                                                                {% for status in statuses %}
-                                                                    <option title="{% if status.description %}{{status.description}}{% else %}No description available{%endif%}" value="{{status.pk}}" {% if ti.status == status %}selected="selected"{% endif %}>{{status.name}}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </td>
-                                                        {% else %}
-                                                        <td class="review-status">
-                                                            {{ti.status.name}}
-                                                        </td>
-                                                        {% endif %}
-                                                        {% if perms.qa.can_review %}
-                                                        <td class="review-selected"><input class="test-selected" type="checkbox" checked="checked"/></td>
-                                                        {% endif %}
-                                                    </tr>
-                                                    {% if ti.comment %}
-                                                        <tr class="qa-comment no-hover row-{{ ti_form.prefix }}">
-                                                            <td colspan="{% qa_table_colspan perms %}"  class="">
-                                                                <div class="comment-container comment-bar">
-                                                                    <div class="comment-div">
-                                                                        {{ ti.comment }}
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    {% endif %}
-
-                                                    {% if ti.attachment_set.exists %}
-                                                        <tr class="qa-attach no-hover">
-                                                            <td>{{ti.unit_test_info.test.name}} Attachments</td>
-                                                            <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
-                                                                <ul>
-                                                                    {% for attach in ti.attachment_set.all %}
-                                                                        <li>{{ attach | attachment_link }}</li>
-                                                                    {% endfor %}
-                                                                </ul>
-                                                            </td>
-                                                        </tr>
-                                                    {% endif %}
-                                                    {%endwith%}
-
-                                                    {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
-                                                      {% with borders.starts|lookup:forloop.counter as delim %}
-                                                        {% if not delim or delim.class != "sublist" %}
-                                                        <tr class="end-sublist">
-                                                            <td colspan="{% qa_table_colspan perms %}"></td>
-                                                        </tr>
-                                                        {% endif %}
-                                                      {% endwith %}
-                                                    {% endif %}
-                                                {% endfor %}
-                                                {% if tli.attachment_set.exists %}
-                                                    <tr>
-                                                        <td><strong>Attachments</strong></td>
-
-                                                        <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
-                                                            {% for attach in test_list_instance.attachment_set.all %}
-                                                                <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
-                                                            {% endfor %}
-                                                        </td>
-                                                    </tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="row pad"></div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        {% if from_se %}
-
-                                            {% if perms.qa.can_review %}
-                                                <button id="submit-review-ajax"
-                                                     class="btn btn-primary btn-flat pull-right margin-r-5"
-                                                     title="Click to update the test instance statuses"
-                                                >
-                                                    <i class="fa fa-save"></i>
-                                                    Update Statuses
-                                                </button>
-                                            {% endif %}
-
-                                        {% else %}
-                                            {% if perms.qa.can_review %}
-                                                <button id="submit-review"
-                                                        type="submit"
-                                                        class="btn btn-primary btn-flat pull-right margin-r-5"
-                                                        title="Click to update the test instance statuses"
-                                                >
-                                                    <i class="fa fa-save"></i>
-                                                    Update Test Statuses
-                                                </button>
-                                            {% endif %}
-                                            {% if instance.in_progress %}
-                                                <a class="btn btn-primary btn-flat pull-right margin-r-5"
-                                                  title="Continue this list"
-                                                  href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}"
-                                                >
-                                                  <i class="fa fa-play"></i>
-                                                  Continue
-                                                </a>
-                                            {% elif perms.qa.change_testlistinstance %}
-                                                <a class="btn btn-default btn-flat pull-right margin-r-5"
-                                                  title="Edit this list"
-                                                  href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >
-                                                  <i class="fa fa-edit"></i>
-                                                  Edit
-                                                </a>
-                                            {% endif %}
-                                            {% if perms.qa.can_view_history %}
-                                                <a class="btn btn-default btn-flat margin-r-5 pull-right"
-                                                   href="{% url 'review_utc' test_list_instance.unit_test_collection_id %}"
-                                                   title="Click to view other instances of {{ test_list_instance.test_list.name }} on {{ test_list_instance.unit_test_collection.unit.name }}"
-                                                  >
-                                                  <i class="fa fa-list"></i>
-                                                  History
-                                                </a>
-                                            {% endif %}
-                                            {% if perms.qa.delete_testlistinstance %}
-                                              <a class="btn btn-danger btn-flat margin-r-5"
-                                                title="This will redirect you to the admin site where you can permanently delete this qa session"
-                                                href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
-                                                <i class="fa fa-trash-o"></i>
-                                                Delete
-                                              </a>
-                                            {% endif %}
-                                        {% endif %}
-
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="qa-images" class="box-footer">
-                                {% for ti_form in formset %}
-                                    {% with test=ti_form.instance.unit_test_info.test ti=ti_form.instance %}
-                                        {% if test.display_image %}
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <strong><p>Images for {{ test }} Test: </p></strong>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div id="{{ test.slug }}">
-                                                    {% for attach in ti.attachment_set.all %}
-                                                        {% if attach.is_image %}
-                                                            {{ attach | ti_attachment_img }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endwith %}
-                                {% endfor %}
-                            </div>
-
+                  </div>
+                {% endif %}
+                {% if not from_se %}
+                  <div class="row">
+                    <label class="col-md-8">
+                      {% if perms.service_log.add_serviceevent %}
+                        <div class="btn-group">
+                          <a class="btn btn-default btn-xs btn-flat hover-parent"
+                              title="Create new service event initiated by this test list"
+                              href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}"
+                          >
+                            <i class="fa fa-stack fa-fw">
+                              <i class="fa fa-wrench fa-stack-custom-main"></i>
+                              <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
+                            </i>
+                            {% if service_events_ib|length == 0 %}{% trans "Initiate Service Event" %}{% endif %}
+                          </a>
+                          <a class="btn btn-flat btn-xs btn-default new-tab-link"
+                              href="{% url 'sl_new' %}?ib={{ tli.pk }}"
+                              target="_blank"
+                              title="{% trans "New tab: Create new service event initiated by this test list" %}"
+                          >
+                            <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                          </a>
                         </div>
+                      {% endif %}
+                      {% if service_events_ib|length > 0 %}{% trans "Service events initiated" %}:{% endif %}
+                    </label>
+                    <div class="col-md-4">
+                      {% for se in service_events_ib %}
+                        {% if perms.service_log.view_serviceevent %}
+                          <div class="btn-group">
+                            <a href="{% url 'sl_details' pk=se.id %}"
+                                class="btn btn-xs btn-flat service-event-btn"
+                                data-bgcolour="{{ se.service_status.colour }}"
+                                title="{% trans "View service event" %}"
+                            >{{ se.id }}</a>
+                            <a class="btn btn-flat btn-xs btn-default new-tab-link service-event-btn"
+                                href="{% url 'sl_details' pk=se.id %}"
+                                target="_blank"
+                                data-bgcolour="{{ se.service_status.colour }}"
+                                title="{% trans "New tab: view service event" %}"
+                            >
+                              <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                            </a>
+                          </div>
+                        {% else %}
+                          <div>{{ se.id }}</div>
+                        {% endif %}
+                      {% endfor %}
                     </div>
-                </div>
+                  </div>
 
-            </form>
-
-        <div id="box-comments" class="row">
-            <div class="col-sm-12">
-                <div class="box">
-                    <div class="box-header">
-                        <h3 class="box-title">
-                            <i class="fa fa-commenting-o fa-fw"></i>
-                            Comments
-                        </h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                {% render_comment_list for tli %}
+                  {% if service_events_rtsqa|length > 0 %}
+                    <div class="row margin-top-10">
+                      <label class="col-md-8">
+                        {% trans "RTS QC for Service Events" %}:
+                      </label>
+                      <div class="col-md-4">
+                        {% for se in service_events_rtsqa %}
+                          {% if perms.service_log.view_serviceevent %}
+                            <div class="btn-group">
+                              <a href="{% url 'sl_details' pk=se.id %}"
+                                  class="btn btn-xs btn-flat btn-default service-event-btn"
+                                  data-bgcolour="{{ se.service_status.colour }}"
+                                  title="{% trans "View service event" %}"
+                              >{{ se.id }}</a>
+                              <a class="btn btn-xs new-tab-link btn-flat btn-default service-event-btn"
+                                  href="{% url 'sl_details' pk=se.id %}"
+                                  target="_blank"
+                                  data-bgcolour="{{ se.service_status.colour }}"
+                                  title="{% trans "New tab: view service event" %}"
+                              >
+                                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                              </a>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                {% get_comment_form for tli as form %}
-
-                                    <form id="comment-form" method="post">
-                                        {% csrf_token %}
-                                        <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
-                                        {{ form.object_pk }}
-                                        {{ form.content_type }}
-                                        {{ form.security_hash }}
-                                        {{ form.timestamp }}
-                                        <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
-
-                                    </form>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">Post Comment</button>
-                                        </div>
-                                    </div>
-                            </div>
-                        </div>
+                          {% else %}
+                            <div>{{ se.id }}</div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
                     </div>
-                </div>
+                  {% endif %}
+                {% endif %}
+
+              </div>
             </div>
+            {% if tli.test_list.description %}
+              <div class="row">
+                <div class="col-md-4">
+                  <dl class="dl-horizontal">
+                    <dt>{% trans "Description" %}:</dt>
+                  </dl>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  {% spaceless %}
+                    <div class="col-lg-12">
+                      <div class="text-display pre">{{tli.test_list.description.strip|safe|linebreaks}}</div>
+                    </div>
+                  {% endspaceless %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
         </div>
-    {% endwith %}
-{% endblock %}
+      </div>
+    </div>
 
+    <div id="box-review" class="row">
+      <div class="col-md-12">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-search-plus fa-fw" aria-hidden="true"></i>
+              {% trans "Review" %} {{tli.work_completed|date}} {{tli.test_list.name}}
+            </h3>
+              {% if cycle_name %}
+              <div><em>{% trans "From cycle" %}: {{ cycle_name }}</em></div>
+              {% endif %}
+          </div>
+
+          <div class="box-body">
+            <div class="row">
+              <div class="col-md-12">
+                <table id="review-table" class="table table-bordered table-responsive table-condensed" >
+                  <thead>
+                    <tr>
+                      <th>{% trans "Test" %}<div></div></th>
+                      <th class="review-value">{% trans "Value" %}</th>
+                      <th class="review-ref">{% trans "Reference" %}</th>
+                      {% if REVIEW_DIFF_COL %}
+                        <th class="review-diff">{% trans "Difference" %}</th>
+                      {% endif %}
+                      <th class="qa-comment">{% trans "Comment" %}</th>
+                      <th class="qa-history">
+                        {% trans "History" %}<br/>
+                        {% for tli_url, d in history_dates %}
+                          <a href="{{ tli_url}}" title="{% blocktrans %}Click to view this test list instance performed at {{ d }}{% endblocktrans %}">
+                            <span class="label history-label">{{d|date:"dMy"}}</span>
+                          </a>
+                        {% endfor %}
+                        <div></div>
+                      </th>
+                      <th class="review-status">
+                        {% trans "Status" %}<br/>
+
+                        {% if perms.qa.can_review %}
+                          <div class="input-append">
+                            <select id="top-status-select" name="bulk-status" class="input-medium bulk-status">
+                              <option value="" selected="selected">---</option>
+                              {% for status in statuses %}
+                                <option title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}" value="{{status.pk}}">{{status.name}}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                        {% endif %}
+                      </th>
+                      {% if perms.qa.can_review %}
+                        <th class="review-selected">{% trans "Selected" %}<br/><input class="test-selected-toggle" type="checkbox" checked="checked"/></th>
+                      {% endif %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ formset.management_form }}
+
+                    {% for ti_form in formset %}
+                      {% with borders.starts|lookup:forloop.counter0 as delim %}
+                        {% if delim and delim.class == "sublist" %}
+                          <tr class="{{delim.class }}">
+                            <td colspan="2">
+                              {% if delim.description %}
+                                <a class="show-sublist-details" href="#">
+                                  {{ delim.name }}
+                                </a>
+                              {% else %}
+                                  {{ delim.name }}
+                              {% endif %}
+                          </td>
+                          <td colspan="{% qa_table_colspan perms offset=2 %}">&nbsp;</td>
+                        </tr>
+                        {% endif %}
+                      {% endwith %}
+
+                      {% with ti=ti_form.instance test=ti_form.instance.unit_test_info.test %}
+                        <tr class="qa-valuerow" data-prefix="{{ ti_form.prefix }}">
+                          <input type="hidden" name="testinstance_set-{{forloop.counter0}}-id" value="{{ti.pk}}" id="id_testinstance_set-{{forloop.counter0}}-id">
+                          <td class="bar-container test-name" title="{{ ti.unit_test_info.test.name }}"><div class="comment-bar"><div class="padding-left-5 padding-bottom-8" >{{ ti.unit_test_info.test.display }}</div></div></td>
+                          <td class="review-value">
+
+                              {% with vd=ti.value_display %}
+                                <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{vd|slice:"100"}}{% elif ti.diff_display %}{% trans "Diff from ref" %}={{ti.diff_display}}{%else%}{% trans "No ref/tol set" %}{% endif %}">
+                                  {% with ti.pass_fail as status %}
+                                    {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                        {% if status == 'tolerance' %}
+                                            <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
+                                        {% elif status == 'action' %}
+                                            <i class="pull-left fa fa-ban" aria-hidden="true"></i>
+                                        {% elif status == 'ok' %}
+                                            <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
+                                        {% elif status == 'not_done' %}
+                                            <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                  {% endwith %}
+                                  {% if test.is_upload %}
+                                      <a href="#!" style="color: white" class="revealtext" title="{% trans "Click to show full results" %}"><i class="fa fa-book"></i></a>
+                                  {% elif vd|length > 100 %}
+                                    <a href="#!" style="color: white" class="revealtext" title="{{ vd|slice:"100" }}...{% trans "Click to show full text" %}"><i class="fa fa-book"></i></a>
+                                  {% else %}
+                                    {{ti.value_display|safe}}
+                                  {% endif %}
+                                </span>
+                              {% endwith %}
+                          </td>
+                          <td class="review-ref">
+                            {% reference_tolerance_span ti.unit_test_info.test ti.reference ti.tolerance%}
+                          </td>
+                          {% if REVIEW_DIFF_COL %}
+                            <td class="review-diff">
+                              {% if not ti.string_value %}{{ti.diff_display}}{% endif %}
+                            </td>
+                          {% endif %}
+                          <td class="qa-showcmt">
+                            {% if ti.comment %}
+                              <a href="#!" class="revealcomment" title="{{ ti.comment }}"><i class="fa fa-commenting"></i></a>
+                            {% endif %}
+                          </td>
+                          <td class="qa-history">
+                            {% history_display ti_form.history test_list_instance.unit_test_collection.unit test_list_instance.test_list ti.unit_test_info.test unit_test_collection.frequency %}
+                          </td>
+                          {% if perms.qa.can_review %}
+                            {# note we render this manually to prevent the Django ORM from running a query for every form #}
+                            <td class="review-status">
+                                <select name="testinstance_set-{{forloop.counter0}}-status" id="id_testinstance_set-{{forloop.counter0}}-status" class="input-medium">
+                                  {% for status in statuses %}
+                                    <option
+                                      title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}"
+                                      value="{{ status.pk }}"
+                                      {% if ti.status == status %}selected="selected"{% endif %}
+                                    >
+                                      {{ status.name }}
+                                    </option>
+                                  {% endfor %}
+                                </select>
+                            </td>
+                          {% else %}
+                          <td class="review-status">
+                            {{ ti.status.name }}
+                          </td>
+                          {% endif %}
+                          {% if perms.qa.can_review %}
+                            <td class="review-selected"><input class="test-selected" type="checkbox" checked="checked"/></td>
+                          {% endif %}
+                        </tr>
+                        {% if ti.comment %}
+                          <tr class="qa-comment no-hover row-{{ ti_form.prefix }}">
+                            <td colspan="{% qa_table_colspan perms %}"  class="">
+                              <div class="comment-container comment-bar">
+                                <div class="comment-div">
+                                  {{ ti.comment }}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        {% endif %}
+                        {% if not test.is_upload and ti.string_value|length > 100 %}
+                          <tr class="qa-text-display no-hover row-{{ ti_form.prefix }} hidden">
+                            <td colspan="{% qa_table_colspan perms %}"  class="">
+                            <pre style="">
+                              {{ ti.value_display }}
+                            </pre>
+                            </td>
+                          </tr>
+                        {% elif test.is_upload %}
+                          <tr class="qa-text-display no-hover row-{{ ti_form.prefix }} hidden">
+                            <td colspan="{% qa_table_colspan perms %}"  class="">
+                            <pre style="">
+                              {% firstof ti.json_value|pprint "" %}
+                            </pre>
+                            </td>
+                          </tr>
+                        {% endif %}
+
+                        {% if ti.attachment_set.exists %}
+                          <tr class="qa-attach no-hover">
+                            <td>{{ti.unit_test_info.test}} {% trans "Attachments" %}</td>
+                            <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
+                              <ul>
+                                {% for attach in ti.attachment_set.all %}
+                                  <li>{{ attach | attachment_link }}</li>
+                                {% endfor %}
+                            </ul>
+                            </td>
+                          </tr>
+                        {% endif %}
+                      {%endwith%}
+
+                      {% if not forloop.last and borders.ends|lookup:forloop.counter0 %}
+                        {% with borders.starts|lookup:forloop.counter as delim %}
+                          {% if not delim or delim.class != "sublist" %}
+                            <tr class="end-sublist">
+                              <td colspan="{% qa_table_colspan perms %}"></td>
+                            </tr>
+                          {% endif %}
+                        {% endwith %}
+                      {% endif %}
+                    {% endfor %}
+                    {% if tli.attachment_set.exists %}
+                      <tr>
+                        <td><strong>{% trans "Attachments" %}</strong></td>
+
+                        <td id="tli-attachment-names" colspan="{% qa_table_colspan perms offset=2 %}">
+                          {% for attach in test_list_instance.attachment_set.all %}
+                            <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}
+                          {% endfor %}
+                        </td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th>{% trans "Test" %}<div></div></th>
+                      <th class="review-value">{% trans "Value" %}</th>
+                      <th class="review-ref">{% trans "Reference" %}</th>
+                      {% if REVIEW_DIFF_COL %}
+                      <th class="review-diff">{% trans "Difference" %}</th>
+                      {% endif %}
+                      <th class="qa-comment">{% trans "Comment" %}</th>
+                      <th class="qa-history">
+                        {% for tli_url, d in history_dates %}
+                          <a href="{{ tli_url}}" title="{% blocktrans %}Click to view this test list instance performed at {{ d }}{% endblocktrans %}">
+                            <span class="label history-label">{{d|date:"dMy"}}</span>
+                          </a>
+                        {% endfor %}
+                        <div></div>
+                      </th>
+                      <th class="review-status">
+                        {% trans "Status" %}<br/>
+
+                        {% if perms.qa.can_review %}
+                        <div class="input-append">
+                          <select id="bot-status-select" name="bulk-status" class="input-medium bulk-status">
+                            <option value="" selected="selected">---</option>
+                            {% for status in statuses %}
+                            <option title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}" value="{{status.pk}}">{{status.name}}</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                        {% endif %}
+                      </th>
+                      {% if perms.qa.can_review %}
+                        <th class="review-selected">{% trans "Selected" %}<br/><input class="test-selected-toggle" type="checkbox" checked="checked"/></th>
+                      {% endif %}
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            <div class="row pad"></div>
+            <div class="row">
+              <div class="col-md-12">
+                {% if from_se %}
+                  {% if perms.qa.can_review %}
+                    <button id="submit-review-ajax"
+                          class="btn btn-primary btn-flat pull-right margin-r-5"
+                          title="{% trans "Click to update the test instance statuses" %}"
+                    >
+                      <i class="fa fa-save"></i>
+                      {% trans "Update Statuses" %}
+                    </button>
+                  {% endif %}
+                {% else %}
+                  {% if perms.qa.can_review %}
+                    <button id="submit-review"
+                            type="submit"
+                            class="btn btn-primary btn-flat pull-right margin-r-5"
+                            title="{% trans "Click to update the test instance statuses" %}"
+                    >
+                      <i class="fa fa-save"></i>
+                      {% trans "Update Test Statuses" %}
+                    </button>
+                  {% endif %}
+                  {% if instance.in_progress %}
+                    <a class="btn btn-primary btn-flat pull-right margin-r-5"
+                      title="{% trans "Continue this list" %}"
+                      href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}"
+                    >
+                      <i class="fa fa-play"></i>
+                      {% trans "Continue" %}
+                    </a>
+                  {% elif perms.qa.change_testlistinstance %}
+                    <a class="btn btn-default btn-flat pull-right margin-r-5"
+                       title="{% trans "Edit this list" %}"
+                      href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >
+                      <i class="fa fa-edit"></i>
+                      {% trans "Edit" %}
+                    </a>
+                  {% endif %}
+                  {% if perms.qa.can_view_history %}
+                    <a class="btn btn-default btn-flat margin-r-5 pull-right"
+                        href="{% url 'review_utc' test_list_instance.unit_test_collection_id %}"
+                        {% blocktrans with test_list_name=test_list_instance.test_list.name unit_name=test_list_instance.unit_test_collection.unit.name %}
+                        title="Click to view other instances of {{ test_list_name  }} on {{ unit_name }}"
+                        {% endblocktrans %}
+                    >
+                      <i class="fa fa-list"></i>
+                      {% trans "History" %}
+                    </a>
+                  {% endif %}
+                  {% if perms.qa.delete_testlistinstance %}
+                    <a class="btn btn-danger btn-flat margin-r-5"
+                       title="{% trans "This will redirect you to the admin site where you can permanently delete this qa session" %}"
+                      href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
+                      <i class="fa fa-trash-o"></i>
+                      {% trans "Delete" %}
+                    </a>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div id="qa-images" class="box-footer">
+            {% for ti_form in formset %}
+              {% with test=ti_form.instance.unit_test_info.test ti=ti_form.instance %}
+                {% if test.display_image %}
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <strong><p>{% trans "Images for " %}{{ test }}: </p></strong>
+                    </div>
+                  </div>
+                    <div class="row">
+                      <div id="{{ test.slug }}">
+                        {% for attach in ti.attachment_set.all %}
+                          {% if attach.is_image %}
+                            {{ attach | ti_attachment_img }}
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                {% endif %}
+              {% endwith %}
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+  <div id="box-comments" class="row">
+    <div class="col-sm-12">
+      <div class="box">
+        <div class="box-header">
+          <h3 class="box-title">
+            <i class="fa fa-commenting-o fa-fw"></i>
+            {% trans "Comments" %}
+          </h3>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-md-12">
+              {% render_comment_list for tli %}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              {% get_comment_form for tli as form %}
+
+              <form id="comment-form" method="post">
+                {% csrf_token %}
+                <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                {{ form.object_pk }}
+                {{ form.content_type }}
+                {{ form.security_hash }}
+                {{ form.timestamp }}
+                <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="{% trans "Add comment" %}" class="margin-bottom-20 form-control autosize"></textarea>
+              </form>
+              <div class="row">
+                <div class="col-md-12">
+                  <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">{% trans "Post Comment" %}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endwith %}
+{% endblock %}

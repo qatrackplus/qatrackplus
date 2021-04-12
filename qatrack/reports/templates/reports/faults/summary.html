@@ -1,0 +1,42 @@
+{% extends base_template %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-12">
+    {% for site, faults in sites_data %}
+      <h2>{% trans "Site" %} :: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
+      <table class="table table-condensed table-bordered {% if not include_description %}table-striped{% endif %}">
+        <thead>
+          <tr class="{% if include_description %}active{% endif %}">
+            <th style="width: 25%">{% trans "Occurred" %}</th>
+            <th style="width: 25%">{% trans "Unit" %}<div></div></th>
+            <th style="width: 25%">{% trans "Fault Types" %}</th>
+            <th style="width: 25%">{% trans "Modality" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fault in faults %}
+
+            <tr class="page">
+              <td>
+                <a href="{{ fault.link }}" title="{% trans "Click to view this fault" %}" target="_blank">
+                  {{ fault.occurred }}
+                </a>
+              </td>
+              <td>{{ fault.unit_name }}</td>
+              <td>{{ fault.fault_type }}</td>
+              <td>{{ fault.modality }}</td>
+            </tr>
+
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

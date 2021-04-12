@@ -4,7 +4,7 @@ A Complete Service Log Example
 ==============================
 
 In this tutorial we will walk through a complete example of using Service Log
-to record an output adjustment that is made after morning QA revealed that the
+to record an output adjustment that is made after morning QC revealed that the
 output was too high.
 
 Scenario
@@ -20,15 +20,15 @@ of action levels and treatment can not begin:
 
     Output is outside of action levels
 
-The therapist measuring output uses the QATrack+ contacts information to call the 
+The therapist measuring output uses the QATrack+ contacts information to call the
 on on-call physcist and informs them of the issue:
 
 
 .. figure:: images/contacts.png
-    :alt: Contacts displayed while performing QA
+    :alt: Contacts displayed while performing QC
 
-    Contacts displayed while performing QA
-    
+    Contacts displayed while performing QC
+
 The physicist must now restrict the machine and perform an output adjustment
 working alongside the field service engineer (FSE).
 
@@ -52,7 +52,7 @@ The physicist then enters the basic information about this service event:
     Basic information about the Service Event
 
 and then, since this SE was related to a specific :term:`Test List Instance`,
-they choose the related Test List, and specific Test List Instance from the 
+they choose the related Test List, and specific Test List Instance from the
 `Initiated By` drop down menu and popup:
 
 
@@ -60,14 +60,14 @@ they choose the related Test List, and specific Test List Instance from the
     :alt: Selecting Initiated By Test List
 
     Selecting Initiated By Test List
-    
+
 
 .. figure:: images/initiated_by_popup.png
     :alt: Selecting Initiated By Test List Instance
 
     Selecting Initiated By Test List Instance
-    
-    
+
+
 .. figure:: images/initiated_by_selected.png
     :alt: Selected Initiated By Test List Instance
 
@@ -84,41 +84,41 @@ Status to  `Service In Progress`:
     Service In Progress status
 
 
-Next the physicist selects the Return To Service QA that will be required before
+Next the physicist selects the Return To Service QC that will be required before
 the Unit can be released for clinical duty:
 
 
 .. figure:: images/rtsqa_selected.png
-    :alt: Return To Service QA Selected
+    :alt: Return To Service QC Selected
 
-    Return To Service QA Selected
+    Return To Service QC Selected
 
 The physicist now clicks `Save` and the are ready to make the output
 adjustment. Note that the Service Log Dashboard will now show 1 incomplete
-:term:`Return to Service QA` and 1 Service Event needing review.
+:term:`Return To Service QC` and 1 Service Event needing review.
 
 
 .. figure:: images/dash.png
     :alt: Service log dashboard
 
     Service log dashboard
-    
+
 
 
 After The Adjustment
 --------------------
 
-The physicist and FSE have now made the adjustment and will now, perform the 
-Return to Service QA. The physicist clicks the  `Incomplete Return To Service QA` button (shown above)
-and then clicks `Perform` next to the RTS QA list item:
+The physicist and FSE have now made the adjustment and will now, perform the
+Return to Service QC. The physicist clicks the  `Incomplete Return To Service QC` button (shown above)
+and then clicks `Perform` next to the RTS QC list item:
 
 
 .. figure:: images/rtsqa_list.png
-    :alt: Return To Service QA Listing
+    :alt: Return To Service QC Listing
 
-    Return To Service QA Listing
+    Return To Service QC Listing
 
-After the RTSQA is performed the physicist returns to Edit the Service Event so
+After the RTSQC is performed the physicist returns to Edit the Service Event so
 they can complete the entry of how much time it took and who was involved:
 
 
@@ -148,48 +148,48 @@ The `Service Event Status` can now be set to `Service Complete`:
 
 and `Save`'d again.
 
-The Dashboard will now show that there is one Return To Service QA, and 1
+The Dashboard will now show that there is one Return To Service QC, and 1
 Service Event awaiting review:
-    
+
 
 .. figure:: images/dash_after_rts.png
-    :alt: Dashboard after Return To Service QA
+    :alt: Dashboard after Return To Service QC
 
-    Dashboard after Return To Service QA
-    
+    Dashboard after Return To Service QC
 
-Reviewing The RTSQA and Service Event
+
+Reviewing The RTSQC and Service Event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The physicist now goes back to the `Edit` page for the Service Event. Note that
 an attempt to save the Service Event with the Service Event Status to
-`Approved` before the RTSQA has been approved will result in an error!
+`Approved` before the RTSQC has been approved will result in an error!
 
 
 .. figure:: images/cant_approve_yet.png
-    :alt: Can't approve a Service Event without reviewing the RTS QA first
+    :alt: Can't approve a Service Event without reviewing the RTS QC first
 
-    Can't approve a Service Event without reviewing the RTS QA first
+    Can't approve a Service Event without reviewing the RTS QC first
 
-Instead, the physicist first clicks through the `Review` link for the RTSQA and 
-:ref:`reviews <qa_review>` the QA:
+Instead, the physicist first clicks through the `Review` link for the RTSQC and
+:ref:`reviews <qa_review>` the QC:
 
 
 .. figure:: images/review_link.png
-    :alt: Review RTSQA Link
+    :alt: Review RTSQC Link
 
-    Review RTSQA Link
+    Review RTSQC Link
 
-after the RTSQA Test List Instance is reviewed, the physicist is directed back
+after the RTSQC Test List Instance is reviewed, the physicist is directed back
 to the `Edit` page for the Service Event where you can see the updated `Review
-Status` of the RTSQA:
-    
+Status` of the RTSQC:
+
 
 
 .. figure:: images/all_reviewed.png
-    :alt: All RTS QA reviewed
+    :alt: All RTS QC reviewed
 
-    All RTS QA reviewed
+    All RTS QC reviewed
 
 The Service Event Status can now be set to `Approved` and this Service Event is
 now complete!

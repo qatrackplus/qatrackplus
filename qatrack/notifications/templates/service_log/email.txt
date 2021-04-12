@@ -1,0 +1,46 @@
+QATrack+ Service Event Notice
+=============================
+
+Hello,
+
+{% if service_log.is_new %}The following Service Event was just created:{% else %}The following Service Event was just updated:{% endif %}
+
+Service Event: {{ domain }}{{ service_event.get_absolute_url }}{% if service_log.is_new %}
+Service Date: {{ service_event.datetime_service | date }}
+Unit &amp; Service Area: {{ service_event.unit_service_area }}
+Service Type: {{ service_event.service_type }}
+Service Status: {{ service_event.service_status }}{% if service_event.test_list_instance_initiated_by_id %}
+Initiated By: {{ service_event.test_list_instance_initiated_by.unit_test_collection.name }} - {{ domain }}{{ service_event.test_list_instance_initiated_by.get_absolute_url }}
+{% endif %}
+Problem Description
+-------------------
+{{ service_event.problem_description }}
+
+Work Description
+----------------
+{{ service_event.work_description }}
+{% else %}
+Change Type: {{ service_log.get_log_type_display }}
+
+{% if service_log.extra_info|length > 0 %}
+Changes
+-------
+
+{% if service_log.extra_info.status_change %}
+Field Changed: Status
+Old Value: {{ service_log.extra_info.status_change.old }}
+New Value: {{ service_log.extra_info.status_change.new }}
+{% endif %}
+{% for key, val in service_log.extra_info.other_changes.items %}
+{% if key == 'a_deleted' %}
+    Attachments Deleted: {% for d in val.old %}{{ d }}{% if not forloop.last %}, {% endif %}{% endfor %}
+{% elif key == 'a_added' %}
+    Attachments Added: {% for a in val.new %}{{ a }}{% if not forloop.last %}, {% endif %}{% endfor %}
+{% else %}
+    Field Changed: {{ key }}
+    Old Value: {{ val.old }}
+    New Value: {{ val.new }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}

@@ -1,0 +1,5 @@
+{% load i18n %}
+{% load qa_tags %}
+
+<abbr class="might-overflow" title="{{ work_description }}" data-title="{% trans "Work Description" %}">{{ work_description|truncatechars:30 }}</abbr>
+

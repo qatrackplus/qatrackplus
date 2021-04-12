@@ -1,0 +1,214 @@
+.select2-container{ width: 100% !important; }
+
+.select2-container .select2-selection--single .select2-selection__rendered {
+  margin-top: -6px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+
+.tooltip {
+  font-size: 15px;
+}
+.tooltip .tooltip-inner {
+  min-width: 250px;
+}
+
+#report {
+  overflow-y: auto;
+  -webkit-transform:scale(0.95);
+  -moz-transform:scale(0.95);
+  -ms-transform:scale(0.95);
+  transform:scale(0.95);
+}
+
+#report .container-fluid {
+  margin: 20px;
+  padding: 30px;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+}
+
+/* page loading */
+.loading-modal {
+    display:    none;
+    position:   relative;
+    float: left;
+    z-index:    1000;
+    top:        100px;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .6 )
+}
+.loading-modal > .center {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.loading-modal > .center > div {
+    text-align: center;
+}
+#report-preview.loading {
+    overflow: hidden;
+}
+#report-preview.loading .loading-modal {
+    display: block;
+}
+.loading-logo {
+    font-size: 24px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: bold;
+
+}
+
+.loading-error {
+  margin: auto;
+  text-align: center;
+  font-size: 1.5em;
+  font-style: italic;
+}
+
+#report-form .form-group {
+  margin-bottom: 5px;
+}
+
+/* saved reports datatable */
+div.dataTables_wrapper div.dataTables_paginate {
+  text-align: center;
+}
+div.dataTables_wrapper div.dataTables_filter {
+  text-align: left;
+}
+
+div.recurrence-widget {
+    height: 100%;
+}
+
+div.recurrence-widget a.recurrence-label {
+    padding: 0 0;
+    font-weight: normal;
+    padding-right: 0;
+    color: #555;
+    padding-left: 1em;
+}
+
+div.recurrence-widget .remove,
+div.recurrence-widget .remove:link,
+div.recurrence-widget .remove:visited {
+    padding: 0em .5em;
+    font-weight: normal;
+}
+
+div.recurrence-widget .checkbox {
+    display: inline;
+}
+
+div.recurrence-widget .control {
+    padding: 0 0 0 0;
+}
+
+div.recurrence-widget .radio {
+    display: inline;
+}
+
+table.recurrence-calendar .body td.header {
+    border-top: 1px solid #ccc;
+    font-weight: bold;
+    color: #555;
+}
+
+#report-content .table-bordered,
+#report-content .table-bordered > thead > tr > th,
+#report-content .table-bordered > tbody > tr > th,
+#report-content .table-bordered > tfoot > tr > th,
+#report-content .table-bordered > thead > tr > td,
+#report-content .table-bordered > tbody > tr > td,
+#report-content .table-bordered > tfoot > tr > td {
+	border: 1px solid #dfdfdf;
+}
+#report-content .table {
+  margin-left: 3px;
+  margin-right: 2px;
+  margin-bottom: 10px;
+  width: 98%;
+  max-width: 98%;
+}
+
+
+#backup-content table {
+    page-break-inside: auto
+}
+#backup-content tr {
+    page-break-inside: avoid;
+    page-break-after: auto
+}
+#backup-content thead {
+    display: table-header-group
+}
+#backup-content tfoot {
+    display: table-footer-group
+}
+#backup-content .test-list-form-container {
+    width: 670px !important;
+    page-break-after: always;
+    font-size: 0.9em;
+}
+#backup-content th.test-name {
+    width: 230px;
+}
+#backup-content th.test-value {
+    width: 85px;
+}
+#backup-content .table-condensed td {
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+#backup-content th.test-ref {
+    width: 85px;
+}
+#backup-content th.test-tol {
+    width: 245px;
+}
+#backup-content div.comment {
+    height: 50px;
+}
+#backup-content h3 {
+    padding-bottom: 10px;
+}
+#backup-content hr {
+    margin-bottom: 5px;
+}
+#backup-content .margin-l-20 {
+    margin-left: 20px;
+}
+#backup-content td span {
+    height: 100%;
+}
+
+#backup-content .radio,
+#backup-content .checkbox {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.dl-horizontal dt.report-note-heading {
+  word-wrap: break-word;
+  overflow: auto;
+  white-space: normal;
+}
+
+.report-note-content{
+  border: 1px solid #eee;
+  background-color: #fbfbfb;
+  padding: 5px;
+}
+
+.report-note-content.empty{
+  min-height: 100px;
+}
+#saved-reports > thead > tr > th:nth-child(3) {
+    min-width: 47px !important;
+}

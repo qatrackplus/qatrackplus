@@ -12,8 +12,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
+import qatrack.faults.models as faultsm
+import qatrack.parts.models as partsm
 import qatrack.qa.models as qam
 import qatrack.service_log.models as slm
 
@@ -66,7 +69,7 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
             break
         except PermissionError:
             if count == 2:
-                logging.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
+                logger.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
                 break
             count += 1
             time.sleep(0.2)
@@ -80,19 +83,21 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
 
 class Attachment(models.Model):
 
-    attachment = models.FileField(verbose_name=_("Attachment"), upload_to=get_upload_path, max_length=255)
-    label = models.CharField(verbose_name=_("Label"), max_length=255, blank=True)
-    comment = models.TextField(verbose_name=_("Comment"), blank=True)
+    attachment = models.FileField(verbose_name=_l("Attachment"), upload_to=get_upload_path, max_length=255)
+    label = models.CharField(verbose_name=_l("Label"), max_length=255, blank=True)
+    comment = models.TextField(verbose_name=_l("Comment"), blank=True)
 
-    test = models.ForeignKey(qam.Test, null=True, blank=True)
-    testlist = models.ForeignKey(qam.TestList, null=True, blank=True)
-    testlistcycle = models.ForeignKey(qam.TestListCycle, null=True, blank=True)
-    testinstance = models.ForeignKey(qam.TestInstance, null=True, blank=True)
-    testlistinstance = models.ForeignKey(qam.TestListInstance, null=True, blank=True)
-    serviceevent = models.ForeignKey(slm.ServiceEvent, null=True, blank=True)
+    test = models.ForeignKey(qam.Test, on_delete=models.CASCADE, null=True, blank=True)
+    testlist = models.ForeignKey(qam.TestList, on_delete=models.CASCADE, null=True, blank=True)
+    testlistcycle = models.ForeignKey(qam.TestListCycle, on_delete=models.CASCADE, null=True, blank=True)
+    testinstance = models.ForeignKey(qam.TestInstance, on_delete=models.CASCADE, null=True, blank=True)
+    testlistinstance = models.ForeignKey(qam.TestListInstance, on_delete=models.CASCADE, null=True, blank=True)
+    serviceevent = models.ForeignKey(slm.ServiceEvent, on_delete=models.CASCADE, null=True, blank=True)
+    part = models.ForeignKey(partsm.Part, on_delete=models.CASCADE, null=True, blank=True)
+    fault = models.ForeignKey(faultsm.Fault, on_delete=models.CASCADE, null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, editable=False)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False)
 
     OWNER_MODELS = [
         "test",
@@ -101,6 +106,8 @@ class Attachment(models.Model):
         "testinstance",
         "testlistinstance",
         "serviceevent",
+        "part",
+        "fault",
     ]
 
     @property
@@ -157,12 +164,15 @@ class Attachment(models.Model):
     def clean(self):
         nowners = sum(1 for o in self._possible_owners if o)
         if nowners > 1:
-            raise ValidationError(_("An attachment should only have one owner"))
+            raise ValidationError(_l("An attachment should only have one owner"))
 
     @property
     def is_image(self):
 
-        img = imghdr.what(self.attachment) is not None
+        try:
+            img = imghdr.what(self.attachment) is not None
+        except FileNotFoundError:
+            return False
         ext = os.path.splitext(self.attachment.name)[1].strip(".")
         displayable = ["jpg", "jpeg", "png", "svg", "bmp", "gif"]
         force = ext in displayable
@@ -170,4 +180,4 @@ class Attachment(models.Model):
         return is_img or force
 
     def __str__(self):
-        return "Attachment(%s, %s)" % (self.owner or _("No Owner"), self.attachment.name)
+        return "%s(%s, %s)" % (_("Attachment"), self.owner or _("No Owner"), self.attachment.name)

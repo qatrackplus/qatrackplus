@@ -135,14 +135,13 @@ class Command(BaseCommand):
         self.updating_cursor = self.conn.cursor()
         self.iterating_cursor = self.conn.cursor()
 
-        if qat_settings.USE_PARTS:
-            parts_odbc_conn_str = 'DRIVER={Microsoft Access Driver (*.mdb)};DBQ=%s;UID=%s;PWD=%s' % (
-                amt_settings.ACCEL_PARTS_DB_LOCATION, amt_settings.PARTS_DB_USER, amt_settings.PARTS_DB_PASS
-            )
+        parts_odbc_conn_str = 'DRIVER={Microsoft Access Driver (*.mdb)};DBQ=%s;UID=%s;PWD=%s' % (
+            amt_settings.ACCEL_PARTS_DB_LOCATION, amt_settings.PARTS_DB_USER, amt_settings.PARTS_DB_PASS
+        )
 
-            self.parts_conn = pyodbc.connect(parts_odbc_conn_str)
-            self.parts_cursor = self.parts_conn.cursor()
-            self.parts_updating_cursor = self.parts_conn.cursor()
+        self.parts_conn = pyodbc.connect(parts_odbc_conn_str)
+        self.parts_cursor = self.parts_conn.cursor()
+        self.parts_updating_cursor = self.parts_conn.cursor()
 
     def migrate_accel(self):
 
@@ -164,8 +163,7 @@ class Command(BaseCommand):
             print('\t3: Migrate equipment')
             print('\t4: Migrate service events (Complete 1 - 3 first)')
             print('\t5: Migrate workload (Complete 4 first)')
-            if qat_settings.USE_PARTS:
-                print('\t6: Migrate parts (Complete 5 first)')
+            print('\t6: Migrate parts (Complete 5 first)')
             print('\t8: Commit changes to Accel database')
             print('\t9: Commit changes to Accel database and Exit')
 
@@ -178,16 +176,14 @@ class Command(BaseCommand):
                 8: self.commit_to_accel,
                 9: self.done_exit
             }
-            if qat_settings.USE_PARTS:
-                choices[6] = self.migrate_parts
+            choices[6] = self.migrate_parts
 
             choice = user_select_from_list_of_numbers('Select option', choices.keys())
 
             done = choices[choice]()
 
         self.conn.close()
-        if qat_settings.USE_PARTS:
-            self.parts_conn.close()
+        self.parts_conn.close()
 
     def migrate_users(self):
 
@@ -1151,13 +1147,11 @@ class Command(BaseCommand):
 
     def commit_to_accel(self):
         self.conn.commit()
-        if qat_settings.USE_PARTS:
-            self.parts_conn.commit()
+        self.parts_conn.commit()
         return False
 
     def done_exit(self):
         self.conn.commit()
-        if qat_settings.USE_PARTS:
-            self.parts_conn.commit()
+        self.parts_conn.commit()
         return True
 

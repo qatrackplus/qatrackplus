@@ -15,28 +15,28 @@ from qatrack.units.models import Unit, Vendor
 
 class ServiceAreaFilter(filters.FilterSet):
 
-    units = filters.RelatedFilter(UnitFilter, name='units', queryset=Unit.objects.all())
+    units = filters.RelatedFilter(UnitFilter, field_name='units', queryset=Unit.objects.all())
 
     class Meta:
         model = models.ServiceArea
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
 class UnitServiceAreaFilter(filters.FilterSet):
 
-    unit = filters.RelatedFilter(UnitFilter, name='unit', queryset=Unit.objects.all())
+    unit = filters.RelatedFilter(UnitFilter, field_name='unit', queryset=Unit.objects.all())
     service_area = filters.RelatedFilter(
         ServiceAreaFilter,
-        name='service_area',
+        field_name='service_area',
         queryset=models.ServiceArea.objects.all(),
     )
 
     class Meta:
         model = models.UnitServiceArea
         fields = {
-            "notes": ['icontains'],
+            "notes": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -45,10 +45,10 @@ class ServiceTypeFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceType
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "is_review_required": ['exact'],
             "is_active": ['exact'],
-            "description": ['icontains'],
+            "description": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -57,12 +57,12 @@ class ServiceEventStatusFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceEventStatus
         fields = {
-            "name": ['icontains', 'in'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
             "is_review_required": ['exact'],
             "is_default": ['exact'],
             "rts_qa_must_be_reviewed": ['exact'],
-            "description": ['icontains'],
-            "colour": ['icontains', 'in'],
+            "description": ['exact', 'icontains', 'contains', 'in'],
+            "colour": ['exact', 'icontains', 'contains', 'in'],
         }
 
 
@@ -70,43 +70,43 @@ class ServiceEventFilter(filters.FilterSet):
 
     unit_service_area = filters.RelatedFilter(
         UnitServiceAreaFilter,
-        name='unit_service_area',
-        queryset=models.UnitServiceArea.objects.all(),
+        field_name='unit_service_area',
+        queryset=models.UnitServiceArea.objects.select_related("unit", "service_area"),
     )
     service_type = filters.RelatedFilter(
         ServiceTypeFilter,
-        name='service_type',
+        field_name='service_type',
         queryset=models.ServiceType.objects.all(),
     )
     service_event_related = filters.RelatedFilter(
-        'self', name='service_event_related', queryset=models.ServiceEvent.objects.all()
+        'ServiceEventFilter', field_name='service_event_related', queryset=models.ServiceEvent.objects.all()
     )
     service_status = filters.RelatedFilter(
         ServiceEventStatusFilter,
-        name='service_status',
+        field_name='service_status',
         queryset=models.ServiceEventStatus.objects.all(),
     )
     user_status_changed_by = filters.RelatedFilter(
         UserFilter,
-        name='user_status_changed_by',
+        field_name='user_status_changed_by',
         queryset=User.objects.all(),
     )
-    user_created_by = filters.RelatedFilter(UserFilter, name='user_created_by', queryset=User.objects.all())
-    user_modified_by = filters.RelatedFilter(UserFilter, name='user_modified_by', queryset=User.objects.all())
+    user_created_by = filters.RelatedFilter(UserFilter, field_name='user_created_by', queryset=User.objects.all())
+    user_modified_by = filters.RelatedFilter(UserFilter, field_name='user_modified_by', queryset=User.objects.all())
     test_list_instance_initiated_by = filters.RelatedFilter(
         TestListInstanceFilter,
-        name='test_list_instance_initiated_by',
+        field_name='test_list_instance_initiated_by',
         queryset=TestListInstance.objects.all(),
     )
 
-    datetime_status_changed_min = MinDateFilter(name="datetime_status_changed")
-    datetime_status_changed_max = MaxDateFilter(name="datetime_status_changed")
-    datetime_service_min = MinDateFilter(name="datetime_service")
-    datetime_service_max = MaxDateFilter(name="datetime_service")
-    datetime_created_min = MinDateFilter(name="datetime_created")
-    datetime_created_max = MaxDateFilter(name="datetime_created")
-    datetime_modified_min = MinDateFilter(name="datetime_modified")
-    datetime_modified_max = MaxDateFilter(name="datetime_modified")
+    datetime_status_changed_min = MinDateFilter(field_name="datetime_status_changed")
+    datetime_status_changed_max = MaxDateFilter(field_name="datetime_status_changed")
+    datetime_service_min = MinDateFilter(field_name="datetime_service")
+    datetime_service_max = MaxDateFilter(field_name="datetime_service")
+    datetime_created_min = MinDateFilter(field_name="datetime_created")
+    datetime_created_max = MaxDateFilter(field_name="datetime_created")
+    datetime_modified_min = MinDateFilter(field_name="datetime_modified")
+    datetime_modified_max = MaxDateFilter(field_name="datetime_modified")
 
     class Meta:
         model = models.ServiceEvent
@@ -115,8 +115,8 @@ class ServiceEventFilter(filters.FilterSet):
             'datetime_created': ['exact'],
             'datetime_service': ['exact'],
             'datetime_modified': ['exact'],
-            'safety_precautions': ['icontains'],
-            'problem_description': ['icontains'],
+            'safety_precautions': ['exact', 'icontains', 'contains', 'in'],
+            'problem_description': ['exact', 'icontains', 'contains', 'in'],
             'duration_service_time': ['lte', 'gte'],
             'duration_lost_time': ['lte', 'gte'],
             'is_review_required': ['exact'],
@@ -125,22 +125,26 @@ class ServiceEventFilter(filters.FilterSet):
 
 class ThirdPartyFilter(filters.FilterSet):
 
-    vendor = filters.RelatedFilter(VendorFilter, name='vendor', queryset=Vendor.objects.all())
+    vendor = filters.RelatedFilter(VendorFilter, field_name='vendor', queryset=Vendor.objects.all())
 
     class Meta:
         model = models.ThirdParty
         fields = {
-            'first_name': ['icontains', 'in'],
-            'last_name': ['icontains', 'in'],
+            'first_name': ['exact', 'icontains', 'contains', 'in'],
+            'last_name': ['exact', 'icontains', 'contains', 'in'],
         }
 
 
 class HoursFilter(filters.FilterSet):
 
     service_event = filters.RelatedFilter(
-        ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
+        ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
-    third_party = filters.RelatedFilter(ThirdPartyFilter, name='third_party', queryset=models.ThirdParty.objects.all())
+    third_party = filters.RelatedFilter(
+        ThirdPartyFilter,
+        field_name='third_party',
+        queryset=models.ThirdParty.objects.all(),
+    )
 
     class Meta:
         model = models.Hours
@@ -152,18 +156,18 @@ class HoursFilter(filters.FilterSet):
 class ReturnToServiceQAFilter(filters.FilterSet):
 
     unit_test_collection = filters.RelatedFilter(
-        UnitTestCollectionFilter, name='unit_test_collection', queryset=UnitTestCollection.objects.all()
+        UnitTestCollectionFilter, field_name='unit_test_collection', queryset=UnitTestCollection.objects.all()
     )
     test_list_instance = filters.RelatedFilter(
-        TestListInstanceFilter, name='test_list_instance', queryset=TestListInstance.objects.all()
+        TestListInstanceFilter, field_name='test_list_instance', queryset=TestListInstance.objects.all()
     )
-    user_assigned_by = filters.RelatedFilter(UserFilter, name='user_assigned_by', queryset=User.objects.all())
+    user_assigned_by = filters.RelatedFilter(UserFilter, field_name='user_assigned_by', queryset=User.objects.all())
     service_event = filters.RelatedFilter(
-        ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
+        ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
-    datetime_assigned_min = MinDateFilter(name="datetime_assigned")
-    datetime_assigned_max = MaxDateFilter(name="datetime_assigned")
+    datetime_assigned_min = MinDateFilter(field_name="datetime_assigned")
+    datetime_assigned_max = MaxDateFilter(field_name="datetime_assigned")
 
     class Meta:
         model = models.ReturnToServiceQA
@@ -174,13 +178,13 @@ class ReturnToServiceQAFilter(filters.FilterSet):
 
 class GroupLinkerFilter(filters.FilterSet):
 
-    group = filters.RelatedFilter(GroupFilter, name='group', queryset=Group.objects.all())
+    group = filters.RelatedFilter(GroupFilter, field_name='group', queryset=Group.objects.all())
 
     class Meta:
         model = models.GroupLinker
         fields = {
-            "name": ['icontains', 'in'],
-            "description": ['icontains'],
+            "name": ['exact', 'icontains', 'contains', 'in'],
+            "description": ['exact', 'icontains', 'contains', 'in'],
             "help_text": ['icontains'],
         }
 
@@ -188,15 +192,15 @@ class GroupLinkerFilter(filters.FilterSet):
 class GroupLinkerInstanceFilter(filters.FilterSet):
 
     group_linker = filters.RelatedFilter(
-        GroupLinkerFilter, name='group_linker', queryset=models.GroupLinker.objects.all()
+        GroupLinkerFilter, field_name='group_linker', queryset=models.GroupLinker.objects.all()
     )
-    user = filters.RelatedFilter(UserFilter, name='user', queryset=User.objects.all())
+    user = filters.RelatedFilter(UserFilter, field_name='user', queryset=User.objects.all())
     service_event = filters.RelatedFilter(
-        ServiceEventFilter, name='service_event', queryset=models.ServiceEvent.objects.all()
+        ServiceEventFilter, field_name='service_event', queryset=models.ServiceEvent.objects.all()
     )
 
-    datetime_linked_min = MinDateFilter(name="datetime_linked")
-    datetime_linked_max = MaxDateFilter(name="datetime_linked")
+    datetime_linked_min = MinDateFilter(field_name="datetime_linked")
+    datetime_linked_max = MaxDateFilter(field_name="datetime_linked")
 
     class Meta:
         model = models.GroupLinkerInstance

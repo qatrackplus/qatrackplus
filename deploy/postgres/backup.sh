@@ -63,7 +63,7 @@ function perform_backups()
         UPLOADS_DIR=$QATRACK_DIR"qatrack/media/uploads/"
         CSS_PATH=$QATRACK_DIR"qatrack/static/qatrack_core/css/site.css"
         echo "Backup of QATrack+ Uploads"
-        tar cvf - $UPLOADS_DIR | gzip -9 - > $FILE_BACKUP_PATH
+        tar cf - $UPLOADS_DIR | gzip -9 - > $FILE_BACKUP_PATH
         cp $CSS_PATH $FINAL_BACKUP_DIR 2>/dev/null
 
     fi

@@ -1,0 +1,136 @@
+@media print {
+  /* headless chrome currently always inclues header/footer
+   * so we push them off the page by setting smaller than default margin */
+
+  @page {
+    margin: 20px 20px 20px 30px;
+    size: auto;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .page {
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+
+  .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #efefef;
+  }
+
+  .table-bordered {
+    border: 1px solid #efefef;
+  }
+  .table-bordered > thead > tr > th,
+  .table-bordered > tbody > tr > th,
+  .table-bordered > tfoot > tr > th,
+  .table-bordered > thead > tr > td,
+  .table-bordered > tbody > tr > td,
+  .table-bordered > tfoot > tr > td {
+    border: 1px solid #efefef;
+  }
+  .dl-horizontal dt {
+    width: 120px;
+  }
+  .dl-horizontal dd {
+    margin-left: 130px;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid #ddd;
+  }
+  hr.tight {
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact;
+  }
+
+  #report-content .table-bordered,
+  #report-content .table-bordered > thead > tr > th,
+  #report-content .table-bordered > tbody > tr > th,
+  #report-content .table-bordered > tfoot > tr > th,
+  #report-content .table-bordered > thead > tr > td,
+  #report-content .table-bordered > tbody > tr > td,
+  #report-content .table-bordered > tfoot > tr > td {
+    border: 1px solid #dfdfdf;
+  }
+
+  #backup-content table {
+      page-break-inside: auto
+  }
+  #backup-content tr {
+      page-break-inside: avoid;
+      page-break-after: auto
+  }
+  #backup-content thead {
+      display: table-header-group
+  }
+  #backup-content tfoot {
+      display: table-footer-group
+  }
+  #backup-content .test-list-form-container {
+      width: 670px !important;
+      page-break-after: always;
+      font-size: 0.9em;
+  }
+  #backup-content th.test-name {
+      width: 230px;
+  }
+  #backup-content th.test-value {
+      width: 85px;
+  }
+  #backup-content .table-condensed td {
+      padding-top: 1px;
+      padding-bottom: 1px;
+  }
+  #backup-content th.test-ref {
+      width: 85px;
+  }
+  #backup-content th.test-tol {
+      width: 245px;
+  }
+  #backup-content div.comment {
+      height: 50px;
+  }
+  #backup-content h3 {
+      padding-bottom: 10px;
+  }
+  #backup-content hr {
+      margin-bottom: 5px;
+  }
+  #backup-content .margin-l-20 {
+      margin-left: 20px;
+  }
+  #backup-content td span {
+      height: 100%;
+  }
+
+  #backup-content .radio,
+  #backup-content .checkbox {
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
+  .dl-horizontal dt.report-note-heading {
+    word-wrap: break-word;
+    overflow: auto;
+    white-space: normal;
+  }
+
+  .report-note-content{
+    border: 1px solid #eee;
+    background-color: #fbfbfb;
+    padding: 5px;
+  }
+
+  .report-note-content.empty{
+    min-height: 100px;
+  }
+}

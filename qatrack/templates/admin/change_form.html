@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static admin_modify %}
+{% load i18n static admin_modify %}
 {% load admin_urls %}
 
 {% block extrahead %}{{ block.super }}
@@ -41,9 +41,17 @@
 {% if not is_popup %}
 {% block breadcrumbs %}
 <div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{% if app_label == 'sites' %}Websites{% else %}{{ app_label|capfirst|escape }}{% endif %}</a>
-&rsaquo; {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{% if app_label == 'sites' and opts.verbose_name_plural == 'sites' %}Websites{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+  <a href="{% url 'admin:app_list' app_label=opts.app_label %}">
+    {% if app_label == 'sites' %}
+      {% trans "Websites" %}
+    {% elif app_label.lower == 'qa' %}
+      {% trans "QC" %}
+    {% else %}
+      {{ app_label|capfirst|escape }}
+    {% endif %}
+  </a> &rsaquo;
+  {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{% if app_label == 'sites' and opts.verbose_name_plural == 'sites' %}Websites{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
 &rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}
 </div>
 {% endblock %}

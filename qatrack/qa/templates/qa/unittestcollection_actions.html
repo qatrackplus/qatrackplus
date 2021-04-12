@@ -5,7 +5,7 @@
       title="Perform {{ utc.name }} for Unit {{ utc.unit.name }}">
       Perform
     </a>
-{% elif action == "review" and perms.qa.can_view_history %}
+{% elif action == "review" and perms.qa.can_view_completed %}
     <a class="btn btn-default btn-xs btn-flat"
       href="{% url 'review_utc' utc.pk %}?next={{request.path|cut:"data/"}}"
       title="Review historical data for {{ utc.name }} from Unit {{ utc.unit.name }}"

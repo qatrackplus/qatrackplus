@@ -4,12 +4,14 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import constants, get_messages
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
 from django.db.models import Count, Q
 from django.forms import HiddenInput, inlineformset_factory, modelform_factory
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, TransactionTestCase
+from django.test.utils import override_settings
+from django.urls import reverse
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import admin as qa_admin
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
@@ -21,7 +23,7 @@ class TestSetReferencesAndTolerancesForm(TransactionTestCase):
 
     def setUp(self):
 
-        qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.url = reverse('qa_copy_refs_and_tols')
@@ -97,7 +99,7 @@ class TestTestlistjson(TestCase):
 
     def setUp(self):
 
-        qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.u = qa_utils.create_unit()
@@ -168,7 +170,7 @@ class TestToleranceAdmin(TestCase):
 
     def setUp(self):
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.t = qa_utils.create_tolerance()
@@ -211,7 +213,7 @@ class TestToleranceAdmin(TestCase):
 class TestTestInstanceAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
         qa_utils.create_test_instance()
         self.url = reverse(
@@ -226,13 +228,14 @@ class TestTestListInstanceAdmin(TestCase):
 
     def setUp(self):
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.tli = qa_utils.create_test_list_instance()
         self.usa = sl_utils.create_unit_service_area(unit=self.tli.unit_test_collection.unit)
         self.se = sl_utils.create_service_event(
-            unit_service_area=self.usa, add_test_list_instance_initiated_by=self.tli
+            unit_service_area=self.usa,
+            add_test_list_instance_initiated_by=self.tli,
         )
         sl_utils.create_return_to_service_qa(add_test_list_instance=self.tli)
 
@@ -264,7 +267,7 @@ class TestTestListInstanceAdmin(TestCase):
 class TestUnitTestCollectionAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.u_1 = qa_utils.create_unit()
@@ -278,8 +281,8 @@ class TestUnitTestCollectionAdmin(TestCase):
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_1)
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2)
 
-        self.g_1 = qa_utils.create_group()
-        self.g_2 = qa_utils.create_group()
+        self.g_1 = create_group()
+        self.g_2 = create_group()
 
         self.tl_ct = ContentType.objects.get(model='testlist')
         self.tlc_ct = ContentType.objects.get(model='testlistcycle')
@@ -385,7 +388,7 @@ class TestUnitTestCollectionAdmin(TestCase):
 class TestTestAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.c_1 = qa_utils.create_category()
@@ -491,7 +494,7 @@ class TestTestAdmin(TestCase):
 class TestTestListAdmin(TestCase):
 
     def setUp(self):
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         self.t_1 = qa_utils.create_test()
@@ -504,7 +507,7 @@ class TestTestListAdmin(TestCase):
 
         qa_utils.create_test_list_membership(test_list=self.tl_1, test=self.t_2, order=0)
 
-        qa_utils.create_sublist(parent_test_list=self.tl_1)
+        self.sublist = qa_utils.create_sublist(parent_test_list=self.tl_1)
 
         self.url_add = reverse(
             'admin:%s_%s_add' % (qa_models.TestList._meta.app_label, qa_models.TestList._meta.model_name)
@@ -614,6 +617,13 @@ class TestTestListAdmin(TestCase):
         form = modelform_factory(qa_models.TestList, form=qa_admin.TestListAdminForm, exclude=['tests'])(data=data)
         self.assertTrue(form.is_valid())
 
+    @override_settings(MAX_TESTS_PER_TESTLIST=0)
+    def test_too_many_tests(self):
+        data = self.data
+        form = modelform_factory(qa_models.TestList, form=qa_admin.TestListAdminForm, exclude=['tests'])(data=data)
+        assert not form.is_valid()
+        assert any("the maximum number allowed is 0" in err for err in form.errors['__all__'])
+
     def test_duplicate_macros(self):
         data = self.data
         data['testlistmembership_set-TOTAL_FORMS'] = 2
@@ -634,6 +644,8 @@ class TestTestListAdmin(TestCase):
     def test_sublist_formset_valid(self):
 
         data = self.data
+        data['children-0-child'] = self.sublist.child.id
+
         formset = inlineformset_factory(
             qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
             fields='__all__'
@@ -647,6 +659,33 @@ class TestTestListAdmin(TestCase):
             fields='__all__'
         )(data=data, queryset=qa_models.Sublist.objects.all(), instance=self.tl_1)
         self.assertFalse(formset.is_valid())
+
+    def test_sublist_nesting_parent(self):
+        """Shouldn't be able to add a sublist that has a sublist of its own"""
+        tl = qa_utils.create_test_list(name="sub")
+        qa_utils.create_sublist(parent_test_list=self.sublist.child, child_test_list=tl)
+        data = self.data
+        formset = inlineformset_factory(
+            qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
+            fields='__all__'
+        )(data=data, queryset=qa_models.Sublist.objects.all(), instance=None)
+        assert not formset.is_valid()
+        assert "Test Lists can not be nested more than 1 level" in formset.non_form_errors()[0]
+
+    def test_sublist_nesting_child(self):
+        """Shouldn't be able to add a sublist when you are a sublist"""
+        tl = qa_utils.create_test_list(name="sub")
+        data = self.data
+        data['children-0-child'] = tl.id
+        formset = inlineformset_factory(
+            qa_models.TestList,
+            qa_models.Sublist,
+            formset=qa_admin.SublistInlineFormSet,
+            fk_name='parent',
+            fields='__all__'
+        )(data=data, queryset=qa_models.Sublist.objects.all(), instance=self.sublist.child)
+        assert not formset.is_valid()
+        assert "This Test List is a Sublist" in formset.non_form_errors()[0]
 
     def test_sublist_duplicate(self):
         data = self.data
@@ -691,7 +730,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
         get_internal_user()
@@ -705,6 +744,7 @@ class TestUnitTestInfoAdmin(TestCase):
         self.t_4 = qa_utils.create_test(test_type=qa_models.SIMPLE)
         self.t_5 = qa_utils.create_test(test_type=qa_models.BOOLEAN)
         self.t_6 = qa_utils.create_test(test_type=qa_models.MULTIPLE_CHOICE)
+        self.t_360 = qa_utils.create_test(test_type=qa_models.WRAPAROUND, wrap_low=0, wrap_high=360)
         self.tol_1 = qa_utils.create_tolerance()
         self.tol_2 = qa_utils.create_tolerance(act_low=-10, act_high=10)
 
@@ -717,19 +757,20 @@ class TestUnitTestInfoAdmin(TestCase):
         self.r_2 = qa_utils.create_reference(value=1.61803)
         self.r_3 = qa_utils.create_reference(ref_type=qa_models.BOOLEAN)
 
-        self.tli_1 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_1, ref=self.r_1, tol=self.tol_1)
-        self.tli_2 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_2, ref=self.r_1, tol=self.tol_1)
-        self.tli_3 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_3)
-        self.tli_4 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_4)
-        self.tli_5 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_5, tol=self.tol_3)
-        self.tli_6 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_6, tol=self.tol_4)
+        self.uti_1 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_1, ref=self.r_1, tol=self.tol_1)
+        self.uti_2 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_2, ref=self.r_1, tol=self.tol_1)
+        self.uti_3 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_3)
+        self.uti_4 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_4)
+        self.uti_5 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_5, tol=self.tol_3)
+        self.uti_6 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_6, tol=self.tol_4)
+        self.uti_360 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_360, ref=self.r_1, tol=self.tol_1)
 
         self.url_list = reverse(
             'admin:%s_%s_changelist' % (qa_models.UnitTestInfo._meta.app_label, qa_models.UnitTestInfo._meta.model_name)
         )
         self.url_change = reverse(
             'admin:%s_%s_change' % (qa_models.UnitTestInfo._meta.app_label, qa_models.UnitTestInfo._meta.model_name),
-            args=[self.tli_1.id]
+            args=[self.uti_1.id]
         )
 
         self.data = {
@@ -738,7 +779,7 @@ class TestUnitTestInfoAdmin(TestCase):
             'test_type': self.t_1.type,
             'reference_value': self.r_2.value,
             'tolerance': self.tol_1.id,
-            'id': self.tli_1.id
+            'id': self.uti_1.id
         }
 
     def test_list(self):
@@ -747,19 +788,19 @@ class TestUnitTestInfoAdmin(TestCase):
     def test_form_valid(self):
         data = self.data
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_1, data=data)
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         self.assertListEqual(
             list(form.fields['tolerance'].queryset),
-            list(qa_models.Tolerance.objects.exclude(type=qa_models.MULTIPLE_CHOICE))
+            list(qa_models.Tolerance.objects.exclude(type=qa_models.MULTIPLE_CHOICE).exclude(type=qa_models.BOOLEAN))
         )
 
     def test_boolean(self):
 
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_2)
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_2)
 
         self.assertListEqual(
             form.fields['reference_value'].widget.choices,
@@ -772,8 +813,8 @@ class TestUnitTestInfoAdmin(TestCase):
 
     def test_multi(self):
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_3)
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_3)
 
         self.assertIsInstance(form.fields['reference_value'].widget, HiddenInput)
         self.assertListEqual(
@@ -788,22 +829,44 @@ class TestUnitTestInfoAdmin(TestCase):
         request.user = self.user
         admin = qa_admin.UnitTestInfoAdmin(qa_models.UnitTestInfo, self.site)
 
-        form = admin.get_form(request)(instance=self.tli_1, data=data)
+        form = admin.get_form(request)(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         admin.save_model(request, admin.save_form(request, form, True), form, True)
-        self.assertEqual(self.tli_1.reference.value, self.r_2.value)
+        self.assertEqual(self.uti_1.reference.value, self.r_2.value)
 
         data['reference_value'] = ''
-        form = admin.get_form(request)(instance=self.tli_1, data=data)
+        data['tolerance'] = ''
+        form = admin.get_form(request)(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         admin.save_model(request, admin.save_form(request, form, True), form, True)
-        self.assertEqual(self.tli_1.reference, None)
+        self.assertEqual(self.uti_1.reference, None)
 
         data['reference_value'] = '3.14159'
-        form = admin.get_form(request)(instance=self.tli_1, data=data)
+        form = admin.get_form(request)(instance=self.uti_1, data=data)
         self.assertTrue(form.is_valid())
         admin.save_model(request, admin.save_form(request, form, True), form, True)
-        self.assertEqual(self.tli_1.reference.value, '3.14159')
+        self.assertEqual(self.uti_1.reference.value, '3.14159')
+
+    def test_submit_360(self):
+
+        data = {
+            'unit': self.u_1.id,
+            'test': self.t_360.id,
+            'test_type': self.t_360.type,
+            'reference_value': -1,
+            'tolerance': self.tol_1.id,
+            'id': self.uti_360.id
+        }
+        request = self.factory.get(self.url_change)
+        request.user = self.user
+        admin = qa_admin.UnitTestInfoAdmin(qa_models.UnitTestInfo, self.site)
+
+        form = admin.get_form(request)(instance=self.uti_360, data=data)
+        assert not form.is_valid()
+
+        data['reference_value'] = 0
+        form = admin.get_form(request)(instance=self.uti_360, data=data)
+        assert form.is_valid()
 
     def test_save_multiple_simple(self):
         # request = self.factory.get(self.url_change)
@@ -816,19 +879,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_1.id, self.tli_4.id],
+            '_selected_action': [self.uti_1.id, self.uti_4.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_1.id, self.tli_4.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_1.id, self.uti_4.id])
         )
 
-        self.tli_1.refresh_from_db()
-        self.tli_4.refresh_from_db()
+        self.uti_1.refresh_from_db()
+        self.uti_4.refresh_from_db()
         self.assertListEqual(
-            [self.tli_1.reference.value, self.tli_4.reference.value],
+            [self.uti_1.reference.value, self.uti_4.reference.value],
             [self.r_2.value, self.r_2.value]
         )
 
@@ -842,19 +905,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_2.id, self.tli_5.id],
+            '_selected_action': [self.uti_2.id, self.uti_5.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_2.id, self.tli_5.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_2.id, self.uti_5.id])
         )
 
-        self.tli_2.refresh_from_db()
-        self.tli_5.refresh_from_db()
+        self.uti_2.refresh_from_db()
+        self.uti_5.refresh_from_db()
         self.assertListEqual(
-            [self.tli_2.reference.value, self.tli_5.reference.value],
+            [self.uti_2.reference.value, self.uti_5.reference.value],
             [self.r_3.value, self.r_3.value]
         )
 
@@ -868,19 +931,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_3.id, self.tli_6.id],
+            '_selected_action': [self.uti_3.id, self.uti_6.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_3.id, self.tli_6.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_3.id, self.uti_6.id])
         )
 
-        self.tli_3.refresh_from_db()
-        self.tli_6.refresh_from_db()
+        self.uti_3.refresh_from_db()
+        self.uti_6.refresh_from_db()
         self.assertListEqual(
-            [self.tli_3.reference, self.tli_6.reference],
+            [self.uti_3.reference, self.uti_6.reference],
             [None, None]
         )
 
@@ -894,19 +957,19 @@ class TestUnitTestInfoAdmin(TestCase):
             'post': 'yes',
             'contenttype': '',
             'action': 'set_multiple_references_and_tolerances',
-            '_selected_action': [self.tli_1.id, self.tli_4.id],
+            '_selected_action': [self.uti_1.id, self.uti_4.id],
             'apply': 'Set tolerances and references'
         }
         request.POST = QueryDict('', mutable=True)
         request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.tli_1.id, self.tli_4.id])
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_1.id, self.uti_4.id])
         )
 
-        self.tli_1.refresh_from_db()
-        self.tli_4.refresh_from_db()
+        self.uti_1.refresh_from_db()
+        self.uti_4.refresh_from_db()
         self.assertListEqual(
-            [self.tli_1.reference.value, self.tli_4.reference.value],
+            [self.uti_1.reference.value, self.uti_4.reference.value],
             [2.71828, 2.71828]
         )
 
@@ -922,25 +985,49 @@ class TestUnitTestInfoAdmin(TestCase):
 
     def test_bad_multiple(self):
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(
-            instance=self.tli_3
+            instance=self.uti_3
         )
         data = form.initial
         data['tolerance'] = self.tol_1.id
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_3, data=data)
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_3, data=data)
         self.assertFalse(form.is_valid())
 
     def test_bad_percent_tol(self):
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_4)
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4)
         data = form.initial
         data['tolerance'] = self.tol_5.id
         data['reference_value'] = 0
         form = modelform_factory(
-            qa_models.UnitTestInfo, form=qa_admin.TestInfoForm, fields='__all__'
-        )(instance=self.tli_4, data=data)
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4, data=data)
+        self.assertFalse(form.is_valid())
+
+    def test_bad_percent_tol_blank_ref(self):
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4)
+        data = form.initial
+        data['tolerance'] = self.tol_5.id
+        data['reference_value'] = ''
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4, data=data)
+        self.assertFalse(form.is_valid())
+
+    def test_bad_percent_tol_non_numerical_ref(self):
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4)
+        data = form.initial
+        data['tolerance'] = self.tol_5.id
+        data['reference_value'] = 'asdf'
+        form = modelform_factory(
+            qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
+        )(instance=self.uti_4, data=data)
         self.assertFalse(form.is_valid())

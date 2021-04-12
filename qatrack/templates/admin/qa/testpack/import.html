@@ -6,7 +6,8 @@
 
   <link href="{% static "fontawsome/css/font-awesome.min.css" %}" rel="stylesheet">
   <link href="{% static "css/bootstrap-grid.css" %}" rel="stylesheet">
-  <link href="{% static "css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/jquery.dataTables.min.css" %}" rel="stylesheet">
 {% endblock %}
 
 
@@ -14,8 +15,8 @@
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
-    <a href="{% url 'admin:app_list' app_label='qa' %}">Qa</a> &rsaquo;
-    Import Test Pack
+    <a href="{% url 'admin:app_list' app_label='qa' %}">{% trans "QC" %}</a> &rsaquo;
+    {% trans "Import Test Pack" %}
   </div>
 {% endblock %}
 
@@ -28,8 +29,10 @@
   <div class="row">
     <div class="col-sm-12">
       <p>
+        {% blocktrans %}
         On this page you may import Test Lists, Test List Cycles, or individual
         Tests from a Test Pack.
+        {% endblocktrans %}
       </p>
     </div>
   </div>
@@ -40,15 +43,15 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Test Lists To Include</h2>
+          <h2>{% trans "Test Lists To Include" %}</h2>
 
-          <em class="loading">Loading Test List table...</em>
+          <em class="loading">{% trans "Loading Test List table" %}...</em>
           <table id="testlists-table" style="display: none">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Test List</th>
-                <th>Description</th>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Test List" %}</th>
+                <th>{% trans "Description" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -68,15 +71,15 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Test List Cycles To Include</h2>
+          <h2>{% trans "Test List Cycles To Include" %}</h2>
 
-          <em class="loading">Loading Test List Cycle table...</em>
+          <em class="loading">{% trans "Loading Test List Cycle table" %}...</em>
           <table id="testlistcycles-table" style="display: none">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Cycle</th>
-                <th>Description</th>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Cycle" %}</th>
+                <th>{% trans "Description" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -96,24 +99,26 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Select Extra Tests To Include</h2>
+          <h2>{% trans "Select Extra Tests To Include" %}</h2>
 
           <p>
             <em>
+              {% blocktrans %}
               Note that there is no need to select tests that are already
               included as part of a test list
+              {% endblocktrans %}
             </em>
           </p>
 
-          <em class="loading">Loading Test table...</em>
+          <em class="loading">{% trans "Loading Test table" %}...</em>
           <table id="tests-table" style="display: none">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Test</th>
-                <th>Category</th>
-                <th>Type</th>
-                <th>Description</th>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Test" %}</th>
+                <th>{% trans "Category" %}</th>
+                <th>{% trans "Type" %}</th>
+                <th>{% trans "Description" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -136,10 +141,10 @@
     <div class="col-sm-4">
       <form method="post" action>
         {% csrf_token %}
-        <h2>Load Test Pack</h2>
+        <h2>{% trans "Load Test Pack" %}</h2>
         <div class="row">
           <div class="col-sm-6">
-            Test Pack File:
+            {% trans "Test Pack File" %}:
           </div>
           <div class="col-sm-6" style="text-align: right">
             <input type="file" name="testpack" id="id_testpack" required="">
@@ -149,25 +154,25 @@
         </div>
         <div class="row">
           <div class="col-sm-6">
-            Test Pack Name:
+            {% trans "Test Pack Name" %}:
           </div>
           <div id="name" class="col-sm-6" style="text-align: right"></div>
         </div>
         <div class="row">
           <div class="col-sm-6">
-            Test Pack Created By:
+            {% trans "Test Pack Created By" %}:
           </div>
           <div id="created-by" class="col-sm-6" style="text-align: right"></div>
         </div>
         <div class="row">
           <div class="col-sm-6">
-            Test Pack Generator Version:
+            {% trans "Test Pack Generator Version" %}:
           </div>
           <div id="version" class="col-sm-6" style="text-align: right"></div>
         </div>
         <div class="row">
           <div class="col-sm-6">
-            Test Pack Description:
+            {% trans "Test Pack Description" %}:
           </div>
           <div id="description" class="col-sm-6" style="text-align: right"></div>
         </div>
@@ -176,29 +181,29 @@
           {{ form.testlistcycles }}
           {{ form.tests }}
         </div>
-        <h2>Import Summary</h2>
+        <h2>{% trans "Import Summary" %}</h2>
         <hr/>
         <div id="summary">
 
           <div class="row">
-            <div class="col-sm-6">Test Lists:</div>
-            <div class="col-sm-6" style="text-align: right" id="testlists-summary">0 Selected</div>
+            <div class="col-sm-6">{% trans "Test Lists" %}:</div>
+            <div class="col-sm-6" style="text-align: right" id="testlists-summary">{% trans "0 Selected" %}</div>
           </div>
 
           <div class="row">
-            <div class="col-sm-6">Test Lists Cycles:</div>
-            <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">0 Selected</div>
+            <div class="col-sm-6">{% trans "Test Lists Cycles" %}:</div>
+            <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">{% trans "0 Selected" %}</div>
           </div>
 
           <div class="row">
-            <div class="col-sm-6">Tests:</div>
-            <div class="col-sm-6" style="text-align: right" id="tests-summary">0 Selected</div>
+            <div class="col-sm-6">{% trans "Tests" %}:</div>
+            <div class="col-sm-6" style="text-align: right" id="tests-summary">{% trans "0 Selected" %}</div>
           </div>
 
         </div>
         <hr/>
         <div class="submit-row">
-          <input type="submit" value="Import" class="default">
+          <input type="submit" value="{% trans "Import" %}" class="default">
         </div>
       </form>
     </div>
@@ -223,8 +228,7 @@
 
 <script src="{% static "jquery/js/jquery.min.js" %}"></script>
 
-<script src="{% static "js/datatables.min.js" %}"></script>
+<script src="{% static "datatables/1.10/js/datatables.min.js" %}"></script>
 <script src="{% static "js/testpack-import.js" %}"></script>
 
 {% endblock %}
-

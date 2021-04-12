@@ -1,14 +1,25 @@
-
 from django.apps import apps
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.html import escape
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django_comments import signals as dc_signals
 from django_comments.forms import CommentForm
+
+from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
+
+
+def homepage(request):
+    context = {
+        'freq_tree': BootstrapFrequencyTree(request.user.groups.all()).generate(),
+        'cat_tree': BootstrapCategoryTree(request.user.groups.all()).generate(),
+    }
+    return render(request, "homepage.html", context)
 
 
 class CustomCommentForm(CommentForm):
@@ -40,44 +51,57 @@ def ajax_comment(request, next=None, using=None):
     ctype = data.get("content_type")
     object_pk = data.get("object_pk")
     if ctype is None or object_pk is None:
-        return JsonResponse({'error': True, 'message': 'Missing content_type or object_pk field.'}, status=500)
+        return JsonResponse({'error': True, 'message': _('Missing content_type or object_pk field.')}, status=500)
     try:
         model = apps.get_model(*ctype.split(".", 1))
         target = model._default_manager.using(using).get(pk=object_pk)
     except TypeError:
-        return JsonResponse({'error': True, 'message': 'Invalid content_type value: %r' % escape(ctype)}, status=500)
+        return JsonResponse({
+            'error': True,
+            'message': _('Invalid content_type value: %(content_type)r') % {
+                'content_type': escape(ctype)
+            }
+        }, status=500)
     except AttributeError:
         return JsonResponse(
             {
                 'error': True,
-                'message': 'The given content-type %r does not resolve to a valid model.' % escape(ctype)
+                'message':
+                    _('The given content-type %(content_type)r does not resolve to a valid model.') % {
+                        'content_type': escape(ctype)
+                    }
             },
             status=500,
         )
     except ObjectDoesNotExist:
         return JsonResponse(
             {
-                'error':
-                    True,
-                'message':
-                    'No object matching content-type %r and object PK %r exists.' % (escape(ctype), escape(object_pk))
+                'error': True,
+                'message': _('No object matching content-type %(content_type)r and object PK %(object_id)r exists.') % {
+                    'content_type': escape(ctype),
+                    'object_id': escape(object_pk)
+                },
             },
             status=500,
         )
     except (ValueError, ValidationError) as e:
         return JsonResponse(
             {
-                'error':
-                    True,
-                'message':
-                    'Attempting go get content-type %r and object PK %r exists raised %s' %
-                    (escape(ctype), escape(object_pk), e.__class__.__name__)
+                'error': True,
+                'message': _(
+                    'Attempting to get content-type %(content_type)r and '
+                    'object PK %(object_id)r exists raised %(error_class)s'
+                ) % {
+                    'content_type': escape(ctype),
+                    'object_id': escape(object_pk),
+                    'error_class': e.__class__.__name__,
+                }
             },
             status=500,
         )
 
     # Do we want to preview the comment?
-    preview = "preview" in data
+    # preview = "preview" in data
 
     # Construct the comment form
     form = CustomCommentForm(target, data=data)
@@ -97,7 +121,7 @@ def ajax_comment(request, next=None, using=None):
         return JsonResponse(
             {
                 'error': True,
-                'message': 'The comment submission failed',
+                'message': _('The comment submission failed'),
                 'extra': form.errors
             },
             status=400,
@@ -121,7 +145,9 @@ def ajax_comment(request, next=None, using=None):
             return JsonResponse(
                 {
                     'error': True,
-                    'message': 'comment_will_be_posted receiver %r killed the comment' % receiver.__name__
+                    'message': _('comment_will_be_posted receiver %(receiver_name)r killed the comment') % {
+                        'receiver_name': receiver.__name__,
+                    },
                 },
                 status=500,
             )
@@ -144,3 +170,46 @@ def ajax_comment(request, next=None, using=None):
         'submit_date': comment.submit_date,
         'template': render_to_string('comments/comment.html', {'comment': comment, 'hidden': True})
     })
+
+
+def handle_error(request, code, type_, message, exception=None):
+    context = {
+        'code': code,
+        'type': type_,
+        'message': message,
+    }
+    return render(request, 'site_error.html', context, status=code)
+
+
+def handle_400(request, exception=None):
+    return handle_error(request, 400, _("Bad Request"), _("Please check your ALLOWED_HOST setting."), exception)
+
+
+def handle_403(request, exception=None):
+    return handle_error(
+        request,
+        403,
+        _("Insufficient Permission"),
+        _("Please talk to an administrator to acquire the required permission."),
+        exception,
+    )
+
+
+def handle_404(request, exception=None):
+    return handle_error(
+        request,
+        404,
+        _("Resource not found"),
+        _("The page or resource you were looking for can not be found"),
+        exception,
+    )
+
+
+def handle_500(request, exception=None):
+    return handle_error(
+        request,
+        500,
+        _("Server Error"),
+        _("Sorry, the server experienced an error processing your request. The site admin has been notified "),
+        exception,
+    )

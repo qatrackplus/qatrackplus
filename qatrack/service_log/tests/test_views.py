@@ -1,16 +1,17 @@
 import json
 
-from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
+from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.service_log import models, views
 from qatrack.service_log.tests import utils as sl_utils
 
@@ -18,8 +19,8 @@ from qatrack.service_log.tests import utils as sl_utils
 class TestURLS(TestCase):
 
     def setUp(self):
-        u = qa_utils.create_user(is_superuser=True, uname='user', pwd='pwd')
-        g = qa_utils.create_group()
+        u = create_user(is_superuser=True, uname='user', pwd='pwd')
+        g = create_group()
         u.groups.add(g)
         u.save()
         self.client.login(username='user', password='pwd')
@@ -29,8 +30,8 @@ class TestURLS(TestCase):
 
     def test_qa_urls(self):
 
-        ses = sl_utils.create_service_event_status(is_default=True)
-        tis = qa_utils.create_status(is_default=True)
+        sl_utils.create_service_event_status(is_default=True)
+        qa_utils.create_status(is_default=True)
         se = sl_utils.create_service_event()
         u = qa_utils.create_unit()
         utc = qa_utils.create_unit_test_collection(unit=u)
@@ -57,7 +58,8 @@ class TestURLS(TestCase):
         )
 
         url_names_404 = (
-            # Test urls that expect kwargs when not given any (reverse should render url for use in templates, but return 404)
+            # Test urls that expect kwargs when not given any
+            # (reverse should render url for use in templates, but return 404)
             ('sl_details', {}, ''),
             ('tli_select', {}, ''),
             ('se_searcher', {}, ''),
@@ -79,12 +81,14 @@ class TestDashboard(TestCase):
         se_requires_review = sl_utils.create_service_event(is_review_required=True)
         ses_default = sl_utils.create_service_event_status(is_default=True)
         se_default_status = sl_utils.create_service_event(service_status=ses_default)
-        rtsqa_0001 = sl_utils.create_return_to_service_qa(add_test_list_instance=True)  # qa_not_reviewed +1
-        rtsqa_0002 = sl_utils.create_return_to_service_qa()  # qa_not_complete +1
-        rtsqa_0003 = sl_utils.create_return_to_service_qa(service_event=se_requires_review)  # se_needing_review +1, qa_not_complete +1
-        rtsqa_0004 = sl_utils.create_return_to_service_qa(service_event=se_default_status)  # se_default +1, qa_not_complete +1
+        sl_utils.create_return_to_service_qa(add_test_list_instance=True)  # qa_not_reviewed +1
+        sl_utils.create_return_to_service_qa()  # qa_not_complete +1
+        sl_utils.create_return_to_service_qa(
+            service_event=se_requires_review
+        )  # se_needing_review +1, qa_not_complete +1
+        sl_utils.create_return_to_service_qa(service_event=se_default_status)  # se_default +1, qa_not_complete +1
 
-        self.user = qa_utils.create_user(is_superuser=True, uname='person')
+        self.user = create_user(is_superuser=True, uname='person')
 
     def delete_objects(self):
 
@@ -109,7 +113,7 @@ class TestDashboard(TestCase):
         self.assertEqual(counts['se_needing_review'], 1)
         self.assertEqual(counts['se_default']['count'], 1)
 
-        self.delete_objects()
+#        self.delete_objects()
 
     def test_get_timeline(self):
 
@@ -124,7 +128,7 @@ class TestDashboard(TestCase):
         for o in objs:
             self.assertTrue(isinstance(o, models.ServiceLog))
 
-        self.delete_objects()
+#        self.delete_objects()
 
 
 class TestCreateServiceEvent(TestCase):
@@ -174,22 +178,22 @@ class TestCreateServiceEvent(TestCase):
 
         self.url = reverse('sl_new')
         self.url_delete = reverse('se_delete')
-        self.user = qa_utils.create_user(is_superuser=True)
+        self.user = create_user(is_superuser=True)
 
         self.client.login(username='user', password='password')
 
         perm = Permission.objects.get(codename='can_have_hours')
         user_can_hours = User.objects.get(username='user')
         user_can_hours.user_permissions.add(perm)
-        user_group_has_hours = qa_utils.create_user(uname='in_group_with_hours')
-        group_has_hours = qa_utils.create_group(name='can_have_hours')
+        user_group_has_hours = create_user(uname='in_group_with_hours')
+        group_has_hours = create_group(name='can_have_hours')
         group_has_hours.permissions.add(perm)
         user_group_has_hours.groups.add(group_has_hours)
 
         sl_utils.create_third_party()
 
-        group_linked = qa_utils.create_group(name='linked')
-        user_group_linked = qa_utils.create_user(uname='user_in_group_linked')
+        group_linked = create_group(name='linked')
+        user_group_linked = create_user(uname='user_in_group_linked')
         user_group_linked.groups.add(group_linked)
         self.gl_1 = sl_utils.create_group_linker(group=group_linked)
         self.part = sl_utils.create_part(add_storage=True)
@@ -203,7 +207,7 @@ class TestCreateServiceEvent(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(self.default_ses, response.context_data['form'].initial['service_status'])
-        self.assertTrue(response.context_data['form'].fields['service_area_field'].widget.attrs['disabled'])
+        self.assertTrue(response.context_data['form'].fields['service_area_field_fake'].widget.attrs['disabled'])
         self.assertTrue(response.context_data['form'].fields['service_event_related_field'].widget.attrs['disabled'])
         self.assertTrue(response.context_data['form'].fields['initiated_utc_field'].widget.attrs['disabled'])
 
@@ -224,7 +228,9 @@ class TestCreateServiceEvent(TestCase):
 
         perm = Permission.objects.get(codename='can_have_hours')
         user_with_hours = [('', '---------')]
-        for u in User.objects.filter(Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True)).distinct():
+        for u in User.objects.filter(
+            Q(groups__permissions=perm, is_active=True) | Q(user_permissions=perm, is_active=True)
+        ).distinct():
             name = u.username if not u.first_name or not u.last_name else u.last_name + ', ' + u.first_name
             user_with_hours.append(('user-' + str(u.id), name))
         for tp in models.ThirdParty.objects.all():
@@ -244,8 +250,8 @@ class TestCreateServiceEvent(TestCase):
         unit = qa_models.Unit.objects.all().first()
         response = self.client.get(self.url + '?u=%d' % unit.pk)
 
-
-        service_areas = models.UnitServiceArea.objects.filter(unit_id=unit.pk).values_list('service_area_id', 'service_area__name')
+        service_areas = models.UnitServiceArea.objects.filter(unit_id=unit.pk
+                                                              ).values_list('service_area_id', 'service_area__name')
         self.assertEqual(
             list(service_areas),
             list(response.context_data['form'].fields['service_area_field'].queryset.values_list('id', 'name'))
@@ -263,7 +269,11 @@ class TestCreateServiceEvent(TestCase):
         qa_utils.create_unit_test_collection(unit=unit, active=False)
         self.assertEqual(
             list(utc_initialed_by.values_list('id', 'name')),
-            list(response.context_data['rtsqa_formset'].forms[0].fields['unit_test_collection'].queryset.values_list('id', 'name'))
+            list(
+                response.context_data['rtsqa_formset'].forms[0].fields['unit_test_collection'].queryset.values_list(
+                    'id', 'name'
+                )
+            )
         )
 
         # Initiated by pre selected --------------------------------------------------
@@ -290,7 +300,7 @@ class TestCreateServiceEvent(TestCase):
         user.user_permissions.add(Permission.objects.get(codename='can_have_hours'))
 
         data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'unit_field': self.u_1.id,
             'unit_field_fake': self.u_1.id,
             'service_area_field': self.usa_1.service_area.id,
@@ -372,7 +382,10 @@ class TestCreateServiceEvent(TestCase):
 
         self.assertFalse(response.context_data['form'].is_valid())
 
-        for e in ['service_type', 'unit_field', 'service_area_field', 'datetime_service', 'problem_description', 'service_status']:
+        for e in [
+            'service_type', 'unit_field', 'service_area_field', 'datetime_service', 'problem_description',
+            'service_status'
+        ]:
             self.assertTrue(e in response.context_data['form'].errors)
 
     def test_unreviewed_rtsqa(self):
@@ -392,7 +405,7 @@ class TestCreateServiceEvent(TestCase):
         )
 
         data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'unit_field': self.u_1.id,
             'service_area_field': self.sa_1.id,
             'service_type': self.st.id,
@@ -430,7 +443,7 @@ class TestCreateServiceEvent(TestCase):
     def test_formset_required_fields(self):
 
         data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'unit_field': self.u_1.id,
             'service_area_field': self.sa_1.id,
             'service_type': self.st.id,
@@ -533,22 +546,22 @@ class TestEditServiceEvent(TestCase):
         self.se_2 = sl_utils.create_service_event(unit_service_area=self.usa_2)
 
         self.url = reverse('sl_new')
-        self.user = qa_utils.create_user(is_superuser=True)
+        self.user = create_user(is_superuser=True)
 
         self.client.login(username='user', password='password')
 
         perm = Permission.objects.get(codename='can_have_hours')
         user_can_hours = User.objects.get(username='user')
         user_can_hours.user_permissions.add(perm)
-        user_group_has_hours = qa_utils.create_user(uname='in_group_with_hours')
-        group_has_hours = qa_utils.create_group(name='can_have_hours')
+        user_group_has_hours = create_user(uname='in_group_with_hours')
+        group_has_hours = create_group(name='can_have_hours')
         group_has_hours.permissions.add(perm)
         user_group_has_hours.groups.add(group_has_hours)
 
         sl_utils.create_third_party()
 
-        group_linked = qa_utils.create_group(name='linked')
-        user_group_linked = qa_utils.create_user(uname='user_in_group_linked')
+        group_linked = create_group(name='linked')
+        user_group_linked = create_user(uname='user_in_group_linked')
         user_group_linked.groups.add(group_linked)
         self.gl_1 = sl_utils.create_group_linker(group=group_linked)
         self.part = sl_utils.create_part(add_storage=True)
@@ -564,7 +577,7 @@ class TestEditServiceEvent(TestCase):
         self.url = reverse('sl_edit', kwargs={"pk": self.se.pk})
 
         self.data = {
-            'datetime_service': timezone.now().strftime(settings.INPUT_DATE_FORMATS[0]),
+            'datetime_service': format_datetime(timezone.now()),
             'service_status': self.default_ses.id,
             'service_type': self.st.id,
             'is_review_required': 0,
@@ -653,7 +666,7 @@ class TestServiceLogViews(TestCase):
 
         self.factory = RequestFactory()
 
-        self.user = qa_utils.create_user(is_superuser=True)
+        self.user = create_user(is_superuser=True)
         self.client.login(username='user', password='password')
 
         self.u1 = qa_utils.create_unit()
@@ -700,7 +713,7 @@ class TestServiceLogViews(TestCase):
 
     def test_unit_sa_utc(self):
 
-        tl_to_find = models.UnitTestCollection.objects.filter(unit=self.u3)
+        tl_to_find = qa_models.UnitTestCollection.objects.filter(unit=self.u3)
         sa_to_find = models.ServiceArea.objects.filter(units=self.u3)
 
         data = {'unit_id': self.u3.id}
@@ -726,15 +739,17 @@ class TestServiceLogViews(TestCase):
         qa_utils.create_test_instance(test_list_instance=tli)
 
         expected = json.loads(
-            json.dumps({
-                'pass_fail': tli.pass_fail_summary(),
-                'review': tli.review_summary(),
-                'datetime': timezone.localtime(tli.created).replace(microsecond=0),
-                'all_reviewed': int(tli.all_reviewed),
-                'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
-                'in_progress': tli.in_progress,
-            },
-                       cls=DjangoJSONEncoder)
+            json.dumps(
+                {
+                    'pass_fail': tli.pass_fail_summary(),
+                    'review': tli.review_summary(),
+                    'datetime': timezone.localtime(tli.created).replace(microsecond=0),
+                    'all_reviewed': int(tli.all_reviewed),
+                    'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
+                    'in_progress': tli.in_progress,
+                },
+                cls=DjangoJSONEncoder,
+            )
         )
 
         data = {'tli_id': tli.id}
@@ -754,8 +769,8 @@ class TestServiceLogViews(TestCase):
             'unit': [self.usa3.unit.name, self.usa2.unit.name],
             'unit__type': [self.u3.type.name, self.u2.type.name],
             'daterange': '%s - %s' % (
-                (timezone.now() - timezone.timedelta(days=30)).strftime('%d %b %Y'),
-                timezone.now().strftime('%d %b %Y')
+                format_as_date((timezone.now() - timezone.timedelta(days=30))),
+                format_as_date(timezone.now())
             )
         }
 
@@ -768,3 +783,129 @@ class TestServiceLogViews(TestCase):
         self.assertTrue('%s,%s,0,1,1.00,0.00,1.00,0.00,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
         self.assertTrue('%s,%s,0,2,2.00,0.00,2.00,0.00,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
         self.assertTrue('Totals:,0.0,3,3.00,0.00,3.00,0.00,3' in csv)
+
+
+class TestServiceEventTemplateSearcher(TestCase):
+
+    def setUp(self):
+        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
+        self.client.login(username='user', password='pwd')
+        self.url = reverse('se_template_searcher')
+        self.utc = qa_utils.create_unit_test_collection()
+        self.unit = self.utc.unit
+
+    def create_template(self, name, service_type=None, service_area=None):
+        return models.ServiceEventTemplate.objects.create(
+            name=name,
+            service_type=service_type,
+            service_area=service_area,
+            created_by=self.user,
+            modified_by=self.user,
+        )
+
+    def test_no_filters(self):
+        """No filters, so all templates should be returned"""
+        self.create_template("1")
+        self.create_template("2")
+        resp = self.client.get(self.url, data={'unit': self.unit.id})
+        assert len(resp.json()) == models.ServiceEventTemplate.objects.count()
+
+    def test_with_service_type(self):
+        """If we filter for service type, the searcher should only return
+        templates where the service_type is correct"""
+
+        # one template with correct service type
+        st1 = sl_utils.create_service_type()
+        t1 = self.create_template("1", service_type=st1)
+
+        # one template with incorrect service type
+        st2 = sl_utils.create_service_type()
+        self.create_template("2", service_type=st2)
+
+        # one template with no service_type
+        self.create_template("3")
+
+        resp = self.client.get(self.url, data={'unit': self.unit.id, 'service_type': st1.pk})
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]['id'] == t1.id
+
+    def test_with_service_area(self):
+        """If we filter for service area, the searcher should only return
+        templates where the service_area is correct"""
+
+        # one template with correct service type
+        sa1 = sl_utils.create_service_area()
+        t1 = self.create_template("1", service_area=sa1)
+        sl_utils.create_unit_service_area(
+            unit=self.unit,
+            service_area=sa1,
+        )
+
+        # one template with incorrect service area
+        sa2 = sl_utils.create_service_area()
+        self.create_template("2", service_area=sa2)
+
+        # one template with no service_area
+        self.create_template("3")
+
+        resp = self.client.get(self.url, data={'unit': self.unit.id, 'service_area': sa1.pk})
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]['id'] == t1.id
+
+    def test_with_rts(self):
+        """If we filter for a unit, the searcher should only return
+        templates where the return to service test lists are all
+        assigned to that unit."""
+
+        tl1 = qa_utils.create_test_list()
+        tl2 = qa_utils.create_test_list()
+        u1 = qa_utils.create_unit()
+        qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
+
+        # one template with RTS that is assigned to the unit
+        t1 = self.create_template("1")
+        t1.return_to_service_test_lists.add(tl1)
+
+        # one template with RTS that is not assigned to the unit
+        t2 = self.create_template("2")
+        t2.return_to_service_test_lists.add(tl2)
+
+        # one template with not RTS
+        t3 = self.create_template("3")
+
+        resp = self.client.get(self.url, data={'unit': u1.pk})
+        data = resp.json()
+        assert len(data) == 2
+        assert [t['id'] for t in data] == [t1.id, t3.id]
+
+    def test_with_rts_and_service_type(self):
+        """If we filter for a unit, and service type, the searcher should only return
+        templates where the return to service test lists are all
+        assigned to that unit and the template has the correct service_type."""
+
+        st = sl_utils.create_service_type()
+        tl1 = qa_utils.create_test_list()
+        tl2 = qa_utils.create_test_list()
+        u1 = qa_utils.create_unit()
+        qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
+
+        # one template with RTS that is assigned to the unit
+        t1 = self.create_template("1", service_type=st)
+        t1.return_to_service_test_lists.add(tl1)
+
+        # one template with RTS that is not assigned to the unit
+        t2 = self.create_template("2", service_type=st)
+        t2.return_to_service_test_lists.add(tl2)
+
+        # one template with no RTS and correct service_type
+        t3 = self.create_template("3", service_type=st)
+
+        # one template with no RTS and no service_type
+        self.create_template("4")
+
+        resp = self.client.get(self.url, data={'unit': u1.pk, 'service_type': st.pk})
+        data = resp.json()
+        assert len(data) == 2
+        assert [t['id'] for t in data] == [t1.id, t3.id]

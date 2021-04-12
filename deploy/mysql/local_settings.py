@@ -3,10 +3,18 @@ DEBUG = False
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
-        'NAME': 'qatrackplus',  # Or path to database file if using sqlite3.
-        'USER': 'qatrack',  # Not used with sqlite3.
-        'PASSWORD': 'qatrackpass',  # Not used with sqlite3.
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'qatrackplus31',
+        'USER': 'qatrack',
+        'PASSWORD': 'qatrackpass',
+        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+    },
+    'readonly': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'qatrackplus31',
+        'USER': 'qatrack_reports',
+        'PASSWORD': 'qatrackpass',
         'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
@@ -15,12 +23,8 @@ DATABASES = {
 # Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
 ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
 
-# Set to False to disable the Service Log functionality
-USE_SERVICE_LOG = True
-
-# Set to False to disable the Parts Log functionality
-USE_PARTS = True
-
+# Set to False to disable the SQL Query Tool
+USE_SQL_REPORTS =  True
 
 # If you host your QATrack+ instance at a non root url (e.g. 12.345.678.9/qatrack)
 # then you need to uncomment (and possibly modify) the following settings
@@ -88,7 +92,7 @@ TEST_STATUS_DISPLAY_SHORT = {
 EMAIL_NOTIFICATION_USER = None
 EMAIL_NOTIFICATION_PWD = None
 EMAIL_NOTIFICATION_TEMPLATE = "notification_email.html"
-EMAIL_NOTIFICATION_SENDER = "qatrack"
+EMAIL_NOTIFICATION_SENDER = "qatrack@yourmailhost.com"
 # use either a static subject or a customizable template
 # EMAIL_NOTIFICATION_SUBJECT = "QATrack+ Test Status Notification"
 EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"

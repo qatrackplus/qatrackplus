@@ -1,247 +1,266 @@
 {% extends "site_base.html" %}
 
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
+{% load static %}
 
-{% block head_title %}Change Units Available Time{% endblock %}
+
+{% block head_title %}{% trans "Change Units Available Time" %}{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}felter/css/felter.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}units/css/unit_available_time.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}flatpickr/css/flatpickr.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/flatpickr-custom.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "felter/css/felter.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "units/css/unit_available_time.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "flatpickr/css/flatpickr.css" %}?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/flatpickr-custom.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
-    require(['unit_avail']);
+  require(['unit_avail']);
 {% endblock require_javascript %}
 
 {% block body_class %}layout-top-nav loading{% endblock body_class %}
 
 {% block body %}
 
-    {% csrf_token %}
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">
-                        <i class="fa fa-cube" aria-hidden="true"></i>
-                        Change Unit Available Times
-                    </h3>
-                </div>
-                <div class="box-body">
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <select id="units" multiple class="form-control">
-                                        {% for u in units %}
-                                            <option data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div id="set_edits_div" class="col-sm-12">
-                                            <div class="schedule-change-box">
-                                                <div>Select one or more days to Edit the Available Time of the selected units​</div>
-                                                <button id="open_edit_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_edits_modal">Edit Available Time</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div id="set_uat_div" class="col-sm-12">
-                                            <div class="schedule-change-box">
-                                                <div>Select an effective date to Edit the Schedule of the selected units</div>
-                                                <button id="open_uat_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_modal">Edit Schedule</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div id="delete_div" class="col-sm-12">
-                                            <div class="schedule-change-box">
-                                                <div>Select one or more days to Delete Available Time Changes and Schedule Changes of the selected units​</div>
-                                                <button id="open_delete_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#delete_modal">Delete Changes</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+{% csrf_token %}
 
-                        </div>
-                        <div class="col-md-10">
-
-                            <div class="row margin-bottom-5 parent-align-bottom">
-                                <div class="col-sm-5 align-bottom">
-                                    <div id="prev-month" class="btn btn-flat btn-default btn-sm"><i class="fa fa-chevron-left"></i></div>
-                                    <div class="display-inline-block">{{ month_select }}</div>
-                                    <div class="display-inline-block">{{ year_select }}</div>
-                                    <div id="next-month" class="btn btn-flat btn-default btn-sm"><i class="fa fa-chevron-right"></i></div>
-                                </div>
-                                <div class="col-sm-7 pull-right">
-                                    Click to select a single day. Ctrl click to select different days. Shift click to
-                                    select a group of days.​ <b>A</b> denotes Acceptance date, <b>C</b> denotes Schedule Change,
-                                    Available Time Changes are identified by a label input by the user​.
-                                </div>
-                            </div>
-
-                            <div id="svg-container"></div>
-
-                        </div>
-                    </div>
-                </div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="box">
+      <div class="box-header">
+        <h3 class="box-title">
+          <i class="fa fa-cube" aria-hidden="true"></i>
+          {% trans "Change Unit Available Times" %}
+        </h3>
+      </div>
+      <div class="box-body">
+        <div class="row">
+          <div class="col-md-2">
+            <div class="row">
+              <div class="col-sm-12">
+                <select id="units" multiple class="form-control">
+                  {% for u in units %}
+                    <option data-active="{{ u.active }}" value="{{ u.pk }}" title="{{ u.name }}{% if not u.active %} (inactive){% endif %}">{{ u.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
             </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="row">
+                  <div id="set_edits_div" class="col-sm-12">
+                    <div class="schedule-change-box">
+                      <div>{% trans "Select one or more days to Edit the Available Time of the selected units​" %}</div>
+                      <button id="open_edit_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_edits_modal">
+                        {% trans "Edit Available Time" %}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div id="set_uat_div" class="col-sm-12">
+                    <div class="schedule-change-box">
+                      <div>{% trans "Select an effective date to Edit the Schedule of the selected units" %}</div>
+                      <button id="open_uat_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#available_modal">
+                        {% trans "Edit Schedule" %}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div id="delete_div" class="col-sm-12">
+                    <div class="schedule-change-box">
+                      <div>{% trans "Select one or more days to Delete Available Time Changes and Schedule Changes of the selected units​" %}</div>
+                      <button id="open_delete_modal" class="btn btn-flat btn-sm btn-default uat_btn" disabled data-toggle="modal" data-target="#delete_modal">{% trans "Delete Changes" %}</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="col-md-10">
+
+            <div class="row margin-bottom-5 parent-align-bottom">
+              <div class="col-sm-5 align-bottom">
+                <div id="prev-month" class="btn btn-flat btn-default btn-sm"><i class="fa fa-chevron-left"></i></div>
+                <div class="display-inline-block">{{ month_select }}</div>
+                <div class="display-inline-block">{{ year_select }}</div>
+                <div id="next-month" class="btn btn-flat btn-default btn-sm"><i class="fa fa-chevron-right"></i></div>
+              </div>
+              <div class="col-sm-7 pull-right">
+                {% blocktrans %}
+                  Click to select a single day. Ctrl click to select different days. Shift click to
+                  select a group of days.​ <b>A</b> denotes Acceptance date, <b>C</b> denotes Schedule Change,
+                  Available Time Changes are identified by a label input by the user​.
+                {% endblocktrans %}
+              </div>
+            </div>
+
+            <div id="svg-container"></div>
+
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="available_edits_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">{% trans "Edit available time for selected units and selected days.​" %}</h4>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="row form-group">
+          <label class="col-sm-6" for="edit_input">Avaiable time (hh:mm)</label>
+          <div class="col-sm-6">
+            <input id="edit_input" type="text" class="form-control">
+          </div>
+        </div>
+
+        <div class="row form-group">
+          <label class="col-sm-6" for="name_input">Label</label>
+          <div class="col-sm-6">
+            <input id="name_input" type="text" class="form-control">
+          </div>
+        </div>
+        <div class="row has-error">
+          <div id="edit_error"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="num-days-selected pull-left"></div>
+        <button id="insert_change_edit" type="button" class="btn btn-primary btn-flat" title="{% trans "Insert or change avaialble times for selected days and units." %}">
+          {% trans "Update Available Time" %}
+        </button>
+      </div>
     </div>
 
-    <div id="available_edits_modal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
+  </div>
+</div>
 
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Edit available time for selected units and selected days.​</h4>
-                </div>
-                <div class="modal-body">
+<div id="available_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
 
-                    <div class="row form-group">
-                        <label class="col-sm-6" for="edit_input">Avaiable time (hh:mm)</label>
-                        <div class="col-sm-6">
-                            <input id="edit_input" type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="row form-group">
-                        <label class="col-sm-6" for="name_input">Label</label>
-                        <div class="col-sm-6">
-                            <input id="name_input" type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="row has-error">
-                        <div id="edit_error"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <div class="num-days-selected pull-left"></div>
-                    <button id="insert_change_edit" type="button" class="btn btn-primary btn-flat" title="Insert or change avaialble times for selected days and units.">Update Available Time</button>
-                </div>
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">{% trans "Edit schedule for selected units." %}</h4>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="row">
+          <div class="col-sm-3">
+            <label>{% trans "Effective Date" %}</label>
+          </div>
+          <div class="col-sm-9">
+            <input id="effective_date" class="form-control">
+          </div>
+        </div>
+
+        <div class="row form-group">
+          <div class="col-sm-3">
+            <label>{% trans "Hours (hh:mm)" %}</label>
+          </div>
+          <div class="col-sm-9 weekday-row">
+            <div class="row seven-cols no-gutters">
+              <div class="col-md-1">{% trans "Sunday" %}</div>
+              <div class="col-md-1">{% trans "Monday" %}</div>
+              <div class="col-md-1">{% trans "Tuesday" %}</div>
+              <div class="col-md-1">{% trans "Wednesday" %}</div>
+              <div class="col-md-1">{% trans "Thursday" %}</div>
+              <div class="col-md-1">{% trans "Friday" %}</div>
+              <div class="col-md-1">{% trans "Saturday" %}</div>
             </div>
 
+            <div class="row seven-cols no-gutters">
+              <div class="col-md-1" title="{{ unit_available_time_form.hours_sunday.label }} {% trans "hours" %}">
+                {{ unit_available_time_form.hours_sunday }}
+              </div>
+              <div class="col-md-1" title="{{ unit_available_time_form.hours_monday.label }} {% trans "hours" %}">
+                {{ unit_available_time_form.hours_monday }}
+              </div>
+              <div class="col-md-1" title="{{ unit_available_time_form.hours_tuesday.label }} {% trans "hours" %}">
+                {{ unit_available_time_form.hours_tuesday }}
+              </div>
+              <div class="col-md-1" title="{{ unit_available_time_form.hours_wednesday.label }} {% trans "hours" %}">
+                {{ unit_available_time_form.hours_wednesday }}
+              </div>
+              <div class="col-md-1" title="{{ unit_available_time_form.hours_thursday.label }} {% trans "hours" %}">
+                {{ unit_available_time_form.hours_thursday }}
+              </div>
+              <div class="col-md-1" title="{{ unit_available_time_form.hours_friday.label }} {% trans "hours" %}">
+                {{ unit_available_time_form.hours_friday }}
+              </div>
+              <div class="col-md-1" title="{{ unit_available_time_form.hours_saturday.label }} {% trans "hours" %}">
+                {{ unit_available_time_form.hours_saturday }}
+              </div>
+
+            </div>
+          </div>
         </div>
+
+        <div class="row has-error">
+          <div id="uat_error"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="insert_change_uat" type="button" class="btn btn-primary btn-flat" title="Insert or change default schedules for selected days and units.">
+          {% trans "Update Schedule" %}
+        </button>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div id="available_modal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
+<div id="delete_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
 
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Edit schedule for selected units.</h4>
-                </div>
-                <div class="modal-body">
-
-                    <div class="row">
-                        <div class="col-sm-3">
-                            <label>Effective Date</label>
-                        </div>
-                        <div class="col-sm-9">
-                            <input id="effective_date" class="form-control">
-                        </div>
-                    </div>
-
-                    <div class="row form-group">
-                        <div class="col-sm-3">
-                            <label>Hours (hh:mm)</label>
-                        </div>
-                        <div class="col-sm-9 weekday-row">
-                            <div class="row seven-cols no-gutters">
-                                <div class="col-md-1">Sunday</div>
-                                <div class="col-md-1">Monday</div>
-                                <div class="col-md-1">Tuesday</div>
-                                <div class="col-md-1">Wednesday</div>
-                                <div class="col-md-1">Thursday</div>
-                                <div class="col-md-1">Friday</div>
-                                <div class="col-md-1">Saturday</div>
-                            </div>
-                            <div class="row seven-cols no-gutters">
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_sunday.label }} hours">
-                                    {{ unit_availble_time_form.hours_sunday }}
-                                </div>
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_monday.label }} hours">
-                                    {{ unit_availble_time_form.hours_monday }}
-                                </div>
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_tuesday.label }} hours">
-                                    {{ unit_availble_time_form.hours_tuesday }}
-                                </div>
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_wednesday.label }} hours">
-                                    {{ unit_availble_time_form.hours_wednesday }}
-                                </div>
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_thursday.label }} hours">
-                                    {{ unit_availble_time_form.hours_thursday }}
-                                </div>
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_friday.label }} hours">
-                                    {{ unit_availble_time_form.hours_friday }}
-                                </div>
-                                <div class="col-md-1 {% comment %}padding-right-5 padding-left-5{% endcomment %}" title="{{ unit_availble_time_form.hours_saturday.label }} hours">
-                                    {{ unit_availble_time_form.hours_saturday }}
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row has-error">
-                        <div id="uat_error"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button id="insert_change_uat" type="button" class="btn btn-primary btn-flat" title="Insert or change default schedules for selected days and units.">Update Schedule</button>
-                </div>
-            </div>
-
-        </div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">{% trans "Delete all schedule changes for selected units and days?" %}</h4>
+      </div>
+      <div class="modal-body">
+        <div id="delete_error" class="alert alert-danger" style="display: none;"></div>
+        <button class="btn btn-danger btn-flat" id="delete_go">{% trans "Delete" %}</button>
+        <span class="num-days-selected margin-left-15"></span>
+        <button class="btn btn-default btn-flat pull-right" id="delete_cancel">{% trans "Cancel" %}</button>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div id="delete_modal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
+{% block loading_modal %}
+  <div class="loading-modal ">
+    <div class="center">
+      <div>
+        <span class="loading-logo">QAT</span>
+        <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+      </div>
+      <div>
+        <b>
+          {% trans "Loading..." %}
+        </b>
+      </div>
 
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Delete all schedule changes for selected units and days?</h4>
-                </div>
-                <div class="modal-body">
-                    <div id="delete_error" class="alert alert-danger" style="display: none;"></div>
-                    <button class="btn btn-danger btn-flat" id="delete_go">Delete</button>
-                    <span class="num-days-selected margin-left-15"></span>
-                    <button class="btn btn-default btn-flat pull-right" id="delete_cancel">Cancel</button>
-                </div>
-            </div>
-        </div>
     </div>
-
-    {% block loading_modal %}
-        <div class="loading-modal ">
-            <div class="center">
-                <div>
-                    <span class="loading-logo">QAT</span>
-                    <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
-                </div>
-                <div>
-                    <b>
-                        Loading...
-                    </b>
-                </div>
-
-            </div>
-        </div>
-    {% endblock loading_modal %}
+  </div>
+{% endblock loading_modal %}
 
 {% endblock body %}

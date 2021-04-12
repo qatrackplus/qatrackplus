@@ -1,55 +1,167 @@
 {% extends "site_base.html" %}
 {% load i18n %}
+{% load mptt_tags %}
 
+{% block extra_js %}
+<script type="text/javascript">
+  window.catTree = {{ cat_tree | safe }};
+  window.freqTree = {{ freq_tree | safe }};
+</script>
+{% endblock extra_js %}
 
-{% block head_title %}{% trans "Welcome" %}{% endblock %}
+{% block require_javascript %}
+require(['homepage']);
+{% endblock require_javascript %}
 
-{#{% block body_class %}home{% endblock %}#}
+{% block head_title %}{% trans "QATrack+ Homepage" %}{% endblock %}
 
 {% block body %}
-    <h1>{% trans "Welcome to QATrack+" %}</h1>
-    <p>Please choose one of the following available items</p>
+<div class="row">
+  <div class="col-sm-12 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
 
-    <h3>Perform QA</h3>
-    <ul>
-        <li><a title="Choose a Unit to perform qa on" href="{% url 'choose_unit' %}">Choose a unit to perform QA for</a></li>
-        <li><a title="View available test lists to perform" href="{% url 'all_lists' %}">View all test lists available to perform</a></li>
-    </ul>
+    <div class="page-header text-center">
+      <h1>{% trans "Welcome to QATrack+" %}</h1>
+    </div>
+
+    {% if perms.qa.add_testlistinstance %}
+      <div class="box box-solid box-info">
+        <div class="box-header">
+          <h3 class="box-title">{% trans "Perform QC" %}</h3>
+        </div>
+          <a class="list-group-item" title="{% trans "Choose a Unit to perform qa on" %}" href="{% url 'choose_unit' %}">
+            <i class="fa fa-cubes fa-lg fa-fw"></i> {% trans "Choose a unit to perform QC for" %}
+          </a>
+          <a class="list-group-item" title="{% trans "View available test lists to perform" %}" href="{% url 'all_lists' %}">
+            <i class="fa fa-pencil-square fa-lg fa-fw"></i> {% trans "View all test lists available to perform" %}
+          </a>
+          <a class="list-group-item" href="{% url "in_progress" %}" title="{% trans "Resume a QC session currently in progress" %}">
+            <i class="fa fa-play fa-lg fa-fw" aria-hidden="true"></i>
+            {% trans "Continue an In Progress Test List Instance" %}
+            <span title="{% blocktrans %}There are currently {{ USERS_IN_PROGRESS }} QC Sessions saved in progress{% endblocktrans %}" class="label {% if USERS_IN_PROGRESS == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-in-progress-count">{{ USERS_IN_PROGRESS }}</span>
+            </span>
+          </a>
+          <div class="list-group-item">
+            <i class="pull-left fa fa-stack fa-fw fa-lg">
+              <i class="fa fa-cubes fa-stack-custom-sub lower-left"></i>
+              <i class="fa fa-clock-o fa-stack-custom-sub"></i>
+            </i>
+            <div class="pull-left site-qc-tree" id="site-freq-qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              <span>{% trans "Loading QC Unit & Frequency Tree" %}...</span>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+          <div class="list-group-item">
+            <i class="pull-left fa fa-stack fa-fw fa-lg">
+              <i style="left: -10px" class="fa fa-clock-o fa-stack-custom-sub upper-left"></i>
+              <i style="left: -2px" class="fa fa-cubes fa-lg fa-stack-custom-sub lower-left"></i>
+              <i class="fa fa-tags fa-stack-custom-sub upper-right"></i>
+            </i>
+            <div class="pull-left site-qc-tree" id="site-cat-qc-tree">
+              <i class="fa fa-spinner fa-spin fa-lg fa-fw"></i>
+              <span>{% trans "Loading QC Unit, Frequency, Category Tree" %}...</span>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+      </div>
+      <!-- /.box -->
+    {% endif %}
 
     {% if perms.qa.can_review or perms.qa.can_view_completed %}
-        <h3>Review QA</h3>
+      <div class="box box-solid box-info">
+        <div class="box-header">
+          <h3 class="box-title">{% trans "Review QC" %}</h3>
+        </div>
         {% if perms.qa.can_review %}
-            <ul>
-                <li><a title="Choose a Unit to review qa for" href="{% url 'choose_review_unit' %}">Choose a unit to review QA for</a></li>
-                <li><a title="Review data" href="{% url 'unreviewed' %}">View QA data awaiting review</a></li>
-                {% endif %}
-
-                {% if perms.qa.can_view_completed %}
-                <li><a title="View trends and control charts" href="{% url 'charts' %}">View trends &amp; control charts</a></li>
-                {% endif %}
-            </ul>
-
-    {% endif %}
-
-    {% if USE_SERVICE_LOG %}
-        {% if perms.service_log.view_serviceevent or perms.service_log.add_serviceevent or perms.service_log.perform_returntoserviceqa or perms.qa.can_review %}
-            <h3>Service Log</h3>
-
-            <ul>
-                {% if perms.service_log.view_serviceevent %}
-                    <li><a title="View all service events" href="{% url 'sl_list_all' %}">View all service events</a></li>
-                {% endif %}
-                {% if perms.service_log.add_serviceevent %}
-                    <li><a title="Open new service event" href="{% url 'sl_new' %}">Open new service event</a></li>
-                {% endif %}
-                {% if perms.service_log.perform_returntoserviceqa %}
-                    <li><a title="View all incomplete RTS QA" href="{% url 'rtsqa_list_incomplete' %}">View all incomplete return to service QA</a></li>
-                {% endif %}
-                {% if perms.qa.can_review %}
-                    <li><a title="View unreviewed RTS QA" href="{% url 'rtsqa_list_unreviewed' %}">View unreviewed return to service QA</a></li>
-                {% endif %}
-            </ul>
+          <a class="list-group-item" title="{% trans "Choose a Unit to review QC for" %}" href="{% url 'choose_review_unit' %}">
+            <i class="fa fa-cubes fa-lg fa-fw"></i> {% trans "Choose a unit to review QC for" %}
+          </a>
+          <a class="list-group-item" title="{% trans "Review data" %}" href="{% url 'unreviewed' %}">
+            <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
+            {% trans "View QC data awaiting review" %}
+            {% if perms.qa.can_review_non_visible_tli %}
+              <span title="There are currently {{ UNREVIEWED }} QC Sessions waiting to be reviewed" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-unreviewed-count">{{ UNREVIEWED }}</span>
+              </span>
+            {% else %}
+              <span class="fa fa-lg fa-fw" title="There are currently {{ USERS_UNREVIEWED }} QC Sessions waiting to be reviewed" class="label {% if USERS_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-unreviewed-count">{{ USERS_UNREVIEWED }}</span>
+              </span>
+            {% endif %}
+          </a>
         {% endif %}
+
+        {% if perms.qa.can_view_completed %}
+          <a class="list-group-item" title="{% trans "View trends and control charts" %}" href="{% url 'charts' %}">
+            <i class="fa fa-line-chart fa-fw fa-lg"></i>
+            {% trans "View trends &amp; control charts" %}
+          </a>
+        {% endif %}
+      </div>
     {% endif %}
 
- {% endblock %}
+    {% if perms.service_log.view_serviceevent or perms.service_log.add_serviceevent or perms.service_log.perform_returntoserviceqa or perms.qa.can_review %}
+      <div class="box box-solid box-info">
+        <div class="box-header">
+          <h3 class="box-title">{% trans "Service Log" %}</h3>
+        </div>
+
+        {% if perms.service_log.view_serviceevent %}
+          <a class="list-group-item" title="{% trans "View all service events" %}" href="{% url 'sl_list_all' %}">
+            <i class="fa fa-stack fa-lg fa-fw">
+              <i class="fa fa-wrench fa-stack-custom-main"></i>
+              <i class="fa fa-wrench fa-flip-horizontal left--5 fa-stack-custom-main "></i>
+            </i>
+            {% trans "View all service events" %}
+          </a>
+        {% endif %}
+        {% if perms.service_log.add_serviceevent %}
+          <a class="list-group-item" title="{% trans "Open new service event" %}" href="{% url 'sl_new' %}">
+            <i class="fa fa-stack fa-lg fa-fw">
+              <i class="fa fa-wrench fa-stack-custom-main"></i>
+              <i class="fa fa-plus fa-stack-custom-sub upper-left hover-sub-success"></i>
+            </i>
+            {% trans "Open new service event" %}
+          </a>
+        {% endif %}
+        {% if perms.service_log.review_serviceevent %}
+          <a class="list-group-item" title="{% trans "Service Events Needing Review" %}" href="{% url 'sl_list_review_required' %}">
+            <i class="fa fa-stack fa-lg fa-fw">
+              <i class="fa fa-wrench fa-stack-custom-main"></i>
+              <i class="fa fa-question-circle fa-stack-custom-sub upper-left hover-sub-success"></i>
+            </i>
+            {% trans "Service Events Needing Review" %}
+            <span title="{% trans "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-unreviewed-count">{{ SE_NEEDING_REVIEW_COUNT }}</span>
+            </span>
+          </a>
+        {% endif %}
+
+        {% if perms.service_log.perform_returntoserviceqa %}
+          <a class="list-group-item" title="{% trans "View all incomplete RTS QC" %}" href="{% url 'rtsqa_list_incomplete' %}">
+            <i class="fa fa-stack fa-lg fa-fw">
+              <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+              <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
+            </i>
+            {% trans "View all incomplete return to service QC" %}
+
+            <span title="{% trans "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} incomplete return to service test lists" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0 %}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                <span class="total-unreviewed-count">{{ SE_RTS_INCOMPLETE_QA_COUNT }}</span>
+            </span>
+          </a>
+        {% endif %}
+        {% if perms.qa.can_review %}
+          <a class="list-group-item" title="{% trans "View unreviewed RTS QC" %}" href="{% url 'rtsqa_list_unreviewed' %}">
+            <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
+            {% trans "View unreviewed return to service QC" %}
+            <span title="{% trans "There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+              <span class="total-unreviewed-count">{{ SE_RTS_UNREVIEWED_QA_COUNT }}</span>
+            </span>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

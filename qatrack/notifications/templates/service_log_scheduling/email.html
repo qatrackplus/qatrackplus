@@ -1,0 +1,74 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% load i18n %}
+{% block title%}QATrack+ Service Event Scheduling Notice{% endblock %}
+{% block preheader %}QATrack+ Service Event Scheduling Notice{% endblock %}
+{% block extra_css %}
+  th.header {
+    font-weight: bold;
+  }
+  thead th.header {
+    text-align: center;
+  }
+  thead th {
+    font-weight: bold;
+    text-align: center;
+  }
+  tbody th.header {
+    padding-right: 10px;
+  }
+  .due-date {
+    text-align: center;
+    font-size: 0.9em;
+  }
+{% endblock %}
+{% block content %}
+<p>Hello,</p>
+<p>
+{% if notice.is_all %}
+  The following scheduled service events have due dates shown below.
+{% elif notice.is_due %}
+  The following scheduled service events are currently due or overdue.
+{% elif notice.is_upcoming_and_due %}
+  {% if notice.future_days == 0 %}
+    The following scheduled service events are currently due, overdue.
+  {% else %}
+    The following scheduled service events are currently due, overdue, or will be due in the next {{ notice.future_days }} days.
+  {% endif %}
+{% elif notice.is_upcoming %}
+  {% if notice.future_days == 0 %}
+    The following scheduled service events are due today.
+  {% else %}
+    The following scheduled service events will be due in the next {{ notice.future_days }} days.
+  {% endif %}
+{% endif %}
+</p>
+<table style="border: none;" cellspacing="0" cellpadding="0">
+  <thead>
+    <tr>
+      <th class="header" style="border-bottom: 1px solid #ccc;">Unit</th>
+      <th class="header" style="border-bottom: 1px solid #ccc;">Service Area</th>
+      <th style="border-bottom: 1px solid #ccc;">Service Event Template</th>
+      <th style="border-bottom: 1px solid #ccc;">Due Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% regroup notice.schedules_to_notify by unit_service_area as schedules %}
+    {% for unit_service_area, unit_service_area_schedules in schedules %}
+      {% for schedule in unit_service_area_schedules %}
+        <tr>
+          {% if forloop.first %}
+            <th class="header">{{ unit_service_area.unit.name }}</th>
+            <th class="header">{{ unit_service_area.service_area.name }}</th>
+          {% else %}
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          {% endif %}
+          <td>{{ schedule.service_event_template.name }}</td>
+          <td class="due-date {{ schedule.due_status }}">{% if schedule.due_date %}{{ schedule.due_date | date }}{% else %}Ad Hoc{% endif %}</td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

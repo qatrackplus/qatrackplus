@@ -1,485 +1,557 @@
 {% extends "service_log/sl_base.html" %}
 
+{% load i18n %}
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
-{% block head_title %}Service Event{% endblock %}
+{% block head_title %}{% trans "Service Event" %}{% endblock %}
 
 {% block extra_css %}
-    {{ block.super }}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
+  {{ block.super }}
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
-{#    <script type="text/javascript">#}
-{#         var se_colours_dict = {{ service_event_tag_colours|safe }};#}
-{#    </script>#}
 {% endblock extra_js %}
 
 {% block require_javascript %}
-    require(['sl_se_details']);
+  require(['sl_se_details']);
 {% endblock require_javascript %}
 
 {% block body %}
-    <div class="max-width-lg">
-        <div class="row">
-            <div class="col-md-3">
-                <h4 class="no-margin-top">Service Event {{ serviceevent.id }} Details</h4>
-                {% service_status_label serviceevent.service_status size="14" %}
-            </div>
-            <div class="col-md-8">
-                <div class="col-sm-4">
-                    <dl>
-                        <dt>Created:</dt>
-                        <dd>
-                            <div>{{ serviceevent.datetime_created }}</div>
-                            <div>by {{ serviceevent.user_created_by|get_user_name }}</div>
-                        </dd>
-                    </dl>
-                </div>
-                {% if serviceevent.datetime_modified %}
-                    <div class="col-sm-4">
-                        <dl>
-                            <dt>Modified:</dt>
-                            <dd>
-                                <div>{{ serviceevent.datetime_modified }}</div>
-                                <div>by {{ serviceevent.user_modified_by|get_user_name }}</div>
-                            </dd>
-                        </dl>
-                    </div>
-                {% endif %}
-                {% if serviceevent.datetime_status_changed %}
-                    <div class="col-sm-4">
-                        <dl>
-                            <dt>Status Changed:</dt>
-                            <dd>
-                                <div>{{ serviceevent.datetime_status_changed }}</div>
-                                <div>by
-                                    {% if serviceevent.user_status_changed_by %}
-                                        {{ serviceevent.user_status_changed_by|get_user_name }}
-                                    {% else %}
-                                        System
-                                    {% endif %}
-                                </div>
-                            </dd>
-                        </dl>
-                    </div>
-                {% endif %}
-            </div>
-            <div class="col-md-1">
-                {% if perms.service_log.change_serviceevent %}
-                    <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
-                {% endif %}
-            </div>
+<div class="max-width-lg">
+  <div class="row">
+    <div class="col-md-3">
+      <h4 class="no-margin-top">
+        {% blocktrans with service_event_id=serviceevent.id %}
+          Service Event {{ service_event_id }} Details
+        {% endblocktrans %}
+      </h4>
+      {% if perms.service_log.view_serviceeventstatus %}
+        {% service_status_label serviceevent.service_status size="14" %}
+      {% endif %}
+    </div>
+    <div class="col-md-7">
+      <div class="row">
+        <div class="col-sm-4">
+          <dl>
+            <dt>{% trans "Created" %}:</dt>
+            <dd>
+              <div>{{ serviceevent.datetime_created }}</div>
+              <div>
+                {% blocktrans with username=serviceevent.user_created_by|get_user_name %}
+                  by {{ username }}
+                {% endblocktrans %}
+              </div>
+            </dd>
+          </dl>
         </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <div class="box">
-                    <div class="box-header">
-
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div id="required-fields" class="col-md-6 form-horizontal">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <dl class="dl-horizontal">
-                                            <dt>Service date:</dt><dd><div>{{ serviceevent.datetime_service }}</div></dd>
-                                            <dt>Unit:</dt><dd><div>{{ serviceevent.unit_service_area.unit }}</div></dd>
-                                            <dt>Service area:</dt><dd><div>{{ serviceevent.unit_service_area.service_area }}</div></dd>
-                                            <dt>Service type:</dt><dd><div>{{ serviceevent.service_type }}</div></dd>
-                                            <dt>Requires review:</dt><dd><div>{{ serviceevent.is_review_required }}</div></dd>
-                                        </dl>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="optional-fields" class="col-md-6 form-horizontal">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <dl class="dl-horizontal">
-                                            {% if serviceevent.service_event_related.all|length > 0 %}
-                                                <dt>Related service events:</dt>
-                                                <dd><div>
-                                                    <ul>
-                                                        {% for rel in serviceevent.service_event_related.all %}
-                                                            {% with rel.pk as rel_pk %}
-
-                                                                <li>
-                                                                    <a id="service-event" href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat margin-bottom-1" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
-                                                                </li>
-                                                            {% endwith %}
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div></dd>
-                                            {% endif %}
-                                            {% if serviceevent.test_list_instance_initiated_by %}
-                                                <dt>Initiated by:</dt>
-                                                <dd>
-                                                    <div class="row">
-                                                        <div class="col-md-12">
-                                                            <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by.test_list.name }}</span>
-                                                        </div>
-                                                        <div class="col-md-12">
-                                                            <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_pass_fail_status:False }}</span>
-                                                            <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_review_status }}</span>
-                                                            <div class="btn-group margin-r-3">
-                                                                <a id="view-tli-btn"
-                                                                   class="btn btn-default btn-xs btn-flat"
-                                                                   href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}"
-                                                                   title="View test list instance"
-                                                                >View</a>
-                                                                <a class="btn btn-default btn-xs btn-flat new-tab-link"
-                                                                   href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}"
-                                                                   target="_blank"
-                                                                   title="New tab: view test list instance"
-                                                                >
-                                                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                                </a>
-                                                            </div>
-                                                            <span>{{ serviceevent.test_list_instance_initiated_by.created }}</span>
-                                                        </div>
-                                                    </div>
-                                                </dd>
-                                            {% endif %}
-                                        </dl>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row display-flex">
-                            <div class="col-sm-6">{% spaceless %}
-                                <dl class="height-100 margin-0">
-                                    <dt>Problem description:</dt>
-                                    <dd class="text-display pre height-100-40">{{ serviceevent.problem_description }}</dd>
-                                </dl>{% endspaceless %}
-                            </div>
-                            <div class="col-sm-6">
-                                {% if serviceevent.safety_precautions %}{% spaceless %}
-                                    <dl class="height-100 margin-0">
-                                        <dt>Safety precautions:</dt>
-                                        <dd class="text-display pre height-100-40">{{ serviceevent.safety_precautions }}</dd>
-                                    </dl>{% endspaceless %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-12">
-                                {% if serviceevent.work_description %}{% spaceless %}
-                                    <dl class="margin-0">
-                                        <dt>Work description:</dt>
-                                        <dd class="text-display pre">{{ serviceevent.work_description }}</dd>
-                                    </dl>{% endspaceless %}
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+        {% if serviceevent.datetime_modified %}
+          <div class="col-sm-4">
+            <dl>
+              <dt>{% trans "Modified" %}:</dt>
+              <dd>
+                <div>{{ serviceevent.datetime_modified }}</div>
+                <div>
+                  {% blocktrans with username=serviceevent.user_modified_by|get_user_name %}
+                    by {{ username }}
+                  {% endblocktrans %}
                 </div>
-            </div>
+              </dd>
+            </dl>
+          </div>
+        {% endif %}
+        {% if serviceevent.datetime_status_changed %}
+          <div class="col-sm-4">
+            <dl>
+              <dt>{% trans "Status Changed" %}:</dt>
+              <dd>
+                <div>{{ serviceevent.datetime_status_changed }}</div>
+                <div>
+                  {% if serviceevent.user_status_changed_by %}
+                    {% blocktrans with username=serviceevent.user_status_changed_by|get_user_name %}
+                      by {{ username }}
+                    {% endblocktrans %}
+                  {% else %}
+                    {% trans "by System" %}
+                  {% endif %}
+                </div>
+              </dd>
+            </dl>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-md-2">
+      {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
+        {% include "service_log/serviceevent_pdf_button.html" with se=serviceevent %}
+      {% endif %}
+      {% if perms.service_log.change_serviceevent %}
+        <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">{% trans "Edit" %}</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header">
+
         </div>
+        <div class="box-body">
+          <div class="row">
+            <div id="required-fields" class="col-md-6 form-horizontal">
+              <div class="row">
+                <div class="col-md-12">
+                  <dl class="dl-horizontal">
 
-        <div class="row">
-            <div class="col-md-4">
-                {% if hours|length > 0 or g_links|length > 0 or serviceevent.duration_service_time or serviceevent.duration_lost_time %}
-                    <div class="box">
-                        <div class="box-header">
-                            <h3 class="box-title">
-                                <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
-                                Involved Parties and Durations
-                            </h3>
-                        </div>
-                        <div class="box-body">
+                    <dt>{% trans "Service date" %}:</dt>
+                    <dd><div>{{ serviceevent.datetime_service }}</div></dd>
 
-                            {% if serviceevent.duration_service_time or serviceevent.duration_lost_time %}
-                                <div class="subheading-divider">Service Event Durations</div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <dl class="dl-horizontal">
-                                            {% if serviceevent.duration_service_time != None %}
-                                                <dt>Service time (hh:mm):</dt><dd><div>{{ serviceevent.duration_service_time|hour_min }}</div></dd>
-                                            {% endif %}
-                                            {% if serviceevent.duration_lost_time != None %}
-                                                <dt>Lost time (hh:mm):</dt><dd><div>{{ serviceevent.duration_lost_time|hour_min }}</div></dd>
-                                            {% endif %}
-                                        </dl>
-                                    </div>
-                                </div>
-                            {% endif %}
+                    <dt>{% trans "Unit" %}:</dt>
+                    <dd><div>{{ serviceevent.unit_service_area.unit }}</div></dd>
 
-                            {% if g_links|length > 0 %}
-                                <div class="subheading-divider">Group Members Involved</div>
-                                <div class="row">
-                                    <div id="g-link-fields" class="col-md-12">
-                                        <dl class="dl-horizontal">
-                                            {% for gli in g_links %}
-                                                <dt>{{ gli.group_linker.name }}:</dt>
-                                                <dd>{% if gli.user.get_full_name %}{{gli.user.get_full_name}}{% else %} {{gli.user.username}}{% endif %}</dd>
-                                            {% endfor %}
-                                        </dl>
-                                    </div>
-                                </div>
-                            {% endif %}
+                    <dt>{% trans "Service area" %}:</dt>
+                    <dd><div>{{ serviceevent.unit_service_area.service_area }}</div></dd>
 
-                            {% if hours|length > 0 %}
-                                <div class="subheading-divider">User and Third Party Work Durations</div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <table class="table table-hover table-condensed table-valign-middle">
-                                            <thead>
-                                                <tr>
-                                                    <th>User or Third Party</th>
-                                                    <th>Time (hh:mm)</th>
-                                                </tr>
-                                            </thead>
+                    <dt>{% trans "Service type" %}:</dt>
+                    <dd><div>{{ serviceevent.service_type }}</div></dd>
 
-                                            <tbody id="hours-tbody">
+                    <dt>{% trans "Requires review" %}:</dt>
+                    <dd><div>{{ serviceevent.is_review_required }}</div></dd>
 
-                                                {% for h in hours %}
-                                                    <tr>
-                                                        <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
-                                                        <td>{{ h.time|hour_min }}</td>
-                                                    </tr>
-                                                {% endfor %}
-
-                                            </tbody>
-
-                                        </table>
-                                    </div>
-                                </div>
-                            {% endif %}
-
-                        </div>
-                    </div>
-                {% endif %}
-
-                {% if serviceevent.attachment_set.all|length > 0 %}
-                    <div class="box">
-                        <div class="box-header">
-                            <h3 class="box-title">
-                                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
-                                Attachments
-                            </h3>
-                        </div>
-                        <div class="box-body">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    {% if perms.attachments.add_attachment %}
-                                        <table id="attach-table" class="table table-responsive table-condensed">
-                                            <tbody>
-
-                                                {% for attach in serviceevent.attachment_set.all %}
-                                                    <tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td></tr>
-                                                {% endfor %}
-                                            </tbody>
-                                            <tfoot id="se-attachment-names"></tfoot>
-                                        </table>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-
+                  </dl>
+                </div>
+              </div>
             </div>
+            <div id="optional-fields" class="col-md-6 form-horizontal">
+              <div class="row">
+                <div class="col-md-12">
+                  <dl class="dl-horizontal">
+                    {% if serviceevent.service_event_template %}
+                      <dt>{% trans "Template" %}:</dt>
+                      <dd>
+                        {{ serviceevent.service_event_template }}
+                      </dd>
+                    {% endif %}
+                    {% if serviceevent.service_event_schedule %}
+                      <dt>{% trans "Previous Due Date" %}:</dt>
 
-            <div class="col-md-8">
-                <div class="box">
-                    <div class="box-header">
-                        <h3 class="box-title">
-                            <i class="fa fa-stack fa-fw">
-                                <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
-                                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
-                            </i>
-                            Return To Service QA
-                        </h3>
-                    </div>
-                    <div class="box-body">
-                        {% if rtsqas|length > 0 %}
-                            <div class="subheading-divider">Return To Service QA Required</div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <table class="table table-hover table-condensed table-valign-middle">
-
-                                        <thead>
-                                            <tr>
-                                                <th style="min-width: 200px;">Test List</th>
-                                                <th>Completed</th>
-                                                <th>Pass/Fail</th>
-                                                <th>Review Status</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody>
-                                            {% for f in rtsqas %}
-                                                <tr>
-                                                    <td>{{ f.unit_test_collection.tests_object.name }}</td>
-                                                    <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance.work_completed }}{% else %}----{% endif %}</td>
-                                                    <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
-                                                    <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
-                                                    <td>
-                                                        {% if f.test_list_instance.pk %}
-                                                            {% if perms.qa.can_review %}
-                                                                <div class="btn-group">
-                                                                    <a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}"
-                                                                       class="btn btn-xs btn-default btn-flat"
-                                                                       title="Review test list instance"
-                                                                    >Review</a>
-                                                                    <a class="btn btn-default btn-xs btn-flat new-tab-link"
-                                                                       href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}"
-                                                                       target="_blank"
-                                                                       title="New tab: review test list instance"
-                                                                    >
-                                                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                                    </a>
-                                                                </div>
-                                                            {% endif %}
-                                                        {% else %}
-                                                            {% if perms.qa.add_testlistinstance %}
-                                                                <div class="btn-group">
-                                                                    <a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}"
-                                                                       class="btn btn-xs btn-default btn-flat"
-                                                                       title="Perform test list"
-                                                                    >Perform</a>
-                                                                    <a class="btn btn-default btn-xs btn-flat new-tab-link"
-                                                                       href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}"
-                                                                       target="_blank"
-                                                                       title="New tab: perform test list"
-                                                                    >
-                                                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                                    </a>
-                                                                </div>
-                                                            {% endif %}
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-
-                                        </tbody>
-
-                                        <tfoot></tfoot>
-
-                                    </table>
-                                </div>
-                            </div>
+                      <dd>
+                        {% if serviceevent.due_date %}
+                          <abbr title="Due date when this service event was completed">{{ serviceevent.due_date }}</abbr>
+                        {% else %}
+                          <em>{% trans "No due date set" %}</em>
                         {% endif %}
+                      </dd>
+
+                      <dt>{% trans "Scheduled" %}:</dt>
+                      <dd>
+                        {% if serviceevent.include_for_scheduling %}
+                          <abbr title="This service event is included when calculating due dates">{% trans "Yes" %}</abbr>
+                        {% else %}
+                          <abbr title="This service event is not considered when calculating due dates">{% trans "No" %}</abbr>
+                        {% endif %}
+                      </dd>
+                    {% endif %}
+                    {% if serviceevent.service_event_related.all|length > 0 %}
+                      <dt>{% trans "Related service events" %}:</dt>
+                      <dd>
+                        <div>
+                          <ul>
+                            {% for rel in serviceevent.service_event_related.all %}
+                              {% with rel.pk as rel_pk %}
+                                <li>
+                                  <a id="service-event" href="{% url 'sl_details' pk=rel.id %}" class="se_tag btn btn-xs btn-flat margin-bottom-1" data-bgcolour="{{ rel.service_status.colour }}">{{ rel }}</a>
+                                </li>
+                              {% endwith %}
+                            {% endfor %}
+                          </ul>
+                        </div>
+                      </dd>
+                    {% endif %}
+                    {% if serviceevent.test_list_instance_initiated_by %}
+                      <dt>{% trans "Initiated by" %}:</dt>
+                      <dd>
                         <div class="row">
-                            <div class="col-sm-12">
-
-                                <div class="subheading-divider">Comments</div>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        {% render_comment_list for serviceevent %}
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        {% get_comment_form for serviceevent as c_form %}
-
-                                        <div id="comment-form">
-                                            {% csrf_token %}
-                                            <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
-                                            {{ c_form.object_pk }}
-                                            {{ c_form.content_type }}
-                                            {{ c_form.security_hash }}
-                                            {{ c_form.timestamp }}
-                                            <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="2" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div id="post-comment" class="btn btn-flat btn-info btn-sm pull-right disabled">Post Comment</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                          <div class="col-md-12">
+                            <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by.test_list.name }}</span>
+                          </div>
+                          <div class="col-md-12">
+                            <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_pass_fail_status:False }}</span>
+                            <span class="margin-r-3">{{ serviceevent.test_list_instance_initiated_by|as_review_status }}</span>
+                            <div class="btn-group margin-r-3">
+                              <a id="view-tli-btn"
+                                class="btn btn-default btn-xs btn-flat"
+                                href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}"
+                                title="{% trans "View test list instance" %}"
+                              >{% trans "View" %}</a>
+                              <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                                href="{% url 'view_test_list_instance' pk=serviceevent.test_list_instance_initiated_by.id %}"
+                                target="_blank"
+                                title="{% trans "New tab: view test list instance" %}"
+                              >
+                                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                              </a>
                             </div>
+                            <span>{{ serviceevent.test_list_instance_initiated_by.created }}</span>
+                          </div>
                         </div>
-                    </div>
+                      </dd>
+                    {% endif %}
+                  </dl>
                 </div>
-
-                {% if USE_PARTS and parts_used|length > 0 %}
-                    <div class="box">
-                        <div class="box-header">
-                            <h3 class="box-title">
-                                <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
-                                Parts
-                            </h3>
-                        </div>
-                        <div class="box-body">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <h4>Parts Used</h4>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <table class="table table-hover table-condensed table-valign-middle">
-
-                                        <thead>
-                                            <tr>
-                                                <th class="max-width-300">Part</th>
-                                                <th>Quantity</th>
-                                                <th>From Storage</th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody>
-                                            {% for pu in parts_used %}
-                                                <tr>
-                                                    <td>{{ pu.part }}</td>
-                                                    <td>{{ pu.quantity }}</td>
-                                                    <td>{% if pu.from_storage %}{{ pu.from_storage }}{% endif %}</td>
-                                                </tr>
-                                            {% endfor %}
-
-                                        </tbody>
-
-                                        <tfoot></tfoot>
-
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-
+              </div>
             </div>
-        </div>
-
-        <div class="row">
+          </div>
+          <div class="row display-flex">
+            <div class="col-sm-6">{% spaceless %}
+              <dl class="height-100 margin-0">
+                <dt>{% trans "Problem description" %}:</dt>
+                <dd class="text-display pre height-100-40">{{ serviceevent.problem_description }}</dd>
+              </dl>{% endspaceless %}
+            </div>
+            <div class="col-sm-6">
+              {% if serviceevent.safety_precautions %}{% spaceless %}
+                <dl class="height-100 margin-0">
+                  <dt>{% trans "Safety precautions" %}:</dt>
+                  <dd class="text-display pre height-100-40">{{ serviceevent.safety_precautions }}</dd>
+                </dl>{% endspaceless %}
+              {% endif %}
+            </div>
+          </div>
+          <div class="row">
             <div class="col-sm-12">
-                {% if perms.service_log.change_serviceevent %}
-                    <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">Edit</a>
-                {% endif %}
+              {% if serviceevent.work_description %}{% spaceless %}
+                <dl class="margin-0">
+                  <dt>{% trans "Work description" %}:</dt>
+                  <dd class="text-display pre">{{ serviceevent.work_description }}</dd>
+                </dl>{% endspaceless %}
+              {% endif %}
             </div>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-clock-o fa-fw" aria-hidden="true"></i>
+              {% trans "Involved Parties and Durations" %}
+            </h3>
+          </div>
+          <div class="box-body">
+
+            <div class="subheading-divider"{% trans ">Service Event Durations" %}</div>
+            <div class="row">
+              <div class="col-md-12">
+                <dl class="dl-horizontal">
+                  <dt>{% trans "Service time (hh:mm)" %}:</dt>
+                  <dd>
+                    <div>
+                      {% if serviceevent.duration_service_time != None %}
+                        {{ serviceevent.duration_service_time|hour_min }}
+                      {% else %}
+                        <em>{% trans "Not specified" %}</em>
+                      {% endif %}
+                    </div>
+                  </dd>
+                  <dt>{% trans "Lost time (hh:mm)" %}:</dt>
+                  <dd>
+                    <div>
+                      {% if serviceevent.duration_lost_time != None %}
+                        {{ serviceevent.duration_lost_time|hour_min }}
+                      {% else %}
+                        <em>{% trans "Not specified" %}</em>
+                      {% endif %}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+
+            {% if g_links|length > 0 %}
+              <div class="subheading-divider">{% trans "Group Members Involved" %}</div>
+              <div class="row">
+                <div id="g-link-fields" class="col-md-12">
+                  <dl class="dl-horizontal">
+                    {% for gli in g_links %}
+                      <dt>{{ gli.group_linker.name }}:</dt>
+                      <dd>{% if gli.user.get_full_name %}{{gli.user.get_full_name}}{% else %} {{gli.user.username}}{% endif %}</dd>
+                    {% endfor %}
+                  </dl>
+                </div>
+              </div>
+            {% endif %}
+
+              <div class="subheading-divider">{% trans "User and Third Party Work Durations" %}</div>
+              <div class="row">
+                <div class="col-md-12">
+                  {% if hours|length > 0 %}
+                    <table class="table table-hover table-condensed table-valign-middle">
+                      <thead>
+                        <tr>
+                          <th>{% trans "User or Third Party" %}</th>
+                          <th{% trans ">Time (hh:mm)" %}</th>
+                        </tr>
+                      </thead>
+
+                      <tbody id="hours-tbody">
+
+                        {% for h in hours %}
+                          <tr>
+                            <td>{% if h.user_or_thirdparty.get_full_name %}{{ h.user_or_thirdparty.get_full_name }}{% else %} {{ h.user_or_thirdparty.username }}{% endif %}</td>
+                            <td>{{ h.time|hour_min }}</td>
+                          </tr>
+                        {% endfor %}
+
+                      </tbody>
+
+                    </table>
+                  {% else %}
+                    <em>{% trans "No work hours specified" %}</em>
+                  {% endif %}
+                </div>
+              </div>
+
+          </div>
+        </div>
+
+      {% if serviceevent.attachment_set.all|length > 0 %}
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+              {% trans "Attachments" %}
+            </h3>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-sm-12">
+                <table id="attach-table" class="table table-responsive table-condensed">
+                  <tbody>
+                    {% for attach in serviceevent.attachment_set.all %}
+                      <tr><td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td></tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot id="se-attachment-names"></tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
     </div>
 
-    <div class="max-width-lg margin-top-30">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="box">
-                    <div class="box-header">
-                        <h4 class="box-title">Service Log For Service Event {{ form.instance.id }} </h4>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <ul class="timeline timeline-custom">
-                                    {% for log in service_logs %}
-                                        {% render_log log user False True %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="col-md-8">
+      <div class="box">
+        <div class="box-header">
+          <h3 class="box-title">
+            <i class="fa fa-stack fa-fw">
+              <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
+                <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left info"></i>
+            </i>
+            {% trans "Return To Service QC" %}
+          </h3>
         </div>
+        <div class="box-body">
+          {% if rtsqas|length > 0 %}
+            <div class="subheading-divider">{% trans "Return To Service QC Required" %}</div>
+              <div class="row">
+                <div class="col-md-12">
+                  <table class="table table-hover table-condensed table-valign-middle">
+
+                    <thead>
+                      <tr>
+                        <th style="min-width: 200px;">{% trans "Test List" %}</th>
+                        <th>{% trans "Completed" %}</th>
+                        <th>{% trans "Pass/Fail" %}</th>
+                        <th>{% trans "Review Status" %}</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {% for f in rtsqas %}
+                        <tr>
+                          <td>{{ f.unit_test_collection.tests_object.name }}</td>
+                          <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance.work_completed }}{% else %}----{% endif %}</td>
+                          <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_pass_fail_status:False }}{% else %}----{% endif %}</td>
+                          <td>{% if f.test_list_instance.pk %}{{ f.test_list_instance|as_review_status }}{% else %}----{% endif %}</td>
+                          <td>
+                            {% if f.test_list_instance.pk %}
+                              {% if perms.qa.can_review %}
+                                <div class="btn-group">
+                                  <a href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}?next={% url 'sl_details' pk=serviceevent.pk %}"
+                                      class="btn btn-xs btn-default btn-flat"
+                                      title="{% trans "Review test list instance" %}"
+                                  >{% trans "Review" %}</a>
+                                  <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                                      href="{% url 'review_test_list_instance' pk=f.test_list_instance.pk %}"
+                                      target="_blank"
+                                      title="{% trans "New tab: review test list instance" %}"
+                                  >
+                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                  </a>
+                                </div>
+                              {% endif %}
+                            {% else %}
+                              {% if perms.qa.add_testlistinstance and user|visible_utc:f.unit_test_collection %}
+                                <div class="btn-group">
+                                  <a href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}&next={% url 'sl_details' pk=serviceevent.pk %}"
+                                      class="btn btn-xs btn-default btn-flat"
+                                      title="{% trans "Perform test list" %}"
+                                  >{% trans "Perform" %}</a>
+                                  <a class="btn btn-default btn-xs btn-flat new-tab-link"
+                                      href="{% url 'perform_qa' pk=f.unit_test_collection.pk %}?rtsqa={{ f.id }}"
+                                      target="_blank"
+                                      title="{% trans "New tab: perform test list" %}"
+                                  >
+                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                  </a>
+                                </div>
+                              {% endif %}
+                            {% endif %}
+                          </td>
+                        </tr>
+                      {% endfor %}
+
+                    </tbody>
+
+                    <tfoot></tfoot>
+
+                  </table>
+                </div>
+              </div>
+          {% endif %}
+
+          <div class="row">
+            <div class="col-sm-12">
+
+              <div class="subheading-divider">{% trans "Comments" %}</div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    {% render_comment_list for serviceevent %}
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  {% get_comment_form for serviceevent as c_form %}
+
+                  <div id="comment-form">
+                    {% csrf_token %}
+                    <input id="id_name" maxlength="50" name="name" type="hidden" required="" value="{{ user.username }}">
+                    {{ c_form.object_pk }}
+                    {{ c_form.content_type }}
+                    {{ c_form.security_hash }}
+                    {{ c_form.timestamp }}
+                    <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="2" required="" placeholder="Add comment" class="margin-bottom-20 form-control autosize"></textarea>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <div id="post-comment" class="btn btn-flat btn-info btn-sm pull-right disabled">{% trans "Post Comment" %}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if parts_used|length > 0 %}
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+              {% trans "Parts" %}
+            </h3>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-md-12">
+                <h4>{% trans "Parts Used" %}</h4>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <table class="table table-hover table-condensed table-valign-middle">
+
+                  <thead>
+                    <tr>
+                      <th class="max-width-300">{% trans "Part" %}</th>
+                      <th>{% trans "Quantity" %}</th>
+                      <th>{% trans "From Storage" %}</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {% for pu in parts_used %}
+                      <tr>
+                        <td>{{ pu.part }}</td>
+                        <td>{{ pu.quantity }}</td>
+                        <td>{% if pu.from_storage %}{{ pu.from_storage }}{% endif %}</td>
+                      </tr>
+                    {% endfor %}
+
+                  </tbody>
+
+                  <tfoot></tfoot>
+
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
     </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-12">
+      {% if perms.service_log.change_serviceevent %}
+        <a class="btn btn-flat btn-default pull-right" href="{% url "sl_edit" serviceevent.id %}">{% trans "Edit" %}</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="max-width-lg margin-top-30">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header">
+          <h4 class="box-title">
+            {% blocktrans with service_event_id=form.instance.id %}
+              Service Log For Service Event {{ service_event_id }}
+            {% endblocktrans %}
+          </h4>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-md-12">
+              <ul class="timeline timeline-custom">
+                {% for log in service_logs %}
+                  {% render_log log user False True %}
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock body %}

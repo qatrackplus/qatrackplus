@@ -43,4 +43,4 @@
 
         $('div.inline-related').sort();
     });
-})(django.jQuery);
+})($);

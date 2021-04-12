@@ -1,5 +1,9 @@
+from unittest import mock
+
 from django.conf import settings
 from django.test import TestCase
+from django.utils import timezone
+import recurrence
 
 from qatrack.qa import models
 from qatrack.qa.templatetags import qa_tags
@@ -25,7 +29,8 @@ class TestTags(TestCase):
                 'can_view_ref_tol': False,
             }
         }
-        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object, perms)
+        user = None
+        rendered = qa_tags.qa_value_form(form, self.unit_test_list.tests_object, perms, user)
         self.assertIsInstance(rendered, str)
 
     def test_due_date(self):
@@ -116,7 +121,7 @@ class TestToleranceForReference(TestCase):
 
     def test_multiple_choice(self):
         tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_tol_choices="foo", mc_pass_choices="")
-        self.assertIn("%s: foo" % (settings.TEST_STATUS_DISPLAY['tolerance']), qa_tags.tolerance_for_reference(tol, None))
+        assert "%s: foo" % (settings.TEST_STATUS_DISPLAY['tolerance']) in qa_tags.tolerance_for_reference(tol, None)
 
     def test_absolute(self):
         r = models.Reference(value=1)
@@ -126,3 +131,48 @@ class TestToleranceForReference(TestCase):
         )
 
         self.assertIn("Between 0 &amp; 2", qa_tags.tolerance_for_reference(tol, r))
+
+
+class TestAsQCWindow:
+
+    @property
+    def wed(self):
+        """Generate a Wed frequency with a 1 day window_start and 1 day window_end"""
+        rule = recurrence.Rule(
+            freq=recurrence.WEEKLY,
+            byday=[recurrence.WE],
+        )
+        return models.Frequency(
+            name="Wed",
+            slug="wed",
+            recurrences=recurrence.Recurrence(
+                rrules=[rule],
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+            ),
+            window_start=1,
+            window_end=1,
+        )
+
+    def test_start_and_end(self):
+        """Window start and end so should show 1 day before and after due date"""
+        utc = mock.Mock()
+        utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=timezone.utc)  # 28th in EST
+        utc.frequency = self.wed
+        window = qa_tags.as_qc_window(utc)
+        assert window == "27 Nov 2018 - 29 Nov 2018"
+
+    def test_no_start(self):
+        """No window_start so window should show as due date to overdue date"""
+        utc = mock.Mock()
+        utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=timezone.utc)  # 28th in EST
+        utc.frequency = utils.create_frequency(name="w", slug="w", interval=7, window_end=4, save=False)
+        window = qa_tags.as_qc_window(utc)
+        assert window == "28 Nov 2018 - 02 Dec 2018"
+
+    def test_no_due_date(self):
+        """No due date so no window available"""
+        utc = mock.Mock()
+        utc.due_date = None
+        utc.frequency = utils.create_frequency(name="w", slug="w", interval=7, window_end=4, save=False)
+        window = qa_tags.as_qc_window(utc)
+        assert window == ""

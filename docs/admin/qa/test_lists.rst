@@ -4,7 +4,7 @@ Configuring Test Lists
 ======================
 
 To edit existing test lists or create new test lists click on the **Test
-Lists** in the **QA** section on the main admin page.
+Lists** in the **QC** section on the main admin page.
 
 Create a new test list by clicking the **Add Test List** link on the
 **Test Lists** admin page. The fields for defining a new test list are
@@ -34,8 +34,8 @@ Warning Message
 ---------------
 
 Use this field to define the message shown when a test within this test
-is at Action level. If the message is left blank, the default is "Do not
-treat".
+is at Action level. If the message is left blank, a warning message will not
+be shown for out of tolerance tests.
 
 Javascript
 ----------

@@ -1,174 +1,190 @@
 {% extends "service_log/sl_base.html" %}
 
 {% load widget_tweaks %}
+{% load attach_tags %}
 {% load qa_tags %}
+{% load i18n %}
 
-{% block head_title %}Part{% endblock %}
-
-{% block extra_css %}
-    {{ block.super }}
-{% endblock extra_css %}
-
-{% block extra_js %}
-    <script type="text/javascript">
-
-    </script>
-{% endblock extra_js %}
-
-{% block require_javascript %}
-{#    require(['p_part', 'sidebar']);#}
-{% endblock require_javascript %}
+{% block head_title %}{% trans "Part Details" %}: {{ part.name }}{% endblock %}
 
 {% block body %}
 
-    <div>
-
+{% csrf_token %}
+<div class="max-width-lg">
+  <div class="row">
+    <div class="col-md-3">
+      <h3 class="no-margin-top">{% blocktrans with part_id=part.id %}Part {{ part_id }} Details{% endblocktrans %}</h3>
     </div>
-
-    <form action="" method="post" novalidate>
-        {% csrf_token %}
-        <div class="max-width-lg">
-            <div class="row">
-                <div class="col-md-3">
-                    <h3 class="no-margin-top">Part {{ part.id }} Details</h3>
-                </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header"></div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-sm-6">
+              <dl class="dl-horizontal">
+                <dt>{% trans "Part number" %}:</dt><dd><div>{% firstof part.part_number "<em>N/A</em>" %}</div></dd>
+                <dt>{% trans "Cost" %}:</dt><dd><div>{% if part.cost is None %}<em>N/A</em>{% else %}{{ part.cost }}{% endif %}</div></dd>
+                <dt>{% trans "Quantity min" %}:</dt><dd><div>{{ part.quantity_min }}</div></dd>
+                <dt>{% trans "Quantity current" %}:</dt><dd><div>{{ part.quantity_current }}</div></dd>
+              </dl>
             </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="box">
-                        <div class="box-header">
-
-                        </div>
-                        <div class="box-body">
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <dl class="dl-horizontal">
-                                        <dt>Part number:</dt><dd><div>{{ part.part_number }}</div></dd>
-                                        <dt>Cost:</dt><dd><div>{{ part.cost }}</div></dd>
-                                        <dt>Quantity min:</dt><dd><div>{{ part.quantity_min }}</div></dd>
-                                        <dt>Quantity current:</dt><dd><div>{{ part.quantity_current }}</div></dd>
-                                    </dl>
-
-
-                                </div>
-                                <div class="col-sm-6">
-                                    <dl class="dl-horizontal">
-                                        <dt>Alternate Part number:</dt><dd><div>{{ part.alt_part_number }}</div></dd>
-                                        <dt>Part category:</dt><dd><div>{% if part.part_category %}{{ part.part_category }}{% endif %}</div></dd>
-                                        <dt>Obsolete:</dt><dd><div>{{ part.is_obsolete }}</div></dd>
-                                    </dl>
-
-                                </div>
-
-                            </div>
-                            <div class="row display-flex">
-                                <div class="col-md-6">
-                                    {% spaceless %}
-                                    <dl class="height-100 margin-0">
-                                        <dt>Name:</dt>
-                                        <dd class="text-display pre height-100-40">{{ part.name }}</dd>
-                                    </dl>{% endspaceless %}
-                                </div>
-                                <div class="col-md-6">
-                                    {% if part.notes %}{% spaceless %}
-                                    <dl class="height-100 margin-0">
-                                        <dt>Notes:</dt>
-                                        <dd class="text-display pre height-100-40">{{ part.notes }}</dd>
-                                    </dl>{% endspaceless %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-sm-6">
+              <dl class="dl-horizontal">
+                <dt>{% trans "Alternate Part number" %}:</dt><dd><div>{{ part.alt_part_number }}</div></dd>
+                <dt>{% trans "Part category" %}:</dt><dd><div>{% if part.part_category %}{{ part.part_category }}{% endif %}</div></dd>
+                <dt>{% trans "Obsolete" %}:</dt><dd><div>{{ part.is_obsolete }}</div></dd>
+              </dl>
             </div>
-
-            <div class="row">
-                {% with part.partsuppliercollection_set.all as psc_set %}
-                    <div class="col-md-5">
-                        {% if psc_set|length > 0 %}
-                            <div class="box">
-                                <div class="box-header">
-                                    <h4 class="box-title">Suppliers</h4>
-                                </div>
-
-                                <div class="box-body">
-                                    <table class="table table-condensed table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Supplier</th>
-                                                <th>Supplier Specific Part #</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for psc in psc_set %}
-                                                <tr>
-                                                    <td class="min-width-200">{{ psc.supplier.name }}</td>
-                                                    <td>{% if psc.part_number %}{{ psc.part_number }}{% endif %}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-
-                                        </tfoot>
-                                    </table>
-                                </div>
-
-                            </div>
-                        {% endif %}
-
-                    </div>
-                {% endwith %}
-                {% with part.partstoragecollection_set.all as psc_set %}
-                    <div class="col-md-7">
-                        {% if psc_set|length > 0 %}
-                            <div class="box">
-                                <div class="box-header">
-                                    <h4 class="box-title">Storage</h4>
-                                </div>
-
-                                <div class="box-body">
-                                    <table class="table table-condensed table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Room</th>
-                                                <th>Location</th>
-                                                <th class="max-width-75">Quantity</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for psc in psc_set %}
-                                                <tr title="{{ psc.storage.description }}">
-                                                    <td class="min-width-150 room-td">{{ psc.storage.room }}</td>
-                                                    <td class="min-width-100">{{ psc.storage.location }}</td>
-                                                    <td class="max-width-75">{{ psc.quantity }}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-
-                                        </tfoot>
-                                    </table>
-                                </div>
-
-                            </div>
-                        {% endif %}
-
-                    </div>
-                {% endwith %}
+          </div>
+          <div class="row display-flex">
+            <div class="col-md-6">
+              {% spaceless %}
+              <dl class="height-100 margin-0">
+                <dt>{% trans "Name" %}:</dt>
+                <dd class="text-display pre height-100-40">{{ part.name }}</dd>
+              </dl>{% endspaceless %}
             </div>
-
-            <div class="row">
-                <div class="col-md-12">
-                    {% if perms.parts.change_part %}
-                        <a href="{% url 'part_edit' part.id %}" class="btn btn-flat btn-default pull-right">Edit</a>
-                    {% endif %}
-                </div>
+            <div class="col-md-6">
+              {% if part.notes %}{% spaceless %}
+                <dl class="height-100 margin-0">
+                  <dt>{% trans "Notes" %}:</dt>
+                  <dd class="text-display pre height-100-40">{{ part.notes }}</dd>
+                </dl>{% endspaceless %}
+              {% endif %}
             </div>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
 
+  <div class="row">
+    {% with part.partsuppliercollection_set.all as psc_set %}
+      <div class="col-md-5">
+        {% if psc_set|length > 0 %}
+          <div class="box">
+            <div class="box-header">
+              <h4 class="box-title">{% trans "Suppliers" %}</h4>
+            </div>
 
+            <div class="box-body">
+              <table class="table table-condensed table-hover">
+                <thead>
+                  <tr>
+                    <th>{% trans "Supplier" %}</th>
+                    <th>{% trans "Supplier Specific Part #" %}</th>
+                  </tr>
+                </thead>
+                  <tbody>
+                    {% for psc in psc_set %}
+                      <tr>
+                        <td class="min-width-200">
+                          <a href="{{ psc.supplier.get_absolute_url }}"
+                              title="{% trans "Click to view supplier details" %}">
+                            {{ psc.supplier.name }}
+                          </a>
+                        </td>
+                        <td>{% if psc.part_number %}{{ psc.part_number }}{% endif %}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot></tfoot>
+              </table>
+            </div>
+          </div>
+        {% endif %}
 
+      </div>
+    {% endwith %}
+    {% with part.partstoragecollection_set.all as psc_set %}
+      <div class="col-md-7">
+        {% if psc_set|length > 0 %}
+          <div class="box">
+            <div class="box-header">
+              <h4 class="box-title">{% trans "Storage" %}</h4>
+            </div>
 
-    </form>
+            <div class="box-body">
+              <table class="table table-condensed table-hover">
+                <thead>
+                  <tr>
+                    <th>{% trans "Room" %}</th>
+                    <th>{% trans "Location" %}</th>
+                    <th class="max-width-75">{% trans "Quantity" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for psc in psc_set %}
+                    <tr title="{{ psc.storage.description }}">
+                      <td class="min-width-150 room-td">{{ psc.storage.room }}</td>
+                      <td class="min-width-100">{{ psc.storage.location }}</td>
+                      <td class="max-width-75">{{ psc.quantity }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot></tfoot>
+              </table>
+            </div>
+
+          </div>
+        {% endif %}
+
+      </div>
+    {% endwith %}
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      {% if part.attachment_set.all|length > 0 %}
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">
+              <i class="fa fa-cog fa-fw" aria-hidden="true"></i>
+              {% trans "Attachments" %}
+            </h3>
+          </div>
+          <div class="box-body">
+            <div class="row">
+              <div class="col-sm-12">
+                <table id="attach-table" class="table table-responsive table-condensed">
+                  <thead>
+                    <th>{% trans "Attachment" %}</th>
+                    <th>{% trans "Image" %}</th>
+                  </thead>
+                  <tbody>
+                    {% for attach in part.attachment_set.all %}
+                      <tr>
+                        <td>
+                          <i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>
+                          {{ attach | attachment_link }}
+                        </td>
+                        <td>
+                          {% if attach.is_image %}
+                            {{ attach | attachment_img:"parts-image" }}
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot id="se-attachment-names"></tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      {% if perms.parts.change_part %}
+        <a href="{% url 'part_edit' part.id %}" class="btn btn-flat btn-default pull-right">{% trans "Edit" %}</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 {% endblock body %}

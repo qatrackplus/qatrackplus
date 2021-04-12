@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<div class="btn-group" style="margin-bottom: 2px">
+  <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <i class="fa fa-download"></i> {% trans "Export" %} <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu">
+    <li>
+      <a href="{% url 'test_list_instance_report' pk=tli.pk %}?type=pdf" target="_blank">
+        <i class="fa fa-file-pdf-o"></i> {% trans "PDF" %}
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'test_list_instance_report' pk=tli.pk %}?type=csv" target="_blank">
+        <i class="fa fa-table"></i> {% trans "CSV" %}
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'test_list_instance_report' pk=tli.pk %}?type=xlsx" target="_blank">
+        <i class="fa fa-file-excel-o"></i> {% trans "Excel" %}
+      </a>
+    </li>
+  </ul>
+</div>
+

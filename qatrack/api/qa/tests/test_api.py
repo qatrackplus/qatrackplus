@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import os
 import time
@@ -6,7 +7,9 @@ import time
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.urls import reverse
+from django.utils import timezone
 import pytest
+import pytz
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -35,13 +38,20 @@ class TestTestListInstanceAPI(APITestCase):
         self.tsc = utils.create_test(name="testsc", test_type=models.STRING_COMPOSITE)
         self.tsc.calculation_procedure = "result = 'hello %s' % test3"
         self.tsc.save()
+
+        self.tdate = utils.create_test(name="testdate", test_type=models.DATE)
+        self.tdatetime = utils.create_test(name="testdatetime", test_type=models.DATETIME)
+
         self.default_tests = [self.t1, self.t2, self.t3, self.t4, self.t5]
         self.ntests = len(self.default_tests)
 
-        for t in self.default_tests:
-            utils.create_test_list_membership(self.test_list, t)
+        for order, t in enumerate(self.default_tests):
+            utils.create_test_list_membership(self.test_list, t, order=order)
 
-        self.utc = utils.create_unit_test_collection(test_collection=self.test_list, unit=self.unit)
+        frequency = utils.create_frequency(name="daily")
+        self.utc = utils.create_unit_test_collection(
+            test_collection=self.test_list, unit=self.unit, frequency=frequency
+        )
 
         self.create_url = reverse('testlistinstance-list')
         self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
@@ -99,6 +109,13 @@ class TestTestListInstanceAPI(APITestCase):
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
             assert v == self.data['tests'][t.slug]['value']
 
+    def test_create_order(self):
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        for tlm in self.test_list.testlistmembership_set.order_by("order"):
+            ti = models.TestInstance.objects.get(unit_test_info__test=tlm.test)
+            assert ti.order == tlm.order
+
     def test_create_no_status(self):
         models.TestInstanceStatus.objects.all().delete()
         response = self.client.post(self.create_url, self.data)
@@ -150,11 +167,6 @@ class TestTestListInstanceAPI(APITestCase):
 
     def test_create_missing_test(self):
         self.data['tests'].pop("test1")
-        response = self.client.post(self.create_url, self.data)
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-    def test_invalid_string_value(self):
-        self.data['tests']['test3']['value'] = 3
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -214,6 +226,75 @@ class TestTestListInstanceAPI(APITestCase):
         assert models.TestInstance.objects.count() == self.ntests + 1
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
         assert tic.value == self.data['tests']['test1']['value'] + self.data['tests']['test2']['value']
+
+    def test_create_composite_skipped_all_dependencies_comp_not_skipped(self):
+        """
+        Add a composite test to our test list.  Submitting with its dependencies
+        skipped should result in an error and mention it is missing dependencies
+        and needs to be skipped
+        """
+
+        utils.create_test_list_membership(self.test_list, self.tc)
+        self.data['tests']['test1'] = {'value': None, 'skipped': True}
+        self.data['tests']['test2'] = {'value': None, 'skipped': True}
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "missing dependencies" in response.json()['non_field_errors'][0]
+
+    def test_create_composite_skipped_one_dependency_comp_not_skipped(self):
+        """
+        Add a composite test to our test list.  Submitting with one dependency
+        skipped should result in an error and mention it is missing dependencies
+        and needs to be skipped
+        """
+
+        utils.create_test_list_membership(self.test_list, self.tc)
+        self.data['tests']['test1'] = {'value': None, 'skipped': True}
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "missing dependencies" in response.json()['non_field_errors'][0]
+
+    def test_create_composite_skipped_all_dependencies_comp_skipped(self):
+        """
+        Add a composite test to our test list.  Submitting with one dependency
+        skipped should result in an error and mention it is missing dependencies
+        and needs to be skipped
+        """
+
+        utils.create_test_list_membership(self.test_list, self.tc)
+        self.data['tests']['test1'] = {'value': None, 'skipped': True}
+        self.data['tests']['test2'] = {'value': None, 'skipped': True}
+        self.data['tests']['testc'] = {'skipped': True}
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 1
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        assert tic.pass_fail == models.NOT_DONE
+
+    def test_create_date_composite(self):
+        """
+        Add a date composite test to our test list.  Submitting without data
+        included should result in it being calculated.
+        """
+
+        td1 = utils.create_test(name="test_date_1", test_type=models.DATE)
+        td2 = utils.create_test(name="test_date_2", test_type=models.DATETIME)
+        tcd = utils.create_test(name="test_date_c", test_type=models.COMPOSITE)
+        tcd.calculation_procedure = "result = (test_date_2.date() - test_date_1).total_seconds()"
+        tcd.save()
+        for t in [td1, td2, tcd]:
+            utils.create_test_list_membership(self.test_list, t)
+
+        self.data['tests']['test_date_1'] = {'value': "2019-08-01"}
+        self.data['tests']['test_date_2'] = {'value': "2019-08-02 23:45:00"}
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 3
+        tic = models.TestInstance.objects.get(unit_test_info__test=tcd)
+        assert tic.value == 86400
 
     def test_create_composite_invalid_proc(self):
         """
@@ -350,6 +431,34 @@ class TestTestListInstanceAPI(APITestCase):
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_create_with_date(self):
+        """
+        Add a date test. Resulting TestInstance should have date_value != None
+        """
+        utils.create_test_list_membership(self.test_list, self.tdate)
+        today = datetime.date(2019, 11, 11)
+
+        self.data['tests']['testdate'] = {'value': today.strftime("%Y-%m-%d")}
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tdate)
+        assert tic.date_value == today
+
+    def test_create_with_datetime(self):
+        """
+        Add a datetime test. Resulting TestInstance should have datetime_value != None
+        """
+        utils.create_test_list_membership(self.test_list, self.tdatetime)
+        now = timezone.now()
+        self.data['tests']['testdatetime'] = {
+            'value': now.astimezone(pytz.timezone("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S.%f")
+        }
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tdatetime)
+        assert tic.datetime_value == now
+
     def test_create_with_string_composite(self):
         """
         Add a composite test which depends on a constant value to our test list.
@@ -416,8 +525,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -447,8 +561,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'r').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': upload_data,
             'filename': "tmp.json",
@@ -475,8 +594,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'comment': "test comment",
@@ -538,8 +662,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -671,6 +800,14 @@ class TestTestListInstanceAPI(APITestCase):
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").comment == "new comment"
 
+    def test_user_key_updated(self):
+        self.data['user_key'] = "1234"
+        resp = self.client.post(self.create_url, self.data)
+        new_data = {'user_key': "5678"}
+        edit_resp = self.client.patch(resp.data['url'], new_data)
+        assert edit_resp.status_code == 200
+        assert models.TestListInstance.objects.latest("pk").user_key == "5678"
+
     def test_skip_preserved(self):
         self.data['tests']['test1'] = {'skipped': True}
         resp = self.client.post(self.create_url, self.data)
@@ -702,6 +839,30 @@ class TestTestListInstanceAPI(APITestCase):
         new_data = {'in_progress': False}
         self.client.patch(resp.data['url'], new_data)
         assert not models.TestListInstance.objects.all().first().in_progress
+
+    def test_complete_unscheduled(self):
+        self.data['include_for_scheduling'] = True
+        resp = self.client.post(self.create_url, self.data)
+        assert models.TestListInstance.objects.all().first().include_for_scheduling
+        new_data = {'include_for_scheduling': False}
+        self.client.patch(resp.data['url'], new_data)
+        assert not models.TestListInstance.objects.all().first().include_for_scheduling
+
+    def test_complete_unscheduled_due_dates(self):
+        utils.create_test_list_instance(
+            unit_test_collection=self.utc, work_completed=timezone.now() - timezone.timedelta(days=10)
+        )
+        self.utc.refresh_from_db()
+        expected_due_date = self.utc.due_date
+
+        self.data['include_for_scheduling'] = False
+        self.data['work_completed'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        self.data['work_started'] = self.data['work_completed']
+        self.client.post(self.create_url, self.data)
+
+        # unscheduled so should be same due date
+        self.utc.refresh_from_db()
+        assert self.utc.due_date.date() == expected_due_date.date()
 
     def test_no_put(self):
         """All updates should be via patch"""
@@ -745,8 +906,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -778,8 +944,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = json.loads(open(filepath, 'rb').read().decode())
+        upload_data = {
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }
         upload_data['baz']['baz1'] = "edited content"
         self.data['tests']['file_upload'] = {
             'value': json.dumps(upload_data),
@@ -818,8 +989,13 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        filepath = os.path.join(settings.PROJECT_ROOT, "qa", "tests", "TESTRUNNER_test_file.json")
-        upload_data = open(filepath, 'rb').read()
+        upload_data = json.dumps({
+            "foo": 1.2,
+            "bar": [1, 2, 3, 4],
+            "baz": {
+                "baz1": "test"
+            }
+        }).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -858,3 +1034,90 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.patch(resp.data['url'], new_data)
         tli.refresh_from_db()
         assert tli.attachment_set.count() == 2
+
+    def test_create_unique(self):
+        self.data['user_key'] = "1234"
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.latest("pk").user_key == "1234"
+
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "test list instance with this user key already exists." in response.json()['user_key']
+
+
+class TestPerformTestListCycleAPI(APITestCase):
+
+    def setUp(self):
+
+        self.unit = utils.create_unit()
+        self.test_list1 = utils.create_test_list("test list 1")
+        self.test_list2 = utils.create_test_list("test list 2")
+        self.test_list_cycle = utils.create_cycle([self.test_list1, self.test_list2], "test list cycle")
+
+        self.t1 = utils.create_test(name="test1")
+        self.t2 = utils.create_test(name="test2")
+
+        utils.create_test_list_membership(self.test_list1, self.t1)
+        utils.create_test_list_membership(self.test_list2, self.t2)
+
+        self.utc = utils.create_unit_test_collection(test_collection=self.test_list_cycle, unit=self.unit)
+
+        self.create_url = reverse('testlistinstance-list')
+        self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
+
+        self.day1_data = {
+            'unit_test_collection': self.utc_url,
+            'work_completed': '2019-07-25 10:49:47',
+            'work_started': '2019-07-25 10:49:00',
+            'tests': {'test1': {'value': 1}},
+            'day': 0,
+        }
+        self.day2_data = self.day1_data.copy()
+        self.day2_data['day'] = 1
+        self.day2_data['tests'] = {'test2': {'value': 2}}
+
+        self.client.login(username="user", password="password")
+        self.status = utils.create_status()
+
+    def test_create_day_2(self):
+        response = self.client.post(self.create_url, self.day2_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        tli = models.TestListInstance.objects.first()
+        assert tli.testinstance_set.values_list('value', flat=True)[0] == 2
+        assert tli.test_list_id == self.test_list2.id
+        assert tli.day == self.day2_data['day']
+
+    def test_create_day_1(self):
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.unreviewed().count() == 1
+        tli = models.TestListInstance.objects.first()
+        assert tli.testinstance_set.values_list('value', flat=True)[0] == 1
+        assert tli.test_list_id == self.test_list1.id
+        assert tli.day == 0
+
+    def test_create_no_day(self):
+        """If no day is supplied, an error should be returned"""
+        del self.day1_data['day']
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_invalid_day(self):
+        """If incorrect day is supplied, an error should be returned"""
+        self.day1_data['day'] = 'foo'
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_over_range_day(self):
+        """If day is supplied but out of range, an error should be returned"""
+        self.day1_data['day'] = 2
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_under_range_day(self):
+        """If day is supplied but out of range, an error should be returned"""
+        self.day1_data['day'] = -1
+        response = self.client.post(self.create_url, self.day1_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST

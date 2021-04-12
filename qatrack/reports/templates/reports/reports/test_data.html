@@ -1,0 +1,31 @@
+{% extends base_template %}
+{% load i18n %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load attach_tags %}
+{% load comments %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-12">
+    <table class="table table-bordered table-striped table-condensed" >
+      <thead>
+        {% for td in test_data.0 %}
+          <td>{{ td }}</td>
+        {% endfor %}
+      </thead>
+      <tbody>
+        {% for row in test_data|slice:"1:" %}
+          <tr style="font-size: 0.7em">
+            {% for td in row %}
+              <td>{{ td }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

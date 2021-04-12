@@ -75,6 +75,11 @@ li.indent {
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
 }
+.pre-base {
+    white-space: pre-wrap;
+    word-break: normal;
+    word-wrap: normal;
+}
 .pre {
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
     white-space: pre-wrap;
@@ -131,7 +136,7 @@ li.indent {
     width:      100%;
     background: rgba( 255, 255, 255, .6 )
 }
-.loading-modal > .center {
+.loading-modal-center {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -610,4 +615,99 @@ table ul.multiselect-container.dropdown-menu {
 .new-tab-icon {
     vertical-align: top;
     transform: rotate(315deg);
+}
+
+@media (min-width: 768px) {
+  .row.equal-cols {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
+
+  .row.equal-cols:before,
+  .row.equal-cols:after {
+    display: block;
+  }
+
+  .row.equal-cols > [class*='col-'] {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+  }
+
+  .row.equal-cols > [class*='col-'] > * {
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+  }
+}
+
+.node-site-qc-tree {
+  padding: 4px;
+}
+.site-qc-tree {
+  margin-top: -6px;
+}
+.site-qc-tree > .list-group {
+  margin-bottom: 0;
+}
+
+.fa-stack.narrow {
+  width: 0;
+}
+
+.input-group .input-group-addon.btn-default {
+    background-color: #f4f4f4;
+}
+
+.listable-image {
+  max-width: 600px;
+  max-height: 400px;
+}
+.parts-image {
+  max-width: 600px;
+  max-height: 400px;
+}
+
+.hover-img {display: inline-block;}
+.hover-img a { position:relative; display: inline-block;}
+.hover-img a span { position:absolute; right:0; display:none; z-index:99; }
+.hover-img a:hover span {
+  display:block;
+  padding: 5px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  -moz-box-shadow: 0 0 30px 5px #999;
+  -webkit-box-shadow: 0 0 30px 5px #999;
+}
+
+.alert a.btn {
+
+  box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  text-decoration: none;
+}
+
+
+.attach-inline-image {
+    width: 100%;
+    height: auto;
+}
+
+.attach-inline-image-box {
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    width: auto;
+    height: auto;
+    display: inline-block;
+    vertical-align: top;
 }

@@ -1,0 +1,103 @@
+{% extends "registration/base.html" %}
+
+{% load i18n %}
+{% load qatrack_tags %}
+
+{% block head_title %}
+    {% if user.is_anonymous %}
+        Account Details
+    {% else %}
+        Account Details for {{user.username}}
+    {% endif %}
+{% endblock %}
+
+{% block details_active %} class="active info"{% endblock %}
+
+{% block account_box %}
+    <div class="box">
+
+        <div class="box-header">
+            {% if user.is_anonymous %}
+                <h3 class="box-title">
+                    <span class="fa fa-stack fa-fw">
+                        <i class="fa fa-user fa-stack-custom-main"></i>
+                        <i class="fa fa-info fa-stack-custom-sub info"></i>
+                    </span>
+                    {% trans "Account Details" %}
+                </h3>
+            {% else %}
+                <h3 class="box-title">
+                    <span class="fa fa-stack fa-fw">
+                        <i class="fa fa-user fa-stack-custom-main"></i>
+                        <i class="fa fa-info fa-stack-custom-sub info"></i>
+                    </span>
+                    {% trans "Account Details for " %}{% if user.get_full_name %}{{user.get_full_name}}{% else %} {{user.username}}{% endif %}
+                </h3>
+            {% endif %}
+        </div>
+
+        <div class="box-body">
+            {% if user.is_anonymous %}
+                <em><a href="{% url "login" %}">Log in</a> to see your account details</em>
+            {% else %}
+
+                <dl class="dl-horizontal">
+                    <dt>Username:</dt>
+                    <dd>{{user.username}}</dt>
+                    <dt>Email:</dt>
+                    <dd>{% if user.email %}{{user.email}}{% else %}<em>N/A</em>{% endif %}</dt>
+                    <dt>Registered:</dt>
+                    <dd>{{user.date_joined}}</dt>
+                    <dt>Last Login:</dt>
+                    <dd>{{user.last_login}}</dt>
+                    <dt>Groups</dt>
+                    <dd>
+                        <ul>
+                            {% for group in user.groups.all %}
+                            <li>{{group.name}}</li>
+                            {% endfor %}
+                        </ul>
+                    </dd>
+                </dl>
+                <h3>User Permissions</h3>
+
+                <ul class="list-unstyled">
+                    <li>
+                        {% if user.is_staff %}
+                            <i class="fa fa-check-circle fa-lg success" aria-hidden="true"></i>
+                        {% else %}
+                            <i class="fa fa-times-circle fa-lg danger" aria-hidden="true"></i>
+                        {% endif %}
+                        <strong>Can Access Admin</strong>
+                        <em>User can access admin interface for defining tests</em>
+                    </li>
+                    <li>
+                        {% if user.is_superuser %}
+                            <i class="fa fa-check-circle fa-lg success" aria-hidden="true"></i>
+                        {% else %}
+                            <i class="fa fa-times-circle fa-lg danger" aria-hidden="true"></i>
+                        {% endif %}
+                        <strong>Super User</strong>
+                        <em>User has all permissions implicitly</em>
+                    </li>
+                </ul>
+                {% for cat, user_perms in permissions %}
+                    <h4>{{cat}} Permissions</h4>
+                    <ul class="list-unstyled">
+                        {% for has_perm, ptitle, desc in user_perms %}
+                        <li class="indent">
+                            {% if has_perm or user.is_superuser %}
+                                <i class="fa fa-check-circle fa-lg success" aria-hidden="true"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle fa-lg danger" aria-hidden="true"></i>
+                            {% endif %}
+                            <strong>{{ptitle}}</strong>
+                            <em>{{desc}}</em>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock account_box %}

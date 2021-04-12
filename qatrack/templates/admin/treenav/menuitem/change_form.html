@@ -1,7 +1,7 @@
 {% extends "admin/change_form.html" %}
 {% load i18n %}
 {#{% load compressed %}#}
-{% load i18n admin_static admin_modify %}
+{% load i18n static admin_modify %}
 {% load admin_urls %}
 {% block extrastyle %}
     {{ block.super }}
@@ -20,10 +20,14 @@
 
             $(document).ready(function($) {
 
+                $("#id_frequency").select2();
+                $("#id_unit").select2();
+                $("#id_assigned_to").select2({placeholder: '<Choose a Group>', width: 200});
+
                 $('input#id_object_id').hide();
                 $('input#id_object_id').after('<select id="generic_object_id"></select>');
 
-                jQuery('#generic_object_id').select2({
+                $('#generic_object_id').select2({
                     width: '350px',
                     selectOnClose: true,
                     minimumResultsForSearch: 10,
@@ -60,7 +64,7 @@
 
             })
 
-        })(django.jQuery);
+        })($);
 
 
     </script>

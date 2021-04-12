@@ -4,7 +4,7 @@ Tests
 =====
 
 To access existing tests or to configure a new test, click on the
-**Tests** link in the **QA** section on the the main admin page.
+**Tests** link in the **QC** section on the the main admin page.
 
 Create a new test by clicking the **Add Test** link in the top right
 hand page of the **Tests** admin page.  The individual fields for
@@ -13,7 +13,14 @@ configuring a tests are described below.
 Name
 ....
 
-A name that describes what the test is (e.g. something like *Temperature (deg C)* or *0 deg Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
+A unique name that describes what the test is (e.g. something like *Temperature (deg C)* or *0 deg Gantry - Field Size 10.0x10.0cm - X1 (cm)*).
+
+Display Name (Optional)
+.......................
+
+Text describing how a test should be displayed when performing or reviewing. Having a separate name & display name allows
+you to create tests with descriptive names that are easy to find in the admin, but use a more succinct name when
+performing a Test List. If left blank, the test name will be used.
 
 Macro Name
 ..........
@@ -53,7 +60,7 @@ Description
 ~~~~~~~~~~~
 
 The description field is the text that is shown when a user clicks on
-the test name while performing QA.  This description can be made up of
+the test name while performing QC.  This description can be made up of
 plain text or html.  An example showing an html description is shown
 below along with the way it looks when displayed on the test list
 page.
@@ -74,7 +81,7 @@ Procedure
 
 The procedure allows you to insert a URL to a more detailed procedure
 available elsewhere.  A link to that URL will be shown when the user
-clicks on the test name while performing QA as shown below.
+clicks on the test name while performing QC as shown below.
 
 .. figure:: images/procedure_link.png
    :alt: Detailed procedure link
@@ -91,9 +98,18 @@ Choose the :ref:`Test Category <qa_categories>` that this test belongs to.
 Type
 ~~~~
 
-QATrack+ currently supports 8 different test types as outlined below.
+QATrack+ currently supports 11 different test types as outlined below.
 
 #. **Simple Numerical** A test with a single numerical result (e.g. *Temperature*)
+
+#. **Wraparound** A test that accepts values in a predefined range (*Wrap low*
+   to *Wrap high*) and has values that "wrap" from the high to low value and
+   vice versa. This type of test is useful for example if you have a
+   collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
+   difference from a 0 deg reference.
+
+   Only absolute tolerances with reference values between *Wrap low* and *Wrap
+   high* are supported.
 
 #. **Boolean** A test with a Yes or No answer (e.g. *Door Interlock Functional*)
 
@@ -117,9 +133,18 @@ QATrack+ currently supports 8 different test types as outlined below.
 
 #. **String** Allows the user to enter a short piece of text (e.g. a user ID)
 
-#. **String Composite** A *Composite* test that stores a string (text) rather
-   than a numerical value. Please see the :ref:`Composite Test section
+#. **String Composite/JSON** A *Composite* test that stores a string (text) rather
+   than a numerical value. You may also use this type of field to store a JSON
+   data structure. Please see the :ref:`Composite Test section
    <composite_tests>` for more information on defining this type of test.
+
+#. **Date** Allows the user to use a date picker to select a calendar date.
+   Test values will be coerced to Python datetime.date objects in compsite
+   calculations contexts.
+
+#. **Date & Time** Allow the user to use a date picker to select a calendar
+   date and time Test values will be coerced to Python datetime.datetime
+   objects in compsite calculations contexts.
 
 #. **Upload** A test that allows you to upload an arbitrary file and process it
    with a Python snippet.  Please see the :ref:`Composite Test section
@@ -159,17 +184,53 @@ Uncheck this option to hide the test from the charting page.  This can
 help keep your charting page clean and limited to the tests you
 really care about.
 
-Allow auto review of this test?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Auto Review Rules
+~~~~~~~~~~~~~~~~~
 
-Indicate whether this test should be auto-reviewable.  For more information
-about this option see the :ref:`Auto Review page <qa_auto_review>`.
+Indicate whether this test should be auto-reviewable.  Select the
+AutoReviewRuleSet you would like to use for this, or leave blank, to disable
+Auto Review for this test.  For more information about this option see the
+:ref:`Auto Review page <qa_auto_review>`.
 
 Skip Without Comment
 ~~~~~~~~~~~~~~~~~~~~
 
 Check this option if you want users to be able to skip this test without being
 forced to add a comment (regardless of their commenting permissions).
+
+Require Comment
+~~~~~~~~~~~~~~~
+
+Check this option if you want users to be forced to enter a comment when
+submitting this test.
+
+Calculation Procedure
+~~~~~~~~~~~~~~~~~~~~~
+
+This field is used for calculating either test results (for composite, string
+composite, & file upload test types) or default initial (user overrideable)
+values for other test types (simple numerical, string, date/time, multiple
+choice).
+
+
+.. _qa_test_formatting:
+
+Formatting
+~~~~~~~~~~
+
+Python style string format for displaying numerical results. Leave blank for
+the QATrack+ default, select one of the predefined options, or enter your own
+formatting string.  Use e.g. %.2F to display as fixed precision with 2 decimal
+places, or %.3E to show as scientific format with 3 significant figures, or
+%.4G to use 'general' formatting with up to 4 significant figures. (Note this
+does not affect the way other values are calculated, only the way composite and
+constant test values are *displayed*. For example a constant test with a value
+of 1.2345 and a format of %.1f will be displayed as 1.2, but the full 1.2345
+will be used for calculations).  Note you may also use "new style" Python
+string formatting: see https://pyformat.info/ for examples.
+
+To set a default value for numerical formatting see the
+:ref:`DEFAULT_NUMBER_FORMAT <qatrack-config>` setting.
 
 Attachments
 ~~~~~~~~~~~
@@ -185,14 +246,14 @@ Tests with Calculated Results
 
 There are currently three test types that allow you to calculate test
 results using snippets of Python code. These tests include *Composite*,
-*String Composite* & *Upload*.
+*String Composite/JSON* & *Upload*.
 
 Composite Tests
 ---------------
 
 .. _composite_tests:
 
-Composite tests allow you to do calculations to produce a numberical
+Composite tests allow you to do calculations to produce a numerical
 test result based on other test values ( e.g. to calculate a dose based
 on a raw electrometer reading and temperature & pressure ). When you
 select *Composite* for the test *Type* field, a *Calculation Procedure*
@@ -296,7 +357,11 @@ When your script (calculation procedure) is executed, it has access to
 #. A META object which is a dictionary of some potentially useful
    information about the test list currently being performed including:
 
+    -  test\_list\_id - ID of current test list
+
     -  test\_list\_name - Name of current test list
+
+    -  unit\_test\_collection\_id - ID of current Unit Test Collection (Unit Test List/Cycle Assignment)
 
     -  unit\_number - Unit number
 
@@ -313,6 +378,13 @@ When your script (calculation procedure) is executed, it has access to
     - **UTILS.get_comment(** *macro_name* **)** gets the user set comment for the input
 
     - **UTILS.set_comment(** "*your comment here*" **)** sets the comment for the current test
+
+    - **UTILS.set_skip(** *macro_name* **, True|False )** set skip status of a
+      test. Please note that if a user alters the skip state of the same test
+      before the composite calculation is complete, their selection will be
+      overridden by the results of the composite test.
+
+    - **UTILS.get_skip(** *macro_name* **)** returns boolean indicating whether or not a given test is currently skipped.
 
     - **UTILS.write_file(file_name, object)** attaches a file to the current
       test (see below for an example). If you have :ref:`Display Image
@@ -442,18 +514,27 @@ by default.  The calculationn `a = 1/2` will result in `a = 0.5` rather than `a
 `//` operator like `a = 1//2 # a == 0`.
 
 
-String Composite Tests
-----------------------
+.. _qa_string_comp_json:
+
+String Composite/JSON Tests
+---------------------------
 
 The String Composite test type are the same as the Composite test type
 described above with the exception that the calculated value should be a
 string rather than a number. An example Composite String test is shown
 below.
 
+As of v3.1.0 you may now also return a `JSON serializable Python dictionary
+<https://pythontic.com/serialization/json/introduction>`__.  This allows you to
+e.g. pre-calculate values for other composite tests, or store more complex
+datatypes in the database.
+
+
 .. figure:: images/string_composite_procedure.png
    :alt: Example String Composite procedure
 
    Example String Composite procedure
+
 
 
 Upload Tests
@@ -559,3 +640,61 @@ DICOM file:
     import pydicom
     f = pydicom.read_file(BIN_FILE)
     mean_value = f.pixel_array.mean()
+
+
+.. _qa_default_values:
+
+Setting Default Initial Values for Non-Calculated Tests
+-------------------------------------------------------
+
+.. warning::
+
+    Defaults are currently only applied for Test Lists performed via the
+    web user interface and not through the API.
+
+Similar to calculated tests, as of version 3.1.0, you can now use the
+calculation procedure field to set an initial default value for a test that can
+be overridden by the user.
+
+For example, to set an initial value for a Simple Numerical test you could use
+a simple calculation procedure like:
+
+::
+
+    your_simple_test = 22
+
+To set an initial value for a Multiple Choice test with choices "A,B,C" you
+could use a simple calculation procedure like:
+
+::
+
+    your_mult_choice_test = "B"
+
+
+To set an initial value for a Boolean (Yes/No) test you would use:
+
+::
+
+    your_bool_test = True  # or False
+
+
+To set an initial value for a String test you would use:
+
+::
+
+    your_string_test = "Some string"
+
+
+To set an initial value for a Date test you could use something like this:
+
+::
+
+    from django.utils import timezone
+    your_date_test = timezone.now().date()  # or some other datetime.date instance
+
+To set an initial value for a Datetime test you could use someting like this:
+
+::
+
+    from django.utils import timezone
+    your_date_test = timezone.now()  # or some other datetime.datetime instance

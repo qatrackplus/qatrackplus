@@ -5,11 +5,16 @@ from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
-from django.db.models import Q
+from django.db.models import Count, Q
+from django.db.transaction import atomic
 from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
+from django.template.loader import get_template
+from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import (
     DeleteView,
     DetailView,
@@ -19,6 +24,8 @@ from django.views.generic import (
 )
 import pytz
 
+from qatrack.qatrack_core.dates import format_datetime
+from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
 from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,
@@ -56,11 +63,34 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
         se_ib = ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
         context['service_events_ib'] = se_ib
         self.all_tests = self.object.test_list.ordered_tests()
-        context['borders'] = self.object.test_list.sublist_borders(self.all_tests)
+        context['borders'] = self.object.sublist_borders()
 
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
         return context
+
+
+def test_list_instance_report(request, pk):
+
+    tli = get_object_or_404(models.TestListInstance, id=pk)
+    utc = tli.unit_test_collection
+    wc = format_datetime(tli.work_completed)
+
+    base_opts = {
+        'report_type': TestListInstanceDetailsReport.report_type,
+        'report_format': request.GET.get("type", "pdf"),
+        'title': "%s - %s - %s" % (utc.unit.name, tli.test_list.name, wc),
+        'include_signature': False,
+        'visible_to': [],
+    }
+
+    report_opts = {
+        'work_completed': "%s - %s" % (wc, wc),
+        'unit_test_collection': [utc.id],
+    }
+    report = TestListInstanceDetailsReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
+
+    return report.render_to_response(base_opts['report_format'])
 
 
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
@@ -94,15 +124,9 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context = self.get_context_data()
         formset = context["formset"]
 
-        review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
-        review_user = self.request.user
-
         test_list_instance = form.save(commit=False)
-        initially_requires_reviewed = not test_list_instance.all_reviewed
-        test_list_instance.reviewed = review_time
-        test_list_instance.reviewed_by = review_user
-        test_list_instance.all_reviewed = True
-        test_list_instance.save()
+        statuses = []
+        test_instances = []
 
         # note we are not calling if formset.is_valid() here since we assume
         # validity given we are only changing the status of the test_instances.
@@ -111,56 +135,28 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         #
         # If you add something here be very careful to check that the data
         # is clean before updating the db
-
-        # for efficiency update statuses in bulk rather than test by test basis
-        status_groups = collections.defaultdict(list)
         for ti_form in formset:
             status_pk = int(ti_form["status"].value())
-            status_groups[status_pk].append(ti_form.instance.pk)
+            statuses.append(status_pk)
+            test_instances.append(ti_form.instance)
 
-        still_requires_review = False
-        for status_pk, test_instance_pks in list(status_groups.items()):
-            status = models.TestInstanceStatus.objects.get(pk=status_pk)
-            if status.requires_review:
-                still_requires_review = True
-            models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
+        changed_se = review_test_list_instance(test_list_instance, test_instances, statuses, self.request.user)
 
-        # Handle Service Log items:
-        #
-        #    Change status of service events with status__requires_review = False to have default status if this
-        #    test_list still requires approval.
-        #
-        #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
-
-        if still_requires_review:
-            test_list_instance.all_reviewed = False
-            test_list_instance.save()
-
-            if settings.USE_SERVICE_LOG:
-                changed_se = test_list_instance.update_service_event_statuses()
-                if len(changed_se) > 0 and self.from_se:
-                    messages.add_message(
-                        request=self.request, level=messages.INFO,
-                        message='Changed status of service event(s) %s to "%s".' % (
-                            ', '.join(str(x) for x in changed_se),
-                            ServiceEventStatus.get_default().name
-                        )
-                    )
-        if settings.USE_SERVICE_LOG and initially_requires_reviewed != still_requires_review:
-            for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
-                ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
-
-        # Set utc due dates
-        test_list_instance.unit_test_collection.set_due_date()
+        if len(changed_se) > 0 and self.from_se:
+            msg = _(
+                'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+            ) % {
+                'service_event_ids': ', '.join(str(x) for x in changed_se),
+                'serviceeventstatus_name': ServiceEventStatus.get_default().name,
+            }
+            messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
         if self.from_se:
             return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
 
         # let user know request succeeded and return to unit list
-        messages.add_message(
-            request=self.request, message=_("Successfully updated %s " % self.object.test_list.name),
-            level=messages.SUCCESS
-        )
+        msg = _("Successfully updated %(test_list_name)s") % {'test_list_name': self.object.test_list.name}
+        messages.add_message(request=self.request, message=msg, level=messages.SUCCESS)
         return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
@@ -173,8 +169,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                 se.append(f.service_event)
 
         context['service_events'] = se
-        tests = [f.instance.unit_test_info.test for f in context['formset']]
-        context['borders'] = self.object.test_list.sublist_borders(tests)
+        context['borders'] = self.object.sublist_borders()
         context['cycle_ct'] = ContentType.objects.get_for_model(models.TestListCycle).id
 
         self.rtsqa_form = self.kwargs.get('rtsqa_form')
@@ -183,6 +178,63 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         context['from_se'] = self.from_se
 
         return context
+
+
+@atomic
+def review_test_list_instance(test_list_instance, test_instances, status_pks, review_user):
+    """Common code for reviewing test list instances from the ReviewTestListInstance and
+    bulk_review views.
+
+    test_list_instance is the TLI to be reviewed
+
+    test_instances is the set of test_instances belonging to test_list_instance
+    status_pks is a list of status ids, the same length as test_instances, to be applied to each
+    of the corresponding test instances (i.e. the Nth status id will be applied to the Nth test instance.
+
+    review_user is the user who performed the review
+    """
+
+    review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
+
+    initially_requires_reviewed = not test_list_instance.all_reviewed
+    test_list_instance.reviewed = review_time
+    test_list_instance.reviewed_by = review_user
+    test_list_instance.all_reviewed = True
+    test_list_instance.save()
+
+    # for efficiency update statuses in bulk rather than test by test basis
+    status_groups = collections.defaultdict(list)
+    for instance, status_pk in zip(test_instances, status_pks):
+        status_groups[status_pk].append(instance.pk)
+
+    still_requires_review = False
+    for status_pk, test_instance_pks in list(status_groups.items()):
+        status = models.TestInstanceStatus.objects.get(pk=status_pk)
+        if status.requires_review:
+            still_requires_review = True
+        models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
+
+    # Handle Service Log items:
+    #
+    #    Change status of service events with status__requires_review = False to have default status if this
+    #    test_list still requires approval.
+    #
+    #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
+    changed_se = []
+    if still_requires_review:
+        test_list_instance.all_reviewed = False
+        test_list_instance.save()
+
+        changed_se = test_list_instance.update_service_event_statuses()
+
+    if initially_requires_reviewed != still_requires_review:
+        for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
+            ServiceLog.objects.log_rtsqa_changes(review_user, se)
+
+    # Set utc due dates
+    test_list_instance.unit_test_collection.set_due_date()
+
+    return changed_se
 
 
 class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
@@ -220,7 +272,7 @@ class UTCReview(PermissionRequiredMixin, UTCList):
         return 'fa-users'
 
     def get_page_title(self):
-        return "Review Test List Data"
+        return _("Review Test List Data")
 
 
 class UTCYourReview(PermissionRequiredMixin, UTCList):
@@ -230,13 +282,13 @@ class UTCYourReview(PermissionRequiredMixin, UTCList):
     raise_exception = True
 
     action = "review"
-    action_display = "Review"
+    action_display = _l("Review")
 
     def get_icon(self):
         return 'fa-users'
 
     def get_page_title(self):
-        return "Review Your Test List Data"
+        return _("Review Your Test List Data")
 
 
 class UTCFrequencyReview(UTCYourReview):
@@ -260,7 +312,9 @@ class UTCFrequencyReview(UTCYourReview):
         return 'fa-clock-o'
 
     def get_page_title(self):
-        return " Review " + ", ".join([x.name for x in self.frequencies]) + " Test Lists"
+        return _(" Review %(frequency_names)s Test Lists") % {
+            'frequency_names': ", ".join([x.name for x in self.frequencies])
+        }
 
 
 class UTCUnitReview(UTCYourReview):
@@ -276,7 +330,7 @@ class UTCUnitReview(UTCYourReview):
         return 'fa-cube'
 
     def get_page_title(self):
-        return "Review " + ", ".join([x.name for x in self.units]) + " Test Lists"
+        return _(" Review %(unit_names)s Test Lists") % {'unit_names': ", ".join([x.name for x in self.units])}
 
 
 class ChooseUnitForReview(ChooseUnit):
@@ -301,7 +355,7 @@ class InactiveReview(UTCReview):
     inactive_only = True
 
     def get_page_title(self):
-        return "Review All Inactive Test Lists"
+        return _("Review All Inactive Test Lists")
 
     def get_icon(self):
         return 'fa-file'
@@ -314,7 +368,7 @@ class YourInactiveReview(UTCYourReview):
     inactive_only = True
 
     def get_page_title(self):
-        return "Review Your Inactive Test Lists"
+        return _("Review Your Inactive Test Lists")
 
     def get_icon(self):
         return 'fa-file'
@@ -323,15 +377,106 @@ class YourInactiveReview(UTCYourReview):
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
-    # queryset = models.TestListInstance.objects.unreviewed()
+    headers = {
+        "unit_test_collection__unit__site__name": _("Site"),
+        "unit_test_collection__unit__name": _("Unit"),
+        "unit_test_collection__frequency__name": _("Frequency"),
+        "created_by__username": _("Created By"),
+        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
+        "selected": mark_safe('<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")),
+    }
+
+    search_fields = {
+        "actions": False,
+        "pass_fail": False,
+        "review_status": False,
+        "bulk_review_status": False,
+        "attachments": False,
+        "selected": False,
+    }
+
+    order_fields = {
+        "actions": False,
+        "unit_test_collection__unit__name": "unit_test_collection__unit__number",
+        "unit_test_collection__frequency__name": "unit_test_collection__frequency__nominal_interval",
+        "review_status": False,
+        "pass_fail": False,
+        "bulk_review_status": False,
+        "selected": False,
+        "attachments": "attachment_count",
+        "selected": False,
+    }
+
     permission_required = "qa.can_review"
     raise_exception = True
 
+    def get_fields(self, request=None):
+        fields = super().get_fields(request=request)
+        if settings.REVIEW_BULK:
+            fields += ("bulk_review_status", "selected")
+
+        return fields
+
+    def get_header_for_field(self, field):
+        if settings.REVIEW_BULK and field == "bulk_review_status":
+            return Unreviewed._status_select(header=True)
+
+        return super().get_header_for_field(field)
+
+    @classmethod
+    def _status_select(cls, header=False):
+        if header:
+            title = _("Select the review status to apply to all currently selected test instance rows")
+        else:
+            title = _("Select the review status to apply to this row")
+
+        return get_template("qa/_testinstancestatus_select.html").render({
+            'name': 'bulk-status' if header else '',
+            'id': 'bulk-status' if header else '',
+            'statuses': models.TestInstanceStatus.objects.all(),
+            'class': 'input-medium' + (' bulk-status' if header else ''),
+            'title': title,
+        })
+
+    def selected(self, obj):
+        return '<input type="checkbox" class="test-selected" title="%s"/>' % _(
+            "Check to include this test list instance when bulk setting approval statuses"
+        )
+
+    def bulk_review_status(self, obj):
+        if not hasattr(self, "_bulk_review"):
+            self._bulk_review = self._status_select()
+
+        return self._bulk_review.replace(":TLI_ID:", str(obj.pk))
+
     def get_queryset(self):
-        return models.TestListInstance.objects.unreviewed()
+        qs = models.TestListInstance.objects.unreviewed()
+        qs = qs.annotate(attachment_count=Count("attachment"))
+        return qs
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['bulk_review'] = settings.REVIEW_BULK
+        return context
 
     def get_page_title(self):
-        return "Unreviewed Test List Instances"
+        return _("Unreviewed Test List Instances")
+
+
+def bulk_review(request):
+
+    count = 0
+    for pairs in request.POST.getlist('tlis'):
+        status, tli = pairs.split(",")
+        tli = models.TestListInstance.objects.get(pk=tli)
+        test_instances = tli.testinstance_set.all()
+        statuses = [status] * len(test_instances)
+        review_test_list_instance(tli, test_instances, statuses, request.user)
+        count += 1
+
+    msg = _("Successfully reviewed %(count)s test list instances") % {'count': count}
+    messages.add_message(request=request, message=msg, level=messages.SUCCESS)
+    return JsonResponse({"ok": True})
 
 
 class UnreviewedVisibleTo(Unreviewed):
@@ -339,10 +484,12 @@ class UnreviewedVisibleTo(Unreviewed):
         the user"""
 
     def get_queryset(self):
-        return models.TestListInstance.objects.your_unreviewed(self.request.user)
+        return models.TestListInstance.objects.your_unreviewed(self.request.user).annotate(
+            attachment_count=Count("attachment"),
+        )
 
     def get_page_title(self):
-        return "Unreviewed Test List Instances Visible To Your Groups"
+        return _("Unreviewed Test List Instances Visible To Your Groups")
 
 
 class ChooseGroupVisibleTo(ListView):
@@ -366,7 +513,9 @@ class UnreviewedByVisibleToGroup(Unreviewed):
         return 'fa-users'
 
     def get_page_title(self):
-        return "Unreviewed Test List Instances Visible To " + models.Group.objects.get(pk=self.kwargs['group']).name
+        return _("Unreviewed Test List Instances Visible To %(group_name)s") % {
+            'group_name': models.Group.objects.get(pk=self.kwargs['group']).name
+        }
 
 
 class DueDateOverview(PermissionRequiredMixin, TemplateView):
@@ -377,11 +526,11 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     raise_exception = True
 
     DUE_DISPLAY_ORDER = (
-        ("overdue", "Due & Overdue"),
-        ("this_week", "Due This Week"),
-        ("next_week", "Due Next Week"),
-        ("this_month", "Due This Month"),
-        ("next_month", "Due Next Month"),
+        ("overdue", _l("Due & Overdue")),
+        ("this_week", _l("Due This Week")),
+        ("next_week", _l("Due Next Week")),
+        ("this_month", _l("Due This Month")),
+        ("next_month", _l("Due Next Month")),
     )
 
     def check_permissions(self, request):
@@ -426,6 +575,8 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
         month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        if calendar.isleap(now.year) and now.month == 2:
+            month_end += timezone.timedelta(days=1)
         next_month_start = month_end + timezone.timedelta(days=1)
         next_month_end = tz.localize(
             timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
@@ -452,7 +603,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
                 due["next_month"].append(utc)
 
             units.add(str(utc.unit))
-            freqs.add(str(utc.frequency or "Ad-Hoc"))
+            freqs.add(str(utc.frequency or _("Ad Hoc")))
             groups.add(str(utc.assigned_to))
 
         ordered_due_lists = []
@@ -476,7 +627,7 @@ class DueDateOverviewUser(DueDateOverview):
 
 
 class Overview(PermissionRequiredMixin, TemplateView):
-    """Overall status of the QA Program"""
+    """Overall status of the QC Program"""
 
     template_name = "qa/overview.html"
     permission_required = ["qa.can_review", "qa.can_view_overview"]
@@ -490,11 +641,11 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Overview, self).get_context_data()
-        context['title'] = 'Qa Program Overview'
-        context['msg'] = 'Overview of current QA status on all units'
+        context['title'] = _('QC Program Overview')
+        context['msg'] = _('Overview of current QC status on all units')
         if '-user' in self.request.path:
-            context['title'] += ' For Your Groups'
-            context['msg'] = 'Overview of current QA status (visible to your groups) on all units'
+            context['title'] = _('QC Program Overview For Your Groups')
+            context['msg'] = _('Overview of current QC status (visible to your groups) on all units')
             context['user_groups'] = True
         return context
 
@@ -535,7 +686,7 @@ class OverviewObjects(JSONResponseMixin, View):
         for unit in units:
             unit_freqs = collections.OrderedDict()
             for freq in frequencies:
-                freq_name = freq.name if freq else 'Ad Hoc'
+                freq_name = freq.name if freq else _('Ad Hoc')
                 if freq_name not in unit_freqs:
                     unit_freqs[freq_name] = collections.OrderedDict()
                 for utc in qs:
@@ -546,7 +697,7 @@ class OverviewObjects(JSONResponseMixin, View):
                             for lipfs in utc.last_instance.pass_fail_status():
                                 last_instance_pfs[lipfs[0]] = len(lipfs[2])
                         else:
-                            last_instance_pfs = 'New List'
+                            last_instance_pfs = _('New List')
 
                         ds = utc.due_status()
                         last_completed = utc.last_instance.work_completed if utc.last_instance else None
@@ -573,8 +724,11 @@ class UTCInstances(PermissionRequiredMixin, TestListInstances):
     def get_page_title(self):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
-            return "History for %s :: %s" % (utc.unit.name, utc.name)
-        except:
+            return _("History for %(unit_name)s :: %(unit_test_collection_name)s") % {
+                'unit_name': utc.unit.name,
+                'unit_test_collection_name': utc.name
+            }
+        except models.UnitTestCollection.DoesNotExist:
             raise Http404
 
     def get_queryset(self):

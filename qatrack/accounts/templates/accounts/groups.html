@@ -1,0 +1,174 @@
+{% extends "registration/base.html" %}
+
+{% load qa_tags %}
+{% load i18n %}
+{% load static %}
+
+{% block head_title %}
+  {% trans "Manage Groups & Permissions" %}
+{% endblock %}
+
+{% block groups_active %}active{% endblock groups_active %}
+
+{% block extra_css %}
+  <link href="{% static "accounts/css/groups.css" %}?v={{VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block require_javascript %}
+    window.groupsUrl = "{% url "group-list" %}";
+    window.usersUrl = "{% url "user-list" %}?limit=10000";
+    window.allPermissions = {{ all_perms|safe }};
+    require(['groups']);
+{% endblock require_javascript %}
+
+{% block body_class %}layout-top-nav{% endblock body_class %}
+
+{% block account_box %}
+
+<script type="text/x-template" id="perm-template">
+
+  <li class="indent">
+    <a class="toggle" @click="toggle" :title="title">
+      <i :class="icon" aria-hidden="true"></i>
+      <strong>${name}</strong>
+    </a>
+    <em>${description}</em>
+  </li>
+
+</script>
+
+<div class="box">
+
+  <div class="box-header">
+    <h3 class="box-title">
+      <span class="fa fa-stack fa-fw">
+        <i class="fa fa-users fa-stack-custom-main"></i>
+        <i class="fa fa-lock fa-stack-custom-sub primary"></i>
+      </span>
+      {% trans "Group Membership & Permissions" %}
+    </h3>
+  </div>
+
+  <div id="app" class="box-body">
+
+    <div class="row">
+      <div class="col-xs-12">
+        {% blocktrans %}
+          Use the controls below to set group permissions and control group
+          membership.
+        {% endblocktrans %}
+        <hr/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12">
+        <form class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-2" for="groups">{% trans "Group" %}</label>
+            <div class="col-sm-5">
+              <select class="form-control" id="groups" v-model="selected">
+                <option v-for="group in groups" :value="group.name" v-text="group.name"></option>
+              </select>
+            </div>
+            <div class="col-sm-5">
+              <a @click="addGroupDialog('add')"
+                class="btn btn-default btn-flat btn-sm"
+                type="button" title="{% trans "Add New Group" %}"
+              >
+                <i class="fa fa-plus"></i> {% trans "Add Group" %}
+              </a>
+              <a @click="addGroupDialog('edit')"
+                class="btn btn-default btn-flat btn-sm"
+                type="button" title="{% trans "Edit Group Name & Members" %}"
+              >
+                <i class="fa fa-edit"></i> {% trans "Edit Group" %}
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+
+        <div v-for="category in permissionCategories">
+          <hr/>
+          <p>{% trans "Use the icons/links below to toggle the permission" %}</p>
+          <label class="" for="groups" v-text="category.name + ' Permissions for ' + selectedGroup"></label>
+          <ul class="list-unstyled">
+            <permission
+              v-for="perm in category.perms"
+              :key="perm.code"
+              v-bind:code="perm.code"
+              v-bind:name="perm.name"
+              v-bind:description="perm.description"
+              v-bind:active="perm.active"
+              @toggle="togglePerm"
+            ></permission>
+          </ul>
+
+        </div>
+
+      </div>
+    </div>
+
+    <div id="new-group-modal" class="modal fade" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" v-text="groupModalTitle"></h4>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-sm-12">
+                <form class="form">
+                  <div class="form-group">
+                    <label for="new-group-name">{% trans "Name" %}</label>
+                    <input id="new-group-name" v-model="newGroupName" type="text" class="form-control" placeholder="{% trans "New Group Name" %}"/>
+                  </div>
+                  <div class="form-group">
+                    <label for="new-group-users">{% trans "Select Users Below" %}</label>
+                    <a @click="userSelectAll" class="btn btn-xs btn-flat btn-default pull-right">{% trans "Select All" %}</a>
+                    <a @click="userSelectNone" class="btn btn-xs btn-flat btn-default pull-right" style="margin-right: 5px">{% trans "Select None" %}</a>
+                    <table id="user-table" class="table table-bordered table-striped table-condensed fixed">
+                      <thead>
+                        <tr>
+                          <th>{% trans "Username" %}</th>
+                          <th>{% trans "First Name" %}</th>
+                          <th>{% trans "Last Name" %}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          class="toggle"
+                          v-for="(user, idx) in users"
+                          :class="user.selected ? 'info' : ''"
+                          @click="userToggle(user, idx)">
+                          <td>${ user.username}</td>
+                          <td>${ user.first_name }</td>
+                          <td>${ user.last_name}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p id="group-add-msg"></p>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="groupModalClose" type="button" class="btn btn-flat btn-default" data-dismiss="modal">{% trans "Close" %}</button>
+            <button @click="updateGroup" type="button" class="btn btn-flat btn-primary" v-text="groupModalButton"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- /.modal -->
+
+{% endblock account_box %}

@@ -1,14 +1,16 @@
 {% extends "site_base.html" %}
+{% load i18n %}
 {% load qa_tags %}
 {% load qatrack_tags %}
 {% load attach_tags %}
 {% load comments %}
+{% load static %}
 
 {% block head_title %}{{test_list_instance.work_completed|date}} {{test_list_instance.test_list.name}} Details{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/qa.css?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -19,7 +21,6 @@
 
 {% block require_javascript %}
     require(['jquery', 'qareview'], function() {
-        $('body').removeClass("loading");
     });
 {% endblock require_javascript %}
 
@@ -51,7 +52,7 @@
                                     <dt>Test List :</dt>
                                     <dd>
                                         {% if tli.test_list.description%}
-                                        <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="icon-info-sign" ></i></a>
+                                        <a class="show-hide" id="test-list-info-toggle" title="Click to view description and general instructions for this test list">{{tli.test_list.name}} <i class="fa fa-info" ></i></a>
                                         {% else %}
                                            {{tli.test_list.name}}
                                         {% endif %}
@@ -60,6 +61,14 @@
                                     <dt>Performed By :</dt>
                                     <dd>{{tli.created_by}}</dd>
 
+                                    <dt>User Key:</dt>
+                                    <dd>
+                                      {% if tli.user_key %}
+                                        {{tli.user_key }}
+                                      {% else %}
+                                        <em>{% trans "Not set" %}</em>
+                                      {% endif %}
+                                    </dd>
                                </dl>
                             </div>
                             <div class="col-md-4">
@@ -90,54 +99,114 @@
                                         {% endif %}
                                     </dd>
 
+                                    <dt>Previous Due Date:</dt>
+                                    <dd>
+                                      {% if tli.due_date %}
+                                        <abbr title="Due date when this test list was performed">{{ tli.due_date }}</abbr>
+                                      {% else %}
+                                        <em>No due date set</em>
+                                      {% endif %}
+                                    </dd>
+
+                                    <dt>Scheduled:</dt>
+                                    <dd>
+                                      {% if tli.include_for_scheduling %}
+                                        <abbr title="This instance is included when calculating due dates">Yes</abbr>
+                                      {% else %}
+                                        <abbr title="This instance is not considered when calculating due dates">No</abbr>
+                                      {% endif %}
+                                    </dd>
+
                                     <dt>Last Modification :</dt>
                                     <dd>{{tli.modified_by}} @ {{tli.modified}}</dd>
 
                                     <dt>Reviewed by:</dt>
-                                    <dd>{{tli.reviewed_by}} @ {{tli.reviewed}}</dd>
+                                    <dd>
+                                      {% if tli.reviewed %}
+                                        {{tli.reviewed_by}} @ {{tli.reviewed}}
+                                      {% else %}
+                                        <em>{% trans "Unreviewed" %}</em>
+                                      {% endif %}
+                                    </dd>
                                </dl>
                             </div>
                             <div class="col-md-4">
-                                {% if USE_SERVICE_LOG %}
-                                    <div class="row">
-                                        <label class="col-md-8">
-                                            {% if perms.service_log.add_serviceevent %}
+                                {% if perms.reports.can_run_reports or perms.reports.can_create_reports %}
+                                  <div class="row">
+                                    <div class="col-sm-12 text-right">
+                                      {% include "qa/testlistinstance_pdf_button.html" with tli=tli %}
+                                    </div>
+                                  </div>
+                                {% endif %}
+                                <div class="row">
+                                    <label class="col-md-8">
+                                        {% if perms.service_log.add_serviceevent %}
+                                            <div class="btn-group">
+                                                <a class="btn btn-default btn-xs btn-flat hover-parent"
+                                                    title="Create new service event initiated by this list"
+                                                    href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}"
+                                                >
+                                                    <i class="fa fa-stack fa-fw">
+                                                        <i class="fa fa-wrench fa-stack-custom-main"></i>
+                                                        <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
+                                                    </i>
+                                                    {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
+                                                </a>
+                                                <a class="btn btn-default btn-xs btn-flat hover-parent new-tab-link"
+                                                    title="New tab: Create new service event initiated by this list"
+                                                    href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}"
+                                                    target="_blank"
+                                                >
+                                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                        {% if service_events_ib|length > 0 %}Service Events Initiated:{% endif %}
+                                    </label>
+                                    <div class="col-md-4">
+                                        {% for se in service_events_ib %}
+                                            {% if perms.service_log.view_serviceevent %}
                                                 <div class="btn-group">
-                                                    <a class="btn btn-default btn-xs btn-flat hover-parent"
-                                                       title="Create new service event initiated by this list"
-                                                       href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}"
-                                                    >
-                                                        <i class="fa fa-stack fa-fw">
-                                                            <i class="fa fa-wrench fa-stack-custom-main"></i>
-                                                            <i class="fa fa-plus fa-stack-custom-sub upper-0 hover-sub-success"></i>
-                                                        </i>
-                                                        {% if service_events_ib|length == 0 %}Initiate Service Event{% endif %}
-                                                    </a>
-                                                    <a class="btn btn-default btn-xs btn-flat hover-parent new-tab-link"
-                                                       title="New tab: Create new service event initiated by this list"
-                                                       href="{% url 'sl_new' %}?ib={{ tli.pk }}&next={{request.path|cut:"data/"}}"
-                                                       target="_blank"
+                                                    <a href="{% url 'sl_details' pk=se.id %}"
+                                                        class="btn btn-xs btn-flat service-event-btn"
+                                                        data-bgcolour="{{ se.service_status.colour }}"
+                                                        title="View service event"
+                                                    >{{ se.id }}</a>
+                                                    <a class="btn btn-default btn-xs btn-flat new-tab-link service-event-btn"
+                                                        href="{% url 'sl_details' pk=se.id %}"
+                                                        target="_blank"
+                                                        data-bgcolour="{{ se.service_status.colour }}"
+                                                        title="New tab: view service event"
                                                     >
                                                         <i class="fa fa-chevron-right" aria-hidden="true"></i>
                                                     </a>
                                                 </div>
+                                            {% else %}
+                                                <div>{{ se.id }}</div>
                                             {% endif %}
-                                            {% if service_events_ib|length > 0 %}Service Events Initiated:{% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                {% if service_events_rtsqa|length > 0 %}
+                                    <div class="row margin-top-10">
+                                        <label class="col-md-8">
+                                            RTS QC for Service Events:
                                         </label>
                                         <div class="col-md-4">
-                                            {% for se in service_events_ib %}
+                                            {% for se in service_events_rtsqa %}
                                                 {% if perms.service_log.view_serviceevent %}
                                                     <div class="btn-group">
                                                         <a href="{% url 'sl_details' pk=se.id %}"
-                                                           class="btn btn-xs btn-flat service-event-btn"
-                                                           data-bgcolour="{{ se.service_status.colour }}"
-                                                           title="View service event"
+                                                            class="btn btn-xs btn-flat service-event-btn"
+                                                            data-bgcolour="{{ se.service_status.colour }}"
+                                                            title="View service event"
                                                         >{{ se.id }}</a>
                                                         <a class="btn btn-default btn-xs btn-flat new-tab-link service-event-btn"
-                                                           href="{% url 'sl_details' pk=se.id %}"
-                                                           target="_blank"
-                                                           data-bgcolour="{{ se.service_status.colour }}"
-                                                           title="New tab: view service event"
+                                                            href="{% url 'sl_details' pk=se.id %}"
+                                                            target="_blank"
+                                                            data-bgcolour="{{ se.service_status.colour }}"
+                                                            title="New tab: view service event"
                                                         >
                                                             <i class="fa fa-chevron-right" aria-hidden="true"></i>
                                                         </a>
@@ -148,37 +217,6 @@
                                             {% endfor %}
                                         </div>
                                     </div>
-
-                                    {% if service_events_rtsqa|length > 0 %}
-                                        <div class="row margin-top-10">
-                                            <label class="col-md-8">
-                                                RTS QA for Service Events:
-                                            </label>
-                                            <div class="col-md-4">
-                                                {% for se in service_events_rtsqa %}
-                                                    {% if perms.service_log.view_serviceevent %}
-                                                        <div class="btn-group">
-                                                            <a href="{% url 'sl_details' pk=se.id %}"
-                                                               class="btn btn-xs btn-flat service-event-btn"
-                                                               data-bgcolour="{{ se.service_status.colour }}"
-                                                               title="View service event"
-                                                            >{{ se.id }}</a>
-                                                            <a class="btn btn-default btn-xs btn-flat new-tab-link service-event-btn"
-                                                               href="{% url 'sl_details' pk=se.id %}"
-                                                               target="_blank"
-                                                               data-bgcolour="{{ se.service_status.colour }}"
-                                                               title="New tab: view service event"
-                                                            >
-                                                                <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                            </a>
-                                                        </div>
-                                                    {% else %}
-                                                        <div>{{ se.id }}</div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    {% endif %}
                                 {% endif %}
                             </div>
 
@@ -195,7 +233,7 @@
                                 <div class="col-md-12">
                                     {% spaceless %}
                                         <div class="col-lg-12">
-                                            <div class="text-display pre">{{tli.test_list.description.strip|safe}}</div>
+                                            <div class="text-display pre">{{tli.test_list.description.strip|safe|linebreaks}}</div>
                                         </div>
                                     {% endspaceless %}
                                 </div>
@@ -219,7 +257,7 @@
         <div id="test-list-info" class="row" style="display:none;">
             <div class="col-md-12">
                 <pre >
-                    {{test_list_instance.test_list.description|safe}}
+                    {{test_list_instance.test_list.description|safe|linebreaks}}
                 </pre>
             </div>
         </div>
@@ -244,8 +282,10 @@
                                         <th class="review-ref">Reference</th>
                                         <th>Comment</th>
                                         <th class="qa-history">History<br/>
-                                            {% for d in instances_and_dates.1 %}
-                                                <span class="label history-label" title="{{d}}">{{d|date:"dMy"}}</span>
+                                            {% for tli_url, d in instances_and_dates.1 %}
+                                              <a href="{{ tli_url}}" title="{% blocktrans %}Click to view this test list instance performed at {{ d }}{% endblocktrans %}">
+                                                <span class="label history-label">{{d|date:"dMy"}}</span>
+                                              </a>
                                             {% endfor %}
                                             <div></div>
                                         </th>
@@ -273,20 +313,32 @@
                                               {% endif %}
                                             {% endwith %}
                                           <tr>
-                                              <td><strong>{{test.name}}</strong></td>
+                                              <td title="{{ ti.unit_test_info.test.name }}"><strong>{{ test.display }}</strong></td>
                                               <td class="review-value">
-                                                  <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{ti.value_display}}{% else %}{{ti.diff_display}}{% endif %}">
-                                                      {% with ti.pass_fail as status %}
-                                                          {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
-                                                              {% if status == 'tolerance' %}
-                                                                  <i class="pull-left icon-warning-sign"></i>
-                                                              {% elif status == 'action' %}
-                                                                  <i class="pull-left icon-minus-sign"></i>
-                                                              {% endif %}
+                                                {% with vd=ti.value_display %}
+                                                  <span class="label pass-fail {{ti.pass_fail}}" title="{% if ti.string_value %}{{vd|slice:"100"}}{% elif ti.diff_display %}{% trans "Diff from ref" %}={{ti.diff_display}}{%else%}{% trans "No ref/tol set" %}{% endif %}">
+                                                    {% with ti.pass_fail as status %}
+                                                      {% if ICON_SETTINGS.SHOW_STATUS_ICONS_REVIEW %}
+                                                          {% if status == 'tolerance' %}
+                                                              <i class="pull-left fa fa-exclamation-circle" aria-hidden="true"></i>
+                                                          {% elif status == 'action' %}
+                                                              <i class="pull-left fa fa-ban" aria-hidden="true"></i>
+                                                          {% elif status == 'ok' %}
+                                                              <i class="pull-left fa fa-check-circle-o" aria-hidden="true"></i>
+                                                          {% elif status == 'not_done' %}
+                                                              <i class="pull-left fa fa-circle-o" aria-hidden="true"></i>
                                                           {% endif %}
-                                                      {% endwith %}
+                                                      {% endif %}
+                                                    {% endwith %}
+                                                    {% if test.is_upload %}
+                                                        <a href="#!" class="revealtext" title="{% trans "Click to show full results" %}"><i class="fa fa-book"></i></a>
+                                                    {% elif vd|length > 100 %}
+                                                      <a href="#!" class="revealtext" title="{{ vd|slice:"100" }}...{% trans "Click to show full text" %}"><i class="fa fa-book"></i></a>
+                                                    {% else %}
                                                       {{ti.value_display|safe}}
+                                                    {% endif %}
                                                   </span>
+                                                {% endwith %}
                                               </td>
                                               <td class="review-ref">
                                                   {% reference_tolerance_span test ti.reference ti.tolerance%}
@@ -316,9 +368,26 @@
                                               </tr>
                                           {% endif %}
 
+                                          {% if not test.is_upload and ti.string_value|length > 100 %}
+                                            <tr class="qa-text-display no-hover row-{{ ti_form.prefix }} hidden">
+                                              <td colspan="{% qa_table_colspan perms %}"  class="">
+                                              <pre style="">
+                                                {{ ti.value_display }}
+                                              </pre>
+                                              </td>
+                                            </tr>
+                                          {% elif test.is_upload %}
+                                            <tr class="qa-text-display no-hover row-{{ ti_form.prefix }} hidden">
+                                              <td colspan="{% qa_table_colspan perms %}"  class="">
+                                              <pre style="">
+                                                {% firstof ti.json_value|pprint "" %}
+                                              </pre>
+                                              </td>
+                                            </tr>
+                                          {% endif %}
                                           {% if ti.attachment_set.exists %}
                                               <tr class="qa-attach no-hover">
-                                                  <td>{{ti.unit_test_info.test.name}} Attachments</td>
+                                                  <td>{{ti.unit_test_info.test}} Attachments</td>
                                                   <td colspan="{% qa_table_colspan perms offset=1 %}"  class="">
                                                       <ul>
                                                           {% for attach in ti.attachment_set.all %}
@@ -361,7 +430,7 @@
                 </div>
                 <div class="box-footer">
                     {% if perms.qa.delete_testlistinstance %}
-                      <a class="btn btn-danger btn-flat" title="This will redirect you to the admin site where you can permanently delete this qa session" href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}">Delete</a>
+                      <a class="btn btn-danger btn-flat" title="This will redirect you to a page where you can permanently delete this qa session" href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}">Delete</a>
                     {% endif %}
                     {% if test_list_instance.in_progress %}
                         <a class="btn btn-default pull-right btn-flat margin-r-5" title="Continue this list" href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >Continue</a>

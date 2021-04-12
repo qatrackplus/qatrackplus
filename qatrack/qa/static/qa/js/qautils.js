@@ -1,7 +1,9 @@
-"use strict";
-
+/*jslint browser: true */
+/*global window,$ */
 
 var QAUtils = new function() {
+
+    "use strict";
 
     this.ACT_LOW = "act_low";
     this.TOL_LOW = "tol_low";
@@ -17,9 +19,9 @@ var QAUtils = new function() {
     this.DONE = "done";
     this.NO_TOL = "no_tol";
 
-    var sh = TEST_STATUS_SHORT;
+    var sh = window.TEST_STATUS_SHORT;
     // this.WITHIN_TOL_DISP =  sh.ok;
-    var icons = ICON_SETTINGS.SHOW_STATUS_ICONS_PERFORM;
+    var icons = window.ICON_SETTINGS.SHOW_STATUS_ICONS_PERFORM;
 
     this.TOLERANCE_DISP = icons ? '<i class="pull-left fa fa-exclamation-circle"></i> ' + sh.tolerance : sh.tolerance;
     this.ACTION_DISP = icons ? '<i class="pull-left fa fa-ban"></i> ' + sh.action : sh.action;
@@ -34,15 +36,19 @@ var QAUtils = new function() {
 
     this.NUMERICAL = "numerical";
     this.SIMPLE = "simple";
+    this.WRAPAROUND = "wraparound";
     this.CONSTANT = "constant";
     this.BOOLEAN = "boolean";
     this.MULTIPLE_CHOICE = "multchoice";
     this.COMPOSITE = "composite";
+    this.DATE = "date";
+    this.DATETIME = "datetime";
     this.STRING_COMPOSITE = "scomposite";
     this.UPLOAD = "upload";
     this.STRING = "string";
-    this.NUMBER_TEST_TYPES = [this.SIMPLE, this.CONSTANT, this.COMPOSITE];
+    this.NUMBER_TEST_TYPES = [this.SIMPLE, this.WRAPAROUND, this.CONSTANT, this.COMPOSITE];
     this.READ_ONLY_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE, this.CONSTANT];
+    this.COMPOSITE_TEST_TYPES = [this.COMPOSITE, this.STRING_COMPOSITE];
 
     this.NUMERIC_WHITELIST_REGEX = /[^0-9\.eE\-]/g;
     this.NUMERIC_REGEX = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
@@ -51,12 +57,10 @@ var QAUtils = new function() {
     this.EPSILON = 1E-10;
     this.COMPARISON_SIGNIFICANT = 7;
 
-    this.API_VERSION = "v1";
-    this.API_URL = QAURLs.base+"/qa/api/"+this.API_VERSION+"/";
-    this.COMPOSITE_URL = QAURLs.base+"/qa/composite/";
-    this.INFO_URL = QAURLs.base+"/qa/utc/perform/info/";
-    this.UPLOAD_URL = QAURLs.base+"/qa/upload/";
-    this.CHARTS_URL = QAURLs.base+"/qa/charts/";
+    this.COMPOSITE_URL = window.QAURLs.base+"/qa/composite/";
+    this.INFO_URL = window.QAURLs.base+"/qa/utc/perform/info/";
+    this.UPLOAD_URL = window.QAURLs.base+"/qa/upload/";
+    this.CHARTS_URL = window.QAURLs.base+"/qa/charts/";
     this.OPTION_DELIM = "=";
     this.OPTION_SEP = "&";
 
@@ -118,7 +122,7 @@ var QAUtils = new function() {
             sc_a = 0.0;
         }
 
-        return Math.abs(sc_b - sc_a) <= Math.pow(10.,-(this.COMPARISON_SIGNIFICANT-1));
+        return Math.abs(sc_b - sc_a) <= Math.pow(10.0,-(this.COMPARISON_SIGNIFICANT-1));
 
     };
 
@@ -127,11 +131,11 @@ var QAUtils = new function() {
     this.format_float = function(val){
         if (Math.abs(val)<this.EPSILON){
             return "0";
-        }else if ((Math.abs(val) < 0.01) || (Math.abs(val) >= 10000.)){
+        }else if ((Math.abs(val) < 0.01) || (Math.abs(val) >= 10000.0)){
             return val.toExponential(4);
         }
         return parseFloat(val).toPrecision(6);
-    }
+    };
 
 
     this.clean_numerical_value = function(value){
@@ -166,7 +170,7 @@ var QAUtils = new function() {
     /*************************************************************************/
     this.get_checked = function(container){
         var vals =  [];
-        $(container+" input[type=checkbox]:checked").each(function(i,cb){
+        $(container + " input[type=checkbox]:checked").each(function(i,cb){
             vals.push(cb.value);
         });
         return vals;
@@ -199,7 +203,28 @@ var QAUtils = new function() {
             return null;
         }
 
-    }
+    };
+
+   //parse a date in dd-mmm-yyyy hh:mm format (24 hour clock) e..g 01 Oct 2019
+    this.parse_dd_mmm_yyyy_date= function(s){
+        var months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+        try {
+            var dt = s.split(" ");
+
+            var dd = parseInt(dt[0]);
+            var mm = months.indexOf(dt[1].toLowerCase());
+            var yy = parseInt(dt[2]);
+
+            var time = dt[3].split(':');
+            var hh = parseInt(time[0]);
+            var nn = parseInt(time[1]);
+            return new Date(yy, mm, dd, hh, nn);
+        }catch(err){
+            return null;
+        }
+
+    };
 
     //taken from http://n8v.enteuxis.org/2010/12/parsing-iso-8601-dates-in-javascript/
     this.parse_iso8601_date = function(s){

@@ -4,10 +4,12 @@ import logging
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
-from django.core.urlresolvers import resolve, reverse
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.template.loader import get_template
-from django.utils.translation import ugettext as _
+from django.urls import resolve, reverse
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import UpdateView
 from listable.views import (
     DATE_RANGE,
@@ -25,8 +27,10 @@ from listable.views import (
     BaseListableView,
 )
 
+from qatrack.attachments.views import listable_attachment_tags
 from qatrack.qa import models
 from qatrack.service_log import models as sl_models
+from qatrack.units.models import Unit
 
 # signals import  needs to be here so signals get registered
 from .. import signals  # NOQA
@@ -76,6 +80,7 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
         "testinstance_set__reference",
         "testinstance_set__tolerance",
         "testinstance_set__status",
+        "testinstance_set__attachment_set",
     ]
     select_related = [
         "unit_test_collection",
@@ -105,7 +110,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
         # override the default queryset for the formset so that we can pull in all the
         # reference/tolerance data without the ORM generating lots of extra queries
-        test_instances = self.object.testinstance_set.order_by("created").select_related(
+        test_instances = self.object.testinstance_set.order_by("order", "created").select_related(
             "status",
             "reference",
             "tolerance",
@@ -114,6 +119,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             "unit_test_info__unit",
         ).prefetch_related(
             "unit_test_info__test__attachment_set",
+            "attachment_set",
         )
 
         if self.request.method == "POST":
@@ -130,7 +136,9 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         self.add_histories(formset.forms)
         context["formset"] = formset
         context["history_dates"] = self.history_dates
-        context["categories"] = set([x.unit_test_info.test.category for x in test_instances])
+        context["categories"] = sorted(
+            set([x.unit_test_info.test.category for x in test_instances]), key=lambda c: c.name
+        )
         context["statuses"] = models.TestInstanceStatus.objects.all()
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
@@ -139,22 +147,20 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
 
-        tests = [t.unit_test_info.test for t in test_instances]
-        context['borders'] = self.object.test_list.sublist_borders(tests)
+        context['borders'] = self.object.test_list.sublist_borders()
 
         context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
 
-        if settings.USE_SERVICE_LOG:
-            rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=self.object)
-            se_rtsqa = []
-            for f in rtsqas:
-                if f.service_event not in se_rtsqa:
-                    se_rtsqa.append(f.service_event)
+        rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=self.object)
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
 
-            context['service_events_rtsqa'] = se_rtsqa
+        context['service_events_rtsqa'] = se_rtsqa
 
-            se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
-            context['service_events_ib'] = se_ib
+        se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
+        context['service_events_ib'] = se_ib
 
         return context
 
@@ -175,24 +181,12 @@ class UTCList(BaseListableView):
     model = models.UnitTestCollection
 
     action = "perform"
-    action_display = "Perform"
-    page_title = "All QA"
+    action_display = _l("Perform")
+    page_title = _l("All QC")
     active_only = True
     inactive_only = False
     visible_only = True
     paginate_by = 50
-
-    fields = (
-        "actions",
-        "name",
-        "due_date",
-        "unit__name",
-        "frequency__name",
-        "assigned_to__name",
-        "last_instance__work_completed",
-        "last_instance_pass_fail",
-        "last_instance_review_status",
-    )
 
     search_fields = {
         "actions": False,
@@ -204,7 +198,7 @@ class UTCList(BaseListableView):
 
     order_fields = {
         "actions": False,
-        "frequency__name": "frequency__due_interval",
+        "frequency__name": "frequency__nominal_interval",
         "unit__name": "unit__number",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
@@ -213,6 +207,7 @@ class UTCList(BaseListableView):
 
     widgets = {
         "unit__name": SELECT_MULTI,
+        "unit__site__name": SELECT_MULTI,
         "frequency__name": SELECT_MULTI,
         "assigned_to__name": SELECT_MULTI,
         "last_instance__work_completed": DATE_RANGE,
@@ -228,17 +223,19 @@ class UTCList(BaseListableView):
         "last_instance",
         "frequency",
         "unit",
+        "unit__site",
         "assigned_to",
     )
 
     headers = {
-        "name": _("Test List/Cycle"),
-        "unit__name": _("Unit"),
-        "frequency__name": _("Frequency"),
-        "assigned_to__name": _("Assigned To"),
-        "last_instance__work_completed": _("Completed"),
-        "last_instance_pass_fail": _("Pass/Fail Status"),
-        "last_instance_review_status": _("Review Status"),
+        "name": _l("Test List/Cycle"),
+        "unit__name": _l("Unit"),
+        "unit__site__name": _l("Site"),
+        "frequency__name": _l("Frequency"),
+        "assigned_to__name": _l("Assigned To"),
+        "last_instance__work_completed": _l("Completed"),
+        "last_instance_pass_fail": _l("Pass/Fail Status"),
+        "last_instance_review_status": _l("Review Status"),
     }
 
     prefetch_related = (
@@ -268,6 +265,28 @@ class UTCList(BaseListableView):
             'pass_fail': get_template("qa/pass_fail_status.html"),
             'due_date': get_template("qa/due_date.html"),
         }
+
+    def get_fields(self, request=None):
+
+        fields = (
+            "actions",
+            "name",
+            "due_date",
+        )
+
+        multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
+        if multiple_sites:
+            fields += ("unit__site__name",)
+
+        fields += (
+            "unit__name",
+            "frequency__name",
+            "assigned_to__name",
+            "last_instance__work_completed",
+            "last_instance_pass_fail",
+            "last_instance_review_status",
+        )
+        return fields
 
     def get_icon(self):
         return 'fa-pencil-square-o'
@@ -306,7 +325,9 @@ class UTCList(BaseListableView):
         filters = super(UTCList, self).get_filters(field, queryset=queryset)
 
         if field == 'frequency__name':
-            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+            filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
+        elif field == 'unit__site__name':
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 
@@ -357,25 +378,17 @@ class TestListInstances(BaseListableView):
 
     order_by = ["unit_test_collection__unit__name", "-work_completed"]
 
-    fields = (
-        "actions",
-        "unit_test_collection__unit__name",
-        "unit_test_collection__frequency__name",
-        "test_list__name",
-        "work_completed",
-        "created_by__username",
-        "review_status",
-        "pass_fail",
-    )
-
     headers = {
+        "unit_test_collection__unit__site__name": _("Site"),
         "unit_test_collection__unit__name": _("Unit"),
         "unit_test_collection__frequency__name": _("Frequency"),
         "created_by__username": _("Created By"),
+        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
     }
 
     widgets = {
         "unit_test_collection__frequency__name": SELECT_MULTI,
+        "unit_test_collection__unit__site__name": SELECT_MULTI,
         "unit_test_collection__unit__name": SELECT_MULTI,
         "created_by__username": SELECT_MULTI,
         "work_completed": DATE_RANGE
@@ -387,19 +400,22 @@ class TestListInstances(BaseListableView):
         "actions": False,
         "pass_fail": False,
         "review_status": False,
+        "attachments": False,
     }
 
     order_fields = {
         "actions": False,
         "unit_test_collection__unit__name": "unit_test_collection__unit__number",
-        "unit_test_collection__frequency__name": "unit_test_collection__frequency__due_interval",
+        "unit_test_collection__frequency__name": "unit_test_collection__frequency__nominal_interval",
         "review_status": False,
         "pass_fail": False,
+        "attachments": "attachment_count",
     }
 
     select_related = (
         "test_list",
         "unit_test_collection__unit",
+        "unit_test_collection__unit__site",
         "unit_test_collection__frequency",
         "created_by",
         "modified_by",
@@ -413,6 +429,7 @@ class TestListInstances(BaseListableView):
         'rtsqa_for_tli__service_event',
         'serviceevents_initiated',
         'comments',
+        'attachment_set',
     )
 
     def __init__(self, *args, **kwargs):
@@ -431,6 +448,27 @@ class TestListInstances(BaseListableView):
     def get_page_title(self):
         return "All Test Collections"
 
+    def get_fields(self, request=None):
+
+        fields = ("actions",)
+
+        multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
+        if multiple_sites:
+            fields += ("unit_test_collection__unit__site__name",)
+
+        fields += (
+            "unit_test_collection__unit__name",
+            "unit_test_collection__frequency__name",
+            "test_list__name",
+            "work_completed",
+            "created_by__username",
+            "review_status",
+            "pass_fail",
+            "attachments",
+        )
+
+        return fields
+
     def get_context_data(self, *args, **kwargs):
         context = super(TestListInstances, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
@@ -444,12 +482,17 @@ class TestListInstances(BaseListableView):
         filters = super(TestListInstances, self).get_filters(field, queryset=queryset)
 
         if field == 'unit_test_collection__frequency__name':
-            filters = [(NONEORNULL, 'Ad Hoc') if f == (NONEORNULL, 'None') else f for f in filters]
+            filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
+        elif field == "unit_test_collection__unit__site__name":
+            filters = [(NONEORNULL, _('Other')) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 
     def get_queryset(self, *args, **kwargs):
-        return super(TestListInstances, self).get_queryset(*args, **kwargs).order_by("-work_completed")
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.filter(unit_test_collection__visible_to__in=self.request.user.groups.all()).distinct()
+        qs = qs.annotate(attachment_count=Count("attachment"))
+        return qs.order_by("-work_completed")
 
     def unit_test_collection__frequency__name(self, tli):
         freq = tli.unit_test_collection.frequency
@@ -458,17 +501,13 @@ class TestListInstances(BaseListableView):
     def actions(self, tli):
         template = self.templates['actions']
 
-        if settings.USE_SERVICE_LOG:
-            rtsqas = tli.rtsqa_for_tli.all()
-            se_rtsqa = []
-            for f in rtsqas:
-                if f.service_event not in se_rtsqa:
-                    se_rtsqa.append(f.service_event)
+        rtsqas = tli.rtsqa_for_tli.all()
+        se_rtsqa = []
+        for f in rtsqas:
+            if f.service_event not in se_rtsqa:
+                se_rtsqa.append(f.service_event)
 
-            se_ib = tli.serviceevents_initiated.all()
-        else:
-            se_ib = []
-            se_rtsqa = []
+        se_ib = tli.serviceevents_initiated.all()
 
         c = {
             'instance': tli,
@@ -480,7 +519,6 @@ class TestListInstances(BaseListableView):
             'show_rtsqa_se': True,
             'rtsqa_for_se': se_rtsqa,
             'num_rtsqa_se': len(se_rtsqa),
-            'USE_SERVICE_LOG': settings.USE_SERVICE_LOG
         }
         return template.render(c)
 
@@ -509,3 +547,6 @@ class TestListInstances(BaseListableView):
             "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
         }
         return template.render(c)
+
+    def attachments(self, tli):
+        return listable_attachment_tags(tli)

@@ -1,0 +1,101 @@
+#save-image {
+  margin-right: 10px;
+}
+
+.pvtCols {
+  width: 99%;
+}
+.pvtCols::before {
+  content: "Columns";
+  padding: 10px;
+  font-weight: bold;
+  border-right: 1px solid #CCC;
+}
+
+.pvtRows::before {
+  padding: 3px;
+  content: "Rows";
+  display: block;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #CCC;
+}
+
+
+.pvtUi .form-control {
+  display: inline-block;
+}
+
+.pvtRenderer,
+.pvtAggregator {
+  width: 150px;
+}
+
+.pvtAxisContainer, .pvtVals {
+  padding: 0;
+}
+
+.pvtAxisContainer li {
+  padding: 0;
+}
+
+.pvtAxisContainer li span.pvtAttr {
+  display: inline-block;
+  border-radius: 0;
+  border-top: 0;
+  padding: 7px;
+}
+
+.pvtUnused .pvtAttr,
+.pvtRows .pvtAttr {
+  width: 100%;
+}
+
+.pvtUiCell {
+  background: #EEE;
+}
+
+.panel-body {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.pivot-table-col {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pivot-table {
+  padding: 0;
+}
+
+.overflow-wrapper {
+  max-height: 600px;
+  overflow: scroll;
+}
+
+.pvtUi td {
+  overflow-y: scroll;
+}
+
+.pvtUi td:nth-child(1),
+.pvtUi td:nth-child(2) {
+  white-space: nowrap;
+}
+
+.pvtUi td:nth-child(1) {
+}
+
+.pivot-table > .pvtUi > table tbodytable tbody  td:nth-child(3) {
+  width: 99%;
+}
+
+
+.pvtRendererArea {
+  padding: 0;
+}
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+}

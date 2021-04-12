@@ -3,17 +3,21 @@ import collections
 from django import template
 from django.conf import settings
 from django.template.loader import get_template
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
-import qatrack.qa.models as models
+from qatrack.qa import models
+from qatrack.qatrack_core import scheduling
+from qatrack.qatrack_core.dates import end_of_day, format_as_date, start_of_day
 
 register = template.Library()
 
 
 @register.simple_tag
-def qa_value_form(form, test_list, perms, test_info=None, unit_test_collection=None, show_category=True):
+def qa_value_form(form, test_list, perms, user, test_info=None, unit_test_collection=None, show_category=True):
     template = get_template("qa/qavalue_form.html")
     c = {
+        "user": user,
         "form": form,
         "perms": perms,
         "test_list": test_list,
@@ -95,7 +99,7 @@ def tolerance_for_reference(tol, ref):
     for key in tols:
         tols[key] = "-" if tols[key] is None else "%.4g" % tols[key]
     tols["ok_disp"] = tsd['ok']
-    tols["tol_disp"] = tsd['ok']
+    tols["tol_disp"] = tsd['tolerance']
     tols["act_disp"] = tsd['action']
     return mark_safe(
         '<span>%(ok_disp)s: Between %(tol_low)s &amp; %(tol_high)s</br> '
@@ -107,8 +111,22 @@ def tolerance_for_reference(tol, ref):
 @register.simple_tag
 def history_display(history, unit, test_list, test, frequency=None):
     template = get_template("qa/history.html")
+
+    # Set start / end dates of 1 year, or the span of the history elements, whichever is larger
+    one_year = timezone.timedelta(days=365)
+    end_date = end_of_day(timezone.now())
+    start_date = start_of_day(end_date - one_year)
+    if history:
+        start_date = history[-1][0].work_completed
+        end_date = history[0][0].work_completed
+        hist_covers_less_than_1_year = end_date - start_date < one_year
+        if hist_covers_less_than_1_year:
+            start_date = end_date - one_year
+    date_range = "%s - %s" % (format_as_date(start_date), format_as_date(end_date))
+
     c = {
         "history": history,
+        "date_range": date_range,
         "unit": unit,
         "test_list": test_list,
         "test": test,
@@ -164,12 +182,31 @@ def as_due_date(unit_test_collection):
     return template.render(c)
 
 
+@register.filter(expects_local_time=True)
+def as_qc_window(unit_test_collection):
+
+    start, end = scheduling.qc_window(unit_test_collection.due_date, unit_test_collection.frequency)
+    if start:
+        start = format_as_date(start)
+
+    if end:
+        end = format_as_date(end)
+
+    if start:
+        return "%s - %s" % (start, end)
+    elif unit_test_collection.due_date:
+        start = format_as_date(unit_test_collection.due_date)
+        return "%s - %s" % (start, end)
+
+    return ""
+
+
 @register.filter(is_safe=True, expects_local_time=True)
 def as_time_delta(time_delta):
     hours, remainder = divmod(time_delta.seconds, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
     return '%dd %dh %dm %ds' % (time_delta.days, hours, minutes, seconds)
-as_time_delta.safe = True  # noqa E305
+as_time_delta.safe = True  # noqa: E305
 
 
 @register.filter
@@ -191,6 +228,8 @@ def as_data_attributes(unit_test_collection):
 
 @register.filter
 def hour_min(duration):
+    if duration in (None, ""):
+        return ""
     total_seconds = int(duration.total_seconds())
     hours = total_seconds // 3600
     minutes = (total_seconds % 3600) // 60

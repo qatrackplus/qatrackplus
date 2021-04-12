@@ -1,0 +1,12 @@
+{% load i18n %}Hello,
+{% spaceless %}
+The following Units currently have unreviewed Faults:
+{% endspaceless %}
+{% regroup notice.faults_by_unit_fault_type by unit__name as unit_groups %}
+{% for unit, unit_fault_types in unit_groups %}
+
+Unit: {{ unit }}
+===================================
+{% for fault_type in unit_fault_types %}{{ unit_fault_type.fault_types__code }} : {{ unit_fault_type.fault_types__count }} Unreviewed
+{% endfor %}
+{% endfor %}

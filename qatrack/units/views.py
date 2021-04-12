@@ -1,16 +1,16 @@
-import json
-
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.models import Permission
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import TemplateView
 import pytz
 
+from qatrack.qatrack_core.dates import format_as_date as fmt_date
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.units import forms
 from qatrack.units import models as u_models
 
@@ -18,19 +18,21 @@ from qatrack.units import models as u_models
 def get_unit_available_time_data(request):
 
     unit_qs = u_models.Unit.objects.prefetch_related('unitavailabletime_set', 'unitavailabletimeedit_set').all()
-    unit_available_time_data = {u.id: {
-        'number': u.number,
-        'name': u.name,
-        'active': u.active,
-        'date_acceptance': u.date_acceptance.strftime('%Y-%m-%d') if u.date_acceptance else None,
-        'available_time_edits': {
-            uate.date.strftime('%Y-%m-%d'): {
-                'name': uate.name,
-                'hours': uate.hours
-            } for uate in u.unitavailabletimeedit_set.all()
-        },
-        'available_times': list(u.unitavailabletime_set.all().values())
-    } for u in unit_qs}
+    unit_available_time_data = {
+        u.id: {
+            'number': u.number,
+            'name': u.name,
+            'active': u.active,
+            'date_acceptance': fmt_date(u.date_acceptance) if u.date_acceptance else None,
+            'available_time_edits': {
+                fmt_date(uate.date): {
+                    'name': uate.name,
+                    'hours': uate.hours
+                } for uate in u.unitavailabletimeedit_set.all()
+            },
+            'available_times': u.get_available_times_list(),
+        } for u in unit_qs
+    }
 
     return JsonResponse({'unit_available_time_data': unit_available_time_data})
 
@@ -43,8 +45,8 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(UnitAvailableTimeChange, self).get_context_data(**kwargs)
-        context['unit_availble_time_form'] = forms.UnitAvailableTimeForm()
-        context['unit_availble_time_edit_form'] = forms.UnitAvailableTimeEditForm()
+        context['unit_available_time_form'] = forms.UnitAvailableTimeForm()
+        context['unit_available_time_edit_form'] = forms.UnitAvailableTimeEditForm()
         context['units'] = u_models.Unit.objects.filter(is_serviceable=True)
         context['year_select'] = forms.year_select
         context['month_select'] = forms.month_select
@@ -59,7 +61,7 @@ def handle_unit_available_time(request):
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
     day = request.POST.get('day')
-    day = timezone.datetime.fromtimestamp(int(day) / 1000, tz).date() if day else None
+    day = timezone.localtime(timezone.datetime.fromtimestamp(int(day) / 1000, tz)).date() if day else None
 
     uats = u_models.UnitAvailableTime.objects.filter(unit__in=units, date_changed=day).select_related('unit')
 
@@ -84,7 +86,7 @@ def handle_unit_available_time(request):
                 date_changed=day,
                 hours_monday=timezone.timedelta(hours=int(hours['monday'][0]), minutes=int(hours['monday'][1])),
                 hours_tuesday=timezone.timedelta(hours=int(hours['tuesday'][0]), minutes=int(hours['tuesday'][1])),
-                hours_wednesday=timezone.timedelta(hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])),
+                hours_wednesday=timezone.timedelta(hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])),  # noqa: E501
                 hours_thursday=timezone.timedelta(hours=int(hours['thursday'][0]), minutes=int(hours['thursday'][1])),
                 hours_friday=timezone.timedelta(hours=int(hours['friday'][0]), minutes=int(hours['friday'][1])),
                 hours_saturday=timezone.timedelta(hours=int(hours['saturday'][0]), minutes=int(hours['saturday'][1])),
@@ -98,11 +100,10 @@ def handle_unit_available_time(request):
 @csrf_protect
 def handle_unit_available_time_edit(request):
 
-    delete = request.POST.get('delete', False) == 'true'
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
-    days = [timezone.datetime.fromtimestamp(int(d) / 1000, tz).date() for d in request.POST.getlist('days[]', [])]
+    days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]  # noqa: E501
 
     hours_mins = request.POST.get('hours_mins', None)
     if hours_mins:
@@ -122,7 +123,10 @@ def handle_unit_available_time_edit(request):
                     uate.save()
                 except ObjectDoesNotExist:
                     u_models.UnitAvailableTimeEdit.objects.create(
-                        unit=u, date=d, hours=timezone.timedelta(hours=hours, minutes=mins), name=name
+                        unit=u,
+                        date=d,
+                        hours=timezone.timedelta(hours=hours, minutes=mins),
+                        name=name,
                     )
 
     return get_unit_available_time_data(request)
@@ -135,7 +139,10 @@ def delete_schedules(request):
     unit_ids = request.POST.getlist('units[]', [])
     tz = request.POST.get("tz", settings.TIME_ZONE)
     tz = pytz.timezone(tz)
-    days = [timezone.datetime.fromtimestamp(int(d) / 1000, tz).date() for d in request.POST.getlist('days[]', [])]
+    days = [
+        timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date()
+        for d in request.POST.getlist('days[]', [])
+    ]
 
     u_models.UnitAvailableTime.objects.filter(
         unit_id__in=unit_ids,
@@ -148,3 +155,10 @@ def delete_schedules(request):
     ).delete()
 
     return get_unit_available_time_data(request)
+
+
+def get_unit_info(request):
+    units = request.GET.getlist("units[]", [])
+    serviceable_only = request.GET.get("serviceable_only", "false") == "true"
+    unit_info = u_models.get_unit_info(unit_ids=units, serviceable_only=serviceable_only)
+    return JsonResponse(unit_info, encoder=QATrackJSONEncoder)

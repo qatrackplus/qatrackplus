@@ -1,4 +1,4 @@
-Performing and reviewing QA
+Performing and reviewing QC
 ===========================
 
 
@@ -14,6 +14,5 @@ Performing and reviewing QA
    deleting_qa_data
    qa_overview
    charts
-   paper_backup_forms
 
 

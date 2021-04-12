@@ -6,7 +6,8 @@
 
   <link href="{% static "fontawsome/css/font-awesome.min.css" %}" rel="stylesheet">
   <link href="{% static "css/bootstrap-grid.css" %}" rel="stylesheet">
-  <link href="{% static "css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/jquery.dataTables.min.css" %}" rel="stylesheet">
 {% endblock %}
 
 
@@ -14,8 +15,8 @@
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
-    <a href="{% url 'admin:app_list' app_label='qa' %}">Qa</a> &rsaquo;
-    Export Test Pack
+    <a href="{% url 'admin:app_list' app_label='qa' %}">{% trans "QC" %}</a> &rsaquo;
+    {% trans "Export Test Pack" %}
   </div>
 {% endblock %}
 
@@ -28,9 +29,11 @@
   <div class="row">
     <div class="col-sm-12">
       <p>
+        {% blocktrans %}
         On this page you may create a Test Pack for sharing test lists,
         tests, and other QATrack+ configuration data with other QATrack+
         installations.
+        {% endblocktrans %}
       </p>
     </div>
   </div>
@@ -41,15 +44,15 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Test Lists To Export</h2>
+          <h2>{% trans "Test Lists To Export" %}</h2>
 
-          <em class="loading">Loading Test List table...</em>
+          <em class="loading">{% trans "Loading Test List table" %}...</em>
           <table id="testlists-table" style="display: none">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Test List</th>
-                <th>Description</th>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Test List" %}</th>
+                <th>{% trans "Description" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -69,15 +72,15 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Test List Cycles To Export</h2>
+          <h2>{% trans "Test List Cycles To Export" %}</h2>
 
-          <em class="loading">Loading Test List Cycle table...</em>
+          <em class="loading">{% trans "Loading Test List Cycle table" %}...</em>
           <table id="testlistcycles-table" style="display: none">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Cycle</th>
-                <th>Description</th>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Cycle" %}</th>
+                <th>{% trans "Description" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -97,24 +100,26 @@
       <div class="row">
         <div class="col-sm-12 tp-container">
           <hr/>
-          <h2>Select Extra Tests To Export</h2>
+          <h2>{% trans "Select Extra Tests To Export" %}</h2>
 
           <p>
             <em>
+              {% blocktrans %}
               Note that there is no need to select tests that are already
               included as part of a test list
+              {% endblocktrans %}
             </em>
           </p>
 
-          <em class="loading">Loading Test table...</em>
+          <em class="loading">{% trans "Loading Test table" %}...</em>
           <table id="tests-table" style="display: none">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Test</th>
-                <th>Category</th>
-                <th>Type</th>
-                <th>Description</th>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Test" %}</th>
+                <th>{% trans "Category" %}</th>
+                <th>{% trans "Type" %}</th>
+                <th>{% trans "Description" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -135,23 +140,23 @@
     </div>
 
     <div class="col-sm-4">
-      <h2>Summary</h2>
+      <h2>{% trans "Summary" %}</h2>
       <hr/>
       <div id="summary">
 
         <div class="row">
-          <div class="col-sm-6">Test Lists:</div>
-          <div class="col-sm-6" style="text-align: right" id="testlists-summary">0 Selected</div>
+          <div class="col-sm-6">{% trans "Test Lists" %}:</div>
+          <div class="col-sm-6" style="text-align: right" id="testlists-summary">{% trans "0 Selected" %}</div>
         </div>
 
         <div class="row">
-          <div class="col-sm-6">Test Lists Cycles:</div>
-          <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">0 Selected</div>
+          <div class="col-sm-6">{% trans "Test Lists Cycles" %}:</div>
+          <div class="col-sm-6" style="text-align: right" id="testlistcycles-summary">{% trans "0 Selected" %}</div>
         </div>
 
         <div class="row">
-          <div class="col-sm-6">Tests:</div>
-          <div class="col-sm-6" style="text-align: right" id="tests-summary">0 Selected</div>
+          <div class="col-sm-6">{% trans "Tests" %}:</div>
+          <div class="col-sm-6" style="text-align: right" id="tests-summary">{% trans "0 Selected" %}</div>
         </div>
 
       </div>
@@ -165,7 +170,7 @@
         </div>
         <div class="row">
           <div class="col-sm-6">
-            Test Pack Name:
+            {% trans "Test Pack Name" %}:
           </div>
           <div class="col-sm-6" style="text-align: right">
             {{ form.name|attr:"style:width: 100%" }}
@@ -174,7 +179,7 @@
         </div>
         <div class="row">
           <div class="col-sm-6">
-            Description:
+            {% trans "Description" %}:
           </div>
           <div class="col-sm-6" style="">
             {{ form.description|attr:"style:width: 100%" }}
@@ -189,7 +194,7 @@
           </ul>
         {% endif %}
         <div class="submit-row">
-          <input type="submit" value="Download" class="default">
+          <input type="submit" value="{% trans "Download" %}" class="default">
         </div>
       </form>
     </div>
@@ -200,12 +205,10 @@
 {% endblock %}
 
 {% block footer %}
-<script type="text/javascript">
-</script>
 
 <script src="{% static "jquery/js/jquery.min.js" %}"></script>
 
-<script src="{% static "js/datatables.min.js" %}"></script>
+<script src="{% static "datatables/1.10/js/datatables.min.js" %}"></script>
 <script src="{% static "js/testpack-export.js" %}"></script>
 
 {% endblock %}

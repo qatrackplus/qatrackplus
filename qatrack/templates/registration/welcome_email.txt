@@ -1,0 +1,11 @@
+Hello {{ user }},
+
+Welcome to QATrack+!
+
+You can log in to your site with the link below:
+
+{{ login_link }}
+
+Best wishes,
+
+The QATrack+ Team

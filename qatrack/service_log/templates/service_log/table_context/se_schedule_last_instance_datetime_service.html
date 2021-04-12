@@ -1,0 +1,8 @@
+{% load qa_tags %}
+{% if instance %}
+  <span data-timestamp="{{ instance.datetime_service|date:"U" }}">
+    <abbr title="Completed by {{ instance.user_created_by }}, Last modified by {{ instance.user_modified_by }}">{{ instance.datetime_service }}</abbr>
+  </span>
+{% else %}
+  <em>New Schedule</em>
+{% endif %}

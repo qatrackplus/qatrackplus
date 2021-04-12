@@ -31,7 +31,7 @@ require(['jquery', 'moment'], function ($, moment) {
             });
 
             if (active) {
-                inputs.push('unit__active=' + active)
+                inputs.push('unit__active=' + active);
             }
 
             if (problem_description) {

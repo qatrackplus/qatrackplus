@@ -83,3 +83,56 @@ C:\\deploy\\qatrackplus\\backup.ps1` in the `Add Arguments` field.
 
 Now save your scheduled task and run it and manually to confirm it worked
 correctly.
+
+
+Using Django to Dump The Database To JSON
+-----------------------------------------
+
+In some cases you may want to move your database from one type of SQL database
+to another, say from Postgres to SQLite.  In this case, one way to do this is
+to dump your database to a JSON file and then load it in your other database.
+
+Dumping your database
+.....................
+
+Open a terminal, and activate your virtual environment and then:
+
+
+.. code-block:: console
+
+    python manage.py dumpdata > qatrack-dump.json
+
+
+The qatrack-dump.json file can now be used to populate a fresh database.
+
+
+Loading your database
+.....................
+
+
+.. danger::
+
+    This will completely erase all of the data in your database.  Only do this
+    if you are sure you are dealing with a fresh database
+
+
+You must load your previously dumped database into the same version of
+QATrack+.  First you need to create a new database, and then configure QATrack+
+to access it. Then migrate your database and clean out the autopopulated data:
+
+.. code-block:: console
+
+    python manage.py migrate
+    python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"
+
+
+Then you can load in your new data:
+
+
+.. code-block:: console
+
+    python manage.py loaddata qatrack-dump.json
+
+
+
+

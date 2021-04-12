@@ -1,0 +1,77 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+<link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+<link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+
+<style type="text/css">
+
+.selector {
+    width: 980px;
+    float: left;
+}
+
+.selector select {
+    width: 470px;
+    height: 17.2em;
+}
+
+.selector-available, .selector-chosen {
+    float: left;
+    width: 470px;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} change-form{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='qa' %}">{% trans "QC" %}</a> &rsaquo;
+    {% trans "Copy References & Tolerances" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+<p>{% trans "Select the source unit and test list (or test list cycle) and destination units." %}</p>
+
+<form action="." method="post" novalidate>{% csrf_token %}
+    {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+    {% endfor %}
+
+    <fieldset class="module aligned">
+      {% for field in form.visible_fields %}
+      <div class="form-row{% if field.errors %} errors{% endif %}">
+        <div class="fieldBox">
+            {{ field.errors }}
+            {{ field.label_tag }} {{ field }}
+            {% if field.help_text %}
+              <p class="help">{{ field.help_text|safe }}</p>
+            {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </fieldset>
+    <input type="submit" value="{% trans "Copy references and tolerances" %}" />
+</form>
+
+<script type="text/javascript">
+    var ADMINURLs = {
+        GETTESTLIST: unescape("{% url 'qa_copy_refs_and_tols_testlist_json' source_unit=":source_unit:" content_type=":content_type:" %}")
+    }
+</script>
+
+<script src="{% static "jquery/js/jquery.min.js" %}"></script>
+<script language="javascript" type="text/javascript" src="{% static "select2/js/select2.js" %}?v={{VERSION}}"></script>
+<script language="javascript" type="text/javascript" src="{% static "js/copy_ref_tols_admin.js" %}?v={{VERSION}}"></script>
+{% endblock %}
+

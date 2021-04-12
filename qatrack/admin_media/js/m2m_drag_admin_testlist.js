@@ -19,6 +19,21 @@
         $(rows).not(".add-row").removeClass("row1 row2")
             .filter(":even").addClass("row1").end()
             .filter("#member-container tbody tr" + ":odd").addClass("row2");
+
+        set_tab_order();
+    }
+
+    function set_tab_order(){
+
+        var tabindex = 1;
+        $('input,select').not("[type=checkbox]").each(function() {
+            if (this.type != "hidden") {
+            var $input = $(this);
+            $input.attr("tabindex", tabindex);
+            tabindex++;
+            }
+        });
+
     }
 
     function sort_container(){
@@ -111,7 +126,7 @@
         '    <fieldset class="module">',
         '      <h2>Test List Members</h2>',
         '      <table>',
-        '        <thead><th>Type</th><th colspan="2">ID</th><th>Order</th><th>Macro Name</th><th>Show outline<br/>around sublist</th><th>Delete</th></thead>',
+        '        <thead><th>Type</th><th colspan="2">ID</th><th>Order</th><th>Macro Name</th><th>Show outline<br/>around sublist</th><th>Remove From<br/>TestList</th></thead>',
         '        <tbody></tbody>',
         '      </table>',
         '    </fieldset>',
@@ -170,4 +185,4 @@
             }
         }
     });
-})(django.jQuery);
+})($);

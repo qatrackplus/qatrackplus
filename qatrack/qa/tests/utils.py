@@ -1,16 +1,13 @@
-from django.contrib.auth.models import User, Group, Permission
-from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
+from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
+import recurrence
 
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
-from qatrack.units.models import Unit, UnitType, Modality, PHOTON, Vendor
-
-
-def get_next_id(obj):
-    if obj is None:
-        return 1
-    return obj.id + 1
+from qatrack.qatrack_core.tests.utils import get_next_id
+from qatrack.units.models import PHOTON, Modality, Site, Unit, UnitType, Vendor
 
 
 def exists(app, model, field, value):
@@ -19,19 +16,6 @@ def exists(app, model, field, value):
     if len(results) > 0:
         return True
     return False
-
-
-def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", is_active=True):
-    try:
-        u = User.objects.get(username=uname)
-    except:
-        if is_superuser:
-            u = User.objects.create_superuser(uname, "super@qatrackplus.com", pwd, is_staff=is_staff, is_active=is_active)
-        else:
-            u = User.objects.create_user(uname, "user@qatrackplus.com", password=pwd, is_staff=is_staff, is_active=is_active)
-    finally:
-        u.user_permissions.add(Permission.objects.get(codename="add_testlistinstance"))
-    return u
 
 
 def create_category(name="cat", slug="cat", description="cat"):
@@ -52,7 +36,16 @@ def create_status(name=None, slug=None, is_default=True, requires_review=True):
     return status
 
 
-def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None, constant_value=None):
+def create_test(
+    name=None,
+    test_type=models.SIMPLE,
+    choices=None,
+    procedure=None,
+    constant_value=None,
+    category=None,
+    wrap_low=None,
+    wrap_high=None,
+):
     user = create_user()
     if name is None or models.Test.objects.filter(name=name).count() > 0:
         name = "test_%d" % models.Test.objects.count()
@@ -61,10 +54,12 @@ def create_test(name=None, test_type=models.SIMPLE, choices=None, procedure=None
         slug=name,
         description="desc",
         type=test_type,
-        category=create_category(),
+        category=category or create_category(),
         created_by=user,
         modified_by=user,
         choices=choices,
+        wrap_high=wrap_high,
+        wrap_low=wrap_low,
         procedure=procedure,
         constant_value=constant_value
     )
@@ -88,7 +83,9 @@ def create_test_list(name=None):
     return test_list
 
 
-def create_test_list_instance(unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False):
+def create_test_list_instance(
+    unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False
+):
     if unit_test_collection is None:
         unit_test_collection = create_unit_test_collection()
     if test_list is None:
@@ -151,7 +148,9 @@ def create_test_list_membership(test_list=None, test=None, order=0):
     return tlm
 
 
-def create_test_instance(test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None):
+def create_test_instance(
+    test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None
+):
 
     if test_list_instance is None:
         test_list_instance = create_test_list_instance()
@@ -218,7 +217,15 @@ def create_unit_type(name=None, vendor=None, model="model"):
     return ut
 
 
-def create_unit(name=None, number=None, tipe=None):
+def create_site(name=None):
+
+    if name is None:
+        name = 'site_%04d' % get_next_id(Site.objects.order_by('id').last())
+
+    return Site.objects.create(name=name)
+
+
+def create_unit(name=None, number=None, tipe=None, site=None):
 
     if name is None:
         name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
@@ -228,10 +235,9 @@ def create_unit(name=None, number=None, tipe=None):
     if tipe is None:
         tipe = create_unit_type()
 
-    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True)
+    u = Unit(name=name, number=number, date_acceptance=timezone.now(), type=tipe, is_serviceable=True, site=site)
     u.save()
     u.modalities.add(create_modality())
-    u.save()
     return u
 
 
@@ -248,7 +254,7 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
 
 
 def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None,
-                     mc_pass_choices=None, mc_tol_choices=None):
+                     mc_pass_choices='', mc_tol_choices=''):
 
     if created_by is None:
         created_by = create_user()
@@ -275,24 +281,25 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
     return tol
 
 
-def create_group(name=None):
-    if name is None:
-        name = 'group_%04d' % get_next_id(Group.objects.order_by('id').last())
-    g = Group(name=name)
-    g.save()
-    g.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
-    return g
-
-
-def create_frequency(name=None, slug=None, nom=1, due=1, overdue=1):
+def create_frequency(name=None, slug=None, interval=1, window_end=1, save=True):
     if name is None or slug is None:
         name = 'frequency_%04d' % get_next_id(models.Frequency.objects.order_by('id').last())
         slug = name
+
+    rule = recurrence.Rule(freq=recurrence.DAILY, interval=interval)
+
     f = models.Frequency(
-        name=name, slug=slug,
-        nominal_interval=nom, due_interval=due, overdue_interval=overdue
+        name=name,
+        slug=slug,
+        recurrences=recurrence.Recurrence(
+            rrules=[rule],
+            dtstart=timezone.get_current_timezone().localize(timezone.datetime(2012, 1, 1)),
+        ),
+        window_start=None,
+        window_end=window_end,
     )
-    f.save()
+    if save:
+        f.save()
     return f
 
 
@@ -319,7 +326,9 @@ def create_unit_test_info(unit=None, test=None, assigned_to=None, ref=None, tol=
     return uti
 
 
-def create_unit_test_collection(unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False, active=True):
+def create_unit_test_collection(
+    unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False, active=True
+):
 
     if unit is None:
         unit = create_unit()

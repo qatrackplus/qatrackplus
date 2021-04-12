@@ -269,8 +269,8 @@ Uploading Data
 --------------
 
 The real power of the API is the ability to complete TestLists programatically.
-In order to demonstrate the API, we will submit two number entries via the API to perform a test list
-that adds two numbers together shown here:
+In order to demonstrate the API, we will submit two number entries via the API
+to perform a test list that adds two numbers together shown here:
 
 .. image:: testlist.png
 
@@ -293,9 +293,12 @@ A script that will find the above test list, and submit the data is shown here:
     # sum_of_two since it is calculated from number_1 and number_2
     data = {
         'unit_test_collection': utc_url,
+        'day': 0, # optional day=0, for TestLists, required for Test List Cycles (where 0 <= day < # of test lists in cycle)
         'in_progress': False,  # optional, default is False
+        'include_for_scheduling': True,
         'work_started': "2018-07-6 10:00",
         'work_completed': "2018-07-6 11:00",  # optional
+        'user_key': "12345",  # optional, allows you ensure uniqueness of results
         'comment': "test list comment",  # optional
         'tests': {
             'number_1': {'value': 1, 'comment': "hello number 1"}, # comment is optional
@@ -314,6 +317,7 @@ A script that will find the above test list, and submit the data is shown here:
         'day': 0,
         'due_date': None,
         'in_progress': False,
+        'include_for_scheduling': True,
         'reviewed': None,
         'reviewed_by': None,
         'site_url': 'http://127.0.0.1:8081/qa/session/details/2991/',
@@ -371,7 +375,7 @@ A script that will find the above test list, and submit the data is shown here:
 
 A few things to note:
 
-* Some fields like `comment`, `in_progress`, and `attachments` are optional
+* Some fields like `comment`, `in_progress`, `include_for_scheduling`, and `attachments` are optional
 * The `tests` key is a dictionary of the form (`skipped` and `comment` keys are optional):
 
   .. code-block:: python
@@ -383,6 +387,29 @@ A few things to note:
 
 * You don't need to submit data for `sum_of_two` since it is a composite test and calculated automatically.
 * The `url` key contains the hyperlink where you can view the completed TestListInstance online.
+
+Performing A Test List Cycle
+............................
+
+In order to perform a Test List Cycle you must include a `day` key in your
+upload data.  The `day` key is a 0-indexed integer indicating which day of the
+test list cycle you want to perform (e.g. if you want to perform day 1, you
+would use `'day': 0`, and if you want to perform day 2, you would use `'day':
+1`).
+
+Example data to perform day 2 of a test list cycle would look something like:
+
+.. code-block:: python
+
+    data = {
+        'unit_test_collection': utc_url,
+        'day': 1,  # note 0-indexed days so we use 1 for day 2
+        'work_started': "2018-07-6 10:00",
+        'work_completed': "2018-07-6 11:00",  # optional
+        'tests': {
+            ...
+        },
+    }
 
 
 Upload test types
@@ -434,6 +461,44 @@ Similar to File Upload test types, you can add arbitrary attachments to your Tes
             },
         ],
     }
+
+
+Preventing Duplicate Entries with the user_key field
+....................................................
+
+When uploading data in an automated fashion via the API, you may want to ensure
+that your script or program is not uploading the same data twice.  To
+facilitate this, the TestListInstance API allows you to specify a unique "User
+Key".  The User Key has a uniqueness constraint enforced at the database level
+and posting data with a duplicated `user_key` will result in an HTTP 400 error
+code with a message "test list instance with this user key already exists". To
+set the `user_key` for a test list instance include a unique identifier with
+your json data.  
+
+.. code:: python
+
+    data = {
+        'unit_test_collection': utc_url,
+        ...
+        'user_key': "some unique identifier",  # optional, allows you ensure uniqueness of results
+        'tests': {
+            ...
+        },
+    }
+
+
+How you choose the user_key is up to you but it is stored as a text field with
+a maximum length of 255 characters. Examples of user_key's might be:
+
+
+* A Test List Name and Database Row ID:  "Test List Name: 1234"
+* A Test List Name, Unit Name, and Timestamp: "SomeTestListName:Unit 123:2021-03-16 12:34"
+* An MD5 hash of a file: 
+
+    .. code:: python
+
+        import hashlib
+        user_key = hashlib.md5(open("some-file.dcm", "rb").read()).hexdigest()
 
 
 FAQ

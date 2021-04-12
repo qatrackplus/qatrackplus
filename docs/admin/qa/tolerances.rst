@@ -12,7 +12,7 @@ setting reference and tolerance values for a given test on a unit is described
 Creating a new tolerance
 ------------------------
 
-To create a new tolerance click the **Tolerances** link under the **QA**
+To create a new tolerance click the **Tolerances** link under the **QC**
 section on the main admin page and then click the **Add tolerance**
 button at the top right hand corner. Choose the Tolerance type you want
 to create and fill in the appropriate values (described below).
@@ -72,7 +72,7 @@ values less than 78 or greater than 82 will be considered failing.
 Multiple Choice Tolerances
 --------------------------
 
-:ref:`Multiple choice tests <qa_tests>` can be subjected to
+:ref:`Multiple choice, String, & String Composite tests <qa_tests>` can be subjected to
 pass/tolerance/fail criteria by using the **Multiple Choice** tolerance
 type. First choose the **Multiple Choice** option for the **Type** field
 and then enter a comma separated list of choices which are to be

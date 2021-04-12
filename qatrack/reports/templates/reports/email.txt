@@ -1,0 +1,5 @@
+Hello,
+
+Please find your {{ report.get_report_type_display }} "#{{ report.id }}. {{ report.title }}" for {% now "DATE_FORMAT" %} attached.
+
+Sent by QATrack+.

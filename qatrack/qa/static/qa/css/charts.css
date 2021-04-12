@@ -120,10 +120,12 @@ input.date-only-input{
 .chart-options-subbox > .row {
     margin: 0;
 }
-.chart-options-subbox > .row > .col-sm-12 {
+.chart-options-subbox > .row > .col-sm-12,
+.chart-options-subbox > .row > .col-sm-6 {
     padding: 0;
 }
-.chart-options-subbox > .row > .col-sm-12 > .form-group {
+.chart-options-subbox > .row > .col-sm-12 > .form-group,
+.chart-options-subbox > .row > .col-sm-6> .form-group {
     margin: 0 0 10px 0;
 }
 .chart-options-subbox .title {
@@ -247,6 +249,9 @@ rect.handle {
 }
 .tooltip {
     font-weight: normal;
+}
+.popover {
+  min-width: 300px;
 }
 .brush .extent {
     stroke: #FFF;

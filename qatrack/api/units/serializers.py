@@ -12,6 +12,13 @@ class UnitListSerializer(serializers.HyperlinkedModelSerializer):
             'name',
             'number',
             'site',
+            'type',
+            'serial_number',
+            'location',
+            'install_date',
+            'date_acceptance',
+            'active',
+            'is_serviceable',
         )
 
 

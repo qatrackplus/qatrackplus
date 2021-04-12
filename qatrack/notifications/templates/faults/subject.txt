@@ -1,0 +1,1 @@
+QATrack+ Fault {{ fault.unit.site_unit_name }} {{ fault.fault_types_display }}: {% now "DATE_FORMAT" %}

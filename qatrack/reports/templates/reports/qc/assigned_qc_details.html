@@ -1,0 +1,77 @@
+{% extends base_template %}
+{% load i18n %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load attach_tags %}
+{% load comments %}
+
+{% block content %}
+
+{% for site, utcs in sites_data %}
+  <h3>{% trans "Site" %}: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h3>
+  {% for utc in utcs %}
+    <div class="row">
+      <div class="col-xs-12">
+        <dl class="dl-horizontal">
+          <dt>{% trans "Unit" %}:</dt>
+          <dd>{% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %} - {{ utc.unit_name }}</dd>
+
+          {% if utc.all_lists|length > 1 %}
+            <dt>{% trans "Test List Cycle" %}</dt>
+            <dd><a href="{{ utc.link }}">{{ utc.name }}</a></dd>
+
+            <dt>{% trans "Test List Members" %}</dt>
+            <dd>{% for tl in utc.all_lists %}{{ tl.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</dd>
+          {% else %}
+            <dt>{% trans "Test List" %}</dt>
+            <dd><a href="{{ utc.link }}">{{ utc.name }}</a></dd>
+          {% endif %}
+          <dt>{% trans "Frequency" %}:</dt>
+          <dd>{{ utc.frequency }}</dd>
+
+          <dt>{% trans "Assigned To" %}:</dt>
+          <dd>{{ utc.assigned_to }}</dd>
+
+          <dt>{% trans "Visible To" %}:</dt>
+          <dd>{{ utc.visible_to }}</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        {% for test_list in utc.all_lists %}
+          <table class="table table-bordered table-striped table-condensed">
+            <thead>
+              <tr>
+                <th colspan="2">{% trans "Test List" %} :: {{ test_list.name }}</th>
+                <th colspan="2">
+                  {% if utc.all_lists|length > 1 %}
+                    {% trans "Cycle Day" %} :: {{ forloop.counter }}</th>
+                  {% endif %}
+                </th>
+              </tr>
+              <tr>
+                <th style="">{% trans "Test" %}</th>
+                <th style="width: 22%">{% trans "Category" %}</th>
+                <th style="width: 10%">{% trans "Reference" %}</th>
+                <th style="width: 33%">{% trans "Tolerance" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for test, category, reference, tolerance in test_list.utis %}
+                <tr>
+                  <td>{{ test }}</td>
+                  <td>{{ category }}</td>
+                  <td>{% if reference %}{{ reference }}{% endif %}</td>
+                  <td>{% if tolerance %}{{ tolerance }}{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endfor %}
+        <hr/>
+      </div>
+    </div>
+  {% endfor %}
+{% endfor %}
+{% endblock %}

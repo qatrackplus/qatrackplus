@@ -1,61 +1,92 @@
-.. QATrack+ documentation master file, created by
-   sphinx-quickstart on Mon Jun  4 22:03:51 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to QATrack+'s documentation!
 ====================================
 
 
-About QATrack+
---------------
+About QATrack+ v3.1.0
+---------------------
 
 QATrack+ is a fully configurable, free, and open source (MIT License) web
-application for managing QA data for radiation therapy and medical imaging
-equipment. QATrack+ is now used in many hospitals and clinics around the world!
-Visit the QATrack+ homepage at http://qatrackplus.com
+application for managing QC data for radiation therapy and medical imaging
+equipment. QATrack+ is used in `many hospitals and clinics around the world
+<http://qatrackplus.com/#whos-using>`_!
 
-QATrack+ is deployable on most operating system/server/database platform
-combinations. It was developed in the popular Python programming language using
-the Django web framework so that QC data may be entered, reviewed, and analyzed
-using a web browser.
+QATrack+ is a replacement for error prone spreadsheets and other in-house
+databases. It brings structure and organization to your QA program while
+retaining much of the flexibility of spreadsheets.  Built in scheduling,
+reports, notifications, and charts make keeping on top of your machine QA
+program a breeze!
 
 The main features include:
 
-* Ability to define QC tests via an user-friendly interface. Configuration
-  settings are available for data type (Boolean, float, computational result,
-  or multiple choice selection), test frequency (due/past due dates), reference
-  values, and tolerance and action levels. Test configurations can be grouped
-  and assigned to multiple units/devices to reduce configuration workload, and
-  to simplify the configuration maintenance.
+* :ref:`Record <qa_perform>` & :ref:`review <qa_review>` your QC data via a
+  user friendly web application.
 
-* Several options for trending numerical data via control charts and other
-  tools. Data can be filtered by unit, date, or frequency, and can also be
-  exported for external analysis.
+* Fully customized QC tests.  You configure QATrack+ to record the data that is
+  important to you.  QATrack+ comes with a number of :ref:`test types
+  <qa_tests>` including:
 
-* Support for multiple, unique user groups (e.g. administrators, physicists,
-  assistants, therapists, etc) with user & group-specific privileges and test
-  lists, as well as a configurable user authentication system.
+    * numerical
+    * text
+    * file upload & analysis using Python scripts (arbitrary file types including DICOM, JPG, TIFF etc)
+    * yes/no
+    * multiple choice
+    * calculations using Python snippets
+    * date & times
+    * and :ref:`more <qa_tests>`!
+
+* Schedule your QC on a daily, weekly, monthly, semi-annual, annual or define
+  your own custom scheduling recurrence rules.
+
+* Configure :ref:`notifications <notifications>` to alert you when:
+
+    * Scheduled QC tests are due or overdue
+    * QC tests are completed
+    * Service events are created
+    * :ref:`more <notifications>`!
+
+* Built in :ref:`data charts <qa_charts>` for trending numerical test results.
+  Data can be filtered by unit, date, or frequency, and can also be exported
+  for external analysis.
+
+* :ref:`PDF & Excel reports <reports>` that can be generated on the fly, or
+  delivered to you via email on a schedule of your choosing.
+
+* Support for :ref:`multiple user groups <qa_auth>` (e.g. Administrators,
+  Physicists, Assistants, Therapists, etc) with user & group-specific
+  privileges and test lists, as well as a configurable user authentication
+  system.
 
 * Easily integrate test procedures into data entry forms via embedded html
   or links to external documentation.
 
 * Save incomplete work and complete it a later date.
 
-* Configure a review/approval process with additional options for
-  classifying data. The software also allows reviewers to easily differentiate
-  between measurements performed as part of investigative work, or as part of
-  routine QC testing.
+* Perform manual :ref:`review & approval <qa_review>` of QC data or use
+  :ref:`Auto Review Rules <qa_auto_review>` to cut down your QC Review
+  workload.
 
-* Integrated Service Log for tracking service events and machine downtime
+* Integrated :ref:`Service Log <service_log>` for tracking service events and
+  machine downtime
 
 * Parts tracker for tracking spare parts on hand, part costs and vendors
-
-* Optional and configurable email notifications.
 
 * The flexibility to host on an intranet or www, requiring minimal resources
   from IT departments. Can optionally be managed within a physics department if
   permitted by local institution policies.
+
+
+Screenshots
+-----------
+
+For some example screenshots, please see the :ref:`screenshots` page.
+
+Installation & Deployment
+-------------------------
+
+QATrack+ is deployable on most operating system/server/database platform
+combinations. It was developed in the popular Python programming language using
+the Django web framework so that QC data may be entered, reviewed, and analyzed
+using a web browser.
 
 
 Documentation for QATrack+ v0.2.7-v0.2.9
@@ -76,7 +107,7 @@ Bugs or Feature Requests
 ------------------------
 
 If you have a bug to report or a feature to request please use the
-:issues:`BitBucket Issues <>` page.
+:issues:`GitHub Issues <>` page.
 
 Mailing List, General Questions, Discussions or Support?
 --------------------------------------------------------

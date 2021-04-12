@@ -1,11 +1,22 @@
 import io
 import json
+from unittest import mock
 
+from django.conf import settings
 from django.test import TestCase
+from django.test.utils import override_settings
 
 from qatrack.qa import models, testpack
 from qatrack.qa import utils as qautils
 from qatrack.qa.tests import utils
+
+delta_time = 0
+
+
+def time():
+    global delta_time
+    delta_time += 10
+    return delta_time
 
 
 class TestUtils(TestCase):
@@ -66,6 +77,7 @@ class TestImportExport(TestCase):
         utils.create_test_list_membership(self.tl1, self.t1)
         utils.create_test_list_membership(self.tl2, self.t2)
         utils.create_test_list_membership(self.tl3, self.t3)
+        utils.create_test_list_membership(self.tl3, self.t1)
 
         self.tlqs = models.TestList.objects.filter(pk=self.tl3.pk)
         self.tlcqs = models.TestListCycle.objects.filter(pk=self.tlc.pk)
@@ -77,15 +89,15 @@ class TestImportExport(TestCase):
             cycles=self.tlcqs,
             extra_tests=self.extra,
         ))
-        models.Category.objects.all().delete()
         models.TestListCycle.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
+        models.Category.objects.all().delete()
         testpack.add_testpack(pack)
 
         assert models.Test.objects.count() == 4
         assert models.TestList.objects.count() == 3
-        assert models.TestListMembership.objects.count() == 3
+        assert models.TestListMembership.objects.count() == 4
         assert models.TestListCycle.objects.count() == 1
         assert models.TestListCycleMembership.objects.count() == 2
 
@@ -111,6 +123,12 @@ class TestImportExport(TestCase):
                     pass
 
         assert list_found and test_found
+
+    def test_timeout(self):
+
+        with self.assertRaises(RuntimeError):
+            with mock.patch('time.time', mock.Mock(side_effect=time)):
+                testpack.create_testpack(self.tlqs, self.tlcqs, timeout=1)
 
     def test_save_pack(self):
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
@@ -156,7 +174,12 @@ class TestImportExport(TestCase):
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_testpack(fp, test_keys=[self.t1.natural_key()], test_list_keys=[self.tl1.natural_key()], cycle_keys=[])
+        testpack.load_testpack(
+            fp,
+            test_keys=[self.t1.natural_key()],
+            test_list_keys=[self.tl1.natural_key()],
+            cycle_keys=[],
+        )
 
         assert models.TestList.objects.count() == 1
         assert models.Test.objects.count() == 1
@@ -179,7 +202,12 @@ class TestImportExport(TestCase):
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
-        testpack.load_testpack(fp, test_keys=[self.t1.natural_key()], test_list_keys=[self.tl1.natural_key()], cycle_keys=[])
+        testpack.load_testpack(
+            fp,
+            test_keys=[self.t1.natural_key()],
+            test_list_keys=[self.tl1.natural_key()],
+            cycle_keys=[],
+        )
 
         assert models.TestList.objects.filter(name__in=[self.tl2.name, self.tl3.name]).count() == 2
         assert models.Test.objects.filter(name__in=[self.t2.name, self.t3.name]).count() == 2
@@ -207,7 +235,7 @@ class TestImportExport(TestCase):
 
     def test_sublist(self):
         tl5 = utils.create_test_list("tl5")
-        t5 =  utils.create_test("t5")
+        t5 = utils.create_test("t5")
         utils.create_test_list_membership(tl5, t5, order=0)
         utils.create_sublist(tl5, self.tl1, order=2)
         utils.create_sublist(tl5, self.tl2, order=3)
@@ -222,3 +250,39 @@ class TestImportExport(TestCase):
             assert sl.child.testlistmembership_set.count() == 1
         assert models.TestList.objects.count() == 3
         assert models.TestList.objects.get(name="tl5")
+
+
+class TestFormatQCValue:
+
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_null_format(self):
+        assert qautils.format_qc_value(1, None) == "1.0"
+
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_empty_format(self):
+        assert qautils.format_qc_value(1, "") == "1.0"
+
+    def test_old_style(self):
+        assert qautils.format_qc_value(1, "%.3f") == "1.000"
+
+    def test_new_style(self):
+        assert qautils.format_qc_value(1, "{:.3f}") == "1.000"
+
+    @override_settings(CONSTANT_PRECISION=2)
+    def test_invalid_format(self):
+        assert qautils.format_qc_value(1, "{:foo}") == qautils.to_precision(1, settings.CONSTANT_PRECISION)
+
+    def test_non_numerical_val(self):
+        assert qautils.format_qc_value(None, "%d") == "None"
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="{:.3f}")
+    def test_default_format_new(self):
+        assert qautils.format_qc_value(1, "") == qautils.format_qc_value(1, "{:.3f}")
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="%.3f")
+    def test_default_format_old(self):
+        assert qautils.format_qc_value(1, None) == qautils.format_qc_value(1, "{:.3f}")
+
+    @override_settings(DEFAULT_NUMBER_FORMAT="{:foo}")
+    def test_invalid_default_fallback(self):
+        assert qautils.format_qc_value(1, None) == qautils.to_precision(1, settings.CONSTANT_PRECISION)

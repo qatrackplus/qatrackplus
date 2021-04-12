@@ -1,94 +1,95 @@
 {% extends "site_base.html" %}
 {% load qa_tags %}
+{% load i18n %}
+{% load static %}
+
+{% block head_title %}{% trans "Paper Backup Forms" %}{% endblock %}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{VERSION}}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qa/css/backup.css?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/backup.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block body %}
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box">
+<div class="row">
+  <div class="col-md-12">
+    <div class="box">
 
-                <div class="box-header no-print">
-                    <h3 class="box-title">
-                        <i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>
-                        Paper based backup forms for QA
-                    </h3>
-                    <p>To print, hit Ctrl-P or use the browser menus.</p>
-                    <p>Note, tests that require macro calculations or files to be uploaded are not included in paper based forms.</p>
-                </div>
+      <div class="box-header no-print">
+        <h3 class="box-title">
+          <i class="fa fa-paper-plane-o fa-fw" aria-hidden="true"></i>
+          {% trans "Paper based backup forms for QC" %}
+        </h3>
+        <p>{% trans "To print, hit Ctrl-P or use the browser menus." %}</p>
+        <p>{% trans "Note, tests that require macro calculations or files to be uploaded are not included in paper based forms." %}</p>
+      </div>
 
-                <div class="box-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            {% for utc in object_list %}
-                                {% for test_list in utc.all_lists %}
+      <div class="box-body">
+        <div class="row">
+          <div class="col-md-12">
+            {% for utc in object_list %}
+              {% for test_list in utc.all_lists %}
 
-                                    <div class="test-list-form-container">
-                                        <hr class="no-print"/>
-                                        <h3>{{utc.unit.name}} :: {{test_list.name}}</h3>
-                                        <div class="form form-inline">
-                                            <label><strong>Name: </strong> <input type="text"/></label>
-                                            <label class="pull-right"><strong>Date: </strong> <input type="text"/></label>
-                                        </div>
-                                        <div class="comment" >
-                                            <label><strong>Comments:</strong></label>
-                                        </div>
-                                        <table class="table table-bordered table-condensed">
-                                            <thead>
-                                                <tr>
-                                                    <th class="test-name">Test</th>
-                                                    <th class="test-value">Value</th>
-                                                    {% if include_refs %}
-                                                    <th class="test-ref">Reference</th>
-                                                    <th class="test-tol">Tolerance</th>
-                                                    {% endif %}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for uti in test_list.utis %}
-                                                <tr>
-                                                    <td><strong>{{uti.test.name}}</strong></td>
-                                                    <td>
-                                                        {% if uti.test.is_boolean %}
-                                                            <span class="pull-left margin-l-20"> <label class="checkbox"><input type="checkbox"/> No</label></span>
-                                                            <span class="pull-right margin-l-20"> <label class="checkbox"><input type="checkbox"/> Yes</label></span>
-                                                        {% elif uti.test.is_mult_choice %}
-                                                            <div class="margin-l-20">
-                                                                {% for choice in uti.test.get_choices %}
-                                                                    <label class="checkbox"><input type="checkbox"/>{{choice.1}}</label>
-                                                                {% endfor %}
-                                                            </div>
-                                                        {% endif %}
-                                                    </td>
-
-                                                    {% if include_refs %}
-                                                    <td>
-                                                        {% if uti.reference %}
-                                                        {{uti.reference.value_display}}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% tolerance_for_reference uti.tolerance uti.reference %}
-                                                    </td>
-                                                    {% endif %}
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                <div class="test-list-form-container">
+                  <hr class="no-print"/>
+                  <h3>{{utc.unit.name}} :: {{test_list.name}}</h3>
+                  <div class="form form-inline">
+                    <label><strong>{% trans "Name" %}: </strong> <input type="text"/></label>
+                    <label class="pull-right"><strong>{% trans "Date" %}: </strong> <input type="text"/></label>
+                  </div>
+                  <div class="comment" >
+                    <label><strong>{% trans "Comments" %}:</strong></label>
+                  </div>
+                  <table class="table table-bordered table-condensed">
+                    <thead>
+                      <tr>
+                        <th class="test-name">{% trans "Test" %}</th>
+                        <th class="test-value">{% trans "Value" %}</th>
+                        {% if include_refs %}
+                          <th class="test-ref">{% trans "Reference" %}</th>
+                          <th class="test-tol">{% trans "Tolerance" %}</th>
+                        {% endif %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for uti in test_list.utis %}
+                        <tr>
+                          <td><strong>{{uti.test}}</strong></td>
+                          <td>
+                            {% if uti.test.is_boolean %}
+                              <span class="pull-left margin-l-20"> <label class="checkbox"><input type="checkbox"/> {% trans "No" %}</label></span>
+                              <span class="pull-right margin-l-20"> <label class="checkbox"><input type="checkbox"/> {% trans "Yes" %}</label></span>
+                            {% elif uti.test.is_mult_choice %}
+                              <div class="margin-l-20">
+                                {% for choice in uti.test.get_choices %}
+                                  <label class="checkbox"><input type="checkbox"/>{{choice.1}}</label>
                                 {% endfor %}
-                            {% endfor %}
-                        </div>
-                    </div>
+                              </div>
+                            {% endif %}
+                          </td>
+
+                          {% if include_refs %}
+                            <td>
+                              {% if uti.reference %}
+                                {{uti.reference.value_display}}
+                              {% endif %}
+                            </td>
+                            <td>
+                                {% tolerance_for_reference uti.tolerance uti.reference %}
+                            </td>
+                          {% endif %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
                 </div>
-
-            </div>
+              {% endfor %}
+            {% endfor %}
+          </div>
         </div>
+      </div>
     </div>
-
-
+  </div>
+</div>
 {% endblock %}

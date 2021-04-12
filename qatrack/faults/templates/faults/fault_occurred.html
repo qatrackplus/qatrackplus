@@ -1,0 +1,7 @@
+{% load i18n %}
+<span data-timestamp="{{ fault.occurred_on|date:"U"}}">
+  <abbr
+      title="{% blocktrans with created_by=fault.created_by modified_by=fault.modified_by %}Created by {{ created_by }}, Last modified by {{ modified_by }}{% endblocktrans %}">
+    {{ fault.occurred }}
+  </abbr>
+</span>

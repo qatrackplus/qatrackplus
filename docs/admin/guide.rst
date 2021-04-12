@@ -5,7 +5,7 @@ Administrators Guide
 
 
 Introduction
------------------------
+------------
 
 The admin guide is intended for use by anyone who will be responsible for
 configuring tests and test lists, modifying references & tolerances or managing
@@ -38,7 +38,7 @@ idea to begin by doing some initial configuration.
 #. `Configure the Service Log app <service_log/guide.html>`__ (optional)
 #. `Configure the Units app <units/guide.html>`__
 #. `Define some Groups and Users <qa/auth.html>`__
-#. :ref:`Configure the QA app <initial_qa_config>`
+#. :ref:`Configure the QC app <initial_qa_config>`
 
 
 Admin Guide Contents
@@ -48,7 +48,10 @@ Admin Guide Contents
    :maxdepth: 2
 
    qa/change_site_name
+   qa/auth
+   notifications/guide
    units/guide
    qa/guide
    service_log/guide
+   faults/guide
 

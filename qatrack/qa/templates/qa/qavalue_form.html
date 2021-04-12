@@ -1,153 +1,172 @@
+{% load i18n %}
 {% load qatrack_tags %}
 {% load qa_tags %}
 {% load attach_tags %}
 {% for field in form %}
-    {% if field.errors %}
-        <tr class="no-hover qa-error row-{{ form.prefix }}">
-            <td colspan="{% qa_table_colspan perms %}">
-                <div class="error-container error-bar in">
-                    {% for error in field.errors %}
-                        <div class="qa-error-text">
-                            {{test_info.test.name}}:&nbsp;{{ error }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </td>
-        </tr>
-{#            <td>#}
-{#            #}
-{#            </td>#}
-{#            {% if include_history and include_ref_tols %}#}
-{#                <td colspan="5">&nbsp;</td>#}
-{#            {% elif include_history or include_ref_tols %}#}
-{#                <td colspan="4">&nbsp;</td>#}
-{#            {% else %}#}
-{#                <td colspan="3">&nbsp;</td>#}
-{#            {% endif %}#}
-{#        </tr>#}
-    {% endif %}
-{% endfor %}
-<tr class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
-
-    {% for hidden in form.hidden_fields %}
-        {{ hidden }}
-    {% endfor %}
-
-    {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info %}
-
-        <td class="qa-category bar-container">
-            <div class="error-bar {% if form.errors %}in{% endif %}">
-                <div class="procedure-bar">
-                    <div class="comment-bar">
-                        <div title="{{test.category.name}}" class="padding-left-5 padding-bottom-8">
-                          {% if show_category %}
-                            {{test.category.name}}
-                          {% endif %}
-                        </div>
-                    </div>
-                </div>
+  {% if field.errors %}
+    <tr class="no-hover qa-error row-{{ form.prefix }}">
+      <td colspan="{% qa_table_colspan perms %}">
+        <div class="error-container error-bar in">
+          {% for error in field.errors %}
+            <div class="qa-error-text">
+              {{ test_info.test }}:&nbsp;{{ error }}
             </div>
-        </td>
-        <td class="qa-name qa-showproc">
-          {%if test.procedure or test.description or test.attachment_set.count %}
-                <a href="#" class="revealprocedure" title="Show/hide procedure & attachments for this test">{{test.name}}</a>
-            {% else %}
-                {{test.name}}
-            {% endif %}
-        </td>
-        <td class="qa-value" title="{{form.value.help_text|safe}}" >
-            {% if test.is_boolean %}
-                <div class="row">
-                    <div class="col-xs-12">
-                      <span class="pull-left">{{form.value.0}}</span>
-                      <span class="pull-right">{{form.value.1}}</span>
-                    </div>
-                </div>
-            {% elif test.is_upload %}
-                <span class="upload-button">
-                    {{form.string_value}}
-                    <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-xs btn-flat">Upload</a>
-                </span>
-            {% elif test.is_string_type %}
-                 <div>{{form.string_value}}</div>
-            {% else %}
-                 <div>{{form.value}}</div>
-            {% endif %}
-        </td>
-        <td class="qa-skip"title="{{form.skipped.help_text|safe}}">
-            {% if test.skip_required %}{{form.skipped}}{% endif %}
-        </td>
-        <td class="qa-status">Not Done</td>
-        <td class="qa-showcmt"><a href="#" class="revealcomment" title="Add comment for this test"><i class="fa fa-commenting-o"></i></a></td>
-
-        {% if perms.qa.can_view_history or perms.qa.can_view_ref_tol %}
-            {% if perms.qa.can_view_ref_tol %}
-                <td class="qa-reference">
-                    {% reference_tolerance_span test ref tol %}
-                </td>
-            {% endif %}
-            {% if perms.qa.can_view_history %}
-                <td class="qa-history">
-                    {% history_display form.history uti.unit test_list test unit_test_collection.frequency %}
-                </td>
-            {% endif %}
-{#        {% else %}#}
-{#            <td></td>#}
-        {% endif %}
-
-    {% endwith %}
-</tr>
-<tr class="qa-comment no-hover row-{{ form.prefix }}">
-    <td colspan="{% qa_table_colspan perms %}" class="">
-        <div class="error-bar {% if form.errors %}in{% endif %}">
-            <div class="procedure-bar">
-                <div class="comment-container comment-bar">
-                    <div class="comment-div">
-                        {{ form.comment|addplaceholder:"Add Comment For Reviewer" }}
-                    </div>
-                </div>
-            </div>
+          {% endfor %}
         </div>
-    </td>
-</tr>
+      </td>
+    </tr>
+  {% endif %}
+{% endfor %}
 
-<tr class="qa-procedure no-hover row-{{ form.prefix }}">
-    <td colspan="{% qa_table_colspan perms %}  class="" >
-        {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description or form.unit_test_info.test.attachment_set.count %}
-            <div class="error-bar {% if form.errors %}in{% endif %}">
-                <div class="procedure-container procedure-bar">
-                    <div class="qa-procedure-text">
-                        {% if form.unit_test_info.test.procedure %}
-                            <h6>
-                                Detailed procedure link:
-                                <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="Show detailed procedure for this test" target="_blank">
-                                    {{form.unit_test_info.test.name}}
-                                </a>
-                            </h6>
-                        {% endif %}
-        {#                {% spaceless %}#}
-                            {% if form.unit_test_info.test.description %}
-                                <div class="pre">{{form.unit_test_info.test.description.strip|safe}}</div>
-                            {% endif %}
-        {#                {% endspaceless%}#}
-                        {% for attach in form.unit_test_info.test.attachment_set.all %}
-                            {% if forloop.first %}
-                                <h6>Attachments</h6>
-                                <ul>
-                            {% endif %}
+{% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info slug=test_info.test.slug %}
+<tr id="{{ test_info.test.slug }}-row" class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
-                            <li>{{ attach|attachment_link }}</li>
+  {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+  {% endfor %}
 
-                            {% if forloop.last %}
-                                </ul>
-                            {% endif %}
 
-                        {% endfor %}
-                    </div>
-                </div>
+    <td id="{{slug }}-category" class="qa-category bar-container">
+      <div class="error-bar {% if form.errors %}in{% endif %}">
+        <div class="procedure-bar">
+          <div class="comment-bar">
+            <div title="{{test.category.name}}" class="padding-left-5 padding-bottom-8">
+              {% if show_category %}
+                {{test.category.name}}
+              {% endif %}
             </div>
-        {% endif %}
-
+          </div>
+        </div>
+      </div>
     </td>
+    <td id="{{ slug }}-procedure" class="qa-name qa-showproc" title="{{ test.name }}">
+      {%if test.procedure or test.description or test.attachment_set.count %}
+      <a id="procedure-toggle-{{ test_info.test.slug }}" href="#" class="revealprocedure" title="{% trans "Show/hide procedure & attachments for this test" %}">{{ test.display }}</a>
+      {% else %}
+        {{ test.display }}
+      {% endif %}
+    </td>
+    <td id="{{ slug }}-value" class="qa-value" title="{{form.value.help_text|safe}}" >
+      {% if test.is_boolean %}
+        <div class="row">
+          <div class="col-xs-12 boolean-wrapper">
+            <span class="pull-left">{{form.value.0}}</span>
+            <span class="pull-right">{{form.value.1}}</span>
+          </div>
+        </div>
+      {% elif test.is_upload %}
+        <span class="upload-button">
+          {{form.string_value}}
+          {{form.json_value}}
+          <a id="upload-button-{{ test.id }}" type="button" class="qa-input btn btn-default btn-xs btn-flat">Upload</a>
+        </span>
+      {% elif test.is_date or test.is_datetime %}
+        <div class="input-group">
+          {% if test.is_date %}
+            {{ form.date_value }}
+          {% else %}
+            {{ form.datetime_value }}
+          {% endif %}
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-flat btn-xs choose-date{% if test.is_datetime %}time{% endif %}" title="toggle" data-toggle>
+              {% if test.is_datetime %}
+                <i class="fa fa-stack fa-fw qa-date-pick">
+                  <i class="fa fa-calendar fa-stack-custom-main"></i>
+                  <i class="fa fa-clock-o fa-stack-custom-sub upper-1"></i>
+                </i>
+              {% else %}
+                <i class="fa fa-calendar fa-fw qa-date-pick"></i>
+              {% endif %}
+            </button>
+            <button type="button" class="btn btn-flat btn-xs qa-date-clear" title="toggle" data-clear>
+              <i class="fa fa-close"></i>
+            </button>
+          </span>
+        </div>
+      {% elif test.is_string_type %}
+          <div>{{form.string_value}}</div>
+      {% else %}
+          <div>{{form.value}}</div>
+      {% endif %}
+    </td>
+    <td id="{{ slug }}-skip" class="qa-skip" title="{{form.skipped.help_text|safe}}">
+        {% if test.skip_required %}{{form.skipped}}{% endif %}
+    </td>
+    <td id="{{ slug }}-status" class="qa-status">{% trans "Not Done" %}</td>
+    <td id="{{ slug }}-showcmt" class="qa-showcmt"><a id="comment-toggle-{{ test_info.test.slug }}" href="#" class="revealcomment" title="{% trans "Add comment for this test" %}"><i class="fa fa-commenting-o"></i></a></td>
+
+      {% if perms.qa.can_view_history or perms.qa.can_view_ref_tol %}
+        {% if perms.qa.can_view_ref_tol %}
+          <td class="qa-reference">
+            {% reference_tolerance_span test ref tol %}
+            {% if user.is_staff and perms.qa.change_unittestinfo %}
+              <a class="ref-tol-link" style="font-size: 0.7em"
+                title="{% trans "Update reference & tolerance values" %}"
+                href="{% url "admin:qa_unittestinfo_change" object_id=uti.id %}"
+              >
+                <i class="fa fa-pencil "></i>
+              </a>
+            {% endif %}
+          </td>
+        {% endif %}
+        {% if perms.qa.can_view_history %}
+          <td id="{{ slug }}-history" class="qa-history">
+            {% history_display form.history uti.unit test_list test unit_test_collection.frequency %}
+          </td>
+        {% endif %}
+      {% endif %}
+
 </tr>
 
+<tr id="{{ slug }}-comment-row" class="qa-comment no-hover row-{{ form.prefix }}">
+  <td id="{{ slug }}-comment" colspan="{% qa_table_colspan perms %}" class="">
+    <div class="error-bar {% if form.errors %}in{% endif %}">
+      <div class="procedure-bar">
+        <div class="comment-container comment-bar">
+          <div class="comment-div">
+            {{ form.comment|addplaceholder:"Add Comment For Reviewer" }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </td>
+</tr>
+
+<tr id="{{ slug }}-procedure-row" class="qa-procedure no-hover row-{{ form.prefix }} {%if test_info.test.hidden %}hidden-procedure{% endif %}">
+  <td id="{{ slug }}-procedure" colspan="{% qa_table_colspan perms %}"  class="">
+    {% if form.unit_test_info.test.procedure or form.unit_test_info.test.description or form.unit_test_info.test.attachment_set.count %}
+      <div class="error-bar {% if form.errors %}in{% endif %}">
+        <div class="procedure-container procedure-bar">
+          <div class="qa-procedure-text">
+            {% if form.unit_test_info.test.procedure %}
+              <h6>
+                {% trans "Detailed procedure link" %}:
+                <a href="{{form.unit_test_info.test.procedure}}" class="revealprocedure" title="{% trans "Show detailed procedure for this test" %}" target="_blank">
+                  {{ form.unit_test_info.test }}
+                </a>
+              </h6>
+            {% endif %}
+            {% if form.unit_test_info.test.description %}
+              <div class="pre">{{form.unit_test_info.test.description.strip|safe|linebreaks}}</div>
+            {% endif %}
+
+            {% for attach in form.unit_test_info.test.attachment_set.all %}
+              {% if forloop.first %}
+                <h6>{% trans "Attachments" %}</h6>
+                <ul>
+              {% endif %}
+
+                <li>{{ attach|attachment_link }}</li>
+
+                {% if forloop.last %}
+                  </ul>
+                {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </td>
+</tr>
+
+{% endwith %}

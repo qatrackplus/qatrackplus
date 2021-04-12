@@ -1,0 +1,12 @@
+{% load i18n %}QATrack+ Fault Notice
+=====================
+
+Hello,
+
+The following fault was just logged:
+
+Fault: {{ fault }}
+Fault Types: {{ fault_types }}
+Occurred: {{ fault.occurred }}
+Unit: {{ fault.unit.site_unit_name }}
+Treatment or Imaging Modality: {% if fault.modality %}{{ fault.modality }}{% else %}{% trans "Not Specified" %}{% endif %}

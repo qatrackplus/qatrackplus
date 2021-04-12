@@ -1,0 +1,42 @@
+{% load i18n %}
+
+<div class="row">
+  <div class="col-xs-6">
+    <strong>{% trans "Report Information" %} ::</strong>
+    <dl class="dl-horizontal">
+
+      <dt>{% trans "Report Type" %}:</dt>
+      <dd>{{ report_name }}</dd>
+
+      <dt>{% trans "Generated" %}:</dt>
+      <dd>{% now "d M Y H:i:s" %}</dd>
+
+      {% if report_url %}
+      <dt>{% trans "View on site" %}:</dt>
+        <dd>
+          <a href="{{ report_url }}" title="{% trans "View Report on Site" %}">
+            {{ report_title }}
+          </a>
+        </dd>
+      {% endif %}
+
+      <dt>{% trans "Report Description" %}:</dt>
+      <dd>{{ report_description }}</dd>
+
+    </dl>
+  </div>
+  <div class="col-xs-6">
+    <strong>{% trans "Filter Details" %} ::</strong>
+    <dl class="dl-horizontal">
+      {% for label, criteria in report_details %}
+        <dt>{{ label }}:</dt>
+        <dd>{{ criteria | safe }}</dd>
+      {% endfor %}
+    </dl>
+  </div>
+</div>
+<div class="row">
+  <div class="col-xs-12">
+    <hr style="padding-top: 0; margin-top: 5px;" class="tight"/>
+  </div>
+</div>

@@ -1,3 +1,5 @@
+.. _screenshots:
+
 Screenshots
 ===========
 
@@ -6,9 +8,9 @@ Screenshots
 
 
 .. figure:: images/perform_tl.png
-   :alt: Example interface for performing QA
+   :alt: Example interface for performing QC
 
-   Example interface for performing QA. Shown are numerical tests, boolean
+   Example interface for performing QC. Shown are numerical tests, boolean
    tests, and composite tests.
 
 
@@ -33,22 +35,28 @@ Screenshots
 
    Demonstration of QATrack+'s plotting capabilities.
 
-.. figure:: images/overview.png
-   :alt: Screenshot of the QA Program Overview
+.. figure:: images/report.png
+   :alt: Screenshot of report generating interface
 
-   Screenshot of the QA Program Overview
+   Demonstration of QATrack+'s reporting capabilities.
+
+
+.. figure:: images/overview.png
+   :alt: Screenshot of the QC Program Overview
+
+   Screenshot of the QC Program Overview
 
 .. figure:: images/due_status.png
-   :alt: Screenshot of the QA Program Overview by Due Status
+   :alt: Screenshot of the QC Program Overview by Due Status
 
-   Screenshot of the QA Program Overview by Due Status
-   
+   Screenshot of the QC Program Overview by Due Status
+
 
 .. figure:: images/create_se.png
    :alt: Screenshot of entering a new Service Event
 
    Entering a new Service Event in QATrack+
-   
+
 
 .. figure:: images/sl_dash.png
    :alt: Screenshot of the service log dashboard

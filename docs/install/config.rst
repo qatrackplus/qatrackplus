@@ -12,11 +12,38 @@ meet your clinics needs.  The most important settings are explained below.
 These settings should be defined in a `local_settings.py` file in the main
 directory (same directory as `settings.py`)
 
-.. note::
+.. _reload-config:
 
-    Any time you change a setting in local_settings.py, you need to restart the
-    QATrack+ application either by restarting Apache or restarting the CherryPy
-    Windows Service.
+After configuration changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Any time you change a setting in local_settings.py, you need to restart the
+QATrack+ application either by restarting Apache  or restarting the CherryPy
+Windows Service and you also need to restart Django Q.
+
+Restarting QATrack+ on Linux
+............................
+
+.. code-block:: console
+
+    sudo service apache2 restart
+    sudo supervisorctl reread
+    sudo supervisorctl update
+
+
+Restarting QATrack+ on Windows
+..............................
+
+Open a PowerShell Window and enter the following commands:
+
+.. code-block:: console
+
+    cd C:\deploy
+    .\venvs\qatrack31\Scripts\Activate.ps1
+    cd qatrackplus
+    python manage.py QATrack3CherryPyService.py restart
+    Stop-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
+    Start-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
 
 
 Mandatory Settings
@@ -63,6 +90,20 @@ On Windows using CherryPy/IIS (or if you are running QATrack+ behind a reverse p
 
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
+HTTP or HTTPS Setting
+.....................
+
+In order for urls to use the correct protocol for links, set `HTTP_OR_HTTPS` to
+the appropriate protocol.
+
+.. code-block:: python
+
+    HTTP_OR_HTTPS = 'http'  # when using http for your site (default)
+    # -or -
+    HTTP_OR_HTTPS = 'https'  # when using https/ssl for your site
+
+
+.. _databases:
 
 DATABASES Setting
 .................
@@ -76,8 +117,16 @@ the QATrack+ deployment documentation.
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'qatrack',
+            'NAME': 'qatrackplus',
             'USER': 'qatrack',
+            'PASSWORD': 'qatrackpass',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        },
+        'readonly': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'qatrackplus',
+            'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': 'localhost',
             'PORT': '5432',
@@ -152,7 +201,7 @@ To override the default settings, copy the following Python dictionary to your
   is performing a test list.
 
 * `SHOW_STATUS_ICONS_LISTING` controls whether icons are shown on listings
-  pages which show the results of the last QA session. (Default True)
+  pages which show the results of the last QC session. (Default True)
 
 * `SHOW STATUS_ICONS_REVIEW` controls whether the icons are shown when a user
   is reviewing a test list. (Default True)
@@ -221,11 +270,51 @@ The meaning of the individual keys is as follows:
 Other Settings
 ~~~~~~~~~~~~~~
 
-AUTO_REVIEW_DEFAULT
-...................
+.. _accounts_password_reset:
 
-Set `AUTO_REVIEW_DEFAULT = True` in your `local_settings.py` file in order to
-enable :ref:`Auto Review <qa_auto_review>` by default.
+When `ACCOUNTS_PASSWORD_RESET = True` users will be able to reset or change their
+passwords on their own. This only applies to the normal QATrack+ authentication 
+backend, and not the LDAP or ADFS backends. Default is `True`.
+
+.. _accounts_self_register:
+
+ACCOUNTS_SELF_REGISTER
+......................
+
+When `ACCOUNTS_SELF_REGISTER = True` anonymous users are able to register
+themselves for accounts. Default is `False`.
+
+.. _accounts_clean_username:
+
+ACCOUNTS_CLEAN_USERNAME
+.......................
+
+When `ACCOUNTS_CLEAN_USERNAME` is set to callable it will be used to transform
+any username that is to be authenticated.  The most common scenario for this
+setting it is for example to set `def ACCOUNTS_CLEAN_USERNAME(username): return
+username.lower()` which makes all logins lowercase.  Note in this case, the
+user can enter `SoMeUsErName` and it will be authenticated as `someusername`.
+Default is `ACCOUNTS_CLEAN_USERNAME = False`.
+
+
+.. _autosave_days_to_keep:
+
+Set `AUTOSAVE_DAYS_TO_KEEP` to control the maximum number of days that auto-saved
+QC data will be kept for.  The default settings is 30 days.
+
+
+CHROME_PATH
+...........
+
+Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. For example
+
+.. code-block:: python
+
+    CHROME_PATH = '/usr/bin/chromium-browser'  # default
+    # - or -
+    CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
+
+
 
 CATEGORY_FIRST_OF_GROUP_ONLY
 ............................
@@ -233,21 +322,45 @@ CATEGORY_FIRST_OF_GROUP_ONLY
 When `CATEGORY_FIRST_OF_GROUP_ONLY = True`, then the category will only be shown for the first test of a consecutive group of tests sharing the same category, otherwise the category will be shown
 next to each test line when performing QC.
 
-CONSTANT_PRECISION
-...................
+
+COMPOSITE_AUTO_FORMAT
+.....................
+
+When `COMPOSITE_AUTO_FORMAT = True` (default) calculation procedures will be
+auto formatted with `Black <https://black.readthedocs.io/en/stable/>`_ .  This
+leaves everyones code in a consistent format making stylistic differences when
+reading code a non-issue.  Set to `False` to tell QATrack+ to leave your code
+alone!
+
+
+CONSTANT_PRECISION (deprecated. Use DEFAULT_NUMBER_FORMAT instead)
+..................................................................
 
 Set the `CONSTANT_PRECISION` setting to adjust the precision for which
 :ref:`Constant test type <qa_test_types>` values are displayed. (default 8)
 
-DEFAULT_GROUP_NAMES
-...................
 
-A list of group names to automatically add users to when they sign up (default
-is an emtpy list):
+DEFAULT_NUMBER_FORMAT
+.....................
+
+Default formatting string to be used for Composite & Constant number formatting
+(can be overridden on a test by test basis). Set to a Python style string
+format for displaying numerical results.  Use e.g. %.2F to display as fixed
+precision with 2 decimal places, or %.3E to show as scientific format with 3
+significant figures, or %.4G to use 'general' formatting with up to 4
+significant figures. (Note this does not affect the way other values are
+calculated, only the way composite and constant test values are *displayed*.
+For example a constant test with a value of 1.2345 and a format of %.1f will be
+displayed as 1.2, but the full 1.2345 will be used for calculations).  Note you
+may also use "new style" Python string formatting: see https://pyformat.info/
+for examples.
 
 .. code-block:: python
 
-    DEFAULT_GROUP_NAMES = ["Therapists"]
+    DEFAULT_NUMBER_FORMAT = "%.3f"  # 3 decimal place fixed precision using "Old" style formatting
+    DEFAULT_NUMBER_FORMAT = "{:.3f}"  # 3 decimal place fixed precision using "New" style formatting
+    DEFAULT_NUMBER_FORMAT = "{:.4E}"  # 5 sig fig scientific notation using "New" style formatting
+
 
 DEFAULT_WARNING_MESSAGE
 .......................
@@ -257,8 +370,8 @@ warning message that will be shown when a performed test is at action level.
 If `DEFAULT_WARNING_MESSAGE = ""` then the default will be to not show any
 warning message when a test is at action level.
 
-FORCE_SCRIPT_NAME, LOGIN_EXEMPT_URLS, LOGIN_REDIRECT_URL, LOGIN_URL
-...................................................................
+FORCE_SCRIPT_NAME, LOGIN_REDIRECT_URL, LOGIN_URL, STATIC_URL, MEDIA_URL, UPLOADS_URL
+....................................................................................
 
 If you deploy QATrack+ at a non root url (e.g. http://5.5.5.5/qatrack/) then you need to
 set these settings as follows:
@@ -266,16 +379,32 @@ set these settings as follows:
 .. code-block:: python
 
     FORCE_SCRIPT_NAME = '/qatrack'
-    LOGIN_EXEMPT_URLS = [r"^qatrack/accounts/", r"qatrack/api/*"]
-    LOGIN_REDIRECT_URL = 'qatrack//qa/unit/'
+    LOGIN_REDIRECT_URL = 'qatrack/'
     LOGIN_URL = "/qatrack/accounts/login/"
+
+If you've also changed the directory IIS is serving static media from, you may need to adjust the static and media
+urls as well:
+
+
+.. code-block:: python
+
+    # just an example, change according to how you have configured IIS
+    MEDIA_URL = '/qatrack_media/'
+    UPLOADS_URL = MEDIA_URL + 'uploads/'
+    STATIC_URL = '/qatrack_static/'
+
+
+MAX_TESTS_PER_TESTLIST
+......................
+
+Sets the maximum number of tests per test list. Default is `MAX_TESTS_PER_TESTLIST = 200`
 
 
 NHIST
 .....
 
 Adjusts the number of historical test results to show when reviewing/performing
-QA. Default is `NHIST = 5`.
+QC. Default is `NHIST = 5`.
 
 ORDER_UNITS_BY
 ..............
@@ -290,22 +419,44 @@ Set `REVIEW_DIFF_COL = True` to include a difference column when reviewing test
 list results. This column shows the difference between a test value and its
 reference value.
 
+.. _review_bulk:
+
+REVIEW_BULK
+...........
+
+Set `REVIEW_BULK = False` to disable the :ref:`Bulk Review <qa_perform_bulk_review>` 
+feature which allows users to update the review and approval status of multiple
+test list instances at the same time.
+
+
+.. _setting_sl_allow_blank_service_area:
+
+SL_ALLOW_BLANK_SERVICE_AREA
+...........................
+
+Set `SL_ALLOW_BLANK_SERVICE_AREA = True` to allow users to create a ServiceEvent with
+a blank ServiceArea set.  When a Service Event is saved without a ServiceArea explicitly set,
+the ServiceArea will be set to "Not Specified".
+
+.. _setting_sl_allow_blank_service_type:
+
+SL_ALLOW_BLANK_SERVICE_TYPE
+...........................
+
+Set `SL_ALLOW_BLANK_SERVICE_TYPE = True` to allow users to create a ServiceEvent with
+a blank ServiceType set.  When a Service Event is saved without a ServiceType explicitly set,
+the ServiceType will be set to "Not Specified".
+
 TESTPACK_TIMEOUT
 ................
 
 Change the number of elapsed seconds before exporting a TestPack will time out.
 Default is 30.
 
-USE_SERVICE_LOG
+USE_SQL_REPORTS
 ...............
 
-Set `USE_SERVICE_LOG` to `False` in order to disable Service Log
-
-USE_PARTS
-.........
-
-Set `USE_PARTS` to `False` in order to disable the Parts app (Service Log
-requires `USE_PARTS = True`).
+Set `USE_SQL_REPORTS` to `False` in order to disable the SQL Query tool
 
 USE_X_FORWARDED_HOST
 ....................
@@ -365,8 +516,8 @@ Email host settings
 * `EMAIL_HOST` should be set to the SMTP host you are using (e.g.
   'smtp.gmail.com' or 'smtp.mail.your.hospital')
 
-* `EMAIL_HOST_USER`  this is the default username of the account to access the
-  SMTP server
+* `EMAIL_HOST_USER`  this is the default email address of the account to access
+  the SMTP server
 
 * `EMAIL_HOST_PASSWORD` this is the default account of the account to access
   the SMTP server
@@ -403,24 +554,31 @@ and for an unsecured connection:
     EMAIL_USE_TLS = False
     EMAIL_PORT = 25
 
+
+.. _email_notification_settings:
+
 Notification specific settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These settings allow you to override the default notification settings in your
 local_settings.py file:
 
-* `EMAIL_NOTIFICATION_USER` allows you to use a diferent user from the default
-  set above (set to None to use `EMAIL_HOST_USER`)
 
-* `EMAIL_NOTIFICATION_PWD` password to go along with `EMAIL_NOTIFICATION_USER`
-
-* `EMAIL_NOTIFICATION_SENDER` name to use in the email "From" address
+* `EMAIL_NOTIFICATION_SENDER` email address to use in QATrack+ emails "From" address
 
 * `EMAIL_NOTIFICATION_SUBJECT_TEMPLATE` allows you to override the default
   template to use for rendering the email subject line (see below)
 
 * `EMAIL_NOTIFICATION_TEMPLATE` allows you to override the default template to
   use for rendering the email body (see below)
+
+* (deprecated) `EMAIL_NOTIFICATION_USER` allows you to use a diferent user from
+  the default set above (set to None to use `EMAIL_HOST_USER`).  This setting
+  is no longer used, set `EMAIL_HOST_USER` instead.
+
+* (deprecated) `EMAIL_NOTIFICATION_PWD` password to go along with
+  `EMAIL_NOTIFICATION_USER`.  This setting is no longer used, set
+  `EMAIL_HOST_PASSWORD` instead.
 
 
 An example of these settings is shown here:
@@ -995,14 +1153,18 @@ following settings:
 AUTHENTICATION_BACKENDS
 .......................
 
-In order to use the AD backend, you need to set the `AUTHENTICATION BACKENDS` setting as follows:
+In order to use one of the Active Directory backends, you need to copy the
+`AUTHENTICATION BACKENDS` setting to your local_settings.py and uncomment the 
+:ref:`backend <auth_backends>` you want to use e.g.:
 
 .. code-block:: python
 
-    AUTHENTICATION_BACKENDS = (
-        'django.contrib.auth.backends.ModelBackend',
+    AUTHENTICATION_BACKENDS = [
+        'qatrack.accounts.backends.QATrackAccountBackend',
         'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
-    )
+        # 'qatrack.accounts.backends.WindowsIntegratedAuthenticationBackend',
+        # 'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend',
+    ]
 
 General AD Settings
 ...................
@@ -1020,22 +1182,15 @@ General AD Settings
     AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
     AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
-    AD_MEMBERSHIP_REQ = []  # optional list of groups that user must be a part of in order to create account
-                            # eg ["*TOHCC - All Staff | Tout le personnel  - CCLHO"]
-
-    AD_CERT_FILE='/path/to/your/cert.txt'
-
-    AD_DEBUG = False  # turn on active directory loggin
-    AD_DEBUG_FILE = None  # log file path for debugging AD connection issues
+    AD_CERT_FILE = '/path/to/your/cert.txt'
 
     AD_CLEAN_USERNAME_STRING = ''  # if your AD usernames are returned as e.g. "foo/jsmith" then
-                                   # setting `AD_CLEAN_USERNAME_STRING = 'foo/'` will strip the `foo/` prefix
-                                   # off the username, so the QATrack+ username will just be 'jsmith'
+                                    # setting `AD_CLEAN_USERNAME_STRING = 'foo/'` will strip the `foo/` prefix
+                                    # off the username, so the QATrack+ username will just be 'jsmith'
 
     AD_CLEAN_USERNAME = None  # define a function called AD_CLEAN_USERNAME in local_settings.py if you
-                              # wish to clean usernames before sending to ldap server e.g.
-                              # def AD_CLEAN_USERNAME(username): return username.lower()
-
+                                # wish to clean usernames before sending to ldap server e.g.
+                                # def AD_CLEAN_USERNAME(username): return username.lower()
 
 Non-SSL AD Connection Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

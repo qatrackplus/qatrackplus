@@ -5,7 +5,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
     $(document).ready(function () {
 
-        var $units = $('#units'),
+        var $sites = $("#sites"),
+            $units = $('#units'),
             $frequencies = $('#frequencies'),
             $test_lists = $('#test-lists'),
             $tests = $('#tests'),
@@ -27,15 +28,31 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $include_fit = $('#include-fit'),
             $combine_data = $('#combine-data'),
             $relative_diff = $('#relative-diff'),
+            $highlight_flags = $('#highlight-flags'),
+            $highlight_comments = $('#highlight-comments'),
             $control_chart_container = $("#control-chart-container"),
             $review_required = $('#review-required');
 
-        var date_format = 'DD MMM YYYY';
+        var date_format = siteConfig.MOMENT_DATE_FMT;
 
         var default_service_type_ids = $service_type_selector.val();
 
         var set_chart_height;
 
+        $sites.felter({
+            mainDivClass: 'col-sm-1',
+            selectAllClass: 'btn btn-flat btn-xs btn-default',
+            height: 350,
+            label: 'Sites',
+            slimscroll: true,
+            selectAll: true,
+            selectNone: true,
+            initially_displayed: true,
+            renderOption: function(opt_data){
+                var div_id = 'felter-option-site-div-' + opt_data.value;
+                return $('<div id="' + div_id + '" class="felter-option' + (opt_data.selected ? ' felter-selected' : '') + '" title="' + $(opt_data.$option).attr('title') + '">'  + opt_data.text + '</div>');
+            }
+        });
         $units.felter({
             mainDivClass: 'col-sm-2',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
@@ -56,6 +73,26 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     refresh_on_dependent_changes: false
                 }
             },
+            dependent_on_filters: [
+                {
+                    element: $sites,
+                    filter: function () {
+                        var sites = $sites.val();
+                        if (_.isNull(sites)){
+                            return [];
+                        }
+                        var units = [];
+                        _.each($units.find("option"), function(opt){
+                            var $opt = $(opt);
+                            if (sites.indexOf(opt.dataset.site) >= 0){
+                                units.push(parseInt($opt.val()));
+                            }
+                        });
+                        return units;
+                    },
+                    is_ajax: false
+                }
+            ],
             renderOption: function(opt_data){
                 var div_id = 'felter-option-unit-div-' + opt_data.value;
                 return $('<div id="' + div_id + '" class="felter-option' + (opt_data.selected ? ' felter-selected' : '') + '" title="' + $(opt_data.$option).attr('title') + '">'  + opt_data.text + '</div>');
@@ -145,7 +182,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                                 finished_chart_update();
                                 if (typeof console != "undefined") {
-                                    console.log(error)
+                                    console.log(error);
                                 }
                             }
                         });
@@ -180,7 +217,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                                 finished_chart_update();
                                 if (typeof console != "undefined") {
-                                    console.log(error)
+                                    console.log(error);
                                 }
                             }
                         });
@@ -196,7 +233,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
         });
 
         $tests.felter({
-            mainDivClass: 'col-sm-5',
+            mainDivClass: 'col-sm-4',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
             label: 'Tests',
@@ -228,10 +265,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 }
                             },
                             error: function (error) {
-
                                 console.log(error);
                             }
-                        })
+                        });
 
                     },
                     is_ajax: true
@@ -270,7 +306,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 // Avoid negative or really small widths
                 var new_h = d3.max([50, d3.min([max_y_resize, h + dy])]);
-                is_max = !(new_h < max_y_resize);
+                is_max = new_h >= max_y_resize;
 
                 d3_filter_box.style('height', new_h + 'px');
             });
@@ -335,7 +371,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             linkedCalendars: false,
             opens: 'left',
             locale: {
-                format: date_format
+                format: siteConfig.DATERANGEPICKER_DATE_FMT
             }
         });
 
@@ -400,7 +436,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             } else {
                 $cc_chart_options.slideDown('fast');
                 $service_log_box.slideUp('fast');
-                $relative_diff.attr("checked", false)
+                $relative_diff.attr("checked", false);
             }
             set_filter_height();
         }
@@ -437,10 +473,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             $.each(filters, function (key, values) {
                 if (_.isArray(values)) {
                     $.each(values, function (idx, value) {
-                        options.push(key + QAUtils.OPTION_DELIM + value)
+                        options.push(key + QAUtils.OPTION_DELIM + value);
                     });
                 } else if (!_.isEmpty(values) || values === true) {
-                    options.push(key + QAUtils.OPTION_DELIM + values)
+                    options.push(key + QAUtils.OPTION_DELIM + values);
                 }
             });
 
@@ -468,6 +504,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 fit_data: $include_fit.is(":checked"),
                 combine_data: $combine_data.is(":checked"),
                 relative: $relative_diff.is(":checked"),
+                highlight_comments: $highlight_comments.is(":checked"),
+                highlight_flags: $highlight_flags.is(":checked"),
                 show_events: $show_events.is(':checked'),
                 service_types: $service_type_selector.val(),
                 chart_type: $chart_type.val(),
@@ -541,7 +579,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
             var chart_width = $('#chart').width() - 15,
                 chart_height = 40,
-                margin = {top: 20, right: 30, bottom: 140, left: 30}
+                margin = {top: 20, right: 30, bottom: 140, left: 30};
 
             var svg = d3.select("#chart")
                 .append("svg")
@@ -612,7 +650,9 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         x: x,
                         y: val.value,
                         test_instance_id: val.test_instance_id,
-                        test_list_instance_id: val.test_list_instance.id
+                        test_list_instance_id: val.test_list_instance.id,
+                        test_instance_comment: val.test_instance_comment,
+                        flagged: val.test_list_instance.flagged
                     });
 
                     if (val.reference !== null) {
@@ -688,7 +728,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var e_data = v;
                 e_data.x = moment(v.date).valueOf();
                 e_data.visible = true;
-                events.push(e_data)
+                events.push(e_data);
             });
 
             _data._series = series;
@@ -697,7 +737,38 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             return _data;
         }
 
-        function remove_tooltip_outter() {};
+        function remove_tooltip_outter() {}
+
+
+        function circleRadius(dat, idx, series){
+            // Use larger circle radius for ti's with comments
+            var showComment = $highlight_comments.is(":checked") && dat.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && dat.flagged;
+            if (showComment || showFlag){
+                return 5;
+            }
+            return 4;
+        }
+
+        function circleStroke(d, i, s) {
+            var showComment = $highlight_comments.is(":checked") && d.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && d.flagged;
+            if (showComment){
+                return "rgb(60, 141, 188)";
+            }else if (showFlag){
+                return "rgb(243, 156, 18)";
+            }
+            return s[i].parentNode.__data__.color;
+        }
+
+        function circleStrokeWidth(d, i, s) {
+            var showComment = $highlight_comments.is(":checked") && d.test_instance_comment;
+            var showFlag = $highlight_flags.is(":checked") && d.flagged;
+            if (showComment || showFlag){
+                return 4;
+            }
+            return 2;
+        }
 
         function create_chart(_data) {
 
@@ -723,6 +794,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 set_chart_height = $(window).height() - 50;
             }
             var chart_height = set_chart_height;
+
 
             var circle_radius = 3,
                 circle_radius_highlight = 4,
@@ -773,7 +845,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return yScale(d.y);
                 })
                 .defined(function (d) {
-                    return d.y != null;
+                    return d.y !== null;
                 });
 
             var line2 = d3.line()
@@ -785,7 +857,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return yScale2(d.y);
                 })
                 .defined(function (d) {
-                    return d.y != null;
+                    return d.y !== null;
                 });
 
             var area = d3.area()
@@ -937,7 +1009,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('class', 'area ok')
                 .style("pointer-events", "none")
                 .attr("id", function (d) {
-                    return "area_ok_" + d.test_name.replace(/\W+/g, "_")
+                    return "area_ok_" + d.test_name.replace(/\W+/g, "_");
                 })
                 .attr("d", function (d) {
                     return d.visible && d.ref_tol_visible ? area(d.area_data_ok) : null; // If array key "visible" = true then draw line, if not then don't
@@ -953,7 +1025,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('class', 'area tol')
                 .style("pointer-events", "none")
                 .attr("id", function (d) {
-                    return "area_upper_tol_" + d.test_name.replace(/\W+/g, "_")
+                    return "area_upper_tol_" + d.test_name.replace(/\W+/g, "_");
                 })
                 .attr("d", function (d) {
                     return d.visible && d.ref_tol_visible ? area(d.area_data_upper_tol) : null; // If array key "visible" = true then draw line, if not then don't
@@ -969,7 +1041,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 .attr('class', 'area tol')
                 .style("pointer-events", "none")
                 .attr("id", function (d) {
-                    return "area_lower_tol_" + d.test_name.replace(/\W+/g, "_")
+                    return "area_lower_tol_" + d.test_name.replace(/\W+/g, "_");
                 })
                 .attr("d", function (d) {
                     return d.visible && d.ref_tol_visible ? area(d.area_data_lower_tol) : null; // If array key "visible" = true then draw line, if not then don't
@@ -1001,27 +1073,25 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return d.line_data_test_results;
                 })
                 .enter().append('circle')
-            // .style("pointer-events", "none") // Stop line interferring with cursor
                 .attr('id', function (d) {
-                    return 'ti_' + d.test_instance_id
+                    return 'ti_' + d.test_instance_id;
                 })
                 .attr('class', function (d, i, s) {
                     return 'tli_' + d.test_list_instance_id + ' tl_' + s[i].parentNode.__data__.test_list.id;
                 })
                 .attr("clip-path", "url(#clip)")
-                .attr("stroke-width", 1)
-                .attr("stroke", function (d, i, s) {
-                    return s[i].parentNode.__data__.color;
-                })
+                .attr("stroke-width", circleStrokeWidth)
+                .attr("stroke-opacity", 1)
+                .attr("stroke", circleStroke)
                 .attr("cx", function (d) {
                     return xScale(d.x);
                 })
                 .attr("cy", function (d) {
                     return yScale(d.y);
                 })
-                .attr("r", circle_radius)
-                .attr("fill", "white").attr("fill-opacity", .5)
-
+                .attr("r", circleRadius)
+                .attr("fill", "white")
+                .attr("fill-opacity", 1)
                 .on('mousemove', mousemove);
 
             var test_reference = test.append('g')
@@ -1057,7 +1127,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 })
                 .attr('class', 'service-marker')
                 .attr('transform', function (d) {
-                    return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')'
+                    return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')';
                 });
 
             var event_marker_points = '0,' + event_group_height + ' ' + event_group_height / 2 + ',0 ' + event_group_height + ',' + event_group_height;
@@ -1122,7 +1192,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var legend_se_types = legend.selectAll('.legend-set-row')
                     .data([
                         {'name': 'Service Event', 'id': 0},
-                        {'name': 'Service Event with Initiating QA', 'id': 1},
+                        {'name': 'Service Event with Initiating QC', 'id': 1},
                         {'name': 'Service Event with Return To Service', 'id': 2}
                     ])
                     .enter().append('g')
@@ -1155,10 +1225,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 legend_se_types.append('title').text(function(d) {
                     switch(d.id) {
                         case 0: return 'Service Event';
-                        case 1: return 'Service Event with Initiating QA';
+                        case 1: return 'Service Event with Initiating QC';
                         case 2: return 'Service Event with Return To Service';
                     }
-                })
+                });
             }
 
             // Legend series toggle
@@ -1171,7 +1241,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     return d.visible ? d.color : '#F1F1F2';
                 })
                 .attr('id', function (d, i) {
-                    return 'tsb_' + i
+                    return 'tsb_' + i;
                 })
                 .attr('class', 'toggle-series-box')
                 .attr('stroke', function (d) {
@@ -1251,7 +1321,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 })
                 .attr('class', 'toggle-ref-tol-box')
                 .attr('id', function (d, i) {
-                    return 'trtb_' + i
+                    return 'trtb_' + i;
                 })
 
                 .on('click', function (d, i, s) {
@@ -1352,7 +1422,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
             // Add mouseover events for hover line.
             var old_x_closest,
-                format = d3.timeFormat('%a, %b %e, %Y at %H:%M');
+                format = d3.timeFormat('%a, %d %b %Y at %H:%M');
 
             var highlighted_event;
 
@@ -1543,7 +1613,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     event_group.selectAll('.service-marker')
                         .transition()
                         .attr('transform', function (d) {
-                            return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')'
+                            return 'translate(' + (xScale(d.x) - event_group_height / 2) + ',' + 0 + ')';
                         });
                 }
 
@@ -1552,7 +1622,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .transition()
                     .style('opacity', function (d) {
                         return d.visible ? 1 : 0.2;
-                    })
+                    });
             }
 
             function mousemove() {
@@ -1564,7 +1634,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     var x0 = xScale.invert(mouse_x),
                         x_closest;
 
-                    if ($show_events.is(':checked') && mouse_y > d3.select(this).attr('height') * .91) {
+                    if ($show_events.is(':checked') && mouse_y > d3.select(this).attr('height') * 0.91) {
 
                         x_closest = findClosestEvent(x0);
 
@@ -1588,8 +1658,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             function removeHighlights() {
 
                 d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
-                    .attr('stroke-width', 1);
+                    .attr('r', circleRadius)
+                    .attr('stroke-width', circleStrokeWidth);
 
                 d3.selectAll('.service-marker-icon')
                     .attr('stroke-width', 1);
@@ -1610,7 +1680,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 svg.selectAll('.tli_line').remove();
 
                 d3.selectAll('circle[r="' + circle_radius_highlight + '"]')
-                    .attr('r', circle_radius)
+                    .attr('r', circleRadius)
                     .attr('stroke-width', 1);
 
                 d3.selectAll('.tooltip')
@@ -1723,6 +1793,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                             tli_coords.push({x: initiated_x, color: 'rgba(60, 141, 188, 0.6)'});
 
+                            var comments = initiated_data[0].test_instance_comment || "";
+                            if (comments){
+                                comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
+                            }
+                            if (initiated_data[0].flagged){
+                                comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
+                            }
+
+
                             var tli_initiated_tooltip = d3.select("body")
                                 .append("div")
                                 .attr('id', 'tli-' + initiated_data[0].test_list_instance_id + '_tooltip')
@@ -1738,9 +1817,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .style('top', y_pos + 'px')
                                 .html($('#tli-tooltip-template').html()
                                     .replace(/__tli-id__/g, initiated_data[0].test_list_instance_id)
-                                    .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
+                                    .replace(/__tli-date__/g, moment(initiated_data[0].x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                                     .replace(/__tli-tl-name__/g, initiated_name)
-                                    .replace(/__tli-kind__/g, 'Initiating QA')
+                                    .replace(/__tli-kind__/g, 'Initiating QC')
+                                    .replace(/__tli-comments__/g, comments)
                                     .replace(/__show-in__/g, 'style="display: none"')
                                 );
 
@@ -1756,7 +1836,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                         var rtsqa_circles = d3.selectAll('.tli_' + f.test_list_instance);
 
-                        if (rtsqa_circles.size() == 0) {
+                        if (rtsqa_circles.size() === 0) {
                             continue;
                         }
                         _i++;
@@ -1794,6 +1874,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                         tli_coords.push({x: rtsqa_x, color: 'rgba(0, 192, 239, 0.6)'});
 
+                        var rtsqa_comments = rtsqa_data[0].test_instance_comment || "";
+                        if (rtsqa_comments){
+                            rtsqa_comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + rtsqa_comments + '"></i>';
+                        }
+
+                        if (rtsqa_data[0].flagged){
+                            rtsqa_comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
+                        }
+
                         var tli_rtsqa_tooltip = d3.select("body")
                             .append("div")
                             .attr('id', 'tli-' + rtsqa_data[0].test_list_instance_id + '_tooltip')
@@ -1809,9 +1898,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                             .style('top', y_pos + 'px')
                             .html($('#tli-tooltip-template').html()
                                 .replace(/__tli-id__/g, rtsqa_data[0].test_list_instance_id)
-                                .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, MMM D, YYYY, k:mm'))
+                                .replace(/__tli-date__/g, moment(rtsqa_data[0].x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
-                                .replace(/__tli-kind__/g, 'Return To Service QA')
+                                .replace(/__tli-kind__/g, 'Return To Service QC')
+                                .replace(/__tli-comments__/g, rtsqa_comments)
                                 .replace(/__show-in__/g, 'style="display: none"')
                             );
 
@@ -1856,7 +1946,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .attr('r', circle_radius_highlight)
                     .attr('stroke-width', 2);
 
-                if (ti_circles.size() == 0) {
+                if (ti_circles.size() === 0) {
                     return;
                 }
 
@@ -1876,7 +1966,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     x_buffer = 0,
                     chart_div_offset = mouse_tracker.node().getBoundingClientRect().left;
 
-                if (x_pos > width - legend_expand_width + margin.right) {
+                var overlapped_by_legend = x_pos > width - legend_expand_width + margin.right;
+                if (legend_expanded && overlapped_by_legend) {
                     y_pos += legend_height + y_buffer;
                 }
 
@@ -1891,6 +1982,14 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 }
 
                 var colour = 'rgba(100, 100, 100, 0.2)';
+
+                var comments = tli_data[0].test_instance_comment || "";
+                if (comments){
+                    comments = '<i class="fa fa-commenting" style="color: rgb(60, 141, 188)" data-toggle="popover" title="Comments" data-content="' + comments + '"></i>';
+                }
+                if (tli_data[0].flagged){
+                    comments += '<i class="fa fa-flag" style="color: rgb(243, 156, 18)" title="Flagged as Important"></i>';
+                }
 
                 var tli_tooltip = d3.select("body")
                     .append("div")
@@ -1907,9 +2006,10 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     .style('top', y_pos + 'px')
                     .html($('#tli-tooltip-template').html()
                         .replace(/__tli-id__/g, tli_data[0].test_list_instance_id)
-                        .replace(/__tli-date__/g, moment(x).format('ddd, MMM D, YYYY, k:mm'))
+                        .replace(/__tli-date__/g, moment(x).format('ddd, ' + siteConfig.MOMENT_DATETIME_FMT))
                         .replace(/__tli-tl-name__/g, tli_name)
                         .replace(/__tli-kind__/g, 'Test List')
+                        .replace(/__tli-comments__/g, comments)
                         .replace(/__show-in__/g, 'style="display: block"')
                     )
                     .on('click', toggleLock);
@@ -1953,7 +2053,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var maxXValues = data.map(function(d) {
                     return d3.max(d.line_data_test_results, function (value) {
                         return value.x;
-                    })
+                    });
                 });
                 return d3.max(maxXValues) || 0;
             }
@@ -1962,7 +2062,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 var minXValues = data.map(function(d) {
                     return d3.min(d.line_data_test_results, function (value) {
                         return value.x;
-                    })
+                    });
                 });
                 return d3.min(minXValues) || 0;
             }
@@ -1998,7 +2098,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 else {
                                     return null;
                                 }
-                            })
+                            });
                         }
                         return maxY;
                     }
@@ -2038,7 +2138,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 else {
                                     return Infinity;
                                 }
-                            })
+                            });
                         }
                         return minY;
                     }
@@ -2052,7 +2152,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
                 var best_x = 0, best_dist = Infinity,
                     bi_left = d3.bisector(function (d) {
-                        return d.x
+                        return d.x;
                     }).left;
 
                 d3.map(_data._series).each(function (val) {
@@ -2064,13 +2164,13 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                             d1,
                             d2;
 
-                        if (i == 0 || (v[i - 1].x < x_min_max[0])) {
+                        if (i === 0 || (v[i - 1].x < x_min_max[0])) {
                             d1 = Infinity;
                         }
                         else {
                             d1 = x - v[i - 1].x;
                         }
-                        if (i == v.length || (v[i].x > x_min_max[1])) {
+                        if (i === v.length || (v[i].x > x_min_max[1])) {
                             d2 = Infinity;
                         }
                         else {
@@ -2123,7 +2223,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     {type: 'all', text: 'All'}
                 ],
                 selected: prev_selection || 4
-            }
+            };
         }
 
         function get_legend_options() {
@@ -2134,7 +2234,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                     layout: "vertical",
                     enabled: true,
                     verticalAlign: "middle"
-                }
+                };
             }
             return legend;
         }
@@ -2240,6 +2340,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             var include_fit = get_filtered_option_values("include_fit", options)[0];
             var combine_data = get_filtered_option_values("combine_data", options)[0];
             var relative_diff = get_filtered_option_values("relative_diff", options)[0];
+            var highlight_flags = get_filtered_option_values("highlight_flags", options)[0];
+            var highlight_comments = get_filtered_option_values("highlight_comments", options)[0];
             var show_events = get_filtered_option_values("show_events", options)[0];
             var inactive_units = get_filtered_option_values('inactive_units', options)[0];
             var inactive_test_lists = get_filtered_option_values('inactive_test_lists', options)[0];
@@ -2260,7 +2362,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 $chart_type.change();
                 $subgroup_size.val(subgroup_size);
                 $n_baseline_subgroups.val(n_baseline_subgroups);
-                $include_fit.prop('checked', include_fit)
+                $include_fit.prop('checked', include_fit);
             } else {
                 $show_events.prop('checked', show_events);
                 if ($show_events.is(':checked')) {
@@ -2269,13 +2371,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             }
             $combine_data.prop('checked', combine_data);
             $relative_diff.prop('checked', relative_diff);
+            $highlight_flags.prop('checked', highlight_flags);
+            $highlight_comments.prop('checked', highlight_comments);
             if (!date_range) {
-                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(date_format));
-                $date_range.data('daterangepicker').setEndDate(moment().format(date_format));
+                $date_range.data('daterangepicker').setStartDate(moment().subtract(1, 'years').format(siteConfig.MOMENT_DATE_FMT));
+                $date_range.data('daterangepicker').setEndDate(moment().format(siteConfig.MOMENT_DATE_FMT));
             } else {
                 date_range = date_range.replace(/%20/g, ' ');
-                $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], date_format).format(date_format));
-                $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], date_format).format(date_format));
+                $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
+                $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
             }
             $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
             $show_events.prop('checked', show_events);
@@ -2310,8 +2414,15 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             downloadURL("./export/csv/?" + $.param(get_data_filters()));
         }
 
-        $('#filter-box').fadeTo(1500, 1);
+        $('#filter-box').fadeTo(1, 1);
 
+    });
+
+    $("body").popover({
+        selector: '[data-toggle="popover"]',
+        html: true,
+        placement: 'auto',
+        trigger: 'hover'
     });
 
 });

@@ -24,13 +24,12 @@ or have questions about using git or contributing code then please post to the
 In order to develop for QATrack+ you first need to make sure you have a few
 requirements installed.
 
-Python 3.4+
+Python 3.6+
 ~~~~~~~~~~~
 
-QATrack+ is developed using Python 3 (at least Python 3.4, preferably 3.5+).
-Depending on your operating system, Python 3 may already be installed but if
-not you can find instructions for installing the proper version on
-https://python.org.
+QATrack+ is developed using Python 3 (Python 3.6-3.9).  Depending on your
+operating system, Python 3 may already be installed but if not you can find
+instructions for installing the proper version on https://python.org.
 
 Git
 ~~~
@@ -45,28 +44,27 @@ installed it is recommended you go through a git tutorial to learn about git
 branches, commiting code and pull requests. There are many tutorials available
 online including a `tutorial by the Django team
 <https://dont-be-afraid-to-commit.readthedocs.io/en/latest/>`__ as well as
-tutorials on `BitBucket <https://www.atlassian.com/git/tutorials>`__ and
-`GitHub <https://try.github.io/>`__.
+a tutorial on and `GitHub <https://try.github.io/>`__.
 
 
-BitBucket
-~~~~~~~~~
+GitHub
+~~~~~~
 
-The QATrack+ project currently uses `BitBucket <https://bitbucket.org>`__ for
+The QATrack+ project currently uses `GitHub <https://github.com>`__ for
 hosting its source code repository.  In general, to contribute code to QATrack+
-you will need to create a fork of QATrack+ on BitBucket, make your changes,
+you will need to create a fork of QATrack+ on GitHub, make your changes,
 then make a pull request to the main QATrack+ project.
 
 Creating a fork of QATrack+
 ...........................
 
-Creating a fork of QATrack+ is explained in the `BitBucket documentation
-<https://confluence.atlassian.com/bitbucket/forking-a-repository-221449527.html>`__.
+Creating a fork of QATrack+ is explained in the `GitHub documentation
+<https://guides.github.com/activities/forking/>`__.
 
 Cloning your fork to your local system
 ......................................
 
-Once you have created a fork of QATrack+ on BitBucket, you will want to
+Once you have created a fork of QATrack+ on GitHub, you will want to
 download your fork to your local system to work on. This can either be done
 using the command line or one of the graphical git apps that are available.
 This page assumes you are using bash on linux or the Git Bash shell on Windows.
@@ -154,10 +152,10 @@ QATrack+.
 Internationalization & Translation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As of version 0.3.1, all strings and templates in QATrack+ should be marked for
-translation. This will allow for QATrack+ to be made avaialable in multiple
-languages.  For discussion of how to mark templates and strings for translation
-please read the `Django docs on translation
+Please mark all strings and templates in QATrack+ for translation. This will
+allow for QATrack+ to be made avaialable in multiple languages.  For discussion
+of how to mark templates and strings for translation please read the `Django
+docs on translation
 <https://docs.djangoproject.com/en/1.11/topics/i18n/translation/>`__.
 
 
@@ -334,7 +332,7 @@ The author of the code (or potentially their employer) retains the copyright of
 their work even when contributing code to QATrack+.  However, unless specified
 otherwies, by submitting code to the QATrack+ project you agree to have it
 distributed using the same `MIT license
-<https://bitbucket.org/tohccmedphys/qatrackplus/src/master/LICENSE>`__ as
+<https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ as
 QATrack+ uses.
 
 
@@ -346,11 +344,11 @@ QATrack+ but still wants to help the project out.  Here are a couple of ways
 that you can contribute to the QATrack+ project without doing any software
 development:
 
-* **Translations:** Starting in QATrack+ v0.3.1, QATrack+ will have the
-  infrastructure in place to support languages other than English.  We will be
-  making translation files available so that the community can create
-  translation files for their native languages. Please get in touch with
-  randy@multileaf.ca if you are able to help out with this task!
+* **Translations:** Starting in QATrack+ v3.1.0 (sorry this didn't happen yet),
+  QATrack+ will have the infrastructure in place to support languages other
+  than English.  We will be making translation files available so that the
+  community can create translation files for their native languages. Please get
+  in touch with randy@multileaf.ca if you are able to help out with this task!
 
 * **Tutorials:** :ref:`Tutorials <tutorials>` are a great way for newcomers to
   learn their way around QATrack+.  If you have an idea for a tutorial, we

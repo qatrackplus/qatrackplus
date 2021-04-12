@@ -3,17 +3,18 @@
 {% load widget_tweaks %}
 {% load qa_tags %}
 {% load comments %}
+{% load static %}
 
 {% block head_title %}Issue{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
-    <link href="{{ STATIC_URL }}daterangepicker/css/daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-daterangepicker.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}select2/css/select2.min.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/tables.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}qatrack_core/css/custom-select2.css?v={{ VERSION }}" rel="stylesheet">
-    <link href="{{ STATIC_URL }}issue_tracker/css/issues.css?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "select2/css/select2.min.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/tables.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{ VERSION }}" rel="stylesheet">
+    <link href="{% static "issue_tracker/css/issues.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -74,7 +75,7 @@
                                                             <div class="col-sm-12 help-block text-center">
                                                                 <a class="pic_click cursor-pointer">{{ field.help_text }}</a>
                                                                 <div class="pic_display" style="display: none;">
-                                                                    <img class="error-pic" src="{{ STATIC_URL }}issue_tracker/img/error-example.png?v={{ VERSION }}">
+                                                                  <img class="error-pic" src="{% static "issue_tracker/img/error-example.png" %}?v={{ VERSION }}">
                                                                 </div>
                                                             </div>
                                                         {% else %}

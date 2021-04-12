@@ -5,7 +5,7 @@ import token
 import tokenize
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
+from django.db.transaction import atomic
 
 
 class SetEncoder(json.JSONEncoder):
@@ -14,27 +14,6 @@ class SetEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
         return json.JSONEncoder.default(self, obj)  # pragma: nocover
-
-
-def qs_extra_for_utc_name():
-
-    from qatrack.qa import models
-
-    ct_tl = ContentType.objects.get_for_model(models.TestList)
-    ct_tlc = ContentType.objects.get_for_model(models.TestListCycle)
-
-    extraq = """
-         CASE
-            WHEN content_type_id = {0}
-                THEN (SELECT name AS utc_name from qa_testlist WHERE object_id = qa_testlist.id )
-            WHEN content_type_id = {1}
-                THEN (SELECT name AS utc_name from qa_testlistcycle WHERE object_id = qa_testlistcycle.id)
-         END
-         """.format(ct_tl.pk, ct_tlc.pk)
-
-    return {
-        "select": {'utc_name': extraq}
-    }
 
 
 def to_precision(x, p):
@@ -99,8 +78,18 @@ def to_precision(x, p):
 
 def tokenize_composite_calc(calc_procedure):
     """tokenize a calculation procedure"""
-    tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
-    return [t[token.NAME] for t in tokens if t[token.NAME]]
+    all_tokens = tokenize.generate_tokens(io.StringIO(calc_procedure).readline)
+    tokens = []
+    prev = None
+    for t in all_tokens:
+        val = t[token.NAME]
+        if not val:
+            prev = val
+            continue
+        if prev != ".":
+            tokens.append(val)
+        prev = val
+    return tokens
 
 
 def unique(seq, idfun=None):
@@ -134,7 +123,7 @@ def almost_equal(a, b, significant=7):
     try:
         scale = 0.5 * (abs(b) + abs(a))
         scale = math.pow(10, math.floor(math.log10(scale)))
-    except:
+    except:  # noqa: E722
         pass
 
     try:
@@ -198,14 +187,93 @@ def get_bool_tols(user_klass=None, tol_klass=None):
 def get_internal_user(user_klass=None):
 
     from qatrack.qa import models
+    from django.contrib.auth.hashers import make_password
     user_klass = user_klass or models.User
 
     try:
         u = user_klass.objects.get(username="QATrack+ Internal")
     except user_klass.DoesNotExist:
-        pwd = user_klass.objects.make_random_password()
+        pwd = make_password(user_klass.objects.make_random_password())
         u = user_klass.objects.create(username="QATrack+ Internal", password=pwd)
         u.is_active = False
         u.save()
 
     return u
+
+
+def format_qc_value(val, format_str, _try_default=True):
+    """Format a value with given format_str first by trying old style "<foo>" %
+    (*args)" and then trying new "<foo>".format(*args) style. If both of those
+    methods fail, then we try using settings.DEFAULT_NUMBER_FORMAT before
+    falling back to using to_precision and settings.CONSTANT_PRECISION.  If
+    that also fails, just return  str(val).  """
+
+    if format_str:
+        try:
+            return format_str % val
+        except TypeError as e:
+            old_style_likely = "number is required" in str(e)
+            if not old_style_likely:
+                try:
+                    return format_str.format(val)
+                except:  # noqa: E722
+                    pass
+        except:  # noqa: E722
+            pass
+
+    if _try_default and settings.DEFAULT_NUMBER_FORMAT:
+        try:
+            return format_qc_value(val, settings.DEFAULT_NUMBER_FORMAT, _try_default=False)
+        except:  # noqa: E722
+            pass
+
+    try:
+        # try fall back on old behaviour
+        return to_precision(val, settings.CONSTANT_PRECISION)
+    except:  # noqa: E722
+        pass
+
+    return str(val)
+
+
+@atomic
+def copy_unit_config(from_unit, to_unit):
+    """
+    This function will copy all UnitTestCollection and reference and tolerances
+    from `from_unit` to `to_unit`. If the same TestList(Cycle) is already
+    assigned to the to_unit, that assignment is skipped.  Likewise, if a given
+    UnitTestInfo already exists on the to_unit, the reference and tolerance
+    values won't be updated.
+    """
+
+    from qatrack.qa.models import UnitTestCollection, UnitTestInfo
+
+    existing = list(UnitTestCollection.objects.filter(unit=to_unit).values_list("content_type_id", "object_id"))
+    existing_utis = list(UnitTestInfo.objects.filter(unit=to_unit).values_list("test_id", flat=True))
+    from_utcs = UnitTestCollection.objects.filter(unit=from_unit)
+
+    for utc in from_utcs:
+        if (utc.content_type_id, utc.object_id) in existing:
+            continue
+        visible_to = list(utc.visible_to.all())
+        utc.pk = None
+        utc.unit = to_unit
+        utc.last_instance = None
+        utc.due_date = None
+        utc.save()
+
+        for vt in visible_to:
+            utc.visible_to.add(vt)
+
+        for day in range(len(utc.tests_object)):
+            __, tl = utc.get_list(day=day)
+            for t in tl.ordered_tests():
+
+                uti_old = UnitTestInfo.objects.get(unit=from_unit, test=t)
+                if t.id in existing_utis:
+                    continue
+
+                uti_new = UnitTestInfo.objects.get(unit=to_unit, test=t)
+                uti_new.reference = uti_old.reference
+                uti_new.tolerance = uti_old.tolerance
+                uti_new.save()

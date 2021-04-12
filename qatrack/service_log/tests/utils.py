@@ -1,22 +1,14 @@
-
 from django.conf import settings
-from django.contrib.auth.models import User, Group, Permission
-from django.contrib.contenttypes.models import ContentType
-from django.apps import apps
 from django.utils import timezone
+from django.utils.text import slugify
 
-from qatrack.service_log import models
-from qatrack.qa.tests import utils as qa_utils
-from qatrack.qa import models as qa_models
+from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
+from qatrack.qa import models as qa_models
+from qatrack.qa.tests import utils as qa_utils
+from qatrack.qatrack_core.tests.utils import get_next_id
+from qatrack.service_log import models
 from qatrack.units import models as u_models
-
-
-def get_next_id(obj):
-
-    if obj is None:
-        return 1
-    return obj.id + 1
 
 
 def create_service_area(name=None):
@@ -79,7 +71,7 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
     if service_status is None:
         service_status = create_service_event_status()
     if user_created_by is None:
-        user_created_by = qa_utils.create_user()
+        user_created_by = create_user()
 
     se, _ = models.ServiceEvent.objects.get_or_create(
         unit_service_area=unit_service_area, service_type=service_type, service_status=service_status,
@@ -89,7 +81,7 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
     )
 
     if add_test_list_instance_initiated_by:
-        if isinstance(add_test_list_instance_initiated_by, models.TestListInstance):
+        if isinstance(add_test_list_instance_initiated_by, qa_models.TestListInstance):
             se.test_list_instance_initiated_by = add_test_list_instance_initiated_by
         else:
             utc = qa_utils.create_unit_test_collection(unit=unit_service_area.unit)
@@ -97,6 +89,51 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
         se.save()
 
     return se
+
+
+def create_service_event_template(name=None, service_type=None, service_area=None,
+                                  problem_description="", work_description="",
+                                  created_by=None):
+
+    if name is None:
+        name = 'name_%04d' % get_next_id(models.ServiceEventTemplate.objects.order_by('id').last())
+
+    if created_by is None:
+        created_by = qa_utils.create_user()
+
+    template, _ = models.ServiceEventTemplate.objects.get_or_create(
+        name=name,
+        service_area=service_area,
+        service_type=service_type,
+        problem_description=problem_description,
+        work_description=work_description,
+        created_by=created_by,
+        modified_by=created_by,
+    )
+
+    return template
+
+
+def create_service_event_schedule(service_event_template=None, unit_service_area=None,
+                                  frequency=None, assigned_to=None):
+
+    if service_event_template is None:
+        service_event_template = create_service_event_template()
+
+    if unit_service_area is None:
+        unit_service_area = create_unit_service_area()
+
+    if assigned_to is None:
+        assigned_to = qa_utils.create_group()
+
+    ses, _ = models.ServiceEventSchedule.objects.get_or_create(
+        service_event_template=service_event_template,
+        unit_service_area=unit_service_area,
+        assigned_to=assigned_to,
+        frequency=frequency,
+    )
+
+    return ses
 
 
 def create_third_party(vendor=None, first_name=None, last_name=None):
@@ -118,7 +155,7 @@ def create_hours(service_event=None, third_party=None, user=None, time=timezone.
     if service_event is None:
         service_event = create_service_event()
     if third_party is None and user is None:
-        user = qa_utils.create_user()
+        user = create_user()
 
     h, _ = models.Hours.objects.get_or_create(
         service_event=service_event, third_party=third_party, user=user, time=time
@@ -135,7 +172,7 @@ def create_return_to_service_qa(service_event=None, unit_test_collection=None, u
     if unit_test_collection is None:
         unit_test_collection = qa_utils.create_unit_test_collection()
     if user_assigned_by is None:
-        user_assigned_by = qa_utils.create_user()
+        user_assigned_by = create_user()
 
     rtsqa, _ = models.ReturnToServiceQA.objects.get_or_create(
         service_event=service_event, unit_test_collection=unit_test_collection, user_assigned_by=user_assigned_by,
@@ -156,7 +193,7 @@ def create_return_to_service_qa(service_event=None, unit_test_collection=None, u
 def create_group_linker(group=None, name=None):
 
     if group is None:
-        group = qa_utils.create_group()
+        group = create_group()
     if name is None:
         name = 'group_linker_%04d' % get_next_id(models.GroupLinker.objects.order_by('id').last())
 
@@ -170,9 +207,11 @@ def create_group_linker_instance(group_linker=None, user=None, service_event=Non
     if group_linker is None:
         group_linker = create_group_linker()
     if user is None:
-        user = qa_utils.create_user()
+        user = create_user()
     if service_event is None:
         service_event = create_service_event()
+
+    user.groups.add(group_linker.group)
 
     gli, _ = models.GroupLinkerInstance.objects.get_or_create(
         group_linker=group_linker, user=user, service_event=service_event, datetime_linked=datetime_linked
@@ -197,7 +236,7 @@ def create_part(part_category=None, part_number=None, name='description', add_st
     if part_category is None:
         part_category = create_part_category()
     if part_number is None:
-        part_number = get_next_id(p_models.PartCategory.objects.order_by('id').last())
+        part_number = str(get_next_id(p_models.PartCategory.objects.order_by('id').last()))
 
     p, _ = p_models.Part.objects.get_or_create(
         part_category=part_category, part_number=part_number, name=name, quantity_min=quantity_min,
@@ -239,7 +278,8 @@ def create_site(name=None):
     if name is None:
         name = 'site_%04d' % get_next_id(u_models.Site.objects.order_by('id').last())
 
-    s, _ = u_models.Site.objects.get_or_create(name=name)
+    slug = slugify(name)
+    s, _ = u_models.Site.objects.get_or_create(name=name, slug=slug)
 
     return s
 

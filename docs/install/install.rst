@@ -7,12 +7,8 @@ Selecting a platform for QATrack+
 ---------------------------------
 
 Currently there are two "officially" supported platforms for deploying QATrack+
-on: 1) Ubuntu Linux (14.04+) with PostgreSql (or MySQL) and 2) Windows Server
-2012+ with SQL Server.  There are many, many, more operating systems/database
-combinations but it is overwhelming to create and keep documentation updated
-for all of them.  That said, if you have a different preference of platform,
-adapting the Ubuntu instructions to another \*nix system should be relatively
-straightforward.
+on: 1) Ubuntu Linux (18.04+) with PostgreSql (or MySQL) and 2) Windows Server
+2017+ with SQL Server.
 
 The platform you choose will generally depend on what type of system you or
 your clinic has the most expertise in and / or your budget (Microsoft tools can
@@ -20,10 +16,20 @@ be expensive!).
 
 .. toctree::
    :maxdepth: 2
-   :caption: Officially Supported Platforms
+   :caption: Ubuntu Linux
 
    linux
+   linux_upgrade_from_030
+   linux_upgrade_from_02X
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Windows Server
+
    win
+   win_upgrade_from_030
+   win_upgrade_from_02X
 
 
 Note there is no official support for the platforms listed below.  That doesn't
@@ -45,8 +51,8 @@ settings for QATrack+.  All of the available settings and how to set them is
 described here:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    config
-   active_directory
+   authentication_backends
    backup

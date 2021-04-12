@@ -8,13 +8,17 @@ Units
 Creating A New Unit
 -------------------
 
-Before you can create a new unit you have to define some modalities and unit
-types. This can either be done beforehand or "inline" when defining a new unit.
-The former is described below.
+Before you can create a new unit you have to define some treatment and imaging
+modalities and unit types. This can either be done beforehand or "inline" when
+defining a new unit.  The former is described below.
 
 
-Defining a modality
--------------------
+Defining a treatment or imaging modality
+----------------------------------------
+
+Modalities can be used to define what beam energies, and treatment or imaging
+techniques are available on a unit. Examples of modalities might be "6X",
+"6FFF", "6E", "9E", "CBCT" and so on.
 
 From the main administrators page click the **Modalities** link from the
 **Units** section.
@@ -42,6 +46,7 @@ definition of a 6MV photon beam is illustrated below.
 
 Click **Save** when you are finished.
 
+
 Defining a new unit class
 -------------------------
 
@@ -58,6 +63,7 @@ etc).
 
    Defining a new unit class
 
+.. _unit_type:
 
 Defining a new unit type
 ------------------------
@@ -66,8 +72,11 @@ From the main administrators page click the **Unit Types** link from the
 **Units** section and then on the next page click the **Add unit type**
 link in the top right hand corner.
 
-Fill in the **Name**, **Vendor**, and optionally **Unit class* and **Model**
-fields and click **Save** when you are finished.
+Fill in the **Name**, **Vendor**, and optionally **Unit class*,  **Model**, and
+**Collapse** fields and click **Save** when you are finished.
+
+Checking the **Collapse** option will hide units of this unit type by default
+on pages where you select units (e.g. the Choose Unit to Perform QC On page).
 
 .. figure:: images/unit_type.png
    :alt: Defining a new unit type
@@ -112,6 +121,7 @@ of which are described below:
 * Unit Type - *Select the type of unit this is*
 * Is serviceable - *Set to true to make this unit selectable in Service Events*
 * Site - *If you have multiple sites configured, choose the site this unit is located at*
+* Modalities - *Select any treatment and imaging modalities that are currently available on this machine. These are used in conjunction with the fault log functionality*
 * Service Areas - *Select all the service areas available for this unit (e.g. Linac, kv Imaging, MV Imaging etc)*
 * Available Time on date of acceptance - *The number of clinical hours that the unit is available on a day to day basis*
 * Unit Schedule - *Set the number of hours this unit is available and the effective date. See below for an example*

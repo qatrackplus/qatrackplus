@@ -1,0 +1,11 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% block title%}QATrack+ Report: {{report.title }}{% endblock %}
+{% block preheader %}QATrack+ Report: {{report.title }}{% endblock %}
+{% block content %}
+<p>Hello,</p>
+<p>
+  Please find your {{ report.get_report_type_display }} report "{{ report.title }}" attached.
+</p>
+{% endblock content %}
+

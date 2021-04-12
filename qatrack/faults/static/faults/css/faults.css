@@ -1,0 +1,11 @@
+dd.fault_type_description {
+  overflow-y: auto;
+  max-height: 200px;
+}
+.select2-container--default .select2-results__option[aria-disabled=true] {
+    display: none;
+}
+
+#fault-modal .modal-dialog {
+  width: 800px;
+}

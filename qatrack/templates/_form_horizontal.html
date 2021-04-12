@@ -1,0 +1,93 @@
+{% load i18n %}
+{% load widget_tweaks %}
+{% load attach_tags %}
+
+{% for hidden_field in form.hidden_fields %}
+  {{ hidden_field }}
+{% endfor %}
+
+{% if form.non_field_errors %}
+  <div class="form-group">
+    <div class="alert alert-danger" role="alert">
+      {% for error in form.non_field_errors %}
+        {{ error }}
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+{% for field in form.visible_fields %}
+
+  <div class="form-group {% if field.errors %}has-error{% endif %}">
+
+    {% if field|field_type == "booleanfield" %}
+      <div class="col-sm-offset-4 col-sm-8">
+        <div class="checkbox-inline">
+          <label for="{{ field.id_for_label }}">
+            {% render_field field %}
+            {{ field.label }}{% if field.field.required %}*{% endif %}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+          </label>
+        </div>
+        {% for error in field.errors %}
+          <div class="help-block error-message">
+            {{ error }}
+          </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+
+      <label class="col-sm-4 control-label" for="{{ field.id_for_label }}">
+        {{ field.label }}{% if field.field.required %}*{% endif %}
+      </label>
+      <div class="col-sm-8">
+
+
+        {% if field|field_type == "filefield" %}
+          {% if include_attach_table %}
+            <table id="attach-table" class="table table-responsive table-condensed" style="margin-bottom: 5px">
+              <thead>
+                <tr>
+                  <th>Filename</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if form.instance.id %}
+                  {% for attach in form.instance.attachment_set.all %}
+                    <tr>
+                      <td><i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>{{ attach | attachment_link }}</td>
+                      <td align="center"><input type="checkbox" name="attach-{{ attach.id }}-DELETE" id="attach-{{ attach.id }}-DELETE" class="attach-delete" value="{{ attach.id }}"></td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
+              </tbody>
+              <tfoot id="attachment-names"></tfoot>
+            </table>
+          {% endif %}
+          <label class="qa-input btn btn-default btn-sm btn-flat pull-right" title="{% trans "Click to add attachments. (Hold Ctrl or Cmd in the dialog to include multiple attachments)" %}">
+            {% trans "Browse" %}
+            {{ field }}
+          </label>
+        {% else %}
+          {% render_field field class+="form-control input-sm" %}
+        {% endif %}
+        {% if field.help_text %}
+          <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+        {% for error in field.errors %}
+          <div class="help-block error-message">
+            {{ error }}
+          </div>
+        {% endfor %}
+      </div>
+
+
+    {% endif %}
+
+
+  </div>
+{% endfor %}

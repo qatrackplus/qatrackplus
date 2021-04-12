@@ -1,0 +1,368 @@
+{% extends "site_base.html" %}
+
+{% load qa_tags %}
+{% load i18n %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_title %}{% trans "Reports" %}{% endblock %}
+
+{% block extra_head %}
+<script type="text/javascript">
+  window.pgettext = function(context, string){ return string;};
+</script>
+<script type="text/javascript" src="{% static "recurrence/js/recurrence.js" %}"></script>
+<script type="text/javascript" src="{% static "recurrence/js/recurrence-widget.js" %}"></script>
+{% endblock extra_head %}
+
+{% block extra_js %}
+{% endblock extra_js %}
+
+{% block extra_css %}
+  <link href="{% static "select2/css/select2.min.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "select2/css/select2-bootstrap.min.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-select2.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
+  <link href="{% static "qa/css/qa.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
+  <link href="{% static "datepicker/css/bootstrap-datepicker.min.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{ CSS_VERSION }}" rel="stylesheet">
+{#  <link href="{% static "datatables/1.10/css/datatables.min.css" %}?v={{ VERSION }}" rel="stylesheet">#}
+{#  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/dataTables.bootstrap.min.css" %}?v={{ VERSION }}" rel="stylesheet">#}
+  <link href="{% static "reports/css/reports.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
+  <link href="{% static "recurrence/css/recurrence.css" %}?v={{VERSION}}" rel="stylesheet">
+  <link href="{% static "qatrack_core/css/tables.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
+{% endblock extra_css %}
+
+{% block require_javascript %}
+  require(['reports']);
+{% endblock require_javascript %}
+
+{% block body_class %}layout-top-nav {% endblock body_class %}
+
+{% block body %}
+
+
+<div class="row">
+  <div class="col-lg-3 col-md-6" >
+    <div id="config-container" class="box">
+      <div class="box-header">
+        <i class="fa fa-gear fa-fw" aria-hidden="true"></i>
+        <h2 class="box-title">{% trans "Report Configuration" %}</h2>
+      </div>
+      <div class="box-body pad">
+        <p>
+          <em>
+            {% blocktrans %}
+            Choose a report type and then use the Report Filters to configure
+            the report you want to generate.
+            {% endblocktrans %}
+          </em>
+        </p>
+        <div id="report-config">
+          <div id="notes-empty-form" class="hidden">
+            <div id="notes-form-__prefix__" class="__empty__">
+
+              {% with notes_formset.empty_form as f %}
+
+                {% for hidden_field in f.hidden_fields %}
+                  {{ hidden_field.errors }}
+                  {{ hidden_field }}
+                {% endfor %}
+
+                <div class="form-group">
+                  <label class="col-sm-4 control-label" for="current">
+                    {{ f.heading.label }}*
+                  </label>
+                  <div class="col-sm-8">
+                    <div class="input-group">
+                      {% render_field f.heading class+="form-control input-sm" %}
+                      <div class="input-group-btn">
+                        <button id="id_reportnote_set-remove-__prefix__" type="button" class="btn btn-primary btn-sm" title="{% trans "Remove Comment" %}">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted">{{ f.heading.help_text }}</small>
+                    {% for error in f.heading.errors %}
+                      <div class="help-block error-message">
+                        {{ error }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-group {% if f.content.errors %}has-error{% endif %}">
+                  <label class="col-sm-4 control-label" for="{{ f.content.id_for_label }}">
+                    {{ f.content.label }}
+                  </label>
+                  <div class="col-sm-8">
+                    {% render_field f.content class+="form-control input-sm" %}
+                    <small class="form-text text-muted">{{ f.content.help_text }}</small>
+                    {% for error in f.content.errors %}
+                      <div class="help-block error-message">
+                        {{ error }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="hidden form-group {% if f.DELETE.errors %}has-error{% endif %}">
+                  <div class="col-sm-offset-4 col-sm-8">
+                    <div class="checkbox-inline">
+                      <label for="{{ f.DELETE.id_for_label }}">
+                        {% render_field f.DELETE %}
+                        {{ f.DELETE.label }}
+                      </label>
+                    </div>
+                    {% for error in f.DELETE.errors %}
+                      <div class="help-block error-message">
+                        {{ error }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endwith %}
+            </div>
+          </div>
+          <form id="report-form"
+            action=""
+            method="post"
+            data-preview="{% url "reports-preview" %}"
+            data-getfilter="{% url "reports-filter" %}"
+            data-save="{% url "reports-save" %}"
+            data-load="{% url "reports-load" %}"
+            data-delete="{% url "reports-delete" %}"
+            novalidate
+            autocomplete="off"
+            class="form-horizontal"
+          >
+            {% csrf_token %}
+
+            <fieldset>
+
+              <input type="hidden" name="report_id" id="report_id"/>
+
+              <div class="form-group">
+                <label class="col-sm-4 control-label" for="current">
+                  {% trans "Currently editing" %}
+                </label>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <input id="current" data-original="{% trans "New Report" %}" type="text" class="form-control disabled" disabled value="{% trans "New Report" %}"/>
+                    <div class="input-group-btn">
+                      <button id="clear-report" {% if not report_form.is_bound %}disabled{% endif %} type="button" class="btn btn-default btn-sm" title="{% trans "Clear report" %}"><i class="fa fa-remove"></i></button>
+                      <button id="delete-report" {% if not report_form.is_bound %}disabled{% endif %} type="button"
+                              class="btn btn-default btn-sm"
+                              title="{% trans "Delete report" %}"
+                              data-target="#delete-modal"
+                      >
+                        <i class="fa fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {% include '_form_horizontal.html' with form=report_form %}
+
+            </fieldset>
+            <fieldset id="notes-formset">
+              <div class="form-group">
+                <label class="col-sm-4 control-label" for="current">
+                  {% trans "Notes" %}
+                </label>
+                <div class="col-sm-8">
+                    <button id="add-note" type="button" class="btn btn-default btn-xs pull-right btn-flat" title="{% trans "Add a note to this report" %}">
+                      <i class="fa fa-stack fa-fw">
+                        <i class="fa fa-sticky-note-o fa-stack-custom-main"></i>
+                        <i class="fa fa-plus fa-stack-custom-sub upper-1"></i>
+                      </i>
+                      {% trans "Add Note" %}
+                    </button>
+                </div>
+              </div>
+
+              {{ notes_formset.management_form }}
+
+
+            </fieldset>
+
+
+            <div class="form-group has-error">
+              <div id="form-errors" class="col-sm-offset-4 col-sm-8">
+              </div>
+            </div>
+
+            <div class="form-group has-success">
+              <div id="form-success" class="col-sm-offset-4 col-sm-8">
+              </div>
+            </div>
+
+            <hr/>
+
+            <fieldset>
+              <legend class="filter-only hidden">{% trans "Report Filters" %}</legend>
+              <div id="filters">
+                {% if filter_form %}
+                  {% include '_form_horizontal.html' with form=filter_form %}
+                {% endif %}
+                {% if extra_form %}
+                  {% include '_form_horizontal.html' with form=extra_form %}
+                {% endif %}
+              </div>
+            </fieldset>
+            <fieldset>
+
+              <button id="preview" value="preview" type="button" class="btn btn-default btn-sm pull-right btn-flat" {% if not report_form.is_bound %}disabled{% endif %}
+                title="{% trans 'Click to view a preview of this report in PDF format' %}">
+                <i class="fa fa-eye"> </i> {% trans "Preview" %}
+              </button>
+              <button id="download" value="download" type="submit" class="btn btn-default btn-sm pull-right btn-flat margin-right-5" {% if not report_form.is_bound %}disabled{% endif %}
+                title="{% trans 'Click to download this report in the selected format' %}">
+                <i class="fa fa-download"></i> {% trans "Download" %}
+              </button>
+              <button id="save" value="save" type="button" class="btn btn-primary btn-sm btn-flat" {% if not report_form.is_bound %}disabled{% endif %}
+                title="{% trans "Click to save this report so it can be re-run later" %}" >
+                <i class="fa fa-save"></i> {% trans "Save" %}
+              </button>
+            </fieldset>
+
+            {{ report_form.media }}
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-lg-push-6 col-md-6">
+    <div  id="saved-reports-container" class="box">
+      <div class="box-header">
+        <i class="fa fa-save fa-fw" aria-hidden="true"></i>
+        <h2 class="box-title">{% trans "Saved & Scheduled Reports" %}</h2>
+      </div>
+      <div class="box-body pad">
+        <div id="saved-reports-wrapper">
+          <p><em>{% trans "Click a link below to edit an existing reports. You may search by report title, creator, or recipient. Reports may only be edited and scheduled by the creator." %}</em></p>
+          <table style="width: 100%" id="saved-reports" data-src="{% url "reports-saved" %}" class="table table-condensed table-striped">
+            <thead>
+              <tr>
+                <th>{% trans "Report" %}</th>
+                <th>{% trans "Creator" %}</th>
+                <th>
+                  <i class="fa fa-stack fa-fw" title="Report Schedule">
+                    <i class="fa fa-calendar fa-stack-custom-main"></i>
+                    <i class="fa fa-clock-o fa-stack-custom-sub"></i>
+                  </i>
+                </th>
+                <th>
+                  Recipients
+                </th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6 col-lg-pull-3 col-md-12" >
+    <div id="preview-container" class="box">
+      <div class="box-header">
+        <i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i>
+        <h2 class="box-title">{% trans "Report Preview" %}</h2>
+      </div>
+      <div class="box-body pad">
+        <div id="report-preview">
+          <div class="loading-modal ">
+            <div class="center">
+              <div>
+                <span class="loading-logo">QAT</span>
+                <i class="fa fa-fw fa-plus fa-spin fa-2x info"></i>
+              </div>
+                <div>
+                  <b>
+                      Loading Report
+                  </b>
+                </div>
+            </div>
+          </div>
+          <div id="report"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="delete-modal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title"></h4>
+      </div>
+      <div class="modal-body">
+        <p>{% trans "Are you sure you want to delete this report?" %}</p>
+      </div>
+      <div class="modal-footer">
+
+        <button id="delete" type="button" class="btn btn-flat btn-danger pull-left">
+          <i class="fa fa-trash"></i>
+          {% trans "Yes, Delete" %}
+        </button>
+        <button type="button" class="btn btn-default btn-flat" data-dismiss="modal">
+          <i class="fa fa-ban"></i>
+          {% trans "No, Cancel" %}
+        </button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div id="schedule-modal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title"></h4>
+      </div>
+      <div class="modal-body">
+        <form id="schedule-form"
+          action=""
+          novalidate
+          autocomplete="off"
+          class="form-horizontal"
+          data-schedule-url="{% url "reports-schedule" %}"
+          data-clear-schedule-url="{% url "reports-schedule-delete" %}"
+        >
+          {% csrf_token %}
+          <div class="form-group">
+            <div id="schedule-message" class="alert">
+            </div>
+          </div>
+          <div class="contents">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="clear-schedule" type="button" class="btn btn-primary btn-flat pull-left" title="{% trans "Click to clear this reports schedule" %}" >
+          <i class="fa fa-trash"></i>
+          {% trans "Clear Schedule" %}
+        </button>
+
+        <button id="schedule" type="button" class="btn btn-primary btn-flat">
+          <i class="fa fa-clock-o"></i>
+          {% trans "Update Schedule" %}
+        </button>
+
+        <button type="button" class="btn btn-default btn-flat" data-dismiss="modal">
+          <i class="fa fa-remove"></i>
+          {% trans "Close" %}
+        </button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+
+{% endblock body %}

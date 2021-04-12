@@ -17,6 +17,7 @@ Service Log & Parts
    service_areas
    statuses
    types
+   templates_and_schedules
    parts
 
 

@@ -1,0 +1,172 @@
+{% extends "email/base.html" %}
+{% load comments %}
+{% load i18n %}
+{% block title%}QATrack+ Service Event Notice{% endblock %}
+{% block preheader %}QATrack+ Service Event Notice{% endblock %}
+{% block extra_css %}
+  th.header {
+    font-weight: bold;
+  }
+  thead th.header {
+    text-align: center;
+    background: #eee;
+  }
+  tbody th.header {
+    padding-right: 10px;
+  }
+{% endblock %}
+{% block content %}
+<p>Hello,</p>
+<p>
+{% if service_log.is_new %}
+  {% trans "The following Service Event was just created" %}:
+{% else %}
+  {% trans "The following Service Event was just updated" %}:
+{% endif %}
+</p>
+{% if service_log.is_new %}
+  <table>
+    <tbody>
+      <tr>
+        <th class="header">{% trans "Service Event" %}:</th>
+        <td>
+          <a href="{{ domain }}{{ service_event.get_absolute_url }}"
+             title="{% trans "Click to view on the site" %}"
+          >
+            {% blocktrans with service_event_id=service_event.id %}
+              Service Event #{{ service_event_id }}
+            {% endblocktrans %}
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <th class="header">{% trans "Created" %}:</th>
+        <td>{{ service_event.datetime_created }}</td>
+      </tr>
+      <tr>
+        <th class="header">{% trans "Unit &amp; Service Area" %}:</th>
+        <td>{{ service_event.unit_service_area }}</td>
+      </tr>
+      <tr>
+        <th class="header">{% trans "Service Type" %}:</th>
+        <td>{{ service_event.service_type }}</td>
+      </tr>
+      <tr>
+        <th class="header">{% trans "Service Status" %}:</th>
+        <td>{{ service_event.service_status }}</td>
+      </tr>
+      {% if service_event.test_list_instance_initiated_by_id %}
+        <tr>
+          <th class="header">{% trans "Initiated By" %}:</th>
+          <td>
+            <a href="{{ domain }}{{ service_event.test_list_instance_initiated_by.get_absolute_url }}"
+               title="{% trans "Click to view on the site" %}"
+            >
+              {{ service_event.test_list_instance_initiated_by.unit_test_collection.name }}
+            </a>
+          </td>
+        </tr>
+      {% endif %}
+      <tr>
+        <th class="header">{% trans "Problem Description" %}:</th>
+        <td>{{ service_event.problem_description }}</td>
+      </tr>
+      <tr>
+        <th class="header">{% trans "Work Description" %}:</th>
+        <td>{{ service_event.work_description }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+{% else %}
+
+  <table>
+    <tbody>
+      <tr>
+        <th class="header">{% trans "Service Event" %}:</th>
+        <td>
+          <a href="{{ domain }}{{ service_event.get_absolute_url }}"
+             title="{% trans "Click to view on the site" %}"
+          >
+            {% blocktrans with service_event_id=service_event.id %}
+            Service Event #{{ service_event_id }}
+            {% endblocktrans %}
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <th class="header">{% trans "Change Type" %}:</th>
+        <td style="text-align: left">
+          {{ service_log.get_log_type_display }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <table style="border: none;" cellspacing="0" cellpadding="0">
+    <tbody>
+      {% if service_log.is_rtsqa_change or service_log.is_rtsqa_performed or service_log.is_rtsqa_approved %}
+        <tr>
+          <th colspan="2" class="header" style="background: #eee; text-align: left; width: 66%; border-bottom: 1px solid #ccc;">{% trans "Return To Service QC" %}</th>
+          <th class="header" style="text-align: left; background: #eee; width: 34%; border-bottom: 1px solid #ccc;">{% trans "Status" %}</th>
+        </tr>
+        {% for state in service_event.create_rts_log_details %}
+          <tr>
+            <td colspan="2">{{ state.details }}</td>
+            <td>
+              {% if state.state == "tli_incomplete" %}
+                {% trans "Incomplete" %}
+              {% elif state.state == "tli_req_review" %}
+                {% trans "Requires Review" %}
+              {% elif state.state == "tli_reviewed" %}
+                {% trans "Reviewed" %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      {% elif service_log.info %}
+        <tr>
+          <th colspan=3" class="header" style="text-align: center; background: #eee;">{% trans "Changes" %}</th>
+        </tr>
+        <tr>
+          <th class="header" style="width: 33%; border-bottom: 1px solid #ccc;">{% trans "Field" %}</th>
+          <th style="width: 33%; font-weight: bold; border-bottom: 1px solid #ccc; text-align: center;">{% trans "Old" %}</th>
+          <th style="width: 33%; font-weight: bold; border-bottom: 1px solid #ccc; text-align: center;">{% trans "New" %}</th>
+        </tr>
+        {% if service_log.info.status_change %}
+          <tr>
+            <th class="header">{% trans "Status" %}:</th>
+            <td>{{ service_log.info.status_change.old }}</td>
+            <td>{{ service_log.info.status_change.new }}</td>
+          </tr>
+        {% endif %}
+        {% for key, val in service_log.info.other_changes.items %}
+          <tr>
+            {% if key == 'a_deleted' %}
+            <th class="header">{% trans "Attachments Deleted" %}:</th>
+              <td colspan="2">{% for d in val.old %}{{ d }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+            {% elif key == 'a_added' %}
+            <th class="header">{% trans "Attachments Added" %}:</th>
+              <td colspan="2">{% for a in val.new %}{{ a }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+            {% else %}
+              <th class="header">{{ key | title }}:</th>
+              <td>{{ val.old }}</td>
+              <td>{{ val.new }}</td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="3" style="border-bottom: 1px solid #ccc;"></td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+{% endif %}
+
+<p></p>
+<p>
+{% trans "For more details, please view this Service Event on the site" %}: <a href="{{ domain }}{{ service_event.get_absolute_url }}" title="{% trans "Click to view on the site" %}">
+  {% blocktrans with service_event_id=service_event.id %}
+    Service Event #{{ service_event_id }}</a>.
+  {% endblocktrans %}
+</p>
+{% endblock content %}

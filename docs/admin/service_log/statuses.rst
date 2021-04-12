@@ -19,7 +19,7 @@ Fill in the fields as follows:
 
 * **Is review required**  Do service events with this status require review?
 
-* **RTS qa review required**  Service events with Return To Service (RTS) QA
+* **RTS qa review required**  Service events with Return To Service (RTS) QC
   that has not been reviewed can not have this status selected if set to true.
   For example, you may have an `Approved` Service Event Status that requires
   one or more Test Lists to be performed *and* approved before the Service
@@ -28,6 +28,10 @@ Fill in the fields as follows:
 * **Description** A description of this status
 
 * **Color** Service Event Statuses can have different colours associated with them.
+
+* **Order** You may set an explit order for each Service Event Status.  When
+  the user selects a status from a dropdown menu in the UI, the statuses will
+  be displayed according to their order.
 
 
 Examples
@@ -41,7 +45,7 @@ By default the following Service Event Statuses are configured:
     * - Status Name
       - Is Review Required
       - Is Default
-      - RTS QA Must be reviewed
+      - RTS QC Must be reviewed
     * - Service Pending
       - Yes
       - No

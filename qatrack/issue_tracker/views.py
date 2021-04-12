@@ -1,6 +1,6 @@
 from braces.views import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse, resolve
+from django.urls import reverse, resolve
 from django.forms.utils import timezone
 from django.http import HttpResponseRedirect
 from django.template.loader import get_template
@@ -170,7 +170,7 @@ class IssueList(BaseListableView):
         return template.render(c)
 
     def datetime_submitted(self, i):
-        template = get_template('service_log/table_context_datetime.html')
+        template = get_template('service_log/table_context/table_context_datetime.html')
         c = {'datetime': i.datetime_submitted}
         return template.render(c)
 

@@ -1,17 +1,24 @@
-from collections import OrderedDict
+import calendar
+import collections
 import csv
+from itertools import groupby
 
-from braces.views import LoginRequiredMixin, PermissionRequiredMixin
+from braces.views import (
+    JSONResponseMixin,
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+)
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import resolve, reverse
-from django.db.models import Sum
+from django.db import transaction
+from django.db.models import Q, Sum
 from django.forms.utils import timezone
 from django.http import (
     Http404,
@@ -21,43 +28,62 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
+from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
-from django.views.generic.edit import ModelFormMixin, ProcessFormView
+from django.views.generic.edit import (
+    BaseCreateView,
+    ModelFormMixin,
+    ProcessFormView,
+)
 from django_comments.models import Comment
 from listable.views import (
     DATE_RANGE,
     LAST_7_DAYS,
+    LAST_14_DAYS,
     LAST_30_DAYS,
     LAST_365_DAYS,
     LAST_MONTH,
     LAST_WEEK,
     LAST_YEAR,
+    NEXT_WEEK,
+    NONEORNULL,
     SELECT,
     SELECT_MULTI,
     THIS_MONTH,
     THIS_WEEK,
     THIS_YEAR,
     TODAY,
+    TOMORROW,
     YEAR_TO_DATE,
     YESTERDAY,
     BaseListableView,
 )
+import pytz
 
 from qatrack.attachments.models import Attachment
+from qatrack.parts import forms as p_forms
+from qatrack.parts import models as p_models
 from qatrack.qa import models as qa_models
 from qatrack.qa.templatetags import qa_tags
 from qatrack.qa.views.base import generate_review_status_context
 from qatrack.qa.views.perform import ChooseUnit
 from qatrack.qa.views.review import UTCInstances
-from qatrack.service_log import forms, models
+from qatrack.qatrack_core.dates import (
+    format_as_date,
+    format_as_time,
+    format_datetime,
+    parse_date,
+)
+from qatrack.qatrack_core.serializers import QATrackJSONEncoder
+from qatrack.reports.service_log import ServiceEventDetailsReport
+from qatrack.service_log import forms
+from qatrack.service_log import models as sl_models
+from qatrack.service_log import signals  # NOQA: F401
 from qatrack.units import models as u_models
-
-if settings.USE_PARTS:
-    from qatrack.parts import forms as p_forms
-    from qatrack.parts import models as p_models
 
 
 def get_time_display(dt):
@@ -69,18 +95,18 @@ def get_time_display(dt):
         # ago = timezone.timedelta(minutes=ago.minute)
         return str(ago.seconds // 60) + ' minutes ago'
     else:
-        return dt.strftime('%I:%M %p')
+        return format_as_time(dt)
 
 
 def unit_sa_utc(request):
 
     try:
-        unit = models.Unit.objects.get(id=request.GET['unit_id'])
+        unit = u_models.Unit.objects.get(id=request.GET['unit_id'])
     except (KeyError, ObjectDoesNotExist):
         raise Http404
-    service_areas = list(models.ServiceArea.objects.filter(units=unit).values())
+    service_areas = list(sl_models.ServiceArea.objects.filter(units=unit).values())
 
-    utcs_tl_qs = models.UnitTestCollection.objects.select_related('frequency').filter(unit=unit, active=True)
+    utcs_tl_qs = qa_models.UnitTestCollection.objects.select_related('frequency').filter(unit=unit, active=True)
     utcs_tl = sorted(
         [
             {'id': utc.id, 'name': utc.name, 'frequency': utc.frequency.name if utc.frequency else 'Ad Hoc'}
@@ -100,7 +126,7 @@ def se_searcher(request):
         return JsonResponse({'error': True}, status=404)
 
     omit_id = request.GET.get('self_id', 'false')
-    service_events = models.ServiceEvent.objects \
+    service_events = sl_models.ServiceEvent.objects \
         .filter(id__icontains=se_search, unit_service_area__unit=unit_id)
 
     if omit_id != 'false':
@@ -119,13 +145,13 @@ class SLDashboard(TemplateView):
 
     def get_counts(self):
 
-        rtsqa_qs = models.ReturnToServiceQA.objects.prefetch_related().all()
-        default_status = models.ServiceEventStatus.objects.get(is_default=True)
+        rtsqa_qs = sl_models.ReturnToServiceQA.objects.prefetch_related().all()
+        default_status = sl_models.ServiceEventStatus.objects.get(is_default=True)
         to_return = {
             'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
             'qa_not_complete': rtsqa_qs.filter(test_list_instance__isnull=True).count(),
-            'se_needing_review': models.ServiceEvent.objects.filter(
-                service_status__in=models.ServiceEventStatus.objects.filter(
+            'se_needing_review': sl_models.ServiceEvent.objects.filter(
+                service_status__in=sl_models.ServiceEventStatus.objects.filter(
                     is_review_required=True
                 ),
                 is_review_required=True
@@ -133,7 +159,7 @@ class SLDashboard(TemplateView):
             'se_default': {
                 'status_name': default_status.name,
                 'id': default_status.id,
-                'count': models.ServiceEvent.objects.filter(service_status=default_status).count()
+                'count': sl_models.ServiceEvent.objects.filter(service_status=default_status).count()
             }
         }
         return to_return
@@ -142,14 +168,14 @@ class SLDashboard(TemplateView):
 
         context = super(SLDashboard, self).get_context_data()
         context['counts'] = self.get_counts()
-        context['recent_logs'] = models.ServiceLog.objects.select_related(
+        context['recent_logs'] = sl_models.ServiceLog.objects.select_related(
             'user', 'service_event', 'service_event__unit_service_area__unit'
         )[:60]
 
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        if models.ServiceEventStatus.objects.filter(is_default=True).exists():
+        if sl_models.ServiceEventStatus.objects.filter(is_default=True).exists():
             return super(SLDashboard, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(reverse('err'))
@@ -166,7 +192,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
     """
     permission_required = 'service_log.add_serviceevent'
     raise_exception = True
-    model = models.ServiceEvent
+    model = sl_models.ServiceEvent
     template_name = 'service_log/service_event_update.html'
     form_class = forms.ServiceEventForm
 
@@ -222,9 +248,29 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
     def get_form_kwargs(self):
         kwargs = super(ServiceEventUpdateCreate, self).get_form_kwargs()
         # group_linkers = models.GroupLinker.objects.all()
-        kwargs['group_linkers'] = models.GroupLinker.objects.all()
+        kwargs['group_linkers'] = sl_models.GroupLinker.objects.all()
         kwargs['user'] = self.user
+        self.set_schedule()
+        kwargs['se_schedule'] = self.se_schedule
         return kwargs
+
+    def set_schedule(self):
+        se_schedule_id = self.request.GET.get('se_schedule')
+        self.se_schedule = None
+        if se_schedule_id:
+            self.se_schedule = get_object_or_404(
+                sl_models.ServiceEventSchedule.objects.select_related(
+                    "unit_service_area",
+                    "unit_service_area__unit",
+                    "unit_service_area__service_area",
+                    "frequency",
+                    "last_instance",
+                ).filter(
+                    active=True,
+                    visible_to__in=self.request.user.groups.all(),
+                ).distinct(),
+                pk=se_schedule_id
+            )
 
     def get_context_data(self, *args, **kwargs):
         context_data = super(ServiceEventUpdateCreate, self).get_context_data(**kwargs)
@@ -232,36 +278,50 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
         if self.request.method == 'POST':
-            qs = models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))
+            qs = sl_models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist('service_event_related_field'))
             context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
         elif self.object:
             context_data['se_statuses'] = {se.id: se.service_status.id for se in self.object.service_event_related.all()}
         else:
             context_data['se_statuses'] = {}
-        context_data['status_tag_colours'] = models.ServiceEventStatus.get_colour_dict()
-        context_data['se_types_review'] = {st.id: int(st.is_review_required) for st in models.ServiceType.objects.all()}
+        context_data['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
+        context_data['se_types_review'] = {st.id: int(st.is_review_required) for st in sl_models.ServiceType.objects.all()}
+        context_data['template_form'] = forms.ServiceEventTemplateForm(request=self.request)
 
-        context_data['ses_status_details'] = {
-            ses.id: {
-                'is_review_required': int(ses.is_review_required),
-                'rts_qa_must_be_reviewed': int(ses.rts_qa_must_be_reviewed),
-                'is_default': int(ses.is_default)
-            } for ses in models.ServiceEventStatus.objects.all()
-        }
-        context_data['default_qa_status_name'] = qa_models.TestInstanceStatus.objects.filter(is_default=True).first().name
-
-        unit_field = self.object.unit_service_area.unit if self.object is not None else None
-        if not unit_field:
+        unit_field_value = self.object.unit_service_area.unit if self.object else None
+        initial_utcs = [{'unit_test_collection': rts_utc} for rts_utc in self.object.returntoserviceqa_set.all()] if self.object else []
+        if not unit_field_value:
             try:
                 if self.request.GET.get('ib'):
-                    unit_field = qa_models.TestListInstance.objects.get(
+                    unit_field_value = qa_models.TestListInstance.objects.get(
                         pk=self.request.GET.get('ib')).unit_test_collection.unit
                 elif self.request.GET.get('u'):
-                    unit_field = u_models.Unit.objects.get(pk=self.request.GET.get('u'))
+                    unit_field_value = u_models.Unit.objects.get(pk=self.request.GET.get('u'))
+                elif self.request.GET.get('se_schedule'):
+                    schedule = get_object_or_404(
+                        sl_models.ServiceEventSchedule, pk=self.request.GET.get('se_schedule')
+                    )
+                    template = schedule.service_event_template
+                    unit_field_value = schedule.unit_service_area.unit
+                    tl_ct = ContentType.objects.get_for_model(qa_models.TestList)
+                    tl_utcs = qa_models.UnitTestCollection.objects.filter(
+                        unit=unit_field_value,
+                        content_type=tl_ct,
+                        object_id__in=template.return_to_service_test_lists.values_list("pk", flat=True),
+                        active=True,
+                    )
+                    tlc_ct = ContentType.objects.get_for_model(qa_models.TestListCycle)
+                    tlc_utcs = qa_models.UnitTestCollection.objects.filter(
+                        unit=unit_field_value,
+                        content_type=tlc_ct,
+                        object_id__in=template.return_to_service_cycles.values_list("pk", flat=True),
+                        active=True,
+                    )
+                    initial_utcs = [{'unit_test_collection': rts_utc} for rts_utc in list(tl_utcs) + list(tlc_utcs)]
             except ObjectDoesNotExist:
                 pass
 
-        extra_rtsqa_forms = 2 if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
+        extra_rtsqa_forms = max(2, len(initial_utcs) + 1) if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
         if self.request.method == 'POST':
 
             context_data['hours_formset'] = forms.HoursFormset(
@@ -275,10 +335,10 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 prefix='rtsqa',
                 form_kwargs={
                     'service_event_instance': self.object,
-                    'unit_field': unit_field,
+                    'unit_field': unit_field_value,
                     'user': self.request.user
                 },
-                queryset=models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
+                queryset=sl_models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
                     'test_list_instance',
                     'test_list_instance__test_list',
                     'unit_test_collection',
@@ -287,14 +347,15 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     "test_list_instance__testinstance_set",
                     "test_list_instance__testinstance_set__status",
                     'unit_test_collection__tests_object'
-                )
+                ),
+                # initial=initial_utcs
             )
-            if settings.USE_PARTS:
-                context_data['part_used_formset'] = p_forms.PartUsedFormset(
-                    self.request.POST,
-                    instance=self.object,
-                    prefix='parts'
-                )
+            context_data['part_used_formset'] = p_forms.PartUsedFormset(
+                self.request.POST,
+                instance=self.object,
+                prefix='parts',
+                form_kwargs={'user': self.request.user}
+            )
         else:
 
             context_data['hours_formset'] = forms.HoursFormset(instance=self.object, prefix='hours')
@@ -303,10 +364,10 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                 prefix='rtsqa',
                 form_kwargs={
                     'service_event_instance': self.object,
-                    'unit_field': unit_field,
+                    'unit_field': unit_field_value,
                     'user': self.request.user
                 },
-                queryset=models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
+                queryset=sl_models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
                     'test_list_instance',
                     'test_list_instance__test_list',
                     'unit_test_collection',
@@ -315,25 +376,37 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     "test_list_instance__testinstance_set",
                     "test_list_instance__testinstance_set__status",
                     'unit_test_collection__tests_object'
-                )
+                ),
+                initial=initial_utcs
             )
-            if settings.USE_PARTS:
-                context_data['part_used_formset'] = p_forms.PartUsedFormset(instance=self.object, prefix='parts')
+            context_data['part_used_formset'] = p_forms.PartUsedFormset(
+                instance=self.object,
+                prefix='parts',
+                form_kwargs={'user': self.request.user}
+            )
 
         context_data['attachments'] = self.object.attachment_set.all() if self.object else []
+
+        schedule_id = self.request.GET.get('se_schedule')
+        if schedule_id:
+            try:
+                schedule = sl_models.ServiceEventSchedule.objects.get(id=schedule_id)
+                context_data['se_schedule'] = schedule
+            except sl_models.ServiceEventSchedule.DoesNotExist:
+                pass
 
         if self.request.GET.get('next'):
             context_data['next_url'] = self.request.GET.get('next')
         return context_data
 
     def form_invalid(self, form):
-        messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        messages.add_message(self.request, messages.ERROR, _('Please correct the Service Event Details error below.'))
         return super().form_invalid(form)
 
     def reset_status(self, form):
 
         if not form.instance.service_status.is_review_required:
-            default = models.ServiceEventStatus.get_default()
+            default = sl_models.ServiceEventStatus.get_default()
             form.instance.service_status = default
             messages.add_message(self.request, messages.WARNING, _(
                 'Due to changes detected, service event %s status has been reset to %s' % (
@@ -363,34 +436,45 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         hours_formset = context["hours_formset"]
         rtsqa_formset = context["rtsqa_formset"]
 
-        if settings.USE_PARTS:
+        if self.user.has_perm('parts.add_partused'):
             parts_formset = context['part_used_formset']
             if not parts_formset or not parts_formset.is_valid():
-                messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+                messages.add_message(self.request, messages.ERROR, _('Please correct the Parts error below.'))
                 return self.render_to_response(context)
         else:
-            parts_formset = None
+            parts_formset = []
 
-        if not hours_formset.is_valid() or not rtsqa_formset.is_valid():
-            messages.add_message(self.request, messages.ERROR, _('Please correct the error below.'))
+        hours_valid = hours_formset.is_valid()
+        rtsqa_valid = rtsqa_formset.is_valid()
+        if not hours_valid:
+            messages.add_message(self.request, messages.ERROR, _('Please correct the User Hours error below.'))
+        if not rtsqa_valid:
+            messages.add_message(self.request, messages.ERROR, _('Please correct the Return to Service QC error below.'))
+        if not (rtsqa_valid and hours_valid):
             return self.render_to_response(context)
 
         new = form.instance.pk is None
 
+        if self.se_schedule:
+            form.instance.due_date = self.se_schedule.due_date
+            form.instance.service_event_schedule = self.se_schedule
+        else:
+            form.instance.include_for_scheduling = False
+
         service_event = form.save()
         service_event_related = form.cleaned_data.get('service_event_related_field')
         try:
-            sers = models.ServiceEvent.objects.filter(pk__in=service_event_related)
+            sers = sl_models.ServiceEvent.objects.filter(pk__in=service_event_related)
         except ValueError:
             sers = []
         service_event.service_event_related.set(sers)
 
         if 'service_status' in form.changed_data:
-            se_needing_review_count = models.ServiceEvent.objects.filter(
-                service_status__in=models.ServiceEventStatus.objects.filter(is_review_required=True),
+            se_needing_review_count = sl_models.ServiceEvent.objects.filter(
+                service_status__in=sl_models.ServiceEventStatus.objects.filter(is_review_required=True),
                 is_review_required=True
             ).count()
-            cache.set('se_needing_review_count', se_needing_review_count)
+            cache.set(settings.CACHE_SE_NEEDING_REVIEW_COUNT, se_needing_review_count)
 
         comment = form.cleaned_data['qafollowup_comments']
         if comment:
@@ -405,24 +489,28 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
 
         for g_link in form.g_link_dict:
             if g_link in form.changed_data:
+                glis = sl_models.GroupLinkerInstance.objects.filter(
+                    service_event=service_event,
+                    group_linker=form.g_link_dict[g_link]['g_link']
+                ).select_related("user")
+                existing_gli_users = set(gli.user.id for gli in glis)
+                current_cli_users = set(u.pk for u in (form.cleaned_data[g_link] or []))
 
-                try:
-                    gl_instance = models.GroupLinkerInstance.objects.get(
-                        service_event=service_event, group_linker=form.g_link_dict[g_link]['g_link']
-                    )
-                    gl_instance.user = form.cleaned_data[g_link]
-                    gl_instance.datetime_linked = timezone.now()
-                except ObjectDoesNotExist:
-                    gl_instance = models.GroupLinkerInstance(
+                # create any new GLIs
+                new_gli_users = current_cli_users - existing_gli_users
+                for user_id in new_gli_users:
+                    sl_models.GroupLinkerInstance.objects.get_or_create(
                         service_event=service_event,
                         group_linker=form.g_link_dict[g_link]['g_link'],
-                        user=form.cleaned_data[g_link],
-                        datetime_linked=timezone.now()
+                        user_id=user_id,
+                        defaults={
+                            'datetime_linked': timezone.now(),
+                        },
                     )
-                if form.cleaned_data[g_link] is None:
-                    gl_instance.delete()
-                else:
-                    gl_instance.save()
+
+                # delete any existing link instances that aren't present anymore
+                deleted_gli_users = existing_gli_users - current_cli_users
+                glis.filter(user_id__in=deleted_gli_users).delete()
 
         for h_form in hours_formset:
 
@@ -471,120 +559,119 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     f_instance.service_event = service_event
                 f_instance.save()
 
-        if settings.USE_PARTS:
+        for p_form in parts_formset:
 
-            for p_form in parts_formset:
+            if not p_form.has_changed():
+                continue
 
-                if not p_form.has_changed():
-                    continue
+            delete = p_form.cleaned_data.get('DELETE')
+            is_new = p_form.instance.id is None
 
-                delete = p_form.cleaned_data.get('DELETE')
-                is_new = p_form.instance.id is None
+            pu_instance = p_form.instance
 
-                pu_instance = p_form.instance
+            initial_p = p_form.initial.get('part', None)
+            if delete:
+                current_p = p_form.initial['part']
+            else:
+                current_p = p_form.cleaned_data['part']
 
-                initial_p = p_form.initial.get('part', None)
-                if delete:
-                    current_p = p_form.initial['part']
-                else:
-                    current_p = p_form.cleaned_data['part']
+            initial_s = p_form.initial.get('from_storage', None)
+            current_s = p_form.cleaned_data.get('from_storage', None)
 
-                initial_s = p_form.initial.get('from_storage', None)
-                current_s = p_form.cleaned_data.get('from_storage', None)
+            try:
+                current_psc = p_models.PartStorageCollection.objects.get(
+                    part=current_p, storage=current_s
+                ) if current_s else None
+            except ObjectDoesNotExist:
+                current_psc = p_models.PartStorageCollection(
+                    part=current_p, storage=current_s, quantity=0
+                )
+            try:
+                initial_psc = p_models.PartStorageCollection.objects.get(
+                    part=initial_p, storage=initial_s
+                ) if initial_s and initial_p else None
+            except ObjectDoesNotExist:
+                initial_psc = None
 
-                try:
-                    current_psc = p_models.PartStorageCollection.objects.get(
-                        part=current_p, storage=current_s
-                    ) if current_s else None
-                except ObjectDoesNotExist:
-                    current_psc = p_models.PartStorageCollection(
-                        part=current_p, storage=current_s, quantity=0
-                    )
-                try:
-                    initial_psc = p_models.PartStorageCollection.objects.get(
-                        part=initial_p, storage=initial_s
-                    ) if initial_s and initial_p else None
-                except ObjectDoesNotExist:
-                    initial_psc = None
+            initial_qty = 0 if is_new else p_form.initial['quantity']
+            current_qty = p_form.cleaned_data.get('quantity', initial_qty)
+            change = current_qty - initial_qty
 
-                initial_qty = 0 if is_new else p_form.initial['quantity']
-                current_qty = p_form.cleaned_data.get('quantity', initial_qty)
-                change = current_qty - initial_qty
+            if delete and not is_new:
+                if current_psc:
+                    qty = pu_instance.quantity
+                    current_psc.quantity += qty
 
-                if delete and not is_new:
                     if current_psc:
-                        qty = pu_instance.quantity
-                        current_psc.quantity += qty
-
-                        if current_psc:
-                            current_psc.save()
-
-                        if initial_psc:
-                            initial_psc.save()
-
-                    pu_instance.delete()
-                    continue
-
-                elif p_form.has_changed():
-
-                    if is_new:
-                        pu_instance.service_event = service_event
-
-                    # If parts storage changed
-                    if 'from_storage' in p_form.changed_data:
-
-                        if initial_psc:
-                            initial_psc.quantity += initial_qty
-                            initial_psc.save()
-                        if current_psc:
-                            current_psc.quantity -= current_qty
-                            current_psc.save()
-                        pu_instance.from_storage = current_psc.storage if current_psc else None
-
-                    # Edge case if part changed and storage didn't
-                    elif 'part' in p_form.changed_data and current_psc:
-
-                        if initial_s:
-                            if not initial_psc and change < 0:
-                                initial_psc = p_models.PartStorageCollection(
-                                    part=initial_p,
-                                    storage=initial_s,
-                                    quantity=-change
-                                )
-                                current_psc.save()
-                            initial_psc.quantity += initial_qty
-                            initial_psc.save()
-
-                        current_psc.quantity -= current_qty
                         current_psc.save()
 
-                    # Else if just quantity changed
-                    elif 'quantity' in p_form.changed_data:
+                    if initial_psc:
+                        initial_psc.save()
 
-                        if current_psc:
-                            current_psc.quantity -= change
-                            current_psc.save()
-                        # If trying to put a part back to storage with no part storage collection
-                        elif current_s and change < 0:
-                            current_psc = p_models.PartStorageCollection(
-                                part=current_p,
-                                storage=current_s,
+                pu_instance.delete()
+                continue
+
+            elif p_form.has_changed():
+
+                if is_new:
+                    pu_instance.service_event = service_event
+
+                # If parts storage changed
+                if 'from_storage' in p_form.changed_data:
+
+                    if initial_psc:
+                        initial_psc.quantity += initial_qty
+                        initial_psc.save()
+                    if current_psc:
+                        current_psc.quantity -= current_qty
+                        current_psc.save()
+                    pu_instance.from_storage = current_psc.storage if current_psc else None
+
+                # Edge case if part changed and storage didn't
+                elif 'part' in p_form.changed_data and current_psc:
+
+                    if initial_s:
+                        if not initial_psc and change < 0:
+                            initial_psc = p_models.PartStorageCollection(
+                                part=initial_p,
+                                storage=initial_s,
                                 quantity=-change
                             )
                             current_psc.save()
+                        initial_psc.quantity += initial_qty
+                        initial_psc.save()
 
-                    pu_instance.save()
-                    if current_p.set_quantity_current():
-                        messages.add_message(
-                            request=self.request,
-                            level=messages.INFO,
-                            message='Part number %s is low (%s left in stock).' % (current_p.part_number, current_p.quantity_current)
+                    current_psc.quantity -= current_qty
+                    current_psc.save()
+
+                # Else if just quantity changed
+                elif 'quantity' in p_form.changed_data:
+
+                    if current_psc:
+                        current_psc.quantity -= change
+                        current_psc.save()
+                    # If trying to put a part back to storage with no part storage collection
+                    elif current_s and change < 0:
+                        current_psc = p_models.PartStorageCollection(
+                            part=current_p,
+                            storage=current_s,
+                            quantity=-change
                         )
-                    if initial_p:
-                        initial_p.set_quantity_current()
+                        current_psc.save()
+
+                pu_instance.save()
+                if current_p.set_quantity_current():
+                    messages.add_message(
+                        request=self.request,
+                        level=messages.INFO,
+                        message='Part %s is low (%s left in stock).' % (str(current_p), current_p.quantity_current)
+                    )
+                if initial_p:
+                    initial_p.set_quantity_current()
 
         self.generate_logs(new, form, rtsqa_formset)
         self.edit_se_attachments(service_event)
+
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
@@ -597,21 +684,21 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
     def generate_logs(self, is_new, form, rtsqa_formset):
 
         if is_new:
-            models.ServiceLog.objects.log_new_service_event(self.request.user, form.instance)
+            sl_models.ServiceLog.objects.log_new_service_event(self.request.user, form.instance)
 
         elif 'service_status' in form.changed_data:
-            models.ServiceLog.objects.log_service_event_status(
+            sl_models.ServiceLog.objects.log_service_event_status(
                 self.request.user, form.instance, form.stringify_form_changes(self.request), form.stringify_status_change()
             )
 
         elif form.has_changed():
-            models.ServiceLog.objects.log_changed_service_event(
+            sl_models.ServiceLog.objects.log_changed_service_event(
                 self.request.user, form.instance, form.stringify_form_changes(self.request)
             )
 
         if rtsqa_formset.has_changed():
-            models.ServiceLog.objects.log_rtsqa_changes(
-                self.request.user, models.ServiceEvent.objects.get(pk=form.instance.pk)
+            sl_models.ServiceLog.objects.log_rtsqa_changes(
+                self.request.user, sl_models.ServiceEvent.objects.get(pk=form.instance.pk)
             )
 
 
@@ -623,13 +710,14 @@ class CreateServiceEvent(ServiceEventUpdateCreate):
         kwargs['initial_u'] = self.request.GET.get('u', None)
         return kwargs
 
+    @transaction.atomic
     def form_valid(self, form):
 
         self.instance = form.save(commit=False)
         form.instance.user_created_by = self.request.user
         form.instance.datetime_created = timezone.now()
 
-        if not form.cleaned_data['service_status'].id == models.ServiceEventStatus.get_default().id:
+        if not form.cleaned_data['service_status'].id == sl_models.ServiceEventStatus.get_default().id:
             form.instance.datetime_status_changed = timezone.now()
             form.instance.user_status_changed_by = self.request.user
 
@@ -642,9 +730,15 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
+        context['service_logs'] = sl_models.ServiceLog.objects.filter(service_event=self.object).select_related(
+            "user",
+            "service_event",
+            "service_event__unit_service_area",
+            "service_event__unit_service_area__unit",
+        )
         return context
 
+    @transaction.atomic
     def form_valid(self, form):
 
         self.instance = form.save(commit=False)
@@ -676,14 +770,14 @@ class UpdateServiceEvent(ServiceEventUpdateCreate):
 
 class DetailsServiceEvent(DetailView):
 
-    model = models.ServiceEvent
+    model = sl_models.ServiceEvent
     template_name = 'service_log/service_event_detail.html'
 
     def get_context_data(self, **kwargs):
         context_data = super(DetailsServiceEvent, self).get_context_data(**kwargs)
         # context_data['service_event_tag_colours'] = models.ServiceEvent.get_colour_dict()
-        context_data['hours'] = models.Hours.objects.filter(service_event=self.object)
-        context_data['rtsqas'] = models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
+        context_data['hours'] = sl_models.Hours.objects.filter(service_event=self.object)
+        context_data['rtsqas'] = sl_models.ReturnToServiceQA.objects.filter(service_event=self.object).select_related(
             'test_list_instance',
             'test_list_instance__test_list',
             'unit_test_collection',
@@ -695,9 +789,14 @@ class DetailsServiceEvent(DetailView):
         )
         context_data['parts_used'] = p_models.PartUsed.objects.filter(service_event=self.object)
         context_data['request'] = self.request
-        context_data['g_links'] = models.GroupLinkerInstance.objects.filter(service_event=self.object)
+        context_data['g_links'] = sl_models.GroupLinkerInstance.objects.filter(service_event=self.object)
 
-        context_data['service_logs'] = models.ServiceLog.objects.filter(service_event=self.object)
+        context_data['service_logs'] = sl_models.ServiceLog.objects.filter(service_event=self.object).select_related(
+            "user",
+            "service_event",
+            "service_event__unit_service_area",
+            "service_event__unit_service_area__unit",
+        )
 
         return context_data
 
@@ -712,7 +811,7 @@ class DeleteServiceEvent(DeleteView, FormView, PermissionRequiredMixin):
 
     permission_required = 'service_log.delete_serviceevent'
     raise_exception = True
-    model = models.ServiceEvent
+    model = sl_models.ServiceEvent
     template_name = 'service_log/service_event_delete.html'
     form_class = forms.ServiceEventDeleteForm
 
@@ -736,7 +835,7 @@ class DeleteServiceEvent(DeleteView, FormView, PermissionRequiredMixin):
 
         self.object = self.get_object()
 
-        models.ServiceLog.objects.log_service_event_delete(
+        sl_models.ServiceLog.objects.log_service_event_delete(
             self.request.user,
             self.object,
             {'reason': form.cleaned_data['reason'], 'comment': form.cleaned_data['comment']}
@@ -765,38 +864,27 @@ class ServiceEventsBaseList(BaseListableView):
     :model:`service_log.ServiceEvent`'s.
     """
 
-    model = models.ServiceEvent
+    model = sl_models.ServiceEvent
     template_name = 'service_log/service_event_list.html'
     paginate_by = 50
 
     order_by = ['-datetime_service']
     kwarg_filters = None
 
-    fields = (
-        'actions',
-        'pk',
-        'datetime_service',
-        'unit_service_area__unit__name',
-        'unit_service_area__service_area__name',
-        'service_type__name',
-        # 'problem_type__name',
-        'problem_description',
-        'work_description',
-        'service_status__name'
-    )
-
     headers = {
-        'pk': _('ID'),
-        'datetime_service': _('Service Date'),
-        'unit_service_area__unit__name': _('Unit'),
-        'unit_service_area__service_area__name': _('Service Area'),
-        'service_type__name': _('Service Type'),
-        # 'problem_type__name': _('Problem Type'),
-        'service_status__name': _('Service Status'),
+        'pk': _l('ID'),
+        'datetime_service': _l('Service Date'),
+        'unit_service_area__unit__site__name': _l('Site'),
+        'unit_service_area__unit__name': _l('Unit'),
+        'unit_service_area__service_area__name': _l('Service Area'),
+        'service_type__name': _l('Service Type'),
+        # 'problem_type__name': _l('Problem Type'),
+        'service_status__name': _l('Service Status'),
     }
 
     widgets = {
         'datetime_service': DATE_RANGE,
+        'unit_service_area__unit__site__name': SELECT_MULTI,
         'unit_service_area__unit__name': SELECT_MULTI,
         'unit_service_area__service_area__name': SELECT_MULTI,
         'service_type__name': SELECT_MULTI,
@@ -820,6 +908,7 @@ class ServiceEventsBaseList(BaseListableView):
 
     select_related = (
         'unit_service_area__unit',
+        'unit_service_area__unit__site',
         'unit_service_area__service_area',
         'service_type',
         'service_status'
@@ -829,11 +918,11 @@ class ServiceEventsBaseList(BaseListableView):
 
         super(ServiceEventsBaseList, self).__init__(*args, **kwargs)
         self.templates = {
-            'actions': get_template('service_log/table_context_se_actions.html'),
-            'datetime_service': get_template('service_log/table_context_datetime.html'),
+            'actions': get_template('service_log/table_context/table_context_se_actions.html'),
+            'datetime_service': get_template('service_log/table_context/table_context_datetime.html'),
             'service_status__name': get_template('service_log/service_event_status_label.html'),
-            'problem_description': get_template('service_log/table_context_problem_description.html'),
-            'work_description': get_template('service_log/table_context_work_description.html'),
+            'problem_description': get_template('service_log/table_context/table_context_problem_description.html'),
+            'work_description': get_template('service_log/table_context/table_context_work_description.html'),
         }
 
     def get_icon(self):
@@ -841,6 +930,40 @@ class ServiceEventsBaseList(BaseListableView):
 
     def get_page_title(self, f=None):
         return 'All Service Events'
+
+    def get_fields(self, request=None):
+
+        fields = (
+            'actions',
+            'pk',
+            'datetime_service',
+        )
+
+        multiple_sites = len(set(u_models.Unit.objects.values_list("site_id"))) > 1
+        if multiple_sites:
+            fields += ('unit_service_area__unit__site__name',)
+
+        fields += (
+            'unit_service_area__unit__name',
+            'unit_service_area__service_area__name',
+            'service_type__name',
+            'problem_description',
+            'work_description',
+        )
+
+        if request and request.user.has_perm('service_log.view_serviceeventstatus'):
+            fields += ('service_status__name',)
+
+        return fields
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super().get_filters(field, queryset=queryset)
+
+        if field == 'unit_service_area__unit__site__name':
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
 
     def get_context_data(self, *args, **kwargs):
         context = super(ServiceEventsBaseList, self).get_context_data(*args, **kwargs)
@@ -888,8 +1011,8 @@ class ServiceEventsByStatusList(ServiceEventsBaseList):
         return qs.filter(service_status_id=self.kwargs['pk'])
 
     def get_page_title(self, *args, **kwargs):
-        status = get_object_or_404(models.ServiceEventStatus, pk=self.kwargs['pk'])
-        return "Service Events - Status: %s" % (status.name)
+        status = get_object_or_404(sl_models.ServiceEventStatus, pk=self.kwargs['pk'])
+        return "Service Events - Status: %s" % status.name
 
     def get_next(self):
         return reverse('sl_list_by_status', kwargs={'pk': self.kwargs['pk']})
@@ -903,7 +1026,7 @@ class ServiceEventsReviewRequiredList(ServiceEventsBaseList):
         return "Service Events Requiring Review"
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(is_review_required=True,  service_status__is_review_required=True)
+        qs = super().get_queryset().filter(is_review_required=True, service_status__is_review_required=True)
         return qs
 
     def get_next(self):
@@ -917,7 +1040,7 @@ class ServiceEventsInitiatedByList(ServiceEventsBaseList):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
         title = "%s %s - %s " % (
             tli.unit_test_collection.unit, tli.unit_test_collection.name,
-            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+            format_datetime(tli.work_completed)
         )
         return "Service Events Initiated By %s" % (title)
 
@@ -931,13 +1054,13 @@ class ServiceEventsInitiatedByList(ServiceEventsBaseList):
 
 class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
     """View to show Service Events where a TestListInstance was performed as
-    return to service qa."""
+    Return To Service QC."""
 
     def get_page_title(self, *args):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
         title = "%s %s - %s " % (
             tli.unit_test_collection.unit, tli.unit_test_collection.name,
-            timezone.localtime(tli.work_completed).strftime('%b %m, %I:%M %p')
+            format_datetime(tli.work_completed)
         )
         return "Service Events with %s as Return To Service" % (title)
 
@@ -954,7 +1077,7 @@ class ServiceEventsByUnitList(ServiceEventsBaseList):
 
     def get_page_title(self, *args):
         unit = get_object_or_404(u_models.Unit, number=self.kwargs['unit_number'])
-        return "Service Events For %s" % (unit)
+        return "Service Events For %s" % unit
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -966,7 +1089,7 @@ class ServiceEventsByUnitList(ServiceEventsBaseList):
 
 class ReturnToServiceQABaseList(BaseListableView):
 
-    model = models.ReturnToServiceQA
+    model = sl_models.ReturnToServiceQA
     template_name = 'service_log/rtsqa_list.html'
     paginate_by = 50
 
@@ -985,13 +1108,13 @@ class ReturnToServiceQABaseList(BaseListableView):
     )
 
     headers = {
-        'service_event__datetime_service': _('Service Date'),
-        'service_event__unit_service_area__unit__name': _('Unit'),
-        'unit_test_collection__name': _('Test List'),
-        'test_list_instance__work_completed': _('Test List Completed'),
-        'test_list_instance_pass_fail': _('Pass/Fail'),
-        'test_list_instance_review_status': _('Review Status'),
-        'service_event__service_status__name': _('Service Event Status')
+        'service_event__datetime_service': _l('Service Date'),
+        'service_event__unit_service_area__unit__name': _l('Unit'),
+        'unit_test_collection__name': _l('Test List'),
+        'test_list_instance__work_completed': _l('Test List Completed'),
+        'test_list_instance_pass_fail': _l('Pass/Fail'),
+        'test_list_instance_review_status': _l('Review Status'),
+        'service_event__service_status__name': _l('Service Event Status')
     }
 
     widgets = {
@@ -1037,9 +1160,10 @@ class ReturnToServiceQABaseList(BaseListableView):
 
         super(ReturnToServiceQABaseList, self).__init__(*args, **kwargs)
         self.templates = {
-            'actions': get_template("service_log/table_context_rtsqa_actions.html"),
-            'service_event__datetime_service': get_template("service_log/table_context_datetime.html"),
-            'test_list_instance__work_completed': get_template("service_log/table_context_tli_work_completed.html"),
+            'actions': get_template("service_log/table_context/table_context_rtsqa_actions.html"),
+            'service_event__datetime_service': get_template("service_log/table_context/table_context_datetime.html"),
+            'test_list_instance__work_completed': get_template(
+                "service_log/table_context/table_context_tli_work_completed.html"),
             'test_list_instance_pass_fail': get_template("qa/pass_fail_status.html"),
             'test_list_instance_review_status': get_template("qa/review_status.html"),
             'service_event__service_status__name': get_template("service_log/service_event_status_label.html"),
@@ -1049,7 +1173,7 @@ class ReturnToServiceQABaseList(BaseListableView):
         return 'fa-pencil-square-o'
 
     def get_page_title(self, f=None):
-        return 'All Return To Service QA'
+        return 'All Return To Service QC'
 
     def get_context_data(self, *args, **kwargs):
         context = super(ReturnToServiceQABaseList, self).get_context_data(*args, **kwargs)
@@ -1116,7 +1240,7 @@ class ReturnToServiceQABaseList(BaseListableView):
 class ReturnToServiceQAIncompleteList(ReturnToServiceQABaseList):
 
     def get_page_title(self):
-        return "Return to Service QA - Incomplete"
+        return "Return to Service QC - Incomplete"
 
     def get_queryset(self):
         return super().get_queryset().filter(test_list_instance=None)
@@ -1128,7 +1252,7 @@ class ReturnToServiceQAIncompleteList(ReturnToServiceQABaseList):
 class ReturnToServiceQAUnreviewedList(ReturnToServiceQABaseList):
 
     def get_page_title(self):
-        return "Return to Service QA - Unreviewed"
+        return "Return to Service QC - Unreviewed"
 
     def get_queryset(self):
         return super().get_queryset().filter(
@@ -1143,16 +1267,16 @@ class ReturnToServiceQAUnreviewedList(ReturnToServiceQABaseList):
 class ReturnToServiceQAForEventList(ReturnToServiceQABaseList):
 
     def get_page_title(self):
-        se = get_object_or_404(models.ServiceEvent, pk=self.kwargs['se_pk'])
+        se = get_object_or_404(sl_models.ServiceEvent, pk=self.kwargs['se_pk'])
         description = "%s - %s %s" % (
             se.unit_service_area,
-            timezone.localtime(se.datetime_service).strftime('%b %m, %I:%M %p'),
+            format_datetime(se.datetime_service),
             qa_tags.service_status_label(se.service_status),
         )
-        return mark_safe("Return to Service QA - Service Event %d: %s" % (se.pk, description))
+        return mark_safe("Return to Service QC - Service Event %d: %s" % (se.pk, description))
 
     def get_queryset(self):
-        get_object_or_404(models.ServiceEvent, pk=self.kwargs['se_pk'])
+        get_object_or_404(sl_models.ServiceEvent, pk=self.kwargs['se_pk'])
         return super().get_queryset().filter(service_event_id=self.kwargs['se_pk'])
 
     def get_next(self):
@@ -1165,9 +1289,9 @@ class TLISelect(UTCInstances):
 
     def get_page_title(self):
         try:
-            utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
+            utc = qa_models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
             return "Select a %s instance" % utc.name
-        except:
+        except qa_models.UnitTestCollection.DoesNotExist:
             raise Http404
 
     def actions(self, tli):
@@ -1216,7 +1340,7 @@ class ChooseUnitForViewSE(ChooseUnit):
 class ServiceEventDownTimesList(ServiceEventsBaseList):
 
     template_name = 'service_log/service_event_down_time.html'
-    model = models.ServiceEvent
+    model = sl_models.ServiceEvent
 
     fields = (
         'actions',
@@ -1233,15 +1357,15 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
     )
 
     headers = {
-        # 'pk': _('ID'),
-        'datetime_service': _('Service Date'),
-        'unit_service_area__unit__name': _('Unit'),
-        'unit_service_area__unit__type__name': _('Unit Type'),
-        'unit_service_area__unit__active': _('Active'),
-        'unit_service_area__service_area__name': _('Service Area'),
-        # 'service_type__name': _('Service Type'),
-        'duration_service_time': _('Service Time (hh:mm)'),
-        'duration_lost_time': _('Lost Time (hh:mm)')
+        # 'pk': _l('ID'),
+        'datetime_service': _l('Service Date'),
+        'unit_service_area__unit__name': _l('Unit'),
+        'unit_service_area__unit__type__name': _l('Unit Type'),
+        'unit_service_area__unit__active': _l('Active'),
+        'unit_service_area__service_area__name': _l('Service Area'),
+        # 'service_type__name': _l('Service Type'),
+        'duration_service_time': _l('Service Time (hh:mm)'),
+        'duration_lost_time': _l('Lost Time (hh:mm)')
     }
 
     widgets = {
@@ -1278,6 +1402,9 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
         'service_status'
     )
 
+    def get_fields(self, request=None):
+        return self.fields
+
     def get_page_title(self, f=None):
         return 'Filter Service Events and Up Time Summary'
 
@@ -1303,7 +1430,7 @@ class ServiceEventDownTimesList(ServiceEventsBaseList):
 @login_required
 def handle_unit_down_time(request):
 
-    se_qs = models.ServiceEvent.objects.select_related(
+    se_qs = sl_models.ServiceEvent.objects.select_related(
         'service_type', 'unit_service_area__service_area', 'unit_service_area__unit'
     ).all()
 
@@ -1311,8 +1438,9 @@ def handle_unit_down_time(request):
 
     if daterange:
         tz = timezone.get_current_timezone()
-        date_from = timezone.datetime.strptime(daterange.split(' - ')[0], '%d %b %Y')
-        date_to = timezone.datetime.strptime(daterange.split(' - ')[1], '%d %b %Y')
+        from_, to = daterange.split(' - ')
+        date_from = parse_date(from_, as_date=False)
+        date_to = parse_date(to, as_date=False)
         date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
         date_from = tz.localize(date_from)
         date_to = tz.localize(date_to)
@@ -1362,18 +1490,18 @@ def handle_unit_down_time(request):
     response['Content-Disposition'] = 'attachment; filename="qatrack_unit_uptime.csv"'
     response['Content-Type'] = 'text/csv; charset=utf-8'
 
-    totals = OrderedDict({'potential': 0})
+    totals = collections.OrderedDict({'potential': 0})
 
     writer = csv.writer(response)
     rows = [
-        ['Up Time Report: ' + (date_from.strftime('%d %b %Y') + ' to ' + date_to.strftime('%d %b %Y')) if daterange else 'Up Time Report: All time until ' + timezone.datetime.now().strftime('%d %b %Y')],
+        ['Up Time Report: ' + (format_as_date(date_from) + ' to ' + format_as_date(date_to)) if daterange else 'Up Time Report: All time until ' + format_datetime(timezone.datetime.now())],
         [''],
         [''],
         [''],
         ['Unit Name', 'Unit Type', 'Available Time Hrs'],
     ]
 
-    all_service_types = models.ServiceType.objects.all()
+    all_service_types = sl_models.ServiceType.objects.all()
     for t in all_service_types:
         rows[4].append('# ' + t.name + ' Repairs')
         rows[4].append(t.name + ' Service Hrs')
@@ -1452,7 +1580,7 @@ def handle_unit_down_time(request):
     totals['total_lost'] = '{:.2f}'.format(totals['total_lost'])
 
     if not service_areas:
-        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) is not 0 else 0
+        totals['available'] = '{:.2f}'.format(totals['available'] / len(units)) if len(units) != 0 else 0
     rows += [[''], ['']]
     rows.append(['', 'Totals:'] + [str(totals[t]) for t in totals])
 
@@ -1460,3 +1588,409 @@ def handle_unit_down_time(request):
         writer.writerow(r)
 
     return response
+
+
+class CreateServiceEventTemplateAjax(JSONResponseMixin, PermissionRequiredMixin, BaseCreateView):
+
+    permission_required = 'add_serviceeventtemplate'
+    model = sl_models.ServiceEventTemplate
+    form_class = forms.ServiceEventTemplateForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(request=self.request)
+        return kwargs
+
+    def form_invalid(self, form):
+        return self.render_json_response({
+            'success': False, 'message': '{}'.format('Template invalid'), 'errors': form.errors.as_json()
+        })
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return self.render_json_response({
+            'success': True,
+            'message': 'Successfully created template',
+            'template': {
+                'id': self.object.id,
+            }
+        })
+
+
+def service_event_template_searcher(request):
+
+    qs = sl_models.ServiceEventTemplate.objects.prefetch_related(
+        "return_to_service_test_lists",
+        "return_to_service_cycles",
+    ).order_by("pk")
+
+    service_type = request.GET.get('service_type')
+    if service_type:
+        qs = qs.filter(service_type_id=service_type)
+
+    service_area = request.GET.get('service_area')
+    if service_area:
+        qs = qs.filter(service_area_id=service_area)
+
+    unit_id = request.GET.get('unit')
+    unit = u_models.Unit.objects.get(pk=unit_id)
+    unit_service_areas = unit.unitservicearea_set.values_list("service_area_id", flat=True)
+    qs = qs.filter(
+        Q(service_area=None) |
+        Q(service_area_id__in=unit_service_areas)
+    )
+
+    # first get all active QC assigned to this unit
+    tl_ct = ContentType.objects.get_for_model(qa_models.TestList)
+    tlc_ct = ContentType.objects.get_for_model(qa_models.TestListCycle)
+    utcs = qa_models.UnitTestCollection.objects.active().filter(
+        unit_id=unit_id,
+    ).values_list("content_type_id", "object_id", "pk")
+    utcs = {(ct, obj_id): pk for ct, obj_id, pk in utcs}
+
+    unit_tls = set(qa_models.get_utc_tl_ids(units=[unit], active=True, include_cycles=False))
+    unit_tlcs = set(qa_models.get_utc_tlc_ids(units=[unit], active=True))
+
+    # now find all templates which either have no return to service QC
+    # or who's RTS QC is a subset of the QC assigned to the unit
+    # Probably there is a way to express this in a single SQL query...
+    sts = qs.values_list("pk", "return_to_service_test_lists", "return_to_service_cycles")
+    matching_templates = []
+    rts_utcs = {}
+    for template_id, rts_qc_ids in groupby(sts, lambda x: x[0]):
+
+        # get return to service test lists and test list cycles for this template
+        rts_tl_ids = set(x[1] for x in rts_qc_ids if x[1] is not None)
+        rts_tlc_ids = set(x[2] for x in rts_qc_ids if x[2] is not None)
+
+        # check if there is no RTS QC for this template
+        no_rts = len(rts_tl_ids) + len(rts_tlc_ids) == 0
+
+        # check if template RTS QC is subset of QC assigned to this unit
+        is_subset = (
+            len(rts_tl_ids - unit_tls) == 0 and
+            len(rts_tlc_ids - unit_tlcs) == 0
+        )
+
+        if is_subset or no_rts:
+            matching_templates.append(template_id)
+            # get UTC id for RTS test lists and test list cycles
+            rts_utcs[template_id] = [utcs[(tl_ct.id, tl_id)] for tl_id in rts_tl_ids if tl_id is not None]
+            rts_utcs[template_id] += [utcs[(tlc_ct.id, tlc_id)] for tlc_id in rts_tlc_ids if tlc_id is not None]
+
+    qs = qs.filter(pk__in=matching_templates)
+
+    results = [{
+        'id': st.id,
+        'service_area': st.service_area_id,
+        'service_type': st.service_type_id,
+        'problem_description': st.problem_description,
+        'work_description': st.work_description,
+        'is_review_required': st.is_review_required,
+        'name': st.name,
+        'return_to_service_utcs': rts_utcs[st.id],
+    } for st in qs]
+
+    return JsonResponse(results, encoder=QATrackJSONEncoder, safe=False)
+
+
+class ServiceEventScheduleList(BaseListableView):
+
+    model = sl_models.ServiceEventSchedule
+    template_name = 'service_log/se_schedule_list.html'
+    paginate_by = 50
+
+    order_by = ['unit_service_area__unit__name', 'frequency__name', 'service_event_template__name']
+
+    kwarg_filters = None
+
+    page_title = _l('All Service Event Schedules')
+    visible_only = True
+
+    fields = (
+        'actions',
+        'service_event_template__name',
+        'due_date',
+        'unit_service_area__unit__name',
+        'unit_service_area__service_area__name',
+        'service_event_template__service_type__name',
+        'frequency__name',
+        'assigned_to__name',
+        'last_instance__datetime_service',
+        'last_instance__service_status__name',
+    )
+
+    search_fields = {
+        'actions': False,
+    }
+
+    order_fields = {
+        'actions': False,
+        'frequency__name': 'frequency__nominal_interval',
+        'unit_service_area__unit__name': 'unit_service_area__unit__%s' % settings.ORDER_UNITS_BY,
+        'due_date': 'due_date'
+    }
+
+    widgets = {
+        'unit_service_area__unit__name': SELECT_MULTI,
+        'unit_service_area__service_area__name': SELECT_MULTI,
+        'service_event_template__service_type__name': SELECT_MULTI,
+        'frequency__name': SELECT_MULTI,
+        'assigned_to__name': SELECT_MULTI,
+        'last_instance__service_status__name': SELECT_MULTI,
+        'last_instance__datetime_service': DATE_RANGE,
+        'due_date': DATE_RANGE
+    }
+
+    date_ranges = {
+        'last_instance__datetime_service': [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
+        'due_date': [YESTERDAY, TODAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK]
+    }
+
+    select_related = (
+        'last_instance',
+        'last_instance__service_status',
+        'frequency',
+        'service_event_template',
+        'unit_service_area',
+        'unit_service_area__unit',
+        'unit_service_area__service_area',
+    )
+
+    headers = {
+        'service_event_template__name': _l('Name'),
+        'due_date': _l('Due Date'),
+        'unit_service_area__unit__name': _l('Unit'),
+        'unit_service_area__service_area__name': _l('Service Area'),
+        'service_event_template__service_type__name': _l("Service Type"),
+        'frequency__name': _l('Frequency'),
+        'assigned_to__name': _l("Assigned To"),
+        'last_instance__datetime_service': _l('Completed'),
+        'last_instance__service_status__name': _l('Service Status'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Store templates on view initialization so we don't have to reload them for every row!
+        self.templates = {
+            'actions': get_template('service_log/table_context/se_schedule_actions.html'),
+            'last_instance__datetime_service': get_template('service_log/table_context/se_schedule_last_instance_datetime_service.html'),
+            'last_instance__service_status__name': get_template('service_log/service_event_status_label.html'),
+            # 'review_status': get_template('qa/testlistinstance_review_status.html'),
+            # 'pass_fail': get_template('qa/pass_fail_status.html'),
+            'due_date': get_template('qa/due_date.html'),
+        }
+
+    def get_icon(self):
+        return 'fa-pencil-square-o'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        current_url = resolve(self.request.path_info).url_name
+        context['view_name'] = current_url
+        context['page_title'] = self.get_page_title()
+        context['icon'] = self.get_icon()
+
+        return context
+
+    def get_page_title(self):
+        return self.page_title
+
+    def actions(self, se_schedule):
+        template = self.templates['actions']
+        perms = PermWrapper(self.request.user)
+        c = {
+            'se_schedule': se_schedule,
+            'request': self.request,
+            'perms': perms
+        }
+        return template.render(c)
+
+    def due_date(self, se_schedule):
+        template = self.templates['due_date']
+        c = {'unit_test_collection': se_schedule, 'show_icons': settings.ICON_SETTINGS['SHOW_DUE_ICONS']}
+        return template.render(c)
+
+    def last_instance__datetime_service(self, schedule):
+        template = self.templates['last_instance__datetime_service']
+        c = {'instance': schedule.last_instance}
+        return template.render(c)
+
+    def last_instance__service_status__name(self, se_schedule):
+        template = self.templates['last_instance__service_status__name']
+        c = {
+            'colour': se_schedule.last_instance.service_status.colour if se_schedule.last_instance else '',
+            'name': se_schedule.last_instance.service_status.name if se_schedule.last_instance else '',
+            'se': se_schedule.last_instance,
+            'request': self.request,
+            'perms': PermWrapper(self.request.user),
+        }
+        return template.render(c)
+
+    def get_queryset(self):
+        """filter queryset for visibility and fetch relevent related objects"""
+
+        qs = super().get_queryset().order_by("pk")
+
+        if self.visible_only:
+            qs = qs.filter(visible_to__in=self.request.user.groups.all(),).distinct()
+
+        return qs
+
+    def get_filters(self, field, queryset=None):
+
+        filters = super().get_filters(field, queryset=queryset)
+
+        if field == 'frequency__name':
+            filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
+        elif field == 'unit__site__name':
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
+
+        return filters
+
+    def frequency__name(self, utc):
+        return utc.frequency.name if utc.frequency else 'Ad Hoc'
+
+
+class DueAndOverdue(ServiceEventScheduleList):
+
+    page_title = _l("Due & Overdue Service Event Schedules")
+
+    def get_queryset(self):
+        today = timezone.now().astimezone(timezone.get_current_timezone()).date()
+        qs = super().get_queryset()
+        return qs.exclude(due_date=None).filter(due_date__lte=today)
+
+
+class DueDateOverview(PermissionRequiredMixin, TemplateView):
+    """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
+
+    template_name = "service_log/overview_by_due_date.html"
+    permission_required = ["service_log.review_serviceevent"]
+    raise_exception = True
+
+    DUE_DISPLAY_ORDER = (
+        ("overdue", _l("Due & Overdue")),
+        ("this_week", _l("Due This Week")),
+        ("next_week", _l("Due Next Week")),
+        ("this_month", _l("Due This Month")),
+        ("next_month", _l("Due Next Month")),
+    )
+
+    def check_permissions(self, request):
+        for perm in self.get_permission_required(request):
+            if request.user.has_perm(perm):
+                return True
+        return False
+
+    def get_queryset(self):
+
+        qs = sl_models.ServiceEventSchedule.objects.filter(
+            active=True,
+            unit_service_area__unit__active=True
+        ).select_related(
+            "last_instance",
+            "frequency",
+            "service_event_template",
+            "unit_service_area",
+            "unit_service_area__service_area",
+            "unit_service_area__unit",
+            "assigned_to",
+        ).exclude(due_date=None).order_by(
+            "frequency__nominal_interval",
+            "unit_service_area__unit__number",
+            "service_event_template__name",
+        )
+
+        return qs.distinct()
+
+    def get_context_data(self):
+        """Group all Service Event Schedules"""
+
+        context = super().get_context_data()
+
+        qs = self.get_queryset()
+
+        tz = pytz.timezone(settings.TIME_ZONE)
+        now = timezone.now().astimezone(tz)
+        today = now.date()
+        friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
+        next_friday = friday + timezone.timedelta(days=7)
+        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        if calendar.isleap(now.year) and now.month == 2:
+            month_end += timezone.timedelta(days=1)
+        next_month_start = month_end + timezone.timedelta(days=1)
+        next_month_end = tz.localize(
+            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
+        ).date()
+
+        due = collections.defaultdict(list)
+
+        units = set()
+        service_areas = set()
+        freqs = set()
+        groups = set()
+
+        for sch in qs:
+            due_date = sch.due_date.astimezone(tz).date()
+            if due_date <= today:
+                due["overdue"].append(sch)
+            elif due_date <= friday:
+                if sch.last_instance is None or sch.last_instance.work_completed.astimezone(tz).date() != today:
+                    due["this_week"].append(sch)
+            elif due_date <= next_friday:
+                due["next_week"].append(sch)
+            elif due_date <= month_end:
+                due["this_month"].append(sch)  # pragma: nocover
+            elif due_date <= next_month_end:
+                due["next_month"].append(sch)
+
+            units.add(str(sch.unit_service_area.unit))
+            service_areas.add(str(sch.unit_service_area.service_area.name))
+            freqs.add(str(sch.frequency or _("Ad Hoc")))
+            groups.add(str(sch.assigned_to))
+
+        ordered_due_lists = []
+        for key, display in self.DUE_DISPLAY_ORDER:
+            ordered_due_lists.append((key, display, due[key]))
+        context["due"] = ordered_due_lists
+        context["units"] = sorted(units)
+        context["service_areas"] = sorted(service_areas)
+        context["freqs"] = sorted(freqs)
+        context["groups"] = sorted(groups)
+        context['user_groups'] = '-user' in self.request.path
+
+        return context
+
+
+class DueDateOverviewUser(DueDateOverview):
+
+    permission_required = ["service_log.review_serviceevent"]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(visible_to__in=self.request.user.groups.all())
+
+
+def service_log_report(request, pk):
+
+    se = get_object_or_404(sl_models.ServiceEvent, id=pk)
+
+    se_date = format_datetime(se.datetime_service)
+    base_opts = {
+        'report_type': ServiceEventDetailsReport.report_type,
+        'report_format': request.GET.get("type", "pdf"),
+        'title': "Service Event %s - %s" % (se.pk, se_date),
+        'include_signature': False,
+        'visible_to': [],
+    }
+
+    report_opts = {
+        'datetime_service': "%s - %s" % (se_date, se_date),
+        'unit_service_area__unit': [se.unit_service_area.unit.id],
+        'unit_service_area__service_area': [se.unit_service_area],
+        'unit_service_area__service_type': [se.service_type],
+    }
+    report = ServiceEventDetailsReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
+
+    return report.render_to_response(base_opts['report_format'])

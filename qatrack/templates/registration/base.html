@@ -2,100 +2,117 @@
 
 {% load i18n %}
 {% load qatrack_tags %}
+{% load static %}
 
 {#{% block body_class %}account{% endblock %}#}
 
 {% block extra_css %}
-    <link href="{{ STATIC_URL }}icheck/css/blue.css?v={{ VERSION }}" rel="stylesheet">
+  <link href="{% static "icheck/css/blue.css" %}?v={{ VERSION }}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block require_javascript %}
     require(['icheck']);
 {% endblock require_javascript %}
 
+{% block messages %}
+{% endblock messages %}
+
 {% block body %}
 
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-8">
     <div class="row">
-        <div class="col-md-2"></div>
-        <div class="col-md-8">
-            <div class="row">
 
-                <div class="col-md-3">
-                    <div class="box box-solid" style="min-width: 165px;">
-                        <div class="box-header">
-                            <h3 class="box-title"><i class="fa fa-user fa-fw" aria-hidden="true"></i>Account</h3>
-                        </div>
-                        <div class="box-body no-padding">
-                            <ul class="nav nav-pills nav-stacked">
-                                <li{% block login_active %}{% endblock login_active %}><a href="{% url "auth_login" %}">
-                                    <i class="fa fa-power-off fa-fw success" aria-hidden="true"></i>
-                                    {% trans "Log In" %}
-                                </a></li>
-                                {% if user.is_authenticated %}
-                                    <li{% block details_active %}{% endblock details_active %}><a href="{% url "account-details" %}">
-                                        <span class="fa fa-stack fa-fw" aria-hidden="true">
-                                            <i class="fa fa-user fa-stack-custom-main"></i>
-                                            <i class="fa fa-info fa-stack-custom-sub info"></i>
-                                        </span>
-                                        {% trans "Account Details" %}
-                                    </a></li>
-                                    <li{% block change_active %}{% endblock change_active %}><a href="{% url "auth_password_change" %}">
-                                        <span class="fa fa-stack fa-fw" aria-hidden="true">
-                                            <i class="fa fa-lock fa-stack-custom-main"></i>
-                                            <i class="fa fa-pencil fa-stack-custom-sub primary"></i>
-                                        </span>
-                                        {% trans "Change Password" %}
-                                    </a></li>
-                                {% endif %}
-                                <li{% block reset_active %}{% endblock reset_active %}><a href="{% url "auth_password_reset" %}">
-                                    <span class="fa fa-stack fa-fw" aria-hidden="true">
-                                        <i class="fa fa-lock fa-stack-custom-main"></i>
-                                        <i class="fa fa-undo fa-stack-custom-sub primary"></i>
-                                    </span>
-                                    {% trans "Reset Password" %}
-                                </a></li>
-                                {% if user.is_authenticated %}
-                                    <li><a href="{% url "auth_logout" %}">
-                                        <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
-                                        {% trans "Log Out" %}
-                                    </a></li>
-                                {% else %}
-                                    <li {% block register_active %}{% endblock register_active %}><a href="{% url "registration_register" %}">
-                                        <i class="fa fa-user fa-fw " aria-hidden="true"></i>
-                                        {% trans "Register" %}
-                                    </a></li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+      <div class="col-md-3">
+        <div class="box box-solid" style="min-width: 165px;">
+          <div class="box-header">
+            <h3 class="box-title"><i class="fa fa-user fa-fw" aria-hidden="true"></i> {% trans "Account" %}</h3>
+          </div>
+          <div class="box-body no-padding">
+            <ul class="nav nav-pills nav-stacked">
+                <li {% block login_active %}{% endblock login_active %}>
+                  <a href="{% url "login" %}">
+                    <i class="fa fa-power-off fa-fw success" aria-hidden="true"></i>
+                    {% trans "Log In" %}
+                  </a>
+                </li>
+                {% if user.is_authenticated %}
+                  <li {% block details_active %}{% endblock details_active %}>
+                    <a href="{% url "account-details" %}">
+                      <span class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-user fa-stack-custom-main"></i>
+                        <i class="fa fa-info fa-stack-custom-sub info"></i>
+                      </span>
+                      {% trans "Account Details" %}
+                    </a>
+                  </li>
+                  {% if ACCOUNTS_PASSWORD_RESET %}
+                    <li {% block change_active %}{% endblock change_active %}>
+                      <a href="{% url "account-change-password" %}">
+                        <span class="fa fa-stack fa-fw" aria-hidden="true">
+                          <i class="fa fa-lock fa-stack-custom-main"></i>
+                          <i class="fa fa-pencil fa-stack-custom-sub primary"></i>
+                        </span>
+                        {% trans "Change Password" %}
+                      </a>
+                    </li>
+                  {% endif %}
+                {% endif %}
+                {% if ACCOUNTS_PASSWORD_RESET %}
+                  <li {% block reset_active %}{% endblock reset_active %}>
+                    <a href="{% url "password_reset" %}">
+                      <span class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-lock fa-stack-custom-main"></i>
+                        <i class="fa fa-undo fa-stack-custom-sub primary"></i>
+                      </span>
+                      {% trans "Reset Password" %}
+                    </a>
+                  </li>
+                {% endif %}
 
-                <div class="col-md-9">
+                {% if perms.auth.change_group %}
+                  <li role="separator" class="divider"></li>
+                  <li class="{% block groups_active %}{% endblock groups_active %}">
+                    <a href="{% url "groups-app" %}">
+                      <span class="fa fa-stack fa-fw" aria-hidden="true">
+                        <i class="fa fa-users fa-stack-custom-main"></i>
+                        <i class="fa fa-lock fa-stack-custom-sub primary"></i>
+                      </span>
+                      {% trans "Group Membership & Permissions" %}
+                    </a>
+                  </li>
+                {% endif %}
 
-                    {% block account_box %}
-                    {% endblock %}
-
-                </div>
-            </div>
+                {% if user.is_authenticated %}
+                  <li role="separator" class="divider"></li>
+                  <li>
+                    <a href="{% url "auth_logout" %}">
+                      <i class="fa fa-power-off fa-fw danger" aria-hidden="true"></i>
+                      {% trans "Log Out" %}
+                    </a>
+                  </li>
+                {% elif SELF_REGISTER %}
+                  <li {% block register_active %}{% endblock register_active %}>
+                    <a href="{% url "account-register" %}">
+                      <i class="fa fa-user fa-fw " aria-hidden="true"></i>
+                      {% trans "Register" %}
+                    </a>
+                  </li>
+                {% endif %}
+            </ul>
+          </div>
         </div>
+      </div>
 
-        <div class="col-md-2"></div>
+      <div class="col-md-9">
+        {% block account_box %}
+        {% endblock %}
+      </div>
     </div>
+  </div>
 
-
-{#    <ul class="nav nav-list">#}
-{#        <li class="nav-header">{% trans "Account" %}</li>#}
-{#        {% comment%}#}
-{#        <li><a href="{% url "acct_email' %}">{% trans "Email Addresses" %}</a></li>#}
-{#        <li><a href="{% url "auth_password_reset" %}">{% trans "Set Password" %}</a></li>#}
-{#        {% endcomment %}#}
-{#        <li><a href="{% url "account-details" %}">{% trans "Account Details" %}</a></li>#}
-{#        <li><a href="{% url "auth_password_change" %}">{% trans "Change Password" %}</a></li>#}
-{#        <li><a href="{% url "auth_password_reset" %}">{% trans "Reset Password" %}</a></li>#}
-{#        {% comment %}#}
-{#            <li><a href="{% url "acct_language_change" %}">{% trans "Language" %}</a></li>#}
-{#            <li><a href="{% url "acct_timezone_change" %}">{% trans "Timezone" %}</a></li>#}
-{#        {% endcomment %}#}
-{#    </ul>#}
+  <div class="col-md-2"></div>
+</div>
 
 {% endblock body %}

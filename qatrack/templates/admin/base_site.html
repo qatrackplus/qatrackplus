@@ -56,11 +56,78 @@
                 }
 
             });
+
+            /// override Django strftime
+            console.log("Overriding Date.prototype.strftime in admin/base_site.html");
+            if (typeof gettext === "undefined"){
+              gettext = function(s){return s;};
+            }
+
+            if (typeof window.CalendarNamespace !== "undefined"){
+              initCalendar();
+            }
+
         });
     }
 
     window.DYNAMIC_RAW_ID_MOUNT_URL = "{% url "admin:index" %}";
 
+    function initCalendar(){
+        window.CalendarNamespace.monthsOfYearShort = [
+            gettext("Jan"),
+            gettext("Feb"),
+            gettext("Mar"),
+            gettext("Apr"),
+            gettext("May"),
+            gettext("Jun"),
+            gettext("Jul"),
+            gettext("Aug"),
+            gettext("Sep"),
+            gettext("Oct"),
+            gettext("Nov"),
+            gettext("Dec")
+        ];
+
+        Date.prototype.getShortMonthName = function() {
+            return typeof window.CalendarNamespace === "undefined"
+                ? this.getTwoDigitMonth()
+                : window.CalendarNamespace.monthsOfYearShort[this.getMonth()];
+        };
+
+        Date.prototype.strftime = function(format) {
+            var fields = {
+                B: this.getFullMonthName(),
+                b: this.getShortMonthName(),
+                c: this.toString(),
+                d: this.getTwoDigitDate(),
+                H: this.getTwoDigitHour(),
+                I: this.getTwoDigitTwelveHour(),
+                m: this.getTwoDigitMonth(),
+                M: this.getTwoDigitMinute(),
+                p: (this.getHours() >= 12) ? 'PM' : 'AM',
+                S: this.getTwoDigitSecond(),
+                w: '0' + this.getDay(),
+                x: this.toLocaleDateString(),
+                X: this.toLocaleTimeString(),
+                y: ('' + this.getFullYear()).substr(2, 4),
+                Y: '' + this.getFullYear(),
+                '%': '%'
+            };
+            var result = '', i = 0;
+            while (i < format.length) {
+                if (format.charAt(i) === '%') {
+                    result = result + fields[format.charAt(i + 1)];
+                    ++i;
+                }
+                else {
+                    result = result + format.charAt(i);
+                }
+                ++i;
+            }
+            return result;
+        };
+
+    }
 
 </script>
 {% endblock footer %}

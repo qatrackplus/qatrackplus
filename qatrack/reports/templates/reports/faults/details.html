@@ -1,0 +1,107 @@
+{% extends base_template %}
+{% load qa_tags %}
+{% load qatrack_tags %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-12">
+    {% for site, faults in sites_data %}
+    <h2>{% trans "Site" %} :: {% if site %}{{ site }}{% else %}{% trans "Other" %}{% endif %}</h2>
+      {% for fault in faults %}
+        <table class="table table-condensed table-bordered">
+          <thead>
+            <tr class="active" style="width: 25%">
+              <th class="text-right">{% trans "Fault #" %}</th>
+              <td colspan="3">{{ fault.id }}</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="page">
+              <th class="text-right" style="width: 20%">{% trans "Occurred" %}:</th>
+              <td colspan="3">{{ fault.occurred }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Unit" %}:</th>
+              <td colspan="3">{{ fault.unit_name }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Fault Types" %}:</th>
+              <td colspan="3">{{ fault.fault_type }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Modality" %}:</th>
+              <td colspan="3">{{ fault.modality }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Created By" %}:</th>
+              <td colspan="2">{{ fault.created_by }}</td>
+              <td>{{ fault.created }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Last Modified By" %}:</th>
+              <td colspan="2">{{ fault.modified_by }}</td>
+              <td>{{ fault.modified }}</td>
+            </tr>
+
+            <tr>
+              <th class="text-right">{% trans "Reviewed By" %}:</th>
+              <td colspan="2">{{ fault.reviewed_by }}</td>
+              <td>{{ fault.reviewed }}</td>
+            </tr>
+
+            {% for service_event_id, service_date, link in fault.related_ses %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ fault.related_ses|length }}">
+                    {% trans "Related Service Events" %}:
+                  </th>
+                {% endif %}
+                <td colspan="2">
+                  <a href="{{ link }}" title="{% trans "Click to view relate Service Event" %}">
+                    {% blocktrans %}
+                    Service Event #{{ service_event_id }}
+                    {% endblocktrans %}
+                  </a>
+                </td>
+                <td>{{ service_date }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="1">{% trans "Related Service Events" %}:</th>
+                <td colspan="3"><em>{% trans "No associated Service Events" %}</em></td>
+              </tr>
+            {% endfor %}
+
+            {% for user, dt, comment in fault.comments %}
+              <tr>
+                {% if forloop.first %}
+                  <th class="text-right" rowspan="{{ fault.comments|length }}" colspan="1">
+                    {% trans "Comments" %}:
+                  </th>
+                {% endif %}
+                <td colspan="1">{{ dt }}</td>
+                <td colspan="1">{{ user }}</td>
+                <td colspan="1">{{ comment }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <th class="text-right" colspan="1">{% trans "Comments" %}:</th>
+                <td colspan="3"><em>{% trans "No Comments" %}</em></td>
+              </tr>
+            {% endfor %}
+
+          </tbody>
+        </table>
+      {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
