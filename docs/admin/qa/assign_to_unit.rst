@@ -48,9 +48,9 @@ test list.
 Visible To
 ----------
 
-By default, all user groups will be able to see and perform a test list.  If
-you want to restrict access/hide a test list from certain groups you can move
-the groups from the **Chosen visible to** to the **Available visible to** box.
+Choose the groups you want this test list on this unit to be visible to by
+moving the groups from the **Available visible to** to the **Chosen visible
+to** box.
 
 Active
 ------
