@@ -42,7 +42,7 @@ function toggle_test_type(){
     toggle_required_field(".field-wrap_low,.field-wrap_high", ["wraparound"], test_type);
     toggle_required_field(".field-flag_when", ["boolean"], test_type);
 
-    var not_visible_in_charts = ["scomposite", "date", "datetime", "multchoice", "upload"];
+    var not_visible_in_charts = ["scomposite", "date", "datetime", "upload"];
     $(".field-chart_visibility").find("input[type=checkbox]").prop(
         "checked",
         not_visible_in_charts.indexOf(test_type) < 0

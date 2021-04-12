@@ -652,6 +652,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         test_instance_id: val.test_instance_id,
                         test_list_instance_id: val.test_list_instance.id,
                         test_instance_comment: val.test_instance_comment,
+                        display: val.display,
                         flagged: val.test_list_instance.flagged
                     });
 
@@ -812,8 +813,8 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
 
             var event_group_height = 10;
 
-            var tooltip_height = 85,
-                tooltip_width = 175,
+            var tooltip_height = 105,
+                tooltip_width = 250,
                 tooltip_padding = 7;
 
             var parseDate = d3.timeFormat("%Y%m%d").parse;
@@ -1821,6 +1822,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                     .replace(/__tli-tl-name__/g, initiated_name)
                                     .replace(/__tli-kind__/g, 'Initiating QC')
                                     .replace(/__tli-comments__/g, comments)
+                                    .replace(/__tli-ti-value-display__/g, initiated_data[0].display)
                                     .replace(/__show-in__/g, 'style="display: none"')
                                 );
 
@@ -1902,6 +1904,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                                 .replace(/__tli-tl-name__/g, rtsqa_name)
                                 .replace(/__tli-kind__/g, 'Return To Service QC')
                                 .replace(/__tli-comments__/g, rtsqa_comments)
+                                .replace(/__tli-ti-value-display__/g, rtsqa_data[0].display)
                                 .replace(/__show-in__/g, 'style="display: none"')
                             );
 
@@ -2010,6 +2013,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         .replace(/__tli-tl-name__/g, tli_name)
                         .replace(/__tli-kind__/g, 'Test List')
                         .replace(/__tli-comments__/g, comments)
+                        .replace(/__tli-ti-value-display__/g, tli_data[0].display)
                         .replace(/__show-in__/g, 'style="display: block"')
                     )
                     .on('click', toggleLock);
