@@ -192,7 +192,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             sel2 = self.driver.find_element_by_id("select2-%s-container" % el_id)
             sel2.click()
             time.sleep(0.1)
-            els = sel2.find_elements_by_class_name("select2-results__option")
+            els = self.driver.find_elements_by_class_name("select2-results__option")
             els[index].click()
         except:  # noqa: E722
             select = Select(self.driver.find_element_by_id(el_id))
