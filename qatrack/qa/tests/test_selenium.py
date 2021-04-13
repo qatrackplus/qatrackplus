@@ -266,8 +266,8 @@ class LiveQATests(BaseQATests):
     def test_admin_modality(self):
 
         self.load_admin()
-        self.click_by_link_text("Modalities")
-        self.click_by_link_text("ADD MODALITY")
+        self.click_by_link_text("Treatment and imaging modalities")
+        self.click_by_link_text("ADD TREATMENT AND IMAGING MODALITY")
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['Modality']['name'])
         self.driver.find_element_by_name('_save').click()
