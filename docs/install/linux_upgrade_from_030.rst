@@ -246,12 +246,13 @@ our database.
     python manage.py migrate
 
 
-After that completes, we can grant privileges to our readonly database user as
-follows:
+After that completes, we can create & grant privileges to our readonly database
+user as follows:
 
 .. code-block:: bash
 
     # PostgreSQL
+    sudo -u postgres psql < deploy/postgres/create_ro_role.sql
     sudo -u postgres psql < deploy/postgres/grant_ro_rights.sql
 
     # or MySQL if you set a password during install
