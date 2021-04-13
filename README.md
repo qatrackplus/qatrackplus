@@ -2,8 +2,6 @@
 ###### Copyright 2012 The Ottawa Hospital Cancer Center
 ---
 
-![build badge](https://travis-ci.org/randlet/qatrackplus-ci.svg?branch=master)
-
 
 QATrack+ is a fully configurable, free, and open source (MIT License) web
 application for managing QA data for radiation therapy and medical imaging
@@ -47,7 +45,7 @@ The main features include:
 
 ## Documentation & Release Notes
 
-The latest version is 0.3.0 Please review the
+The latest version is 3.1.0 Please review the
 [release_notes](https://docs.qatrackplus.com/en/latest/release_notes.html)
 before installing or upgrading.
 
