@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+QATrack+ v3.1.1 Release Notes
+-----------------------------
+
+.. _release_notes_311:
+
+* Added basic multiple choice plotting support
+* A few documentation fixes
+* Fixed a permissions check for deleting faults
+* A message warning you about being logged out or your server not being
+  reachable will be shown after 3 consecutive unauthenticated or failed
+  pings.  In order to disable this check set `PING_INTERVAL_S = 0` in your
+  local_settings.py file.
+
+
 QATrack+ v3.1.0 Release Notes
 -----------------------------
 

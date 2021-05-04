@@ -14,25 +14,25 @@ user = get_internal_user()
 
 
 def run(*args):
-    nargs_wrong = len(args) != 2
+    nargs_wrong = len(args) != 3
     if not nargs_wrong:
-        mode, beam = args
+        mode, tl_name, beam = args
 
     if nargs_wrong or mode not in ["db", "testpack"]:
-        print("Usage 'python manage.py runscript create_dqa3_testlist --script-args {testpack,db} {beam}")
+        print("Usage 'python manage.py runscript create_dqa3_testlist --script-args {testpack,db} \"{test_list_name}\" {beam}")
         print("To create a test list:")
-        print("    'python manage.py runscript create_dqa3_testlist --script-args testpack 6X'")
+        print("    'python manage.py runscript create_dqa3_testlist --script-args testpack \"Daily QA Results: 6X\" 6X'")
         print("To create a test pack:")
-        print("    'python manage.py runscript create_dqa3_testlist --script-args db 12E'")
+        print("    'python manage.py runscript create_dqa3_testlist --script-args db \"Daily QA Results: 12E\" 12E'")
     else:
-        create_dqa3(mode, beam)
+        create_dqa3(mode, tl_name, beam)
 
 
 class Rollback(Exception):
     pass
 
 
-def create_dqa3(mode, beam):
+def create_dqa3(mode, tl_name, beam):
 
     params = [
         "Signature",
@@ -81,7 +81,7 @@ def create_dqa3(mode, beam):
                 },
             )
 
-            test_list_name = f"Daily QA3 Results: {beam}"
+            test_list_name = tl_name
             print(f"Creating Test List: {test_list_name}")
             test_list, _ = models.TestList.objects.get_or_create(
                 name=test_list_name,
@@ -102,7 +102,7 @@ def create_dqa3(mode, beam):
                 elif param not in string_tests:
                     unit = "%" if 'shift' not in param.lower() and 'size' not in param.lower() else "cm"
                 name = f"{beam}: {param} ({unit})" if unit else f"{beam}: {param}"
-                test_name = f"DQA3 Results: {name}"
+                test_name = f"{test_list_name}: {name}"
                 slug = slugify(param).lower().replace("-", "_")
                 print(f"\tCreating Test: {test_name} ({slug})")
                 test, _ = models.Test.objects.get_or_create(

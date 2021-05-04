@@ -75,7 +75,7 @@
           </h3>
         </div>
       </div>
-      <div class="row">
+      <div class="row ping-popover-container">
         <div class="col-md-4">
           {% for field in form.fieldsets.service_status %}
             <div class="form-horizontal">
@@ -139,7 +139,7 @@
           {% endif %}
         </div>
         <div class="col-sm-1">
-          <button class="btn btn-flat btn-primary service-save pull-right">{% trans "Save" %}</button>
+          <button class="btn btn-flat btn-primary service-save pull-right ping-popover">{% trans "Save" %}</button>
         </div>
       </div>
 
@@ -647,15 +647,16 @@
       </div>
 
       <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-12 logged-out-message-container">
 
-          <button id="save-se" class="btn btn-flat btn-primary service-save pull-right">{% trans "Save" %}</button>
+          <button id="save-se" class="btn btn-flat btn-primary service-save pull-right ping-popover">{% trans "Save" %}</button>
           {% if perms.service_log.delete_serviceevent and form.instance.id %}
             <a href="{% url 'se_delete' pk=form.instance.id %}"
-               class="btn btn-flat btn-default service-delete pull-left">{% trans "Delete" %}</a>
+              class="btn btn-flat btn-default service-delete pull-left">{% trans "Delete" %}</a>
           {% endif %}
         </div>
       </div>
+
     </div>
   </form>
 

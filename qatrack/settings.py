@@ -580,6 +580,8 @@ PAGINATE_DEFAULT = 50
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
 
+PING_INTERVAL_S = 5  # how often to ping server when performing QA. Set to 0 to disable ping
+
 ICON_SETTINGS = {
     'SHOW_STATUS_ICONS_PERFORM': True,
     'SHOW_STATUS_ICONS_LISTING': True,
