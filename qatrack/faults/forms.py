@@ -21,7 +21,7 @@ class FaultForm(BetterModelForm):
     comment = forms.CharField(
         widget=forms.Textarea,
         required=False,
-        help_text=_l("Include any relevant comments."),
+        help_text=_l("Include any relevant comment i.e. describe what you were doing when the fault occurred"),
     )
 
     unit = forms.ChoiceField(
@@ -62,9 +62,9 @@ class FaultForm(BetterModelForm):
             'occurred',
             'unit',
             'modality',
+            'comment',
             'fault_types_field',
             'related_service_events',
-            'comment',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -126,6 +126,7 @@ class FaultForm(BetterModelForm):
         if 'comment' in self.fields:
             self.fields['comment'].widget.attrs['class'] += 'autosize'
             self.fields['comment'].widget.attrs['cols'] = 8
+            self.fields['comment'].widget.attrs['rows'] = 3
 
     def clean_fault_types_field(self):
         fault_types = self.cleaned_data.get('fault_types_field')
