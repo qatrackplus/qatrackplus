@@ -114,7 +114,7 @@ class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
     ).prefetch_related(
         "visible_to",
         "tests_object",
-    )
+    ).distinct()
     serializer_class = serializers.UnitTestCollectionSerializer
     filterset_class = filters.UnitTestCollectionFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
