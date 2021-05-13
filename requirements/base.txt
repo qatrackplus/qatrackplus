@@ -39,7 +39,7 @@ pandas<=1.1.5
 pep8==1.7.1
 Pillow==8.1.0
 pydicom==2.1.2
-pylinac-qatrackplus==2.5.1.1
+pylinac-qatrackplus==2.5.1.2
 pynliner==0.8.0
 pytest-cov==2.11.1
 pytest-django==4.1.0
