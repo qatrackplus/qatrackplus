@@ -2,6 +2,7 @@ from itertools import groupby
 
 import dateutil.parser
 from django import forms
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
@@ -213,6 +214,22 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
             ('3', _('No')),
         )
 
+    def filter_queryset(self, queryset):
+        """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
+
+        # don't let the default filtering filter by active since we'll do it
+        # ourselves below
+        active = self.form.cleaned_data.pop('active', None)
+
+        qs = super().filter_queryset(queryset)
+
+        # note active can be None (Both), False (Inactive), or True (Active Only)
+        if active is True:
+            qs = qs.filter(Q(active=True) & Q(unit__active=True))
+        elif active is False:
+            qs = qs.filter(Q(active=False) | Q(unit__active=False))
+        return qs
+
 
 class AssignedQCDetailsFilter(UnitTestCollectionFilter):
 
@@ -338,6 +355,22 @@ class SchedulingFilter(BaseReportFilterSet):
             ('2', _('Yes')),
             ('3', _('No')),
         )
+
+    def filter_queryset(self, queryset):
+        """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
+
+        # don't let the default filtering filter by active since we'll do it
+        # ourselves below
+        active = self.form.cleaned_data.pop('active', None)
+
+        qs = super().filter_queryset(queryset)
+
+        # note active can be None (Both), False (Inactive), or True (Active Only)
+        if active is True:
+            qs = qs.filter(Q(active=True) & Q(unit__active=True))
+        elif active is False:
+            qs = qs.filter(Q(active=False) | Q(unit__active=False))
+        return qs
 
 
 class TestDataFilter(BaseReportFilterSet):
@@ -529,6 +562,22 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
             ('2', _('Yes')),
             ('3', _('No')),
         )
+
+    def filter_queryset(self, queryset):
+        """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
+
+        # don't let the default filtering filter by active since we'll do it
+        # ourselves below
+        active = self.form.cleaned_data.pop('active', None)
+
+        qs = super().filter_queryset(queryset)
+
+        # note active can be None (Both), False (Inactive), or True (Active Only)
+        if active is True:
+            qs = qs.filter(Q(active=True) & Q(unit_service_area__unit__active=True))
+        elif active is False:
+            qs = qs.filter(Q(active=False) | Q(unit_service_area__unit__active=False))
+        return qs
 
 
 class BaseFaultFilter(BaseReportFilterSet):

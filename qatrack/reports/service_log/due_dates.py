@@ -24,7 +24,7 @@ class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
             "unit_service_area__unit",
             "unit_service_area__service_area",
             "frequency",
-        ).exclude(active=False)
+        )
 
     def get_context(self):
 

@@ -17,11 +17,12 @@ class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
     category = _l("QC")
 
     def get_queryset(self):
-        return models.UnitTestCollection.objects.select_related(
+        qs = models.UnitTestCollection.objects.select_related(
             "assigned_to",
             "unit",
             "frequency",
-        ).exclude(active=False)
+        )
+        return qs
 
     def get_context(self):
 
