@@ -11,7 +11,6 @@ REVIEW_BULK = True
 TIME_ZONE = 'America/Toronto'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.abspath(os.path.join("..", "test_emails"))
-import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
 if not os.path.isdir(EMAIL_FILE_PATH):
     try:
         os.mkdir(EMAIL_FILE_PATH)
