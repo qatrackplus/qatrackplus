@@ -462,7 +462,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 content = d['value']
 
                 if d.get("encoding", "base64") == "base64":
-                    if not BASE64_RE.match(content):
+                    if not (content and BASE64_RE.match(content)):
                         raise serializers.ValidationError(
                             "base64 encoding requested but content does not appear to be base64"
                         )
