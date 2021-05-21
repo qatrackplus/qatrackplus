@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db import ProgrammingError, connection
 from django.utils import timezone
 from django_q.models import Schedule
-from django_q.tasks import schedule as schedule_djq
+from django_q.tasks import schedule as _schedule_djq
 
 from qatrack.qatrack_core.utils import today_start_end
 
@@ -34,16 +34,16 @@ def schedule(function, *args, name=None, hook=None, schedule_type=Schedule.ONCE,
     """Wrapper for scheduler to delegate scheduling to appropriate scheduler"""
     next_run = next_run or timezone.now()
 
-    return schedule_djq(function, *args, name=name, hook=hook, schedule_type=schedule_type, repeats=repeats,
-                        next_run=next_run, q_options=q_options, **kwargs)
+    return _schedule_djq(function, *args, name=name, hook=hook, schedule_type=schedule_type, repeats=repeats,
+                         next_run=next_run, q_options=q_options, **kwargs)
 
 
 def delete_schedule(name, method="exact"):
     """Wrapper to delegate deleting schedule to appropriate scheduler"""
-    return delete_schedule_djq(name, method)
+    return _delete_schedule_djq(name, method)
 
 
-def delete_schedule_djq(name, method):
+def _delete_schedule_djq(name, method):
     """Delete schedule object from db"""
     if method == "contains":
         Schedule.objects.filter(name__contains=name).delete()
@@ -75,7 +75,7 @@ def _schedule_periodic_task_djq(function, task_name, cron="7,22,47 * * * *", nex
         logger.info("%s next run updated to %s" % (function, next_run))
     except Schedule.DoesNotExist:
 
-        schedule_djq(
+        schedule(
             function,
             name=task_name,
             schedule_type=Schedule.CRON,
