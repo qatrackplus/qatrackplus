@@ -42,12 +42,11 @@ function toggle_test_type(){
     toggle_required_field(".field-wrap_low,.field-wrap_high", ["wraparound"], test_type);
     toggle_required_field(".field-flag_when", ["boolean"], test_type);
 
-    var not_visible_in_charts = ["scomposite", "date", "datetime", "upload"];
-    $(".field-chart_visibility").find("input[type=checkbox]").prop(
-        "checked",
-        not_visible_in_charts.indexOf(test_type) < 0
-    );
-    toggle_not_required_field(".field-chart_visibility", not_visible_in_charts, test_type);
+    var never_visible_in_charts = ["string", "scomposite", "date", "datetime", "upload"];
+    if (never_visible_in_charts.indexOf(test_type) > 0){
+        $(".field-chart_visibility").find("input[type=checkbox]").prop("checked", false);
+    }
+    toggle_not_required_field(".field-chart_visibility", never_visible_in_charts, test_type);
 }
 
 $(document).ready(function() {

@@ -9,6 +9,8 @@ QATrack+ v3.1.1 Release Notes
 * Added basic multiple choice plotting support
 * A few documentation fixes
 * Fixed a permissions check for deleting faults
+* Fixed a file upload API bug where QATrack+ would try to base64 decode a null value
+* Fixed a Test admin bug with the display of "Test item visible in charts"
 * A message warning you about being logged out or your server not being
   reachable will be shown after 3 consecutive unauthenticated or failed
   pings.  In order to disable this check set `PING_INTERVAL_S = 0` in your
