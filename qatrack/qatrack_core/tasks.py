@@ -1,4 +1,5 @@
 from functools import wraps
+import importlib
 import logging
 import os
 
@@ -7,11 +8,13 @@ from django.conf import settings
 from django.db import ProgrammingError, connection
 from django.utils import timezone
 from django_q.models import Schedule
-from django_q.tasks import schedule
+from django_q.tasks import schedule as schedule_djq
 
 from qatrack.qatrack_core.utils import today_start_end
 
 logger = logging.getLogger('django-q')
+
+CUSTOMER_DELIMITER = "_-_"
 
 
 def qatrack_task_wrapper(func):
@@ -26,7 +29,35 @@ def qatrack_task_wrapper(func):
     return wrapped
 
 
+def schedule(function, *args, name=None, hook=None, schedule_type=Schedule.ONCE, minutes=None, repeats=-1,
+             next_run=None, q_options=None, **kwargs):
+    """Wrapper for scheduler to delegate scheduling to appropriate scheduler"""
+    next_run = next_run or timezone.now()
+
+    return schedule_djq(function, *args, name=name, hook=hook, schedule_type=schedule_type, repeats=repeats,
+                        next_run=next_run, q_options=q_options, **kwargs)
+
+
+def delete_schedule(name, method="exact"):
+    """Wrapper to delegate deleting schedule to appropriate scheduler"""
+    return delete_schedule_djq(name, method)
+
+
+def delete_schedule_djq(name, method):
+    """Delete schedule object from db"""
+    if method == "contains":
+        Schedule.objects.filter(name__contains=name).delete()
+    else:
+        Schedule.objects.get(name=name).delete()
+
+
 def _schedule_periodic_task(function, task_name, cron="7,22,47 * * * *", next_run=None):
+    """Create a periodic schedule calling input function.  Default interval is 15min"""
+
+    return _schedule_periodic_task_djq(function, task_name, cron, next_run)
+
+
+def _schedule_periodic_task_djq(function, task_name, cron="7,22,47 * * * *", next_run=None):
     """Create a periodic schedule calling input function.  Default interval is 15min"""
 
     now = timezone.now()
@@ -35,7 +66,6 @@ def _schedule_periodic_task(function, task_name, cron="7,22,47 * * * *", next_ru
         next_run = croniter(cron, now).get_next(timezone.datetime)
 
     try:
-
         sch = Schedule.objects.get(name=task_name)
         sch.func = function
         sch.schedule_type = Schedule.CRON
@@ -43,10 +73,9 @@ def _schedule_periodic_task(function, task_name, cron="7,22,47 * * * *", next_ru
         sch.next_run = next_run
         sch.save()
         logger.info("%s next run updated to %s" % (function, next_run))
-
     except Schedule.DoesNotExist:
 
-        schedule(
+        schedule_djq(
             function,
             name=task_name,
             schedule_type=Schedule.CRON,
@@ -66,7 +95,7 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
         log_name: short description to include in log strings,
 
         handler: a function that will be called when an instance should be run
-        in the current time period must accept an instance of model, and a
+        in the current time period. Must accept an instance of model, and a
         datetime when the task should be scheduled for. The handler function
         should perform the actual scheduling of the task.
 
@@ -114,3 +143,22 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
             tz = timezone.get_current_timezone()
             send_time = tz.localize(timezone.datetime.combine(start_today, getattr(instance, time_field)))
             handler(instance, send_time)
+
+
+def run_task(task_info: dict) -> dict:
+    """Run a scheduled or one-off task function.
+
+    task_info is a dictionary of form:
+        {'function': "dotted.path.to.function", 'task_name': "Some descriptive name"}
+
+    Returns (potentially empty) dictionary of task results
+    """
+
+    func = task_info['function']
+    if not callable(func):
+        module_path, func = func.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        func = getattr(module, func)
+
+    result = func(*task_info['args'], **task_info['kwargs'])
+    return result or {}

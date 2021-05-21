@@ -7,11 +7,11 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 from django_q.models import Schedule
-from django_q.tasks import schedule
 
 from qatrack.qa.models import TestListInstance
 from qatrack.qa.signals import testlist_complete
 from qatrack.qatrack_core.email import send_email_to_users
+from qatrack.qatrack_core.tasks import schedule, delete_schedule
 
 logger = logging.getLogger('qatrack')
 
@@ -87,7 +87,7 @@ def get_notification_recipients(test_list_instance):
 
 @receiver(testlist_complete)
 def follow_up_emails(signal, sender, instance, created, **kwargs):
-    """When a test list is completed, create Schedule objects any follow up
+    """When a test list is completed, create schedule objects any follow up
     notifications that need to be scheduled"""
 
     from qatrack.notifications.models import QCCompletedNotice
@@ -103,7 +103,7 @@ def follow_up_emails(signal, sender, instance, created, **kwargs):
 
     if not created:
         # clear any existing scheduled notices before rescheduling
-        Schedule.objects.filter(name__contains="follow-up-for-tli-%d-" % instance.pk).delete()
+        delete_schedule("follow-up-for-tli-%d-" % instance.pk, method="contains")
 
     for notice in notices:
         follow_up = instance.work_completed + timezone.timedelta(days=notice.follow_up_days)
@@ -121,4 +121,4 @@ def follow_up_emails(signal, sender, instance, created, **kwargs):
 @receiver(post_delete, sender=TestListInstance)
 def clean_up_follow_up_emails(*args, **kwargs):
     """Test list instance was deleted.  Remove any scheduled follow up emails for it"""
-    Schedule.objects.filter(name__contains="follow-up-for-tli-%d-" % kwargs['instance'].pk).delete()
+    delete_schedule("follow-up-for-tli-%d-" % kwargs['instance'].pk, method="contains")

@@ -3,12 +3,13 @@ import logging
 from django.conf import settings
 from django.utils import timezone
 from django_q.models import Schedule
-from django_q.tasks import schedule
 
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import (
     qatrack_task_wrapper,
     run_periodic_scheduler,
+    schedule,
+    delete_schedule,
 )
 from qatrack.reports.models import ReportSchedule
 from qatrack.reports.reports import CONTENT_TYPES
@@ -70,7 +71,7 @@ def send_report(schedule_id, task_name=""):
         )
         logger.info("Sent ReportSchedule %s (report %s) at %s" % (schedule_id, s.report_id, timezone.now()))
         try:
-            Schedule.objects.get(name=task_name).delete()
+            delete_schedule(task_name)
         except:  # noqa: E722  # pragma: nocover
             logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
     except:  # noqa: E722  # pragma: nocover
