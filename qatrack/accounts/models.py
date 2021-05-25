@@ -2,11 +2,12 @@ from django.contrib.auth.models import Group
 from django.db import models
 from django.utils.text import gettext_lazy as _l
 
+from rest_framework.authtoken.models import Token
 
 USER_QATRACK_INTERNAL = "QATrack+ Internal"
 
 
-def get_internal_user(user_klass=None):
+def get_internal_user(user_klass=None, username=USER_QATRACK_INTERNAL, initial_active=False):
 
     from qatrack.qa import models
     from django.contrib.auth.hashers import make_password
@@ -17,10 +18,18 @@ def get_internal_user(user_klass=None):
     except user_klass.DoesNotExist:
         pwd = make_password(user_klass.objects.make_random_password())
         u = user_klass.objects.create(username=USER_QATRACK_INTERNAL, password=pwd)
-        u.is_active = False
+        u.is_active = initial_active
         u.save()
 
     return u
+
+
+def get_user_api_headers(username=USER_QATRACK_INTERNAL):
+    """Returns an API key request headers for a user"""
+
+    user = get_internal_user(username=username)
+    token, __ = Token.objects.get_or_create(user=user)
+    return {"Authorization": f"Token {token.key}"}
 
 
 class ActiveDirectoryGroupMap(models.Model):
