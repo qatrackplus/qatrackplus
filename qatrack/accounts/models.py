@@ -14,10 +14,10 @@ def get_internal_user(user_klass=None, username=USER_QATRACK_INTERNAL, initial_a
     user_klass = user_klass or models.User
 
     try:
-        u = user_klass.objects.get(username=USER_QATRACK_INTERNAL)
+        u = user_klass.objects.get(username=username)
     except user_klass.DoesNotExist:
         pwd = make_password(user_klass.objects.make_random_password())
-        u = user_klass.objects.create(username=USER_QATRACK_INTERNAL, password=pwd)
+        u = user_klass.objects.create(username=username, password=pwd)
         u.is_active = initial_active
         u.save()
 
