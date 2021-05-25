@@ -27,7 +27,7 @@ def get_internal_user(user_klass=None, username=USER_QATRACK_INTERNAL, initial_a
 def get_user_api_headers(username=USER_QATRACK_INTERNAL):
     """Returns an API key request headers for a user"""
 
-    user = get_internal_user(username=username)
+    user = get_internal_user(username=username, initial_active=True)
     token, __ = Token.objects.get_or_create(user=user)
     return {"Authorization": f"Token {token.key}"}
 
