@@ -39,8 +39,10 @@ def schedule_qcreview_notice(notice, send_time):
     )
 
 
-def send_qcreview_notice(notice_id, task_name=""):
+def send_qcreview_notice(*args, **kwargs):
 
+    notice_id = args[0]
+    task_name = kwargs.get("task_name", "")
     notice = QCReviewNotice.objects.filter(id=notice_id).first()
 
     if notice:

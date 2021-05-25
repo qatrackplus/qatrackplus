@@ -110,11 +110,11 @@ def follow_up_emails(signal, sender, instance, created, **kwargs):
         name = "follow-up-for-tli-%d-notice-%d" % (instance.pk, notice.pk)
         schedule(
             "qatrack.notifications.qccompleted.tasks.send_follow_up_email",
+            instance.pk,
+            notice.id,
             name=name,
             schedule_type=Schedule.ONCE,
             next_run=follow_up,
-            test_list_instance_id=instance.pk,
-            notification_id=notice.id,
         )
 
 

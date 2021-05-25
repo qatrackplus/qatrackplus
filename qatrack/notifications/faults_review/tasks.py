@@ -39,8 +39,10 @@ def schedule_faultsreview_notice(notice, send_time):
     )
 
 
-def send_faultsreview_notice(notice_id, task_name=""):
+def send_faultsreview_notice(*args, **kwargs):
 
+    notice_id = args[0]
+    task_name = kwargs.get("task_name", "")
     notice = FaultsReviewNotice.objects.filter(id=notice_id).first()
 
     if notice:

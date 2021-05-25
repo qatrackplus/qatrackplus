@@ -4,8 +4,11 @@ from qatrack.qa.models import TestListInstance
 from qatrack.qatrack_core.email import send_email_to_users
 
 
-def send_follow_up_email(test_list_instance_id=None, notification_id=None):
+def send_follow_up_email(*args, **kwargs):
     """Task to do the actual sending of the follow up emails"""
+
+    test_list_instance_id = args[0] if args else None
+    notification_id = args[1] if len(args) > 1 else None
 
     from qatrack.notifications.models import QCCompletedNotice
 

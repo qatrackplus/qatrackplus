@@ -44,7 +44,10 @@ def schedule_report(s, send_time):
 
 
 @qatrack_task_wrapper
-def send_report(schedule_id, task_name=""):
+def send_report(*args, **kwargs):
+
+    schedule_id = args[0]
+    task_name = kwargs.get("task_name", "")
 
     logger.info("Attempting Send of ReportSchedule %s" % schedule_id)
 
