@@ -15,7 +15,7 @@ from django_comments.models import Comment
 import pyodbc
 from qatrack.parts import models as p_models
 from qatrack.qa import models as qa_models
-from qatrack.qa.utils import get_internal_user
+from qatrack.accounts.models import get_internal_user
 from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
 

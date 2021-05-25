@@ -8,7 +8,7 @@ from django.utils.text import slugify as django_slugify  # noqa: #402
 
 from qatrack.qa import models
 from qatrack.qa.testpack import create_testpack
-from qatrack.qa.utils import get_internal_user  # noqa: #402
+from qatrack.accounts.models import get_internal_user  # noqa: #402
 
 user = get_internal_user()
 

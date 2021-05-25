@@ -3,6 +3,26 @@ from django.db import models
 from django.utils.text import gettext_lazy as _l
 
 
+USER_QATRACK_INTERNAL = "QATrack+ Internal"
+
+
+def get_internal_user(user_klass=None):
+
+    from qatrack.qa import models
+    from django.contrib.auth.hashers import make_password
+    user_klass = user_klass or models.User
+
+    try:
+        u = user_klass.objects.get(username=USER_QATRACK_INTERNAL)
+    except user_klass.DoesNotExist:
+        pwd = make_password(user_klass.objects.make_random_password())
+        u = user_klass.objects.create(username=USER_QATRACK_INTERNAL, password=pwd)
+        u.is_active = False
+        u.save()
+
+    return u
+
+
 class ActiveDirectoryGroupMap(models.Model):
 
     ad_group = models.CharField(

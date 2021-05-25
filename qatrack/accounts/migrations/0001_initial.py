@@ -2,11 +2,12 @@
 
 from django.contrib.auth.hashers import make_password
 from django.db import migrations
+from qatrack.accounts.models import USER_QATRACK_INTERNAL
 
 
 def update_internal_pass(apps, schema):
     User = apps.get_model("auth", "User")
-    user = User.objects.get(username="QATrack+ Internal")
+    user = User.objects.get(username=USER_QATRACK_INTERNAL)
     user.password = make_password(User.objects.make_random_password())
     user.save()
 

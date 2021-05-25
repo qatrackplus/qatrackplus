@@ -49,7 +49,7 @@ class QATrackUserAdmin(UserAdmin):
 
     def has_change_permission(self, request, obj=None):
 
-        if obj and obj.username == "QATrack+ Internal":
+        if obj and obj.username == models.USER_QATRACK_INTERNAL:
             return False
 
         return super(QATrackUserAdmin, self).has_change_permission(request, obj=obj)

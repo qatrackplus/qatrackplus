@@ -4,8 +4,9 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+from qatrack.accounts.models import get_internal_user
 from qatrack.qa.models import BOOLEAN
-from qatrack.qa.utils import get_bool_tols, get_internal_user
+from qatrack.qa.utils import get_bool_tols
 
 
 def create_bool_tolerances(apps, schema):

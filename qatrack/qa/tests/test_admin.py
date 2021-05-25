@@ -11,11 +11,12 @@ from django.test import RequestFactory, TestCase, TransactionTestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 
+from qatrack.accounts.models import get_internal_user
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import admin as qa_admin
 from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
-from qatrack.qa.utils import get_bool_tols, get_internal_user
+from qatrack.qa.utils import get_bool_tols
 from qatrack.service_log.tests import utils as sl_utils
 
 

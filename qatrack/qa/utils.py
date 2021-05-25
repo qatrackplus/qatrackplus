@@ -165,6 +165,7 @@ def check_query_count():  # pragma: nocover
 def get_bool_tols(user_klass=None, tol_klass=None):
 
     from qatrack.qa import models
+    from qatrack.accounts.models import get_internal_user
     user_klass = user_klass or models.User
     tol_klass = tol_klass or models.Tolerance
     user = get_internal_user(user_klass)
@@ -182,23 +183,6 @@ def get_bool_tols(user_klass=None, tol_klass=None):
         modified_by=user
     )
     return warn, act
-
-
-def get_internal_user(user_klass=None):
-
-    from qatrack.qa import models
-    from django.contrib.auth.hashers import make_password
-    user_klass = user_klass or models.User
-
-    try:
-        u = user_klass.objects.get(username="QATrack+ Internal")
-    except user_klass.DoesNotExist:
-        pwd = make_password(user_klass.objects.make_random_password())
-        u = user_klass.objects.create(username="QATrack+ Internal", password=pwd)
-        u.is_active = False
-        u.save()
-
-    return u
 
 
 def format_qc_value(val, format_str, _try_default=True):
