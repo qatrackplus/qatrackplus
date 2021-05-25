@@ -29,7 +29,10 @@ def get_user_api_headers(username=USER_QATRACK_INTERNAL):
 
     user = get_internal_user(username=username, initial_active=True)
     token, __ = Token.objects.get_or_create(user=user)
-    return {"Authorization": f"Token {token.key}"}
+    return {
+        "Authorization": f"Token {token.key}",
+        "Content-Type": "application/json",
+    }
 
 
 class ActiveDirectoryGroupMap(models.Model):
