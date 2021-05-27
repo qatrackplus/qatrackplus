@@ -37,7 +37,7 @@ API
 * The UnitTestCollection API end point should no longer return duplicated results.
 * The AutoReviewRuleSetFilter API end point has been fixed.
 * Fixed the `fault_types` field of the API's FaultSerializer
-* The API schema view will no longer through a 500 error.
+* The API schema view will no longer throw a 500 error.
 
 
 Miscellaneous
