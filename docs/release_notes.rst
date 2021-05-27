@@ -6,15 +6,47 @@ QATrack+ v3.1.1 Release Notes
 
 .. _release_notes_311:
 
+
+This is a follow up release to address a few issues that were found in v3.1.0. The following
+issues have been addressed:
+
+QA
+~~
+
 * Added basic multiple choice plotting support
-* A few documentation fixes
-* Fixed a permissions check for deleting faults
-* Fixed a file upload API bug where QATrack+ would try to base64 decode a null value
 * Fixed a Test admin bug with the display of "Test item visible in charts"
 * A message warning you about being logged out or your server not being
   reachable will be shown after 3 consecutive unauthenticated or failed
   pings.  In order to disable this check set `PING_INTERVAL_S = 0` in your
   local_settings.py file.
+* The maximum frequency of autosaves has been reduced to once per 4s. This an attempt
+  to work around occasional deadlocks with SQL Server.
+* Pylinac has been updated:
+    * An issue with CatPhan modules CNR calculations return NaN due to the modules not having
+      background ROIs defined has been fixed
+    * A bug with DMLC VMAT tests with valleys in their profiles that fell below 50% of Dmax has
+      been fixed.
+    * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
+      remedied.
+
+
+API
+~~~
+
+* Fixed a file upload API bug where QATrack+ would try to base64 decode a null value
+* The UnitTestCollection API end point should no longer return duplicated results.
+* The AutoReviewRuleSetFilter API end point has been fixed.
+* Fixed the `fault_types` field of the API's FaultSerializer
+* The API schema view will no longer through a 500 error.
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* A few documentation typo fixes
+* Reports now respect the active/inactive status of units as well as the 
+  active/inactive status of test list assignments.
+* Fixed a permissions check for deleting faults
 
 
 QATrack+ v3.1.0 Release Notes
