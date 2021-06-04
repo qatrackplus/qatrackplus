@@ -290,6 +290,11 @@ PERMISSIONS += (
         _l("Faults"),
         (
             (
+                'faults.view_fault',
+                _l("Can View Faults"),
+                _l("Gives user the ability to view machine faults"),
+            ),
+            (
                 'faults.add_fault',
                 _l("Can Add Faults"),
                 _l("Gives user the ability to log machine faults"),
