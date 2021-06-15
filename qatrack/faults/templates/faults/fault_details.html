@@ -54,9 +54,9 @@
                   {% endif %}
                   {% if perms.faults.can_review %}
                     {% if fault.faultreviewinstance_set.count %}
-                      <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unapprove This Fault" %}</button>
+                      <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unacknowledge This Fault" %}</button>
                     {% else %}
-                      <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Approve This Fault" %}</button>
+                      <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Acknowledge This Fault" %}</button>
                     {% endif %}
                   {% endif %}
                   {% if perms.faults.change_fault %}

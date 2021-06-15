@@ -47,6 +47,7 @@ Miscellaneous
 * Reports now respect the active/inactive status of units as well as the 
   active/inactive status of test list assignments.
 * Fixed a permissions check for deleting faults
+* Reviewing faults now use the term "Acknowledge" instead of "Approve"
 
 
 QATrack+ v3.1.0 Release Notes

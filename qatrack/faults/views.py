@@ -531,18 +531,18 @@ def review_fault(request, pk):
         fault = form.save(commit=False)
         fault.modified_by = request.user
         fault.save()
-        approve = fault.faultreviewinstance_set.first() is None
-        if approve:
+        acknowledge = fault.faultreviewinstance_set.first() is None
+        if acknowledge:
             reviews = create_reviews_for_fault(fault, request.user)
             for review in reviews:
                 review.save()
         else:
             fault.faultreviewinstance_set.all().delete()
 
-        if approve:
-            messages.success(request, _("Successfully approved %(fault)s ") % {'fault': fault})
+        if acknowledge:
+            messages.success(request, _("Successfully acknowledged %(fault)s ") % {'fault': fault})
         else:
-            messages.warning(request, _("Successfully unapproved %(fault)s ") % {'fault': fault})
+            messages.warning(request, _("Successfully unacknowledged %(fault)s ") % {'fault': fault})
     else:  # pragma: nocover
         messages.error(_("Sorry, something went wrong trying to review this fault. It has not been updated"))
 
