@@ -40,7 +40,8 @@ function toggle_test_type(){
     toggle_required_field(".field-display_image", ["upload", "composite", "scomposite"], test_type);
     toggle_required_field(".field-choices", ["multchoice"], test_type);
     toggle_required_field(".field-wrap_low,.field-wrap_high", ["wraparound"], test_type);
-    toggle_required_field(".field-flag_when", ["boolean"], test_type);
+    toggle_required_field(".field-flag_when,.field-reference_value_bool", ["boolean"], test_type);
+    toggle_not_required_field(".field-flag_when,.field-reference_value", ["boolean"], test_type);
 
     var never_visible_in_charts = ["string", "scomposite", "date", "datetime", "upload"];
     if (never_visible_in_charts.indexOf(test_type) > 0){
@@ -109,7 +110,7 @@ $(document).ready(function() {
         $("#id_formatting").val(el.target.value);
     });
 
-    $("#id_category, #id_type, #id_autoreviewruleset").select2();
+    $("#id_category, #id_type, #id_autoreviewruleset, #id_default_tolerance, #id_reference_value_bool").select2();
 
 
 });

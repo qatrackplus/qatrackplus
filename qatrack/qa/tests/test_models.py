@@ -10,7 +10,7 @@ from django.utils import timezone
 from django_comments.models import Comment
 import pytest
 
-from qatrack.qa import models
+from qatrack.qa import models, signals
 from qatrack.qatrack_core import scheduling
 
 from . import utils
@@ -602,6 +602,45 @@ class TestUnitTestInfo(TestCase):
         self.utc.active = False
         self.utc.save()
         self.assertEqual(models.UnitTestInfo.objects.inactive().count(), 1)
+
+    def test_default_reference_and_tolerance_set(self):
+        """Ensure that when get_or_create_unit_test_info is called, if a
+        default reference or tolerance is set on the test, they will be
+        transferred to the UTI"""
+
+        ref = utils.create_reference()
+        tol = utils.create_tolerance()
+        test = utils.create_test()
+        test.default_reference = ref
+        test.default_tolerance = tol
+        test.save()
+
+        uti = signals.get_or_create_unit_test_info(self.utc.unit, test, self.utc.assigned_to)
+        assert uti.reference == ref
+        assert uti.tolerance == tol
+
+    def test_reference_and_tolerance_not_overridden_by_new_default(self):
+        """ Ensure that when a get_or_create_unit_test_info is called for an
+        existing UTI existing references and tolerances won't be affected."""
+
+        ref = utils.create_reference()
+        tol = utils.create_tolerance()
+        self.uti.reference = ref
+        self.uti.tolerance = tol
+        self.uti.save()
+
+        ref_new = utils.create_reference(name="new ref")
+        assert ref_new != ref
+        tol_new = utils.create_tolerance(act_low=-3, tol_low=-2)
+        assert tol_new != tol
+        self.test.reference = ref_new
+        self.test.tolerance = tol_new
+        self.test.save()
+
+        uti = signals.get_or_create_unit_test_info(self.utc.unit, self.test, self.utc.assigned_to)
+        assert uti.id == self.uti.id
+        assert uti.reference == ref
+        assert uti.tolerance == tol
 
 
 class TestTestListMembership(TestCase):

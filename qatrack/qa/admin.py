@@ -8,7 +8,7 @@ from django.contrib import admin, messages
 from django.contrib.admin import options, widgets
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Count, Q
+from django.db.models import Case, Count, Q, Value, When
 import django.forms as forms
 from django.shortcuts import HttpResponseRedirect, redirect, render
 from django.template import loader
@@ -29,7 +29,7 @@ from qatrack.attachments.admin import (
     get_attachment_inline,
 )
 import qatrack.qa.models as models
-from qatrack.qa.utils import format_qc_value
+from qatrack.qa.utils import format_qc_value, get_bool_tols
 from qatrack.qatrack_core.admin import (
     BaseQATrackAdmin,
     BasicSaveUserAdmin,
@@ -891,9 +891,33 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
 
 class TestForm(forms.ModelForm):
 
+    reference_value = forms.FloatField(
+        label=_l("Default reference value"),
+        required=False,
+    )
+
+    reference_value_bool = forms.CharField(
+        label=_l("Default Boolean reference"),
+        required=False,
+        widget=forms.Select(choices=[("", "---"), (0, _l("No")), (1, _l("Yes"))]),
+    )
+
     class Meta:
         model = models.Test
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        warn_bool, act_bool = get_bool_tols()
+        order = Case(
+            When(type=models.PERCENT, then=Value(1)),
+            When(type=models.ABSOLUTE, then=Value(2)),
+            When(type=models.BOOLEAN, then=Value(3)),
+            When(type=models.MULTIPLE_CHOICE, then=Value(4)),
+        )
+        self.fields['default_tolerance'].queryset = self.fields['default_tolerance'].queryset.order_by(order)
 
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
@@ -1019,6 +1043,22 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
                     'skip_without_comment',
                     'require_comment',
                     'formatting',
+                ],
+            },
+        ),
+        (
+            "Default References & Tolerance",
+            {
+                'description': _l(
+                    "You may optionally set default reference and/or tolerance values for this test. If set, "
+                    "when this test is assigned to a unit its reference and tolerance will be automatically set "
+                    "to this default value.  Changing the default reference and tolerance will not affect any "
+                    "existing references & tolerances."
+                ),
+                'fields': [
+                    "reference_value",
+                    "reference_value_bool",
+                    "default_tolerance",
                 ],
             },
         ),
