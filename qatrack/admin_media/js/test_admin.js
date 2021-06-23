@@ -15,7 +15,7 @@ function toggle_formatting(test_type){
 
 function toggle_not_required_field(field_class, not_required_for_test_types, test_type){
     if (not_required_for_test_types.indexOf(test_type) >= 0){
-        $(field_class).not('errors').hide();
+        $(field_class).not('.errors').hide();
     }else{
         $(field_class).show();
     }
@@ -25,7 +25,7 @@ function toggle_required_field(selector, required_for_test_types, test_type){
     if (required_for_test_types.indexOf(test_type) >= 0){
         $(selector).show();
     }else{
-        $(selector).not('errors').hide();
+        $(selector).not('.errors').hide();
     }
 }
 
