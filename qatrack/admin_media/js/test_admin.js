@@ -15,7 +15,7 @@ function toggle_formatting(test_type){
 
 function toggle_not_required_field(field_class, not_required_for_test_types, test_type){
     if (not_required_for_test_types.indexOf(test_type) >= 0){
-        $(field_class).not('errors').hide();
+        $(field_class).not('.errors').hide();
     }else{
         $(field_class).show();
     }
@@ -25,7 +25,7 @@ function toggle_required_field(selector, required_for_test_types, test_type){
     if (required_for_test_types.indexOf(test_type) >= 0){
         $(selector).show();
     }else{
-        $(selector).not('errors').hide();
+        $(selector).not('.errors').hide();
     }
 }
 
@@ -41,7 +41,15 @@ function toggle_test_type(){
     toggle_required_field(".field-choices", ["multchoice"], test_type);
     toggle_required_field(".field-wrap_low,.field-wrap_high", ["wraparound"], test_type);
     toggle_required_field(".field-flag_when,.field-reference_value_bool", ["boolean"], test_type);
-    toggle_not_required_field(".field-flag_when,.field-reference_value", ["boolean"], test_type);
+    toggle_not_required_field(".field-flag_when,.field-reference_value", ["boolean", "scomposite", "string", "date", "datetime", "upload"], test_type);
+    toggle_not_required_field(".field-default_tolerance", ["upload"], test_type);
+
+    var $ref_tols_fieldset = $(".field-default_tolerance").not(".errors").parents("fieldset");
+    if (test_type === "upload" && $ref_tols_fieldset.find(".errors").length === 0){
+        $ref_tols_fieldset.hide();
+    }else{
+        $ref_tols_fieldset.show();
+    }
 
     var never_visible_in_charts = ["string", "scomposite", "date", "datetime", "upload"];
     if (never_visible_in_charts.indexOf(test_type) > 0){
