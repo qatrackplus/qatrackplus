@@ -2198,7 +2198,7 @@ class TestListInstanceManager(models.Manager):
     def in_progress(self, user=None):
         qs = self.get_queryset().filter(in_progress=True)
         if user:
-            qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all())
+            qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all()).distinct()
         return qs.order_by("-work_completed")
 
     def your_in_progress_count(self, user):
