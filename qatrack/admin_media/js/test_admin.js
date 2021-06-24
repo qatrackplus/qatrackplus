@@ -120,5 +120,29 @@ $(document).ready(function() {
 
     $("#id_category, #id_type, #id_autoreviewruleset, #id_default_tolerance, #id_reference_value_bool").select2();
 
+    $("#id_default_tolerance").select2({
+        allowClear: true,
+        placeholder: '-------',
+        ajax: {
+            url: admin_urls.TOLERANCE_SEARCHER,
+            dataType: 'json',
+            data: function (args) {
+                return {
+                    q: $("#id_type").val()
+                };
+            },
+            processResults: function(data, params){
+                var results = [];
+                $.each(data.items, function(i, v){
+                    results.push({
+                        id: v.id,
+                        text: v.name
+                    });
+                });
+                return {results: results};
+            }
+        }
+    });
+
 
 });

@@ -12,6 +12,7 @@ import pytest
 
 from qatrack.qa import models, signals
 from qatrack.qatrack_core import scheduling
+from qatrack.qa.utils import get_bool_tols
 
 from . import utils
 
@@ -223,6 +224,32 @@ class TestTolerance(TestCase):
     def test_natural_key(self):
         t = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
         assert t.natural_key() == (t.name,)
+
+    def test_get_by_test_type_numerical(self):
+        """Ensure only numerical tolerances are returned for by_test_type("numerical")"""
+        t1 = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        t2 = utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.PERCENT)
+        utils.create_tolerance(mc_pass_choices="foo", tol_type=models.MULTIPLE_CHOICE)
+        assert set(models.Tolerance.objects.by_test_type(models.NUMERICAL)) == set([t1, t2])
+        assert set(models.Tolerance.objects.by_test_type(models.SIMPLE)) == set([t1, t2])
+
+    def test_get_by_test_type_bool(self):
+        """Ensure only boolean tolerances are returned for by_test_type("boolean")"""
+        utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        utils.create_tolerance(mc_pass_choices="foo", tol_type=models.MULTIPLE_CHOICE)
+        assert set(models.Tolerance.objects.by_test_type(models.BOOLEAN)) == set(get_bool_tols())
+
+    def test_get_by_test_type_string(self):
+        """Ensure only string tolerances are returned for by_test_type("string")"""
+        t1 = utils.create_tolerance(mc_pass_choices="foo", tol_type=models.MULTIPLE_CHOICE)
+        utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        assert set(models.Tolerance.objects.by_test_type(models.STRING)) == set([t1])
+
+    def test_get_by_test_type_no_tol(self):
+        """Ensure no tolerances are returned for by_test_type("upload")"""
+        utils.create_tolerance(mc_pass_choices="foo", tol_type=models.MULTIPLE_CHOICE)
+        utils.create_tolerance(act_high=2, act_low=-2, tol_high=1, tol_low=-1, tol_type=models.ABSOLUTE)
+        assert set(models.Tolerance.objects.by_test_type(models.UPLOAD)) == set()
 
 
 class TestTestCollectionInterface(TestCase):

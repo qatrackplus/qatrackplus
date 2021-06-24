@@ -32,6 +32,7 @@ urlpatterns = [
 
     # search urls
     url(r"^searcher/test/$", views.test_searcher, name='test_searcher'),
+    url(r"^searcher/tolerance/$", views.tolerance_searcher, name='tolerance_searcher'),
     url(r"^searcher/test_list/$", views.test_list_searcher, name='test_list_searcher'),
     url(r"^searcher/test_list_cycle/$", views.test_list_cycle_searcher, name='test_list_cycle_searcher'),
     url(r"^searcher/test_instance/$", views.test_instance_searcher, name='test_instance_searcher'),

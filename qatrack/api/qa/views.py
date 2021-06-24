@@ -200,6 +200,12 @@ def test_searcher(request):
     return JsonResponse({'items': list(tests)})
 
 
+def tolerance_searcher(request):
+    q = request.GET.get('q')
+    tols = models.Tolerance.objects.by_test_type(q).values("id", "name")
+    return JsonResponse({'items': list(tols)})
+
+
 def test_list_searcher(request):
     q = request.GET.get('q')
     testlists = models.TestList.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]

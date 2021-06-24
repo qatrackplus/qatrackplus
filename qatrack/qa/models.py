@@ -580,6 +580,16 @@ class ToleranceManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
 
+    def by_test_type(self, test_type):
+        qs = self.get_queryset()
+        if test_type in STRING_TYPES:
+            return qs.filter(type=MULTIPLE_CHOICE)
+        elif test_type == BOOLEAN:
+            return qs.filter(type=BOOLEAN)
+        elif test_type in NUMERICAL_TYPES or test_type == NUMERICAL:
+            return qs.filter(Q(type=ABSOLUTE) | Q(type=PERCENT))
+        return qs.none()
+
 
 class Tolerance(models.Model):
     """
