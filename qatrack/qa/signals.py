@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.signals import (
@@ -61,7 +63,8 @@ def handle_se_statuses_post_tli_delete(test_list_instance):
 
 
 def get_or_create_unit_test_info(unit: models.Unit, test: models.Test,
-                                 assigned_to: models.Group = None, active: bool = True) -> models.UnitTestInfo:
+                                 assigned_to: Optional[models.Group] = None,
+                                 active: bool = True) -> models.UnitTestInfo:
     """Return a UnitTestInfo object for the input unit and test.  If a UTI
     doesn't exist, it will be created and have its reference & tolerance
     updated where applicable"""
