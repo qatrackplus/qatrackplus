@@ -9,6 +9,7 @@ from django.db.models.signals import (
 )
 from django.dispatch import Signal, receiver
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django_comments.models import Comment
 from django_comments.signals import comment_was_posted
 
@@ -73,8 +74,17 @@ def get_or_create_unit_test_info(unit: models.Unit, test: models.Test,
     if created:
         uti.assigned_to = assigned_to
         uti.active = active
-        uti.reference = test.default_reference
-        uti.tolerance = test.default_tolerance
+        if test.default_reference or test.default_tolerance:
+            uti.reference = test.default_reference
+            uti.tolerance = test.default_tolerance
+            models.UnitTestInfoChange.objects.create(
+                unit_test_info=uti,
+                comment=_("Set from tests default reference & tolerance values"),
+                reference_changed=uti.reference is not None,
+                tolerance_changed=uti.tolerance is not None,
+                changed_by=test.modified_by,
+            )
+
         uti.save()
     return uti
 

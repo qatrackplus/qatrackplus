@@ -618,6 +618,10 @@ class TestUnitTestInfo(TestCase):
         uti = signals.get_or_create_unit_test_info(self.utc.unit, test, self.utc.assigned_to)
         assert uti.reference == ref
         assert uti.tolerance == tol
+        utic = uti.unittestinfochange_set.latest("pk")
+        assert "default reference" in utic.comment
+        assert utic.reference_changed
+        assert utic.tolerance_changed
 
     def test_reference_and_tolerance_not_overridden_by_new_default(self):
         """ Ensure that when a get_or_create_unit_test_info is called for an
