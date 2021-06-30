@@ -279,6 +279,14 @@ REST_FRAMEWORK = {
     'DATETIME_INPUT_FORMATS': DATETIME_INPUT_FORMATS,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_FILTER_BACKENDS': ('rest_framework_filters.backends.RestFrameworkFilterBackend',),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '120/min',
+        'testlistinstance': '30/min',
+    },
 }
 
 # -----------------------------------------------------------------------------

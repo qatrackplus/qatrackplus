@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.utils import timezone
+from django.test.utils import override_settings
 import pytest
 import pytz
 from rest_framework import status
@@ -18,7 +19,12 @@ from qatrack.qa import models
 from qatrack.qa.tests import utils
 from qatrack.service_log.tests import utils as sl_utils
 
+rf_settings = settings.REST_FRAMEWORK
+rf_settings['DEFAULT_THROTTLE_RATES']['user'] = "1000000/min"
+rf_settings['DEFAULT_THROTTLE_RATES']['testlistinstance'] = "1000000/min"
 
+
+@override_settings(REST_FRAMEWORK=rf_settings)
 class TestTestListInstanceAPI(APITestCase):
 
     def setUp(self):
@@ -82,6 +88,9 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.login(username="user", password="password")
         self.status = utils.create_status()
 
+        rf_settings['DEFAULT_THROTTLE_RATES']['testlistinstance'] = "1000000/min"
+        rf_settings['DEFAULT_THROTTLE_RATES']['user'] = "1000000/min"
+
     def tearDown(self):
         for a in Attachment.objects.all():
             if os.path.isfile(a.attachment.path):
@@ -108,6 +117,30 @@ class TestTestListInstanceAPI(APITestCase):
             ti = models.TestInstance.objects.get(unit_test_info__test=t)
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
             assert v == self.data['tests'][t.slug]['value']
+
+    def test_create_throttled(self):
+        """If a client exceeds the set throttle rate for posting results, they should get a 429"""
+        tmp_settings = settings.REST_FRAMEWORK.copy()
+        tmp_settings['DEFAULT_THROTTLE_RATES']['testlistinstance'] = "1/min"
+        with override_settings(REST_FRAMEWORK=tmp_settings):
+
+            response = self.client.post(self.create_url, self.data)
+            assert response.status_code == status.HTTP_201_CREATED
+            response = self.client.post(self.create_url, self.data)
+            assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+    def test_get_throttled(self):
+        """If a client exceeds the set throttle rate for fetching non test list
+        instance endpoints, they should get a 429"""
+
+        tmp_settings = settings.REST_FRAMEWORK.copy()
+        tmp_settings['DEFAULT_THROTTLE_RATES']['user'] = "1/min"
+        with override_settings(REST_FRAMEWORK=tmp_settings):
+            url = reverse("unittestcollection-list")
+            response = self.client.get(url, self.data)
+            assert response.status_code == status.HTTP_200_OK
+            response = self.client.get(url, self.data)
+            assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
     def test_create_order(self):
         response = self.client.post(self.create_url, self.data)

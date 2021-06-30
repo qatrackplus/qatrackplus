@@ -419,6 +419,42 @@ Controls how often (in seconds) the server is "pinged" when performing QC or
 entering service log data. Set to `PING_INTERVAL_S = 0` to disable the ping
 check.  Default is `PING_INTERVAL_S = 5`
 
+.. _rest-framework-config:
+
+REST_FRAMEWORK
+..............
+
+The `REST_FRAMEWORK` settings control how the QATrack+ API behaves.  If you
+want to alter the throttle rates of the API you can do so with settings similar
+to the following:
+
+.. code-block:: python
+
+    REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework.authentication.TokenAuthentication',
+            'rest_framework.authentication.SessionAuthentication',
+        ),
+        # Use Django's standard `django.contrib.auth` permissions
+        'DEFAULT_SCHEMA_CLASS': 'qatrack.api.schemas.QATrackAutoSchema',
+        'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
+        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+        'PAGE_SIZE': 100,
+        'DATETIME_INPUT_FORMATS': DATETIME_INPUT_FORMATS,
+        'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+        'DEFAULT_FILTER_BACKENDS': ('rest_framework_filters.backends.RestFrameworkFilterBackend',),
+        'DEFAULT_THROTTLE_CLASSES': [
+            'rest_framework.throttling.ScopedRateThrottle',
+            'rest_framework.throttling.UserRateThrottle',
+        ],
+        'DEFAULT_THROTTLE_RATES': {
+            'user': '120/min',
+            'testlistinstance': '30/min',
+        },
+    }
+
+
+
 REVIEW_DIFF_COL
 ...............
 

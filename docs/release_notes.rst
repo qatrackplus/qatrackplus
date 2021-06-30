@@ -33,7 +33,12 @@ QA
 API
 ~~~
 
+
+* Added API request throttling. By default creating test list instances are throttled
+  to 30 / min and other calls are throttled to 120 / min. You can adjust these
+  rates with the :ref:`REST_FRAMEWORK settings <rest-framework-config>`.
 * Fixed a file upload API bug where QATrack+ would try to base64 decode a null value
+* Fixed a bug where upload tests returning date objects would fail with an invalid type error
 * The UnitTestCollection API end point should no longer return duplicated results.
 * The AutoReviewRuleSetFilter API end point has been fixed.
 * Fixed the `fault_types` field of the API's FaultSerializer
