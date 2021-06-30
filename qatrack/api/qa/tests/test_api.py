@@ -584,6 +584,30 @@ class TestTestListInstanceAPI(APITestCase):
         assert tiu.attachment_set.first().finalized
         assert tiu.comment == "test comment"
 
+    def test_file_upload_with_date_in_return(self):
+        """
+        If an upload test type returns a date object as part of its results,
+        for another test to use, there should be no wrong type error returned
+        """
+        self.tsc.calculation_procedure = "result = file_upload['foo']"
+        self.tsc.save()
+        utils.create_test_list_membership(self.test_list, self.tsc)
+
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "import datetime\nresult = {'foo': datetime.datetime.now()}"
+        upload.save()
+        utils.create_test_list_membership(self.test_list, upload)
+
+        upload_data = json.dumps({"a": 1}).encode()
+        self.data['tests']['file_upload'] = {
+            'value': upload_data,
+            'filename': "tmp.json",
+            'encoding': "text",
+            'comment': "test comment",
+        }
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+
     def test_file_upload_no_filename(self):
         """
         Add a file upload test and ensure we can upload, process and have
