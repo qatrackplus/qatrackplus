@@ -881,7 +881,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
     def parent_of(self, obj):
 
         title = _("Click to view child test list")
-        links = [(sl.child.name, reverse("admin:qa_testlist_change", args=(sl.parent.pk,)))
+        links = [(sl.child.name, reverse("admin:qa_testlist_change", args=(sl.child.pk,)))
                  for sl in obj.children.all()]
         html_links = format_html_join(
             ", ", '<a href="{}" title="{}" target="_blank">{}</a>', ((url, title, name) for (name, url) in links)
