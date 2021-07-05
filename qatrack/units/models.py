@@ -2,6 +2,7 @@ import calendar
 from collections import defaultdict
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
@@ -200,6 +201,22 @@ class Modality(models.Model):
         max_length=255,
         help_text=_l('Descriptive name for this treatment or imaging modality.'),
         unique=True
+    )
+
+    dosimetric_leaf_gap = models.DecimalField(
+        max_digits=4,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(10)]
+    )
+
+    transmission = models.DecimalField(
+        max_digits=4,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(10)]
     )
 
     objects = NameNaturalKeyManager()

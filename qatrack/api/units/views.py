@@ -38,7 +38,7 @@ class UnitTypeViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
-class ModalityViewSet(viewsets.ReadOnlyModelViewSet):
+class ModalityViewSet(viewsets.ModelViewSet):
     queryset = models.Modality.objects.all().order_by('name')
     serializer_class = serializers.ModalitySerializer
     filterset_class = filters.ModalityFilter
