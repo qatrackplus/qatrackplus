@@ -12,6 +12,16 @@ from qatrack.qatrack_core.dates import format_as_date as fmt_date
 
 PHOTON = 'photon'
 ELECTRON = 'electron'
+SCALE_ELEKTA = 'ELEKTA'
+SCALE_ELEKTA_IEC = 'ELEKTA_IEC'
+SCALE_ELEKTA_IEC601 = 'ELEKTA_IEC601'
+SCALE_IEC61217 = 'IEC61217'
+SCALE_SATURNE = 'SATURNE'
+SCALE_SATURNE_MS = 'SATURNE_MS'
+SCALE_SIEMENS = 'SIEMENS'
+SCALE_SIEMENS_IEC = 'SIEMENS_IEC'
+SCALE_VARIAN_IEC = 'VARIAN_IEC'
+SCALE_VARIAN_STANDARD = 'VARIAN_STANDARD'
 
 
 class NameNaturalKeyManager(models.Manager):
@@ -221,7 +231,21 @@ class Unit(models.Model):
     """
     type = models.ForeignKey(UnitType, verbose_name=_l("Unit Type"), on_delete=models.PROTECT)
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.PROTECT)
-
+    scale = models.CharField(
+        max_length=256, default='', blank=True, help_text=_l('Coordinate scale of the machine'),
+        choices=[
+            (SCALE_ELEKTA, 'Elekta'),
+            (SCALE_ELEKTA_IEC, 'Elekta IEC'),
+            (SCALE_ELEKTA_IEC601, 'Elekta IEC601'),
+            (SCALE_IEC61217, 'IEC61217'),
+            (SCALE_SATURNE, 'Saturne'),
+            (SCALE_SATURNE_MS, 'Saturne MS'),
+            (SCALE_SIEMENS, 'Siemens'),
+            (SCALE_SIEMENS_IEC, 'Siemens IEC'),
+            (SCALE_VARIAN_IEC, 'Varian IEC'),
+            (SCALE_VARIAN_STANDARD, 'Varian Standard')
+        ]
+    )
     number = models.PositiveIntegerField(
         null=False,
         blank=True,

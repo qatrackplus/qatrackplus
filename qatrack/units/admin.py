@@ -58,6 +58,7 @@ class UnitFormAdmin(ModelForm):
             'date_acceptance',
             'active',
             'type',
+            'scale',
             'is_serviceable',
             'site',
             'modalities',
