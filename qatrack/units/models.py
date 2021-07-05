@@ -247,7 +247,7 @@ class Unit(models.Model):
     Stores a single radiation device (e.g. Linac, Tomo unit, Cyberkinfe etc.)
     """
     type = models.ForeignKey(UnitType, verbose_name=_l("Unit Type"), on_delete=models.PROTECT)
-    site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.PROTECT)
+    site = models.ForeignKey(Site, null=False, blank=False, on_delete=models.PROTECT)
     scale = models.CharField(
         max_length=256, default='', blank=True, help_text=_l('Coordinate scale of the machine'),
         choices=[
