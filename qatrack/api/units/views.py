@@ -52,6 +52,20 @@ class SiteViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
+class RoomViewSet(viewsets.ModelViewSet):
+    queryset = models.Room.objects.all()
+    serializer_class = serializers.RoomSerializer
+    filterset_class = filters.RoomFilter
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+
+
+class StorageViewSet(viewsets.ModelViewSet):
+    queryset = models.Storage.objects.all()
+    serializer_class = serializers.StorageSerializer
+    filterset_class = filters.StorageFilter
+    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+
+
 class UnitAvailableTimeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.UnitAvailableTime.objects.all().order_by('unit__number', "-date_changed")
     serializer_class = serializers.UnitAvailableTimeSerializer

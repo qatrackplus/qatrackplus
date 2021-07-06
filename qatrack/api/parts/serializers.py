@@ -10,13 +10,6 @@ class SupplierSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
-class StorageSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = models.Storage
-        fields = "__all__"
-
-
 class PartCategorySerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:

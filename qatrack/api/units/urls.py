@@ -10,6 +10,8 @@ router.register(r'unitclasses', views.UnitClassViewSet)
 router.register(r'unittypes', views.UnitTypeViewSet)
 router.register(r'modalities', views.ModalityViewSet)
 router.register(r'sites', views.SiteViewSet)
+router.register(r'rooms', views.RoomViewSet)
+router.register(r'storages', views.StorageViewSet)
 router.register(r'availabletimes', views.UnitAvailableTimeViewSet)
 router.register(r'availabletimeedits', views.UnitAvailableTimeEditViewSet)
 

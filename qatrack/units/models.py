@@ -6,6 +6,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
+from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
@@ -118,6 +119,96 @@ class Site(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RoomManager(models.Manager):
+
+    def get_queryset(self):
+        return super(RoomManager, self).get_queryset().select_related('site')
+
+
+class Room(models.Model):
+
+    site = models.ForeignKey(
+        Site,
+        verbose_name=_l("site"),
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        help_text=_l('Site this storage room is located')
+    )
+    name = models.CharField(
+        verbose_name=_l("name"),
+        max_length=32,
+        help_text=_l('Name of room or room number'),
+    )
+
+    objects = RoomManager()
+
+    class Meta:
+        ordering = ['site', 'name']
+        unique_together = ['site', 'name']
+
+    def __str__(self):
+        return '%s%s' % (self.name, ' (%s)' % self.site.name if self.site else '')
+
+    def save(self, *args, **kwargs):
+        new = self.pk is None
+        super().save(*args, **kwargs)
+        if new:
+            # Create generic storage (ie, no location)
+            Storage.objects.create(room=self)
+
+
+class StorageManager(models.Manager):
+
+    def get_queryset(self):
+        return super(StorageManager, self).get_queryset().select_related('room', 'room__site').order_by('location')
+
+    def get_queryset_for_room(self, room):
+        return super().get_queryset().filter(room=room).order_by('location')
+
+
+class Storage(models.Model):
+
+    room = models.ForeignKey(
+        Room,
+        verbose_name=_l("room"),
+        blank=True,
+        null=True,
+        help_text=_l('Room for part storage'),
+        on_delete=models.CASCADE,
+    )
+
+    location = models.CharField(
+        verbose_name=_l("location"),
+        max_length=32, blank=True, null=True,
+        help_text=_l('Where is this storage located?'),
+    )
+    description = models.TextField(
+        verbose_name=_l("description"),
+        max_length=255, null=True, blank=True,
+        help_text=_l("Optional description of this storage"),
+    )
+
+    objects = StorageManager()
+
+    class Meta:
+        verbose_name_plural = _l("Storage")
+        unique_together = ['room', 'location']
+
+    def __str__(self):
+        items = []
+        if self.room:
+            if self.room.site:
+                items.append(self.room.site.name)
+            items.append(self.room.name)
+        if self.location:
+            items.append(self.location)
+        else:
+            items.append('<%s>' % _("no location"))
+
+        return ' - '.join(items)
 
 
 class UnitTypeManager(models.Manager):

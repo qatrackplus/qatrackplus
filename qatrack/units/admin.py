@@ -1,5 +1,6 @@
 from itertools import groupby
 
+from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ChoiceField, ModelForm, ModelMultipleChoiceField
@@ -15,7 +16,9 @@ from qatrack.service_log.models import (
 from .forms import UnitAvailableTimeForm
 from .models import (
     Modality,
+    Room,
     Site,
+    Storage,
     Unit,
     UnitAvailableTime,
     UnitClass,
@@ -216,8 +219,81 @@ class SiteAdmin(BaseQATrackAdmin):
     )
 
 
+class StorageInlineForm(forms.ModelForm):
+
+    class Meta:
+        model = Storage
+        fields = ['id', 'room', 'location', 'description']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['description'].widget.attrs.update({'rows': 1, 'class': 'autosize width-100'})
+        if self.instance.pk and self.initial['location'] is None:
+            self.fields['location'].widget.attrs.update({'placeholder': '<no specific location>'})
+            self.fields['location'].disabled = 'disabled'
+
+
+class StorageInline(admin.TabularInline):
+
+    model = Storage
+    form = StorageInlineForm
+    parent_instance = None
+    template = 'admin/parts/storage/edit_inline/tabular_paginated.html'
+
+    def get_formset(self, request, obj=None, **kwargs):
+        if obj:
+            self.verbose_name_plural = 'Storage within room %s' % obj.name
+            self.parent_instance = obj
+        formset = super().get_formset(request, obj=obj, **kwargs)
+        return formset
+
+    def get_queryset(self, request):
+
+        qs = Storage.objects.get_queryset_for_room(room=self.parent_instance).prefetch_related(
+            'partstoragecollection_set__part', 'partstoragecollection_set'
+        ).select_related('room', 'room__site')
+
+        return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if 'queryset' in kwargs:
+            kwargs['queryset'] = kwargs['queryset'].select_related('room', 'room__site')
+        else:
+            db = kwargs.pop('using', None)
+            rel = db_field.remote_field
+            kwargs['queryset'] = rel.model._default_manager.using(db).complex_filter(
+                rel.limit_choices_to
+            ).select_related('room', 'room__site')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class RoomAdmin(BaseQATrackAdmin):
+
+    list_display = ['name', 'site']
+    search_fields = ('name', 'site__name')
+    inlines = [StorageInline]
+    del_storage_response = None
+
+    class Media:
+        js = (
+            "admin/js/jquery.init.js",
+            'jquery/js/jquery.min.js',
+            'autosize/js/autosize.min.js',
+        )
+
+    def get_queryset(self, request):
+        if request.method == 'POST':
+            return super().get_queryset(request).prefetch_related(
+                'storage_set',
+                'storage_set__room',
+                'storage_set__room__site',
+            )
+        return super().get_queryset(request).prefetch_related('storage_set')
+
+
 admin.site.register(Unit, UnitAdmin)
 admin.site.register(UnitType, UnitTypeAdmin)
 admin.site.register(Modality, ModalityAdmin)
 admin.site.register(Site, SiteAdmin)
 admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)
+admin.site.register([Room], RoomAdmin)

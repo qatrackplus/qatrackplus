@@ -65,6 +65,20 @@ class SiteSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class RoomSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.Room
+        fields = "__all__"
+
+
+class StorageSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.Storage
+        fields = "__all__"
+
+
 class UnitAvailableTimeSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:

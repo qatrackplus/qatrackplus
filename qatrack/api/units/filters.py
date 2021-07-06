@@ -105,3 +105,26 @@ class UnitAvailableTimeFilter(filters.FilterSet):
         fields = {
             "date_changed": ['exact'],
         }
+
+
+class RoomFilter(filters.FilterSet):
+
+    site = filters.RelatedFilter(SiteFilter, field_name="site", queryset=models.Site.objects.all())
+
+    class Meta:
+        model = models.Room
+        fields = {
+            "name": "__all__",
+        }
+
+
+class StorageFilter(filters.FilterSet):
+
+    room = filters.RelatedFilter(RoomFilter, field_name="room", queryset=models.Room.objects.all())
+
+    class Meta:
+        model = models.Storage
+        fields = {
+            "location": "__all__",
+            "description": "__all__",
+        }

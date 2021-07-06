@@ -13,6 +13,8 @@ QATrack+ v3.2.0 Release Notes
   unit types without a unit class assigned to it will automatically be assigned
   a "Default" unit class.
 
+* Room & Storage models have been moved from the Parts app to the Units app.
+
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------
