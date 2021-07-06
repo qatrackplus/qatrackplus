@@ -53,7 +53,7 @@ class FaultReportMixin:
         )
 
     def get_unit__site_details(self, sites):
-        return ("Site(s)", (', '.join(s.name if s != 'null' else _("Other") for s in sites)).strip(", "))
+        return ("Site(s)", (', '.join(s.name for s in sites)).strip(", "))
 
     def get_review_status_details(self, val):
         return (_("Review Status"), dict(self.filter_set.form.fields['review_status'].choices)[val] if val else "")

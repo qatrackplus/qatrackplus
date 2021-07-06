@@ -45,8 +45,8 @@ class TestFaultSummaryReport(TestCase):
 
     def test_get_unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = faults.FaultSummaryReport().get_unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = faults.FaultSummaryReport().get_unit__site_details([site])
+        assert sites == ('Site(s)', 'site')
 
     def test_get_faults_for_site(self):
         site = USite.objects.create(name="site")
@@ -59,18 +59,6 @@ class TestFaultSummaryReport(TestCase):
         qs = models.Fault.objects.all()
         fs = faults.FaultSummaryReport().get_faults_for_site(qs, site)
         assert [x.pk for x in fs] == [fault1.pk]
-
-    def test_get_faults_for_null_site(self):
-        site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
-        fault_utils.create_fault(unit=unit1)
-
-        unit2 = utils.create_unit(site=None)
-        fault2 = fault_utils.create_fault(unit=unit2)
-
-        qs = models.Fault.objects.all()
-        fs = faults.FaultSummaryReport().get_faults_for_site(qs, None)
-        assert [x.pk for x in fs] == [fault2.pk]
 
     def test_generate_html(self):
 

@@ -245,7 +245,7 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
         for site, utcs in context['sites_data']:
             for utc in utcs:
                 rows.extend([
-                    (_("Site"), site or _("Other")),
+                    (_("Site"), site),
                     (_("Unit"), utc['unit_name']),
                     (_("Test list (Cycle)"), utc['name']),
                     (_("Frequency"), utc['frequency']),

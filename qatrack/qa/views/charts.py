@@ -115,10 +115,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'categories': models.Category.objects.all(),
             'statuses': models.TestInstanceStatus.objects.all(),
             'service_types': sl_models.ServiceType.objects.all(),
-            'sites': [{
-                "pk": "",
-                "name": "Other"
-            }] + list(Site.objects.values('pk', 'name')),
+            'sites': list(Site.objects.values('pk', 'name')),
             'units': Unit.objects.values('pk', 'name', 'active', 'site_id'),
             'unit_frequencies': json.dumps(self.unit_frequencies, cls=SetEncoder),
             'active_unit_test_list': self.get_active_test_lists()
@@ -544,7 +541,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         """look for a number in GET and convert it to the given datatype"""
         try:
             v = dtype(self.request.GET.get(param, default))
-        except:  # noqa: E507
+        except:  # noqa: E507, E722
             v = default
         return v
 

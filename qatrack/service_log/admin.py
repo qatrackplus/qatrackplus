@@ -384,7 +384,7 @@ class ServiceEventScheduleAdmin(BaseQATrackAdmin):
     get_name.admin_order_field = 'service_event_template__name'
 
     def get_site(self, ses):
-        return ses.unit_service_area.unit.site.name if ses.unit_service_area.unit.site else _l("Other")
+        return ses.unit_service_area.unit.site.name
     get_site.short_description = _l('Site')
     get_site.admin_order_field = 'unit_service_area__unit__site'
 

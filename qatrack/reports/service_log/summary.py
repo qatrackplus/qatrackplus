@@ -44,7 +44,7 @@ class ServiceEventReportMixin:
         )
 
     def get_unit_service_area__unit__site_details(self, sites):
-        return ("Site(s)", (', '.join(s.name if s != 'null' else _("Other") for s in sites)).strip(", "))
+        return ("Site(s)", (', '.join(s.name for s in sites)).strip(", "))
 
     def get_ses_for_site(self, qs, site):
         """Get Test List Instances from filtered queryset for input site"""

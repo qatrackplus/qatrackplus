@@ -209,11 +209,13 @@ class TestFaultList(TestCase):
 
     def test_get_filters_multiple_sites(self):
         """If more than one site exists, there should be a noneornull filter for Other sites"""
-        site = qa_utils.create_site()
-        qa_utils.create_unit(name="second unit", site=site)
-        utils.create_fault()
+        site = qa_utils.create_site("site2")
+        u2 = qa_utils.create_unit(name="second unit", site=site)
+        utils.create_fault(unit=self.unit)
+        utils.create_fault(unit=u2)
         filters = views.FaultList().get_filters('unit__site__name')
-        assert filters == [('noneornull', 'Other')]
+
+        assert set(filters) == set([(self.unit.site.name, self.unit.site.name), (site.name, site.name)])
 
 
 class TestUnreviewedFaultList(TestCase):

@@ -138,10 +138,10 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
     """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
 
     def site_unit_type(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
+        return "%s :: %s" % (u.site.name, u.type.name)
 
     def site_unit_name(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
+        return "%s :: %s" % (u.site.name, u.name)
 
     units = u_models.Unit.objects.select_related(
         "site",
@@ -169,7 +169,7 @@ def unit_site_service_area_choices(include_empty=False, include_unspecified=Fals
         return usa.service_area.name
 
     def site_unit_name(usa):
-        return "%s :: %s" % (usa.unit.site.name if usa.unit.site else "Other", usa.unit.name)
+        return "%s :: %s" % (usa.unit.site.name, usa.unit.name)
 
     usas = sl_models.UnitServiceArea.objects.select_related(
         "unit__site",
@@ -197,10 +197,10 @@ def utc_choices(include_empty=False):
     """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
 
     def site_unit_type(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
+        return "%s :: %s" % (u.site.name, u.type.name)
 
     def unit_utc_name(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
+        return "%s :: %s" % (u.site.name, u.name)
 
     units = u_models.Unit.objects.select_related("site", "type").prefetch_related(
         "unittestcollection_set",

@@ -2141,10 +2141,11 @@ class TestTrees(TestCase):
         vdc = umodels.UnitType.objects.create(vendor=ve, unit_class=rad, name="VDC 405")
         crc = umodels.UnitType.objects.create(vendor=cap, unit_class=rad, name="CRC-15R")
         d690 = umodels.UnitType.objects.create(vendor=ge, unit_class=pet, name="Discovery 690")
+        self.site = utils.create_site()
 
-        u1 = umodels.Unit.objects.create(type=vdc, number=1, date_acceptance=timezone.now().date())
-        u2 = umodels.Unit.objects.create(type=crc, number=2, date_acceptance=timezone.now().date())
-        u3 = umodels.Unit.objects.create(type=d690, number=3, date_acceptance=timezone.now().date())
+        u1 = umodels.Unit.objects.create(type=vdc, number=1, date_acceptance=timezone.now().date(), site=self.site)
+        u2 = umodels.Unit.objects.create(type=crc, number=2, date_acceptance=timezone.now().date(), site=self.site)
+        u3 = umodels.Unit.objects.create(type=d690, number=3, date_acceptance=timezone.now().date(), site=self.site)
 
         t = utils.create_test()
         tl = utils.create_test_list()
@@ -2157,11 +2158,10 @@ class TestTrees(TestCase):
 
         tree = trees.BootstrapFrequencyTree([self.utc1.assigned_to]).generate()[0]
 
-        # no site, so should be Other site
         site_nodes = tree['nodes']
         assert len(site_nodes) == 1
         site_node = site_nodes[0]
-        assert site_node['text'].startswith("Other")
+        assert site_node['text'].startswith(self.site.name)
 
         # two unit classes
         class_nodes = site_node['nodes']
@@ -2176,11 +2176,10 @@ class TestTrees(TestCase):
 
         tree = trees.BootstrapCategoryTree([self.utc1.assigned_to]).generate()[0]
 
-        # no site, so should be Other site
         site_nodes = tree['nodes']
         assert len(site_nodes) == 1
         site_node = site_nodes[0]
-        assert site_node['text'].startswith("Other")
+        assert site_node['text'].startswith(self.site.name)
 
         # two unit classes
         class_nodes = site_node['nodes']

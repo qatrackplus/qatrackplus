@@ -81,7 +81,7 @@ class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
             rows.extend([
                 [],
                 [],
-                [site if site else _("Other")],
+                [site],
                 [_("Unit"),
                  _("Service Area"),
                  _("Template Name"),

@@ -956,15 +956,6 @@ class ServiceEventsBaseList(BaseListableView):
 
         return fields
 
-    def get_filters(self, field, queryset=None):
-
-        filters = super().get_filters(field, queryset=queryset)
-
-        if field == 'unit_service_area__unit__site__name':
-            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
-
-        return filters
-
     def get_context_data(self, *args, **kwargs):
         context = super(ServiceEventsBaseList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
@@ -1844,8 +1835,6 @@ class ServiceEventScheduleList(BaseListableView):
 
         if field == 'frequency__name':
             filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
-        elif field == 'unit__site__name':
-            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 

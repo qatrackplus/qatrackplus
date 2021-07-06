@@ -76,7 +76,7 @@ class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
             rows.extend([
                 [],
                 [],
-                [site if site else _("Other")],
+                [site],
                 [_("Unit"),
                  _("Name"),
                  _("Frequency"),

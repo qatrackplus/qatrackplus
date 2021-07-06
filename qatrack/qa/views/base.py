@@ -326,8 +326,6 @@ class UTCList(BaseListableView):
 
         if field == 'frequency__name':
             filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
-        elif field == 'unit__site__name':
-            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 
@@ -483,8 +481,6 @@ class TestListInstances(BaseListableView):
 
         if field == 'unit_test_collection__frequency__name':
             filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
-        elif field == "unit_test_collection__unit__site__name":
-            filters = [(NONEORNULL, _('Other')) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 

@@ -18,7 +18,6 @@ class BaseTree:
     def setup_units(self):
         self.units = dict(Unit.objects.filter(active=True).values_list("number", "name"))
         self.sites = dict(Site.objects.values_list("slug", "name"))
-        self.sites['other'] = _("Other")
         self.unit_classes = dict(UnitClass.objects.values_list("id", "name"))
 
     def setup_frequencies(self):
@@ -37,7 +36,6 @@ class BaseTree:
         return node
 
     def site_text(self, site):
-        site = site or "other"
         site_name = self.sites[site]
         href = reverse("qa_by_site", kwargs={'site': site})
         title = _("Click to browse QC at Site {site}").format(site=site_name)
@@ -181,7 +179,7 @@ class BootstrapCategoryTree(BaseTree):
             "cat_tree_id",
             "cat_level",
             "cat_name",
-        )#.distinct()  # yapf: disable
+        )
 
     def setup_categories(self):
         """Set up category maps for use generating the tree"""

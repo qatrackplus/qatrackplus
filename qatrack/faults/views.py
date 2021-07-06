@@ -20,7 +20,6 @@ from django_comments.models import Comment
 from listable.views import (
     DATE_RANGE,
     LAST_14_DAYS,
-    NONEORNULL,
     SELECT_MULTI,
     TEXT,
     THIS_MONTH,
@@ -144,15 +143,6 @@ class FaultList(BaseListableView):
             "review_status",
         )
         return fields
-
-    def get_filters(self, field, queryset=None):
-
-        filters = super().get_filters(field, queryset=queryset)
-
-        if field == 'unit__site__name':
-            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
-
-        return filters
 
     def actions(self, fault):
         c = {

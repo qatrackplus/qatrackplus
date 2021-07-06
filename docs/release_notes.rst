@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+QATrack+ v3.2.0 Release Notes
+-----------------------------
+
+* Site has now been made a mandatory field on Units. This simplifies code in
+  places as it doesn't require developers to add extra logic for handling null
+  site fields. Any existing some unit without a Site assigned to it will
+  automatically be assigned to an "Other" site.
+
 QATrack+ v3.1.1 Release Notes
 -----------------------------
 

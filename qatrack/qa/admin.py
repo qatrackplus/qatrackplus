@@ -1094,7 +1094,7 @@ unit_name.short_description = _l("Unit")
 
 
 def site_name(obj):
-    return obj.unit.site.name if obj.unit.site else _l("Other")
+    return obj.unit.site.name
 site_name.admin_order_field = "unit__site__name"  # noqa: E305
 site_name.short_description = _l("Site")
 

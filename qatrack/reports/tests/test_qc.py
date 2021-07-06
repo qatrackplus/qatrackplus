@@ -93,20 +93,6 @@ class TestTestListInstanceSummaryReport(TestCase):
         tlis = qc.TestListInstanceSummaryReport().get_tlis_for_site(qs, site)
         assert list([x.pk for x in tlis]) == [tli.pk]
 
-    def test_get_tlis_for_null_site(self):
-        site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
-        utc = utils.create_unit_test_collection(unit=unit)
-        utils.create_test_list_instance(unit_test_collection=utc)
-
-        unit2 = utils.create_unit(site=None)
-        utc2 = utils.create_unit_test_collection(unit=unit2)
-        tli2 = utils.create_test_list_instance(unit_test_collection=utc2)
-
-        qs = TestListInstance.objects.all()
-        tlis = qc.TestListInstanceSummaryReport().get_tlis_for_site(qs, None)
-        assert list([x.pk for x in tlis]) == [tli2.pk]
-
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
@@ -389,8 +375,8 @@ class TestDueDateReport(TestCase):
 
     def test_get_unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = qc.NextDueDatesReport().get_unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = qc.NextDueDatesReport().get_unit__site_details([site])
+        assert sites == ('Site(s)', 'site')
 
     def test_get_unit_details(self):
         site = USite.objects.create(name="site")
@@ -457,8 +443,8 @@ class TestAssignedQCReport(TestCase):
 
     def test_get_unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = qc.AssignedQCReport().get_unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = qc.AssignedQCReport().get_unit__site_details([site])
+        assert sites == ('Site(s)', 'site')
 
     def test_get_unit_details(self):
         site = USite.objects.create(name="site")

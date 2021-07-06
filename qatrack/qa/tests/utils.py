@@ -2,6 +2,7 @@ from django.apps import apps
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
+from django.utils.text import slugify
 import recurrence
 
 from qatrack.accounts.tests.utils import create_group, create_user
@@ -222,7 +223,9 @@ def create_site(name=None):
     if name is None:
         name = 'site_%04d' % get_next_id(Site.objects.order_by('id').last())
 
-    return Site.objects.create(name=name)
+    slug = slugify(name)
+
+    return Site.objects.create(name=name, slug=slug)
 
 
 def create_unit(name=None, number=None, tipe=None, site=None, active=True):
@@ -234,6 +237,8 @@ def create_unit(name=None, number=None, tipe=None, site=None, active=True):
         number = last.number + 1 if last else 0
     if tipe is None:
         tipe = create_unit_type()
+    if site is None:
+        site = create_site()
 
     u = Unit(
         name=name,

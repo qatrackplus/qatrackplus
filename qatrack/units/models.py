@@ -6,7 +6,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.aggregates import Max
 from django.utils.timezone import timedelta
-from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
@@ -294,7 +293,7 @@ class Unit(models.Model):
         return self.name
 
     def site_unit_name(self):
-        return "%s :: %s" % (_("Other") if not self.site else self.site.name, self.name)
+        return "%s :: %s" % (self.site.name, self.name)
 
     def get_potential_time(self, date_from, date_to):
 

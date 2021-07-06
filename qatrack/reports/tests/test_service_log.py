@@ -41,8 +41,8 @@ class TestServiceEventSummaryReport(TestCase):
 
     def test_get_unit_service_area__unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = sl.ServiceEventSummaryReport().get_unit_service_area__unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = sl.ServiceEventSummaryReport().get_unit_service_area__unit__site_details([site])
+        assert sites == ('Site(s)', 'site')
 
     def test_get_ses_for_site(self):
         site = USite.objects.create(name="site")
@@ -57,20 +57,6 @@ class TestServiceEventSummaryReport(TestCase):
         qs = models.ServiceEvent.objects.all()
         ses = sl.ServiceEventSummaryReport().get_ses_for_site(qs, site)
         assert [x.pk for x in ses] == [se1.pk]
-
-    def test_get_ses_for_null_site(self):
-        site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
-        usa1 = sl_utils.create_unit_service_area(unit=unit1)
-        sl_utils.create_service_event(unit_service_area=usa1)
-
-        unit2 = utils.create_unit(site=None)
-        usa2 = sl_utils.create_unit_service_area(unit=unit2)
-        se2 = sl_utils.create_service_event(unit_service_area=usa2)
-
-        qs = models.ServiceEvent.objects.all()
-        ses = sl.ServiceEventSummaryReport().get_ses_for_site(qs, None)
-        assert [x.pk for x in ses] == [se2.pk]
 
     def test_generate_html(self):
 
@@ -331,8 +317,8 @@ class TestDueDateReport(TestCase):
 
     def test_get_unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = sl.NextScheduledServiceEventsDueDatesReport().get_unit_service_area__unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = sl.NextScheduledServiceEventsDueDatesReport().get_unit_service_area__unit__site_details([site])
+        assert sites == ('Site(s)', 'site')
 
     def test_get_unit_details(self):
         site = USite.objects.create(name="site")
@@ -404,8 +390,8 @@ class TestAssignedTemplatesReport(TestCase):
 
     def test_get_unit_service_area__unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = sl.ScheduledTemplatesReport().get_unit_service_area__unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = sl.ScheduledTemplatesReport().get_unit_service_area__unit__site_details([site])
+        assert sites == ('Site(s)', 'site')
 
     def test_get_unit_service_area__unit_details(self):
         site = USite.objects.create(name="site")

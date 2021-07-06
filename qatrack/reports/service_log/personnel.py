@@ -40,7 +40,7 @@ class ServiceEventPersonnelSummaryReport(BaseReport):
         )
 
     def get_unit_service_area__unit__site_details(self, sites):
-        return ("Site(s)", (', '.join(s.name if s != 'null' else _("Other") for s in sites)).strip(", "))
+        return ("Site(s)", (', '.join(s.name for s in sites)).strip(", "))
 
     def get_context(self):
 

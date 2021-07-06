@@ -893,8 +893,6 @@ class ChooseUnit(TemplateView):
             unit_site_types = {}
             for s in Site.objects.all():
                 unit_site_types[(s.slug, s.name)] = collections.defaultdict(list)
-            if q.filter(unit__site__isnull=True).exists():
-                unit_site_types[('zzzNonezzz', 'zzzNonezzz')] = collections.defaultdict(list)
 
             q = q.values(
                 'unit',
@@ -922,10 +920,6 @@ class ChooseUnit(TemplateView):
                 if unit['unit__site__name']:
                     key = (unit['unit__site__slug'], unit['unit__site__name'])
                     unit_site_types[key][(unit["unit__type__name"], unit["unit__type__collapse"])].append(unit)
-                else:
-                    unit_site_types[('zzzNonezzz', 'zzzNonezzz')][
-                        (unit['unit__type__name'], unit['unit__type__collapse'])
-                    ].append(unit)
 
             ordered = {}
             for s in unit_site_types:
@@ -1912,17 +1906,8 @@ class SiteList(UTCList):
 
         sites = self.kwargs["site"].split("/")
         self.sites = Site.objects.filter(slug__in=sites)
-
-        q = Q(unit__site__in=self.sites)
-        self.has_other = False
-        if "other" in sites:
-            self.has_other = True
-            q |= Q(unit__site=None)
-
-        return qs.filter(q).distinct()
+        return qs.filter(unit__site__in=self.sites).distinct()
 
     def get_page_title(self):
-        names = ", ".join([x.name if x else "other" for x in self.sites])
-        if self.has_other:
-            names = _("Other") + names.strip()
+        names = ", ".join([x.name for x in self.sites])
         return _("%(site_names)s Test Lists") % {'site_names': names}
