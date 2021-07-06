@@ -6,8 +6,13 @@ QATrack+ v3.2.0 Release Notes
 
 * Site has now been made a mandatory field on Units. This simplifies code in
   places as it doesn't require developers to add extra logic for handling null
-  site fields. Any existing some unit without a Site assigned to it will
-  automatically be assigned to an "Other" site.
+  site fields. Any existing units without a Site assigned to it will
+  automatically be assigned to an "Default" site.
+
+* Unit Class has now been made a mandatory field on Unit Types.  Any existing
+  unit types without a unit class assigned to it will automatically be assigned
+  a "Default" unit class.
+
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------

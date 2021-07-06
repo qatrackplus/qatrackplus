@@ -58,5 +58,41 @@
     "fields": {
         "name": "Cobalt"
     }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Ion Chamber"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Electrometer"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Detector Array"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Water Tank"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Phantom"
+    }
+},
+{
+    "model": "units.unitclass",
+    "fields": {
+        "name": "Computer"
+    }
 }
 ]

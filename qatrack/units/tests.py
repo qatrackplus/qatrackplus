@@ -9,7 +9,7 @@ from qatrack.units import models
 class TestUnits(TestCase):
 
     def test_auto_set_number(self):
-        ut = models.UnitType.objects.create(name="UT")
+        ut = utils.create_unit_type()
         site = models.Site.objects.create(name="site", slug="site")
         models.Unit.objects.create(name="U1", type=ut, number=1, site=site, date_acceptance=timezone.now())
         u2 = models.Unit.objects.create(name="U2", type=ut, date_acceptance=timezone.now(), site=site)
@@ -52,11 +52,11 @@ class TestUnitType(TestCase):
     def test_get_by_nk(self):
         ut = utils.create_unit_type()
         assert models.UnitType.objects.get_by_natural_key(
-            ut.name, ut.model, vendor_name=ut.vendor.name).pk == ut.pk
+            ut.name, ut.model, ut.unit_class.name, vendor_name=ut.vendor.name).pk == ut.pk
 
     def test_nk(self):
         ut = utils.create_unit_type()
-        assert ut.natural_key() == (ut.name, ut.model, ut.vendor.name)
+        assert ut.natural_key() == (ut.name, ut.model, ut.vendor.name, ut.unit_class.name)
 
 
 class TestModality:

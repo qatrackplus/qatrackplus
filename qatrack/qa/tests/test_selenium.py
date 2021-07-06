@@ -83,6 +83,9 @@ objects = {
     'Modality': {
         'name': 'TestModality'
     },
+    'UnitClass': {
+        'name': 'TestUnitClass',
+    },
     'UnitType': {
         'name': 'TestModality',
         'vendor': 'TestVendor'
@@ -275,12 +278,16 @@ class LiveQATests(BaseQATests):
 
     def test_admin_unittype(self):
 
+        utils.create_vendor(objects['UnitType']['vendor'])
+        utils.create_unit_class(name=objects['UnitClass']['name'])
+
         self.load_admin()
         self.click_by_link_text("Unit types")
         self.click_by_link_text("ADD UNIT TYPE")
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys(objects['UnitType']['name'])
         self.driver.find_element_by_id('id_vendor').send_keys(objects['UnitType']['vendor'])
+        self.driver.find_element_by_id('id_unit_class').send_keys(objects['UnitClass']['name'])
         self.driver.find_element_by_name('_save').click()
         self.wait_for_success()
 
@@ -658,7 +665,6 @@ class TestPerformQC(BaseQATests):
         self.click_by_css_selector("body")
         time.sleep(0.2)
 
-
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
@@ -782,21 +788,20 @@ class TestPerformQC(BaseQATests):
         assert models.TestListInstance.objects.first().serviceevents_initiated.count() == 1
 
     def test_autosave(self):
-        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        """Ensure that no auto save object is created until a value is entered"""
 
         self.login()
         self.open(self.url)
         time.sleep(0.2)
         inputs = self.driver.find_elements_by_class_name("qa-input")[:3]
         inputs[0].send_keys(1)
+        inputs[0].send_keys(Keys.TAB)
         assert models.AutoSave.objects.count() == 0
-        time.sleep(1)
-        inputs[0].send_keys(Keys.ENTER)
-        time.sleep(2.1)  # auto save is debounced with a 2s interval
+        time.sleep(4.1)
         assert models.AutoSave.objects.count() == 1
 
     def test_load_autosave(self):
-        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        """Ensure we can load an existing autosave object and populate tests correctly"""
 
         tl2 = utils.create_test_list(name="day 2")
         utils.create_test_list_membership(tl2, test=self.tnum_1)

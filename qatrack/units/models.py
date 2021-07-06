@@ -122,8 +122,8 @@ class Site(models.Model):
 
 class UnitTypeManager(models.Manager):
 
-    def get_by_natural_key(self, name, model, vendor_name=None, unitclass_name=None):
-        return self.get(name=name, model=model, vendor__name=vendor_name, unit_class__name=unitclass_name)
+    def get_by_natural_key(self, name, model, unitclass_name, vendor_name=None):
+        return self.get(name=name, model=model, unit_class__name=unitclass_name, vendor__name=vendor_name)
 
 
 class UnitType(models.Model):
@@ -144,8 +144,6 @@ class UnitType(models.Model):
 
     unit_class = models.ForeignKey(
         UnitClass,
-        null=True,
-        blank=True,
         on_delete=models.PROTECT,
         verbose_name=_l("unit class"),
     )
@@ -179,7 +177,7 @@ class UnitType(models.Model):
 
     def natural_key(self):
         vendor = self.vendor.natural_key() if self.vendor else ()
-        unit_class = self.unit_class.natural_key() if self.unit_class else ()
+        unit_class = self.unit_class.natural_key()
         return (self.name, self.model) + vendor + unit_class
     natural_key.dependencies = ["units.vendor", "units.unitclass"]
 
