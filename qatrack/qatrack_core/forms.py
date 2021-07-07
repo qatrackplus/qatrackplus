@@ -6,3 +6,8 @@ class MultipleCharField(forms.CharField):
 
     def to_python(self, value):
         return value
+
+
+class UserChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.get_full_name()

@@ -5,7 +5,7 @@ from django.utils.text import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
 
 from qatrack.faults import models
-from qatrack.qatrack_core.forms import MultipleCharField
+from qatrack.qatrack_core.forms import MultipleCharField, UserChoiceField
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.units import models as u_models
@@ -155,7 +155,7 @@ class InlineReviewForm(forms.Form):
         widget=forms.TextInput(attrs={'readonly': 'readonly'}),
     )
 
-    reviewed_by = forms.ModelChoiceField(
+    reviewed_by = UserChoiceField(
         queryset=User.objects.none(),
         help_text=_l("Select the user from this group who reviewed this fault"),
         required=False,
@@ -175,7 +175,7 @@ class InlineReviewForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['group'].initial = fault_review_group.group.name
         self.fields['reviewed_by'].required = fault_review_group.required
-        self.fields['reviewed_by'].queryset = fault_review_group.group.user_set.all()
+        self.fields['reviewed_by'].queryset = fault_review_group.group.user_set.filter(is_active=True).all()
 
 
 class ReviewFaultForm(BetterModelForm):
