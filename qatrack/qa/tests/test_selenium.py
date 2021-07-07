@@ -15,6 +15,7 @@ from qatrack.qa.tests import utils
 from qatrack.qatrack_core.dates import format_as_date
 from qatrack.qatrack_core.tests.live import SeleniumTests
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units.tests import utils as u_utils
 
 objects = {
 
@@ -278,8 +279,8 @@ class LiveQATests(BaseQATests):
 
     def test_admin_unittype(self):
 
-        utils.create_vendor(objects['UnitType']['vendor'])
-        utils.create_unit_class(name=objects['UnitClass']['name'])
+        u_utils.create_vendor(objects['UnitType']['vendor'])
+        u_utils.create_unit_class(name=objects['UnitClass']['name'])
 
         self.load_admin()
         self.click_by_link_text("Unit types")
@@ -294,12 +295,12 @@ class LiveQATests(BaseQATests):
     def test_admin_unit(self):
 
         if not utils.exists('units', 'UnitType', 'name', objects['UnitType']['name']):
-            utils.create_unit_type(
-                name=objects['UnitType']['name'], vendor=utils.create_vendor(objects['UnitType']['vendor'])
+            u_utils.create_unit_type(
+                name=objects['UnitType']['name'], vendor=u_utils.create_vendor(objects['UnitType']['vendor'])
             )
 
         if not utils.exists('units', 'Modality', 'name', objects['Modality']['name']):
-            utils.create_modality(name=objects['Modality']['name'])
+            u_utils.create_modality(name=objects['Modality']['name'])
 
         sl_utils.create_service_area()
 
@@ -345,7 +346,7 @@ class LiveQATests(BaseQATests):
             create_group(name=objects['Group']['name'])
 
         if not utils.exists('units', 'Unit', 'name', objects['Modality']['name']):
-            utils.create_unit(name=objects['Modality']['name'], number=objects['Unit']['number'])
+            u_utils.create_unit(name=objects['Modality']['name'], number=objects['Unit']['number'])
 
         if not utils.exists('qa', 'Frequency', 'name', objects['Frequency']['name']):
             utils.create_frequency(name=objects['Frequency']['name'])
@@ -582,7 +583,7 @@ class TestPerformQC(BaseQATests):
 
         super().setUp()
 
-        self.unit = utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.group = utils.create_group()
         for p in Permission.objects.all():
             self.group.permissions.add(p)

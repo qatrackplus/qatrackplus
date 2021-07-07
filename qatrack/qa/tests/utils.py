@@ -2,13 +2,12 @@ from django.apps import apps
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from django.utils.text import slugify
 import recurrence
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
 from qatrack.qatrack_core.tests.utils import get_next_id
-from qatrack.units.models import PHOTON, Modality, Site, Unit, UnitType, Vendor, UnitClass
+from qatrack.units.tests.utils import create_unit
 
 
 def exists(app, model, field, value):
@@ -181,91 +180,6 @@ def create_test_instance(
 
     ti.save()
     return ti
-
-
-def create_modality(energy=6, particle=PHOTON, name=None):
-
-    if name is None:
-        if particle == "photon":
-            unit, particle = "MV", "Photon"
-        else:
-            unit, particle = "MeV", "Electron"
-        a_name = "%g%s %s" % (energy, unit, particle)
-    else:
-        a_name = name
-    m, _ = Modality.objects.get_or_create(name=a_name)
-    return m
-
-
-def create_vendor(name=None):
-
-    if name is None:
-        name = 'vendor_%04d' % get_next_id(Vendor.objects.order_by('id').last())
-
-    v, _ = Vendor.objects.get_or_create(name=name)
-
-    return v
-
-
-def create_unit_class(name=None):
-
-    if name is None:
-        name = 'unit_class_%04d' % get_next_id(UnitClass.objects.order_by('id').last())
-
-    uc, _ = UnitClass.objects.get_or_create(name=name)
-
-    return uc
-
-
-def create_unit_type(name=None, vendor=None, model="model", unit_class=None):
-
-    if name is None:
-        name = 'unit_type_%04d' % get_next_id(UnitType.objects.order_by('id').last())
-    if vendor is None:
-        vendor = create_vendor()
-
-    if unit_class is None:
-        unit_class = create_unit_class()
-
-    ut, _ = UnitType.objects.get_or_create(name=name, vendor=vendor, model=model, unit_class=unit_class)
-    ut.save()
-    return ut
-
-
-def create_site(name=None):
-
-    if name is None:
-        name = 'site_%04d' % get_next_id(Site.objects.order_by('id').last())
-
-    slug = slugify(name)
-
-    return Site.objects.create(name=name, slug=slug)
-
-
-def create_unit(name=None, number=None, tipe=None, site=None, active=True):
-
-    if name is None:
-        name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
-    if number is None:
-        last = models.Unit.objects.order_by('number').last()
-        number = last.number + 1 if last else 0
-    if tipe is None:
-        tipe = create_unit_type()
-    if site is None:
-        site = create_site()
-
-    u = Unit(
-        name=name,
-        number=number,
-        date_acceptance=timezone.now(),
-        type=tipe,
-        is_serviceable=True,
-        site=site,
-        active=active,
-    )
-    u.save()
-    u.modalities.add(create_modality())
-    return u
 
 
 def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=None):

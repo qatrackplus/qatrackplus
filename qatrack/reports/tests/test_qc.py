@@ -12,6 +12,7 @@ from qatrack.qa.models import Frequency, TestListInstance
 from qatrack.qa.tests import utils
 from qatrack.reports import qc
 from qatrack.units.models import Site as USite
+from qatrack.units.tests import utils as u_utils
 
 
 class TestTestListInstanceSummaryReport(TestCase):
@@ -81,11 +82,11 @@ class TestTestListInstanceSummaryReport(TestCase):
 
     def test_get_tlis_for_site(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         utc2 = utils.create_unit_test_collection(unit=unit2)
         utils.create_test_list_instance(unit_test_collection=utc2)
 
@@ -96,11 +97,11 @@ class TestTestListInstanceSummaryReport(TestCase):
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         utils.create_test_list_instance(unit_test_collection=utc)
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         utc2 = utils.create_unit_test_collection(unit=unit2)
         utils.create_test_list_instance(unit_test_collection=utc2)
 
@@ -147,11 +148,11 @@ class TestTestListInstanceDetailsReport(TestCase):
 
     def test_generate_html(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         utils.create_test_list_instance(unit_test_collection=utc)
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         utc2 = utils.create_unit_test_collection(unit=unit2)
         tli2 = utils.create_test_list_instance(unit_test_collection=utc2)
         comment = Comment(
@@ -170,7 +171,7 @@ class TestTestListInstanceDetailsReport(TestCase):
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         # make this tli autoreviewed
@@ -178,7 +179,7 @@ class TestTestListInstanceDetailsReport(TestCase):
         tli.reviewed_by = None
         tli.save()
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         utc2 = utils.create_unit_test_collection(unit=unit2)
         tli2 = utils.create_test_list_instance(unit_test_collection=utc2)
 
@@ -261,7 +262,7 @@ class TestTestInstanceDetailsReport(TestCase):
 
     def test_generate_html_group_by_unit_test_date(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(test_list_instance=tli)
@@ -277,7 +278,7 @@ class TestTestInstanceDetailsReport(TestCase):
 
     def test_generate_html_one_per_row(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(test_list_instance=tli)
@@ -294,7 +295,7 @@ class TestTestInstanceDetailsReport(TestCase):
     def test_to_table_one_per_row_csv(self):
 
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(test_list_instance=tli)
@@ -331,7 +332,7 @@ class TestTestInstanceDetailsReport(TestCase):
     def test_to_table_group_by_unit_test_date_csv(self):
 
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         ti = utils.create_test_instance(test_list_instance=tli)
@@ -380,13 +381,13 @@ class TestDueDateReport(TestCase):
 
     def test_get_unit_details(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         units = qc.NextDueDatesReport().get_unit_details([unit.pk])
         assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
 
     def test_generate_next_due_dates_html(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         utils.create_test_instance(test_list_instance=tli)
@@ -397,7 +398,7 @@ class TestDueDateReport(TestCase):
 
     def test_generate_due_and_overdue_html(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
         utils.create_test_instance(test_list_instance=tli)
@@ -409,11 +410,11 @@ class TestDueDateReport(TestCase):
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
         utils.create_test_list_instance(unit_test_collection=utc)
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         utc2 = utils.create_unit_test_collection(unit=unit2)
         utils.create_test_list_instance(unit_test_collection=utc2)
 
@@ -448,13 +449,13 @@ class TestAssignedQCReport(TestCase):
 
     def test_get_unit_details(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         units = qc.AssignedQCReport().get_unit_details([unit.pk])
         assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
 
     def test_generate_summary_html(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utils.create_unit_test_collection(unit=unit)
 
         rep = qc.AssignedQCReport()
@@ -464,11 +465,11 @@ class TestAssignedQCReport(TestCase):
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utils.create_unit_test_collection(unit=unit)
 
         tlm = utils.create_test_list_membership()
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         utils.create_unit_test_collection(unit=unit2, test_collection=tlm.test_list)
 
         rep = qc.AssignedQCReport(report_opts={'active': True})
@@ -506,7 +507,7 @@ class TestAssignedQCDetailsReport(TestCase):
 
     def test_generate_summary_html(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         utils.create_unit_test_collection(unit=unit)
 
         rep = qc.AssignedQCDetailsReport()
@@ -516,12 +517,12 @@ class TestAssignedQCDetailsReport(TestCase):
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
 
         tlm = utils.create_test_list_membership()
         utils.create_unit_test_collection(unit=unit, test_collection=tlm.test_list)
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         utils.create_unit_test_collection(unit=unit2, test_collection=tlm.test_list)
 
         rep = qc.AssignedQCDetailsReport(report_opts={'active': True})

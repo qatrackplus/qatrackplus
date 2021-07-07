@@ -13,13 +13,14 @@ from qatrack.notifications.service_log import admin
 from qatrack.qa.tests import utils
 from qatrack.service_log import models
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units.tests import utils as u_utils
 
 
 class TestServiceLogEmails(TestCase):
 
     def setUp(self):
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = u_utils.create_unit(name="unit1", number=1)
+        self.unit2 = u_utils.create_unit(name="unit2", number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
@@ -85,7 +86,7 @@ class TestServiceLogAdmin(TestCase):
         assert "Notify when a Service Event is created or modified" in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = utils.create_unit(name="Test Unit")
+        u = u_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")

@@ -15,6 +15,7 @@ from qatrack.notifications.models import (
 from qatrack.notifications.qccompleted import admin, tasks
 from qatrack.qa import models, signals
 import qatrack.qa.tests.utils as utils
+import qatrack.units.tests.utils as u_utils
 
 
 class TestQCCompletedNoticeAdmin(TestCase):
@@ -70,7 +71,7 @@ class TestQCCompletedNoticeAdmin(TestCase):
         assert "Tolerance" in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = utils.create_unit(name="Test Unit")
+        u = u_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")
@@ -332,7 +333,7 @@ class TestQCCompletedEmails(TestCase):
 
     def test_email_not_sent_for_same_testlist_different_unit(self):
 
-        unit = utils.create_unit()
+        unit = u_utils.create_unit()
         utc = utils.create_unit_test_collection(unit=unit, test_collection=self.test_list)
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.COMPLETED,
@@ -392,7 +393,7 @@ class TestQCCompletedEmails(TestCase):
 
     def test_follow_up_not_sent_for_same_testlist_different_unit(self):
 
-        unit = utils.create_unit()
+        unit = u_utils.create_unit()
         utc = utils.create_unit_test_collection(unit=unit, test_collection=self.test_list)
 
         QCCompletedNotice.objects.create(

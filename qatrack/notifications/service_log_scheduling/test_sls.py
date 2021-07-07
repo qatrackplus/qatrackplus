@@ -15,6 +15,7 @@ import qatrack.qa.tests.utils as qa_utils
 from qatrack.qatrack_core.utils import today_start_end
 from qatrack.service_log import models
 import qatrack.service_log.tests.utils as utils
+import qatrack.units.tests.utils as u_utils
 
 
 class TestServiceEventSchedulingAdmin(TestCase):
@@ -79,7 +80,7 @@ class TestServiceEventSchedulingAdmin(TestCase):
         assert n.get_notification_type_display() in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = qa_utils.create_unit(name="Test Unit")
+        u = u_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")

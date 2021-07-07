@@ -15,6 +15,7 @@ from qatrack.notifications.qcscheduling import admin, tasks
 from qatrack.qa import models
 import qatrack.qa.tests.utils as utils
 from qatrack.qatrack_core.utils import today_start_end
+import qatrack.units.tests.utils as u_utils
 
 
 class TestQCSchedulingAdmin(TestCase):
@@ -76,7 +77,7 @@ class TestQCSchedulingAdmin(TestCase):
         assert n.get_notification_type_display() in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = utils.create_unit(name="Test Unit")
+        u = u_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")
@@ -115,8 +116,8 @@ class TestQCSchedulingModel(TestCase):
 
     def setUp(self):
 
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = u_utils.create_unit(name="unit1", number=1)
+        self.unit2 = u_utils.create_unit(name="unit2", number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
@@ -333,8 +334,8 @@ class TestQCSchedulingEmails(TestCase):
 
     def setUp(self):
 
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = u_utils.create_unit(name="unit1", number=1)
+        self.unit2 = u_utils.create_unit(name="unit2", number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 

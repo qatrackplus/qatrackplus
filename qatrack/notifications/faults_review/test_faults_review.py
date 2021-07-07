@@ -15,6 +15,7 @@ from qatrack.notifications.models import (
 )
 from qatrack.qa import models
 import qatrack.qa.tests.utils as qa_utils
+import qatrack.units.tests.utils as u_utils
 
 
 class TestFaultsReviewAdmin(TestCase):
@@ -32,7 +33,7 @@ class TestFaultsReviewAdmin(TestCase):
         assert "Notify about Faults awaiting review" in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = qa_utils.create_unit(name="Test Unit")
+        u = u_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")
@@ -58,8 +59,8 @@ class TestFaultsReviewModel(TestCase):
 
     def setUp(self):
 
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = u_utils.create_unit(name="unit1", number=1)
+        self.unit2 = u_utils.create_unit(name="unit2", number=2)
 
         self.fault1 = utils.create_fault(unit=self.unit1)
         self.fault2 = utils.create_fault(unit=self.unit2)
@@ -135,8 +136,8 @@ class TestFaultsReviewEmails(TestCase):
 
     def setUp(self):
 
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = u_utils.create_unit(name="unit1", number=1)
+        self.unit2 = u_utils.create_unit(name="unit2", number=2)
         self.faults1 = utils.create_fault(unit=self.unit1)
         self.faults2 = utils.create_fault(unit=self.unit2)
 

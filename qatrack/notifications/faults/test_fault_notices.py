@@ -11,6 +11,7 @@ from qatrack.faults.tests import utils as utils
 from qatrack.notifications.faults import admin
 from qatrack.notifications.models import FaultNotice, RecipientGroup, UnitGroup
 from qatrack.qa.tests import utils as qa_utils
+from qatrack.units.tests import utils as u_utils
 
 
 class TestFaultNoticeAdmin(TestCase):
@@ -39,7 +40,7 @@ class TestFaultNoticeAdmin(TestCase):
 
     def test_get_units(self):
         """Ensure admin notification units display works as expected"""
-        u = qa_utils.create_unit(name="Test Unit")
+        u = u_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")
@@ -66,7 +67,7 @@ class TestFaultNoticeEmails(TestCase):
 
         self.tests = []
 
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
 
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.unit)

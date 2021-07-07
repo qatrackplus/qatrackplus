@@ -14,6 +14,7 @@ from qatrack.notifications.service_log_review import admin, tasks
 from qatrack.qa import models
 import qatrack.qa.tests.utils as qa_utils
 import qatrack.service_log.tests.utils as utils
+import qatrack.units.tests.utils as u_utils
 
 
 class TestServiceEventReviewAdmin(TestCase):
@@ -31,7 +32,7 @@ class TestServiceEventReviewAdmin(TestCase):
         assert "Notify about Service Events awaiting review" in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = qa_utils.create_unit(name="Test Unit")
+        u = u_utils.create_unit(name="Test Unit")
         ug = UnitGroup.objects.create(name="UG")
         ug.units.add(u)
         rg = RecipientGroup.objects.create(name="RG")
@@ -57,8 +58,8 @@ class TestServiceEventReviewModel(TestCase):
 
     def setUp(self):
 
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = u_utils.create_unit(name="unit1", number=1)
+        self.unit2 = u_utils.create_unit(name="unit2", number=2)
         self.usa1 = utils.create_unit_service_area(unit=self.unit1)
         self.usa2 = utils.create_unit_service_area(unit=self.unit2)
 
@@ -143,8 +144,8 @@ class TestServiceEventReviewEmails(TestCase):
 
     def setUp(self):
 
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = u_utils.create_unit(name="unit1", number=1)
+        self.unit2 = u_utils.create_unit(name="unit2", number=2)
         self.usa1 = utils.create_unit_service_area(unit=self.unit1)
         self.usa2 = utils.create_unit_service_area(unit=self.unit2)
 

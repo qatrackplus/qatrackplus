@@ -26,6 +26,7 @@ import qatrack.qa.views.perform
 import qatrack.qa.views.review
 from qatrack.qatrack_core.dates import format_as_date
 import qatrack.units.models as umodels
+from qatrack.units.tests import utils as u_utils
 
 from . import utils
 
@@ -62,8 +63,8 @@ class TestURLS(TestCase):
 
         utils.create_category()
         utils.create_status()
-        u1 = utils.create_unit(number=1, name="u1")
-        utils.create_unit(
+        u1 = u_utils.create_unit(number=1, name="u1")
+        u_utils.create_unit(
             number=2,
             name="u2",
         )
@@ -148,7 +149,7 @@ class TestControlImage(TestCase):
 
         tl = utils.create_test_list()
         test = utils.create_test()
-        unit = utils.create_unit()
+        unit = u_utils.create_unit()
         utils.create_unit_test_info(test=test, unit=unit)
 
         utils.create_status()
@@ -165,7 +166,7 @@ class TestControlImage(TestCase):
     def test_invalid_subgroup_size(self):
         tl = utils.create_test_list()
         test = utils.create_test()
-        unit = utils.create_unit()
+        unit = u_utils.create_unit()
         utils.create_unit_test_info(test=test, unit=unit)
 
         utils.create_status()
@@ -200,7 +201,7 @@ class TestControlImage(TestCase):
         tl = utils.create_test_list()
         test = utils.create_test()
         utils.create_test_list_membership(tl, test)
-        unit = utils.create_unit()
+        unit = u_utils.create_unit()
         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
         uti = models.UnitTestInfo.objects.get(test=test, unit=unit)
 
@@ -228,7 +229,7 @@ class TestControlImage(TestCase):
     def test_invalid(self):
         tl = utils.create_test_list()
         test = utils.create_test()
-        unit = utils.create_unit()
+        unit = u_utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
@@ -258,7 +259,7 @@ class TestControlImage(TestCase):
     def test_fails(self):
         tl = utils.create_test_list()
         test = utils.create_test()
-        unit = utils.create_unit()
+        unit = u_utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
         tli = utils.create_test_list_instance(unit_test_collection=utc)
@@ -303,7 +304,7 @@ class TestChartView(TestCase):
         self.units = []
         self.tests = []
         for i in range(1, 3):
-            unit = utils.create_unit(number=i)
+            unit = u_utils.create_unit(number=i)
             self.units.append(unit)
             tl = utils.create_test_list(name="tl%s" % i)
             self.tls.append(tl)
@@ -541,7 +542,7 @@ class TestComposite(TestCase):
         self.url = reverse("composite")
 
         self.user = utils.create_user()
-        self.unit = utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.test_list = utils.create_test_list()
         self.t1 = utils.create_test(name="test1")
         self.t2 = utils.create_test(name="test2")
@@ -2081,7 +2082,7 @@ class TestReviewStatusContext(TestCase):
         self.client.login(username='user', password='pwd')
         self.factory = RequestFactory()
 
-        self.u_1 = utils.create_unit()
+        self.u_1 = u_utils.create_unit()
         self.tl_1 = utils.create_test_list()
         self.t_1 = utils.create_test()
         self.t_2 = utils.create_test()
@@ -2141,7 +2142,7 @@ class TestTrees(TestCase):
         vdc = umodels.UnitType.objects.create(vendor=ve, unit_class=rad, name="VDC 405")
         crc = umodels.UnitType.objects.create(vendor=cap, unit_class=rad, name="CRC-15R")
         d690 = umodels.UnitType.objects.create(vendor=ge, unit_class=pet, name="Discovery 690")
-        self.site = utils.create_site()
+        self.site = u_utils.create_site()
 
         u1 = umodels.Unit.objects.create(type=vdc, number=1, date_acceptance=timezone.now().date(), site=self.site)
         u2 = umodels.Unit.objects.create(type=crc, number=2, date_acceptance=timezone.now().date(), site=self.site)

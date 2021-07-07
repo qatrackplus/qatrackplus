@@ -4,12 +4,13 @@ from django.utils import timezone
 
 from qatrack.qa.tests import utils
 from qatrack.units import models
+from qatrack.units.tests import utils as u_utils
 
 
 class TestUnits(TestCase):
 
     def test_auto_set_number(self):
-        ut = utils.create_unit_type()
+        ut = u_utils.create_unit_type()
         site = models.Site.objects.create(name="site", slug="site")
         models.Unit.objects.create(name="U1", type=ut, number=1, site=site, date_acceptance=timezone.now())
         u2 = models.Unit.objects.create(name="U2", type=ut, date_acceptance=timezone.now(), site=site)
@@ -19,11 +20,11 @@ class TestUnits(TestCase):
 class TestVendor(TestCase):
 
     def test_get_by_nk(self):
-        v = utils.create_vendor()
+        v = u_utils.create_vendor()
         assert models.Vendor.objects.get_by_natural_key(v.name).pk == v.pk
 
     def test_nk(self):
-        v = utils.create_vendor()
+        v = u_utils.create_vendor()
         assert v.natural_key() == (v.name,)
 
     def test_str(self):
@@ -50,12 +51,12 @@ class TestSite:
 class TestUnitType(TestCase):
 
     def test_get_by_nk(self):
-        ut = utils.create_unit_type()
+        ut = u_utils.create_unit_type()
         assert models.UnitType.objects.get_by_natural_key(
             ut.name, ut.model, ut.unit_class.name, vendor_name=ut.vendor.name).pk == ut.pk
 
     def test_nk(self):
-        ut = utils.create_unit_type()
+        ut = u_utils.create_unit_type()
         assert ut.natural_key() == (ut.name, ut.model, ut.vendor.name, ut.unit_class.name)
 
 
@@ -93,9 +94,9 @@ class TestUnitAvailableTime(TestCase):
         self.get_url = reverse('unit_available_time')
         self.post_url = reverse('handle_unit_available_time')
         self.delete_url = reverse('delete_schedules')
-        utils.create_unit()
-        utils.create_unit()
-        utils.create_unit()
+        u_utils.create_unit()
+        u_utils.create_unit()
+        u_utils.create_unit()
 
     def test_unit_available_time_change(self):
 
@@ -151,9 +152,9 @@ class TestUnitAvailableTimeEdit(TestCase):
         self.get_url = reverse('unit_available_time')
         self.post_url = reverse('handle_unit_available_time_edit')
         self.delete_url = reverse('delete_schedules')
-        utils.create_unit()
-        utils.create_unit()
-        utils.create_unit()
+        u_utils.create_unit()
+        u_utils.create_unit()
+        u_utils.create_unit()
 
     def test_handle_unit_available_time_edit(self):
 
@@ -237,8 +238,8 @@ class TestGetUnitInfo(TestCase):
         utils.create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
-        self.u1 = utils.create_unit()
-        self.u2 = utils.create_unit()
+        self.u1 = u_utils.create_unit()
+        self.u2 = u_utils.create_unit()
 
     def test_get_all(self):
         resp = self.client.get(self.url)
@@ -271,3 +272,15 @@ class TestGetUnitInfo(TestCase):
             },
         }
         assert resp.json() == expected
+
+
+class TestStorage(TestCase):
+
+    def setUp(self):
+
+        self.si_1 = u_utils.create_site()
+        self.r_1 = u_utils.create_room(site=self.si_1)
+        self.st_1 = u_utils.create_storage(room=self.r_1, location='top_shelf')
+
+    def test_str(self):
+        self.assertEqual(str(self.st_1), '%s - %s - %s' % (self.si_1.name, self.r_1.name, self.st_1.location))

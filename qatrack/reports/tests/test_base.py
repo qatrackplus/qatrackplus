@@ -30,8 +30,8 @@ from qatrack.reports import (
     views,
 )
 from qatrack.service_log.models import ServiceEventSchedule
-
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units.tests import utils as u_utils
 
 
 class TestReportForm:
@@ -530,8 +530,8 @@ class TestFilters(TestCase):
 
     def test_dueandoverdue_unit_site_choices(self):
 
-        s = utils.create_site()
-        u = utils.create_unit(site=s)
+        s = u_utils.create_site()
+        u = u_utils.create_unit(site=s)
         f = filters.UnitTestCollectionFilter()
         choices = [('%s :: %s' % (s.name, u.type.name), [(u.id, '%s :: %s' % (s.name, u.name))])]
         assert list(f.form.fields['unit'].choices) == choices
@@ -544,8 +544,8 @@ class TestFilters(TestCase):
         """Ensure active/inactive units are filtered appropriately based on
         UTC active status"""
 
-        u1 = utils.create_unit()
-        u2 = utils.create_unit()
+        u1 = u_utils.create_unit()
+        u2 = u_utils.create_unit()
         utc1 = utils.create_unit_test_collection(unit=u1)
         utc2 = utils.create_unit_test_collection(unit=u2, active=False)
         qs = UnitTestCollection.objects.filter().all()
@@ -562,8 +562,8 @@ class TestFilters(TestCase):
         """Ensure active/inactive units are filtered appropriately based on
         unit active status"""
 
-        u1 = utils.create_unit()
-        u2 = utils.create_unit()
+        u1 = u_utils.create_unit()
+        u2 = u_utils.create_unit()
         u2.active = False
         u2.save()
         utc1 = utils.create_unit_test_collection(unit=u1)

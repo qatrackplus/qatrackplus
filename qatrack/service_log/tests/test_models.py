@@ -5,16 +5,16 @@ from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 
 from qatrack.accounts.tests.utils import create_group, create_user
-from qatrack.qa.tests import utils as qa_utils
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units.tests import utils as u_utils
 
 
 class TestUnitServiceArea(TestCase):
 
     def setUp(self):
 
-        self.u = qa_utils.create_unit()
+        self.u = u_utils.create_unit()
         self.sa = sl_utils.create_service_area()
 
     def test_unique_together(self):
@@ -74,7 +74,7 @@ class TestThirdParty(TestCase):
 
     def test_unique_together(self):
 
-        v_01 = qa_utils.create_vendor()
+        v_01 = u_utils.create_vendor()
         tp_01 = sl_utils.create_third_party(vendor=v_01)
         tp_01_first_name = tp_01.first_name
         tp_01_last_name = tp_01.last_name

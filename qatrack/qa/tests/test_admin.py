@@ -17,6 +17,7 @@ from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qa.utils import get_bool_tols, get_internal_user
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units.tests import utils as u_utils
 
 
 class TestSetReferencesAndTolerancesForm(TransactionTestCase):
@@ -37,8 +38,8 @@ class TestSetReferencesAndTolerancesForm(TransactionTestCase):
         self.tlc_1 = qa_utils.create_cycle(test_lists=[self.tl_fc_1, self.tl_fc_2, self.tl_fc_3])
         self.tlc_2 = qa_utils.create_cycle(test_lists=[self.tl_fc_1, self.tl_fc_2])
 
-        self.u_1 = qa_utils.create_unit()
-        self.u_2 = qa_utils.create_unit()
+        self.u_1 = u_utils.create_unit()
+        self.u_2 = u_utils.create_unit()
 
         test = qa_utils.create_test()
 
@@ -102,7 +103,7 @@ class TestTestlistjson(TestCase):
         create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
-        self.u = qa_utils.create_unit()
+        self.u = u_utils.create_unit()
 
         tl1 = qa_utils.create_test_list()
         tl2 = qa_utils.create_test_list()
@@ -270,8 +271,8 @@ class TestUnitTestCollectionAdmin(TestCase):
         self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
-        self.u_1 = qa_utils.create_unit()
-        self.u_2 = qa_utils.create_unit()
+        self.u_1 = u_utils.create_unit()
+        self.u_2 = u_utils.create_unit()
         self.f_1 = qa_utils.create_frequency()
         self.f_2 = qa_utils.create_frequency()
         self.tl_1 = qa_utils.create_test_list()
@@ -318,7 +319,7 @@ class TestUnitTestCollectionAdmin(TestCase):
         data = {
             'frequency': self.f_1.id,
             'visible_to': [self.g_1.id],
-            'unit': qa_utils.create_unit().id,
+            'unit': u_utils.create_unit().id,
             'auto_schedule': 'on',
             'active': 'on',
             'assigned_to': self.g_1.id,
@@ -499,7 +500,7 @@ class TestTestListAdmin(TestCase):
 
         self.t_1 = qa_utils.create_test()
         self.t_2 = qa_utils.create_test()
-        self.u_1 = qa_utils.create_unit()
+        self.u_1 = u_utils.create_unit()
         self.f_1 = qa_utils.create_frequency()
         self.tl_1 = qa_utils.create_test_list()
         self.utc_1 = qa_utils.create_unit_test_collection(test_collection=self.tl_1, unit=self.u_1)
@@ -737,7 +738,7 @@ class TestUnitTestInfoAdmin(TestCase):
         get_bool_tols()  # hack to work around tolerances being deleted somewhere (in another test?)
 
         self.site = AdminSite()
-        self.u_1 = qa_utils.create_unit()
+        self.u_1 = u_utils.create_unit()
         self.t_1 = qa_utils.create_test(test_type=qa_models.SIMPLE)
         self.t_2 = qa_utils.create_test(test_type=qa_models.BOOLEAN)
         self.t_3 = qa_utils.create_test(test_type=qa_models.MULTIPLE_CHOICE)

@@ -16,6 +16,7 @@ from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.service_log.tests import utils as sl_utils
 from qatrack.units import models as u_models
+from qatrack.units.tests import utils as u_utils
 
 
 class TestFaultType:
@@ -124,10 +125,10 @@ class TestModalityFilter(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         u_models.Modality.objects.all().delete()
-        self.modality = qa_utils.create_modality(name="modality")
+        self.modality = u_utils.create_modality(name="modality")
 
         self.adm = admin.FaultAdmin(Fault, AdminSite())
         self.mf = admin.ModalityFilter(mock.Mock(), {}, Fault, self.adm)
@@ -160,7 +161,7 @@ class TestFaultManager(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
 
     def test_unreviewed(self):
@@ -177,7 +178,7 @@ class TestFaultList(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         self.url = reverse("fault_list")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
@@ -202,15 +203,15 @@ class TestFaultList(TestCase):
 
     def test_get_fields_multiple_sites(self):
         """More than one site so unit__site__name should be in fields"""
-        site = qa_utils.create_site()
-        qa_utils.create_unit(name="second unit", site=site)
+        site = u_utils.create_site()
+        u_utils.create_unit(name="second unit", site=site)
         fields = views.FaultList().get_fields(None)
         assert "unit__site__name" in fields
 
     def test_get_filters_multiple_sites(self):
         """If more than one site exists, there should be a noneornull filter for Other sites"""
-        site = qa_utils.create_site("site2")
-        u2 = qa_utils.create_unit(name="second unit", site=site)
+        site = u_utils.create_site("site2")
+        u2 = u_utils.create_unit(name="second unit", site=site)
         utils.create_fault(unit=self.unit)
         utils.create_fault(unit=u2)
         filters = views.FaultList().get_filters('unit__site__name')
@@ -222,7 +223,7 @@ class TestUnreviewedFaultList(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         self.url = reverse("fault_list_unreviewed")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
@@ -249,7 +250,7 @@ class TestUnreviewedFaultList(TestCase):
 class TestCRUDFault(TestCase):
 
     def setUp(self):
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         self.create_url = reverse("fault_create")
         self.list_url = reverse("fault_list")
@@ -859,7 +860,7 @@ class TestFaultTypeAutocomplete(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.url = reverse("fault_type_autocomplete")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
@@ -914,7 +915,7 @@ class TestFaultDetails(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
 
@@ -953,7 +954,7 @@ class TestFaultsByUnit(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
@@ -970,7 +971,7 @@ class TestFaultsByUnit(TestCase):
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
         fault1 = utils.create_fault()
-        u2 = qa_utils.create_unit()
+        u2 = u_utils.create_unit()
         utils.create_fault(unit=u2)
         url = reverse("fault_list_by_unit", kwargs={'unit_number': fault1.unit.number})
         resp = self.client.get(url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -987,7 +988,7 @@ class TestFaultsByUnitFaultType(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
@@ -1024,7 +1025,7 @@ class TestFaultTypeList(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         self.url = reverse("fault_type_list")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
@@ -1047,7 +1048,7 @@ class TestFaultTypeDetails(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)
@@ -1071,7 +1072,7 @@ class TestChooseUnitForViewFaults(TestCase):
 
     def setUp(self):
         self.user = qa_utils.create_user()
-        self.unit = qa_utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
         self.client.force_login(user)

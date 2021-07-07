@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.utils import timezone
-from django.utils.text import slugify
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.parts import models as p_models
@@ -8,7 +7,8 @@ from qatrack.qa import models as qa_models
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.tests.utils import get_next_id
 from qatrack.service_log import models
-from qatrack.units import models as u_models
+from qatrack.units.tests.utils import create_storage
+from qatrack.units.tests import utils as u_utils
 
 
 def create_service_area(name=None):
@@ -24,7 +24,7 @@ def create_service_area(name=None):
 def create_unit_service_area(unit=None, service_area=None):
 
     if unit is None:
-        unit = qa_utils.create_unit()
+        unit = u_utils.create_unit()
     if service_area is None:
         service_area = create_service_area()
 
@@ -140,7 +140,7 @@ def create_service_event_schedule(service_event_template=None, unit_service_area
 def create_third_party(vendor=None, first_name=None, last_name=None):
 
     if vendor is None:
-        vendor = qa_utils.create_vendor()
+        vendor = u_utils.create_vendor()
     if first_name is None:
         first_name = 'first_name_%04d' % get_next_id(models.ThirdParty.objects.order_by('id').last())
     if last_name is None:
@@ -250,39 +250,6 @@ def create_part(part_category=None, part_number=None, name='description', add_st
         p.save()
 
     return p
-
-
-def create_storage(room=None, location='shelf', quantity=1):
-
-    if room is None:
-        room = create_room()
-
-    s, _ = p_models.Storage.objects.get_or_create(room=room, location=location)
-
-    return s
-
-
-def create_room(site=None, name=None):
-
-    if name is None:
-        name = 'room_%04d' % get_next_id(p_models.Room.objects.order_by('id').last())
-    if site is None:
-        site = create_site()
-
-    r, _ = p_models.Room.objects.get_or_create(name=name, site=site)
-
-    return r
-
-
-def create_site(name=None):
-
-    if name is None:
-        name = 'site_%04d' % get_next_id(u_models.Site.objects.order_by('id').last())
-
-    slug = slugify(name)
-    s, _ = u_models.Site.objects.get_or_create(name=name, slug=slug)
-
-    return s
 
 
 def create_supplier(name=None):

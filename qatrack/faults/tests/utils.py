@@ -4,12 +4,13 @@ import string
 from django.utils import timezone
 from qatrack.faults import models
 from qatrack.qa.tests import utils as qa_utils
+from qatrack.units.tests import utils as u_utils
 
 
 def create_fault(unit=None, occurred=None, fault_type=None, user=None, modality=None):
 
     user = user or qa_utils.create_user()
-    unit = unit or qa_utils.create_unit()
+    unit = unit or u_utils.create_unit()
     fault_type = fault_type or create_fault_type()
     occurred = occurred or timezone.now()
 

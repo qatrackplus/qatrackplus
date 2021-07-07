@@ -6,10 +6,10 @@ from django_comments.models import Comment
 
 from qatrack.faults import models
 from qatrack.faults.tests import utils as fault_utils
-from qatrack.qa.tests import utils
 from qatrack.reports import faults
 from qatrack.service_log.tests import utils as sl_utils
 from qatrack.units.models import Site as USite
+from qatrack.units.tests import utils as u_utils
 
 
 class TestFaultSummaryReport(TestCase):
@@ -39,7 +39,7 @@ class TestFaultSummaryReport(TestCase):
 
     def test_get_unit_details(self):
         site = USite.objects.create(name="site")
-        unit = utils.create_unit(site=site)
+        unit = u_utils.create_unit(site=site)
         units = faults.FaultSummaryReport().get_unit_details([unit.pk])
         assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
 
@@ -50,10 +50,10 @@ class TestFaultSummaryReport(TestCase):
 
     def test_get_faults_for_site(self):
         site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
+        unit1 = u_utils.create_unit(site=site)
         fault1 = fault_utils.create_fault(unit=unit1)
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         fault_utils.create_fault(unit=unit2)
 
         qs = models.Fault.objects.all()
@@ -63,10 +63,10 @@ class TestFaultSummaryReport(TestCase):
     def test_generate_html(self):
 
         site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
+        unit1 = u_utils.create_unit(site=site)
         fault_utils.create_fault(unit=unit1)
 
-        unit2 = utils.create_unit()
+        unit2 = u_utils.create_unit()
         fault_utils.create_fault(unit=unit2)
 
         rep = faults.FaultSummaryReport()
@@ -76,10 +76,10 @@ class TestFaultSummaryReport(TestCase):
     def test_to_table_reviewed(self):
 
         site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
+        unit1 = u_utils.create_unit(site=site)
         fault_utils.create_fault(unit=unit1)
 
-        unit2 = utils.create_unit()
+        unit2 = u_utils.create_unit()
         fault2 = fault_utils.create_fault(unit=unit2)
         fault_rev = fault_utils.create_fault_review(fault=fault2)
         comment = Comment(
@@ -111,7 +111,7 @@ class TestFaultSummaryReport(TestCase):
     def test_unreviewed_filter(self):
 
         site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
+        unit1 = u_utils.create_unit(site=site)
         fault_utils.create_fault(unit=unit1)
         rep = faults.FaultSummaryReport(report_opts={'review_status': "unreviewed"})
         rep.report_format = "csv"
@@ -127,10 +127,10 @@ class TestFaultDetailsReport(TestCase):
     def test_generate_html(self):
 
         site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
+        unit1 = u_utils.create_unit(site=site)
         fault_utils.create_fault(unit=unit1)
 
-        unit2 = utils.create_unit(site=None)
+        unit2 = u_utils.create_unit(site=None)
         fault_utils.create_fault(unit=unit2)
 
         rep = faults.FaultDetailsReport()
@@ -140,10 +140,10 @@ class TestFaultDetailsReport(TestCase):
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
-        unit1 = utils.create_unit(site=site)
+        unit1 = u_utils.create_unit(site=site)
         fault_utils.create_fault(unit=unit1)
 
-        unit2 = utils.create_unit()
+        unit2 = u_utils.create_unit()
         fault2 = fault_utils.create_fault(unit=unit2)
 
         usa2 = sl_utils.create_unit_service_area(unit=unit2)

@@ -17,13 +17,14 @@ from qatrack.attachments.models import Attachment
 from qatrack.qa import models
 from qatrack.qa.tests import utils
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units.tests import utils as u_utils
 
 
 class TestTestListInstanceAPI(APITestCase):
 
     def setUp(self):
 
-        self.unit = utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.test_list = utils.create_test_list("test list")
         self.t1 = utils.create_test(name="test1")
         self.t2 = utils.create_test(name="test2")
@@ -1074,7 +1075,7 @@ class TestPerformTestListCycleAPI(APITestCase):
 
     def setUp(self):
 
-        self.unit = utils.create_unit()
+        self.unit = u_utils.create_unit()
         self.test_list1 = utils.create_test_list("test list 1")
         self.test_list2 = utils.create_test_list("test list 2")
         self.test_list_cycle = utils.create_cycle([self.test_list1, self.test_list2], "test list cycle")

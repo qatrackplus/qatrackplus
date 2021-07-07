@@ -14,6 +14,7 @@ from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.service_log import models, views
 from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units.tests import utils as u_utils
 
 
 class TestURLS(TestCase):
@@ -33,7 +34,7 @@ class TestURLS(TestCase):
         sl_utils.create_service_event_status(is_default=True)
         qa_utils.create_status(is_default=True)
         se = sl_utils.create_service_event()
-        u = qa_utils.create_unit()
+        u = u_utils.create_unit()
         utc = qa_utils.create_unit_test_collection(unit=u)
         tli = qa_utils.create_test_list_instance(unit_test_collection=utc)
 
@@ -144,7 +145,7 @@ class TestCreateServiceEvent(TestCase):
 
         now = timezone.now()
 
-        self.u_1 = qa_utils.create_unit(name='u_1')
+        self.u_1 = u_utils.create_unit(name='u_1')
         self.sa_1 = sl_utils.create_service_area(name='sa_1')
         self.usa_1 = sl_utils.create_unit_service_area(unit=self.u_1, service_area=self.sa_1)
         self.tl_1 = qa_utils.create_test_list(name='tl_1')
@@ -160,7 +161,7 @@ class TestCreateServiceEvent(TestCase):
         )
         self.se_1 = sl_utils.create_service_event(unit_service_area=self.usa_1)
 
-        self.u_2 = qa_utils.create_unit(name='u_2')
+        self.u_2 = u_utils.create_unit(name='u_2')
         self.sa_2 = sl_utils.create_service_area(name='sa_2')
         self.usa_2 = sl_utils.create_unit_service_area(unit=self.u_2, service_area=self.sa_2)
         self.tl_2 = qa_utils.create_test_list(name='tl_2')
@@ -514,7 +515,7 @@ class TestEditServiceEvent(TestCase):
 
         now = timezone.now()
 
-        self.u_1 = qa_utils.create_unit(name='u_1')
+        self.u_1 = u_utils.create_unit(name='u_1')
         self.sa_1 = sl_utils.create_service_area(name='sa_1')
         self.usa_1 = sl_utils.create_unit_service_area(unit=self.u_1, service_area=self.sa_1)
         self.tl_1 = qa_utils.create_test_list(name='tl_1')
@@ -530,7 +531,7 @@ class TestEditServiceEvent(TestCase):
         )
         self.se_1 = sl_utils.create_service_event(unit_service_area=self.usa_1)
 
-        self.u_2 = qa_utils.create_unit(name='u_2')
+        self.u_2 = u_utils.create_unit(name='u_2')
         self.sa_2 = sl_utils.create_service_area(name='sa_2')
         self.usa_2 = sl_utils.create_unit_service_area(unit=self.u_2, service_area=self.sa_2)
         self.tl_2 = qa_utils.create_test_list(name='tl_2')
@@ -671,9 +672,9 @@ class TestServiceLogViews(TestCase):
         self.user = create_user(is_superuser=True)
         self.client.login(username='user', password='password')
 
-        self.u1 = qa_utils.create_unit()
-        self.u2 = qa_utils.create_unit()
-        self.u3 = qa_utils.create_unit()
+        self.u1 = u_utils.create_unit()
+        self.u2 = u_utils.create_unit()
+        self.u3 = u_utils.create_unit()
 
         self.usa1 = sl_utils.create_unit_service_area(unit=self.u1)
         self.usa2 = sl_utils.create_unit_service_area(unit=self.u2)
@@ -863,7 +864,7 @@ class TestServiceEventTemplateSearcher(TestCase):
 
         tl1 = qa_utils.create_test_list()
         tl2 = qa_utils.create_test_list()
-        u1 = qa_utils.create_unit()
+        u1 = u_utils.create_unit()
         qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
 
         # one template with RTS that is assigned to the unit
@@ -890,7 +891,7 @@ class TestServiceEventTemplateSearcher(TestCase):
         st = sl_utils.create_service_type()
         tl1 = qa_utils.create_test_list()
         tl2 = qa_utils.create_test_list()
-        u1 = qa_utils.create_unit()
+        u1 = u_utils.create_unit()
         qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
 
         # one template with RTS that is assigned to the unit
