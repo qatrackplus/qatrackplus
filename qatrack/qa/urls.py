@@ -115,4 +115,11 @@ urlpatterns = [
     ),
     url(r"^category/(?P<category>[/\w-]+?)/$", perform.CategoryList.as_view(), name="qa_by_category"),
     url(r"^due-and-overdue/$", perform.DueAndOverdue.as_view(), name="qa_by_overdue"),
+
+    # search urls
+    url(r"^searcher/test/$", base.test_searcher, name='test_searcher'),
+    url(r"^searcher/test_list/$", base.test_list_searcher, name='test_list_searcher'),
+    url(r"^searcher/test_list_cycle/$", base.test_list_cycle_searcher, name='test_list_cycle_searcher'),
+    url(r"^searcher/test_instance/$", base.test_instance_searcher, name='test_instance_searcher'),
+    url(r"^searcher/test_list_instance/$", base.test_list_instance_searcher, name='test_list_instance_searcher'),
 ]

@@ -5,6 +5,7 @@ from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
 from django.conf import settings
 from django.contrib.auth.context_processors import PermWrapper
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
@@ -546,3 +547,40 @@ class TestListInstances(BaseListableView):
 
     def attachments(self, tli):
         return listable_attachment_tags(tli)
+
+
+def test_searcher(request):
+    q = request.GET.get('q')
+    tests = models.Test.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(tests)})
+
+
+def test_list_searcher(request):
+    q = request.GET.get('q')
+    testlists = models.TestList.objects.filter(Q(id__icontains=q) | Q(name__icontains=q)).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(testlists)})
+
+
+def test_list_cycle_searcher(request):
+    q = request.GET.get('q')
+    testlistcycles = models.TestListCycle.objects.filter(
+        Q(id__icontains=q) | Q(name__icontains=q),
+    ).values('id', 'name')[0:50]
+    return JsonResponse({'items': list(testlistcycles)})
+
+
+def test_instance_searcher(request):
+    q = request.GET.get('q')
+    testinstance = models.TestInstance.objects.filter(
+        Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q)
+        | Q(unit_test_info__test__display_name__icontains=q),
+    ).values('id', 'unit_test_info__test__name')[0:50]
+    return JsonResponse({'items': list(testinstance), 'name': 'unit_test_info__test__name'})
+
+
+def test_list_instance_searcher(request):
+    q = request.GET.get('q')
+    testlistinstance = models.TestListInstance.objects.filter(
+        Q(id__icontains=q) | Q(test_list__name__icontains=q),
+    ).values('id', 'test_list__name')[0:50]
+    return JsonResponse({'items': list(testlistinstance), 'name': 'test_list__name'})
