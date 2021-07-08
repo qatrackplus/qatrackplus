@@ -281,10 +281,10 @@ class PartStorageCollection(models.Model):
         self.part.set_quantity_current()
 
     def __str__(self):
-        locs = []
-        if self.storage.room.site:
-            locs.append(self.storage.room.site.name)
-        locs.append(self.storage.room.name)
+        locs = [
+            self.storage.room.site.name,
+            self.storage.room.name,
+        ]
         if self.storage.location:
             locs.append(self.storage.location)
         locs.append('(%s)' % self.quantity)

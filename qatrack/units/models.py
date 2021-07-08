@@ -133,8 +133,6 @@ class Room(models.Model):
         Site,
         verbose_name=_l("site"),
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         help_text=_l('Site this storage room is located')
     )
     name = models.CharField(
@@ -150,7 +148,7 @@ class Room(models.Model):
         unique_together = ['site', 'name']
 
     def __str__(self):
-        return '%s%s' % (self.name, ' (%s)' % self.site.name if self.site else '')
+        return '%s%s' % (self.name, ' (%s)' % self.site.name)
 
     def save(self, *args, **kwargs):
         new = self.pk is None
@@ -200,8 +198,7 @@ class Storage(models.Model):
     def __str__(self):
         items = []
         if self.room:
-            if self.room.site:
-                items.append(self.room.site.name)
+            items.append(self.room.site.name)
             items.append(self.room.name)
         if self.location:
             items.append(self.location)

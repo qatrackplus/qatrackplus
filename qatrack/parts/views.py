@@ -324,12 +324,11 @@ class PartsList(BaseListableView):
 
         tmp_cache = defaultdict(list)
         for part_id, quantity, loc, site_name, room_name in psc:
-            site = "%s:" % site_name if site_name else ""
             text = (
                 '<div style="display: inline-block; white-space: nowrap;">'
-                '%s%s:%s <span class="badge">%d</span>'
+                '%s:%s:%s <span class="badge">%d</span>'
                 '</div>'
-            ) % (site, room_name, loc or "", quantity)
+            ) % (site_name, room_name, loc or "", quantity)
             tmp_cache[part_id].append(text)
 
         self._parts_locations_cache = {}
