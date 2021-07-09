@@ -13,11 +13,14 @@ from qatrack.units.models import (
     Unit,
     UnitClass,
     UnitType,
+    UnitAvailableTime,
+    UnitAvailableTimeEdit,
     Vendor,
 )
 
 
-def create_modality(energy: Union[int, float] = 6, particle: Union[PHOTON, ELECTRON] = PHOTON, name: Optional[str] = None) -> Modality:
+def create_modality(energy: Union[int, float] = 6, particle: Union[PHOTON, ELECTRON] = PHOTON,
+                    name: Optional[str] = None) -> Modality:
 
     if name is None:
         if particle == "photon":
@@ -76,7 +79,7 @@ def create_site(name=None):
     return Site.objects.create(name=name, slug=slug)
 
 
-def create_unit(name=None, number=None, tipe=None, site=None, active=True):
+def create_unit(name=None, number=None, tipe=None, site=None, active=True, serviceable=True):
 
     if name is None:
         name = 'unit_%04d' % get_next_id(Unit.objects.order_by('id').last())
@@ -93,7 +96,7 @@ def create_unit(name=None, number=None, tipe=None, site=None, active=True):
         number=number,
         date_acceptance=timezone.now(),
         type=tipe,
-        is_serviceable=True,
+        is_serviceable=serviceable,
         site=site,
         active=active,
     )
@@ -122,3 +125,36 @@ def create_room(site=None, name=None):
     r, _ = Room.objects.get_or_create(name=name, site=site)
 
     return r
+
+
+def create_unit_available_time(unit=None, hours_per_day=8, date_changed=None):
+    unit = unit or create_unit()
+    date_changed = date_changed or unit.date_acceptance
+    if isinstance(date_changed, timezone.datetime):
+        date_changed = date_changed.date()
+    hours_per_day = timezone.timedelta(hours=hours_per_day)
+    return UnitAvailableTime.objects.create(
+        unit=unit,
+        date_changed=date_changed,
+        hours_sunday=hours_per_day,
+        hours_monday=hours_per_day,
+        hours_tuesday=hours_per_day,
+        hours_wednesday=hours_per_day,
+        hours_thursday=hours_per_day,
+        hours_friday=hours_per_day,
+        hours_saturday=hours_per_day,
+    )
+
+
+def create_unit_available_time_edit(unit=None, hours=8, date=None, name="reason"):
+
+    unit = unit or create_unit()
+    date = date or timezone.now().date()
+    hours = timezone.timedelta(hours=hours)
+
+    return UnitAvailableTimeEdit.objects.create(
+        unit=unit,
+        name=name,
+        date=date,
+        hours=hours,
+    )

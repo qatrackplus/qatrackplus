@@ -5,11 +5,11 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.aggregates import Max
-from django.utils.timezone import timedelta
+from django.utils.timezone import timedelta, datetime
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
-from qatrack.qatrack_core.dates import format_as_date as fmt_date
+from qatrack.qatrack_core.dates import format_as_date as fmt_date, start_of_day
 
 PHOTON = 'photon'
 ELECTRON = 'electron'
@@ -382,6 +382,8 @@ class Unit(models.Model):
         return "%s :: %s" % (self.site.name, self.name)
 
     def get_potential_time(self, date_from, date_to):
+        """Return the potential time available for a unit to be used between
+        two dates (available time - available time edits)"""
 
         if date_from is None:
             date_from = self.date_acceptance
@@ -390,6 +392,12 @@ class Unit(models.Model):
             if date_to < self.date_acceptance:
                 return 0
             date_from = self.date_acceptance
+
+        if isinstance(date_from, datetime):
+            date_from = start_of_day(date_from).date()
+
+        if isinstance(date_to, datetime):
+            date_to = start_of_day(date_to).date()
 
         self_uat_set = self.unitavailabletime_set.filter(
             date_changed__range=[date_from, date_to]
