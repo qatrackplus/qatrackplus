@@ -2,6 +2,7 @@ from django.apps import apps
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
+from django.utils.text import slugify
 import recurrence
 
 from qatrack.accounts.tests.utils import create_group, create_user
@@ -74,7 +75,7 @@ def create_test_list(name=None):
     user = create_user()
     test_list = models.TestList(
         name=name,
-        slug=name,
+        slug=slugify(name),
         description="desc",
         created_by=user,
         modified_by=user,

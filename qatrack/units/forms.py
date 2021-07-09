@@ -12,9 +12,9 @@ from qatrack.service_log.forms import HoursMinDurationField
 from qatrack.units import models as u_models
 
 
-def max_24hr(value):
+def max_24hr(value: timedelta) -> None:
+    """Raise a validation error if input timedelta has a duration greater than 24hrs"""
     if value > timedelta(hours=24):
-
         raise ValidationError(_('Duration can not be greater than 24 hours'))
 
 
@@ -83,8 +83,6 @@ class UnitAvailableTimeForm(forms.ModelForm):
             if f == 'date_changed':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
                 self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
-            elif f in ['year_select', 'month_select']:
-                self.fields[f].widget.attrs['class'] = 'form-control'
             else:
                 self.fields[f].widget.attrs['class'] = 'form-control duration weekday-duration'
 
@@ -159,11 +157,8 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
     return choices
 
 
-def unit_site_service_area_choices(include_empty=False, include_unspecified=False):
+def unit_site_service_area_choices(include_empty=False):
     """Return unit service areas grouped by site and unit, suitable for using as optgroups for select inputs"""
-
-    def unit_service_area(usa):
-        return "%s :: %s" % (usa.unit.name, usa.service_area.name)
 
     def service_area(usa):
         return usa.service_area.name
@@ -176,8 +171,6 @@ def unit_site_service_area_choices(include_empty=False, include_unspecified=Fals
         "unit",
         "service_area",
     )
-    if not include_unspecified:
-        usas = usas.exclude(service_area__name=sl_models.ServiceArea.BLANK_SA_NAME)
 
     usas = usas.order_by(
         "unit__site__name",
@@ -198,9 +191,6 @@ def utc_choices(include_empty=False):
 
     def site_unit_type(u):
         return "%s :: %s" % (u.site.name, u.type.name)
-
-    def unit_utc_name(u):
-        return "%s :: %s" % (u.site.name, u.name)
 
     units = u_models.Unit.objects.select_related("site", "type").prefetch_related(
         "unittestcollection_set",

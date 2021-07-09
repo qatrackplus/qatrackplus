@@ -2,8 +2,11 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+import pytest
+
 from qatrack.qa.tests import utils
-from qatrack.units import models
+from qatrack.service_log.tests import utils as sl_utils
+from qatrack.units import models, forms
 from qatrack.units.tests import utils as u_utils
 
 
@@ -193,3 +196,92 @@ class TestGetUnitInfo(TestCase):
             },
         }
         assert resp.json() == expected
+
+
+class TestUnitSiteUnitTypeChoices(TestCase):
+
+    def setUp(self):
+        self.s1 = u_utils.create_site(name="site 1")
+        self.u1 = u_utils.create_unit(site=self.s1)
+        self.s2 = u_utils.create_site(name="site 2")
+        self.u2 = u_utils.create_unit(site=self.s2, serviceable=False)
+
+    def test_include_empty_false(self):
+        """No empty choice should be included when include_empty=False"""
+        choices = forms.unit_site_unit_type_choices(include_empty=False)
+        expected = [
+            (f'site 1 :: {self.u1.type.name}', [(self.u1.pk, f'site 1 :: {self.u1.name}')]),
+            (f'site 2 :: {self.u2.type.name}', [(self.u2.pk, f'site 2 :: {self.u2.name}')]),
+        ]
+        assert choices == expected
+
+    def test_include_empty_true(self):
+        """An empty choice should be included when include_empty=True"""
+        choices = forms.unit_site_unit_type_choices(include_empty=True)
+        assert choices[0][1][0] == "-"
+
+    def test_exclude_no_serviceable(self):
+        """An empty choice should be included when include_empty=True"""
+        choices = forms.unit_site_unit_type_choices(serviceable_only=True)
+        assert len(choices) == 1
+
+
+class TestUnitSiteServiceAreaChoices(TestCase):
+
+    def setUp(self):
+        self.s1 = u_utils.create_site(name="site 1")
+        self.u1 = u_utils.create_unit(site=self.s1, name="unit 1")
+        self.sa1 = sl_utils.create_service_area(name="sa1")
+        self.usa1 = sl_utils.create_unit_service_area(unit=self.u1, service_area=self.sa1)
+
+        self.s2 = u_utils.create_site(name="site 2")
+        self.u2 = u_utils.create_unit(site=self.s2, name="unit 2", serviceable=False)
+        self.sa2 = sl_utils.create_service_area(name="sa2")
+        self.usa2 = sl_utils.create_unit_service_area(unit=self.u2, service_area=self.sa2)
+
+    def test_include_empty_false(self):
+        """No empty choice should be included when include_empty=False"""
+        choices = forms.unit_site_service_area_choices(include_empty=False)
+        expected = [
+            ('site 1 :: unit 1', [(self.usa1.pk, 'sa1')]),
+            ('site 2 :: unit 2', [(self.usa2.pk, 'sa2')])
+        ]
+        assert choices == expected
+
+    def test_include_empty_true(self):
+        """An empty choice should be included when include_empty=True"""
+        choices = forms.unit_site_service_area_choices(include_empty=True)
+        assert choices[0][1][0] == "-"
+
+
+class TestUTCChoices(TestCase):
+
+    def setUp(self):
+        self.s1 = u_utils.create_site(name="site 1")
+        self.u1 = u_utils.create_unit(site=self.s1)
+        self.tl1 = utils.create_test_list(name="tl 1")
+        self.utc1 = utils.create_unit_test_collection(unit=self.u1, test_collection=self.tl1)
+
+        self.s2 = u_utils.create_site(name="site 2")
+        self.tl2 = utils.create_test_list(name="tl 2")
+        self.u2 = u_utils.create_unit(site=self.s2, serviceable=False)
+        self.utc2 = utils.create_unit_test_collection(unit=self.u2, test_collection=self.tl2)
+
+    def test_include_empty_false(self):
+        """No empty choice should be included when include_empty=False"""
+        choices = forms.utc_choices(include_empty=False)
+        expected = [
+            (f'site 1 :: {self.u1.type.name}', [(self.utc1.pk, f'{self.u1.name} :: tl 1')]),
+            (f'site 2 :: {self.u2.type.name}', [(self.utc2.pk, f'{self.u2.name} :: tl 2')])
+        ]
+        assert choices == expected
+
+    def test_include_empty_true(self):
+        """An empty choice should be included when include_empty=True"""
+        choices = forms.utc_choices(include_empty=True)
+        assert choices[0][1][0] == "-"
+
+
+def test_max24h():
+    with pytest.raises(forms.ValidationError):
+        forms.max_24hr(timezone.timedelta(hours=24, minutes=1))
