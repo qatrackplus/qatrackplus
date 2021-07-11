@@ -1,10 +1,9 @@
 import rest_framework_filters as filters
 
 from qatrack.api.service_log.filters import ServiceEventFilter
-from qatrack.api.units.filters import SiteFilter
+from qatrack.api.units.filters import StorageFilter
 from qatrack.parts import models
 from qatrack.service_log.models import ServiceEvent
-from qatrack.units.models import Site
 
 
 class SupplierFilter(filters.FilterSet):
@@ -14,29 +13,6 @@ class SupplierFilter(filters.FilterSet):
         fields = {
             "name": "__all__",
             "notes": "__all__",
-        }
-
-
-class RoomFilter(filters.FilterSet):
-
-    site = filters.RelatedFilter(SiteFilter, field_name="site", queryset=Site.objects.all())
-
-    class Meta:
-        model = models.Room
-        fields = {
-            "name": "__all__",
-        }
-
-
-class StorageFilter(filters.FilterSet):
-
-    room = filters.RelatedFilter(RoomFilter, field_name="room", queryset=models.Room.objects.all())
-
-    class Meta:
-        model = models.Storage
-        fields = {
-            "location": "__all__",
-            "description": "__all__",
         }
 
 
@@ -99,7 +75,11 @@ class PartSupplierCollectionFilter(filters.FilterSet):
 
 class PartUsedFilter(filters.FilterSet):
 
-    service_event = filters.RelatedFilter(ServiceEventFilter, field_name="service_event", queryset=ServiceEvent.objects.all())
+    service_event = filters.RelatedFilter(
+        ServiceEventFilter,
+        field_name="service_event",
+        queryset=ServiceEvent.objects.all(),
+    )
     part = filters.RelatedFilter(PartFilter, field_name="part", queryset=models.Part.objects.all())
     from_storage = filters.RelatedFilter(
         StorageFilter, field_name="from_storage", queryset=models.Storage.objects.all()
