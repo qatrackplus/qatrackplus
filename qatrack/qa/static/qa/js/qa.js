@@ -451,7 +451,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 if (_.isNull(value)){
                     self.inputs.prop("checked",false);
                 }else{
-                    self.inputs[0].checked = value === 0;
+                    self.inputs[0].checked = (value === 0) || (value === false);
                     self.inputs[1].checked = !self.inputs[0].checked;
                 }
             }else if (
