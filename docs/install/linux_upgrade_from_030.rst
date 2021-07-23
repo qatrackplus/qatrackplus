@@ -61,10 +61,10 @@ also confirm your backup step above worked.
 .. code-block:: bash
 
     sudo -u postgres psql -c "CREATE DATABASE qatrackplus31;"
-    sudo -u postgres psql -d qatrackplus31 < backup-0.3.0-$(date -I).sql
     # postgres (# it's ok if you see an error "role "qatrack" already exists here)
     sudo -u postgres psql -c "CREATE USER qatrack with PASSWORD 'qatrackpass';"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE qatrackplus31 to qatrack;"
+    sudo -u postgres psql -d qatrackplus31 < backup-0.3.0-$(date -I).sql
 
     # or for MySQL (omit the -p if your mysql installation doesn't require a password for root)
     sudo mysql -p -e "CREATE DATABASE qatrackplus31;"

@@ -3,6 +3,7 @@ import logging
 import os
 import os.path
 import shutil
+import sys
 import time
 from uuid import uuid4
 
@@ -68,6 +69,12 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
             os.remove(start_path)
             break
         except PermissionError:
+            # After much hair pulling, it was discovered
+            # that running gc.collect() before os.remove allows Python to delete the file (grrr)
+            if 'win' in sys.platform.lower():
+                import gc;
+                gc.collect()
+
             if count == 2:
                 logger.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
                 break
