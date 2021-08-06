@@ -109,6 +109,9 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                     }
                 ]
             });
+            if ($dt.is(":focus")){
+                $dt.get(0)._flatpickr.open();
+            }
         });
 
 

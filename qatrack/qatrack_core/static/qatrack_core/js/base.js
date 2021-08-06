@@ -1,4 +1,3 @@
-
 require(['jquery'], function ($) {
     /* add filter to IE*/
     if (!Array.prototype.filter)
@@ -45,7 +44,7 @@ require(['jquery'], function ($) {
 
 
     $.fn.preventDoubleSubmit = function() {
-      jQuery(this).submit(function() {
+      $(this).submit(function() {
         if (this.beenSubmitted)
           return false;
         else{
@@ -53,7 +52,7 @@ require(['jquery'], function ($) {
           this.beenSubmitted = true;
         }
       });
-      return jQuery(this);
+      return $(this);
     };
 
     var KEYS = {
@@ -116,6 +115,7 @@ require(['jquery'], function ($) {
 
         $.overrideSelect2Keys = function (els) {
             var self = $(els).data('select2');
+            var val;
             delete self.listeners.keypress;
             self.on('keypress', function (evt) {
                 var key = evt.which;
@@ -150,7 +150,7 @@ require(['jquery'], function ($) {
                         evt.preventDefault();
                     }
                     if (key === KEYS.DOWN) {
-                        var val = self.$element.find('option:selected').nextAll(":enabled").first().val();
+                        val = self.$element.find('option:selected').nextAll(":enabled").first().val();
                         if (undefined !== val) {
                             self.$element.val(val);
                             self.$element.trigger('change');
@@ -158,7 +158,7 @@ require(['jquery'], function ($) {
                         evt.preventDefault();
                     }
                     if (key === KEYS.UP) {
-                        var val = self.$element.find('option:selected').prevAll(":enabled").first().val();
+                        val = self.$element.find('option:selected').prevAll(":enabled").first().val();
                         if (undefined !== val) {
                             self.$element.val(val);
                             self.$element.trigger('change');
@@ -170,13 +170,13 @@ require(['jquery'], function ($) {
                             self.keys_pressed = [key];
                             self.key_timer = setTimeout(function () {
                                 self.keys_pressed = [];
-                            }, 1000)
+                            }, 1000);
                         } else {
                             self.keys_pressed.push(key);
                             clearTimeout(self.key_timer);
                             self.key_timer = setTimeout(function () {
                                 self.keys_pressed = [];
-                            }, 1000)
+                            }, 1000);
                         }
                         var best_options = self.$element.find('option:enabled');
                         $.each(self.keys_pressed, function (i, v) {
@@ -196,7 +196,7 @@ require(['jquery'], function ($) {
                 console.log(self);
             });
         };
-    })(jQuery);
+    })($);
 
     var $tab_content = $('body > div.wrapper > aside > div.tab-content'),
         $control_sidebar = $('body > div.wrapper > aside.control-sidebar'),
@@ -230,11 +230,12 @@ require(['jquery'], function ($) {
 
     $('form').on('focus', 'input[type=number]', function (e) {
         $(this).on('mousewheel.disableScroll', function (e) {
-            e.preventDefault()
-        })
-    })
+            e.preventDefault();
+        });
+    });
     $('form').on('blur', 'input[type=number]', function (e) {
-        $(this).off('mousewheel.disableScroll')
-    })
+        $(this).off('mousewheel.disableScroll');
+    });
 
 });
+

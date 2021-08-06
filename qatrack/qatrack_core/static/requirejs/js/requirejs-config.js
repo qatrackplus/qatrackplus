@@ -215,6 +215,9 @@ require.config({
             exports: 'canvg',
             deps: ['rgbcolor', 'stackblur-canvas']
         },
+        select2: {
+            deps: ['site_base'] // required because site base defines overrideSelect2Keys
+        },
         slimscroll: {
             deps: ['jquery']
         },
