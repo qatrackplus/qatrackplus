@@ -321,7 +321,7 @@ You can also check on the status of your task cluster at any time like this:
 
 .. code-block:: bash
 
-    source ~/virtualenvs/qatrack31/bin/activate
+    source ~/venvs/qatrack31/bin/activate
     cd ~/web/qatrackplus/
     python manage.py qmonitor
 
