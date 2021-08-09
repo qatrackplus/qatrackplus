@@ -9,6 +9,9 @@ Query Tool
     read-only database user, and configured QATrack+ to use this read-only user
     in it's :ref:`DATABASES <databases>` setting.
 
+    You must also set :ref:`USE_SQL_REPORTS = True<qatrack_config>` in your
+    local_settings.py file.
+
 
 As of version 3.1.0 QATrack+ has a tool for creating, running, and storing SQL
 database queries/reports. To access the tool, select the **Query Tool** option
