@@ -133,6 +133,10 @@ the QATrack+ deployment documentation.
         }
     }
 
+If you are using SQL Server and the SQL Reports feature, you may also need to
+set `AUTOCOMMIT = False` for your readonly configuration (see the
+`USE_SQL_REPORTS` setting below).
+
 
 Cache Settings
 ~~~~~~~~~~~~~~
@@ -456,7 +460,24 @@ Default is 30.
 USE_SQL_REPORTS
 ...............
 
-Set `USE_SQL_REPORTS` to `False` in order to disable the SQL Query tool
+Set `USE_SQL_REPORTS` to `True` in order to enable the SQL Query tool. Note if
+you are using SQL Server for your database, you may also need to set
+`AUTOCOMMIT = False` for your readonly database user:
+
+.. code-block:: python
+
+    DATABASES = {
+        'default': {
+            # default connection settings...
+        },
+        'readonly': {
+            'ENGINE': 'sql_server.pyodbc',
+            'AUTOCOMMIT': False,
+            # rest of db settings
+        }
+    }
+
+
 
 USE_X_FORWARDED_HOST
 ....................
