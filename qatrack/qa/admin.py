@@ -230,6 +230,44 @@ class ActiveUnitTestInfoFilter(admin.SimpleListFilter):
         return qs
 
 
+class UTITestListFilter(admin.SimpleListFilter):
+
+    title = _l('test list')
+
+    parameter_name = 'test_list'
+
+    def lookups(self, request, model_admin):
+        qs = model_admin.get_queryset(request).values_list(
+            'test__testlistmembership__test_list_id',
+            'test__testlistmembership__test_list__name',
+        ).distinct().order_by('test__testlistmembership__test_list__name')
+        return qs
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(test__testlistmembership__test_list_id=self.value())
+        return queryset
+
+
+class UTICategoryFilter(admin.SimpleListFilter):
+
+    title = _l('category')
+
+    parameter_name = 'category'
+
+    def lookups(self, request, model_admin):
+        qs = model_admin.get_queryset(request).values_list(
+            'test__category_id',
+            'test__category__name',
+        ).distinct().order_by('test__category__name')
+        return qs
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(test__category_id=self.value())
+        return queryset
+
+
 class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
 
     admin_views = (
@@ -254,7 +292,7 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
 
     list_display = [test_name, "unit", test_type, "reference", "tolerance"]
     list_filter = [
-        ActiveUnitTestInfoFilter, "unit__site", "unit", "test__category", "test__testlistmembership__test_list"
+        ActiveUnitTestInfoFilter, "unit__site", "unit", UTICategoryFilter, UTITestListFilter,
     ]
     readonly_fields = ("reference", "test", "unit", "history")
     search_fields = ("test__name", "test__display_name", "test__slug", "unit__name")
@@ -979,11 +1017,49 @@ class TestListMembershipFilter(admin.SimpleListFilter):
         return qs
 
 
+class TestTestListFilter(admin.SimpleListFilter):
+
+    title = _l('test list')
+
+    parameter_name = 'test_list'
+
+    def lookups(self, request, model_admin):
+        qs = model_admin.get_queryset(request).values_list(
+            'testlistmembership__test_list_id',
+            'testlistmembership__test_list__name',
+        ).distinct().order_by('testlistmembership__test_list__name')
+        return qs
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(testlistmembership__test_list_id=self.value())
+        return queryset
+
+
+class TestCategoryFilter(admin.SimpleListFilter):
+
+    title = _l('category')
+
+    parameter_name = 'category'
+
+    def lookups(self, request, model_admin):
+        qs = model_admin.get_queryset(request).values_list(
+            'category_id',
+            'category__name',
+        ).order_by('category__name')
+        return qs
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(category_id=self.value())
+        return queryset
+
+
 class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
 
     inlines = [get_attachment_inline("test")]
     list_display = ["name", "id", "slug", "category", "type", 'obj_created', 'obj_modified']
-    list_filter = ["category", "type", TestListMembershipFilter, "testlistmembership__test_list"]
+    list_filter = [TestCategoryFilter, "type", TestListMembershipFilter, TestTestListFilter]
     search_fields = ["name", "slug", "category__name"]
     readonly_fields = ("id",)
     save_as = True
@@ -1166,10 +1242,9 @@ class AssignedToFilter(admin.SimpleListFilter):
     parameter_name = "assignedtoname"
 
     def lookups(self, request, model_admin):
-        return models.Group.objects.values_list('pk', 'name')
+        return models.Group.objects.order_by("name").values_list('pk', 'name')
 
     def queryset(self, request, queryset):
-
         if self.value():
             return queryset.filter(assigned_to=self.value())
 
@@ -1405,10 +1480,34 @@ utc_unit_name.admin_order_field = "unit_test_collection__unit__name"  # noqa: E3
 utc_unit_name.short_description = _l("Unit")
 
 
+class TestListInstanceTestListFilter(admin.SimpleListFilter):
+
+    title = _l('test list')
+
+    parameter_name = 'test_list'
+
+    def lookups(self, request, model_admin):
+        qs = model_admin.get_queryset(request).values_list(
+            'test_list_id',
+            'test_list__name',
+        ).distinct().order_by('test_list__name')
+        return qs
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(test_list_id=self.value())
+        return queryset
+
+
 class TestListInstanceAdmin(SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
     list_display = ["__str__", utc_unit_name, "test_list", "work_completed", "created_by"]
-    list_filter = ["unit_test_collection__unit", "test_list", ]
+    list_filter = ["unit_test_collection__unit", TestListInstanceTestListFilter]
     inlines = [get_attachment_inline("testlistinstance")]
+    list_select_related = [
+        'unit_test_collection__unit',
+        'test_list',
+        'created_by',
+    ]
 
     def render_delete_form(self, request, context):
         instance = context['object']
@@ -1453,6 +1552,7 @@ class TestInstanceAdmin(SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
             "test_list_instance__test_list",
             "unit_test_info",
             "unit_test_info__test",
+            "unit_test_info__unit",
             "created_by"
         )
 

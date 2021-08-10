@@ -110,10 +110,29 @@ class TestListGroupForm(forms.ModelForm):
         self.fields['test_lists'].queryset = self.fields['test_lists'].queryset.order_by("name")
 
 
+class TestListGroupTestListFilter(admin.SimpleListFilter):
+
+    title = _l('test list')
+
+    parameter_name = 'test_list'
+
+    def lookups(self, request, model_admin):
+        qs = model_admin.get_queryset(request).values_list(
+            'test_lists__id',
+            'test_lists__name',
+        ).distinct().order_by('test_lists__name')
+        return qs
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(test_lists=self.value())
+        return queryset
+
+
 class TestListGroupAdmin(BaseQATrackAdmin):
 
     list_display = ["name", "get_test_lists"]
-    list_filter = ["test_lists"]
+    list_filter = [TestListGroupTestListFilter]
     search_fields = [
         "test_lists__name",
         "test_lists__slug",
