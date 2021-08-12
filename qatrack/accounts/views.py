@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.conf import settings
 from django.contrib import messages
@@ -16,7 +17,7 @@ from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView
-from django_auth_adfs.views import OAuth2CallbackView
+from django_auth_adfs.views import OAuth2LoginView, OAuth2CallbackView
 from django_registration.backends.one_step.views import RegistrationView
 
 from qatrack.accounts.forms import (
@@ -95,7 +96,28 @@ class GroupsApp(PermissionRequiredMixin, TemplateView):
         return context
 
 
+class QATrackOAuth2LoginView(OAuth2LoginView):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logger = logging.getLogger('auth.QATrackAdfsAuthCodeBackend')
+
+    def get(self, request):
+        try:
+            resp = super().get(request)
+        except Exception:
+            msg = "Unable to connect to the Single Sign On Server"
+            self.logger.exception(msg)
+            messages.error(request, msg)
+            return redirect(settings.LOGIN_URL)
+        return resp
+
+
 class QATrackOAuth2CallbackView(OAuth2CallbackView):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logger = logging.getLogger('auth.QATrackAdfsAuthCodeBackend')
 
     def get(self, request):
         result = super().get(request)
@@ -110,6 +132,7 @@ class QATrackOAuth2CallbackView(OAuth2CallbackView):
                 msg = _("Login Failed with error {status_code}: {phrase}").format(
                     status_code=result.status_code, phrase=result.reason_phrase
                 )
+            self.logger.info(msg)
             messages.error(request, msg)
             return redirect(settings.LOGIN_URL)
         return result

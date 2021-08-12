@@ -10,6 +10,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 from django_auth_adfs.backend import AdfsAuthCodeBackend
+from django_auth_adfs.config import ConfigLoadError
 
 from qatrack.accounts.models import ActiveDirectoryGroupMap, DefaultGroup
 
@@ -327,23 +328,28 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
     """Note https://github.com/jobec/django-auth-adfs/issues/31#issuecomment-384034365
     was extremely helpful in getting an Windows Server 2016 ADFS test server set up!"""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logger = logging.getLogger('auth.QATrackAdfsAuthCodeBackend')
+
     def authenticate(self, request=None, authorization_code=None, **kwargs):
         try:
             return super().authenticate(request=request, authorization_code=authorization_code, **kwargs)
+        except ConfigLoadError:
+            return None
         except PermissionDenied:
             return None
 
     def create_user(self, claims):
 
         from django_auth_adfs.config import settings as adfs_settings
-        from django_auth_adfs.backend import logger
 
         username = claims[adfs_settings.USERNAME_CLAIM]
 
         qualified_groups = ActiveDirectoryGroupMap.qualified_ad_group_names()
         if qualified_groups and adfs_settings.GROUPS_CLAIM:
             if len(set(qualified_groups) & set(claims[adfs_settings.GROUPS_CLAIM])) == 0:
-                logger.info(
+                self.logger.info(
                     "successfully authenticated: %s but they don't belong to a qualifying group (%s)" %
                     (username, ', '.join(qualified_groups))
                 )
@@ -380,7 +386,6 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
             claims (dict): Claims from the access token
         """
 
-        from django_auth_adfs.backend import logger
         from django_auth_adfs.config import settings as adfs_settings
 
         if adfs_settings.GROUPS_CLAIM:
@@ -390,7 +395,7 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
                 if not isinstance(claim_groups, list):
                     claim_groups = [claim_groups, ]
             else:
-                logger.debug(
+                self.logger.debug(
                     "The configured groups claim '{}' was not found in the access token".format(
                         adfs_settings.GROUPS_CLAIM
                     ),
@@ -404,7 +409,7 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
             default_groups = [dg.group for dg in DefaultGroup.objects.select_related("group")]
             for qat_group in default_groups:
                 if qat_group not in existing_user_groups:
-                    logger.debug("User added to group '{}'".format(qat_group.name))
+                    self.logger.debug("User added to group '{}'".format(qat_group.name))
                     user.groups.add(qat_group)
 
             ad_group_map = ActiveDirectoryGroupMap.group_map()
@@ -415,7 +420,7 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
                 try:
                     if adfs_settings.MIRROR_GROUPS and ad_group_name:
                         group, _ = Group.objects.get_or_create(name=ad_group_name)
-                        logger.debug("Created group '{}'".format(ad_group_name))
+                        self.logger.debug("Created group '{}'".format(ad_group_name))
                     else:
                         group = Group.objects.get(name=ad_group_name)
 
@@ -425,5 +430,5 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
 
                 for qat_group in qatrack_groups:
                     if qat_group not in existing_user_groups:
-                        logger.debug("User added to group '{}'".format(qat_group.name))
+                        self.logger.debug("User added to group '{}'".format(qat_group.name))
                         user.groups.add(qat_group)
