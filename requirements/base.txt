@@ -21,7 +21,7 @@ django-extensions==3.1.0
 django-filter==2.4.0
 django-form-utils==1.0.3
 django-formtools==2.1
-django-listable==0.5.0
+django-listable==0.5.2
 django-mptt==0.10.0
 django-mptt-admin==0.7.2
 django-picklefield==2.0
