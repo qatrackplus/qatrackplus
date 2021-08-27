@@ -221,7 +221,6 @@ class CreateFault(PermissionRequiredMixin, CreateView):
     def get_form_kwargs(self):
         """Add user to form kwargs"""
         kwargs = super().get_form_kwargs()
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
         kwargs['user'] = self.request.user
         return kwargs
 
