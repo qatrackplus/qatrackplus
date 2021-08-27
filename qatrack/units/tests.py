@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from qatrack.qa.tests import utils
-from qatrack.units import models
+from qatrack.units import forms, models
 
 
 class TestUnits(TestCase):
@@ -270,3 +270,36 @@ class TestGetUnitInfo(TestCase):
             },
         }
         assert resp.json() == expected
+
+
+class TestForms(TestCase):
+
+    def test_units_visible_to_user_no_inactive(self):
+        """units_visible_to_user should only return active units"""
+        u = utils.create_user()
+        g = utils.create_group()
+        u.groups.add(g)
+        unit = utils.create_unit(active=False)
+        utc1 = utils.create_unit_test_collection(unit=unit, assigned_to=g)
+        utc1.visible_to.set([g])
+        assert not forms.units_visible_to_user(u).exists()
+
+    def test_units_visible_to_user_no_inactive_utcs(self):
+        """units_visible_to_user should only return units with active utcs"""
+        u = utils.create_user()
+        g = utils.create_group()
+        u.groups.add(g)
+        unit = utils.create_unit()
+        utc1 = utils.create_unit_test_collection(unit=unit, assigned_to=g, active=False)
+        utc1.visible_to.set([g])
+        assert not forms.units_visible_to_user(u).exists()
+
+    def test_units_visible_to_user_active(self):
+        """units_visible_to_user should return active units with active utcs"""
+        u = utils.create_user()
+        g = utils.create_group()
+        u.groups.add(g)
+        unit = utils.create_unit()
+        utc1 = utils.create_unit_test_collection(unit=unit, assigned_to=g)
+        utc1.visible_to.set([g])
+        assert list(forms.units_visible_to_user(u)) == [unit]

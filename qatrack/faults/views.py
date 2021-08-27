@@ -218,6 +218,13 @@ class CreateFault(PermissionRequiredMixin, CreateView):
     permission_required = "faults.add_fault"
     raise_exception = True
 
+    def get_form_kwargs(self):
+        """Add user to form kwargs"""
+        kwargs = super().get_form_kwargs()
+        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+        kwargs['user'] = self.request.user
+        return kwargs
+
     @atomic
     def form_valid(self, form):
 
@@ -259,6 +266,12 @@ class EditFault(PermissionRequiredMixin, UpdateView):
 
     permission_required = "faults.change_fault"
     raise_exception = True
+
+    def get_form_kwargs(self):
+        """Add user to form kwargs"""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     @atomic
     def form_valid(self, form):

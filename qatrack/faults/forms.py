@@ -70,6 +70,7 @@ class FaultForm(BetterModelForm):
     def __init__(self, *args, **kwargs):
 
         include_related_ses = kwargs.pop("include_related_ses", True)
+        user = kwargs.pop("user", None)
 
         super().__init__(*args, **kwargs)
 
@@ -103,7 +104,8 @@ class FaultForm(BetterModelForm):
                 if not self.data['%s-unit' % self.prefix]:
                     self.fields['related_service_events'].widget.attrs.update({'disabled': True})
 
-        self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True, serviceable_only=True)
+        self.fields['unit'].choices = unit_site_unit_type_choices(
+            include_empty=True, serviceable_only=True, visible_for_user=user)
 
         for f in self.fields:
             self.fields[f].widget.attrs['class'] = 'form-control'
