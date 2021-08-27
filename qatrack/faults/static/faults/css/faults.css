@@ -9,3 +9,8 @@ dd.fault_type_description {
 #fault-modal .modal-dialog {
   width: 800px;
 }
+
+#listable-table-fault_list tr th:nth-child(2),
+#listable-table-fault_list tr th:nth-child(2) input{
+  width: 100px;
+}
