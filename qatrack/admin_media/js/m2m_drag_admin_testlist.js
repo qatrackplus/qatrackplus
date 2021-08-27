@@ -115,7 +115,7 @@
             items: item_sel,
             handle: 'td',
             update: function() {
-            set_order(this);
+                set_order(this);
             }
         });
 
@@ -182,6 +182,7 @@
             if ($(item_sel).length > 0){
                 clearInterval(interval);
                 initTestMembers();
+                $("tr.add-row a").click(function(){set_order('form');});
             }
         }
     });
