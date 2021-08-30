@@ -50,6 +50,14 @@ Miscellaneous
 * Reviewing faults now use the term "Acknowledge" instead of "Approve"
 
 
+QATrack+ v3.1.0.1 Release Notes
+-----------------------------
+
+.. _release_notes_3101:
+
+* Attempt to fix an issue with Django Q not being able to find report types on Windows
+
+
 QATrack+ v3.1.0 Release Notes
 -----------------------------
 
@@ -103,8 +111,9 @@ Major Features
 
     * Paper Backup Forms
 
-* A new :ref:`Query Tool <reports-query_tool>` has been added for advanced query and
-  reporting.
+* A new :ref:`Query Tool <reports-query_tool>` has been added for advanced
+  query and reporting.  (You must set :ref:`USE_SQL_REPORTS =
+  True<qatrack_config>` in your local_settings.py file to use this feature).
 
 * :ref:`Notifications <notifications>` have been expanded & improved.
     * You can now send notifications on test lists being completed.
