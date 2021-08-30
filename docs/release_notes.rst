@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+QATrack+ v3.1.0.1 Release Notes
+-----------------------------
+
+.. _release_notes_3101:
+
+* Attempt to fix an issue with Django Q not being able to find report types on Windows
+
+
 QATrack+ v3.1.0 Release Notes
 -----------------------------
 
