@@ -14,3 +14,8 @@ dd.fault_type_description {
 #listable-table-fault_list tr th:nth-child(2) input{
   width: 100px;
 }
+
+#listable-table-fault_list tr th:nth-child(5),
+#listable-table-fault_list tr th:nth-child(5) input{
+  width: 400px;
+}

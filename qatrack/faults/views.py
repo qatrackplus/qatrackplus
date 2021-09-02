@@ -51,6 +51,7 @@ class FaultList(BaseListableView):
         'actions': _l('Actions'),
         'get_id': _l('ID'),
         'get_fault_types': _l("Fault Types"),
+        'get_fault_types_descriptions': _l("Description"),
         'unit__site__name': _l("Site"),
         'unit__name': _l("Unit"),
         'modality__name': _l("Modality"),
@@ -72,6 +73,7 @@ class FaultList(BaseListableView):
         'actions': False,
         'review_status': 'reviewed',
         'get_fault_types': 'fault_types__code',
+        'get_fault_types_descriptions': 'fault_types__description',
         'get_occurred': 'occurred',
         'get_id': 'id',
     }
@@ -80,6 +82,7 @@ class FaultList(BaseListableView):
         'actions': False,
         'review_status': 'review_count',
         'get_fault_types': 'fault_types__code',
+        'get_fault_types_description': 'fault_types__description',
         'get_occurred': 'occurred',
     }
 
@@ -99,6 +102,9 @@ class FaultList(BaseListableView):
     prefetch_related = [
         "fault_types",
         "faultreviewinstance_set",
+        "faultreviewinstance_set__reviewed_by",
+        "faultreviewinstance_set__fault_review_group__group",
+        "comments",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -110,6 +116,7 @@ class FaultList(BaseListableView):
             'occurred': get_template("faults/fault_occurred.html"),
             'review_status': get_template("faults/fault_review_status.html"),
             'fault_types': get_template("faults/fault_types.html"),
+            'fault_types_descriptions': get_template("faults/fault_types_descriptions.html"),
         }
 
     def get_queryset(self):
@@ -132,6 +139,7 @@ class FaultList(BaseListableView):
             "id",
             "get_occurred",
             "get_fault_types",
+            "get_fault_types_descriptions",
         )
 
         multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
@@ -163,7 +171,10 @@ class FaultList(BaseListableView):
         return self.templates['actions'].render(c)
 
     def review_status(self, fault):
-        c = {'fault': fault}
+        c = {
+            'fault': fault,
+            'comments': fault.comments.count(),
+        }
         return self.templates['review_status'].render(c)
 
     def get_occurred(self, fault):
@@ -173,6 +184,10 @@ class FaultList(BaseListableView):
     def get_fault_types(self, fault):
         c = {'fault': fault}
         return self.templates['fault_types'].render(c)
+
+    def get_fault_types_descriptions(self, fault):
+        c = {'fault': fault}
+        return self.templates['fault_types_descriptions'].render(c)
 
 
 class UnreviewedFaultList(FaultList):

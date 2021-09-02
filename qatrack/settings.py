@@ -175,7 +175,6 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    #'django_actionlog.middleware.ActionLogMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
@@ -791,6 +790,7 @@ if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
 if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    MIDDLEWARE.insert(1, 'django_actionlog.middleware.ActionLogMiddleware')
 
 
 USE_ADFS = (
