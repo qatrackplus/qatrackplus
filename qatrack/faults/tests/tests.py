@@ -253,7 +253,10 @@ class TestCRUDFault(TestCase):
         self.list_url = reverse("fault_list")
         self.ajax_url = reverse("fault_create_ajax")
         self.user = User.objects.create_superuser("faultuser", "a@b.com", "password")
+        self.group = qa_utils.create_group()
+        self.user.groups.add(self.group)
         self.client.force_login(self.user)
+        self.utc = qa_utils.create_unit_test_collection(unit=self.unit)
 
     def test_load_create_page(self):
         """Initial page load should work ok"""
@@ -456,7 +459,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault()
+        fault = utils.create_fault(unit=self.unit)
 
         edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
         se = sl_utils.create_service_event()
@@ -470,7 +473,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault()
+        fault = utils.create_fault(unit=self.unit)
         ft2 = utils.create_fault_type()
         assert fault.modality is None
 
@@ -502,7 +505,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault()
+        fault = utils.create_fault(unit=self.unit)
         test_file = SimpleUploadedFile("TESTRUNNER_test_file.json", b"{}")
         attach = Attachment.objects.create(fault=fault, attachment=test_file, created_by=self.user)
         assert fault.attachment_set.count() == 1
@@ -538,7 +541,7 @@ class TestCRUDFault(TestCase):
 
         ft1 = utils.create_fault_type()
         ft2 = utils.create_fault_type()
-        fault = utils.create_fault(fault_type=[ft1, ft2])
+        fault = utils.create_fault(unit=self.unit, fault_type=[ft1, ft2])
         assert fault.modality is None
 
         modality = u_models.Modality.objects.create(name="modality")
@@ -572,7 +575,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault()
+        fault = utils.create_fault(unit=self.unit)
         assert fault.modality is None
 
         edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
@@ -596,7 +599,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault(user=self.user)
+        fault = utils.create_fault(unit=self.unit, user=self.user)
         rev_group = utils.create_fault_review_group()
         self.user.groups.add(rev_group.group)
         assert fault.modality is None
@@ -632,7 +635,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault(user=self.user)
+        fault = utils.create_fault(unit=self.unit, user=self.user)
         rev_group = utils.create_fault_review_group()
         self.user.groups.add(rev_group.group)
         assert fault.modality is None
@@ -665,7 +668,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault(user=self.user)
+        fault = utils.create_fault(unit=self.unit, user=self.user)
         rev_group = utils.create_fault_review_group()
         utils.create_fault_review(fault=fault, review_group=rev_group, reviewed_by=self.user)
         self.user.groups.add(rev_group.group)
@@ -702,7 +705,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault(user=self.user)
+        fault = utils.create_fault(unit=self.unit, user=self.user)
         rev_group = utils.create_fault_review_group()
         utils.create_fault_review(fault=fault, review_group=rev_group, reviewed_by=self.user)
         self.user.groups.add(rev_group.group)
@@ -739,7 +742,7 @@ class TestCRUDFault(TestCase):
 
         FaultType.objects.create(code="fault type")
 
-        fault = utils.create_fault(user=self.user)
+        fault = utils.create_fault(unit=self.unit, user=self.user)
         rev_group = utils.create_fault_review_group(required=False)
         utils.create_fault_review(fault=fault, review_group=rev_group, reviewed_by=self.user)
         self.user.groups.add(rev_group.group)
@@ -810,7 +813,7 @@ class TestCRUDFault(TestCase):
     def test_valid_delete(self):
         """Test that deleting a fault works"""
 
-        fault = utils.create_fault()
+        fault = utils.create_fault(unit=self.unit)
         delete_url = reverse("fault_delete", kwargs={'pk': fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
@@ -820,7 +823,7 @@ class TestCRUDFault(TestCase):
         assert Fault.objects.count() == 0
 
     def test_review_fault(self):
-        fault = utils.create_fault()
+        fault = utils.create_fault(unit=self.unit)
         review_url = reverse("fault_review", kwargs={'pk': fault.pk})
         resp = self.client.post(review_url)
         assert resp.status_code == 302
@@ -835,12 +838,12 @@ class TestCRUDFault(TestCase):
         assert fault.faultreviewinstance_set.first() is None
 
     def test_review_bulk(self):
-        group = qa_utils.create_group("group")
+        group = qa_utils.create_group("group2")
         self.user.groups.add(group)
         frg = FaultReviewGroup.objects.create(group=group)
 
-        f1 = utils.create_fault()
-        f2 = utils.create_fault()
+        f1 = utils.create_fault(unit=self.unit)
+        f2 = utils.create_fault(unit=self.unit)
         review_url = reverse("fault_bulk_review")
         data = {'faults': [f1.pk, f2.pk]}
         resp = self.client.post(review_url, data=data)
@@ -919,7 +922,7 @@ class TestFaultDetails(TestCase):
     def test_load_page(self):
         """Initial page load should work ok"""
         fault_type = FaultType.objects.create(code="ABC", slug="abc")
-        fault = utils.create_fault(fault_type=fault_type)
+        fault = utils.create_fault(unit=self.unit, fault_type=fault_type)
         url = reverse("fault_details", kwargs={'pk': fault.pk})
         resp = self.client.get(url)
         assert resp.status_code == 200
@@ -932,9 +935,9 @@ class TestFaultDetails(TestCase):
         ft1 = FaultType.objects.create(code="A", slug="a")
         ft2 = FaultType.objects.create(code="B", slug="b")
         ft3 = FaultType.objects.create(code="C", slug="c")
-        f1 = utils.create_fault(fault_type=[ft1, ft2, ft3])
-        f2 = utils.create_fault(fault_type=[ft2])
-        f3 = utils.create_fault(fault_type=[ft3])
+        f1 = utils.create_fault(unit=self.unit, fault_type=[ft1, ft2, ft3])
+        f2 = utils.create_fault(unit=self.unit, fault_type=[ft2])
+        f3 = utils.create_fault(unit=self.unit, fault_type=[ft3])
 
         from django.test import RequestFactory
 
@@ -958,7 +961,7 @@ class TestFaultsByUnit(TestCase):
 
     def test_load_page(self):
         """Initial page load should work ok"""
-        fault = utils.create_fault()
+        fault = utils.create_fault(unit=self.unit)
         url = reverse("fault_list_by_unit", kwargs={'unit_number': fault.unit.number})
         resp = self.client.get(url, {})
         assert resp.status_code == 200
@@ -967,7 +970,7 @@ class TestFaultsByUnit(TestCase):
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
-        fault1 = utils.create_fault()
+        fault1 = utils.create_fault(unit=self.unit)
         u2 = qa_utils.create_unit()
         utils.create_fault(unit=u2)
         url = reverse("fault_list_by_unit", kwargs={'unit_number': fault1.unit.number})
