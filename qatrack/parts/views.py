@@ -339,7 +339,7 @@ class PartsList(BaseListableView):
                 '</div>'
             ) % (site, room_name, loc or "", quantity)
             tmp_cache[part_id]['locations'].append(text)
-            tmp_cache[part_id]['rooms'].append(room_name)
+            tmp_cache[part_id]['rooms'].append(f"{site}{room_name}")
 
         self._parts_locations_cache = defaultdict(dict)
         for part_id, storages in tmp_cache.items():
