@@ -790,7 +790,6 @@ if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
 if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-    MIDDLEWARE.insert(1, 'django_actionlog.middleware.ActionLogMiddleware')
 
 
 USE_ADFS = (
