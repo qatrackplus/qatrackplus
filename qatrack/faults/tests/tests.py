@@ -923,6 +923,20 @@ class TestFaultTypeAutocomplete(TestCase):
         }]
         assert results == expected
 
+    def test_query_exact_case_insensitive_match(self):
+        """If query has a case insensitive match, and is not a match for any
+        others, then only the match should be returned"""
+
+        fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
+        results = self.client.get(self.url, {'q': 'FT 2'}).json()['results']
+        expected = [{
+            'id': fts[2].code,
+            'text': "ft 2",
+            'code': fts[2].code,
+            'description': ''
+        }]
+        assert results == expected
+
     def test_query_exact_match_plus_others(self):
         """If query matches a fault types exactly, plus matches others, all
         should be returned, but the exact match should be first"""

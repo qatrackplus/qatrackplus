@@ -478,7 +478,7 @@ def fault_type_autocomplete(request):
     exist, return it as a first option so user can select it and have it
     created when they submit the form."""
 
-    q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, "")
+    q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, "").lower()
     qs = models.FaultType.objects.filter(
         code__icontains=q,
     ).order_by("code")
@@ -489,10 +489,11 @@ def fault_type_autocomplete(request):
 
     exact_match = None
     for ft_id, code, description in qs:
+        code = code
         description = description or ''
         text = "%s: %s" % (code, truncatechars(description, 80)) if description else code
-        if code == q:
-            exact_match = (text, description)
+        if code.lower() == q:
+            exact_match = {'id': code, 'code': code, 'text': text, 'description': description}
         else:
             results.append({'id': code, 'text': text, 'description': description, 'code': code})
 
@@ -502,8 +503,9 @@ def fault_type_autocomplete(request):
         new_result = {'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q, 'code': q, 'description': ''}
         results = [new_result] + results
     elif q and exact_match:
+        ft_id, code, text, description = exact_match
         # put the exact match first in the list
-        results = [{'id': q, 'code': q, 'text': exact_match[0], 'description': exact_match[1]}] + results
+        results = [exact_match] + results
 
     return JsonResponse({'results': results}, encoder=QATrackJSONEncoder)
 
