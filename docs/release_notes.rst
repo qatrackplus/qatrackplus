@@ -29,6 +29,19 @@ QA
     * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
       remedied.
 
+Faults
+~~~~~~
+
+* Fault ID column size has been reduced. 
+* Fault review users are now shown as full names instead of usernames where possible
+* The ability to create new fault types on the fly when entering faults is
+  now restricted to users with the "Can Add Fault Type" permission
+
+
+Parts
+~~~~~
+
+Parts tables now allow you to sort/filter by room
 
 API
 ~~~

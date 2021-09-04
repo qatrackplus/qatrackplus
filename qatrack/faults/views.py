@@ -497,11 +497,11 @@ def fault_type_autocomplete(request):
             results.append({'id': code, 'text': text, 'description': description, 'code': code})
 
     new_option = q and exact_match is None
-    if new_option:
+    if new_option and request.user.has_perm("faults.add_faulttype"):
         # allow user to create a new match
         new_result = {'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q, 'code': q, 'description': ''}
         results = [new_result] + results
-    elif q:
+    elif q and exact_match:
         # put the exact match first in the list
         results = [{'id': q, 'code': q, 'text': exact_match[0], 'description': exact_match[1]}] + results
 

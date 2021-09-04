@@ -881,6 +881,34 @@ class TestFaultTypeAutocomplete(TestCase):
         expected = {'id': '%snew' % forms.NEW_FAULT_TYPE_MARKER, 'text': "*new*", 'code': 'new', 'description': ''}
         assert results[0] == expected
 
+    def test_query_doesnt_exist_no_add_permission(self):
+        """If query doesn't match any fault types, and user does not have fault
+        add permissions then an empty list should be returned"""
+
+        for i in range(3):
+            FaultType.objects.create(code="ft %d" % i)
+
+        user = User.objects.create_user("faultuser_non_super", email="a@b.com", password="password")
+        self.client.force_login(user)
+        results = self.client.get(self.url, {'q': 'new'}).json()['results']
+        assert len(results) == 0
+
+    def test_query_doesnt_exist_with_add_permission(self):
+        """If query doesn't match any fault types, and user does have fault
+        type add permissions then an empty list should be returned"""
+
+        for i in range(3):
+            FaultType.objects.create(code="ft %d" % i)
+
+        user = User.objects.create_user("faultuser_non_super", email="a@b.com", password="password")
+        permission = Permission.objects.get(codename="add_faulttype")
+        user.user_permissions.add(permission)
+        self.client.force_login(user)
+        results = self.client.get(self.url, {'q': 'new'}).json()['results']
+        assert len(results) == 1
+        expected = {'id': '%snew' % forms.NEW_FAULT_TYPE_MARKER, 'text': "*new*", 'code': 'new', 'description': ''}
+        assert results[0] == expected
+
     def test_query_exact_match_only(self):
         """If query matches a fault types exactly, and is not a match for any
         others, then only the exact match should be returned"""
