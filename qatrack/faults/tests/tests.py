@@ -952,6 +952,22 @@ class TestFaultTypeAutocomplete(TestCase):
             {'id': "ft 213", 'text': "ft 213", 'code': "ft 213", 'description': ''},
         ]
 
+    def test_query_exact_match_with_whitespace_plus_others(self):
+        """If query matches a fault types but has surrounding whitespace, plus
+        matches others, all should be returned, but the exact match should be
+        first"""
+
+        FaultType.objects.create(code="ft 212", description="description"),
+        FaultType.objects.create(code="ft 21"),
+        FaultType.objects.create(code="ft 213"),
+
+        results = self.client.get(self.url, {'q': ' ft 21 '}).json()['results']
+        assert results == [
+            {'id': "ft 21", 'text': "ft 21", 'code': "ft 21", 'description': ''},
+            {'id': "ft 212", 'text': "ft 212: description", 'code': "ft 212", 'description': 'description'},
+            {'id': "ft 213", 'text': "ft 213", 'code': "ft 213", 'description': ''},
+        ]
+
 
 class TestFaultDetails(TestCase):
 

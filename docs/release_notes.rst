@@ -36,6 +36,7 @@ Faults
 * Fault review users are now shown as full names instead of usernames where possible
 * The ability to create new fault types on the fly when entering faults is
   now restricted to users with the "Can Add Fault Type" permission
+* Fault type matches are now case insensitive and surrounding whitespace will be stripped
 
 
 Parts

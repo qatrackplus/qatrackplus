@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Q
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -480,7 +480,7 @@ def fault_type_autocomplete(request):
 
     q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, "").lower()
     qs = models.FaultType.objects.filter(
-        code__icontains=q,
+        Q(code__icontains=q) | Q(code__icontains=q.strip()),
     ).order_by("code")
 
     qs = qs.values_list("id", "code", "description")
@@ -492,7 +492,7 @@ def fault_type_autocomplete(request):
         code = code
         description = description or ''
         text = "%s: %s" % (code, truncatechars(description, 80)) if description else code
-        if code.lower() == q:
+        if code.lower() == q.strip():
             exact_match = {'id': code, 'code': code, 'text': text, 'description': description}
         else:
             results.append({'id': code, 'text': text, 'description': description, 'code': code})
