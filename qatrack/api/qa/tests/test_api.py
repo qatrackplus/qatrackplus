@@ -635,7 +635,7 @@ class TestTestListInstanceAPI(APITestCase):
 
     def test_file_upload_not_b64(self):
         """
-        An text upload without specifying text encoding should raise an error.
+        A text upload without specifying text encoding should raise an error.
         """
         upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
         upload.calculation_procedure = "import json; result=json.load(FILE)"
