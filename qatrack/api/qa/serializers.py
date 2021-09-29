@@ -339,7 +339,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 dt = parse_datetime(d.pop('value', ""))
                 dt = timezone.make_aware(dt) if dt and timezone.is_naive(dt) else dt
                 d['datetime_value'] = dt
-            elif type_ == models.UPLOAD and slug in validated_data['tests']:
+            elif type_ == models.UPLOAD and slug in validated_data['tests'] and not skipped:
                 # remove base64 data
                 d.pop('value', "")
                 # string value needs to be set to attachment id for later editing
@@ -453,6 +453,17 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             comp_calc_data = self.data_to_composite(validated_data)
             for pk, slug, d in uploads:
+
+                if d.get('skipped'):
+                    # if file upload is skipped, we still need to included that
+                    # information for other tests which rely on knowing the
+                    # file was skipped
+                    self.ti_attachments[slug] = []
+                    self.ti_upload_analysis_data[slug] = None
+                    comp_calc_data['comments'][slug] = d.get("comment", "")
+                    comp_calc_data['tests'][slug] = None
+                    continue
+
                 comp_calc_data['test_id'] = pk
                 try:
                     fname = d['filename']

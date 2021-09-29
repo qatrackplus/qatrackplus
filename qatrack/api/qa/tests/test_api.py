@@ -635,7 +635,7 @@ class TestTestListInstanceAPI(APITestCase):
 
     def test_file_upload_not_b64(self):
         """
-        A text upload without specifying text encoding should raise an error.
+        An text upload without specifying text encoding should raise an error.
         """
         upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
         upload.calculation_procedure = "import json; result=json.load(FILE)"
@@ -707,6 +707,22 @@ class TestTestListInstanceAPI(APITestCase):
         assert tiu.attachment_set.count() == 2
         for a in tiu.attachment_set.all():
             assert a.finalized
+
+    def test_file_upload_skipped(self):
+        """
+        A file upload that is skipped should not produce a 400
+        """
+        upload = utils.create_test(name="file_upload", test_type=models.UPLOAD)
+        upload.calculation_procedure = "import json; result=json.load(FILE)"
+        upload.save()
+        utils.create_test_list_membership(self.test_list, upload)
+
+        self.data['tests']['file_upload'] = {
+            'skipped': True,
+            'comment': "Skipped!"
+        }
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
 
     def test_basic_edit(self):
         resp = self.client.post(self.create_url, self.data)
