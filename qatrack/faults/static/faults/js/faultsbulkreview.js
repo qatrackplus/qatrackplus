@@ -19,7 +19,7 @@ require(['jquery', 'lodash'], function ($, _) {
     });
     var siteIdx = headers.indexOf("site");
     var unitIdx = headers.indexOf("unit");
-    var faultTypeIdx = headers.indexOf("fault type");
+    var faultTypeIdx = headers.indexOf("fault types");
 
     $("#submit-review").click(function(){
         var $tableBody = $("#instance-summary tbody");
