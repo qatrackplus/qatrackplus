@@ -130,7 +130,6 @@ class FaultList(BaseListableView):
             "actions",
             "id",
             "get_occurred",
-            "get_fault_types",
         )
 
         multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
@@ -140,6 +139,7 @@ class FaultList(BaseListableView):
         fields += (
             "unit__name",
             "modality__name",
+            "get_fault_types",
             "review_status",
         )
         return fields
