@@ -10,33 +10,22 @@ dd.fault_type_description {
   width: 800px;
 }
 
-#listable-table-fault_list tr th:nth-child(1),
-#listable-table-fault_list tr th:nth-child(1) input{
+#listable-table-fault_list tr th[data-field="actions"]{
   width: 100px;
 }
 
-#listable-table-fault_list tr th:nth-child(2),
-#listable-table-fault_list tr th:nth-child(2) input{
+#listable-table-fault_list tr th[data-field="id"]{
   width: 50px;
 }
 
-#listable-table-fault_list tr th:nth-child(3),
-#listable-table-fault_list tr th:nth-child(3) input{
+#listable-table-fault_list tr th[data-field="get_occurred"]{
   width: 150px;
 }
 
-#listable-table-fault_list tr th:nth-child(4),
-#listable-table-fault_list tr th:nth-child(4) input{
-  width: 200px;
+#listable-table-fault_list tr th[data-field="unit__name"]{
+  width: 150px;
 }
 
-
-#listable-table-fault_list tr th:nth-child(7),
-#listable-table-fault_list tr th:nth-child(7) input{
-  width: 400px;
-}
-
-#listable-table-fault_list tr th:nth-child(8),
-#listable-table-fault_list tr th:nth-child(8) input{
+#listable-table-fault_list tr th[data-field="get_fault_types"]{
   width: 400px;
 }
