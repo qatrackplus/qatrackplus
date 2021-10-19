@@ -22,7 +22,9 @@ dd.fault_type_description {
   width: 150px;
 }
 
-#listable-table-fault_list tr th[data-field="unit__name"]{
+#listable-table-fault_list tr th[data-field="unit__name"],
+#listable-table-fault_list tr th[data-field="site__name"]
+{
   width: 150px;
 }
 
