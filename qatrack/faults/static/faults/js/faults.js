@@ -140,12 +140,17 @@ require(['jquery', 'lodash', 'moment', 'flatpickr', 'select2', 'comments', 'sl_u
                 if (cur_unit in unitInfo){
                     unit_modalities = unitInfo[cur_unit].modalities;
                 }
+
+                var cur_modality = $modality.val();
                 $modality.val("");
                 $modality.find("option").each(function(i, opt){
                     var $opt = $(opt);
-                    var mod_id = parseInt($(opt).val());
-                    var enable = unit_modalities.indexOf(mod_id) >= 0 || mod_id === "";
+                    var mod_id = $(opt).val();
+                    var enable = mod_id === "" || unit_modalities.indexOf(parseInt(mod_id, 10)) >= 0;
                     $opt.prop('disabled', !enable);
+                    if (mod_id === cur_modality){
+                      $opt.prop("selected", true);
+                    }
                 });
                 $modality.select2("destroy");
                 $modality.select2(s2config);
