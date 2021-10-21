@@ -1222,6 +1222,30 @@ class TestPerformQA(TestCase):
         self.unit_test_list.refresh_from_db()
         assert self.unit_test_list.due_date.date() == expected_due_date.date()
 
+    def test_perform_unscheduled_first_instance(self):
+
+        data = {
+            "work_started": "2012-11-07 00:09",
+            "status": self.status.pk,
+            "form-TOTAL_FORMS": len(self.tests),
+            "form-INITIAL_FORMS": len(self.tests),
+            "form-MAX_NUM_FORMS": "",
+        }
+
+        expected_due_date = None
+
+        data['work_started'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        data['include_for_scheduling'] = False
+        self.set_form_data(data)
+
+        assert self.unit_test_list.due_date is None
+        response = self.client.post(self.url, data=data)
+        assert response.status_code == 302
+
+        # not scheduled so due date should be null still
+        self.unit_test_list.refresh_from_db()
+        assert self.unit_test_list.due_date is None
+
     def test_perform_composite_json_warning(self):
         """ensure returing JSON from composites no longer works"""
         data = {

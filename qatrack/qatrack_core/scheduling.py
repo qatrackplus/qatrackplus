@@ -98,7 +98,7 @@ class SchedulingMixin:
 
         if self.auto_schedule and self.frequency:
             last_valid = self.last_instance_for_scheduling()
-            if not last_valid and self.last_instance:
+            if not last_valid and self.last_instance and self.last_instance.include_for_scheduling:
                 # Done before but no valid lists
                 return timezone.now()
             elif (last_valid and last_valid.work_completed):
