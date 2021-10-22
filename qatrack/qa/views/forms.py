@@ -118,7 +118,7 @@ class TestInstanceWidgetsMixin(object):
             self.fields["string_value"].widget = HiddenInput()
             self.fields["json_value"].widget = HiddenInput()
         elif test_type == models.COMPOSITE:
-            self.fields["value"].widget = Input()
+            self.fields["value"].widget = Input({'type': 'input'})
             if getattr(self, "instance", None):
                 test = self.unit_test_info.test
                 formatted = format_qc_value(self.instance.value, test.formatting)
