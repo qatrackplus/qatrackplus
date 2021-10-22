@@ -429,6 +429,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         }
 
         this.inputs.change(function(){
+            disable_submit();
             self.update_value_from_input();
             if (self.skipped){
                 self.set_skip(false);
@@ -1349,6 +1350,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 display_fail(true);
             }else{
                 display_fail(false);
+            }
+            if (tli.composites.length === 0){
+              enable_submit();
             }
         });
 
