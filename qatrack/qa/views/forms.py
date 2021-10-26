@@ -124,7 +124,7 @@ class TestInstanceWidgetsMixin(object):
                 formatted = format_qc_value(self.instance.value, test.formatting)
                 self.fields["value"].widget.attrs['data-formatted'] = formatted
         elif test_type in models.STRING_TYPES:
-            self.fields['string_value'].widget = Input({'maxlength': 20000})
+            self.fields['string_value'].widget = Input({'type': 'input', 'maxlength': 20000})
         else:
             attrs = {"step": "any"}
             if test_type == models.WRAPAROUND:

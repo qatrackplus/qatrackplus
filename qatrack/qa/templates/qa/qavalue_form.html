@@ -21,10 +21,9 @@
 {% with ref=test_info.reference  tol=test_info.tolerance  test=test_info.test uti=test_info.unit_test_info slug=test_info.test.slug %}
 <tr id="{{ test_info.test.slug }}-row" class="control-group qa-valuerow qa-{{ test_info.test.type }} {%if test_info.test.hidden %}hidden{% endif %} row-{{ form.prefix }}" data-prefix="{{ form.prefix }}">
 
-  {% for hidden in form.hidden_fields %}
-      {{ hidden }}
-  {% endfor %}
-
+    {{ form.id }}
+    {{ form.test_list_instance }}
+    {{ form.user_attached }}
 
     <td id="{{slug }}-category" class="qa-category bar-container">
       <div class="error-bar {% if form.errors %}in{% endif %}">
