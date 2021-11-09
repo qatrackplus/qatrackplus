@@ -2,6 +2,7 @@ from itertools import groupby
 
 from django import forms
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.timezone import timedelta
@@ -132,7 +133,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         return cleaned
 
 
-def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
+def unit_site_unit_type_choices(include_empty=False, serviceable_only=False, visible_for_user=None):
     """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
 
     def site_unit_type(u):
@@ -149,6 +150,10 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
     if serviceable_only:
         units = units.filter(is_serviceable=True)
 
+    if visible_for_user:
+        visible_unit_ids = units_visible_to_user(visible_for_user).values_list("pk", flat=True)
+        units = units.filter(id__in=visible_unit_ids)
+
     choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
     choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
     if include_empty:
@@ -157,7 +162,17 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False):
     return choices
 
 
-def unit_site_service_area_choices(include_empty=False):
+def units_visible_to_user(user: User):
+    """Return a queryset containing the units which the user can view QC on"""
+    units = u_models.Unit.objects.filter(
+        active=True,
+        unittestcollection__active=True,
+        unittestcollection__visible_to__in=user.groups.all()
+    ).distinct()
+    return units
+
+
+def unit_site_service_area_choices(include_empty=False, include_unspecified=False):
     """Return unit service areas grouped by site and unit, suitable for using as optgroups for select inputs"""
 
     def service_area(usa):

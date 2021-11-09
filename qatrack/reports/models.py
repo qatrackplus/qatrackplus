@@ -6,6 +6,14 @@ from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.qatrack_core.fields import JSONField
+
+# ensure Django-Q can pick up all report types on Windows
+from qatrack.reports import (  # noqa: F401
+    faults,
+    qc,
+    service_log,
+)
+
 from qatrack.reports.reports import report_class
 
 

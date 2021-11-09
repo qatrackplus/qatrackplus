@@ -3,11 +3,70 @@ from django.urls import reverse
 from django.utils import timezone
 
 import pytest
-
 from qatrack.qa.tests import utils
+from qatrack.units import forms, models
 from qatrack.service_log.tests import utils as sl_utils
-from qatrack.units import models, forms
 from qatrack.units.tests import utils as u_utils
+
+
+class TestUnits(TestCase):
+
+    def test_auto_set_number(self):
+        uc = models.UnitClass.objects.create(name="UC")
+        ut = models.UnitType.objects.create(name="UT", unit_class=uc)
+        site = models.Site.objects.create(name="site")
+        models.Unit.objects.create(name="U1", type=ut, number=1, date_acceptance=timezone.now(), site=site)
+        u2 = models.Unit.objects.create(name="U2", type=ut, date_acceptance=timezone.now(), site=site)
+        assert u2.number == 2
+
+
+class TestVendor(TestCase):
+
+    def test_get_by_nk(self):
+        v = u_utils.create_vendor()
+        assert models.Vendor.objects.get_by_natural_key(v.name).pk == v.pk
+
+    def test_nk(self):
+        v = u_utils.create_vendor()
+        assert v.natural_key() == (v.name,)
+
+    def test_str(self):
+        assert str(models.Vendor(name="vendor")) == "vendor"
+
+
+class TestUnitClass(TestCase):
+
+    def test_get_by_nk(self):
+
+        uc = models.UnitClass.objects.create(name="uclass")
+        assert uc.natural_key() == (uc.name,)
+
+    def test_str(self):
+        assert str(models.UnitClass(name="uclass")) == "uclass"
+
+
+class TestSite:
+
+    def test_str(self):
+        assert str(models.Site(name="site")) == "site"
+
+
+class TestUnitType(TestCase):
+
+    def test_get_by_nk(self):
+        ut = u_utils.create_unit_type()
+        assert models.UnitType.objects.get_by_natural_key(
+            ut.name, ut.model, unitclass_name=ut.unit_class.name, vendor_name=ut.vendor.name).pk == ut.pk
+
+    def test_nk(self):
+        ut = u_utils.create_unit_type()
+        assert ut.natural_key() == (ut.name, ut.model, ut.vendor.name, ut.unit_class.name)
+
+
+class TestModality:
+
+    def test_nk(self):
+        assert models.Modality(name="modality").natural_key() == ("modality", )
 
 
 class TestUnitAvailableTime(TestCase):
@@ -285,3 +344,36 @@ class TestUTCChoices(TestCase):
 def test_max24h():
     with pytest.raises(forms.ValidationError):
         forms.max_24hr(timezone.timedelta(hours=24, minutes=1))
+
+
+class TestForms(TestCase):
+
+    def test_units_visible_to_user_no_inactive(self):
+        """units_visible_to_user should only return active units"""
+        u = utils.create_user()
+        g = utils.create_group()
+        u.groups.add(g)
+        unit = utils.create_unit(active=False)
+        utc1 = utils.create_unit_test_collection(unit=unit, assigned_to=g)
+        utc1.visible_to.set([g])
+        assert not forms.units_visible_to_user(u).exists()
+
+    def test_units_visible_to_user_no_inactive_utcs(self):
+        """units_visible_to_user should only return units with active utcs"""
+        u = utils.create_user()
+        g = utils.create_group()
+        u.groups.add(g)
+        unit = utils.create_unit()
+        utc1 = utils.create_unit_test_collection(unit=unit, assigned_to=g, active=False)
+        utc1.visible_to.set([g])
+        assert not forms.units_visible_to_user(u).exists()
+
+    def test_units_visible_to_user_active(self):
+        """units_visible_to_user should return active units with active utcs"""
+        u = utils.create_user()
+        g = utils.create_group()
+        u.groups.add(g)
+        unit = utils.create_unit()
+        utc1 = utils.create_unit_test_collection(unit=unit, assigned_to=g)
+        utc1.visible_to.set([g])
+        assert list(forms.units_visible_to_user(u)) == [unit]

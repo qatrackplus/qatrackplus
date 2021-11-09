@@ -44,6 +44,20 @@ QA
     * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
       remedied.
 
+Faults
+~~~~~~
+
+* Fault ID column size has been reduced. 
+* Fault review users are now shown as full names instead of usernames where possible
+* The ability to create new fault types on the fly when entering faults is
+  now restricted to users with the "Can Add Fault Type" permission
+* Fault type matches are now case insensitive and surrounding whitespace will be stripped
+
+
+Parts
+~~~~~
+
+Parts tables now allow you to sort/filter by room
 
 API
 ~~~
@@ -63,6 +77,14 @@ Miscellaneous
   active/inactive status of test list assignments.
 * Fixed a permissions check for deleting faults
 * Reviewing faults now use the term "Acknowledge" instead of "Approve"
+
+
+QATrack+ v3.1.0.1 Release Notes
+-----------------------------
+
+.. _release_notes_3101:
+
+* Attempt to fix an issue with Django Q not being able to find report types on Windows
 
 
 QATrack+ v3.1.0 Release Notes
@@ -118,8 +140,9 @@ Major Features
 
     * Paper Backup Forms
 
-* A new :ref:`Query Tool <reports-query_tool>` has been added for advanced query and
-  reporting.
+* A new :ref:`Query Tool <reports-query_tool>` has been added for advanced
+  query and reporting.  (You must set :ref:`USE_SQL_REPORTS =
+  True<qatrack_config>` in your local_settings.py file to use this feature).
 
 * :ref:`Notifications <notifications>` have been expanded & improved.
     * You can now send notifications on test lists being completed.

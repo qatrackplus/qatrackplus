@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.context_processors import PermWrapper
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Q
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -50,6 +50,7 @@ class FaultList(BaseListableView):
         'actions': _l('Actions'),
         'get_id': _l('ID'),
         'get_fault_types': _l("Fault Types"),
+        'get_fault_types_descriptions': _l("Description"),
         'unit__site__name': _l("Site"),
         'unit__name': _l("Unit"),
         'modality__name': _l("Modality"),
@@ -71,6 +72,7 @@ class FaultList(BaseListableView):
         'actions': False,
         'review_status': 'reviewed',
         'get_fault_types': 'fault_types__code',
+        'get_fault_types_descriptions': 'fault_types__description',
         'get_occurred': 'occurred',
         'get_id': 'id',
     }
@@ -79,6 +81,7 @@ class FaultList(BaseListableView):
         'actions': False,
         'review_status': 'review_count',
         'get_fault_types': 'fault_types__code',
+        'get_fault_types_description': 'fault_types__description',
         'get_occurred': 'occurred',
     }
 
@@ -98,6 +101,9 @@ class FaultList(BaseListableView):
     prefetch_related = [
         "fault_types",
         "faultreviewinstance_set",
+        "faultreviewinstance_set__reviewed_by",
+        "faultreviewinstance_set__fault_review_group__group",
+        "comments",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -109,6 +115,7 @@ class FaultList(BaseListableView):
             'occurred': get_template("faults/fault_occurred.html"),
             'review_status': get_template("faults/fault_review_status.html"),
             'fault_types': get_template("faults/fault_types.html"),
+            'fault_types_descriptions': get_template("faults/fault_types_descriptions.html"),
         }
 
     def get_queryset(self):
@@ -153,7 +160,10 @@ class FaultList(BaseListableView):
         return self.templates['actions'].render(c)
 
     def review_status(self, fault):
-        c = {'fault': fault}
+        c = {
+            'fault': fault,
+            'comments': fault.comments.count(),
+        }
         return self.templates['review_status'].render(c)
 
     def get_occurred(self, fault):
@@ -163,6 +173,10 @@ class FaultList(BaseListableView):
     def get_fault_types(self, fault):
         c = {'fault': fault}
         return self.templates['fault_types'].render(c)
+
+    def get_fault_types_descriptions(self, fault):
+        c = {'fault': fault}
+        return self.templates['fault_types_descriptions'].render(c)
 
 
 class UnreviewedFaultList(FaultList):
@@ -208,6 +222,12 @@ class CreateFault(PermissionRequiredMixin, CreateView):
     permission_required = "faults.add_fault"
     raise_exception = True
 
+    def get_form_kwargs(self):
+        """Add user to form kwargs"""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     @atomic
     def form_valid(self, form):
 
@@ -249,6 +269,12 @@ class EditFault(PermissionRequiredMixin, UpdateView):
 
     permission_required = "faults.change_fault"
     raise_exception = True
+
+    def get_form_kwargs(self):
+        """Add user to form kwargs"""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     @atomic
     def form_valid(self, form):
@@ -441,9 +467,9 @@ def fault_type_autocomplete(request):
     exist, return it as a first option so user can select it and have it
     created when they submit the form."""
 
-    q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, "")
+    q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, "").lower()
     qs = models.FaultType.objects.filter(
-        code__icontains=q,
+        Q(code__icontains=q) | Q(code__icontains=q.strip()),
     ).order_by("code")
 
     qs = qs.values_list("id", "code", "description")
@@ -452,21 +478,23 @@ def fault_type_autocomplete(request):
 
     exact_match = None
     for ft_id, code, description in qs:
+        code = code
         description = description or ''
         text = "%s: %s" % (code, truncatechars(description, 80)) if description else code
-        if code == q:
-            exact_match = (text, description)
+        if code.lower() == q.strip():
+            exact_match = {'id': code, 'code': code, 'text': text, 'description': description}
         else:
             results.append({'id': code, 'text': text, 'description': description, 'code': code})
 
     new_option = q and exact_match is None
-    if new_option:
+    if new_option and request.user.has_perm("faults.add_faulttype"):
         # allow user to create a new match
         new_result = {'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q, 'code': q, 'description': ''}
         results = [new_result] + results
-    elif q:
+    elif q and exact_match:
+        ft_id, code, text, description = exact_match
         # put the exact match first in the list
-        results = [{'id': q, 'code': q, 'text': exact_match[0], 'description': exact_match[1]}] + results
+        results = [exact_match] + results
 
     return JsonResponse({'results': results}, encoder=QATrackJSONEncoder)
 

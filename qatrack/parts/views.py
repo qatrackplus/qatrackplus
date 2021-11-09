@@ -222,6 +222,7 @@ class PartsList(BaseListableView):
         'quantity_current',
         'quantity_min',
         'part_category__name',
+        'partstoragecollection__storage__room__name',
         'locations',
         'attachments',
     )
@@ -234,6 +235,7 @@ class PartsList(BaseListableView):
         'quantity_current': _l('In Storage'),
         'quantity_min': _l('Min Quantity'),
         'locations': _l("Locations"),
+        'partstoragecollection__storage__room__name': _l("Rooms"),
         'part_category__name': _l('Category'),
         "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
     }
@@ -245,7 +247,8 @@ class PartsList(BaseListableView):
         'new_or_used': SELECT_MULTI,
         'quantity_min': None,
         'quantity_current': None,
-        'locations': None,
+        'partstoragecollection__storage__room__name': SELECT_MULTI,
+        'locations': TEXT,
         'part_category__name': SELECT_MULTI,
         'attachments': None,
     }
@@ -254,14 +257,14 @@ class PartsList(BaseListableView):
         'actions': False,
         'quantity_current': False,
         'quantity_min': False,
-        'locations': False,
+        'locations': 'partstoragecollection__storage__location',
         'attachments': False,
     }
 
     order_fields = {
         'actions': False,
-        'part_category__name': False,
-        'locations': "partstoragecollection__storage__room__site__name",
+        'part_category__name': 'part_category__name',
+        'locations': "partstoragecollection__storage__location",
         "attachments": "attachment_count",
     }
 
@@ -299,8 +302,13 @@ class PartsList(BaseListableView):
         c = {'p': p, 'request': self.request, 'next': mext, 'perms': perms}
         return template.render(c)
 
+    def partstoragecollection__storage__room__name(self, p):
+        rooms = self.parts_locations_cache.get(p.id, {'rooms': []})['rooms']
+        return rooms or _("None in storage")
+
     def locations(self, obj):
-        return self.parts_locations_cache.get(obj.id, _("None in storage"))
+        locs = self.parts_locations_cache.get(obj.id, {'locations': []})['locations']
+        return locs or _("None in storage")
 
     @property
     def parts_locations_cache(self):
@@ -322,18 +330,21 @@ class PartsList(BaseListableView):
             "storage__room__name",
         )
 
-        tmp_cache = defaultdict(list)
+        tmp_cache = defaultdict(lambda: {'rooms': [], 'locations': []})
         for part_id, quantity, loc, site_name, room_name in psc:
+            site = "%s/" % site_name if site_name else ""
             text = (
                 '<div style="display: inline-block; white-space: nowrap;">'
-                '%s:%s:%s <span class="badge">%d</span>'
+                '%s%s/%s <span class="badge">%d</span>'
                 '</div>'
-            ) % (site_name, room_name, loc or "", quantity)
-            tmp_cache[part_id].append(text)
+            ) % (site, room_name, loc or "", quantity)
+            tmp_cache[part_id]['locations'].append(text)
+            tmp_cache[part_id]['rooms'].append(f"{site}{room_name}")
 
-        self._parts_locations_cache = {}
-        for k, v in tmp_cache.items():
-            self._parts_locations_cache[k] = ', '.join(v)
+        self._parts_locations_cache = defaultdict(dict)
+        for part_id, storages in tmp_cache.items():
+            for storage_loc in ['locations', 'rooms']:
+                self._parts_locations_cache[part_id][storage_loc] = ', '.join(storages[storage_loc])
 
     def part_number(self, part):
         return part.part_number or "<em>N/A</em>"
