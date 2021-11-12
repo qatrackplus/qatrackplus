@@ -721,6 +721,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             ti.save()
 
+            ti.attachment_set.clear()
+            attachment_ids = self.ti_attachments.get(ti.unit_test_info.test.slug, [])
+            if attachment_ids:
+                for a in Attachment.objects.filter(id__in=attachment_ids):
+                    a.testinstance = ti
+                    a.save()
+
         utc.set_due_date()
 
         # is there an existing rtsqa being linked?
