@@ -15,6 +15,9 @@ QATrack+ v3.2.0 Release Notes
 
 * Room & Storage models have been moved from the Parts app to the Units app.
 
+* Fixed bug where saving reports in the admin would result in invalid JSON
+  being stored for the filters.
+
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------

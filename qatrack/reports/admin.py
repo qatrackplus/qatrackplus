@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.admin import BaseQATrackAdmin, BasicSaveUserAdmin
+from qatrack.qatrack_core.forms import JSONWidget
 from qatrack.reports.models import ReportSchedule, SavedReport
 from qatrack.reports.reports import report_type_choices
 
@@ -23,6 +24,9 @@ class SavedReportForm(forms.ModelForm):
             "filters",
             "visible_to",
         )
+        widgets = {
+            'filters': JSONWidget,
+        }
 
     def __init__(self, *args, **kwargs):
 

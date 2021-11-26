@@ -23,6 +23,10 @@ class JSONField(models.TextField):
     def get_db_prep_save(self, value, *args, **kwargs):
         if value == "":
             return None
+
+        if isinstance(value, str):
+            # ensure we are actually saving a valid JSON string
+            json.dumps(json.loads(value))
         if isinstance(value, dict):
             value = json.dumps(value, cls=DjangoJSONEncoder)
         return value
