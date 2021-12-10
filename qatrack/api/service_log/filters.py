@@ -67,6 +67,28 @@ class ServiceEventStatusFilter(filters.FilterSet):
         }
 
 
+class ServiceEventScheduleFilter(filters.FilterSet):
+
+    unit_service_area = filters.RelatedFilter(
+        UnitServiceAreaFilter,
+        field_name='unit_service_area',
+        queryset=models.UnitServiceArea.objects.select_related("unit", "service_area"),
+    )
+
+    frequency = filters.RelatedFilter(FrequencyFilter, field_name="frequency", queryset=Frequency.objects.all())
+    assigned_to = filters.RelatedFilter(GroupFilter, field_name="assigned_to", queryset=Group.objects.all())
+
+    due_date_min = MinDateFilter(field_name="due_date")
+    due_date_max = MaxDateFilter(field_name="due_date")
+
+    class Meta:
+        model = models.ServiceEventSchedule
+        fields = {
+            "auto_schedule": ['exact'],
+            "active": ['exact'],
+        }
+
+
 class ServiceEventFilter(filters.FilterSet):
 
     unit_service_area = filters.RelatedFilter(
@@ -87,6 +109,11 @@ class ServiceEventFilter(filters.FilterSet):
         field_name='service_status',
         queryset=models.ServiceEventStatus.objects.all(),
     )
+    service_event_schedule = filters.RelatedFilter(
+        ServiceEventScheduleFilter,
+        field_name='service_event_schedule',
+        queryset=models.ServiceEventSchedule.objects.all(),
+    )
     user_status_changed_by = filters.RelatedFilter(
         UserFilter,
         field_name='user_status_changed_by',
@@ -102,6 +129,8 @@ class ServiceEventFilter(filters.FilterSet):
 
     datetime_status_changed_min = MinDateFilter(field_name="datetime_status_changed")
     datetime_status_changed_max = MaxDateFilter(field_name="datetime_status_changed")
+    due_date_min = MinDateFilter(field_name="due_date")
+    due_date_max = MaxDateFilter(field_name="due_date")
     datetime_service_min = MinDateFilter(field_name="datetime_service")
     datetime_service_max = MaxDateFilter(field_name="datetime_service")
     datetime_created_min = MinDateFilter(field_name="datetime_created")
@@ -112,6 +141,7 @@ class ServiceEventFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceEvent
         fields = {
+            'due_date': ['exact'],
             'datetime_status_changed': ['exact'],
             'datetime_created': ['exact'],
             'datetime_service': ['exact'],
@@ -121,6 +151,7 @@ class ServiceEventFilter(filters.FilterSet):
             'duration_service_time': ['lte', 'gte'],
             'duration_lost_time': ['lte', 'gte'],
             'is_review_required': ['exact'],
+            'include_for_scheduling': ['exact'],
         }
 
 
@@ -147,28 +178,6 @@ class ServiceEventTemplateFilter(filters.FilterSet):
             'problem_description': ['exact', 'icontains', 'contains', 'in'],
             'work_description': ['exact', 'icontains', 'contains', 'in'],
             'is_review_required': ['exact'],
-        }
-
-
-class ServiceEventScheduleFilter(filters.FilterSet):
-
-    unit_service_area = filters.RelatedFilter(
-        UnitServiceAreaFilter,
-        field_name='unit_service_area',
-        queryset=models.UnitServiceArea.objects.select_related("unit", "service_area"),
-    )
-
-    frequency = filters.RelatedFilter(FrequencyFilter, field_name="frequency", queryset=Frequency.objects.all())
-    assigned_to = filters.RelatedFilter(GroupFilter, field_name="assigned_to", queryset=Group.objects.all())
-
-    due_date_min = MinDateFilter(field_name="due_date")
-    due_date_max = MaxDateFilter(field_name="due_date")
-
-    class Meta:
-        model = models.ServiceEventSchedule
-        fields = {
-            "auto_schedule": ['exact'],
-            "active": ['exact'],
         }
 
 
