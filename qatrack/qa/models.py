@@ -1,3 +1,4 @@
+from typing import Optional
 import re
 
 import black
@@ -421,7 +422,7 @@ class Frequency(models.Model):
         return self.name
 
 
-class StatusManager(models.Manager):
+class ReviewStatusManager(models.Manager):
     """manager for ReviewStatus"""
 
     def default(self):
@@ -430,6 +431,11 @@ class StatusManager(models.Manager):
             return self.get_queryset().get(is_default=True)
         except ReviewStatus.DoesNotExist:
             return
+
+    def default_pk(self) -> Optional[int]:
+        """return the id of the default ReviewStatus"""
+        default = self.default()
+        return default.pk if default else None
 
     def get_by_natural_key(self, slug):
         return self.get(slug=slug)
@@ -477,7 +483,7 @@ class ReviewStatus(models.Model):
 
     colour = models.CharField(default=settings.DEFAULT_TEST_STATUS_COLOUR, max_length=22, validators=[validate_color])
 
-    objects = StatusManager()
+    objects = ReviewStatusManager()
 
     class Meta:
         verbose_name_plural = "review statuses"
@@ -2276,6 +2282,13 @@ class TestListInstance(models.Model):
     )
 
     all_reviewed = models.BooleanField(default=False)
+    review_status = models.ForeignKey(
+        ReviewStatus,
+        verbose_name=_l("Review Status"),
+        on_delete=models.PROTECT,
+        help_text=_l("Select the review status of this test list instance"),
+        default=ReviewStatus.objects.default,
+    )
 
     day = models.IntegerField(default=0)
 
