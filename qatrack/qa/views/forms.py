@@ -332,7 +332,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
 
     status = forms.ModelChoiceField(
-        queryset=models.TestInstanceStatus.objects,
+        queryset=models.ReviewStatus.objects,
         required=False
     )
 

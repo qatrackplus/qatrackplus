@@ -1085,15 +1085,15 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                     break
 
     def get_test_status(self, form):
-        """return default or user requested :model:`qa.TestInstanceStatus`"""
+        """return default or user requested :model:`qa.ReviewStatus`"""
 
         try:
-            status = models.TestInstanceStatus.objects.get(pk=form["status"].value())
+            status = models.ReviewStatus.objects.get(pk=form["status"].value())
             self.user_set_status = True
             return status
-        except (KeyError, ValueError, models.TestInstanceStatus.DoesNotExist):
+        except (KeyError, ValueError, models.ReviewStatus.DoesNotExist):
             self.user_set_status = False
-            return models.TestInstanceStatus.objects.default()
+            return models.ReviewStatus.objects.default()
 
     def form_invalid(self, form):
         """If the form is invalid, render the invalid form."""
@@ -1273,7 +1273,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # causing them to lose all the data they entered
         self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
-        if models.TestInstanceStatus.objects.default() is None:
+        if models.ReviewStatus.objects.default() is None:
             messages.error(
                 self.request,
                 _("There must be at least one Test Status defined before performing a TestList"),
@@ -1535,10 +1535,10 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def set_status_object(self, status_pk):
 
         try:
-            self.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+            self.status = models.ReviewStatus.objects.get(pk=status_pk)
             self.user_set_status = True
-        except (models.TestInstanceStatus.DoesNotExist, ValueError):
-            self.status = models.TestInstanceStatus.objects.default()
+        except (models.ReviewStatus.DoesNotExist, ValueError):
+            self.status = models.ReviewStatus.objects.default()
             self.user_set_status = False
 
     def update_test_instance(self, test_instance):

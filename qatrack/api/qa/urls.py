@@ -6,7 +6,7 @@ from qatrack.api.qa import views
 router = routers.DefaultRouter()
 
 router.register(r'frequencies', views.FrequencyViewSet)
-router.register(r'testinstancestatus', views.TestInstanceStatusViewSet)
+router.register(r'reviewstatus', views.ReviewStatusViewSet)
 router.register(r'autoreviewrules', views.AutoReviewRuleViewSet)
 router.register(r'autoreviewrulesets', views.AutoReviewRuleSetViewSet)
 router.register(r'references', views.ReferenceViewSet)

@@ -33,9 +33,9 @@ class FrequencySerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
-class TestInstanceStatusSerializer(serializers.HyperlinkedModelSerializer):
+class ReviewStatusSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = models.TestInstanceStatus
+        model = models.ReviewStatus
         fields = "__all__"
 
 
@@ -178,8 +178,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     comment = serializers.CharField(required=False)
     tests = serializers.DictField()
     status = serializers.HyperlinkedRelatedField(
-        view_name="testinstancestatus-detail",
-        queryset=models.TestInstanceStatus.objects.all(),
+        view_name="reviewstatus-detail",
+        queryset=models.ReviewStatus.objects.all(),
         required=False,
     )
 
@@ -546,7 +546,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
-        status = user_set_status or models.TestInstanceStatus.objects.default()
+        status = user_set_status or models.ReviewStatus.objects.default()
         if status is None:
             raise serializers.ValidationError("No test instance status available")
 
@@ -659,7 +659,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
-        status = user_set_status or models.TestInstanceStatus.objects.default()
+        status = user_set_status or models.ReviewStatus.objects.default()
 
         # related return to service
         rtsqa = validated_data.pop('return_to_service_qa', None)
@@ -764,7 +764,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         # Monkeypatch on a tests dict here since it doesn't actually
         # exist on the TestListInstance object
         base_url = reverse("testinstance-list")
-        base_status_url = reverse("testinstancestatus-list")
+        base_status_url = reverse("reviewstatus-list")
         base_ref_url = reverse("reference-list")
         base_tol_url = reverse("tolerance-list")
         qs = obj.testinstance_set.select_related(

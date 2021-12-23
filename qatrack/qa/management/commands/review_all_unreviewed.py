@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from qatrack.qa.models import (
     TestInstance,
-    TestInstanceStatus,
+    ReviewStatus,
     TestListInstance,
     User,
 )
@@ -37,7 +37,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        all_status = TestInstanceStatus.objects.all()
+        all_status = ReviewStatus.objects.all()
         status = all_status.filter(slug=kwargs['status'][0]).first()
         if not status:
             print(

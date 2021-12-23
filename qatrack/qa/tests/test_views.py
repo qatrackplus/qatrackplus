@@ -192,7 +192,7 @@ class TestControlImage(TestCase):
         url += "&tests[]=%s" % pk
         url += "&test_lists[]=%s" % tl_pk
         url += "&units[]=%s" % upk
-        url += "&statuses[]=%s" % models.TestInstanceStatus.objects.all()[0].pk
+        url += "&statuses[]=%s" % models.ReviewStatus.objects.all()[0].pk
         url += "&from_date=%s" % format_as_date(from_date)
         url += "&to_date=%s" % format_as_date(to_date)
         return url
@@ -1582,7 +1582,7 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.context["last_day"], 2)
 
     def test_no_status(self):
-        models.TestInstanceStatus.objects.all().delete()
+        models.ReviewStatus.objects.all().delete()
         response = self.client.get(self.url)
         self.assertTrue(len(list(response.context['messages'])) == 1)
 

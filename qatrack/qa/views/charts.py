@@ -113,7 +113,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'tests': self.tests,
             'test_lists': self.test_lists,
             'categories': models.Category.objects.all(),
-            'statuses': models.TestInstanceStatus.objects.all(),
+            'statuses': models.ReviewStatus.objects.all(),
             'service_types': sl_models.ServiceType.objects.all(),
             'sites': list(Site.objects.values('pk', 'name')),
             'units': Unit.objects.values('pk', 'name', 'active', 'site_id'),
@@ -410,7 +410,7 @@ class BaseChartView(View):
         tests = models.Test.objects.filter(pk__in=tests)
         test_lists = models.TestList.objects.filter(pk__in=test_lists)
         units = Unit.objects.filter(pk__in=units)
-        statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
+        statuses = models.ReviewStatus.objects.filter(pk__in=statuses)
         service_types = sl_models.ServiceType.objects.filter(pk__in=service_types)
 
         if not combine_data:

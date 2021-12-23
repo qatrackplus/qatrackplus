@@ -118,13 +118,13 @@ class TestTestListInstanceAPI(APITestCase):
             assert ti.order == tlm.order
 
     def test_create_no_status(self):
-        models.TestInstanceStatus.objects.all().delete()
+        models.ReviewStatus.objects.all().delete()
         response = self.client.post(self.create_url, self.data)
         assert response.data == ['No test instance status available']
 
     def test_create_user_status(self):
         s2 = utils.create_status(name="user status", slug="user_status", is_default=False, requires_review=False)
-        s2_url = reverse("testinstancestatus-detail", kwargs={'pk': s2.pk})
+        s2_url = reverse("reviewstatus-detail", kwargs={'pk': s2.pk})
         self.data['status'] = s2_url
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -748,7 +748,7 @@ class TestTestListInstanceAPI(APITestCase):
 
     def test_edit_user_status(self):
         s2 = utils.create_status(name="user status", slug="user_status", is_default=False, requires_review=False)
-        s2_url = reverse("testinstancestatus-detail", kwargs={'pk': s2.pk})
+        s2_url = reverse("reviewstatus-detail", kwargs={'pk': s2.pk})
         resp = self.client.post(self.create_url, self.data)
         new_data = {'status': s2_url}
         edit_resp = self.client.patch(resp.data['url'], new_data)

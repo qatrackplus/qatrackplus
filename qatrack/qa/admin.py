@@ -1442,7 +1442,7 @@ class FrequencyAdmin(BaseQATrackAdmin):
 
 class StatusAdmin(BaseQATrackAdmin):
     prepopulated_fields = {'slug': ('name',)}
-    model = models.TestInstanceStatus
+    model = models.ReviewStatus
 
     list_display = (
         'name',
@@ -1680,6 +1680,6 @@ admin.site.register([models.UnitTestCollection], UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle], TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
-admin.site.register([models.TestInstanceStatus], StatusAdmin)
+admin.site.register([models.ReviewStatus], StatusAdmin)
 admin.site.register([models.TestInstance], TestInstanceAdmin)
 admin.site.register([models.TestListInstance], TestListInstanceAdmin)

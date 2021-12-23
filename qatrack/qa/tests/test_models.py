@@ -63,44 +63,44 @@ class TestStatus(TestCase):
 
     def test_save_without_default(self):
         """If there's only one status type force it to be default on save"""
-        self.assertIsNone(models.TestInstanceStatus.objects.default())
-        status = models.TestInstanceStatus(
+        self.assertIsNone(models.ReviewStatus.objects.default())
+        status = models.ReviewStatus(
             name="foo",
             slug="foo",
             is_default=False,
         )
         status.save()
-        self.assertEqual(status, models.TestInstanceStatus.objects.default())
+        self.assertEqual(status, models.ReviewStatus.objects.default())
 
     def test_new_default(self):
-        status = models.TestInstanceStatus(
+        status = models.ReviewStatus(
             name="foo",
             slug="foo",
             is_default=True,
         )
         status.save()
 
-        new_status = models.TestInstanceStatus(
+        new_status = models.ReviewStatus(
             name="bar",
             slug="bar",
             is_default=True,
         )
         new_status.save()
 
-        defaults = models.TestInstanceStatus.objects.filter(is_default=True)
+        defaults = models.ReviewStatus.objects.filter(is_default=True)
         self.assertEqual(list(defaults), [new_status])
 
     def test_get_by_natural_key(self):
-        new_status = models.TestInstanceStatus(
+        new_status = models.ReviewStatus(
             name="bar",
             slug="bar",
             is_default=True,
         )
         new_status.save()
-        assert models.TestInstanceStatus.objects.get_by_natural_key("bar").name == "bar"
+        assert models.ReviewStatus.objects.get_by_natural_key("bar").name == "bar"
 
     def test_natural_key(self):
-        new_status = models.TestInstanceStatus(
+        new_status = models.ReviewStatus(
             name="bar",
             slug="bar",
             is_default=True,
@@ -782,7 +782,7 @@ class TestUTCDueDates(TestCase):
         test_list = utils.create_test_list()
         utils.create_test_list_membership(test=test, test_list=test_list)
 
-        self.valid_status = models.TestInstanceStatus(
+        self.valid_status = models.ReviewStatus(
             name="valid",
             slug="valid",
             is_default=True,
@@ -791,7 +791,7 @@ class TestUTCDueDates(TestCase):
         )
         self.valid_status.save()
 
-        self.invalid_status = models.TestInstanceStatus(
+        self.invalid_status = models.ReviewStatus(
             name="invalid",
             slug="invalid",
             is_default=False,

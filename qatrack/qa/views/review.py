@@ -96,7 +96,7 @@ def test_list_instance_report(request, pk):
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     """
     This views main purpose is for reviewing a completed :model:`qa.TestListInstance`
-    and updating the :model:`qa.TestInstance`s :model:`qa.TestInstanceStatus`
+    and updating the :model:`qa.TestInstance`s :model:`qa.ReviewStatus`
     """
 
     permission_required = "qa.can_review"
@@ -209,7 +209,7 @@ def review_test_list_instance(test_list_instance, test_instances, status_pks, re
 
     still_requires_review = False
     for status_pk, test_instance_pks in list(status_groups.items()):
-        status = models.TestInstanceStatus.objects.get(pk=status_pk)
+        status = models.ReviewStatus.objects.get(pk=status_pk)
         if status.requires_review:
             still_requires_review = True
         models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
@@ -433,7 +433,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         return get_template("qa/_testinstancestatus_select.html").render({
             'name': 'bulk-status' if header else '',
             'id': 'bulk-status' if header else '',
-            'statuses': models.TestInstanceStatus.objects.all(),
+            'statuses': models.ReviewStatus.objects.all(),
             'class': 'input-medium' + (' bulk-status' if header else ''),
             'title': title,
         })

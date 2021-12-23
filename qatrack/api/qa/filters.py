@@ -23,10 +23,10 @@ class FrequencyFilter(filters.FilterSet):
         }
 
 
-class TestInstanceStatusFilter(filters.FilterSet):
+class ReviewStatusFilter(filters.FilterSet):
 
     class Meta:
-        model = models.TestInstanceStatus
+        model = models.ReviewStatus
         fields = {
             "name": ['exact', 'icontains', 'contains', 'in'],
             "slug": ['exact', 'icontains', 'contains', 'in'],
@@ -41,9 +41,9 @@ class TestInstanceStatusFilter(filters.FilterSet):
 class AutoReviewRuleFilter(filters.FilterSet):
 
     status = filters.RelatedFilter(
-        TestInstanceStatusFilter,
+        ReviewStatusFilter,
         field_name="status",
-        queryset=models.TestInstanceStatus.objects.all(),
+        queryset=models.ReviewStatus.objects.all(),
     )
 
     pass_fail = filters.Filter(
@@ -348,9 +348,9 @@ class TestInstanceFilter(filters.FilterSet):
         queryset=Attachment.objects.all(),
     )
     status = filters.RelatedFilter(
-        TestInstanceStatusFilter,
+        ReviewStatusFilter,
         field_name="status",
-        queryset=models.TestInstanceStatus.objects.all(),
+        queryset=models.ReviewStatus.objects.all(),
     )
     reviewed_by = filters.RelatedFilter(UserFilter, field_name="reviewed_by", queryset=User.objects.all())
     reference = filters.RelatedFilter(ReferenceFilter, field_name="reference", queryset=models.Reference.objects.all())

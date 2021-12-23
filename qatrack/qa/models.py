@@ -422,20 +422,20 @@ class Frequency(models.Model):
 
 
 class StatusManager(models.Manager):
-    """manager for TestInstanceStatus"""
+    """manager for ReviewStatus"""
 
     def default(self):
-        """return the default TestInstanceStatus"""
+        """return the default ReviewStatus"""
         try:
             return self.get_queryset().get(is_default=True)
-        except TestInstanceStatus.DoesNotExist:
+        except ReviewStatus.DoesNotExist:
             return
 
     def get_by_natural_key(self, slug):
         return self.get(slug=slug)
 
 
-class TestInstanceStatus(models.Model):
+class ReviewStatus(models.Model):
     """Configurable statuses for QC Tests"""
 
     name = models.CharField(max_length=50, help_text=_l("Display name for this status type"), unique=True)
@@ -480,19 +480,19 @@ class TestInstanceStatus(models.Model):
     objects = StatusManager()
 
     class Meta:
-        verbose_name_plural = "statuses"
+        verbose_name_plural = "review statuses"
 
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
 
-        cur_default = TestInstanceStatus.objects.default()
+        cur_default = ReviewStatus.objects.default()
         if cur_default is None:
             self.is_default = True
         elif self.is_default:
             cur_default.is_default = False
             cur_default.save()
 
-        super(TestInstanceStatus, self).save(*args, **kwargs)
+        super(ReviewStatus, self).save(*args, **kwargs)
 
     def natural_key(self):
         return (self.slug,)
@@ -509,7 +509,7 @@ class AutoReviewRule(models.Model):
         choices=PASS_FAIL_CHOICES,
     )
     status = models.ForeignKey(
-        TestInstanceStatus,
+        ReviewStatus,
         on_delete=models.CASCADE,
         help_text=_l("Status to assign test instance based on its pass/fail state"),
     )
@@ -1868,7 +1868,7 @@ class TestInstance(models.Model):
     """
 
     # review status
-    status = models.ForeignKey(TestInstanceStatus, on_delete=models.PROTECT)
+    status = models.ForeignKey(ReviewStatus, on_delete=models.PROTECT)
     review_date = models.DateTimeField(null=True, blank=True, editable=False)
     reviewed_by = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
 

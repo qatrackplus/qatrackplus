@@ -140,7 +140,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["categories"] = sorted(
             set([x.unit_test_info.test.category for x in test_instances]), key=lambda c: c.name
         )
-        context["statuses"] = models.TestInstanceStatus.objects.all()
+        context["statuses"] = models.ReviewStatus.objects.all()
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
         context["current_day"] = self.object.day + 1

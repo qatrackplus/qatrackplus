@@ -265,10 +265,10 @@ def test_list_added_to_cycle(*args, **kwargs):
 
 @receiver(post_save, sender=models.AutoReviewRule)
 @receiver(post_save, sender=models.AutoReviewRuleSet)
-@receiver(post_save, sender=models.TestInstanceStatus)
+@receiver(post_save, sender=models.ReviewStatus)
 @receiver(post_delete, sender=models.AutoReviewRule)
 @receiver(post_delete, sender=models.AutoReviewRuleSet)
-@receiver(post_delete, sender=models.TestInstanceStatus)
+@receiver(post_delete, sender=models.ReviewStatus)
 @receiver(m2m_changed, sender=models.AutoReviewRuleSet.rules.through)
 def on_autoreviewrule_save(*args, **kwargs):
     """update auto review rule set cache"""
