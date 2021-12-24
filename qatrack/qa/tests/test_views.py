@@ -213,12 +213,11 @@ class TestControlImage(TestCase):
 
         for n in (1, 1, 8, 90):
             for x in range(n):
-                tli = utils.create_test_list_instance(unit_test_collection=utc)
+                tli = utils.create_test_list_instance(unit_test_collection=utc, status=status)
                 utils.create_test_instance(
                     tli,
                     unit_test_info=uti,
                     value=random.gauss(1, 0.5),
-                    status=status,
                 )
 
             request = self.factory.get(url)
@@ -232,9 +231,9 @@ class TestControlImage(TestCase):
         unit = u_utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
+        tli = utils.create_test_list_instance(unit_test_collection=utc, status=status)
 
         yesterday = timezone.now().date() - timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
@@ -249,7 +248,7 @@ class TestControlImage(TestCase):
 
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
-            utils.create_test_instance(tli, value=x, status=status, unit_test_info=uti)
+            utils.create_test_instance(tli, value=x, unit_test_info=uti)
 
         request = self.factory.get(url)
         request.user = superuser
@@ -262,9 +261,9 @@ class TestControlImage(TestCase):
         unit = u_utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
+        tli = utils.create_test_list_instance(unit_test_collection=utc, status=status)
 
         yesterday = timezone.now().date() - timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
@@ -285,7 +284,7 @@ class TestControlImage(TestCase):
         qatrack.qa.control_chart.control_chart.display = mock_display
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
-            utils.create_test_instance(tli, value=x, status=status, unit_test_info=uti)
+            utils.create_test_instance(tli, value=x, unit_test_info=uti)
 
         request = self.factory.get(url)
         request.user = superuser
@@ -437,17 +436,17 @@ class TestChartData(TestCase):
 
         self.NPOINTS = 10
         for x in range(self.NPOINTS):
-            tli = utils.create_test_list_instance(unit_test_collection=self.utc1)
+            tli = utils.create_test_list_instance(unit_test_collection=self.utc1, status=self.status)
             ti = utils.create_test_instance(
-                value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli
+                value=1., unit_test_info=self.uti1, test_list_instance=tli
             )
             ti.reference = ref
             ti.tolerance = tol
             ti.save()
 
-            tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
+            tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2, status=self.status)
             ti2 = utils.create_test_instance(
-                value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2
+                value=1., unit_test_info=self.uti1, test_list_instance=tli2
             )
             ti2.reference = ref
             ti2.tolerance = per_tol
@@ -456,9 +455,9 @@ class TestChartData(TestCase):
             if x < self.NPOINTS // 2:
                 # create less points for one tests to ensure tabulation routines
                 # can handle data sets of different lengths
-                tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
+                tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2, status=self.status)
                 ti2 = utils.create_test_instance(
-                    value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2
+                    value=1.5, unit_test_info=self.uti2, test_list_instance=tli2
                 )
                 ti2.reference = ref
                 ti2.tolerance = per_tol
@@ -1232,8 +1231,6 @@ class TestPerformQA(TestCase):
             "form-MAX_NUM_FORMS": "",
         }
 
-        expected_due_date = None
-
         data['work_started'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
         data['include_for_scheduling'] = False
         self.set_form_data(data)
@@ -1730,14 +1727,14 @@ class TestEditTestListInstance(TestCase):
         utils.create_test_list_membership(self.test_list, self.test_bool)
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
-        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc, status=self.status)
 
         uti = models.UnitTestInfo.objects.get(test=self.test)
 
-        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1)
 
         utib = models.UnitTestInfo.objects.get(test=self.test_bool)
-        self.tib = utils.create_test_instance(self.tli, unit_test_info=utib, value=1, status=self.status)
+        self.tib = utils.create_test_instance(self.tli, unit_test_info=utib, value=1)
 
         self.url = reverse("edit_tli", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")
@@ -1936,7 +1933,7 @@ class TestReviewTestListInstance(TestCase):
 
         uti = models.UnitTestInfo.objects.get(unit=self.utc.unit, test=self.test)
 
-        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1)
 
         self.url = reverse("review_test_list_instance", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")

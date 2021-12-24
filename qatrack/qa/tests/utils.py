@@ -155,7 +155,7 @@ def create_test_list_membership(test_list=None, test=None, order=0):
 
 
 def create_test_instance(
-    test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None
+    test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None,
 ):
 
     if test_list_instance is None:
@@ -170,15 +170,12 @@ def create_test_instance(
 
     if created_by is None:
         created_by = create_user()
-    if status is None:
-        status = create_status()
 
     ti = models.TestInstance(
         unit_test_info=unit_test_info,
         value=value,
         created_by=created_by,
         modified_by=created_by,
-        status=status,
         work_completed=work_completed,
         work_started=work_started,
         test_list_instance=test_list_instance

@@ -351,12 +351,6 @@ class TestInstanceFilter(filters.FilterSet):
         field_name="attachment",
         queryset=Attachment.objects.all(),
     )
-    status = filters.RelatedFilter(
-        ReviewStatusFilter,
-        field_name="status",
-        queryset=models.ReviewStatus.objects.all(),
-    )
-    reviewed_by = filters.RelatedFilter(UserFilter, field_name="reviewed_by", queryset=User.objects.all())
     reference = filters.RelatedFilter(ReferenceFilter, field_name="reference", queryset=models.Reference.objects.all())
     tolerance = filters.RelatedFilter(ToleranceFilter, field_name="tolerance", queryset=models.Tolerance.objects.all())
     unit_test_info = filters.RelatedFilter(
@@ -384,9 +378,6 @@ class TestInstanceFilter(filters.FilterSet):
     work_completed_min = MinDateFilter(field_name="work_completed")
     work_completed_max = MaxDateFilter(field_name="work_completed")
 
-    review_date_min = MinDateFilter(field_name="review_date")
-    review_date_max = MaxDateFilter(field_name="review_date")
-
     created_min = MinDateFilter(field_name="created")
     created_max = MaxDateFilter(field_name="created")
     modified_min = MinDateFilter(field_name="modified")
@@ -395,7 +386,6 @@ class TestInstanceFilter(filters.FilterSet):
     class Meta:
         model = models.TestInstance
         fields = {
-            "review_date": ['exact'],
             "value": ['exact', 'in', 'gte', 'lte'],
             "string_value": ['exact', 'icontains', 'contains', 'in'],
             "skipped": ['exact'],

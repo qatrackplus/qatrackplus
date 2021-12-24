@@ -1182,7 +1182,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 unit_test_info=ti_form.unit_test_info,
                 reference=ti_form.unit_test_info.reference,
                 tolerance=ti_form.unit_test_info.tolerance,
-                status=status,
                 order=order,
                 created=self.object.created,
                 created_by=self.request.user,

@@ -515,7 +515,6 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             "assigned_to",
         ).prefetch_related(
             "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
             "last_instance__modified_by",
             "tests_object",
         ).exclude(due_date=None).order_by(
@@ -628,7 +627,6 @@ class OverviewObjects(JSONResponseMixin, View):
             "assigned_to",
         ).prefetch_related(
             "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
             "last_instance__modified_by",
         ).order_by("frequency__nominal_interval", "unit__number", "name", )
 

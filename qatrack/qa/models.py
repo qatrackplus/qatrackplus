@@ -867,17 +867,6 @@ class Test(models.Model, TestPackMixin):
     )
     category = models.ForeignKey(Category, on_delete=models.PROTECT, help_text=_l("Choose a category for this test"))
     chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
-    autoreviewruleset = models.ForeignKey(
-        "AutoReviewRuleSet",
-        verbose_name=_l("Auto Review Rules"),
-        null=True,
-        blank=True,
-        default=default_autoreviewruleset,
-        on_delete=models.PROTECT,
-        help_text=_l(
-            "Choose the Auto Review Rule Set to use for this Test. Leave blank to disable Auto Review for this Test."
-        ),
-    )
 
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
@@ -1163,7 +1152,7 @@ class Test(models.Model, TestPackMixin):
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id", "modified", "modified_by", "created", "created_by", "autoreviewruleset"]
+        exclude = ["id", "modified", "modified_by", "created", "created_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def get_testpack_dependencies(self):
@@ -1332,15 +1321,6 @@ class UnitTestInfo(models.Model):
             if self.reference is not None and self.reference.value not in (0., 1.):
                 msg = _("Test type is BOOLEAN but reference value is not 0 or 1")
                 raise ValidationError(msg)
-
-    def get_history(self, number=5):
-        """return last 'number' of instances for this test performed on input unit
-        list is ordered in ascending dates
-        """
-        # hist = TestInstance.objects.filter(unit_test_info=self)
-        hist = self.testinstance_set.select_related("status").all().order_by("-work_completed", "-pk")
-        # hist = hist.select_related("status")
-        return [(x.work_completed, x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
 
     def __str__(self):
         return "UnitTestInfo(%s)" % self.pk
@@ -1761,7 +1741,8 @@ class UnitTestCollection(SchedulingMixin, models.Model):
             return self.testlistinstance_set.filter(
                 in_progress=False,
                 include_for_scheduling=True,
-            ).exclude(testinstance__status__valid=False).latest("work_completed")
+                review_status__valid=True,
+            ).latest("work_completed")
         except TestListInstance.DoesNotExist:
             pass
 
@@ -1770,21 +1751,6 @@ class UnitTestCollection(SchedulingMixin, models.Model):
 
         if hasattr(self, "last_instance") and self.last_instance is not None:
             return self.last_instance.work_completed
-
-    def unreviewed_instances(self):
-        """return a query set of all TestListInstances for this object that have not been fully reviewed"""
-
-        return self.testlistinstance_set.filter(
-            testinstance__status__requires_review=True,
-        ).distinct().select_related("test_list")
-
-    def unreviewed_test_instances(self):
-        """return query set of all TestInstances for this object"""
-
-        return TestInstance.objects.complete().filter(
-            unit_test_info__unit=self.unit,
-            unit_test_info__test__in=self.tests_object.all_tests()
-        )
 
     def history(self, before=None):
 
@@ -1798,7 +1764,6 @@ class UnitTestCollection(SchedulingMixin, models.Model):
         tlis = tlis.order_by(
             "-work_completed"
         ).prefetch_related(
-            "testinstance_set__status",
             "testinstance_set__reference",
             "testinstance_set__tolerance",
             "testinstance_set__unit_test_info",
@@ -1889,11 +1854,6 @@ class TestInstance(models.Model):
     or not the test passed or failed along with the reference and tolerance
     that pass/fail was based on.
     """
-
-    # review status
-    status = models.ForeignKey(ReviewStatus, on_delete=models.PROTECT)
-    review_date = models.DateTimeField(null=True, blank=True, editable=False)
-    reviewed_by = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
 
     # did test pass or fail (or was skipped etc)
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES, editable=False, db_index=True)
@@ -2350,9 +2310,6 @@ class TestListInstance(models.Model):
             'comments': comment_count,
         }
 
-    def unreviewed_instances(self):
-        return self.testinstance_set.filter(status__requires_review=True)
-
     def auto_review(self):
         """set review status of the current value if allowed.
 
@@ -2417,7 +2374,6 @@ class TestListInstance(models.Model):
         #     "testinstance_set__unit_test_info__test",
         #     "testinstance_set__reference",
         #     "testinstance_set__tolerance",
-        #     "testinstance_set__status",
         # ]
         # select_related = ["unittestcollection__unit"]
 
@@ -2434,7 +2390,6 @@ class TestListInstance(models.Model):
         tlis = tlis.order_by(
             "-work_completed"
         ).prefetch_related(
-            "testinstance_set__status",
             "testinstance_set__reference",
             "testinstance_set__tolerance",
             "testinstance_set__unit_test_info__test",

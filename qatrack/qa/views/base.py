@@ -76,7 +76,6 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
         "testinstance_set__unit_test_info__test",
         "testinstance_set__reference",
         "testinstance_set__tolerance",
-        "testinstance_set__status",
         "testinstance_set__attachment_set",
     ]
     select_related = [
@@ -108,7 +107,6 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         # override the default queryset for the formset so that we can pull in all the
         # reference/tolerance data without the ORM generating lots of extra queries
         test_instances = self.object.testinstance_set.order_by("order", "created").select_related(
-            "status",
             "reference",
             "tolerance",
             "unit_test_info__test",
@@ -237,7 +235,6 @@ class UTCList(BaseListableView):
 
     prefetch_related = (
         'last_instance__testinstance_set',
-        'last_instance__testinstance_set__status',
         'last_instance__reviewed_by',
         'last_instance__modified_by',
         'last_instance__created_by',
@@ -419,7 +416,6 @@ class TestListInstances(BaseListableView):
 
     prefetch_related = (
         'testinstance_set',
-        'testinstance_set__status',
         'rtsqa_for_tli',
         'rtsqa_for_tli__service_event',
         'serviceevents_initiated',

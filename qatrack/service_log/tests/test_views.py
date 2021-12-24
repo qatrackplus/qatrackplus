@@ -396,14 +396,14 @@ class TestCreateServiceEvent(TestCase):
             name='Approved', is_review_required=False, rts_qa_must_be_reviewed=True
         )
 
-        test_status = qa_utils.create_status()
+        status = qa_utils.create_status()
         tl = qa_utils.create_test_list()
         t = qa_utils.create_test()
         qa_utils.create_test_list_membership(tl, t)
 
-        tli_unreviewed = qa_utils.create_test_list_instance(test_list=tl)
+        tli_unreviewed = qa_utils.create_test_list_instance(test_list=tl, status=status)
         qa_utils.create_test_instance(
-            tli_unreviewed, unit_test_info=qa_utils.create_unit_test_info(unit=self.u_1), status=test_status
+            tli_unreviewed, unit_test_info=qa_utils.create_unit_test_info(unit=self.u_1),
         )
 
         data = {

@@ -224,7 +224,6 @@ class TestTestListInstanceDetailsReport(TestCase):
             _('Reference'),
             _('Tolerance'),
             _('Pass/Fail'),
-            _('Review Status'),
             _('Comment'),
             _('Attachments'),
         ])

@@ -221,7 +221,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             ).prefetch_related(
                 'returntoserviceqa_set',
                 'test_list_instance_initiated_by__testinstance_set',
-                'test_list_instance_initiated_by__testinstance_set__status',
                 'test_list_instance_initiated_by__unit_test_collection__tests_object'
             )
 
@@ -345,7 +344,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     'user_assigned_by'
                 ).prefetch_related(
                     "test_list_instance__testinstance_set",
-                    "test_list_instance__testinstance_set__status",
                     'unit_test_collection__tests_object'
                 ),
                 # initial=initial_utcs
@@ -374,7 +372,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     'user_assigned_by'
                 ).prefetch_related(
                     "test_list_instance__testinstance_set",
-                    "test_list_instance__testinstance_set__status",
                     'unit_test_collection__tests_object'
                 ),
                 initial=initial_utcs
@@ -784,7 +781,6 @@ class DetailsServiceEvent(DetailView):
             'user_assigned_by'
         ).prefetch_related(
             "test_list_instance__testinstance_set",
-            "test_list_instance__testinstance_set__status",
             'unit_test_collection__tests_object'
         )
         context_data['parts_used'] = p_models.PartUsed.objects.filter(service_event=self.object)
@@ -1142,7 +1138,6 @@ class ReturnToServiceQABaseList(BaseListableView):
 
     prefetch_related = (
         'test_list_instance__testinstance_set',
-        'test_list_instance__testinstance_set__status',
         'unit_test_collection',
         'test_list_instance__comments'
     )

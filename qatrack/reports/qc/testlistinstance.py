@@ -236,7 +236,6 @@ class TestListInstanceDetailsReport(BaseReport):
             "testinstance_set__unit_test_info__test",
             "testinstance_set__reference",
             "testinstance_set__tolerance",
-            "testinstance_set__status",
             "testinstance_set__attachment_set",
             "attachment_set",
             "serviceevents_initiated",
@@ -314,7 +313,8 @@ class TestListInstanceDetailsReport(BaseReport):
                 [_("Work Completed") + ":", format_as_date(tli.work_completed)],
                 [_("Duration") + ":", _("In Progress") if tli.in_progress else as_time_delta(tli.duration())],
                 [_("Modified") + ":", format_as_date(tli.modified)],
-                [_("Mofified By") + ":", format_user(tli.modified_by)],
+                [_("Modified By") + ":", format_user(tli.modified_by)],
+                [_("Review Satus") + ":", tli.review_status.name],
             ])
             if tli.all_reviewed and not tli.reviewed_by:
                 rows.extend([
@@ -340,7 +340,6 @@ class TestListInstanceDetailsReport(BaseReport):
                 _("Reference"),
                 _("Tolerance"),
                 _("Pass/Fail"),
-                _("Review Status"),
                 _("Comment"),
                 _("Attachments"),
             ])
@@ -352,7 +351,6 @@ class TestListInstanceDetailsReport(BaseReport):
                     ti.reference.value_display() if ti.reference else "",
                     ti.tolerance.name if ti.tolerance else "",
                     ti.get_pass_fail_display(),
-                    ti.status.name,
                     ti.comment,
                 ]
                 for a in ti.attachment_set.all():

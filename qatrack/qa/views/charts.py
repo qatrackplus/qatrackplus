@@ -419,13 +419,13 @@ class BaseChartView(View):
             for tl, t, u in itertools.product(test_lists, tests, units):
                 tis = models.TestInstance.objects.filter(
                     test_list_instance__test_list=tl,
+                    test_list_instance__review_status_id__in=statuses,
                     unit_test_info__test=t,
                     unit_test_info__unit=u,
-                    status__pk__in=statuses,
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
                 ).select_related(
-                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit",
                     'test_list_instance', 'test_list_instance__test_list'
                 ).prefetch_related(
                     "test_list_instance__comments",
@@ -448,11 +448,11 @@ class BaseChartView(View):
                 tis = models.TestInstance.objects.filter(
                     unit_test_info__test=t,
                     unit_test_info__unit=u,
-                    status__pk__in=statuses,
+                    test_list_instance__review_status_id__in=statuses,
                     work_completed__gte=from_date,
                     work_completed__lte=to_date,
                 ).select_related(
-                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit", "status",
+                    "reference", "tolerance", "unit_test_info__test", "unit_test_info__unit",
                     'test_list_instance'
                 ).prefetch_related(
                     "test_list_instance__comments",

@@ -598,7 +598,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 unit_test_info=uti,
                 reference=uti.reference,
                 tolerance=uti.tolerance,
-                status=status,
                 order=order,
                 created=tli.created,
                 created_by=user,
@@ -704,7 +703,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         )
         for ti in tis:
             tid = test_instance_data[ti.unit_test_info.test.slug]
-            ti.status = status
             ti.modified_by = user
             ti.work_started = instance.work_started
             ti.work_completed = instance.work_completed
@@ -766,20 +764,17 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         # Monkeypatch on a tests dict here since it doesn't actually
         # exist on the TestListInstance object
         base_url = reverse("testinstance-list")
-        base_status_url = reverse("reviewstatus-list")
         base_ref_url = reverse("reference-list")
         base_tol_url = reverse("tolerance-list")
         qs = obj.testinstance_set.select_related(
-            'status',
             'reference',
             'tolerance',
             'unit_test_info__test',
         )
-        obj.status = None
+        obj.review_status = None
         obj.return_to_service_qa = None
         obj.tests = {}
         for ti in qs:
-            status = base_status_url + "%d/" % ti.status.pk
             tol = base_tol_url + "%d/" % ti.tolerance.pk if ti.tolerance else None
             ref = base_ref_url + "%d/" % ti.reference.pk if ti.reference else None
             obj.tests[ti.unit_test_info.test.slug] = {
@@ -793,7 +788,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 "pass_fail": (ti.pass_fail, ti.get_pass_fail_display()),
                 "skipped": ti.skipped,
                 "comment": ti.comment,
-                "status": status,
                 "reference": ref,
                 "tolerance": tol,
                 "attachments": [a.attachment.url for a in ti.attachment_set.all()],
@@ -812,7 +806,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             rep['comment'] = self.comment
 
         rep.pop("return_to_service_qa", None)
-        rep.pop("status", None)
+        rep.pop("review_status", None)
 
         return rep
 

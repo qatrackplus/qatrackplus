@@ -128,7 +128,7 @@ class TestTestListInstanceAPI(APITestCase):
         self.data['status'] = s2_url
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
-        assert models.TestInstance.objects.filter(status=s2).count() == self.ntests
+        assert models.TestListInstance.objects.filter(review_status=s2).count() == 1
         assert models.TestListInstance.objects.all().count() == 1
         assert models.TestListInstance.objects.unreviewed().count() == 0
 
@@ -753,7 +753,7 @@ class TestTestListInstanceAPI(APITestCase):
         new_data = {'status': s2_url}
         edit_resp = self.client.patch(resp.data['url'], new_data)
         assert edit_resp.status_code == 200
-        assert models.TestInstance.objects.filter(status=s2).count() == self.ntests
+        assert models.TestListInstance.objects.filter(review_status=s2).count() == 1
         assert models.TestListInstance.objects.all().count() == 1
         assert models.TestListInstance.objects.unreviewed().count() == 0
 
