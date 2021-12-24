@@ -1,4 +1,3 @@
-import collections
 import logging
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
@@ -44,21 +43,18 @@ def generate_review_status_context(test_list_instance):
     if not test_list_instance:
         return {}
 
-    statuses = collections.defaultdict(lambda: {"count": 0})
-    comment_count = 0
-    for ti in test_list_instance.testinstance_set.all():
-        statuses[ti.status.name]["count"] += 1
-        statuses[ti.status.name]["valid"] = ti.status.valid
-        statuses[ti.status.name]["requires_review"] = ti.status.requires_review
-        statuses[ti.status.name]["reviewed_by"] = test_list_instance.reviewed_by
-        statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
-        statuses[ti.status.name]["colour"] = ti.status.colour
-        if ti.comment:
-            comment_count += 1
+    comment_count = test_list_instance.testinstance_set.exclude(Q(comment="") | Q(comment=None)).count()
     comment_count += test_list_instance.comments.all().count()
 
     c = {
-        "statuses": dict(statuses),
+        "status": {
+            'name': test_list_instance.review_status.name,
+            'valid': test_list_instance.review_status.valid,
+            'requires_review': test_list_instance.review_status.requires_review,
+            'reviewed_by': test_list_instance.reviewed_by,
+            'reviewed': test_list_instance.reviewed,
+            'colour': test_list_instance.review_status.colour,
+        },
         "comments": comment_count,
         "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']
     }

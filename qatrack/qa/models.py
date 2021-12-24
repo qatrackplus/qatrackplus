@@ -435,7 +435,7 @@ class ReviewStatusManager(models.Manager):
         return self.get(slug=slug)
 
 
-def get_default_review_status_id():
+def default_reviewstatus_id():
     """return the default ReviewStatus id or None if is_default is not set"""
     default = ReviewStatus.objects.default()
     return default.id if default else None
@@ -541,8 +541,12 @@ class AutoReviewRuleSet(models.Model):
     is_default = models.BooleanField(
         verbose_name=_l("Default"),
         default=False,
-        help_text=_l("Check this option if you want this to be the default rule set for tests"),
+        help_text=_l("Check this option if you want this to be the default rule set for test lists"),
     )
+
+    def rules_map(self):
+        """Return a dictionary mapping pass_fail status to review status"""
+        return {r.pass_fail: r.status for r in self.rules.all()}
 
     def __str__(self):
         return self.name
@@ -1504,6 +1508,19 @@ class TestList(TestCollectionInterface, TestPackMixin):
         default=settings.DEFAULT_WARNING_MESSAGE,
         blank=True,
     )
+
+    autoreviewruleset = models.ForeignKey(
+        "AutoReviewRuleSet",
+        verbose_name=_l("Auto Review Rules"),
+        null=True,
+        blank=True,
+        default=default_autoreviewruleset,
+        on_delete=models.PROTECT,
+        help_text=_l(
+            "Choose the Auto Review Rule Set to use for this Test List. Leave blank to disable."
+        ),
+    )
+
     utcs = GenericRelation('UnitTestCollection', related_query_name='test_list')
 
     objects = TestListManager()
@@ -2076,25 +2093,6 @@ class TestInstance(models.Model):
 
         return self.value
 
-    def auto_review(self, has_tli_comment=None):
-        """set review status of the current value if allowed"""
-
-        if has_tli_comment is None:
-            # allow caller to control whether or not we need to check
-            # if tli has a comment or not
-            has_tli_comment = self.test_list_instance.comments.all().exists()
-
-        has_comment = self.comment or has_tli_comment
-        if has_comment and not self.skipped:
-            return
-        rule_id = self.unit_test_info.test.autoreviewruleset_id
-        if rule_id:
-            rules = autoreviewruleset_cache(rule_id)
-            status = rules.get(self.pass_fail)
-            if status:
-                self.status = status
-                self.review_date = timezone.now()
-
     @property
     def empty(self):
         null_num = self.value is None
@@ -2286,7 +2284,7 @@ class TestListInstance(models.Model):
         verbose_name=_l("Review Status"),
         on_delete=models.PROTECT,
         help_text=_l("Select the review status of this test list instance"),
-        default=get_default_review_status_id,
+        default=default_reviewstatus_id,
     )
 
     day = models.IntegerField(default=0)
@@ -2336,33 +2334,51 @@ class TestListInstance(models.Model):
         """return timedelta of time from start to completion"""
         return self.work_completed - self.work_started
 
-    def status(self, queryset=None):
-        """return string with review status of this qa instance"""
-        if queryset is None:
-            queryset = self.testinstance_set.prefetch_related("status").all()
-        status_types = set([x.status for x in queryset])
-        statuses = [(status, [x for x in queryset if x.status == status]) for status in status_types]
-        return [x for x in statuses if len(x[1]) > 0]
+    def review_summary(self):
+        """Return information about current review status and count of total
+        comments for this TLI"""
 
-    def review_summary(self, queryset=None):
-        if queryset is None:
-            queryset = self.testinstance_set.prefetch_related('status').all()
-        comment_count = queryset.exclude(comment='').count() + self.comments.count()
-
-        to_return = {
-            status[0].slug: {
-                'num': len(status[1]),
-                'valid': status[0].valid,
-                'reqs_review': status[0].requires_review,
-                'default': status[0].is_default,
-                'colour': status[0].colour
-            } for status in self.status(queryset)
+        comment_count = self.testinstance_set.exclude(comment='').count() + self.comments.count()
+        return {
+            'status': {
+                'name': self.review_status.name,
+                'valid': self.review_status.valid,
+                'reqs_review': self.review_status.requires_review,
+                'default': self.review_status.is_default,
+                'colour': self.review_status.colour
+            },
+            'comments': comment_count,
         }
-        to_return['Comments'] = {'num': comment_count, 'is_comments': 1}
-        return to_return
 
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
+
+    def auto_review(self):
+        """set review status of the current value if allowed.
+
+        Any skipped tests, or comments on the test list instance or test
+        instances, disqualify this test list instance from auto review.
+        """
+
+        if self.test_list.autoreviewruleset_id is None or self.comments.all().exists():
+            return
+
+        pass_fails = set()
+        for ti in self.testinstance_set.values("pass_fail", "comment", "skipped", "unit_test_info__test__hidden"):
+            if ti['comment'] or (ti['skipped'] and not ti['unit_test_info__test__hidden']):
+                return
+            pass_fails.add(ti['pass_fail'])
+
+        all_same_status = len(pass_fails) == 1
+        if not all_same_status:
+            return
+
+        rules = self.test_list.autoreviewruleset.rules_map()
+        status = rules.get(pass_fails.pop())
+        if status:
+            self.review_status = status
+            self.review_date = timezone.now()
+            self.save()
 
     @property
     def all_reviewed(self):

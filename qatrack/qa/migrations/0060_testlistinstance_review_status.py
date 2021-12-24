@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='testlistinstance',
             name='review_status',
-            field=models.ForeignKey(default=qatrack.qa.models.get_default_review_status_id, help_text='Select the review status of this test list instance', on_delete=django.db.models.deletion.PROTECT, to='qa.ReviewStatus', verbose_name='Review Status'),
+            field=models.ForeignKey(default=qatrack.qa.models.default_reviewstatus_id, help_text='Select the review status of this test list instance', on_delete=django.db.models.deletion.PROTECT, to='qa.ReviewStatus', verbose_name='Review Status'),
         ),
         migrations.RemoveField(
             model_name='testlistinstance',

@@ -548,7 +548,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         user_set_status = validated_data.pop('status', None)
         status = user_set_status or models.ReviewStatus.objects.default()
         if status is None:
-            raise serializers.ValidationError("No test instance status available")
+            raise serializers.ValidationError("No review status available")
 
         # related return to service
         rtsqa = validated_data.pop('return_to_service_qa', None)
@@ -609,8 +609,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             )
 
             ti.calculate_pass_fail()
-            if not user_set_status:
-                ti.auto_review()
 
             to_save.append(ti)
 
@@ -620,6 +618,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             for a in Attachment.objects.filter(id__in=attachment_ids):
                 a.testinstance = tli.testinstance_set.get(unit_test_info__test__slug=slug)
                 a.save()
+
+        if not user_set_status:
+            tli.auto_review()
 
         # set due date to account for any non default statuses
         tli.unit_test_collection.set_due_date()
@@ -716,8 +717,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             ti.comment = tid.get("comment", ti.comment)
 
             ti.calculate_pass_fail()
-            if not user_set_status:
-                ti.auto_review()
 
             ti.save()
 
@@ -727,6 +726,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 for a in Attachment.objects.filter(id__in=attachment_ids):
                     a.testinstance = ti
                     a.save()
+
+        if not user_set_status:
+            instance.auto_review()
 
         utc.set_due_date()
 

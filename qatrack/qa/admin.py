@@ -867,7 +867,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
         (
             "Test List",
             {
-                'fields': ['id', 'name', 'slug', 'description', 'javascript', 'warning_message']
+                'fields': ['id', 'name', 'slug', 'description', 'javascript', 'warning_message', 'autoreviewruleset']
             },
         ),
         (
@@ -1096,12 +1096,6 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
                     'require_comment',
                     'formatting',
                 ],
-            },
-        ),
-        (
-            "Autoreview Rules",
-            {
-                'fields': ['autoreviewruleset'],
             },
         ),
         (

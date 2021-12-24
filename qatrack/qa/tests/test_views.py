@@ -2144,14 +2144,10 @@ class TestReviewStatusContext(TestCase):
 
     def test_valid(self):
         context = views.base.generate_review_status_context(self.tli_1)
-        self.assertEqual(1, context['comments'])
-        for ti in self.tli_1.testinstance_set.all():
-            self.assertEqual(
-                self.tli_1.testinstance_set.filter(status=ti.status).count(),
-                context['statuses'][ti.status.name]['count']
-            )
-            self.assertEqual(ti.status.valid, context['statuses'][ti.status.name]['valid'])
-            self.assertEqual(ti.status.requires_review, context['statuses'][ti.status.name]['requires_review'])
+        assert context['comments'] == 1
+        assert context['status']['name'] == self.tli_1.review_status.name
+        assert context['status']['valid'] == self.tli_1.review_status.valid
+        assert context['status']['requires_review'] == self.tli_1.review_status.requires_review
 
 
 class TestTrees(TestCase):

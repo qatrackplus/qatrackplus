@@ -1,7 +1,6 @@
-import collections
-
 from django import template
 from django.conf import settings
+from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -152,23 +151,11 @@ def as_pass_fail_status(test_list_instance, show_label=True):
 
 @register.filter
 def as_review_status(test_list_instance):
-    statuses = collections.defaultdict(lambda: {"count": 0})
-    comment_count = 0
-    for ti in test_list_instance.testinstance_set.all():
-        statuses[ti.status.name]["count"] += 1
-        statuses[ti.status.name]["valid"] = ti.status.valid
-        statuses[ti.status.name]["requires_review"] = ti.status.requires_review
-        statuses[ti.status.name]["reviewed_by"] = test_list_instance.reviewed_by
-        statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
-        statuses[ti.status.name]["colour"] = ti.status.colour
-        if ti.comment:
-            comment_count += 1
-    # if test_list_instance.comment:
-    #     comment_count += 1
+    comment_count = test_list_instance.testinstance_set.exclude(Q(comment="") | Q(comment=None)).count()
     comment_count += test_list_instance.comments.count()
     template = get_template("qa/review_status.html")
     c = {
-        "statuses": dict(statuses),
+        "instance": test_list_instance,
         "comments": comment_count,
         "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS'],
     }

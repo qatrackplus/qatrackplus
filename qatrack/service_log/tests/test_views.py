@@ -740,6 +740,7 @@ class TestServiceLogViews(TestCase):
         tli = qa_utils.create_test_list_instance(unit_test_collection=self.utc)
         qa_utils.create_test_instance(test_list_instance=tli)
         qa_utils.create_test_instance(test_list_instance=tli)
+        tli.refresh_from_db()
 
         expected = json.loads(
             json.dumps(

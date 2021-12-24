@@ -120,7 +120,7 @@ class TestTestListInstanceAPI(APITestCase):
     def test_create_no_status(self):
         models.ReviewStatus.objects.all().delete()
         response = self.client.post(self.create_url, self.data)
-        assert response.data == ['No test instance status available']
+        assert response.data == ['No review status available']
 
     def test_create_user_status(self):
         s2 = utils.create_status(name="user status", slug="user_status", is_default=False, requires_review=False)

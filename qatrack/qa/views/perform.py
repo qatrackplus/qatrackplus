@@ -1157,9 +1157,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         attachments = []
 
-        has_tli_comment = False
         if form.cleaned_data['comment']:
-            has_tli_comment = True
             comment = Comment(
                 submit_date=timezone.now(),
                 user=self.request.user,
@@ -1194,14 +1192,15 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 work_completed=self.object.work_completed,
             )
             ti.calculate_pass_fail()
-            if not self.user_set_status:
-                ti.auto_review(has_tli_comment=has_tli_comment)
 
             to_save.append(ti)
 
         models.TestInstance.objects.bulk_create(to_save)
 
         set_attachment_owners(self.object, attachments)
+
+        if not self.user_set_status:
+            self.object.auto_review()
 
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
@@ -1416,7 +1415,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         if formset.is_valid():
             initially_requires_reviewed = not self.object.all_reviewed
             self.object = form.save(commit=False)
-            self.has_tli_comment = self.object.comments.all().exists()
 
             status_pk = None
             if "status" in form.fields:
@@ -1445,6 +1443,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                     attachment.testinstance = ti
                     attachment.save()
 
+            if not self.user_set_status:
+                self.object.auto_review()
             self.object.unit_test_collection.set_due_date()
 
             # # service_events = form.cleaned_data.get('service_events', False)
@@ -1550,9 +1550,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         try:
             ti.calculate_pass_fail()
-            if not self.user_set_status:
-                ti.auto_review(has_tli_comment=self.has_tli_comment)
-
             ti.save(calculate_pass_fail=False)
         except ZeroDivisionError:
 

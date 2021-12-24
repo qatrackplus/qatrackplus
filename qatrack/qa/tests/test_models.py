@@ -1814,11 +1814,6 @@ class TestTestListInstance(TestCase):
             else:
                 self.assertTrue(len(tests) == 1)
 
-    def test_review_status(self):
-
-        for stat, tests in self.test_list_instance.status():
-            self.assertEqual(len(tests), 1)
-
     def test_unreviewed_instances(self):
 
         self.assertSetEqual(set(self.test_list_instance.unreviewed_instances()), set(models.TestInstance.objects.all()))
@@ -1921,20 +1916,14 @@ class TestAutoReview(TestCase):
             ti.tolerance = self.tol
             ti.test_list_instance = tli
             ti.calculate_pass_fail()
-            ti.auto_review()
             ti.save()
 
+        tli.auto_review()
         tli.save()
         return tli
 
-    def test_review_status(self):
-        """Each of the three tests should have a different status"""
-
-        for stat, tests in self.test_list_instance.status():
-            self.assertEqual(len(tests), 1)
-
     def test_review_status_with_comment(self):
-        """Each of the three tests should have a different status"""
+        """Comment is present on a test instance so test list instance requires review"""
 
         uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
         ti = utils.create_test_instance(
@@ -1944,12 +1933,12 @@ class TestAutoReview(TestCase):
         ti.tolerance = self.tol
         ti.comment = "comment"
         ti.calculate_pass_fail()
-        ti.auto_review()
         ti.save()
-        self.assertTrue(ti.status.requires_review)
+        self.test_list_instance.auto_review()
+        assert self.test_list_instance.review_status.requires_review
 
     def test_review_status_with_tli_comment(self):
-        """Each of the three tests should have a different status"""
+        """Comment is present on test list instance so it should require review"""
 
         uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
         ti = utils.create_test_instance(
@@ -1961,12 +1950,14 @@ class TestAutoReview(TestCase):
         # self.test_list_instance.comments.add(c)
         # self.test_list_instance.save()
         ti.calculate_pass_fail()
-        ti.auto_review()
         ti.save()
-        self.assertTrue(ti.status.requires_review)
+        self.test_list_instance.auto_review()
+        assert self.test_list_instance.review_status.requires_review
 
     def test_review_status_skipped_hidden(self):
         """Skipped hidden tests should not block auto review"""
+
+        self.test_list_instance.testinstance_set.update(pass_fail=models.OK)
 
         uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
         uti.test.hidden = True
@@ -1978,9 +1969,9 @@ class TestAutoReview(TestCase):
         ti.reference = self.ref
         ti.tolerance = self.tol
         ti.calculate_pass_fail()
-        ti.auto_review()
         ti.save()
-        assert not ti.status.requires_review
+        self.test_list_instance.auto_review()
+        assert not self.test_list_instance.review_status.requires_review
 
     def test_autoreviewruleset_cache_missing_id(self):
         """Rule is missing, so cache should be refreshed"""

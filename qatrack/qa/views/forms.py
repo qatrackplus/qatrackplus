@@ -481,6 +481,7 @@ class ReviewTestListInstanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super(ReviewTestListInstanceForm, self).__init__(*args, **kwargs)
+        self.fields['status'].initial = self.instance.review_status
 
     def clean(self):
 
