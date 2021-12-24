@@ -173,9 +173,8 @@ class TestTestListInstanceDetailsReport(TestCase):
         site = USite.objects.create(name="site")
         unit = u_utils.create_unit(site=site)
         utc = utils.create_unit_test_collection(unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-        # make this tli autoreviewed
-        tli.all_reviewed = True
+        status = utils.create_status(requires_review=False)
+        tli = utils.create_test_list_instance(unit_test_collection=utc, status=status)
         tli.reviewed_by = None
         tli.save()
 

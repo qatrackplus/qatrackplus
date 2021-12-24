@@ -557,6 +557,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         attachments = validated_data.pop('attachments', [])
 
         tli = models.TestListInstance(**validated_data)
+        tli.review_status = status
         tli.reviewed = None if status.requires_review else tli.modified
         tli.reviewed_by = None if status.requires_review else user
         tli.save()
@@ -632,7 +633,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             if not tli.all_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-        tli.update_all_reviewed()
+        tli.update_service_event_statuses()
 
         if not tli.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
@@ -675,14 +676,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         instance.modified_by = user
         instance.modified = timezone.now()
+        instance.review_status = status
         instance.reviewed = None
         instance.reviewed_by = None
-        instance.all_reviewed = False
 
         if not status.requires_review:
             instance.reviewed = now
             instance.reviewed_by = user
-            instance.all_reviewed = True
 
         instance.work_complete = instance.work_completed or now
 
@@ -739,7 +739,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             if not instance.all_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-        instance.update_all_reviewed()
+        instance.update_service_event_statuses()
 
         if not instance.in_progress:
             try:

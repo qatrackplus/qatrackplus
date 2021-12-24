@@ -263,6 +263,11 @@ class TestListInstanceFilter(filters.FilterSet):
     )
     test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
 
+    review_status = filters.RelatedFilter(
+        ReviewStatusFilter,
+        field_name="review_status",
+        queryset=models.ReviewStatus.objects.all(),
+    )
     reviewed_by = filters.RelatedFilter(UserFilter, field_name="reviewed_by", queryset=User.objects.all())
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
@@ -291,7 +296,6 @@ class TestListInstanceFilter(filters.FilterSet):
             "in_progress": ['exact'],
             "include_for_scheduling": ['exact'],
             "reviewed": ['exact'],
-            "all_reviewed": ['exact'],
             "day": ['exact', 'in'],
             "user_key": ['exact'],
             "work_started": ['exact', "in"],

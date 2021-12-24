@@ -1141,6 +1141,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         wc = self.object.work_completed
         self.object.work_completed = wc if wc else self.object.modified
 
+        self.object.review_status = status
         self.object.reviewed = None if status.requires_review else self.object.modified
         self.object.reviewed_by = None if status.requires_review else self.request.user
 
@@ -1220,7 +1221,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             if not self.object.all_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-        changed_se = self.object.update_all_reviewed()
+        changed_se = self.object.update_service_event_statuses()
 
         if len(changed_se) > 0:
             msg = _(
@@ -1413,10 +1414,9 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         formset = context["formset"]
 
         if formset.is_valid():
+            initially_requires_reviewed = not self.object.all_reviewed
             self.object = form.save(commit=False)
             self.has_tli_comment = self.object.comments.all().exists()
-
-            initially_requires_reviewed = not self.object.all_reviewed
 
             status_pk = None
             if "status" in form.fields:
@@ -1454,7 +1454,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
             #     rtsqa.test_list_instance = self.object
             #     rtsqa.save()
-            changed_se = self.object.update_all_reviewed()
+            changed_se = self.object.update_service_event_statuses()
 
             if len(changed_se) > 0:
                 msg = _(
@@ -1497,15 +1497,14 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         now = timezone.now()
 
+        self.object.review_status = self.status
         self.object.modified = now
         if self.status.requires_review:
             self.object.reviewed = None
             self.object.reviewed_by = None
-            self.object.all_reviewed = False
         else:
             self.object.reviewed = now
             self.object.reviewed_by = self.request.user
-            self.object.all_reviewed = True
 
         if self.object.work_completed is None:
             self.object.work_completed = now
@@ -1545,7 +1544,6 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         """do bookkeeping for :model:`qa.TestInstance`"""
 
         ti = test_instance
-        ti.status = self.status
         ti.modified_by = self.request.user
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed

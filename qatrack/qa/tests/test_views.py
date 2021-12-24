@@ -1956,15 +1956,15 @@ class TestReviewTestListInstance(TestCase):
         response = self.client.get(self.url)
 
         self.base_data.update({
-            "testinstance_set-0-status": self.review_status.pk,
+            "status": self.review_status.pk,
         })
 
         self.assertEqual(1, models.TestListInstance.objects.unreviewed().count())
         response = self.client.post(self.url, data=self.base_data)
 
         self.assertEqual(302, response.status_code)
-        ti = models.TestInstance.objects.get(pk=self.ti.pk)
-        self.assertEqual(ti.status, self.review_status)
+        self.tli.refresh_from_db()
+        self.assertEqual(self.tli.review_status, self.review_status)
         self.assertEqual(0, models.TestListInstance.objects.unreviewed().count())
 
     def test_update_still_requires_review(self):
@@ -1975,7 +1975,7 @@ class TestReviewTestListInstance(TestCase):
         self.review_status.save()
 
         self.base_data.update({
-            "testinstance_set-0-status": self.review_status.pk,
+            "status": self.review_status.pk,
         })
 
         self.assertEqual(1, models.TestListInstance.objects.unreviewed().count())

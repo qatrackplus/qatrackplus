@@ -148,7 +148,7 @@ class SLDashboard(TemplateView):
         rtsqa_qs = sl_models.ReturnToServiceQA.objects.prefetch_related().all()
         default_status = sl_models.ServiceEventStatus.objects.get(is_default=True)
         to_return = {
-            'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
+            'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__review_status__requires_review=True).count(),
             'qa_not_complete': rtsqa_qs.filter(test_list_instance__isnull=True).count(),
             'se_needing_review': sl_models.ServiceEvent.objects.filter(
                 service_status__in=sl_models.ServiceEventStatus.objects.filter(
@@ -1248,7 +1248,7 @@ class ReturnToServiceQAUnreviewedList(ReturnToServiceQABaseList):
     def get_queryset(self):
         return super().get_queryset().filter(
             test_list_instance__isnull=False,
-            test_list_instance__all_reviewed=False,
+            test_list_instance__review_status__requires_review=True,
         )
 
     def get_next(self):

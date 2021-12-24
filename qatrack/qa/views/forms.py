@@ -312,7 +312,7 @@ class ReviewTestInstanceForm(forms.ModelForm):
 
     class Meta:
         model = models.TestInstance
-        fields = ("status", )
+        fields = ()
 
 
 BaseReviewTestInstanceFormSet = inlineformset_factory(
@@ -359,7 +359,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     class Meta:
         model = models.TestListInstance
-        exclude = ("day",)
+        exclude = ("day", "review_status",)
 
     def __init__(self, *args, **kwargs):
 
@@ -471,6 +471,9 @@ class UpdateTestListInstanceForm(BaseTestListInstanceForm):
 
 
 class ReviewTestListInstanceForm(forms.ModelForm):
+
+    status = forms.ModelChoiceField(queryset=models.ReviewStatus.objects, empty_label=None)
+
     class Meta:
         model = models.TestListInstance
         fields = ()

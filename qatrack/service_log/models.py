@@ -523,7 +523,7 @@ class ReturnToServiceQAManager(models.Manager):
     def unreviewed(self):
         return self.get_queryset().filter(
             test_list_instance__isnull=False,
-            test_list_instance__all_reviewed=False,
+            test_list_instance__review_status__requires_review=True,
         )
 
     def unreviewed_count(self):

@@ -1,4 +1,3 @@
-from typing import Optional
 import re
 
 import black
@@ -426,19 +425,20 @@ class ReviewStatusManager(models.Manager):
     """manager for ReviewStatus"""
 
     def default(self):
-        """return the default ReviewStatus"""
+        """return the default ReviewStatus or None if is_default is not set on any statuses"""
         try:
-            return self.get_queryset().get(is_default=True)
+            return ReviewStatus.objects.get(is_default=True)
         except ReviewStatus.DoesNotExist:
             return
 
-    def default_pk(self) -> Optional[int]:
-        """return the id of the default ReviewStatus"""
-        default = self.default()
-        return default.pk if default else None
-
     def get_by_natural_key(self, slug):
         return self.get(slug=slug)
+
+
+def get_default_review_status_id():
+    """return the default ReviewStatus id or None if is_default is not set"""
+    default = ReviewStatus.objects.default()
+    return default.id if default else None
 
 
 class ReviewStatus(models.Model):
@@ -2184,7 +2184,7 @@ class TestInstance(models.Model):
 class TestListInstanceManager(models.Manager):
 
     def unreviewed(self):
-        return self.complete().filter(all_reviewed=False).order_by("-work_completed")
+        return self.complete().filter(review_status__requires_review=True).order_by("-work_completed")
 
     def unreviewed_count(self):
         # future note: doing something like:
@@ -2194,7 +2194,7 @@ class TestListInstanceManager(models.Manager):
 
     def your_unreviewed(self, user):
         return self.complete().filter(
-            all_reviewed=False,
+            review_status__requires_review=True,
             unit_test_collection__visible_to__in=user.groups.all(),
         ).order_by("-work_completed").distinct()
 
@@ -2281,13 +2281,12 @@ class TestListInstance(models.Model):
         related_name="test_list_instance_reviewer",
     )
 
-    all_reviewed = models.BooleanField(default=False)
     review_status = models.ForeignKey(
         ReviewStatus,
         verbose_name=_l("Review Status"),
         on_delete=models.PROTECT,
         help_text=_l("Select the review status of this test list instance"),
-        default=ReviewStatus.objects.default,
+        default=get_default_review_status_id,
     )
 
     day = models.IntegerField(default=0)
@@ -2365,14 +2364,18 @@ class TestListInstance(models.Model):
     def unreviewed_instances(self):
         return self.testinstance_set.filter(status__requires_review=True)
 
-    def update_all_reviewed(self):
+    @property
+    def all_reviewed(self):
+        """Return whether this test list is reviewed or not.
 
-        self.all_reviewed = len(self.unreviewed_instances()) == 0
+        (The `all_reviewed` name is a recall to the time when QA Status was on
+        TestInstance's rather than TestListInstance.
+        """
 
-        # use update instead of save so we don't trigger save signal
-        TestListInstance.objects.filter(pk=self.pk).update(all_reviewed=self.all_reviewed)
-
-        return self.update_service_event_statuses()
+        try:
+            return not self.review_status.requires_review
+        except ReviewStatus.DoesNotExist:
+            return False
 
     def update_service_event_statuses(self):
         # set linked service events to default status if not all reviewed.

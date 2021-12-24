@@ -85,7 +85,8 @@ def create_test_list(name=None):
 
 
 def create_test_list_instance(
-    unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False
+    unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False,
+    status=None,
 ):
     if unit_test_collection is None:
         unit_test_collection = create_unit_test_collection()
@@ -97,6 +98,9 @@ def create_test_list_instance(
     if created_by is None:
         created_by = create_user()
 
+    if status is None:
+        status = create_status()
+
     tli = models.TestListInstance(
         unit_test_collection=unit_test_collection,
         created_by=created_by,
@@ -106,7 +110,8 @@ def create_test_list_instance(
         work_started=work_started,
         test_list=test_list,
         day=day,
-        in_progress=in_progress
+        in_progress=in_progress,
+        review_status=status,
     )
     tli.save()
     return tli
