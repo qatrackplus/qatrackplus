@@ -225,7 +225,7 @@ class CompositeUtils:
             qs = qs.filter(skipped=False)
 
         if not include_invalid:
-            qs = qs.filter(status__valid=True)
+            qs = qs.filter(test_list_instance__review_status__valid=True)
 
         if unit_number is None:
             unit_number = self.unit.number
