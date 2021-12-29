@@ -184,14 +184,6 @@ Uncheck this option to hide the test from the charting page.  This can
 help keep your charting page clean and limited to the tests you
 really care about.
 
-Auto Review Rules
-~~~~~~~~~~~~~~~~~
-
-Indicate whether this test should be auto-reviewable.  Select the
-AutoReviewRuleSet you would like to use for this, or leave blank, to disable
-Auto Review for this test.  For more information about this option see the
-:ref:`Auto Review page <qa_auto_review>`.
-
 Skip Without Comment
 ~~~~~~~~~~~~~~~~~~~~
 

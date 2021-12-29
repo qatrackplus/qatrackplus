@@ -48,6 +48,14 @@ into the page when performing the test list.
 
    Javascript Injection
 
+Auto Review Rules
+~~~~~~~~~~~~~~~~~
+
+Indicate whether this test list should be auto-reviewable.  Select the
+AutoReviewRuleSet you would like to use for this, or leave blank, to disable
+Auto Review for this test list.  For more information about this option see the
+:ref:`Auto Review page <qa_auto_review>`.
+
 
 Test List Members
 -----------------

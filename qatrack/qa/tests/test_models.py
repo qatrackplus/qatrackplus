@@ -2,7 +2,6 @@ from unittest import mock
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -1826,126 +1825,197 @@ class TestTestListInstance(TestCase):
 class TestAutoReview(TestCase):
 
     def setUp(self):
-        self.tests = []
 
-        self.ref = models.Reference(type=models.NUMERICAL, value=100.)
-        self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
-        self.ref.created_by = utils.create_user()
-        self.tol.created_by = utils.create_user()
-        self.ref.modified_by = utils.create_user()
-        self.tol.modified_by = utils.create_user()
-        self.values = [96, 97, 100]
+        self.ref = utils.create_reference(value=0)
+        self.tol = utils.create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2)
 
-        self.statuses = [
-            utils.create_status(name="default", slug="default", requires_review=True, is_default=True),
-            utils.create_status(name="pass", slug="pass", requires_review=False, is_default=False),
-            utils.create_status(name="tol", slug="tol", requires_review=False, is_default=False),
-            utils.create_status(name="fail", slug="fail", requires_review=False, is_default=False),
-        ]
-
-        models.AutoReviewRule.objects.bulk_create([
-            models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
-            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
-        ])
-        self.ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
-        for rule in models.AutoReviewRule.objects.all():
-            self.ruleset.rules.add(rule)
+        self.unreviewed = utils.create_status(
+            name="unreviewed",
+            slug="unreviewed",
+            requires_review=True,
+            is_default=True,
+        )
+        self.approved = utils.create_status(
+            name="approved",
+            slug="approved",
+            requires_review=False,
+            is_default=False,
+        )
+        self.rejected = utils.create_status(
+            name="rejected",
+            slug="rejected",
+            requires_review=False,
+            is_default=False,
+            valid=False,
+        )
 
         self.test_list = utils.create_test_list()
-        for i in range(3):
+        self.tests = []
+        for i in range(4):
             test = utils.create_test(name="name%d" % i)
-            test.autoreviewruleset_id = self.ruleset.id
-            test.save()
-
             self.tests.append(test)
             utils.create_test_list_membership(self.test_list, test)
 
         self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
 
-        self.test_list_instance = self.create_test_list_instance()
+    def create_test_list_instance(self, values, comments=None, tli_comment=None):
+        """Create a test list instance with the test instance values
+        determined by the values list.  Pass fail status of the test instances
+        are:
 
-    def create_test_list_instance(self):
+            v <= 1 ---> OK,
+            1 < v <= 2 ---> TOL,
+            2 < v ---> ACT
+        """
+
         utc = self.unit_test_collection
 
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
+        tli = utils.create_test_list_instance(
+            unit_test_collection=utc,
+            test_list=self.test_list,
+            status=self.unreviewed,
+        )
 
-        self.ref.save()
-        self.tol.save()
-
-        for i, (v, test) in enumerate(zip(self.values, self.tests)):
+        comments = comments or [""]*len(self.tests)
+        for test, value, comment in zip(self.tests, values, comments):
             uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
-            ti = utils.create_test_instance(tli, unit_test_info=uti, value=v)
+            ti = utils.create_test_instance(tli, unit_test_info=uti, value=value)
+            ti.skipped = value is None
+            ti.comment = comment
             ti.reference = self.ref
             ti.tolerance = self.tol
             ti.test_list_instance = tli
             ti.calculate_pass_fail()
             ti.save()
 
+        if tli_comment:
+            Comment.objects.create(comment=tli_comment, content_object=tli, site_id=1)
         tli.auto_review()
         tli.save()
         return tli
 
-    def test_review_status_with_comment(self):
+    def test_all_map_to_approved(self):
+        """All tests statuses mapped to approved passing so TLI should be reviewed"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0])
+        assert tli.review_status == self.approved
+
+    def test_blocked_by_failing(self):
+        """Failing tests are not auto reviewed so TLI should remain unreviewed"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0])
+        assert tli.review_status == self.unreviewed
+
+    def test_blocked_by_ti_comment(self):
         """Comment is present on a test instance so test list instance requires review"""
 
-        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
-        ti = utils.create_test_instance(
-            self.test_list_instance, unit_test_info=uti, value=self.ref.value,
-        )
-        ti.reference = self.ref
-        ti.tolerance = self.tol
-        ti.comment = "comment"
-        ti.calculate_pass_fail()
-        ti.save()
-        self.test_list_instance.auto_review()
-        assert self.test_list_instance.review_status.requires_review
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
 
-    def test_review_status_with_tli_comment(self):
-        """Comment is present on test list instance so it should require review"""
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
 
-        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
-        ti = utils.create_test_instance(
-            self.test_list_instance, unit_test_info=uti, value=self.ref.value,
-        )
-        ti.reference = self.ref
-        ti.tolerance = self.tol
-        Comment.objects.create(comment="comment", content_object=self.test_list_instance, site_id=1)
-        # self.test_list_instance.comments.add(c)
-        # self.test_list_instance.save()
-        ti.calculate_pass_fail()
-        ti.save()
-        self.test_list_instance.auto_review()
-        assert self.test_list_instance.review_status.requires_review
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0], comments=["hello"])
+        assert tli.review_status == self.unreviewed
 
-    def test_review_status_skipped_hidden(self):
-        """Skipped hidden tests should not block auto review"""
+    def test_blocked_by_tli_comment(self):
+        """Comment is present on test list instance so test list instance requires review"""
 
-        self.test_list_instance.testinstance_set.update(pass_fail=models.OK)
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
 
-        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
-        uti.test.hidden = True
-        uti.test.save()
-        ti = utils.create_test_instance(
-            self.test_list_instance, unit_test_info=uti, value=self.ref.value,
-        )
-        ti.skipped = True
-        ti.reference = self.ref
-        ti.tolerance = self.tol
-        ti.calculate_pass_fail()
-        ti.save()
-        self.test_list_instance.auto_review()
-        assert not self.test_list_instance.review_status.requires_review
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
 
-    def test_autoreviewruleset_cache_missing_id(self):
-        """Rule is missing, so cache should be refreshed"""
-        cache.set(settings.CACHE_AUTOREVIEW_RULESETS, {})
-        r = models.AutoReviewRuleSet.objects.first()
-        cached = models.autoreviewruleset_cache(r.id)
-        assert 'ok' in cached and 'tolerance' in cached
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0], tli_comment="hello")
+        tli.auto_review()
+        assert tli.review_status == self.unreviewed
+
+    def test_blocked_by_skipped(self):
+        """Test was skipped so test list instance requires review"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        tli = self.create_test_list_instance([0.5, 1.5, 10, None])
+        tli.auto_review()
+        assert tli.review_status == self.unreviewed
+
+    def test_skipped_hidden_ok(self):
+        """Test was skipped but it's hidden so auto review can be applied"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        self.tests[3].hidden = True
+        self.tests[3].save()
+        tli = self.create_test_list_instance([0.5, 1.5, 10, None])
+        tli.auto_review()
+        assert tli.review_status == self.approved
 
     def test_arr_str(self):
-        r = models.AutoReviewRule.objects.get(pass_fail="ok")
-        assert str(r) == "OK => pass"
+        r = models.AutoReviewRule.objects.create(pass_fail=models.OK, status=self.approved)
+        assert str(r) == "OK => approved"
 
     def test_arrset_str(self):
-        assert str(self.ruleset) == "default"
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        assert str(ruleset) == "default"

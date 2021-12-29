@@ -25,14 +25,20 @@ def create_category(name="cat", slug="cat", description="cat"):
     return c
 
 
-def create_status(name=None, slug=None, is_default=True, requires_review=True):
+def create_status(name=None, slug=None, is_default=True, requires_review=True, valid=True):
 
     if name is None:
         name = 'status_%04d' % get_next_id(models.ReviewStatus.objects.order_by('id').last())
     if slug is None:
         slug = 'status_%04d' % get_next_id(models.ReviewStatus.objects.order_by('id').last())
 
-    status = models.ReviewStatus(name=name, slug=slug, is_default=is_default, requires_review=requires_review)
+    status = models.ReviewStatus(
+        name=name,
+        slug=slug,
+        is_default=is_default,
+        requires_review=requires_review,
+        valid=valid,
+    )
     status.save()
     return status
 

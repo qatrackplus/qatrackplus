@@ -9,7 +9,6 @@ from django.contrib.contenttypes.fields import (
     GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -321,28 +320,6 @@ PERMISSIONS += (
 
 def default_autoreviewruleset():
     return AutoReviewRuleSet.objects.filter(is_default=True).first()
-
-
-def generate_autoreviewruleset_cache():
-    rulesets = AutoReviewRuleSet.objects.prefetch_related("rules")
-    cache_val = {}
-    for ruleset in rulesets:
-        cache_val[ruleset.id] = {rule.pass_fail: rule.status for rule in ruleset.rules.all()}
-    return cache_val
-
-
-def update_autoreviewruleset_cache():
-    cache_val = generate_autoreviewruleset_cache()
-    cache.set(settings.CACHE_AUTOREVIEW_RULESETS, cache_val)
-    return cache_val
-
-
-def autoreviewruleset_cache(rule_id):
-    cache_val = cache.get(settings.CACHE_AUTOREVIEW_RULESETS)
-    if cache_val is None or rule_id not in cache_val:
-        cache_val = update_autoreviewruleset_cache()
-
-    return cache_val[rule_id]
 
 
 class FrequencyManager(models.Manager):
@@ -2320,18 +2297,19 @@ class TestListInstance(models.Model):
         if self.test_list.autoreviewruleset_id is None or self.comments.all().exists():
             return
 
-        pass_fails = set()
+        rules = self.test_list.autoreviewruleset.rules_map()
+
+        statuses = set()
         for ti in self.testinstance_set.values("pass_fail", "comment", "skipped", "unit_test_info__test__hidden"):
             if ti['comment'] or (ti['skipped'] and not ti['unit_test_info__test__hidden']):
                 return
-            pass_fails.add(ti['pass_fail'])
+            statuses.add(rules.get(ti['pass_fail']))
 
-        all_same_status = len(pass_fails) == 1
+        all_same_status = len(statuses) == 1
         if not all_same_status:
             return
 
-        rules = self.test_list.autoreviewruleset.rules_map()
-        status = rules.get(pass_fails.pop())
+        status = statuses.pop()
         if status:
             self.review_status = status
             self.review_date = timezone.now()
