@@ -319,7 +319,8 @@ PERMISSIONS += (
 
 
 def default_autoreviewruleset():
-    return AutoReviewRuleSet.objects.filter(is_default=True).first()
+    default = AutoReviewRuleSet.objects.filter(is_default=True).first()
+    return default.id if default else None
 
 
 class FrequencyManager(models.Manager):

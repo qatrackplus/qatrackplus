@@ -25,7 +25,7 @@ def test_arrs_to_test_list_arrs(apps, schema):
         rules_all_same = len(set(arrs)) == 1
         uniform_rules = rules_all_same and all_have_auto_review
         if uniform_rules:
-            test_list.autoreviewruleset = arrs[0]
+            test_list.autoreviewruleset_id = arrs[0]
             test_list.save()
         else:
             msg = (
