@@ -2124,7 +2124,7 @@ class TestListInstanceManager(models.Manager):
 
     def unreviewed_count(self):
         # future note: doing something like:
-        # return len([v == (False, False) for v in self.get_queryset().values_list("in_progress", "all_reviewed")])
+        # return len([v == (False, False) for v in self.get_queryset().values_list("in_progress", "is_reviewed")])
         # may be significantly faster for postgres than using count()
         return self.unreviewed().count()
 
@@ -2317,12 +2317,8 @@ class TestListInstance(models.Model):
             self.save()
 
     @property
-    def all_reviewed(self):
-        """Return whether this test list is reviewed or not.
-
-        (The `all_reviewed` name is a recall to the time when QA Status was on
-        TestInstance's rather than TestListInstance.
-        """
+    def is_reviewed(self):
+        """Return whether this test list is reviewed or not."""
 
         try:
             return not self.review_status.requires_review
@@ -2333,7 +2329,7 @@ class TestListInstance(models.Model):
         # set linked service events to default status if not all reviewed.
         changed_se = []
         for rtsqa in self.rtsqa_for_tli.all():
-            if not self.all_reviewed and rtsqa.service_event.service_status.rts_qa_must_be_reviewed:
+            if not self.is_reviewed and rtsqa.service_event.service_status.rts_qa_must_be_reviewed:
                 rtsqa.service_event.service_status = apps.get_model('service_log', 'ServiceEventStatus').get_default()
                 rtsqa.service_event.save()
                 changed_se.append(rtsqa.service_event_id)
@@ -2415,7 +2411,7 @@ class TestListInstance(models.Model):
 
     def str_summary(self):
         return '%s (%s%s)' % (
-            self.pk, format_datetime(self.created), (' - ' + _("All reviewed")) if self.all_reviewed else ''
+            self.pk, format_datetime(self.created), (' - ' + _("All reviewed")) if self.is_reviewed else ''
         )
 
     def save(self, *args, **kwargs):

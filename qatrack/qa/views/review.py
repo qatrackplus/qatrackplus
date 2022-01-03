@@ -177,7 +177,7 @@ def review_test_list_instance(test_list_instance, status_pk, review_user):
     review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
 
     status = models.ReviewStatus.objects.get(pk=status_pk)
-    initially_requires_reviewed = not test_list_instance.all_reviewed
+    initially_requires_reviewed = not test_list_instance.is_reviewed
     test_list_instance.reviewed = review_time
     test_list_instance.reviewed_by = review_user
     test_list_instance.review_status = status

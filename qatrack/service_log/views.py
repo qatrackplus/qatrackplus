@@ -1299,7 +1299,7 @@ def tli_statuses(request):
             'pass_fail': tli.pass_fail_summary(),
             'review': tli.review_summary(),
             'datetime': timezone.localtime(tli.created).replace(microsecond=0),
-            'all_reviewed': int(tli.all_reviewed),
+            'is_reviewed': int(tli.is_reviewed),
             'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
             'in_progress': tli.in_progress
         },

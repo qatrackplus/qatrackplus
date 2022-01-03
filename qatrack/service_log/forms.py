@@ -159,7 +159,7 @@ class ReturnToServiceQAForm(forms.ModelForm):
 
     unit_test_collection = forms.ModelChoiceField(queryset=qa_models.UnitTestCollection.objects.none())
     test_list_instance = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-    all_reviewed = forms.BooleanField(widget=forms.HiddenInput(), required=False)
+    is_reviewed = forms.BooleanField(widget=forms.HiddenInput(), required=False)
 
     log_change_fields = (
         'unit_test_collection', 'test_list_instance'
@@ -167,7 +167,7 @@ class ReturnToServiceQAForm(forms.ModelForm):
 
     class Meta:
         model = models.ReturnToServiceQA
-        fields = ('unit_test_collection', 'test_list_instance', 'all_reviewed')
+        fields = ('unit_test_collection', 'test_list_instance', 'is_reviewed')
 
     def __init__(self, *args, **kwargs):
         self.service_event_instance = kwargs.pop('service_event_instance')
@@ -209,16 +209,16 @@ class ReturnToServiceQAForm(forms.ModelForm):
                 self.fields['unit_test_collection'].queryset = utc_qs.filter(Q(active=True) | Q(active=False))
 
             self.initial['test_list_instance'] = self.instance.test_list_instance.id
-            self.initial['all_reviewed'] = int(self.instance.test_list_instance.all_reviewed)
+            self.initial['is_reviewed'] = int(self.instance.test_list_instance.is_reviewed)
         else:
-            self.initial['all_reviewed'] = 0
+            self.initial['is_reviewed'] = 0
 
         self.fields['unit_test_collection'].widget.attrs.update({
             'class': 'rtsqa-utc select2', 'data-prefix': self.prefix,
             'oldvalue': self.initial.get('unit_test_collection', '')
         })
         self.fields['test_list_instance'].widget.attrs.update({'class': 'tli-instance', 'data-prefix': self.prefix})
-        self.fields['all_reviewed'].widget.attrs.update({'class': 'tli-all-reviewed'})
+        self.fields['is_reviewed'].widget.attrs.update({'class': 'tli-all-reviewed'})
 
     def clean_unit_test_collection(self):
         utc = self.cleaned_data['unit_test_collection']
@@ -813,7 +813,7 @@ class ServiceEventForm(BetterModelForm):
                                 break
 
                     tli_id = self.data[prefix + '-test_list_instance']
-                    if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).all_reviewed:
+                    if tli_id != '' and not qa_models.TestListInstance.objects.get(pk=tli_id).is_reviewed:
                         if prefix + '-DELETE' not in self.data or self.data[prefix + '-DELETE'] != 'on':
                             raize = True
                             break

@@ -316,7 +316,7 @@ class TestListInstanceDetailsReport(BaseReport):
                 [_("Modified By") + ":", format_user(tli.modified_by)],
                 [_("Review Satus") + ":", tli.review_status.name],
             ])
-            if tli.all_reviewed and not tli.reviewed_by:
+            if tli.is_reviewed and not tli.reviewed_by:
                 rows.extend([
                     [_("Reviewed") + ":", format_as_date(tli.modified)],
                     [_("Reviewed By") + ":", _("Auto Reviewed")],

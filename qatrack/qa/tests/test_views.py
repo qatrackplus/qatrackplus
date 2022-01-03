@@ -1800,7 +1800,7 @@ class TestEditTestListInstance(TestCase):
 
         self.client.post(self.url, data=self.base_data)
 
-        self.assertEqual(True, models.TestListInstance.objects.get(pk=self.tli.pk).all_reviewed)
+        self.assertEqual(True, models.TestListInstance.objects.get(pk=self.tli.pk).is_reviewed)
 
     def test_blank_work_completed(self):
         self.tli.work_completed = None
@@ -1980,7 +1980,7 @@ class TestReviewTestListInstance(TestCase):
 
         self.assertEqual(302, response.status_code)
         tli = models.TestListInstance.objects.get(pk=self.tli.pk)
-        self.assertFalse(tli.all_reviewed)
+        self.assertFalse(tli.is_reviewed)
 
     def test_review_tli_url(self):
         tli = models.TestListInstance.objects.get(pk=self.tli.pk)

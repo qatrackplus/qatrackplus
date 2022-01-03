@@ -388,7 +388,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             } else {
                 var completed_hrml = data['in_progress'] ? 'In progress' : moment(data['work_completed']).format(siteConfig.MOMENT_DATETIME_FMT);
                 $('#work-completed-' + prefix).html(completed_hrml);
-                $('#id_' + prefix + '-all_reviewed').val(data.all_reviewed);
+                $('#id_' + prefix + '-is_reviewed').val(data.is_reviewed);
 
                 $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
                 $('.' + prefix + '-hider').fadeIn('fast');

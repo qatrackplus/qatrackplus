@@ -420,7 +420,7 @@
                         <tr id="{{ f_form.prefix }}" class="rtsqa-row">
                           {{ f_form.id }}
                           {{ f_form.test_list_instance }}
-                          {{ f_form.all_reviewed }}
+                          {{ f_form.is_reviewed }}
                           <td class="form-group{% if f_form.unit_test_collection.errors %} has-error{% endif %}">
                             {{ f_form.unit_test_collection }}
                             {% for e in f_form.unit_test_collection.errors %}
@@ -730,7 +730,7 @@
       <tr id="rtsqa-__prefix__" class="rtsqa-row">
         {{ f_form.id }}
         {{ f_form.test_list_instance }}
-        {{ f_form.all_reviewed }}
+        {{ f_form.is_reviewed }}
         <td class="form-group">{{ f_form.unit_test_collection }}</td>
         <td id="work-completed-rtsqa-__prefix__"></td>
         <td id="pass-fail-rtsqa-__prefix__"></td>

@@ -1216,7 +1216,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, rtsqa.service_event)
 
             # If tli needs review, update 'Unreviewed RTS QC' counter
-            if not self.object.all_reviewed:
+            if not self.object.is_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
         changed_se = self.object.update_service_event_statuses()
@@ -1412,7 +1412,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         formset = context["formset"]
 
         if formset.is_valid():
-            initially_requires_reviewed = not self.object.all_reviewed
+            initially_requires_reviewed = not self.object.is_reviewed
             self.object = form.save(commit=False)
 
             status_pk = None
@@ -1463,7 +1463,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                     'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
                 }
                 messages.add_message(request=self.request, level=messages.INFO, message=msg)
-            if initially_requires_reviewed != self.object.all_reviewed:
+            if initially_requires_reviewed != self.object.is_reviewed:
                 for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
                     sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
 

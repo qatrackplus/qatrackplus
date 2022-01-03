@@ -630,7 +630,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             rtsqa.save()
 
             # If tli needs review, update 'Unreviewed RTS QA' counter
-            if not tli.all_reviewed:
+            if not tli.is_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
         tli.update_service_event_statuses()

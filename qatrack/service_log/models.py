@@ -405,7 +405,7 @@ class ServiceEvent(models.Model):
             if not r.test_list_instance:
                 state = 'tli_incomplete'
                 details = utc.name
-            elif not r.test_list_instance.all_reviewed:
+            elif not r.test_list_instance.is_reviewed:
                 state = 'tli_req_review'
                 details = r.test_list_instance.test_list.name
             else:
