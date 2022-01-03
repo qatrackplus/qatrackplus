@@ -445,7 +445,6 @@
               <div class="col-md-6">
                 {% if not from_se and perms.qa.delete_testlistinstance %}
                   <a class="btn btn-danger btn-flat margin-r-5"
-                      title="{% trans "This will redirect you to the admin site where you can permanently delete this qa session" %}"
                     href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
                     <i class="fa fa-trash-o"></i>
                     {% trans "Delete" %}

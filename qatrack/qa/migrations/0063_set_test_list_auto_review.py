@@ -8,6 +8,14 @@ logger = logging.getLogger("qatrack.migrations")
 
 
 def test_arrs_to_test_list_arrs(apps, schema):
+    """Set Auto Review Rule Set (ARRS) on the test list level based on the Auto
+    Review Rule Set of the tests it's made up of.
+
+    1. If no ARRS exist on tests, no ARRS will be applied to the test list
+    2. If all tests have the same ARRS then that ARRS will be applied to the test list
+    3. If only a subset of the tests have an ARRS set, or there are mixed ARRS on the
+    tests, then no ARRS is applied to the test list and a warning is printed.
+    """
 
     TestList = apps.get_model("qa", "TestList")
     Test = apps.get_model("qa", "Test")

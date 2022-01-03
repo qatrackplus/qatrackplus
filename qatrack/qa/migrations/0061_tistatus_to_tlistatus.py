@@ -11,6 +11,8 @@ logger = logging.getLogger("qatrack.migrations")
 
 
 def tistatus2tlistatus(apps, schema):
+    """Set the status of all test list instances based on its constituent test
+    instances"""
 
     TestListInstance = apps.get_model("qa", "TestListInstance")
     ReviewStatus = apps.get_model("qa", "ReviewStatus")
@@ -30,7 +32,19 @@ def tistatus2tlistatus(apps, schema):
 
 
 def determine_tli_status(tli):
-    """"""
+    """Implements a simple heuristic to determine what review status to apply to
+    a test list instance based on its constituent test instances.
+
+    1. If all instances have the same status, that status will be applied to
+    the test list instance.
+    2. If any test instances still require review, counts of all statuses
+    which require review are counted, and the most common one is applied to the
+    test list instance.
+    3. If statuses are either all valid, or all invalid, then the most common
+    status is applied to the test list instance.
+    4. If statuses are mixed valid and invalid, then the most common
+    *invalid* status is applied to the test list instance and a warning is printed.
+    """
 
     # First get a count of all test instance statuses
     statuses = Counter()
