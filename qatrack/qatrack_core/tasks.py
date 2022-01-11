@@ -25,8 +25,10 @@ def qatrack_task_wrapper(func):
     return wrapped
 
 
-def _schedule_periodic_task(function, task_name, interval_min=None, next_run=None, schedule_type=Schedule.MINUTES):
+def _schedule_periodic_task(function, task_name, interval_min=None, next_run=None, schedule_type=Schedule.MINUTES, q_options=None):
     """Create a periodic schedule calling input function.  Default interval is 15min"""
+
+    q_options = q_options or {}
 
     if schedule_type == Schedule.MINUTES and interval_min is None:
         interval_min = 15
@@ -61,6 +63,7 @@ def _schedule_periodic_task(function, task_name, interval_min=None, next_run=Non
             minutes=interval_min,
             repeats=-1,
             next_run=next_run,
+            q_options=q_options,
         )
         logger.info("%s schedule created and next run set to %s" % (function, next_run))
 
