@@ -506,6 +506,41 @@ class TestTestListInstanceAPI(APITestCase):
         tic = models.TestInstance.objects.get(unit_test_info__test=tscc)
         assert tic.string_value == "composite of composite (hello test three)"
 
+    def test_create_with_default(self):
+        """test values should not be required for tests with default calculations"""
+        self.t1.calculation_procedure = "test1 = 321"
+        self.t1.save()
+        self.t3.calculation_procedure = "test3 = 'abc'"
+        self.t3.save()
+        self.tc.calculation_procedure = "result = test1"
+        self.tc.save()
+        self.data['tests'].pop('test1')
+        self.data['tests'].pop('test3')
+        utils.create_test_list_membership(self.test_list, self.tc)
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 1
+        ti1 = models.TestInstance.objects.get(unit_test_info__test=self.t1)
+        assert ti1.value == 321
+        ti3 = models.TestInstance.objects.get(unit_test_info__test=self.t3)
+        assert ti3.string_value == 'abc'
+        tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
+        assert tic.value == 321
+
+    def test_create_with_default_no_override(self):
+        """If a user provides a value for a test with a default calculation, the user provided value should be used"""
+        self.t1.calculation_procedure = "test1 = 321"
+        self.t1.save()
+        self.data['tests']['test1']['value'] = 555
+        utils.create_test_list_membership(self.test_list, self.tc)
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert models.TestListInstance.objects.count() == 1
+        assert models.TestInstance.objects.count() == self.ntests + 1
+        ti1 = models.TestInstance.objects.get(unit_test_info__test=self.t1)
+        assert ti1.value == 555
+
     def test_file_upload(self):
         """
         Add a file upload test and ensure we can upload, process and have

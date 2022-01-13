@@ -260,6 +260,22 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         is_dict = isinstance(test_data, dict)
         return is_dict
 
+    def add_default_data(self, data):
+        """Run default value calculations.
+
+        If user provided a value for a test with a default calculation value,
+        the default value will be ignored."""
+
+        user = self.context['request'].user
+        comp_calc_data = self.data_to_composite(data)
+        comp_calc_data['defaults'] = True
+        default_results = CompositePerformer(user, comp_calc_data).calculate()
+        for slug, results in default_results['results'].items():
+            user_provided_data = slug in data['tests']
+            if user_provided_data:
+                continue
+            data['tests'][slug] = {'value': results['value']}
+
     def add_data_from_instance(self, data):
 
         tis = self.instance.testinstance_set.select_related(
@@ -418,6 +434,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 )
 
             self.day, self.tl = self.utc.get_list(day=self.day)
+
+        self.add_default_data(validated_data)
 
         test_qs = self.tl.all_tests().values_list("id", "slug", "type", "constant_value")
 

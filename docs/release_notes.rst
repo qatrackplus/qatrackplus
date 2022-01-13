@@ -18,6 +18,9 @@ QATrack+ v3.2.0 Release Notes
 * Fixed bug where saving reports in the admin would result in invalid JSON
   being stored for the filters.
 
+* Fixed API bug where default calculations were not being considered when
+  posting test list instance data
+
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------
