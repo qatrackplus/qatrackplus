@@ -270,7 +270,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         comp_calc_data = self.data_to_composite(data)
         comp_calc_data['defaults'] = True
         default_results = CompositePerformer(user, comp_calc_data).calculate()
-        for slug, results in default_results['results'].items():
+        for slug, results in default_results.get('results', {}).items():
             user_provided_data = slug in data['tests']
             if user_provided_data:
                 continue
