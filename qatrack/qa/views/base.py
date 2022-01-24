@@ -570,6 +570,12 @@ def test_instance_searcher(request):
     return JsonResponse({'items': list(testinstance), 'name': 'unit_test_info__test__name'})
 
 
+def tolerance_searcher(request):
+    q = request.GET.get('q')
+    tols = models.Tolerance.objects.by_test_type(q).values("id", "name")
+    return JsonResponse({'items': list(tols)})
+
+
 def test_list_instance_searcher(request):
     q = request.GET.get('q')
     testlistinstance = models.TestListInstance.objects.filter(

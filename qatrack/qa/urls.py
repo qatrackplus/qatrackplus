@@ -118,6 +118,7 @@ urlpatterns = [
 
     # search urls
     url(r"^searcher/test/$", base.test_searcher, name='test_searcher'),
+    url(r"^searcher/tolerance/$", base.tolerance_searcher, name='tolerance_searcher'),
     url(r"^searcher/test_list/$", base.test_list_searcher, name='test_list_searcher'),
     url(r"^searcher/test_list_cycle/$", base.test_list_cycle_searcher, name='test_list_cycle_searcher'),
     url(r"^searcher/test_instance/$", base.test_instance_searcher, name='test_instance_searcher'),
