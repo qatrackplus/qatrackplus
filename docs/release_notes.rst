@@ -21,6 +21,14 @@ QATrack+ v3.2.0 Release Notes
 * Fixed API bug where default calculations were not being considered when
   posting test list instance data
 
+* Added default reference & tolerance fields to the Test model. This 
+  can greatly reduce the amount of work to configure references & tolerances
+  when assigning the same tests to many units.
+
+* Moved the review status from being test instance level to test list instance
+  level.  This simplfies the reviewing of test list instances conceptually and
+  from a UI perspective. There were also some query performance benefits.
+
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------
