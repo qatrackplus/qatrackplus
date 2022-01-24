@@ -1,4 +1,3 @@
-import collections
 import logging
 
 from braces.views import PrefetchRelatedMixin, SelectRelatedMixin
@@ -44,21 +43,18 @@ def generate_review_status_context(test_list_instance):
     if not test_list_instance:
         return {}
 
-    statuses = collections.defaultdict(lambda: {"count": 0})
-    comment_count = 0
-    for ti in test_list_instance.testinstance_set.all():
-        statuses[ti.status.name]["count"] += 1
-        statuses[ti.status.name]["valid"] = ti.status.valid
-        statuses[ti.status.name]["requires_review"] = ti.status.requires_review
-        statuses[ti.status.name]["reviewed_by"] = test_list_instance.reviewed_by
-        statuses[ti.status.name]["reviewed"] = test_list_instance.reviewed
-        statuses[ti.status.name]["colour"] = ti.status.colour
-        if ti.comment:
-            comment_count += 1
+    comment_count = test_list_instance.testinstance_set.exclude(Q(comment="") | Q(comment=None)).count()
     comment_count += test_list_instance.comments.all().count()
 
     c = {
-        "statuses": dict(statuses),
+        "status": {
+            'name': test_list_instance.review_status.name,
+            'valid': test_list_instance.review_status.valid,
+            'requires_review': test_list_instance.review_status.requires_review,
+            'reviewed_by': test_list_instance.reviewed_by,
+            'reviewed': test_list_instance.reviewed,
+            'colour': test_list_instance.review_status.colour,
+        },
         "comments": comment_count,
         "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']
     }
@@ -80,7 +76,6 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
         "testinstance_set__unit_test_info__test",
         "testinstance_set__reference",
         "testinstance_set__tolerance",
-        "testinstance_set__status",
         "testinstance_set__attachment_set",
     ]
     select_related = [
@@ -112,7 +107,6 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         # override the default queryset for the formset so that we can pull in all the
         # reference/tolerance data without the ORM generating lots of extra queries
         test_instances = self.object.testinstance_set.order_by("order", "created").select_related(
-            "status",
             "reference",
             "tolerance",
             "unit_test_info__test",
@@ -140,7 +134,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["categories"] = sorted(
             set([x.unit_test_info.test.category for x in test_instances]), key=lambda c: c.name
         )
-        context["statuses"] = models.TestInstanceStatus.objects.all()
+        context["statuses"] = models.ReviewStatus.objects.all()
         context["test_list"] = self.object.test_list
         context["unit_test_collection"] = self.object.unit_test_collection
         context["current_day"] = self.object.day + 1
@@ -241,7 +235,6 @@ class UTCList(BaseListableView):
 
     prefetch_related = (
         'last_instance__testinstance_set',
-        'last_instance__testinstance_set__status',
         'last_instance__reviewed_by',
         'last_instance__modified_by',
         'last_instance__created_by',
@@ -423,7 +416,6 @@ class TestListInstances(BaseListableView):
 
     prefetch_related = (
         'testinstance_set',
-        'testinstance_set__status',
         'rtsqa_for_tli',
         'rtsqa_for_tli__service_event',
         'serviceevents_initiated',

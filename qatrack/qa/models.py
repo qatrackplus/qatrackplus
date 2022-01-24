@@ -9,7 +9,6 @@ from django.contrib.contenttypes.fields import (
     GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -320,29 +319,8 @@ PERMISSIONS += (
 
 
 def default_autoreviewruleset():
-    return AutoReviewRuleSet.objects.filter(is_default=True).first()
-
-
-def generate_autoreviewruleset_cache():
-    rulesets = AutoReviewRuleSet.objects.prefetch_related("rules")
-    cache_val = {}
-    for ruleset in rulesets:
-        cache_val[ruleset.id] = {rule.pass_fail: rule.status for rule in ruleset.rules.all()}
-    return cache_val
-
-
-def update_autoreviewruleset_cache():
-    cache_val = generate_autoreviewruleset_cache()
-    cache.set(settings.CACHE_AUTOREVIEW_RULESETS, cache_val)
-    return cache_val
-
-
-def autoreviewruleset_cache(rule_id):
-    cache_val = cache.get(settings.CACHE_AUTOREVIEW_RULESETS)
-    if cache_val is None or rule_id not in cache_val:
-        cache_val = update_autoreviewruleset_cache()
-
-    return cache_val[rule_id]
+    default = AutoReviewRuleSet.objects.filter(is_default=True).first()
+    return default.id if default else None
 
 
 class FrequencyManager(models.Manager):
@@ -421,21 +399,27 @@ class Frequency(models.Model):
         return self.name
 
 
-class StatusManager(models.Manager):
-    """manager for TestInstanceStatus"""
+class ReviewStatusManager(models.Manager):
+    """manager for ReviewStatus"""
 
     def default(self):
-        """return the default TestInstanceStatus"""
+        """return the default ReviewStatus or None if is_default is not set on any statuses"""
         try:
-            return self.get_queryset().get(is_default=True)
-        except TestInstanceStatus.DoesNotExist:
+            return ReviewStatus.objects.get(is_default=True)
+        except ReviewStatus.DoesNotExist:
             return
 
     def get_by_natural_key(self, slug):
         return self.get(slug=slug)
 
 
-class TestInstanceStatus(models.Model):
+def default_reviewstatus_id():
+    """return the default ReviewStatus id or None if is_default is not set"""
+    default = ReviewStatus.objects.default()
+    return default.id if default else None
+
+
+class ReviewStatus(models.Model):
     """Configurable statuses for QC Tests"""
 
     name = models.CharField(max_length=50, help_text=_l("Display name for this status type"), unique=True)
@@ -477,22 +461,22 @@ class TestInstanceStatus(models.Model):
 
     colour = models.CharField(default=settings.DEFAULT_TEST_STATUS_COLOUR, max_length=22, validators=[validate_color])
 
-    objects = StatusManager()
+    objects = ReviewStatusManager()
 
     class Meta:
-        verbose_name_plural = "statuses"
+        verbose_name_plural = "review statuses"
 
     def save(self, *args, **kwargs):
         """set status to unreviewed if not previously set"""
 
-        cur_default = TestInstanceStatus.objects.default()
+        cur_default = ReviewStatus.objects.default()
         if cur_default is None:
             self.is_default = True
         elif self.is_default:
             cur_default.is_default = False
             cur_default.save()
 
-        super(TestInstanceStatus, self).save(*args, **kwargs)
+        super(ReviewStatus, self).save(*args, **kwargs)
 
     def natural_key(self):
         return (self.slug,)
@@ -509,7 +493,7 @@ class AutoReviewRule(models.Model):
         choices=PASS_FAIL_CHOICES,
     )
     status = models.ForeignKey(
-        TestInstanceStatus,
+        ReviewStatus,
         on_delete=models.CASCADE,
         help_text=_l("Status to assign test instance based on its pass/fail state"),
     )
@@ -535,8 +519,12 @@ class AutoReviewRuleSet(models.Model):
     is_default = models.BooleanField(
         verbose_name=_l("Default"),
         default=False,
-        help_text=_l("Check this option if you want this to be the default rule set for tests"),
+        help_text=_l("Check this option if you want this to be the default rule set for test lists"),
     )
+
+    def rules_map(self):
+        """Return a dictionary mapping pass_fail status to review status"""
+        return {r.pass_fail: r.status for r in self.rules.all()}
 
     def __str__(self):
         return self.name
@@ -857,17 +845,6 @@ class Test(models.Model, TestPackMixin):
     )
     category = models.ForeignKey(Category, on_delete=models.PROTECT, help_text=_l("Choose a category for this test"))
     chart_visibility = models.BooleanField("Test item visible in charts?", default=True)
-    autoreviewruleset = models.ForeignKey(
-        "AutoReviewRuleSet",
-        verbose_name=_l("Auto Review Rules"),
-        null=True,
-        blank=True,
-        default=default_autoreviewruleset,
-        on_delete=models.PROTECT,
-        help_text=_l(
-            "Choose the Auto Review Rule Set to use for this Test. Leave blank to disable Auto Review for this Test."
-        ),
-    )
 
     type = models.CharField(
         max_length=10, choices=TEST_TYPE_CHOICES, default=SIMPLE,
@@ -1153,7 +1130,7 @@ class Test(models.Model, TestPackMixin):
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id", "modified", "modified_by", "created", "created_by", "autoreviewruleset"]
+        exclude = ["id", "modified", "modified_by", "created", "created_by"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def get_testpack_dependencies(self):
@@ -1323,15 +1300,6 @@ class UnitTestInfo(models.Model):
                 msg = _("Test type is BOOLEAN but reference value is not 0 or 1")
                 raise ValidationError(msg)
 
-    def get_history(self, number=5):
-        """return last 'number' of instances for this test performed on input unit
-        list is ordered in ascending dates
-        """
-        # hist = TestInstance.objects.filter(unit_test_info=self)
-        hist = self.testinstance_set.select_related("status").all().order_by("-work_completed", "-pk")
-        # hist = hist.select_related("status")
-        return [(x.work_completed, x.value, x.pass_fail, x.status) for x in reversed(hist[:number])]
-
     def __str__(self):
         return "UnitTestInfo(%s)" % self.pk
 
@@ -1498,6 +1466,19 @@ class TestList(TestCollectionInterface, TestPackMixin):
         default=settings.DEFAULT_WARNING_MESSAGE,
         blank=True,
     )
+
+    autoreviewruleset = models.ForeignKey(
+        "AutoReviewRuleSet",
+        verbose_name=_l("Auto Review Rules"),
+        null=True,
+        blank=True,
+        default=default_autoreviewruleset,
+        on_delete=models.PROTECT,
+        help_text=_l(
+            "Choose the Auto Review Rule Set to use for this Test List. Leave blank to disable."
+        ),
+    )
+
     utcs = GenericRelation('UnitTestCollection', related_query_name='test_list')
 
     objects = TestListManager()
@@ -1738,7 +1719,8 @@ class UnitTestCollection(SchedulingMixin, models.Model):
             return self.testlistinstance_set.filter(
                 in_progress=False,
                 include_for_scheduling=True,
-            ).exclude(testinstance__status__valid=False).latest("work_completed")
+                review_status__valid=True,
+            ).latest("work_completed")
         except TestListInstance.DoesNotExist:
             pass
 
@@ -1747,21 +1729,6 @@ class UnitTestCollection(SchedulingMixin, models.Model):
 
         if hasattr(self, "last_instance") and self.last_instance is not None:
             return self.last_instance.work_completed
-
-    def unreviewed_instances(self):
-        """return a query set of all TestListInstances for this object that have not been fully reviewed"""
-
-        return self.testlistinstance_set.filter(
-            testinstance__status__requires_review=True,
-        ).distinct().select_related("test_list")
-
-    def unreviewed_test_instances(self):
-        """return query set of all TestInstances for this object"""
-
-        return TestInstance.objects.complete().filter(
-            unit_test_info__unit=self.unit,
-            unit_test_info__test__in=self.tests_object.all_tests()
-        )
 
     def history(self, before=None):
 
@@ -1775,7 +1742,6 @@ class UnitTestCollection(SchedulingMixin, models.Model):
         tlis = tlis.order_by(
             "-work_completed"
         ).prefetch_related(
-            "testinstance_set__status",
             "testinstance_set__reference",
             "testinstance_set__tolerance",
             "testinstance_set__unit_test_info",
@@ -1866,11 +1832,6 @@ class TestInstance(models.Model):
     or not the test passed or failed along with the reference and tolerance
     that pass/fail was based on.
     """
-
-    # review status
-    status = models.ForeignKey(TestInstanceStatus, on_delete=models.PROTECT)
-    review_date = models.DateTimeField(null=True, blank=True, editable=False)
-    reviewed_by = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, editable=False)
 
     # did test pass or fail (or was skipped etc)
     pass_fail = models.CharField(max_length=20, choices=PASS_FAIL_CHOICES, editable=False, db_index=True)
@@ -2070,25 +2031,6 @@ class TestInstance(models.Model):
 
         return self.value
 
-    def auto_review(self, has_tli_comment=None):
-        """set review status of the current value if allowed"""
-
-        if has_tli_comment is None:
-            # allow caller to control whether or not we need to check
-            # if tli has a comment or not
-            has_tli_comment = self.test_list_instance.comments.all().exists()
-
-        has_comment = self.comment or has_tli_comment
-        if has_comment and not self.skipped:
-            return
-        rule_id = self.unit_test_info.test.autoreviewruleset_id
-        if rule_id:
-            rules = autoreviewruleset_cache(rule_id)
-            status = rules.get(self.pass_fail)
-            if status:
-                self.status = status
-                self.review_date = timezone.now()
-
     @property
     def empty(self):
         null_num = self.value is None
@@ -2178,17 +2120,17 @@ class TestInstance(models.Model):
 class TestListInstanceManager(models.Manager):
 
     def unreviewed(self):
-        return self.complete().filter(all_reviewed=False).order_by("-work_completed")
+        return self.complete().filter(review_status__requires_review=True).order_by("-work_completed")
 
     def unreviewed_count(self):
         # future note: doing something like:
-        # return len([v == (False, False) for v in self.get_queryset().values_list("in_progress", "all_reviewed")])
+        # return len([v == (False, False) for v in self.get_queryset().values_list("in_progress", "is_reviewed")])
         # may be significantly faster for postgres than using count()
         return self.unreviewed().count()
 
     def your_unreviewed(self, user):
         return self.complete().filter(
-            all_reviewed=False,
+            review_status__requires_review=True,
             unit_test_collection__visible_to__in=user.groups.all(),
         ).order_by("-work_completed").distinct()
 
@@ -2275,7 +2217,13 @@ class TestListInstance(models.Model):
         related_name="test_list_instance_reviewer",
     )
 
-    all_reviewed = models.BooleanField(default=False)
+    review_status = models.ForeignKey(
+        ReviewStatus,
+        verbose_name=_l("Review Status"),
+        on_delete=models.PROTECT,
+        help_text=_l("Select the review status of this test list instance"),
+        default=default_reviewstatus_id,
+    )
 
     day = models.IntegerField(default=0)
 
@@ -2324,48 +2272,64 @@ class TestListInstance(models.Model):
         """return timedelta of time from start to completion"""
         return self.work_completed - self.work_started
 
-    def status(self, queryset=None):
-        """return string with review status of this qa instance"""
-        if queryset is None:
-            queryset = self.testinstance_set.prefetch_related("status").all()
-        status_types = set([x.status for x in queryset])
-        statuses = [(status, [x for x in queryset if x.status == status]) for status in status_types]
-        return [x for x in statuses if len(x[1]) > 0]
+    def review_summary(self):
+        """Return information about current review status and count of total
+        comments for this TLI"""
 
-    def review_summary(self, queryset=None):
-        if queryset is None:
-            queryset = self.testinstance_set.prefetch_related('status').all()
-        comment_count = queryset.exclude(comment='').count() + self.comments.count()
-
-        to_return = {
-            status[0].slug: {
-                'num': len(status[1]),
-                'valid': status[0].valid,
-                'reqs_review': status[0].requires_review,
-                'default': status[0].is_default,
-                'colour': status[0].colour
-            } for status in self.status(queryset)
+        comment_count = self.testinstance_set.exclude(comment='').count() + self.comments.count()
+        return {
+            'status': {
+                'name': self.review_status.name,
+                'valid': self.review_status.valid,
+                'reqs_review': self.review_status.requires_review,
+                'default': self.review_status.is_default,
+                'colour': self.review_status.colour
+            },
+            'comments': comment_count,
         }
-        to_return['Comments'] = {'num': comment_count, 'is_comments': 1}
-        return to_return
 
-    def unreviewed_instances(self):
-        return self.testinstance_set.filter(status__requires_review=True)
+    def auto_review(self):
+        """set review status of the current value if allowed.
 
-    def update_all_reviewed(self):
+        Any skipped tests, or comments on the test list instance or test
+        instances, disqualify this test list instance from auto review.
+        """
 
-        self.all_reviewed = len(self.unreviewed_instances()) == 0
+        if self.test_list.autoreviewruleset_id is None or self.comments.all().exists():
+            return
 
-        # use update instead of save so we don't trigger save signal
-        TestListInstance.objects.filter(pk=self.pk).update(all_reviewed=self.all_reviewed)
+        rules = self.test_list.autoreviewruleset.rules_map()
 
-        return self.update_service_event_statuses()
+        statuses = set()
+        for ti in self.testinstance_set.values("pass_fail", "comment", "skipped", "unit_test_info__test__hidden"):
+            if ti['comment'] or (ti['skipped'] and not ti['unit_test_info__test__hidden']):
+                return
+            statuses.add(rules.get(ti['pass_fail']))
+
+        all_same_status = len(statuses) == 1
+        if not all_same_status:
+            return
+
+        status = statuses.pop()
+        if status:
+            self.review_status = status
+            self.review_date = timezone.now()
+            self.save()
+
+    @property
+    def is_reviewed(self):
+        """Return whether this test list is reviewed or not."""
+
+        try:
+            return not self.review_status.requires_review
+        except ReviewStatus.DoesNotExist:
+            return False
 
     def update_service_event_statuses(self):
         # set linked service events to default status if not all reviewed.
         changed_se = []
         for rtsqa in self.rtsqa_for_tli.all():
-            if not self.all_reviewed and rtsqa.service_event.service_status.rts_qa_must_be_reviewed:
+            if not self.is_reviewed and rtsqa.service_event.service_status.rts_qa_must_be_reviewed:
                 rtsqa.service_event.service_status = apps.get_model('service_log', 'ServiceEventStatus').get_default()
                 rtsqa.service_event.save()
                 changed_se.append(rtsqa.service_event_id)
@@ -2385,7 +2349,6 @@ class TestListInstance(models.Model):
         #     "testinstance_set__unit_test_info__test",
         #     "testinstance_set__reference",
         #     "testinstance_set__tolerance",
-        #     "testinstance_set__status",
         # ]
         # select_related = ["unittestcollection__unit"]
 
@@ -2402,7 +2365,6 @@ class TestListInstance(models.Model):
         tlis = tlis.order_by(
             "-work_completed"
         ).prefetch_related(
-            "testinstance_set__status",
             "testinstance_set__reference",
             "testinstance_set__tolerance",
             "testinstance_set__unit_test_info__test",
@@ -2449,7 +2411,7 @@ class TestListInstance(models.Model):
 
     def str_summary(self):
         return '%s (%s%s)' % (
-            self.pk, format_datetime(self.created), (' - ' + _("All reviewed")) if self.all_reviewed else ''
+            self.pk, format_datetime(self.created), (' - ' + _("All reviewed")) if self.is_reviewed else ''
         )
 
     def save(self, *args, **kwargs):

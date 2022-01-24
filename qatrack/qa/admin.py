@@ -867,7 +867,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
         (
             "Test List",
             {
-                'fields': ['id', 'name', 'slug', 'description', 'javascript', 'warning_message']
+                'fields': ['id', 'name', 'slug', 'description', 'javascript', 'warning_message', 'autoreviewruleset']
             },
         ),
         (
@@ -1096,12 +1096,6 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
                     'require_comment',
                     'formatting',
                 ],
-            },
-        ),
-        (
-            "Autoreview Rules",
-            {
-                'fields': ['autoreviewruleset'],
             },
         ),
         (
@@ -1442,7 +1436,7 @@ class FrequencyAdmin(BaseQATrackAdmin):
 
 class StatusAdmin(BaseQATrackAdmin):
     prepopulated_fields = {'slug': ('name',)}
-    model = models.TestInstanceStatus
+    model = models.ReviewStatus
 
     list_display = (
         'name',
@@ -1680,6 +1674,6 @@ admin.site.register([models.UnitTestCollection], UnitTestCollectionAdmin)
 
 admin.site.register([models.TestListCycle], TestListCycleAdmin)
 admin.site.register([models.Frequency], FrequencyAdmin)
-admin.site.register([models.TestInstanceStatus], StatusAdmin)
+admin.site.register([models.ReviewStatus], StatusAdmin)
 admin.site.register([models.TestInstance], TestInstanceAdmin)
 admin.site.register([models.TestListInstance], TestListInstanceAdmin)

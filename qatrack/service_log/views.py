@@ -148,7 +148,7 @@ class SLDashboard(TemplateView):
         rtsqa_qs = sl_models.ReturnToServiceQA.objects.prefetch_related().all()
         default_status = sl_models.ServiceEventStatus.objects.get(is_default=True)
         to_return = {
-            'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__all_reviewed=False).count(),
+            'qa_not_reviewed': rtsqa_qs.filter(test_list_instance__isnull=False, test_list_instance__review_status__requires_review=True).count(),
             'qa_not_complete': rtsqa_qs.filter(test_list_instance__isnull=True).count(),
             'se_needing_review': sl_models.ServiceEvent.objects.filter(
                 service_status__in=sl_models.ServiceEventStatus.objects.filter(
@@ -221,7 +221,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             ).prefetch_related(
                 'returntoserviceqa_set',
                 'test_list_instance_initiated_by__testinstance_set',
-                'test_list_instance_initiated_by__testinstance_set__status',
                 'test_list_instance_initiated_by__unit_test_collection__tests_object'
             )
 
@@ -345,7 +344,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     'user_assigned_by'
                 ).prefetch_related(
                     "test_list_instance__testinstance_set",
-                    "test_list_instance__testinstance_set__status",
                     'unit_test_collection__tests_object'
                 ),
                 # initial=initial_utcs
@@ -374,7 +372,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     'user_assigned_by'
                 ).prefetch_related(
                     "test_list_instance__testinstance_set",
-                    "test_list_instance__testinstance_set__status",
                     'unit_test_collection__tests_object'
                 ),
                 initial=initial_utcs
@@ -784,7 +781,6 @@ class DetailsServiceEvent(DetailView):
             'user_assigned_by'
         ).prefetch_related(
             "test_list_instance__testinstance_set",
-            "test_list_instance__testinstance_set__status",
             'unit_test_collection__tests_object'
         )
         context_data['parts_used'] = p_models.PartUsed.objects.filter(service_event=self.object)
@@ -1142,7 +1138,6 @@ class ReturnToServiceQABaseList(BaseListableView):
 
     prefetch_related = (
         'test_list_instance__testinstance_set',
-        'test_list_instance__testinstance_set__status',
         'unit_test_collection',
         'test_list_instance__comments'
     )
@@ -1248,7 +1243,7 @@ class ReturnToServiceQAUnreviewedList(ReturnToServiceQABaseList):
     def get_queryset(self):
         return super().get_queryset().filter(
             test_list_instance__isnull=False,
-            test_list_instance__all_reviewed=False,
+            test_list_instance__review_status__requires_review=True,
         )
 
     def get_next(self):
@@ -1304,7 +1299,7 @@ def tli_statuses(request):
             'pass_fail': tli.pass_fail_summary(),
             'review': tli.review_summary(),
             'datetime': timezone.localtime(tli.created).replace(microsecond=0),
-            'all_reviewed': int(tli.all_reviewed),
+            'is_reviewed': int(tli.is_reviewed),
             'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
             'in_progress': tli.in_progress
         },

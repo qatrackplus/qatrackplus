@@ -33,9 +33,9 @@ class FrequencySerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
-class TestInstanceStatusSerializer(serializers.HyperlinkedModelSerializer):
+class ReviewStatusSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = models.TestInstanceStatus
+        model = models.ReviewStatus
         fields = "__all__"
 
 
@@ -178,8 +178,8 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     comment = serializers.CharField(required=False)
     tests = serializers.DictField()
     status = serializers.HyperlinkedRelatedField(
-        view_name="testinstancestatus-detail",
-        queryset=models.TestInstanceStatus.objects.all(),
+        view_name="reviewstatus-detail",
+        queryset=models.ReviewStatus.objects.all(),
         required=False,
     )
 
@@ -564,9 +564,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
-        status = user_set_status or models.TestInstanceStatus.objects.default()
+        status = user_set_status or models.ReviewStatus.objects.default()
         if status is None:
-            raise serializers.ValidationError("No test instance status available")
+            raise serializers.ValidationError("No review status available")
 
         # related return to service
         rtsqa = validated_data.pop('return_to_service_qa', None)
@@ -575,6 +575,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         attachments = validated_data.pop('attachments', [])
 
         tli = models.TestListInstance(**validated_data)
+        tli.review_status = status
         tli.reviewed = None if status.requires_review else tli.modified
         tli.reviewed_by = None if status.requires_review else user
         tli.save()
@@ -615,7 +616,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 unit_test_info=uti,
                 reference=uti.reference,
                 tolerance=uti.tolerance,
-                status=status,
                 order=order,
                 created=tli.created,
                 created_by=user,
@@ -626,8 +626,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             )
 
             ti.calculate_pass_fail()
-            if not user_set_status:
-                ti.auto_review()
 
             to_save.append(ti)
 
@@ -638,6 +636,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 a.testinstance = tli.testinstance_set.get(unit_test_info__test__slug=slug)
                 a.save()
 
+        if not user_set_status:
+            tli.auto_review()
+
         # set due date to account for any non default statuses
         tli.unit_test_collection.set_due_date()
 
@@ -647,10 +648,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             rtsqa.save()
 
             # If tli needs review, update 'Unreviewed RTS QA' counter
-            if not tli.all_reviewed:
+            if not tli.is_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-        tli.update_all_reviewed()
+        tli.update_service_event_statuses()
 
         if not tli.in_progress:
             # TestListInstance & TestInstances have been successfully create, fire signal
@@ -677,7 +678,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
-        status = user_set_status or models.TestInstanceStatus.objects.default()
+        status = user_set_status or models.ReviewStatus.objects.default()
 
         # related return to service
         rtsqa = validated_data.pop('return_to_service_qa', None)
@@ -693,14 +694,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         instance.modified_by = user
         instance.modified = timezone.now()
+        instance.review_status = status
         instance.reviewed = None
         instance.reviewed_by = None
-        instance.all_reviewed = False
 
         if not status.requires_review:
             instance.reviewed = now
             instance.reviewed_by = user
-            instance.all_reviewed = True
 
         instance.work_complete = instance.work_completed or now
 
@@ -721,7 +721,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         )
         for ti in tis:
             tid = test_instance_data[ti.unit_test_info.test.slug]
-            ti.status = status
             ti.modified_by = user
             ti.work_started = instance.work_started
             ti.work_completed = instance.work_completed
@@ -734,8 +733,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             ti.comment = tid.get("comment", ti.comment)
 
             ti.calculate_pass_fail()
-            if not user_set_status:
-                ti.auto_review()
 
             ti.save()
 
@@ -745,6 +742,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 for a in Attachment.objects.filter(id__in=attachment_ids):
                     a.testinstance = ti
                     a.save()
+
+        if not user_set_status:
+            instance.auto_review()
 
         utc.set_due_date()
 
@@ -757,7 +757,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             if not instance.all_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-        instance.update_all_reviewed()
+        instance.update_service_event_statuses()
 
         if not instance.in_progress:
             try:
@@ -782,20 +782,17 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         # Monkeypatch on a tests dict here since it doesn't actually
         # exist on the TestListInstance object
         base_url = reverse("testinstance-list")
-        base_status_url = reverse("testinstancestatus-list")
         base_ref_url = reverse("reference-list")
         base_tol_url = reverse("tolerance-list")
         qs = obj.testinstance_set.select_related(
-            'status',
             'reference',
             'tolerance',
             'unit_test_info__test',
         )
-        obj.status = None
+        obj.review_status = None
         obj.return_to_service_qa = None
         obj.tests = {}
         for ti in qs:
-            status = base_status_url + "%d/" % ti.status.pk
             tol = base_tol_url + "%d/" % ti.tolerance.pk if ti.tolerance else None
             ref = base_ref_url + "%d/" % ti.reference.pk if ti.reference else None
             obj.tests[ti.unit_test_info.test.slug] = {
@@ -809,7 +806,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 "pass_fail": (ti.pass_fail, ti.get_pass_fail_display()),
                 "skipped": ti.skipped,
                 "comment": ti.comment,
-                "status": status,
                 "reference": ref,
                 "tolerance": tol,
                 "attachments": [a.attachment.url for a in ti.attachment_set.all()],
@@ -828,7 +824,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             rep['comment'] = self.comment
 
         rep.pop("return_to_service_qa", None)
-        rep.pop("status", None)
+        rep.pop("review_status", None)
 
         return rep
 

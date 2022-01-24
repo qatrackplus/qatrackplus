@@ -96,7 +96,7 @@ def test_list_instance_report(request, pk):
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     """
     This views main purpose is for reviewing a completed :model:`qa.TestListInstance`
-    and updating the :model:`qa.TestInstance`s :model:`qa.TestInstanceStatus`
+    and updating the :model:`qa.TestInstance`s :model:`qa.ReviewStatus`
     """
 
     permission_required = "qa.can_review"
@@ -117,30 +117,12 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def form_valid(self, form):
         """
         Update users, times & statuses for the :model:`qa.TestListInstance`
-        and :model:`qa.TestInstance`s. TestListInstances all_reviewed is also
-        set.
+        and :model:`qa.TestInstance`s.
         """
 
-        context = self.get_context_data()
-        formset = context["formset"]
-
         test_list_instance = form.save(commit=False)
-        statuses = []
-        test_instances = []
-
-        # note we are not calling if formset.is_valid() here since we assume
-        # validity given we are only changing the status of the test_instances.
-        # Also, we are not cleaning the data since a 500 will be raised if
-        # something other than a valid int is passed for the status.
-        #
-        # If you add something here be very careful to check that the data
-        # is clean before updating the db
-        for ti_form in formset:
-            status_pk = int(ti_form["status"].value())
-            statuses.append(status_pk)
-            test_instances.append(ti_form.instance)
-
-        changed_se = review_test_list_instance(test_list_instance, test_instances, statuses, self.request.user)
+        status = form.cleaned_data['status']
+        changed_se = review_test_list_instance(test_list_instance, status.pk, self.request.user)
 
         if len(changed_se) > 0 and self.from_se:
             msg = _(
@@ -181,38 +163,25 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
 
 @atomic
-def review_test_list_instance(test_list_instance, test_instances, status_pks, review_user):
+def review_test_list_instance(test_list_instance, status_pk, review_user):
     """Common code for reviewing test list instances from the ReviewTestListInstance and
     bulk_review views.
 
     test_list_instance is the TLI to be reviewed
 
-    test_instances is the set of test_instances belonging to test_list_instance
-    status_pks is a list of status ids, the same length as test_instances, to be applied to each
-    of the corresponding test instances (i.e. the Nth status id will be applied to the Nth test instance.
+    status_pk is the id of the review status to be assigned to the test list instance
 
     review_user is the user who performed the review
     """
 
     review_time = timezone.make_aware(timezone.datetime.now(), timezone.get_current_timezone())
 
-    initially_requires_reviewed = not test_list_instance.all_reviewed
+    status = models.ReviewStatus.objects.get(pk=status_pk)
+    initially_requires_reviewed = not test_list_instance.is_reviewed
     test_list_instance.reviewed = review_time
     test_list_instance.reviewed_by = review_user
-    test_list_instance.all_reviewed = True
+    test_list_instance.review_status = status
     test_list_instance.save()
-
-    # for efficiency update statuses in bulk rather than test by test basis
-    status_groups = collections.defaultdict(list)
-    for instance, status_pk in zip(test_instances, status_pks):
-        status_groups[status_pk].append(instance.pk)
-
-    still_requires_review = False
-    for status_pk, test_instance_pks in list(status_groups.items()):
-        status = models.TestInstanceStatus.objects.get(pk=status_pk)
-        if status.requires_review:
-            still_requires_review = True
-        models.TestInstance.objects.filter(pk__in=test_instance_pks).update(status=status)
 
     # Handle Service Log items:
     #
@@ -221,13 +190,10 @@ def review_test_list_instance(test_list_instance, test_instances, status_pks, re
     #
     #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.
     changed_se = []
-    if still_requires_review:
-        test_list_instance.all_reviewed = False
-        test_list_instance.save()
-
+    if status.requires_review:
         changed_se = test_list_instance.update_service_event_statuses()
 
-    if initially_requires_reviewed != still_requires_review:
+    if initially_requires_reviewed != status.requires_review:
         for se in ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=test_list_instance):
             ServiceLog.objects.log_rtsqa_changes(review_user, se)
 
@@ -375,7 +341,7 @@ class YourInactiveReview(UTCYourReview):
 
 
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
-    """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
+    """Display all :model:`qa.TestListInstance`s with review statuses with requires_review=True"""
 
     headers = {
         "unit_test_collection__unit__site__name": _("Site"),
@@ -433,7 +399,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         return get_template("qa/_testinstancestatus_select.html").render({
             'name': 'bulk-status' if header else '',
             'id': 'bulk-status' if header else '',
-            'statuses': models.TestInstanceStatus.objects.all(),
+            'statuses': models.ReviewStatus.objects.all(),
             'class': 'input-medium' + (' bulk-status' if header else ''),
             'title': title,
         })
@@ -464,14 +430,13 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
 
 def bulk_review(request):
+    """Update the status of one or more test list instances using the bulk review UI"""
 
     count = 0
     for pairs in request.POST.getlist('tlis'):
         status, tli = pairs.split(",")
         tli = models.TestListInstance.objects.get(pk=tli)
-        test_instances = tli.testinstance_set.all()
-        statuses = [status] * len(test_instances)
-        review_test_list_instance(tli, test_instances, statuses, request.user)
+        review_test_list_instance(tli, status, request.user)
         count += 1
 
     msg = _("Successfully reviewed %(count)s test list instances") % {'count': count}
@@ -480,8 +445,8 @@ def bulk_review(request):
 
 
 class UnreviewedVisibleTo(Unreviewed):
-    """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
-        the user"""
+    """Display all  unreviewed :model:`qa.TestListInstance`s associated with a
+    unit_test_collection that is visible to the user"""
 
     def get_queryset(self):
         return models.TestListInstance.objects.your_unreviewed(self.request.user).annotate(
@@ -501,9 +466,8 @@ class ChooseGroupVisibleTo(ListView):
 
 
 class UnreviewedByVisibleToGroup(Unreviewed):
-    """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
-        a select :model:`auth.Group`
-    """
+    """Display all unreviewed :model:`qa.TestListInstance`s linked with a
+    unit_test_collection that is visible to a select :model:`auth.Group` """
 
     def get_queryset(self):
         qs = super(UnreviewedByVisibleToGroup, self).get_queryset()
@@ -551,7 +515,6 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
             "assigned_to",
         ).prefetch_related(
             "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
             "last_instance__modified_by",
             "tests_object",
         ).exclude(due_date=None).order_by(
@@ -664,7 +627,6 @@ class OverviewObjects(JSONResponseMixin, View):
             "assigned_to",
         ).prefetch_related(
             "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
             "last_instance__modified_by",
         ).order_by("frequency__nominal_interval", "unit__number", "name", )
 

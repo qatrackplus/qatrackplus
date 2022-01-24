@@ -25,14 +25,20 @@ def create_category(name="cat", slug="cat", description="cat"):
     return c
 
 
-def create_status(name=None, slug=None, is_default=True, requires_review=True):
+def create_status(name=None, slug=None, is_default=True, requires_review=True, valid=True):
 
     if name is None:
-        name = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+        name = 'status_%04d' % get_next_id(models.ReviewStatus.objects.order_by('id').last())
     if slug is None:
-        slug = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+        slug = 'status_%04d' % get_next_id(models.ReviewStatus.objects.order_by('id').last())
 
-    status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=requires_review)
+    status = models.ReviewStatus(
+        name=name,
+        slug=slug,
+        is_default=is_default,
+        requires_review=requires_review,
+        valid=valid,
+    )
     status.save()
     return status
 
@@ -85,7 +91,8 @@ def create_test_list(name=None):
 
 
 def create_test_list_instance(
-    unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False
+    unit_test_collection=None, work_completed=None, created_by=None, test_list=None, day=0, in_progress=False,
+    status=None,
 ):
     if unit_test_collection is None:
         unit_test_collection = create_unit_test_collection()
@@ -97,6 +104,9 @@ def create_test_list_instance(
     if created_by is None:
         created_by = create_user()
 
+    if status is None:
+        status = create_status()
+
     tli = models.TestListInstance(
         unit_test_collection=unit_test_collection,
         created_by=created_by,
@@ -106,7 +116,8 @@ def create_test_list_instance(
         work_started=work_started,
         test_list=test_list,
         day=day,
-        in_progress=in_progress
+        in_progress=in_progress,
+        review_status=status,
     )
     tli.save()
     return tli
@@ -150,7 +161,7 @@ def create_test_list_membership(test_list=None, test=None, order=0):
 
 
 def create_test_instance(
-    test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None
+    test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None,
 ):
 
     if test_list_instance is None:
@@ -165,15 +176,12 @@ def create_test_instance(
 
     if created_by is None:
         created_by = create_user()
-    if status is None:
-        status = create_status()
 
     ti = models.TestInstance(
         unit_test_info=unit_test_info,
         value=value,
         created_by=created_by,
         modified_by=created_by,
-        status=status,
         work_completed=work_completed,
         work_started=work_started,
         test_list_instance=test_list_instance

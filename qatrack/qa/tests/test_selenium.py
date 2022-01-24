@@ -459,8 +459,8 @@ class LiveQATests(BaseQATests):
     def test_admin_statuses(self):
 
         self.load_admin()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'testinstancestatus')]")))
-        self.driver.find_element_by_xpath("//a[contains(@href,'testinstancestatus')]").click()
+        self.wait.until(e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'reviewstatus')]")))
+        self.driver.find_element_by_xpath("//a[contains(@href,'reviewstatus')]").click()
         self.click_by_link_text('ADD TEST INSTANCE STATUS')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element_by_id('id_name').send_keys('testStatus')
@@ -623,7 +623,7 @@ class TestPerformQC(BaseQATests):
 
         self.utc.visible_to.add(self.group)
         self.url = reverse("perform_qa", kwargs={'pk': self.utc.pk})
-        self.status = models.TestInstanceStatus.objects.create(
+        self.status = models.ReviewStatus.objects.create(
             name="foo",
             slug="foo",
             is_default=True,

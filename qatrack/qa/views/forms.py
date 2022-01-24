@@ -312,7 +312,7 @@ class ReviewTestInstanceForm(forms.ModelForm):
 
     class Meta:
         model = models.TestInstance
-        fields = ("status", )
+        fields = ()
 
 
 BaseReviewTestInstanceFormSet = inlineformset_factory(
@@ -332,7 +332,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
 
     status = forms.ModelChoiceField(
-        queryset=models.TestInstanceStatus.objects,
+        queryset=models.ReviewStatus.objects,
         required=False
     )
 
@@ -359,7 +359,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
     class Meta:
         model = models.TestListInstance
-        exclude = ("day",)
+        exclude = ("day", "review_status",)
 
     def __init__(self, *args, **kwargs):
 
@@ -471,6 +471,9 @@ class UpdateTestListInstanceForm(BaseTestListInstanceForm):
 
 
 class ReviewTestListInstanceForm(forms.ModelForm):
+
+    status = forms.ModelChoiceField(queryset=models.ReviewStatus.objects, empty_label=None)
+
     class Meta:
         model = models.TestListInstance
         fields = ()
@@ -478,6 +481,7 @@ class ReviewTestListInstanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super(ReviewTestListInstanceForm, self).__init__(*args, **kwargs)
+        self.fields['status'].initial = self.instance.review_status
 
     def clean(self):
 

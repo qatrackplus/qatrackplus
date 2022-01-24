@@ -192,7 +192,7 @@ class TestControlImage(TestCase):
         url += "&tests[]=%s" % pk
         url += "&test_lists[]=%s" % tl_pk
         url += "&units[]=%s" % upk
-        url += "&statuses[]=%s" % models.TestInstanceStatus.objects.all()[0].pk
+        url += "&statuses[]=%s" % models.ReviewStatus.objects.all()[0].pk
         url += "&from_date=%s" % format_as_date(from_date)
         url += "&to_date=%s" % format_as_date(to_date)
         return url
@@ -213,12 +213,11 @@ class TestControlImage(TestCase):
 
         for n in (1, 1, 8, 90):
             for x in range(n):
-                tli = utils.create_test_list_instance(unit_test_collection=utc)
+                tli = utils.create_test_list_instance(unit_test_collection=utc, status=status)
                 utils.create_test_instance(
                     tli,
                     unit_test_info=uti,
                     value=random.gauss(1, 0.5),
-                    status=status,
                 )
 
             request = self.factory.get(url)
@@ -232,9 +231,9 @@ class TestControlImage(TestCase):
         unit = u_utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
+        tli = utils.create_test_list_instance(unit_test_collection=utc, status=status)
 
         yesterday = timezone.now().date() - timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
@@ -249,7 +248,7 @@ class TestControlImage(TestCase):
 
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
-            utils.create_test_instance(tli, value=x, status=status, unit_test_info=uti)
+            utils.create_test_instance(tli, value=x, unit_test_info=uti)
 
         request = self.factory.get(url)
         request.user = superuser
@@ -262,9 +261,9 @@ class TestControlImage(TestCase):
         unit = u_utils.create_unit()
         uti = utils.create_unit_test_info(test=test, unit=unit)
         utc = utils.create_unit_test_collection(test_collection=tl, unit=unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
 
         status = utils.create_status()
+        tli = utils.create_test_list_instance(unit_test_collection=utc, status=status)
 
         yesterday = timezone.now().date() - timezone.timedelta(days=1)
         tomorrow = yesterday + timezone.timedelta(days=2)
@@ -285,7 +284,7 @@ class TestControlImage(TestCase):
         qatrack.qa.control_chart.control_chart.display = mock_display
         # generate some data that the control chart fit function won't be able to fit
         for x in range(10):
-            utils.create_test_instance(tli, value=x, status=status, unit_test_info=uti)
+            utils.create_test_instance(tli, value=x, unit_test_info=uti)
 
         request = self.factory.get(url)
         request.user = superuser
@@ -437,17 +436,17 @@ class TestChartData(TestCase):
 
         self.NPOINTS = 10
         for x in range(self.NPOINTS):
-            tli = utils.create_test_list_instance(unit_test_collection=self.utc1)
+            tli = utils.create_test_list_instance(unit_test_collection=self.utc1, status=self.status)
             ti = utils.create_test_instance(
-                value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli
+                value=1., unit_test_info=self.uti1, test_list_instance=tli
             )
             ti.reference = ref
             ti.tolerance = tol
             ti.save()
 
-            tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
+            tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2, status=self.status)
             ti2 = utils.create_test_instance(
-                value=1., status=self.status, unit_test_info=self.uti1, test_list_instance=tli2
+                value=1., unit_test_info=self.uti1, test_list_instance=tli2
             )
             ti2.reference = ref
             ti2.tolerance = per_tol
@@ -456,9 +455,9 @@ class TestChartData(TestCase):
             if x < self.NPOINTS // 2:
                 # create less points for one tests to ensure tabulation routines
                 # can handle data sets of different lengths
-                tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
+                tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2, status=self.status)
                 ti2 = utils.create_test_instance(
-                    value=1.5, status=self.status, unit_test_info=self.uti2, test_list_instance=tli2
+                    value=1.5, unit_test_info=self.uti2, test_list_instance=tli2
                 )
                 ti2.reference = ref
                 ti2.tolerance = per_tol
@@ -1232,8 +1231,6 @@ class TestPerformQA(TestCase):
             "form-MAX_NUM_FORMS": "",
         }
 
-        expected_due_date = None
-
         data['work_started'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
         data['include_for_scheduling'] = False
         self.set_form_data(data)
@@ -1582,7 +1579,7 @@ class TestPerformQA(TestCase):
         self.assertEqual(response.context["last_day"], 2)
 
     def test_no_status(self):
-        models.TestInstanceStatus.objects.all().delete()
+        models.ReviewStatus.objects.all().delete()
         response = self.client.get(self.url)
         self.assertTrue(len(list(response.context['messages'])) == 1)
 
@@ -1730,14 +1727,14 @@ class TestEditTestListInstance(TestCase):
         utils.create_test_list_membership(self.test_list, self.test_bool)
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list)
-        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc)
+        self.tli = utils.create_test_list_instance(unit_test_collection=self.utc, status=self.status)
 
         uti = models.UnitTestInfo.objects.get(test=self.test)
 
-        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1)
 
         utib = models.UnitTestInfo.objects.get(test=self.test_bool)
-        self.tib = utils.create_test_instance(self.tli, unit_test_info=utib, value=1, status=self.status)
+        self.tib = utils.create_test_instance(self.tli, unit_test_info=utib, value=1)
 
         self.url = reverse("edit_tli", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")
@@ -1803,7 +1800,7 @@ class TestEditTestListInstance(TestCase):
 
         self.client.post(self.url, data=self.base_data)
 
-        self.assertEqual(True, models.TestListInstance.objects.get(pk=self.tli.pk).all_reviewed)
+        self.assertEqual(True, models.TestListInstance.objects.get(pk=self.tli.pk).is_reviewed)
 
     def test_blank_work_completed(self):
         self.tli.work_completed = None
@@ -1936,7 +1933,7 @@ class TestReviewTestListInstance(TestCase):
 
         uti = models.UnitTestInfo.objects.get(unit=self.utc.unit, test=self.test)
 
-        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1, status=self.status)
+        self.ti = utils.create_test_instance(self.tli, unit_test_info=uti, value=1)
 
         self.url = reverse("review_test_list_instance", kwargs={"pk": self.tli.pk})
         self.client.login(username="user", password="password")
@@ -1956,15 +1953,15 @@ class TestReviewTestListInstance(TestCase):
         response = self.client.get(self.url)
 
         self.base_data.update({
-            "testinstance_set-0-status": self.review_status.pk,
+            "status": self.review_status.pk,
         })
 
         self.assertEqual(1, models.TestListInstance.objects.unreviewed().count())
         response = self.client.post(self.url, data=self.base_data)
 
         self.assertEqual(302, response.status_code)
-        ti = models.TestInstance.objects.get(pk=self.ti.pk)
-        self.assertEqual(ti.status, self.review_status)
+        self.tli.refresh_from_db()
+        self.assertEqual(self.tli.review_status, self.review_status)
         self.assertEqual(0, models.TestListInstance.objects.unreviewed().count())
 
     def test_update_still_requires_review(self):
@@ -1975,7 +1972,7 @@ class TestReviewTestListInstance(TestCase):
         self.review_status.save()
 
         self.base_data.update({
-            "testinstance_set-0-status": self.review_status.pk,
+            "status": self.review_status.pk,
         })
 
         self.assertEqual(1, models.TestListInstance.objects.unreviewed().count())
@@ -1983,7 +1980,7 @@ class TestReviewTestListInstance(TestCase):
 
         self.assertEqual(302, response.status_code)
         tli = models.TestListInstance.objects.get(pk=self.tli.pk)
-        self.assertFalse(tli.all_reviewed)
+        self.assertFalse(tli.is_reviewed)
 
     def test_review_tli_url(self):
         tli = models.TestListInstance.objects.get(pk=self.tli.pk)
@@ -2144,14 +2141,10 @@ class TestReviewStatusContext(TestCase):
 
     def test_valid(self):
         context = views.base.generate_review_status_context(self.tli_1)
-        self.assertEqual(1, context['comments'])
-        for ti in self.tli_1.testinstance_set.all():
-            self.assertEqual(
-                self.tli_1.testinstance_set.filter(status=ti.status).count(),
-                context['statuses'][ti.status.name]['count']
-            )
-            self.assertEqual(ti.status.valid, context['statuses'][ti.status.name]['valid'])
-            self.assertEqual(ti.status.requires_review, context['statuses'][ti.status.name]['requires_review'])
+        assert context['comments'] == 1
+        assert context['status']['name'] == self.tli_1.review_status.name
+        assert context['status']['valid'] == self.tli_1.review_status.valid
+        assert context['status']['requires_review'] == self.tli_1.review_status.requires_review
 
 
 class TestTrees(TestCase):

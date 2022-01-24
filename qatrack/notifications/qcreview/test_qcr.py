@@ -76,11 +76,11 @@ class TestQCReviewModel(TestCase):
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
-        self.tli1 = utils.create_test_list_instance(unit_test_collection=self.utc1)
-        self.tli1.all_reviewed = False
+        self.unreviewed_status = utils.create_status(requires_review=True)
+        self.tli1 = utils.create_test_list_instance(unit_test_collection=self.utc1, status=self.unreviewed_status)
         self.tli1.save()
-        self.tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2)
-        self.tli2.all_reviewed = True
+        self.reviewed_status = utils.create_status(requires_review=False)
+        self.tli2 = utils.create_test_list_instance(unit_test_collection=self.utc2, status=self.reviewed_status)
         self.tli2.save()
 
         self.testlist_group = TestListGroup.objects.create(name="test group")
@@ -107,9 +107,9 @@ class TestQCReviewModel(TestCase):
         Schedule.objects.all().delete()
 
     def test_unreviewed_both_unreviewed_no_groups(self):
-        self.tli1.all_reviewed = False
+        self.tli1.review_status = self.unreviewed_status
         self.tli1.save()
-        self.tli2.all_reviewed = False
+        self.tli2.review_status = self.unreviewed_status
         self.tli2.save()
 
         notice = QCReviewNotice.objects.create(
@@ -134,9 +134,9 @@ class TestQCReviewModel(TestCase):
         assert list(notice.tlis_by_unit_utc()) == expected
 
     def test_upcoming_both_unreviewed_unit_group(self):
-        self.tli1.all_reviewed = False
+        self.tli1.review_status = self.unreviewed_status
         self.tli1.save()
-        self.tli2.all_reviewed = False
+        self.tli2.review_status = self.unreviewed_status
         self.tli2.save()
 
         notice = QCReviewNotice.objects.create(
@@ -156,10 +156,10 @@ class TestQCReviewModel(TestCase):
         assert list(notice.tlis_by_unit_utc()) == expected
 
     def test_upcoming_both_overdue_testlist_group(self):
-        self.tli1.all_reviewed = False
+        self.tli1.review_status = self.unreviewed_status
         self.tli1.save()
-        self.tli1.all_reviewed = False
-        self.tli1.save()
+        self.tli2.review_status = self.unreviewed_status
+        self.tli2.save()
 
         notice = QCReviewNotice.objects.create(
             recipients=self.recipients,
@@ -210,6 +210,8 @@ class TestQCReviewEmails(TestCase):
         self.inactive_user.is_active = False
         self.inactive_user.save()
 
+        self.unreviewed_status = utils.create_status(requires_review=True)
+
         self.notice = QCReviewNotice.objects.create(
             recipients=self.recipients,
             notification_type=QCReviewNotice.UNREVIEWED,
@@ -220,7 +222,7 @@ class TestQCReviewEmails(TestCase):
 
     def test_send_notice(self):
         self.tli1 = utils.create_test_list_instance(unit_test_collection=self.utc1)
-        self.tli1.all_reviewed = False
+        self.tli1.review_status = self.unreviewed_status
         self.tli1.save()
         now = timezone.now()
         tasks.send_qcreview_notice(self.notice.pk)

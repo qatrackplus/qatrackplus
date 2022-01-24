@@ -23,10 +23,10 @@ class FrequencyFilter(filters.FilterSet):
         }
 
 
-class TestInstanceStatusFilter(filters.FilterSet):
+class ReviewStatusFilter(filters.FilterSet):
 
     class Meta:
-        model = models.TestInstanceStatus
+        model = models.ReviewStatus
         fields = {
             "name": ['exact', 'icontains', 'contains', 'in'],
             "slug": ['exact', 'icontains', 'contains', 'in'],
@@ -41,9 +41,9 @@ class TestInstanceStatusFilter(filters.FilterSet):
 class AutoReviewRuleFilter(filters.FilterSet):
 
     status = filters.RelatedFilter(
-        TestInstanceStatusFilter,
+        ReviewStatusFilter,
         field_name="status",
-        queryset=models.TestInstanceStatus.objects.all(),
+        queryset=models.ReviewStatus.objects.all(),
     )
 
     pass_fail = filters.Filter(
@@ -263,6 +263,11 @@ class TestListInstanceFilter(filters.FilterSet):
     )
     test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
 
+    review_status = filters.RelatedFilter(
+        ReviewStatusFilter,
+        field_name="review_status",
+        queryset=models.ReviewStatus.objects.all(),
+    )
     reviewed_by = filters.RelatedFilter(UserFilter, field_name="reviewed_by", queryset=User.objects.all())
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
@@ -291,7 +296,6 @@ class TestListInstanceFilter(filters.FilterSet):
             "in_progress": ['exact'],
             "include_for_scheduling": ['exact'],
             "reviewed": ['exact'],
-            "all_reviewed": ['exact'],
             "day": ['exact', 'in'],
             "user_key": ['exact'],
             "work_started": ['exact', "in"],
@@ -347,12 +351,6 @@ class TestInstanceFilter(filters.FilterSet):
         field_name="attachment",
         queryset=Attachment.objects.all(),
     )
-    status = filters.RelatedFilter(
-        TestInstanceStatusFilter,
-        field_name="status",
-        queryset=models.TestInstanceStatus.objects.all(),
-    )
-    reviewed_by = filters.RelatedFilter(UserFilter, field_name="reviewed_by", queryset=User.objects.all())
     reference = filters.RelatedFilter(ReferenceFilter, field_name="reference", queryset=models.Reference.objects.all())
     tolerance = filters.RelatedFilter(ToleranceFilter, field_name="tolerance", queryset=models.Tolerance.objects.all())
     unit_test_info = filters.RelatedFilter(
@@ -380,9 +378,6 @@ class TestInstanceFilter(filters.FilterSet):
     work_completed_min = MinDateFilter(field_name="work_completed")
     work_completed_max = MaxDateFilter(field_name="work_completed")
 
-    review_date_min = MinDateFilter(field_name="review_date")
-    review_date_max = MaxDateFilter(field_name="review_date")
-
     created_min = MinDateFilter(field_name="created")
     created_max = MaxDateFilter(field_name="created")
     modified_min = MinDateFilter(field_name="modified")
@@ -391,7 +386,6 @@ class TestInstanceFilter(filters.FilterSet):
     class Meta:
         model = models.TestInstance
         fields = {
-            "review_date": ['exact'],
             "value": ['exact', 'in', 'gte', 'lte'],
             "string_value": ['exact', 'icontains', 'contains', 'in'],
             "skipped": ['exact'],

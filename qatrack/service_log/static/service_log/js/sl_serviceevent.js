@@ -361,28 +361,17 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $('#pass-fail-' + prefix).html($pass_fail_label_group);
             var $review_label_group = $('<span class="label-group ' + prefix + '-hider" style="display: none;"></span>');
 
-            for (status in data['review']) {
+            var colour = data['review']['status']['colour'];
+            var icon = '<i class="fa fa-check-circle"></i>';
+            if (!data['review']['status']['valid']) {
+                icon = '<i class="fa fa-minus"></i>';
+            } else if (data['review']['status']['reqs_review']) {
+                icon = '<i class="fa fa-question"></i>';
+            }
+            $review_label_group.prepend('<span class="label" style="background-color: ' + colour + '">' + icon + '</span>');
 
-                var label_class = 'label',
-                    status_name = status,
-                    icon = '',
-                    colour = '';
-                if (data['review'][status]['is_comments']) {
-                    status_name = '';
-                    icon = '<i class="fa fa-commenting"></i>';
-                } else if (!data['review'][status]['valid']) {
-                    icon = '<i class="fa fa-minus"></i>';
-                } else if (data['review'][status]['reqs_review']) {
-                    icon = '<i class="fa fa-question"></i>';
-                }
-                colour = data['review'][status]['colour'];
-                if (data['review'][status]['is_comments']) {
-                    if (data['review'][status]['num'] > 0) {
-                        $review_label_group.append('<span class="' + label_class + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
-                    }
-                } else {
-                    $review_label_group.prepend('<span class="' + label_class + '" style="background-color: ' + colour + '">' + icon + ' ' + data["review"][status]["num"] + ' ' + status_name + '</span>');
-                }
+            if (data['review']['comments'] > 0) {
+                $review_label_group.append('<span class="label"><i class="fa fa-commenting"></i> ' + data["review"]["comments"] + '</span>');
             }
             $('#review-' + prefix).html($review_label_group);
 
@@ -399,7 +388,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             } else {
                 var completed_hrml = data['in_progress'] ? 'In progress' : moment(data['work_completed']).format(siteConfig.MOMENT_DATETIME_FMT);
                 $('#work-completed-' + prefix).html(completed_hrml);
-                $('#id_' + prefix + '-all_reviewed').val(data.all_reviewed);
+                $('#id_' + prefix + '-is_reviewed').val(data.is_reviewed);
 
                 $('#' + prefix + '-review-btn').addClass(prefix + '-hider');
                 $('.' + prefix + '-hider').fadeIn('fast');

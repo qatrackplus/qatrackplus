@@ -2,7 +2,6 @@ from unittest import mock
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -63,44 +62,44 @@ class TestStatus(TestCase):
 
     def test_save_without_default(self):
         """If there's only one status type force it to be default on save"""
-        self.assertIsNone(models.TestInstanceStatus.objects.default())
-        status = models.TestInstanceStatus(
+        self.assertIsNone(models.ReviewStatus.objects.default())
+        status = models.ReviewStatus(
             name="foo",
             slug="foo",
             is_default=False,
         )
         status.save()
-        self.assertEqual(status, models.TestInstanceStatus.objects.default())
+        self.assertEqual(status, models.ReviewStatus.objects.default())
 
     def test_new_default(self):
-        status = models.TestInstanceStatus(
+        status = models.ReviewStatus(
             name="foo",
             slug="foo",
             is_default=True,
         )
         status.save()
 
-        new_status = models.TestInstanceStatus(
+        new_status = models.ReviewStatus(
             name="bar",
             slug="bar",
             is_default=True,
         )
         new_status.save()
 
-        defaults = models.TestInstanceStatus.objects.filter(is_default=True)
+        defaults = models.ReviewStatus.objects.filter(is_default=True)
         self.assertEqual(list(defaults), [new_status])
 
     def test_get_by_natural_key(self):
-        new_status = models.TestInstanceStatus(
+        new_status = models.ReviewStatus(
             name="bar",
             slug="bar",
             is_default=True,
         )
         new_status.save()
-        assert models.TestInstanceStatus.objects.get_by_natural_key("bar").name == "bar"
+        assert models.ReviewStatus.objects.get_by_natural_key("bar").name == "bar"
 
     def test_natural_key(self):
-        new_status = models.TestInstanceStatus(
+        new_status = models.ReviewStatus(
             name="bar",
             slug="bar",
             is_default=True,
@@ -466,32 +465,6 @@ class TestUnitTestInfo(TestCase):
         self.uti.test.type = models.BOOLEAN
         self.assertRaises(ValidationError, self.uti.clean)
 
-    def test_history(self):
-        td = timezone.timedelta
-        now = timezone.now()
-
-        status = utils.create_status()
-
-        # values purposely utils.created out of order to make sure history
-        # returns in correct order (i.e. ordered by date)
-        history = [
-            (now + td(days=4), 5., models.NO_TOL, status),
-            (now + td(days=1), 5., models.NO_TOL, status),
-            (now + td(days=3), 6., models.NO_TOL, status),
-            (now + td(days=2), 7., models.NO_TOL, status),
-        ]
-
-        for wc, val, _, _ in history:
-            utils.create_test_instance(self.tli, unit_test_info=self.uti, status=status, work_completed=wc, value=val)
-
-        sorted_hist = list(sorted([(x[0].replace(second=0, microsecond=0), x[1], x[2], x[3]) for x in history]))
-        uti_hist = [(x[0].replace(second=0, microsecond=0), x[1], x[2], x[3]) for x in self.uti.get_history()]
-        self.assertListEqual(sorted_hist, uti_hist)
-
-        # test returns correct number of results
-        limited = [(x[0].replace(second=0, microsecond=0), x[1], x[2], x[3]) for x in self.uti.get_history(number=2)]
-        self.assertListEqual(sorted_hist[-2:], limited)
-
     def test_add_to_cycle(self):
         models.UnitTestInfo.objects.all().delete()
         tl1 = utils.create_test_list("tl1")
@@ -782,7 +755,7 @@ class TestUTCDueDates(TestCase):
         test_list = utils.create_test_list()
         utils.create_test_list_membership(test=test, test_list=test_list)
 
-        self.valid_status = models.TestInstanceStatus(
+        self.valid_status = models.ReviewStatus(
             name="valid",
             slug="valid",
             is_default=True,
@@ -791,7 +764,7 @@ class TestUTCDueDates(TestCase):
         )
         self.valid_status.save()
 
-        self.invalid_status = models.TestInstanceStatus(
+        self.invalid_status = models.ReviewStatus(
             name="invalid",
             slug="invalid",
             is_default=False,
@@ -811,8 +784,10 @@ class TestUTCDueDates(TestCase):
     def test_basic(self):
         # test case where utc is completed with valid status
         now = timezone.now()
-        tli = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
-        utils.create_test_instance(tli, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=now, status=self.valid_status,
+        )
+        utils.create_test_instance(tli, unit_test_info=self.uti_hist)
         self.utc_hist.refresh_from_db()
         expected = now + timezone.timedelta(days=1)
         assert self.utc_hist.due_date.date() == expected.date()
@@ -821,8 +796,10 @@ class TestUTCDueDates(TestCase):
         # test case where utc has no history and is completed with invalid status
 
         now = timezone.now()
-        tli = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
-        utils.create_test_instance(tli, unit_test_info=self.uti_hist, status=self.invalid_status)
+        tli = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=now, status=self.invalid_status
+        )
+        utils.create_test_instance(tli, unit_test_info=self.uti_hist)
         tli.save()
         self.utc_hist.refresh_from_db()
         assert self.utc_hist.due_date.date() == now.date()
@@ -833,17 +810,20 @@ class TestUTCDueDates(TestCase):
 
         # first create valid history
         now = timezone.now()
-        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
-        utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli1 = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=now, status=self.valid_status
+        )
+        utils.create_test_instance(tli1, unit_test_info=self.uti_hist)
         tli1.save()
 
         self.utc_hist.refresh_from_db()
 
         # now create 2nd valid history
         orig_due_date = self.utc_hist.due_date
-        tli2 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=orig_due_date)
-        ti2 = utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.valid_status)
-        tli2.save()
+        tli2 = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=orig_due_date, status=self.valid_status
+        )
+        utils.create_test_instance(tli2, unit_test_info=self.uti_hist)
 
         self.utc_hist.refresh_from_db()
         self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
@@ -851,8 +831,8 @@ class TestUTCDueDates(TestCase):
         assert self.utc_hist.due_date.date() == expected.date()
 
         # now mark ti2 as invali
-        ti2.status = self.invalid_status
-        ti2.save()
+        tli2.review_status = self.invalid_status
+        tli2.save()
 
         self.utc_hist.refresh_from_db()
         self.utc_hist.set_due_date()
@@ -864,25 +844,28 @@ class TestUTCDueDates(TestCase):
 
         # first create valid history
         now = timezone.now()
-        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
-        utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli1 = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=now, status=self.valid_status
+        )
+        utils.create_test_instance(tli1, unit_test_info=self.uti_hist)
         tli1.save()
 
         # now create 2nd  with invalid status
         now = timezone.now()
         tli2 = utils.create_test_list_instance(
-            unit_test_collection=self.utc_hist, work_completed=now + timezone.timedelta(days=1)
+            unit_test_collection=self.utc_hist,
+            work_completed=now + timezone.timedelta(days=1),
+            status=self.invalid_status
         )
-        ti2 = utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.invalid_status)
-        tli2.save()
+        utils.create_test_instance(tli2, unit_test_info=self.uti_hist)
 
         # due date should be based on tli1 since tli2 is invalid
         self.utc_hist = models.UnitTestCollection.objects.get(pk=self.utc_hist.pk)
         self.assertEqual(self.utc_hist.due_date.date(), (tli1.work_completed + timezone.timedelta(days=1)).date())
 
         # now mark ti2 as valid
-        ti2.status = self.valid_status
-        ti2.save()
+        tli2.review_status = self.valid_status
+        tli2.save()
         self.utc_hist.set_due_date()
 
         # due date should now be based on tli2 since it is valid
@@ -894,16 +877,20 @@ class TestUTCDueDates(TestCase):
 
         # first create valid history
         now = timezone.now()
-        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
-        utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli1 = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist, work_completed=now, status=self.valid_status
+        )
+        utils.create_test_instance(tli1, unit_test_info=self.uti_hist)
         tli1.save()
 
         # now create 2nd in progress history
         now = timezone.now()
         tli2 = utils.create_test_list_instance(
-            unit_test_collection=self.utc_hist, work_completed=now + timezone.timedelta(days=1)
+            unit_test_collection=self.utc_hist,
+            work_completed=now + timezone.timedelta(days=1),
+            status=self.valid_status,
         )
-        utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.valid_status)
+        utils.create_test_instance(tli2, unit_test_info=self.uti_hist)
         tli2.in_progress = True
         tli2.save()
 
@@ -914,16 +901,22 @@ class TestUTCDueDates(TestCase):
 
         # first create valid history
         now = timezone.now()
-        tli1 = utils.create_test_list_instance(unit_test_collection=self.utc_hist, work_completed=now)
-        utils.create_test_instance(tli1, unit_test_info=self.uti_hist, status=self.valid_status)
+        tli1 = utils.create_test_list_instance(
+            unit_test_collection=self.utc_hist,
+            work_completed=now,
+            status=self.valid_status,
+        )
+        utils.create_test_instance(tli1, unit_test_info=self.uti_hist)
         tli1.save()
 
         # now create 2nd unscheduled
         now = timezone.now()
         tli2 = utils.create_test_list_instance(
-            unit_test_collection=self.utc_hist, work_completed=now + timezone.timedelta(days=1)
+            unit_test_collection=self.utc_hist,
+            work_completed=now + timezone.timedelta(days=1),
+            status=self.valid_status,
         )
-        utils.create_test_instance(tli2, unit_test_info=self.uti_hist, status=self.valid_status)
+        utils.create_test_instance(tli2, unit_test_info=self.uti_hist)
         tli2.include_for_scheduling = False
         tli2.save()
 
@@ -944,8 +937,8 @@ class TestUTCDueDates(TestCase):
         now = timezone.now()
         day, tl = utc.next_list()
         uti = models.UnitTestInfo.objects.get(test=tl.all_tests()[0], unit=utc.unit)
-        tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=now)
-        utils.create_test_instance(tli, unit_test_info=uti, work_completed=now, status=status)
+        tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=now, status=status)
+        utils.create_test_instance(tli, unit_test_info=uti, work_completed=now)
 
         tli.save()
 
@@ -953,7 +946,7 @@ class TestUTCDueDates(TestCase):
         assert utc.due_date.date() == (now + timezone.timedelta(days=1)).date()
 
         uti = models.UnitTestInfo.objects.get(test=test_lists[1].tests.all()[0], unit=utc.unit)
-        utils.create_test_instance(tli, unit_test_info=uti, work_completed=now, status=status)
+        utils.create_test_instance(tli, unit_test_info=uti, work_completed=now)
         utc.refresh_from_db()
         assert utc.due_date.date() == (now + timezone.timedelta(days=1)).date()
 
@@ -1066,7 +1059,6 @@ class TestUnitTestCollection(TestCase):
     def test_last_done_date(self):
         now = timezone.now()
         utc = utils.create_unit_test_collection()
-        self.assertFalse(utc.unreviewed_instances())
         tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=now)
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(tli.test_list, test)
@@ -1077,20 +1069,8 @@ class TestUnitTestCollection(TestCase):
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         self.assertTrue(utils.datetimes_same(now, utc.last_done_date()))
 
-    def test_unreviewed_instances(self):
-        utc = utils.create_unit_test_collection()
-        self.assertFalse(utc.unreviewed_instances())
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-        test = utils.create_test(name="tester")
-        utils.create_test_list_membership(tli.test_list, test)
-        # uti = utils.create_unit_test_info(test=test, unit=utc.unit, frequency=utc.frequency)
-        uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
-        utils.create_test_instance(tli, unit_test_info=uti)
-        self.assertEqual([tli], list(utc.unreviewed_instances()))
-
     def test_last_completed_instance(self):
         utc = utils.create_unit_test_collection()
-        self.assertFalse(utc.unreviewed_instances())
 
         test = utils.create_test(name="tester")
         utils.create_test_list_membership(utc.tests_object, test)
@@ -1102,20 +1082,6 @@ class TestUnitTestCollection(TestCase):
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         utils.create_test_instance(tli, unit_test_info=uti)
         self.assertEqual(tli, utc.last_instance)
-
-    def test_unreview_test_instances(self):
-        utc = utils.create_unit_test_collection()
-        self.assertFalse(utc.unreviewed_instances())
-
-        test = utils.create_test(name="tester")
-        utils.create_test_list_membership(utc.tests_object, test)
-
-        self.assertIsNone(utc.last_instance)
-
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
-        uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
-        ti = utils.create_test_instance(tli, unit_test_info=uti)
-        self.assertEqual([ti], list(utc.unreviewed_test_instances()))
 
     def test_history(self):
         td = timezone.timedelta
@@ -1140,8 +1106,8 @@ class TestUnitTestCollection(TestCase):
         tlis = []
         tis = []
         for wc in history:
-            tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)
-            ti = utils.create_test_instance(tli, unit_test_info=uti, work_completed=wc, status=status)
+            tli = utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc, status=status)
+            ti = utils.create_test_instance(tli, unit_test_info=uti, work_completed=wc)
             tis.append(ti)
             tlis.append(tli)
 
@@ -1789,7 +1755,7 @@ class TestTestListInstance(TestCase):
 
         for i, (v, test, status) in enumerate(zip(self.values, self.tests, self.statuses)):
             uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
-            ti = utils.create_test_instance(tli, unit_test_info=uti, value=v, status=status)
+            ti = utils.create_test_instance(tli, unit_test_info=uti, value=v)
             ti.reference = self.ref
             ti.tolerance = self.tol
             ti.test_list_instance = tli
@@ -1813,15 +1779,6 @@ class TestTestListInstance(TestCase):
                 self.assertTrue(len(tests) == 2)
             else:
                 self.assertTrue(len(tests) == 1)
-
-    def test_review_status(self):
-
-        for stat, tests in self.test_list_instance.status():
-            self.assertEqual(len(tests), 1)
-
-    def test_unreviewed_instances(self):
-
-        self.assertSetEqual(set(self.test_list_instance.unreviewed_instances()), set(models.TestInstance.objects.all()))
 
     def test_tolerance_tests(self):
         self.assertEqual(1, self.test_list_instance.tolerance_tests().count())
@@ -1868,130 +1825,197 @@ class TestTestListInstance(TestCase):
 class TestAutoReview(TestCase):
 
     def setUp(self):
-        self.tests = []
 
-        self.ref = models.Reference(type=models.NUMERICAL, value=100.)
-        self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
-        self.ref.created_by = utils.create_user()
-        self.tol.created_by = utils.create_user()
-        self.ref.modified_by = utils.create_user()
-        self.tol.modified_by = utils.create_user()
-        self.values = [96, 97, 100]
+        self.ref = utils.create_reference(value=0)
+        self.tol = utils.create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2)
 
-        self.statuses = [
-            utils.create_status(name="default", slug="default", requires_review=True, is_default=True),
-            utils.create_status(name="pass", slug="pass", requires_review=False, is_default=False),
-            utils.create_status(name="tol", slug="tol", requires_review=False, is_default=False),
-            utils.create_status(name="fail", slug="fail", requires_review=False, is_default=False),
-        ]
-
-        models.AutoReviewRule.objects.bulk_create([
-            models.AutoReviewRule(pass_fail=models.OK, status=self.statuses[1]),
-            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.statuses[2]),
-        ])
-        self.ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
-        for rule in models.AutoReviewRule.objects.all():
-            self.ruleset.rules.add(rule)
+        self.unreviewed = utils.create_status(
+            name="unreviewed",
+            slug="unreviewed",
+            requires_review=True,
+            is_default=True,
+        )
+        self.approved = utils.create_status(
+            name="approved",
+            slug="approved",
+            requires_review=False,
+            is_default=False,
+        )
+        self.rejected = utils.create_status(
+            name="rejected",
+            slug="rejected",
+            requires_review=False,
+            is_default=False,
+            valid=False,
+        )
 
         self.test_list = utils.create_test_list()
-        for i in range(3):
+        self.tests = []
+        for i in range(4):
             test = utils.create_test(name="name%d" % i)
-            test.autoreviewruleset_id = self.ruleset.id
-            test.save()
-
             self.tests.append(test)
             utils.create_test_list_membership(self.test_list, test)
 
         self.unit_test_collection = utils.create_unit_test_collection(test_collection=self.test_list)
 
-        self.test_list_instance = self.create_test_list_instance()
+    def create_test_list_instance(self, values, comments=None, tli_comment=None):
+        """Create a test list instance with the test instance values
+        determined by the values list.  Pass fail status of the test instances
+        are:
 
-    def create_test_list_instance(self):
+            v <= 1 ---> OK,
+            1 < v <= 2 ---> TOL,
+            2 < v ---> ACT
+        """
+
         utc = self.unit_test_collection
 
-        tli = utils.create_test_list_instance(unit_test_collection=utc)
+        tli = utils.create_test_list_instance(
+            unit_test_collection=utc,
+            test_list=self.test_list,
+            status=self.unreviewed,
+        )
 
-        self.ref.save()
-        self.tol.save()
-
-        for i, (v, test) in enumerate(zip(self.values, self.tests)):
+        comments = comments or [""]*len(self.tests)
+        for test, value, comment in zip(self.tests, values, comments):
             uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
-            ti = utils.create_test_instance(tli, unit_test_info=uti, value=v, status=self.statuses[0])
+            ti = utils.create_test_instance(tli, unit_test_info=uti, value=value)
+            ti.skipped = value is None
+            ti.comment = comment
             ti.reference = self.ref
             ti.tolerance = self.tol
             ti.test_list_instance = tli
             ti.calculate_pass_fail()
-            ti.auto_review()
             ti.save()
 
+        if tli_comment:
+            Comment.objects.create(comment=tli_comment, content_object=tli, site_id=1)
+        tli.auto_review()
         tli.save()
         return tli
 
-    def test_review_status(self):
-        """Each of the three tests should have a different status"""
+    def test_all_map_to_approved(self):
+        """All tests statuses mapped to approved passing so TLI should be reviewed"""
 
-        for stat, tests in self.test_list_instance.status():
-            self.assertEqual(len(tests), 1)
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
 
-    def test_review_status_with_comment(self):
-        """Each of the three tests should have a different status"""
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
 
-        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
-        ti = utils.create_test_instance(
-            self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0]
-        )
-        ti.reference = self.ref
-        ti.tolerance = self.tol
-        ti.comment = "comment"
-        ti.calculate_pass_fail()
-        ti.auto_review()
-        ti.save()
-        self.assertTrue(ti.status.requires_review)
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0])
+        assert tli.review_status == self.approved
 
-    def test_review_status_with_tli_comment(self):
-        """Each of the three tests should have a different status"""
+    def test_blocked_by_failing(self):
+        """Failing tests are not auto reviewed so TLI should remain unreviewed"""
 
-        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
-        ti = utils.create_test_instance(
-            self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0]
-        )
-        ti.reference = self.ref
-        ti.tolerance = self.tol
-        Comment.objects.create(comment="comment", content_object=self.test_list_instance, site_id=1)
-        # self.test_list_instance.comments.add(c)
-        # self.test_list_instance.save()
-        ti.calculate_pass_fail()
-        ti.auto_review()
-        ti.save()
-        self.assertTrue(ti.status.requires_review)
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
 
-    def test_review_status_skipped_hidden(self):
-        """Skipped hidden tests should not block auto review"""
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
 
-        uti = models.UnitTestInfo.objects.get(test=self.tests[0], unit=self.unit_test_collection.unit)
-        uti.test.hidden = True
-        uti.test.save()
-        ti = utils.create_test_instance(
-            self.test_list_instance, unit_test_info=uti, value=self.ref.value, status=self.statuses[0]
-        )
-        ti.skipped = True
-        ti.reference = self.ref
-        ti.tolerance = self.tol
-        ti.calculate_pass_fail()
-        ti.auto_review()
-        ti.save()
-        assert not ti.status.requires_review
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0])
+        assert tli.review_status == self.unreviewed
 
-    def test_autoreviewruleset_cache_missing_id(self):
-        """Rule is missing, so cache should be refreshed"""
-        cache.set(settings.CACHE_AUTOREVIEW_RULESETS, {})
-        r = models.AutoReviewRuleSet.objects.first()
-        cached = models.autoreviewruleset_cache(r.id)
-        assert 'ok' in cached and 'tolerance' in cached
+    def test_blocked_by_ti_comment(self):
+        """Comment is present on a test instance so test list instance requires review"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0], comments=["hello"])
+        assert tli.review_status == self.unreviewed
+
+    def test_blocked_by_tli_comment(self):
+        """Comment is present on test list instance so test list instance requires review"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        tli = self.create_test_list_instance([0.5, 1.5, 10, 0], tli_comment="hello")
+        tli.auto_review()
+        assert tli.review_status == self.unreviewed
+
+    def test_blocked_by_skipped(self):
+        """Test was skipped so test list instance requires review"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        tli = self.create_test_list_instance([0.5, 1.5, 10, None])
+        tli.auto_review()
+        assert tli.review_status == self.unreviewed
+
+    def test_skipped_hidden_ok(self):
+        """Test was skipped but it's hidden so auto review can be applied"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.TOLERANCE, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.ACTION, status=self.approved),
+            models.AutoReviewRule(pass_fail=models.NO_TOL, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        self.tests[3].hidden = True
+        self.tests[3].save()
+        tli = self.create_test_list_instance([0.5, 1.5, 10, None])
+        tli.auto_review()
+        assert tli.review_status == self.approved
 
     def test_arr_str(self):
-        r = models.AutoReviewRule.objects.get(pass_fail="ok")
-        assert str(r) == "OK => pass"
+        r = models.AutoReviewRule.objects.create(pass_fail=models.OK, status=self.approved)
+        assert str(r) == "OK => approved"
 
     def test_arrset_str(self):
-        assert str(self.ruleset) == "default"
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        assert str(ruleset) == "default"

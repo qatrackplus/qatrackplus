@@ -159,7 +159,7 @@ class TestQCCompletedEmails(TestCase):
 
         for i, (v, test, status) in enumerate(zip(self.values, self.tests, self.statuses)):
             uti = models.UnitTestInfo.objects.get(test=test, unit=utc.unit)
-            ti = utils.create_test_instance(tli, unit_test_info=uti, value=v, status=status)
+            ti = utils.create_test_instance(tli, unit_test_info=uti, value=v)
             ti.reference = self.ref
             ti.tolerance = self.tol
             if i == 0:

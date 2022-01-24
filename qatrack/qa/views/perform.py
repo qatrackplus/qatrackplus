@@ -225,7 +225,7 @@ class CompositeUtils:
             qs = qs.filter(skipped=False)
 
         if not include_invalid:
-            qs = qs.filter(status__valid=True)
+            qs = qs.filter(test_list_instance__review_status__valid=True)
 
         if unit_number is None:
             unit_number = self.unit.number
@@ -1085,15 +1085,15 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                     break
 
     def get_test_status(self, form):
-        """return default or user requested :model:`qa.TestInstanceStatus`"""
+        """return default or user requested :model:`qa.ReviewStatus`"""
 
         try:
-            status = models.TestInstanceStatus.objects.get(pk=form["status"].value())
+            status = models.ReviewStatus.objects.get(pk=form["status"].value())
             self.user_set_status = True
             return status
-        except (KeyError, ValueError, models.TestInstanceStatus.DoesNotExist):
+        except (KeyError, ValueError, models.ReviewStatus.DoesNotExist):
             self.user_set_status = False
-            return models.TestInstanceStatus.objects.default()
+            return models.ReviewStatus.objects.default()
 
     def form_invalid(self, form):
         """If the form is invalid, render the invalid form."""
@@ -1141,6 +1141,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         wc = self.object.work_completed
         self.object.work_completed = wc if wc else self.object.modified
 
+        self.object.review_status = status
         self.object.reviewed = None if status.requires_review else self.object.modified
         self.object.reviewed_by = None if status.requires_review else self.request.user
 
@@ -1156,9 +1157,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
 
         attachments = []
 
-        has_tli_comment = False
         if form.cleaned_data['comment']:
-            has_tli_comment = True
             comment = Comment(
                 submit_date=timezone.now(),
                 user=self.request.user,
@@ -1183,7 +1182,6 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 unit_test_info=ti_form.unit_test_info,
                 reference=ti_form.unit_test_info.reference,
                 tolerance=ti_form.unit_test_info.tolerance,
-                status=status,
                 order=order,
                 created=self.object.created,
                 created_by=self.request.user,
@@ -1193,14 +1191,15 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 work_completed=self.object.work_completed,
             )
             ti.calculate_pass_fail()
-            if not self.user_set_status:
-                ti.auto_review(has_tli_comment=has_tli_comment)
 
             to_save.append(ti)
 
         models.TestInstance.objects.bulk_create(to_save)
 
         set_attachment_owners(self.object, attachments)
+
+        if not self.user_set_status:
+            self.object.auto_review()
 
         # set due date to account for any non default statuses
         self.object.unit_test_collection.set_due_date()
@@ -1217,10 +1216,10 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, rtsqa.service_event)
 
             # If tli needs review, update 'Unreviewed RTS QC' counter
-            if not self.object.all_reviewed:
+            if not self.object.is_reviewed:
                 cache.delete(settings.CACHE_RTS_QA_COUNT)
 
-        changed_se = self.object.update_all_reviewed()
+        changed_se = self.object.update_service_event_statuses()
 
         if len(changed_se) > 0:
             msg = _(
@@ -1273,7 +1272,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         # causing them to lose all the data they entered
         self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
 
-        if models.TestInstanceStatus.objects.default() is None:
+        if models.ReviewStatus.objects.default() is None:
             messages.error(
                 self.request,
                 _("There must be at least one Test Status defined before performing a TestList"),
@@ -1413,10 +1412,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         formset = context["formset"]
 
         if formset.is_valid():
+            initially_requires_reviewed = not self.object.is_reviewed
             self.object = form.save(commit=False)
-            self.has_tli_comment = self.object.comments.all().exists()
-
-            initially_requires_reviewed = not self.object.all_reviewed
 
             status_pk = None
             if "status" in form.fields:
@@ -1445,6 +1442,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                     attachment.testinstance = ti
                     attachment.save()
 
+            if not self.user_set_status:
+                self.object.auto_review()
             self.object.unit_test_collection.set_due_date()
 
             # # service_events = form.cleaned_data.get('service_events', False)
@@ -1454,7 +1453,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             #     rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=rtsqa_id)
             #     rtsqa.test_list_instance = self.object
             #     rtsqa.save()
-            changed_se = self.object.update_all_reviewed()
+            changed_se = self.object.update_service_event_statuses()
 
             if len(changed_se) > 0:
                 msg = _(
@@ -1464,7 +1463,7 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
                     'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
                 }
                 messages.add_message(request=self.request, level=messages.INFO, message=msg)
-            if initially_requires_reviewed != self.object.all_reviewed:
+            if initially_requires_reviewed != self.object.is_reviewed:
                 for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
                     sl_models.ServiceLog.objects.log_rtsqa_changes(self.request.user, se)
 
@@ -1497,15 +1496,14 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         now = timezone.now()
 
+        self.object.review_status = self.status
         self.object.modified = now
         if self.status.requires_review:
             self.object.reviewed = None
             self.object.reviewed_by = None
-            self.object.all_reviewed = False
         else:
             self.object.reviewed = now
             self.object.reviewed_by = self.request.user
-            self.object.all_reviewed = True
 
         if self.object.work_completed is None:
             self.object.work_completed = now
@@ -1535,26 +1533,22 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     def set_status_object(self, status_pk):
 
         try:
-            self.status = models.TestInstanceStatus.objects.get(pk=status_pk)
+            self.status = models.ReviewStatus.objects.get(pk=status_pk)
             self.user_set_status = True
-        except (models.TestInstanceStatus.DoesNotExist, ValueError):
-            self.status = models.TestInstanceStatus.objects.default()
+        except (models.ReviewStatus.DoesNotExist, ValueError):
+            self.status = models.ReviewStatus.objects.default()
             self.user_set_status = False
 
     def update_test_instance(self, test_instance):
         """do bookkeeping for :model:`qa.TestInstance`"""
 
         ti = test_instance
-        ti.status = self.status
         ti.modified_by = self.request.user
         ti.work_started = self.object.work_started
         ti.work_completed = self.object.work_completed
 
         try:
             ti.calculate_pass_fail()
-            if not self.user_set_status:
-                ti.auto_review(has_tli_comment=self.has_tli_comment)
-
             ti.save(calculate_pass_fail=False)
         except ZeroDivisionError:
 

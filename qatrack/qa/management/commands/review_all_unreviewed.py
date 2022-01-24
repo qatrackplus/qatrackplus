@@ -4,8 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from qatrack.qa.models import (
-    TestInstance,
-    TestInstanceStatus,
+    ReviewStatus,
     TestListInstance,
     User,
 )
@@ -37,7 +36,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        all_status = TestInstanceStatus.objects.all()
+        all_status = ReviewStatus.objects.all()
         status = all_status.filter(slug=kwargs['status'][0]).first()
         if not status:
             print(
@@ -77,14 +76,8 @@ class Command(BaseCommand):
         for tli in objs:
             tli.reviewed = review_time
             tli.reviewed_by = user
-            tli.all_reviewed = True
+            tli.review_status = status
             tli.save()
-
-            TestInstance.objects.filter(test_list_instance=tli).update(
-                status=status,
-                review_date=review_time,
-                reviewed_by=user,
-            )
 
             # Handle Service Log items:
             #    Log changes to this test_list_instance review status if linked to service_events via rtsqa.

@@ -334,7 +334,7 @@ class TestCreateServiceEvent(TestCase):
 
             'hours-0-time': '100',
             'hours-0-user_or_thirdparty': 'user-%s' % user.id,
-            'rtsqa-0-all_reviewed': self.tli_1_2.all_reviewed,
+            'rtsqa-0-is_reviewed': self.tli_1_2.is_reviewed,
             'rtsqa-0-unit_test_collection': self.tli_1_2.unit_test_collection.id,
             'rtsqa-0-test_list_instance': self.tli_1_2.id,
             'parts-0-quantity': 1,
@@ -396,14 +396,14 @@ class TestCreateServiceEvent(TestCase):
             name='Approved', is_review_required=False, rts_qa_must_be_reviewed=True
         )
 
-        test_status = qa_utils.create_status()
+        status = qa_utils.create_status()
         tl = qa_utils.create_test_list()
         t = qa_utils.create_test()
         qa_utils.create_test_list_membership(tl, t)
 
-        tli_unreviewed = qa_utils.create_test_list_instance(test_list=tl)
+        tli_unreviewed = qa_utils.create_test_list_instance(test_list=tl, status=status)
         qa_utils.create_test_instance(
-            tli_unreviewed, unit_test_info=qa_utils.create_unit_test_info(unit=self.u_1), status=test_status
+            tli_unreviewed, unit_test_info=qa_utils.create_unit_test_info(unit=self.u_1),
         )
 
         data = {
@@ -427,7 +427,7 @@ class TestCreateServiceEvent(TestCase):
             'rtsqa-TOTAL_FORMS': 1,
             'rtsqa-MIN_NUM_FORMS': 0,
 
-            'rtsqa-0-all_reviewed': tli_unreviewed.all_reviewed,
+            'rtsqa-0-is_reviewed': tli_unreviewed.is_reviewed,
             'rtsqa-0-unit_test_collection': tli_unreviewed.unit_test_collection.id,
             'rtsqa-0-test_list_instance': tli_unreviewed.id,
             'rtsqa-0-id': '',
@@ -436,7 +436,7 @@ class TestCreateServiceEvent(TestCase):
         response = self.client.post(self.url, data=data)
         self.assertTrue('service_status' in response.context_data['form'].errors)
 
-        data['rtsqa-0-all_reviewed'] = ''
+        data['rtsqa-0-is_reviewed'] = ''
         data['rtsqa-0-test_list_instance'] = ''
 
         response = self.client.post(self.url, data=data)
@@ -628,7 +628,7 @@ class TestEditServiceEvent(TestCase):
         data['parts-0-quantity'] = 1
         data['hours-0-user_or_thirdparty'] = 'user-%s' % self.user.id
         data['hours-0-time'] = '0030'
-        data['rtsqa-0-all_reviewed'] = self.tli_1_2.all_reviewed
+        data['rtsqa-0-is_reviewed'] = self.tli_1_2.is_reviewed
         data['rtsqa-0-unit_test_collection'] = self.tli_1_2.unit_test_collection.id
         data['rtsqa-0-test_list_instance'] = self.tli_1_2.id
         data['rtsqa-0-id'] = ''
@@ -648,7 +648,7 @@ class TestEditServiceEvent(TestCase):
         data['parts-0-quantity'] = 1
         data['hours-0-user_or_thirdparty'] = 'user-%s' % self.user.id
         data['hours-0-time'] = '0030'
-        data['rtsqa-0-all_reviewed'] = self.tli_1_2.all_reviewed
+        data['rtsqa-0-is_reviewed'] = self.tli_1_2.is_reviewed
         data['rtsqa-0-unit_test_collection'] = self.tli_1_2.unit_test_collection.id
         data['rtsqa-0-test_list_instance'] = self.tli_1_2.id
         data['rtsqa-0-id'] = ''
@@ -656,7 +656,7 @@ class TestEditServiceEvent(TestCase):
         response = self.client.post(self.url, data=data)
         self.assertTrue('service_status' in response.context_data['form'].errors)
 
-        data['rtsqa-0-all_reviewed'] = ''
+        data['rtsqa-0-is_reviewed'] = ''
         data['rtsqa-0-unit_test_collection'] = ''
 
         response = self.client.post(self.url, data=data)
@@ -740,6 +740,7 @@ class TestServiceLogViews(TestCase):
         tli = qa_utils.create_test_list_instance(unit_test_collection=self.utc)
         qa_utils.create_test_instance(test_list_instance=tli)
         qa_utils.create_test_instance(test_list_instance=tli)
+        tli.refresh_from_db()
 
         expected = json.loads(
             json.dumps(
@@ -747,7 +748,7 @@ class TestServiceLogViews(TestCase):
                     'pass_fail': tli.pass_fail_summary(),
                     'review': tli.review_summary(),
                     'datetime': timezone.localtime(tli.created).replace(microsecond=0),
-                    'all_reviewed': int(tli.all_reviewed),
+                    'is_reviewed': int(tli.is_reviewed),
                     'work_completed': timezone.localtime(tli.work_completed).replace(microsecond=0),
                     'in_progress': tli.in_progress,
                 },

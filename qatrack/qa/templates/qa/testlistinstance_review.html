@@ -6,6 +6,8 @@
 {% load attach_tags %}
 {% load comments %}
 {% load static %}
+{% load widget_tweaks %}
+
 
 {% block extra_css %}
   <link href="{% static "qatrack_core/css/tables.css" %}?v={{VERSION}}" rel="stylesheet">
@@ -30,9 +32,8 @@
 
 {% block body %}
   {% with tli=test_list_instance %}
-  <form class="review-test-list" id="qa-review" method="POST" action="">
+  <form class="review-test-list" id="qa-review" method="POST" action="" novalidate>
     {% csrf_token %}
-    {{ form }}
 
     <div id="box-details" class="row">
       <div class="col-md-12">
@@ -281,23 +282,6 @@
                         {% endfor %}
                         <div></div>
                       </th>
-                      <th class="review-status">
-                        {% trans "Status" %}<br/>
-
-                        {% if perms.qa.can_review %}
-                          <div class="input-append">
-                            <select id="top-status-select" name="bulk-status" class="input-medium bulk-status">
-                              <option value="" selected="selected">---</option>
-                              {% for status in statuses %}
-                                <option title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}" value="{{status.pk}}">{{status.name}}</option>
-                              {% endfor %}
-                            </select>
-                          </div>
-                        {% endif %}
-                      </th>
-                      {% if perms.qa.can_review %}
-                        <th class="review-selected">{% trans "Selected" %}<br/><input class="test-selected-toggle" type="checkbox" checked="checked"/></th>
-                      {% endif %}
                     </tr>
                   </thead>
                   <tbody>
@@ -368,29 +352,6 @@
                           <td class="qa-history">
                             {% history_display ti_form.history test_list_instance.unit_test_collection.unit test_list_instance.test_list ti.unit_test_info.test unit_test_collection.frequency %}
                           </td>
-                          {% if perms.qa.can_review %}
-                            {# note we render this manually to prevent the Django ORM from running a query for every form #}
-                            <td class="review-status">
-                                <select name="testinstance_set-{{forloop.counter0}}-status" id="id_testinstance_set-{{forloop.counter0}}-status" class="input-medium">
-                                  {% for status in statuses %}
-                                    <option
-                                      title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}"
-                                      value="{{ status.pk }}"
-                                      {% if ti.status == status %}selected="selected"{% endif %}
-                                    >
-                                      {{ status.name }}
-                                    </option>
-                                  {% endfor %}
-                                </select>
-                            </td>
-                          {% else %}
-                          <td class="review-status">
-                            {{ ti.status.name }}
-                          </td>
-                          {% endif %}
-                          {% if perms.qa.can_review %}
-                            <td class="review-selected"><input class="test-selected" type="checkbox" checked="checked"/></td>
-                          {% endif %}
                         </tr>
                         {% if ti.comment %}
                           <tr class="qa-comment no-hover row-{{ ti_form.prefix }}">
@@ -474,23 +435,6 @@
                         {% endfor %}
                         <div></div>
                       </th>
-                      <th class="review-status">
-                        {% trans "Status" %}<br/>
-
-                        {% if perms.qa.can_review %}
-                        <div class="input-append">
-                          <select id="bot-status-select" name="bulk-status" class="input-medium bulk-status">
-                            <option value="" selected="selected">---</option>
-                            {% for status in statuses %}
-                            <option title="{% if status.description %}{{status.description}}{% else %}{% trans "No description available" %}{%endif%}" value="{{status.pk}}">{{status.name}}</option>
-                            {% endfor %}
-                          </select>
-                        </div>
-                        {% endif %}
-                      </th>
-                      {% if perms.qa.can_review %}
-                        <th class="review-selected">{% trans "Selected" %}<br/><input class="test-selected-toggle" type="checkbox" checked="checked"/></th>
-                      {% endif %}
                     </tr>
                   </tfoot>
                 </table>
@@ -498,46 +442,30 @@
             </div>
             <div class="row pad"></div>
             <div class="row">
-              <div class="col-md-12">
+              <div class="col-md-6">
+                {% if not from_se and perms.qa.delete_testlistinstance %}
+                  <a class="btn btn-danger btn-flat margin-r-5"
+                    href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
+                    <i class="fa fa-trash-o"></i>
+                    {% trans "Delete" %}
+                  </a>
+                {% endif %}
+              </div>
+              <div class="col-md-6 text-right form-inline">
                 {% if from_se %}
                   {% if perms.qa.can_review %}
+                    {{ form.status|add_class:"form-control" }}
                     <button id="submit-review-ajax"
-                          class="btn btn-primary btn-flat pull-right margin-r-5"
+                          class="btn btn-primary btn-flat margin-r-5"
                           title="{% trans "Click to update the test instance statuses" %}"
-                    >
-                      <i class="fa fa-save"></i>
-                      {% trans "Update Statuses" %}
-                    </button>
-                  {% endif %}
-                {% else %}
-                  {% if perms.qa.can_review %}
-                    <button id="submit-review"
-                            type="submit"
-                            class="btn btn-primary btn-flat pull-right margin-r-5"
-                            title="{% trans "Click to update the test instance statuses" %}"
                     >
                       <i class="fa fa-save"></i>
                       {% trans "Update Test Statuses" %}
                     </button>
                   {% endif %}
-                  {% if instance.in_progress %}
-                    <a class="btn btn-primary btn-flat pull-right margin-r-5"
-                      title="{% trans "Continue this list" %}"
-                      href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}"
-                    >
-                      <i class="fa fa-play"></i>
-                      {% trans "Continue" %}
-                    </a>
-                  {% elif perms.qa.change_testlistinstance %}
-                    <a class="btn btn-default btn-flat pull-right margin-r-5"
-                       title="{% trans "Edit this list" %}"
-                      href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >
-                      <i class="fa fa-edit"></i>
-                      {% trans "Edit" %}
-                    </a>
-                  {% endif %}
+                {% else %}
                   {% if perms.qa.can_view_history %}
-                    <a class="btn btn-default btn-flat margin-r-5 pull-right"
+                    <a class="btn btn-default btn-flat margin-r-5 "
                         href="{% url 'review_utc' test_list_instance.unit_test_collection_id %}"
                         {% blocktrans with test_list_name=test_list_instance.test_list.name unit_name=test_list_instance.unit_test_collection.unit.name %}
                         title="Click to view other instances of {{ test_list_name  }} on {{ unit_name }}"
@@ -547,13 +475,32 @@
                       {% trans "History" %}
                     </a>
                   {% endif %}
-                  {% if perms.qa.delete_testlistinstance %}
-                    <a class="btn btn-danger btn-flat margin-r-5"
-                       title="{% trans "This will redirect you to the admin site where you can permanently delete this qa session" %}"
-                      href="{% url 'delete_test_list_instance' pk=test_list_instance.pk %}?next={{ request.META.HTTP_REFERER }}">
-                      <i class="fa fa-trash-o"></i>
-                      {% trans "Delete" %}
+                  {% if instance.in_progress %}
+                    <a class="btn btn-primary btn-flat margin-r-5"
+                      title="{% trans "Continue this list" %}"
+                      href="{%url 'continue_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}"
+                    >
+                      <i class="fa fa-play"></i>
+                      {% trans "Continue" %}
                     </a>
+                  {% elif perms.qa.change_testlistinstance %}
+                    <a class="btn btn-default btn-flat margin-r-5"
+                       title="{% trans "Edit this list" %}"
+                      href="{%url 'edit_tli' pk=test_list_instance.pk%}?next={{request.get_full_path}}" >
+                      <i class="fa fa-edit"></i>
+                      {% trans "Edit" %}
+                    </a>
+                  {% endif %}
+                  {% if perms.qa.can_review %}
+                    {{ form.status|add_class:"form-control" }}
+                    <button id="submit-review"
+                            type="submit"
+                            class="btn btn-primary btn-flat margin-r-5"
+                            title="{% trans "Click to update the test instance statuses" %}"
+                    >
+                      <i class="fa fa-save"></i>
+                      {% trans "Update Test Statuses" %}
+                    </button>
                   {% endif %}
                 {% endif %}
               </div>
@@ -618,8 +565,8 @@
                 <textarea cols="40" id="id_comment" maxlength="3000" name="comment" rows="3" required="" placeholder="{% trans "Add comment" %}" class="margin-bottom-20 form-control autosize"></textarea>
               </form>
               <div class="row">
-                <div class="col-md-12">
-                  <button id="post-comment" class="btn btn-flat btn-info btn-sm pull-right" disabled="disabled">{% trans "Post Comment" %}</button>
+                <div class="col-md-12 text-right">
+                  <button id="post-comment" class="btn btn-flat btn-info btn-sm" disabled="disabled">{% trans "Post Comment" %}</button>
                 </div>
               </div>
             </div>

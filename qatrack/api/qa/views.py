@@ -26,10 +26,10 @@ class FrequencyViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
-class TestInstanceStatusViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.TestInstanceStatus.objects.all()
-    serializer_class = serializers.TestInstanceStatusSerializer
-    filterset_class = filters.TestInstanceStatusFilter
+class ReviewStatusViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.ReviewStatus.objects.all()
+    serializer_class = serializers.ReviewStatusSerializer
+    filterset_class = filters.ReviewStatusFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
