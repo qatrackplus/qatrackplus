@@ -530,8 +530,15 @@ class AutoReviewRuleSet(models.Model):
         return self.name
 
 
+class ReferenceManager(models.Manager):
+    def get_by_natural_key(self, type, value):
+        return self.get(type=type, value=value)
+
+
 class Reference(models.Model):
     """Reference values for various QC :model:`Test`s"""
+
+    NK_FIELDS = ['type', 'value']
 
     name = models.CharField(max_length=255, help_text=_l("Enter a short name for this reference"))
     type = models.CharField(max_length=15, choices=REF_TYPE_CHOICES, default=NUMERICAL)
@@ -545,6 +552,8 @@ class Reference(models.Model):
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False, related_name="reference_modifiers")
 
+    objects = ReferenceManager()
+
     def clean_fields(self):
         if self.type == BOOLEAN and self.value not in (0, 1):
             raise ValidationError({"value": [_("Boolean values must be 0 or 1")]})
@@ -557,6 +566,17 @@ class Reference(models.Model):
         if self.type == BOOLEAN:
             return _("Yes") if int(self.value) == 1 else _("No")
         return "%.6G" % (self.value)
+
+    @classmethod
+    def get_testpack_fields(cls):
+        exclude = ["id", "created", "created_by", "modified", "modified_by"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def get_testpack_dependencies(self):
+        return []
+
+    def natural_key(self):
+        return (self.type, self.value,)
 
     def __str__(self):
         """more helpful display name"""
@@ -584,6 +604,8 @@ class Tolerance(models.Model):
     Model for storing tolerance/action levels and tolerance/action choices
     for multiple choice type tests
     """
+
+    NK_FIELDS = ["name"]
 
     name = models.CharField(max_length=255, unique=True, editable=False)
 
@@ -733,6 +755,14 @@ class Tolerance(models.Model):
     def save(self, *args, **kwargs):
         self.name = get_tolerance_name(self)
         super(Tolerance, self).save(*args, **kwargs)
+
+    @classmethod
+    def get_testpack_fields(cls):
+        exclude = ["id", "created_date", "created_by", "modified_date", "modified_by"]
+        return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
+
+    def get_testpack_dependencies(self):
+        return []
 
     def natural_key(self):
         return (self.name,)
@@ -1168,11 +1198,16 @@ class Test(models.Model, TestPackMixin):
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def get_testpack_dependencies(self):
-        return [(Category, [self.category])]
+        deps = [(Category, [self.category])]
+        if self.default_reference:
+            deps.append((Reference, [self.default_reference]))
+        if self.default_tolerance:
+            deps.append((Tolerance, [self.default_tolerance]))
+        return deps
 
     def natural_key(self):
         return (self.name,)
-    natural_key.dependencies = ['qa.category']
+    natural_key.dependencies = ['qa.category', 'qa.reference', 'qa.tolerance']
 
     def display(self):
         """returns display name if set, otherwise name"""
@@ -1569,7 +1604,7 @@ class TestList(TestCollectionInterface, TestPackMixin):
 
     @classmethod
     def get_testpack_fields(cls):
-        exclude = ["id", "created", "created_by", "modified", "modified_by"]
+        exclude = ["id", "created", "created_by", "modified", "modified_by", "autoreviewruleset"]
         return [f.name for f in cls._meta.concrete_fields if f.name not in exclude]
 
     def get_testpack_dependencies(self):
@@ -1582,6 +1617,10 @@ class TestList(TestCollectionInterface, TestPackMixin):
         return [
             (Category,
              [s.category for s in all_tests]),
+            (Reference,
+             [s.default_reference for s in all_tests if s.default_reference]),
+            (Tolerance,
+             [s.default_tolerance for s in all_tests if s.default_tolerance]),
             (Test, all_tests),
             (TestListMembership, tlms),
             (TestList,

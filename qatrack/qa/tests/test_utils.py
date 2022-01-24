@@ -73,6 +73,9 @@ class TestImportExport(TestCase):
         self.t1 = utils.create_test("t1")
         self.t2 = utils.create_test("t2")
         self.t3 = utils.create_test("t3")
+        self.t3.default_reference = utils.create_reference()
+        self.t3.default_tolerance = utils.create_tolerance()
+        self.t3.save()
         self.t4 = utils.create_test("t4")
         utils.create_test_list_membership(self.tl1, self.t1)
         utils.create_test_list_membership(self.tl2, self.t2)
@@ -93,6 +96,9 @@ class TestImportExport(TestCase):
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
         models.Category.objects.all().delete()
+        models.Reference.objects.all().delete()
+        models.Tolerance.objects.all().delete()
+
         testpack.add_testpack(pack)
 
         assert models.Test.objects.count() == 4
@@ -100,6 +106,8 @@ class TestImportExport(TestCase):
         assert models.TestListMembership.objects.count() == 4
         assert models.TestListCycle.objects.count() == 1
         assert models.TestListCycleMembership.objects.count() == 2
+        assert models.Reference.objects.count() == 1
+        assert models.Tolerance.objects.count() == 1
 
     def test_create_pack(self):
 

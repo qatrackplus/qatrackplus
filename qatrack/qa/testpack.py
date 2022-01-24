@@ -24,6 +24,8 @@ def get_model_map():
     return {
         'qa.test': models.Test,
         'qa.category': models.Category,
+        'qa.reference': models.Reference,
+        'qa.tolerance': models.Tolerance,
         'qa.testlist': models.TestList,
         'qa.testlistcycle': models.TestListCycle,
         'qa.testlistmembership': models.TestListMembership,
@@ -76,7 +78,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         },
     }
 
-    tests = (extra_tests or models.Test.objects.none()).select_related("category")
+    tests = (extra_tests or models.Test.objects.none()).select_related("category", "default_reference", "default_tolerance")
     test_lists = (test_lists or models.TestList.objects.none())
     cycles = cycles or models.TestListCycle.objects.none()
 
@@ -203,7 +205,21 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             categories[nk_vals] = cat
     models.Category.objects.rebuild()
 
-    # we cann= now create the actual primary records (m2m relationships done below
+    # populate ref_tols lookup with Ref/Tols objects for assigning to Tests below
+    ref_tols = {'qa.reference': {}, 'qa.tolerance': {}}
+    ref_tol_models = [
+        ('qa.reference', models.Reference, {'created': created, 'modified': created, 'created_by': user, 'modified_by': user}),
+        ('qa.tolerance', models.Tolerance, {'created_date': created, 'modified_date': created, 'created_by': user, 'modified_by': user})
+    ]
+    for name, cls, create_kwargs in ref_tol_models:
+        for obj in to_import.get(name, []):
+            nk_vals = tuple(obj[k] for k in cls.NK_FIELDS)
+            try:
+                ref_tols[name][nk_vals] = cls.objects.get_by_natural_key(*nk_vals)
+            except cls.DoesNotExist:
+                ref_tols[name][nk_vals] = cls.objects.create(**obj, **create_kwargs)
+
+    # we can now create the actual primary records (m2m relationships done below)
     extra_kwargs = {'created': created, 'modified': created, 'created_by': user, 'modified_by': user}
     for model_name in ['qa.test', 'qa.testlist', 'qa.testlistcycle']:
 
@@ -226,6 +242,11 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             # test is the only object with an extra fk
             if model_name == "qa.test":
                 obj['category'] = categories[tuple(obj['category'])]
+
+                ref_nk = obj.get('default_reference')
+                obj['default_reference'] = None if ref_nk is None else ref_tols['qa.reference'][tuple(ref_nk)]
+                tol_nk = obj.get('default_tolerance')
+                obj['default_tolerance'] = None if tol_nk is None else ref_tols['qa.tolerance'][tuple(tol_nk)]
 
             # add extra kwargs and fix natural key conflicts
             obj.update(extra_kwargs)
