@@ -40,7 +40,16 @@ function toggle_test_type(){
     toggle_required_field(".field-display_image", ["upload", "composite", "scomposite"], test_type);
     toggle_required_field(".field-choices", ["multchoice"], test_type);
     toggle_required_field(".field-wrap_low,.field-wrap_high", ["wraparound"], test_type);
-    toggle_required_field(".field-flag_when", ["boolean"], test_type);
+    toggle_required_field(".field-flag_when,.field-reference_value_bool", ["boolean"], test_type);
+    toggle_not_required_field(".field-flag_when,.field-reference_value", ["boolean", "scomposite", "string", "date", "datetime", "upload"], test_type);
+    toggle_not_required_field(".field-default_tolerance", ["upload"], test_type);
+
+    var $ref_tols_fieldset = $(".field-default_tolerance").not(".errors").parents("fieldset");
+    if (test_type === "upload" && $ref_tols_fieldset.find(".errors").length === 0){
+        $ref_tols_fieldset.hide();
+    }else{
+        $ref_tols_fieldset.show();
+    }
 
     var never_visible_in_charts = ["string", "scomposite", "date", "datetime", "upload"];
     if (never_visible_in_charts.indexOf(test_type) > 0){
@@ -109,7 +118,31 @@ $(document).ready(function() {
         $("#id_formatting").val(el.target.value);
     });
 
-    $("#id_category, #id_type, #id_autoreviewruleset").select2();
+    $("#id_category, #id_type, #id_autoreviewruleset, #id_default_tolerance, #id_reference_value_bool").select2();
+
+    $("#id_default_tolerance").select2({
+        allowClear: true,
+        placeholder: '-------',
+        ajax: {
+            url: admin_urls.TOLERANCE_SEARCHER,
+            dataType: 'json',
+            data: function (args) {
+                return {
+                    q: $("#id_type").val()
+                };
+            },
+            processResults: function(data, params){
+                var results = [];
+                $.each(data.items, function(i, v){
+                    results.push({
+                        id: v.id,
+                        text: v.name
+                    });
+                });
+                return {results: results};
+            }
+        }
+    });
 
 
 });

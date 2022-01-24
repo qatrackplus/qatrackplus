@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.signals import (
@@ -8,6 +10,7 @@ from django.db.models.signals import (
 )
 from django.dispatch import Signal, receiver
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django_comments.models import Comment
 from django_comments.signals import comment_was_posted
 
@@ -58,7 +61,12 @@ def handle_se_statuses_post_tli_delete(test_list_instance):
     se_ib_qs.update(service_status=default_ses)
 
 
-def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
+def get_or_create_unit_test_info(unit: models.Unit, test: models.Test,
+                                 assigned_to: Optional[models.Group] = None,
+                                 active: bool = True) -> models.UnitTestInfo:
+    """Return a UnitTestInfo object for the input unit and test.  If a UTI
+    doesn't exist, it will be created and have its reference & tolerance
+    updated where applicable"""
 
     uti, created = models.UnitTestInfo.objects.get_or_create(
         unit=unit,
@@ -68,6 +76,17 @@ def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
     if created:
         uti.assigned_to = assigned_to
         uti.active = active
+        if test.default_reference or test.default_tolerance:
+            uti.reference = test.default_reference
+            uti.tolerance = test.default_tolerance
+            models.UnitTestInfoChange.objects.create(
+                unit_test_info=uti,
+                comment=_("Set from tests default reference & tolerance values"),
+                reference_changed=uti.reference is not None,
+                tolerance_changed=uti.tolerance is not None,
+                changed_by=test.modified_by,
+            )
+
         uti.save()
     return uti
 

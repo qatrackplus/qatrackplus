@@ -568,6 +568,16 @@ class ToleranceManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
 
+    def by_test_type(self, test_type):
+        qs = self.get_queryset()
+        if test_type in STRING_TYPES:
+            return qs.filter(type=MULTIPLE_CHOICE)
+        elif test_type == BOOLEAN:
+            return qs.filter(type=BOOLEAN)
+        elif test_type in NUMERICAL_TYPES or test_type == NUMERICAL:
+            return qs.filter(Q(type=ABSOLUTE) | Q(type=PERCENT))
+        return qs.none()
+
 
 class Tolerance(models.Model):
     """
@@ -928,6 +938,30 @@ class Test(models.Model, TestPackMixin):
     )
 
     formatting = models.CharField(blank=True, help_text=fmt_help, default='', max_length=10)
+
+    default_reference = models.ForeignKey(
+        Reference,
+        verbose_name=_l("Default Reference"),
+        on_delete=models.SET_NULL,
+        help_text=_l(
+            "Select a default reference value for this test.  This will not affect any existing "
+            "references and you will still be able to set per unit reference values later."
+        ),
+        null=True,
+        blank=True,
+    )
+
+    default_tolerance = models.ForeignKey(
+        Tolerance,
+        verbose_name=_l("Default Tolerance"),
+        on_delete=models.SET_NULL,
+        help_text=_l(
+            "Select a default tolerance for this test.  This will not affect any existing "
+            "references and you will still be able to set per unit tolerances values later."
+        ),
+        null=True,
+        blank=True,
+    )
 
     # for keeping a very basic history
     created = models.DateTimeField(auto_now_add=True)

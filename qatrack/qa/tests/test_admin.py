@@ -426,7 +426,10 @@ class TestTestAdmin(TestCase):
             'type': 'simple',
             'calculation_procedure': '',
             'choices': '',
-            'name': ''
+            'name': '',
+            'reference_value': '',
+            'reference_value_bool': '',
+            'default_tolerance': '',
         }
 
     def test_list(self):
@@ -490,6 +493,174 @@ class TestTestAdmin(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertTrue('type' in form.errors)
+
+    def test_add_default_ref_numerical(self):
+        """Ensure setting a default reference_value for numerical test adds it to the test"""
+        data = self.data
+        data['name'] = self.t_1.name
+        data['slug'] = self.t_1.slug
+        data['reference_value'] = 123
+        self.client.post(self.url_change, data=data)
+        self.t_1.refresh_from_db()
+        assert self.t_1.default_reference.type == qa_models.NUMERICAL
+        assert int(self.t_1.default_reference.value) == 123
+
+    def test_add_default_ref_boolean(self):
+        """Ensure setting a default reference_value for boolean test adds it to the test"""
+        data = self.data
+        data['name'] = "bool"
+        data['slug'] = "bool"
+        data['type'] = qa_models.BOOLEAN
+        data['reference_value_bool'] = 1
+        self.client.post(self.url_add, data=data)
+        test = qa_models.Test.objects.latest("pk")
+        assert test.default_reference.type == qa_models.BOOLEAN
+        assert int(test.default_reference.value) == 1
+
+    def test_clear_default_ref_tol_numerical(self):
+        """Ensure clear reference_value for numerical test removes it from the test"""
+        self.t_1.default_reference = qa_utils.create_reference()
+        self.t_1.default_tolerance = qa_utils.create_tolerance()
+        self.t_1.save()
+        data = self.data
+        data['name'] = self.t_1.name
+        data['slug'] = self.t_1.slug
+        data['reference_value'] = ''
+        data['default_tolerance'] = ''
+        self.client.post(self.url_change, data=data)
+        self.t_1.refresh_from_db()
+        assert self.t_1.default_reference is None
+
+    def test_clear_default_ref_tol_boolean(self):
+        """Ensure setting a default reference_value for boolean test adds it to the test"""
+
+        tol, act = get_bool_tols()
+        self.t_1.type = qa_models.BOOLEAN
+        self.t_1.default_reference = qa_utils.create_reference(ref_type=qa_models.BOOLEAN)
+        self.t_1.default_tolerance = act
+        self.t_1.save()
+        data = self.data
+        data['name'] = "bool"
+        data['slug'] = "bool"
+        data['type'] = qa_models.BOOLEAN
+        data['reference_value_bool'] = ''
+        data['default_tolerance'] = ''
+        self.client.post(self.url_change, data=data)
+        self.t_1.refresh_from_db()
+        assert self.t_1.default_reference is None
+        assert self.t_1.default_tolerance is None
+
+    def test_intial_ref_value_set_numerical(self):
+        """Ensure initial reference_value is set appropriately for numerical tests"""
+        self.t_1.default_reference = qa_utils.create_reference(value=123)
+        self.t_1.save()
+        form = modelform_factory(
+            qa_models.Test, form=qa_admin.TestForm, fields='__all__'
+        )(data=self.data, instance=self.t_1)
+        assert form['reference_value'].initial == 123
+
+    def test_intial_ref_value_set_boolean(self):
+        """Ensure initial reference_value is set appropriately for numerical tests"""
+        self.t_1.type = qa_models.BOOLEAN
+        self.t_1.default_reference = qa_utils.create_reference(ref_type=qa_models.BOOLEAN, value=0)
+        self.t_1.save()
+        form = modelform_factory(
+            qa_models.Test, form=qa_admin.TestForm, fields='__all__'
+        )(data=self.data, instance=self.t_1)
+        assert form['reference_value_bool'].initial == 0
+
+
+class TestTestForm(TestCase):
+
+    def run_clean_default_ref_tols(self, data: dict) -> qa_admin.TestForm:
+        """Helper function to set cleaned_data, run _clean_default_ref_tols and
+        return the form to user"""
+        f = qa_admin.TestForm()
+        f.cleaned_data = data
+        f._clean_default_ref_tols(data)
+        return f
+
+    def test_string_type_wrong_tolerance(self):
+        """Ensure default tolerance can not be set to non multiple choice
+        tolerance for a mutliple choice test"""
+        data = {
+            'type': qa_models.MULTIPLE_CHOICE,
+            'default_tolerance': qa_utils.create_tolerance(),
+        }
+        f = self.run_clean_default_ref_tols(data)
+        assert any("non-multiple choice tolerance" in e for e in f.errors.get('default_tolerance', []))
+
+    def test_string_type_wrong_reference(self):
+        """Ensure multiple choice test doesn't allow reference set"""
+
+        data = {
+            'type': qa_models.MULTIPLE_CHOICE,
+            'reference_value': 123,
+            'reference_value_bool': 0,
+        }
+        f = self.run_clean_default_ref_tols(data)
+        assert any("can't set a reference value for a string" in e for e in f.errors.get('reference_value', []))
+        assert any("can't set a reference value for a string" in e for e in f.errors.get('reference_value_bool', []))
+
+    def test_upload_no_ref_tols(self):
+        """Ensure multiple choice test doesn't allow reference set"""
+
+        data = {
+            'type': qa_models.UPLOAD,
+            'reference_value': 123,
+            'reference_value_bool': 0,
+            'default_tolerance': qa_utils.create_tolerance(),
+        }
+        f = self.run_clean_default_ref_tols(data)
+        for field in ['reference_value', 'reference_value_bool', 'default_tolerance']:
+            assert any("Upload test types should not have reference or tolerance" in e for e in f.errors.get(field, []))
+
+    def test_boolean_wrong_tolerance(self):
+        """Ensure boolean can not have non boolean tolerance set"""
+
+        data = {
+            'type': qa_models.BOOLEAN,
+            'default_tolerance': qa_utils.create_tolerance(),
+        }
+        f = self.run_clean_default_ref_tols(data)
+        assert any("Boolean tests can only have boolean " in e for e in f.errors.get("default_tolerance", []))
+
+    def test_boolean_wrong_reference(self):
+        """Ensure boolean can not have numerical reference set"""
+        data = {'type': qa_models.BOOLEAN, 'reference_value': 0}
+        f = self.run_clean_default_ref_tols(data)
+        assert any("You can not set a numerical reference value" in e for e in f.errors.get("reference_value", []))
+
+    def test_boolean_missing_reference(self):
+        """Ensure boolean has reference when tolerance set"""
+        warn, act = get_bool_tols()
+        data = {
+            'type': qa_models.BOOLEAN,
+            'default_tolerance': act,
+        }
+        f = self.run_clean_default_ref_tols(data)
+        assert any("You must set a reference value" in e for e in f.errors.get("reference_value_bool", []))
+
+    def test_wraparound_wrong_ref(self):
+        """Ensure wraparound reference is in range"""
+        data = {
+            'type': qa_models.WRAPAROUND,
+            'reference_value': -1,
+            'wrap_low': 0,
+            'wrap_high': 360,
+        }
+        f = self.run_clean_default_ref_tols(data)
+        assert any("must be set between 0 and 360" in e for e in f.errors.get('reference_value', []))
+
+    def test_percent_tol_with_0_ref(self):
+        """Ensure reference value of 0 can't be used with a percent tolerance"""
+        data = {
+            'type': qa_models.NUMERICAL,
+            'reference_value': 0,
+            'default_tolerance': qa_utils.create_tolerance(tol_type=qa_models.PERCENT),
+        }
+        f = self.run_clean_default_ref_tols(data)
+        assert any("Percentage based tolerances can not be used" in e for e in f.errors.get('reference_value', []))
 
 
 class TestTestListAdmin(TestCase):

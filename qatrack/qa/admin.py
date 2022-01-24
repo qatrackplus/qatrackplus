@@ -8,7 +8,7 @@ from django.contrib import admin, messages
 from django.contrib.admin import options, widgets
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Count, Q
+from django.db.models import Case, Count, Q, Value, When
 import django.forms as forms
 from django.shortcuts import HttpResponseRedirect, redirect, render
 from django.template import loader
@@ -929,14 +929,54 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
 
 class TestForm(forms.ModelForm):
 
+    reference_value = forms.FloatField(
+        label=_l("Default reference value"),
+        required=False,
+    )
+
+    reference_value_bool = forms.IntegerField(
+        label=_l("Default Boolean reference"),
+        required=False,
+        widget=forms.Select(choices=[("", "---"), (0, _l("No")), (1, _l("Yes"))]),
+    )
+
     class Meta:
         model = models.Test
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        # we want to make sure our tolerances are shown in an ordered fashion
+        order = Case(
+            When(type=models.BOOLEAN, then=Value(1)),
+            When(type=models.PERCENT, then=Value(2)),
+            When(type=models.ABSOLUTE, then=Value(3)),
+            When(type=models.MULTIPLE_CHOICE, then=Value(4)),
+        )
+        self.fields['default_tolerance'].queryset = self.fields['default_tolerance'].queryset.order_by(order)
+
+        if self.instance and self.instance.default_reference:
+            if self.instance.type == models.BOOLEAN:
+                self.fields['reference_value_bool'].initial = int(self.instance.default_reference.value)
+            else:
+                self.fields['reference_value'].initial = self.instance.default_reference.value
 
     def clean(self):
         """if test already has some history don't allow for the test type to be changed"""
 
         cleaned_data = super().clean()
+
+        self._clean_changing_type(cleaned_data)
+        self._clean_formatting(cleaned_data)
+        self._clean_editing_hidden(cleaned_data)
+        self._clean_default_ref_tols(cleaned_data)
+
+        return cleaned_data
+
+    def _clean_changing_type(self, cleaned_data: dict) -> None:
+        """Ensure valid test type transition"""
 
         test_type = cleaned_data.get("type")
         user_changing_type = self.instance.type != test_type
@@ -959,6 +999,10 @@ class TestForm(forms.ModelForm):
                 })
             )
 
+    def _clean_formatting(self, cleaned_data: dict) -> None:
+        """Ensure formatting is set appropriately for the test type"""
+
+        test_type = cleaned_data.get("type")
         if test_type not in models.NUMERICAL_TYPES:
             cleaned_data['formatting'] = ''
         else:
@@ -968,6 +1012,9 @@ class TestForm(forms.ModelForm):
                     format_qc_value(123.4, fmt)
                 except:  # noqa: E722
                     self.add_error("formatting", forms.ValidationError(_("Invalid numerical format")))
+
+    def _clean_editing_hidden(self, cleaned_data: dict) -> None:
+        """Ensure hidden tests don't have references and tolerances set on them"""
 
         editing_hidden = self.instance.pk is not None and cleaned_data.get("hidden")
         if editing_hidden:
@@ -990,7 +1037,73 @@ class TestForm(forms.ModelForm):
                     "and tolerances for this test on the following units before making it hidden: "
                 ) + html_links
                 self.add_error("hidden", mark_safe(msg))
-        return cleaned_data
+
+    def _clean_default_ref_tols(self, cleaned_data: dict) -> None:
+        """Ensure that reference and tolerance values are set appropriately for the test type"""
+
+        test_type = cleaned_data.get("type")
+
+        reference_value = cleaned_data.get("reference_value")
+        reference_value_bool = cleaned_data.get("reference_value_bool")
+        tolerance = cleaned_data.get("default_tolerance")
+
+        empty = ["", None]
+
+        if test_type in models.STRING_TYPES:
+            if tolerance and tolerance.type != models.MULTIPLE_CHOICE:
+                self.add_error(
+                    "default_tolerance",
+                    _("You can't use a non-multiple choice tolerance with a multiple choice or string test")
+                )
+
+            for field in ["reference_value", "reference_value_bool"]:
+                if cleaned_data.get(field) not in empty:
+                    self.add_error(field, _("You can't set a reference value for a string test"))
+
+        elif test_type == models.UPLOAD:
+            for field in ["default_tolerance", "reference_value", "reference_value_bool"]:
+                if cleaned_data.get(field) not in empty:
+                    self.add_error(
+                        field,
+                        _(
+                            "Upload test types should not have reference or tolerance values set. "
+                            "Please clear before saving."
+                        ),
+                    )
+        elif test_type == models.BOOLEAN:
+            if tolerance and tolerance.type != models.BOOLEAN:
+                self.add_error(
+                    "default_tolerance",
+                    _("Boolean tests can only have boolean tolerances set on them")
+                )
+            if reference_value not in empty:
+                self.add_error(
+                    "reference_value",
+                    _("You can not set a numerical reference value for boolean tests")
+                )
+
+            missing_ref = tolerance and reference_value_bool in empty
+            if missing_ref:
+                self.add_error(
+                    "reference_value_bool",
+                    _("You must set a reference value when adding a boolean tolerance")
+                )
+
+        elif reference_value not in empty:
+
+            wrap_low = cleaned_data.get('wrap_low')
+            wrap_high = cleaned_data.get('wrap_high')
+
+            if test_type == models.WRAPAROUND and not (wrap_low <= reference_value <= wrap_high):
+                msg = _(f"Reference values for this wraparound test must be set between {wrap_low} and {wrap_high}")
+                self.add_error("reference_value", msg)
+
+            if tolerance is not None:
+                if reference_value == 0 and tolerance.type == models.PERCENT:
+                    self.add_error(
+                        "reference_value",
+                        _("Percentage based tolerances can not be used with reference value of zero (0)"),
+                    )
 
 
 class TestListMembershipFilter(admin.SimpleListFilter):
@@ -1099,6 +1212,22 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
             },
         ),
         (
+            "Default References & Tolerance",
+            {
+                'description': _l(
+                    "You may optionally set default reference and/or tolerance values for this test. If set, "
+                    "when this test is assigned to a unit its reference and tolerance will be automatically set "
+                    "to this default value.  Changing the default reference and tolerance will not affect any "
+                    "existing references & tolerances."
+                ),
+                'fields': [
+                    "reference_value",
+                    "reference_value_bool",
+                    "default_tolerance",
+                ],
+            },
+        ),
+        (
             "Memberships & Assignments",
             {
                 'fields': [],
@@ -1131,6 +1260,26 @@ class TestAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATrackAdmin):
                     "the object oriented interface to matplotlib."
                 )
                 messages.add_message(request, messages.WARNING, warning)
+
+        if 'reference_value' in form.changed_data or 'reference_value_bool' in form.changed_data:
+            changed_field = 'reference_value_bool' if obj.type == models.BOOLEAN else 'reference_value'
+            val = form.cleaned_data[changed_field]
+            clear_default_reference = val in ('', None)
+            if clear_default_reference:
+                ref = None
+            else:
+                ref_type = models.BOOLEAN if obj.is_boolean() else models.NUMERICAL
+                ref, __ = models.Reference.objects.get_or_create(
+                    value=val,
+                    type=ref_type,
+                    defaults={
+                        "created_by": request.user,
+                        "modified_by": request.user,
+                        "name": f"Default reference created by {obj.name}",
+                    },
+                )
+
+            obj.default_reference = ref
 
         if obj.procedure:
             if not obj.procedure.startswith("http"):
