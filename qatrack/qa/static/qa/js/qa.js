@@ -493,7 +493,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                     self.inputs.attr("title", "Actual value = " + self.value);
                     self.inputs.val(formatted);
                 }
-            }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE){
+            }else if (tt === QAUtils.SIMPLE || tt === QAUtils.COMPOSITE || tt === QAUtils.WRAPAROUND){
                 if (_.isNull(value)){
                     self.inputs.val("");
                 }else{
