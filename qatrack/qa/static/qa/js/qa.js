@@ -834,7 +834,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
         _.each(tli.test_instances, function(ti){
             var skip = skips[ti.test_info.test.slug];
-            if (skip !== ti.skipped){
+            if (skip !== undefined && skip !== ti.skipped) {
                 ti.set_skip(skip);
             }
         });

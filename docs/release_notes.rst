@@ -29,6 +29,10 @@ QATrack+ v3.2.0 Release Notes
   level.  This simplfies the reviewing of test list instances conceptually and
   from a UI perspective. There were also some query performance benefits.
 
+* Fixed missing set_value check for WrapAround tests which caused AutoSave to
+  not load for Wrap Around tests.
+
+* Fixed correct setting of skips after composite calculations
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------
