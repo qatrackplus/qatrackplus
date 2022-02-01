@@ -96,6 +96,7 @@ Copy the following lines to your `local_settings.py` file:
     # AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
 
     AD_CERT_FILE = None  # AD_CERT_FILE='/path/to/your/cert.txt'
+    AD_DISABLE_STRICT_CERT_CHECKING = False  # Set to True to allow self signed certs
 
     AD_SEARCH_DN = "dc=yourdomain,dc=yourhospital,dc=com"
     AD_NT4_DOMAIN = "YOURDOMAIN"  # Network domain that AD server is part of

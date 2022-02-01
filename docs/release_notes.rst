@@ -34,6 +34,10 @@ QATrack+ v3.2.0 Release Notes
 
 * Fixed correct setting of skips after composite calculations
 
+* Added new `AD_DISABLE_STRICT_CERT_CHECKING` to allow self signed certificates
+  to be used with Active Directory
+
+
 QATrack+ v3.1.1 Release Notes
 -----------------------------
 

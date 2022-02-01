@@ -63,6 +63,9 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         self.logger = logging.getLogger('auth.ActiveDirectoryGroupMembershipSSLBackend')
 
         ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
+        if settings.AD_DISABLE_STRICT_CERT_CHECKING:
+            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_ALLOW)
+
         if settings.AD_CERT_FILE:
             self.logger.debug("Setting TLS CERTFILE %s." % settings.AD_CERT_FILE)
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)

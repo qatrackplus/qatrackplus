@@ -403,6 +403,7 @@ AD_MIRROR_GROUPS = False
 
 
 AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
+AD_DISABLE_STRICT_CERT_CHECKING = False  # should self signed certs be allowed?
 
 CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
 

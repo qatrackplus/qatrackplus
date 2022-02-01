@@ -1211,6 +1211,7 @@ General AD Settings
     AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
 
     AD_CERT_FILE = '/path/to/your/cert.txt'
+    AD_DISABLE_STRICT_CERT_CHECKING = False  # Set to True to allow self signed certs
 
     AD_CLEAN_USERNAME_STRING = ''  # if your AD usernames are returned as e.g. "foo/jsmith" then
                                     # setting `AD_CLEAN_USERNAME_STRING = 'foo/'` will strip the `foo/` prefix
