@@ -2001,6 +2001,22 @@ class TestAutoReview(TestCase):
         tli = self.create_test_list_instance([0.5, 1.5, 10, 0])
         assert tli.review_status == self.unreviewed
 
+    def test_blocked_by_no_match(self):
+        """If there is no match for one of the statues no auto review should occur"""
+
+        models.AutoReviewRule.objects.bulk_create([
+            models.AutoReviewRule(pass_fail=models.OK, status=self.approved),
+        ])
+        ruleset = models.AutoReviewRuleSet.objects.create(name="default", is_default=True)
+        for rule in models.AutoReviewRule.objects.all():
+            ruleset.rules.add(rule)
+
+        self.test_list.autoreviewruleset = ruleset
+        self.test_list.save()
+
+        tli = self.create_test_list_instance([10, 10, 10, 10])
+        assert tli.review_status == self.unreviewed
+
     def test_blocked_by_ti_comment(self):
         """Comment is present on a test instance so test list instance requires review"""
 

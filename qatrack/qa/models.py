@@ -2377,7 +2377,12 @@ class TestListInstance(models.Model):
         for ti in self.testinstance_set.values("pass_fail", "comment", "skipped", "unit_test_info__test__hidden"):
             if ti['comment'] or (ti['skipped'] and not ti['unit_test_info__test__hidden']):
                 return
-            statuses.add(rules.get(ti['pass_fail']))
+
+            matched_rule = rules.get(ti['pass_fail'])
+            if matched_rule is None:
+                return
+
+            statuses.add(matched_rule)
 
         all_same_status = len(statuses) == 1
         if not all_same_status:
