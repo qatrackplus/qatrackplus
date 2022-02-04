@@ -1129,6 +1129,12 @@ class TestReportModels(TestCase):
     def test_savedreport_str(self):
         assert str(self.report) == "#%d. title - Test List Instance Summary - PDF" % self.report.pk
 
+    def test_recipients_empty_group(self):
+        """Ensure empty groups don't cause errors"""
+        g = Group.objects.create(name="reports")
+        self.schedule.groups.add(g)
+        assert self.schedule.recipients() == []
+
 
 class TestReportTasks(TestCase):
 

@@ -37,6 +37,7 @@ QATrack+ v3.2.0 Release Notes
 * Added new `AD_DISABLE_STRICT_CERT_CHECKING` to allow self signed certificates
   to be used with Active Directory
 
+* Fixed a bug when trying to send reports to groups with no members
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------
