@@ -13,6 +13,7 @@ import pytz
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.qatrack_core.utils import end_of_day, relative_dates, start_of_day
+from qatrack.reports.models import SavedReport
 
 
 class TestLoginViews(TestCase):
@@ -74,6 +75,14 @@ class TestJSONEncoder:
         enc = QATrackJSONEncoder()
         dt = datetime.date(2020, 2, 29)
         assert enc.default(dt) == "29 Feb 2020"
+
+
+class TestJSONField:
+
+    def test_value_to_string(self):
+        """Ensure serializing doesn't stringify filters field"""
+        obj = SavedReport(filters={"foo": "bar"})
+        assert obj._meta.get_field("filters").value_to_string(obj) == {"foo": "bar"}
 
 
 class TestRelativeDates:

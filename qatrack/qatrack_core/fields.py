@@ -30,3 +30,10 @@ class JSONField(models.TextField):
         if isinstance(value, dict):
             value = json.dumps(value, cls=DjangoJSONEncoder)
         return value
+
+    def value_to_string(self, obj):
+        """value_to_string normally just calls
+        `str(self.value_from_object(obj)` to serialize the field value, but we
+        want to let the json serializer handle our dictionary/object so we skip
+        stringifying here"""
+        return self.value_from_object(obj)
