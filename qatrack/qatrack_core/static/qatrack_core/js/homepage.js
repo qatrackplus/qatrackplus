@@ -22,8 +22,10 @@ require(['jquery', 'treeview'], function($){
 
     }
 
-    initTree("#site-cat-qc-tree", window.catTree);
-    initTree("#site-freq-qc-tree", window.freqTree);
+    $(document).ready(function() {
+      initTree("#site-cat-qc-tree", window.catTree);
+      initTree("#site-freq-qc-tree", window.freqTree);
+    });
 });
 
 })();
