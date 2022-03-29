@@ -651,6 +651,10 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         /* maintain preview & filter window size */
         $(window).resize(function(e){
 
+            if (_.isUndefined($previewContainer.position())) {
+              // GH Issue #607
+              return;
+            }
             var pt = $previewContainer.position().top;
             var ct = $configContainer.position().top;
             var st = $savedReportsContainer.position().top;
