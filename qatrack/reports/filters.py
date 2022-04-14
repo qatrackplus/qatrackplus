@@ -342,7 +342,7 @@ class SchedulingFilter(BaseReportFilterSet):
 
     class Meta:
         model = models.UnitTestCollection
-        fields = ["due_date", "assigned_to", "unit__site", "unit"]
+        fields = ["due_date", "assigned_to", "unit__site", "unit", "frequency"]
 
     def __init__(self, *args, **kwargs):
 
