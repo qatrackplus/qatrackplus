@@ -7,11 +7,7 @@ from django.views.decorators.http import require_POST
 
 from qatrack.qatrack_core.dates import format_as_date
 from qatrack.reports import (  # noqa: F401
-    faults,
-    models,
-    qc,
-    reports,
-    service_log,
+    faults, models, qc, reports, service_log,
 )
 from qatrack.reports.forms import (
     ReportForm,
@@ -70,10 +66,8 @@ def select_report(request):
         # need to filter out any report note meta data so the formset
         # can be treated like a new report rather than a saved report
         def dont_include(k):
-            return (
-                (k.startswith("reportnote_set-") and k.endswith("-report")) or
-                (k.startswith("reportnote_set-") and k.endswith("-id"))
-            )
+            return ((k.startswith("reportnote_set-") and k.endswith("-report")) or
+                    (k.startswith("reportnote_set-") and k.endswith("-id")))
 
         delete = [k for k in request.POST if dont_include(k)]
 
@@ -179,11 +173,8 @@ def save_report(request):
 
 def visible_user_reports(user):
 
-    return models.SavedReport.objects.filter(
-        Q(created_by=user) | Q(visible_to__in=user.groups.all())
-    ).select_related(
-        "created_by"
-    ).order_by("title", "created").distinct()
+    return models.SavedReport.objects.filter(Q(created_by=user) | Q(visible_to__in=user.groups.all())
+                                             ).select_related("created_by").order_by("title", "created").distinct()
 
 
 def saved_reports_datatable(request):

@@ -106,7 +106,9 @@ class TestListInstanceFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
+        ),
     )
 
     unit_test_collection__assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
@@ -168,9 +170,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -189,7 +189,9 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
+        ),
     )
 
     active = django_filters.filters.BooleanFilter(
@@ -293,9 +295,7 @@ class SchedulingFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -314,7 +314,9 @@ class SchedulingFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
+        ),
     )
 
     active = django_filters.filters.BooleanFilter(
@@ -424,13 +426,17 @@ class BaseServiceEventFilter(BaseReportFilterSet):
     unit_service_area__service_area = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Area"),
         queryset=sl_models.ServiceArea.objects.order_by("name").all(),
-        help_text=_l("Use this filter to limit report to one or more service areas (leave blank to include all service areas)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more service areas (leave blank to include all service areas)"
+        ),
     )
 
     service_type = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Type"),
         queryset=sl_models.ServiceType.objects.order_by("name").all(),
-        help_text=_l("Use this filter to limit report to one or more service types (leave blank to include all service types)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more service types (leave blank to include all service types)"
+        ),
     )
 
     class Meta:
@@ -464,9 +470,7 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit_service_area__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -484,7 +488,9 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     unit_service_area__service_area = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Area"),
         queryset=sl_models.ServiceArea.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more Service Areas (leave blank to include all service areas)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more Service Areas (leave blank to include all service areas)"
+        ),
     )
 
     service_event_template = django_filters.filters.ModelMultipleChoiceFilter(
@@ -510,13 +516,8 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     class Meta:
         model = sl_models.ServiceEventSchedule
         fields = [
-            "unit_service_area__unit__site",
-            "unit_service_area__unit",
-            "unit_service_area__service_area",
-            "service_event_template",
-            "frequency",
-            "assigned_to",
-            "active"
+            "unit_service_area__unit__site", "unit_service_area__unit", "unit_service_area__service_area",
+            "service_event_template", "frequency", "assigned_to", "active"
         ]
 
     def __init__(self, *args, **kwargs):
@@ -553,7 +554,9 @@ class BaseFaultFilter(BaseReportFilterSet):
     modality = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Modality"),
         queryset=umodels.Modality.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more modalities (leave blank to include all modalities)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more modalities (leave blank to include all modalities)"
+        ),
     )
 
     review_status = django_filters.filters.ChoiceFilter(

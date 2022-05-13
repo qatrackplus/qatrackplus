@@ -10,6 +10,7 @@ from qatrack.qa import models
 
 from qatrack.qa.testpack import create_testpack
 from qatrack.qa.utils import get_internal_user  # noqa: #402
+
 user = get_internal_user()
 
 
@@ -21,11 +22,17 @@ def run(*args):
         beams = [b.strip() for b in beams.strip(" ,").split(",") if b.strip()]
 
     if nargs_wrong or mode not in ["db", "testpack"]:
-        print("Usage python manage.py runscript create_grouped_dqa3_testlist --script-args {testpack,db} {beam1} {beam2} ... {beamN}")  # noqa: E501
+        print(
+            "Usage python manage.py runscript create_grouped_dqa3_testlist --script-args {testpack,db} {beam1} {beam2} ... {beamN}"
+        )  # noqa: E501
         print("To create a test list:")
-        print("    python manage.py runscript create_grouped_dqa3_testlist --script-args testpack 6X 6FFF 10X 10FFF 18X \"6X EDW60\"")  # noqa: E501
+        print(
+            "    python manage.py runscript create_grouped_dqa3_testlist --script-args testpack 6X 6FFF 10X 10FFF 18X \"6X EDW60\""
+        )  # noqa: E501
         print("To create a test pack:")
-        print("    python manage.py runscript create_grouped_dqa3_testlist --script-args db 6X 6FFF 10X 10FFF 18X \"6X EDW60\" 6E 9E 12E")  # noqa: E501
+        print(
+            "    python manage.py runscript create_grouped_dqa3_testlist --script-args db 6X 6FFF 10X 10FFF 18X \"6X EDW60\" 6E 9E 12E"
+        )  # noqa: E501
     else:
         create_dqa3(mode, beams)
 

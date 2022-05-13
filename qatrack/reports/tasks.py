@@ -63,7 +63,10 @@ def send_report(schedule_id, task_name=""):
         send_email_to_users(
             recipients,
             "reports/email.html",
-            context={'report': s.report, "report_schedule": s},
+            context={
+                'report': s.report,
+                "report_schedule": s
+            },
             subject_template="reports/email_subject.txt",
             text_template="reports/email.txt",
             attachments=[(fname, attach, CONTENT_TYPES[s.report.report_format])],

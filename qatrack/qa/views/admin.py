@@ -106,7 +106,9 @@ class CopyReferencesAndTolerancesForm(forms.Form):
 
             try:
                 models.UnitTestCollection.objects.get(
-                    unit=source_unit, object_id=source_testlist, content_type=ctype,
+                    unit=source_unit,
+                    object_id=source_testlist,
+                    content_type=ctype,
                 )
             except models.UnitTestCollection.DoesNotExist:
                 self.add_error("source_testlist", _("The selected test list does not exist on the source unit"))
@@ -179,14 +181,18 @@ def testlist_json(request, source_unit, content_type):
         utcs = models.UnitTestCollection.objects.filter(
             unit__pk=source_unit,
             content_type=ctype,
-        ).values_list('object_id', flat=True)
+        ).values_list(
+            'object_id', flat=True
+        )
         testlists = list(models.TestList.objects.filter(pk__in=utcs).values_list('pk', 'name'))
         return HttpResponse(json.dumps(testlists), content_type='application/json')
     elif ctype.name == 'test list cycle':
         utcs = models.UnitTestCollection.objects.filter(
             unit__pk=source_unit,
             content_type=ctype,
-        ).values_list('object_id', flat=True)
+        ).values_list(
+            'object_id', flat=True
+        )
         testlistcycles = list(models.TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
         return HttpResponse(json.dumps(testlistcycles), content_type='application/json')
     else:
@@ -198,7 +204,10 @@ class ExportTestPackForm(forms.Form):
     name = forms.SlugField(label=_l("Test Pack Name"))
     description = forms.CharField(
         label=_("Description"),
-        widget=forms.Textarea(attrs={'rows': 4, 'cols': ""}),
+        widget=forms.Textarea(attrs={
+            'rows': 4,
+            'cols': ""
+        }),
         required=False,
     )
     testlists = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -247,11 +256,7 @@ class ExportTestPack(FormView):
         context['title'] = _("Export Test Pack")
 
         context['cycles'] = models.TestListCycle.objects.all()
-        context['testlists'] = models.TestList.objects.only(
-            "pk",
-            "name",
-            "description"
-        )
+        context['testlists'] = models.TestList.objects.only("pk", "name", "description")
         context['tests'] = models.Test.objects.select_related("category").only(
             "pk",
             "name",

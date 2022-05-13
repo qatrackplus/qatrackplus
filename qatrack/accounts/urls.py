@@ -10,7 +10,6 @@ urlpatterns = [
     url(r'^ping/$', views.ping, name="ping_server"),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name="auth_logout"),
     url(r'^details/$', views.AccountDetails.as_view(), name="account-details"),
-
     url(r'^groups/$', views.GroupsApp.as_view(), name="groups-app"),
 ]
 

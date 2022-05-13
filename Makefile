@@ -32,11 +32,11 @@ yapf:
 	yapf --verbose --in-place --recursive --parallel \
 		-e*fixtures* -e*migration* -e*.git* -e*tmp* -e*deploy* \
 		-e*media* -e deploy  -e env -e*templates* -e*backups* -e*ipynb* -e*static* \
-		-e*logs* -e*cache* -e*init.d* -e*emails* -e*postgres* -e*uploads* \
+		-e*logs* -e*cache* -e*init.d* -e*emails* -e*postgres* -e*uploads* -e*.eggs*\
 		.
 
 flake8:
-	flake8 .
+	flake8 --exclude .eggs
 
 docs:
 	cd docs && make html

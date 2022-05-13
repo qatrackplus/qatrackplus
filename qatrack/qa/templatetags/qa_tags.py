@@ -51,12 +51,7 @@ def reference_tolerance_span(test, ref, tol):
 
     tsd = settings.TEST_STATUS_DISPLAY
     if tol.type == models.MULTIPLE_CHOICE:
-        params = (
-            tsd['ok'],
-            ", ".join(tol.pass_choices()),
-            tsd['tolerance'],
-            ', '.join(tol.tol_choices())
-        )
+        params = (tsd['ok'], ", ".join(tol.pass_choices()), tsd['tolerance'], ', '.join(tol.tol_choices()))
         return mark_safe((
             '<span><abbr title="%s Values: %s;  %s Values: %s; All other choices are failing">'
             '<em>Choice</em></abbr></span>'
@@ -64,14 +59,18 @@ def reference_tolerance_span(test, ref, tol):
 
     tsds = settings.TEST_STATUS_DISPLAY_SHORT
     if tol.type == models.ABSOLUTE:
-        return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
-            tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
-            str(tol).replace("Absolute", ""), ref.value_display() if ref else "")
+        return mark_safe(
+            '<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
+                tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"], str(tol).replace("Absolute", ""),
+                ref.value_display() if ref else ""
+            )
         )
     elif tol.type == models.PERCENT:
-        return mark_safe('<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
-            tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"],
-            str(tol).replace("Percent", ""), ref.value_display() if ref else "")
+        return mark_safe(
+            '<span> <abbr title="(%s L, %s L, %s H, %s H) = %s ">%s</abbr></span>' % (
+                tsds["action"], tsds["tolerance"], tsds["tolerance"], tsds["action"], str(tol).replace("Percent", ""),
+                ref.value_display() if ref else ""
+            )
         )
 
 
@@ -141,12 +140,7 @@ def as_pass_fail_status(test_list_instance, show_label=True):
     template = get_template("qa/pass_fail_status.html")
     # statuses_to_exclude = [models.NO_TOL]
     statuses_to_exclude = ['no_tol']
-    c = {
-        "instance": test_list_instance,
-        "exclude": statuses_to_exclude,
-        "show_label": show_label,
-        'show_icons': True
-    }
+    c = {"instance": test_list_instance, "exclude": statuses_to_exclude, "show_label": show_label, 'show_icons': True}
     return template.render(c)
 
 
@@ -206,6 +200,8 @@ def as_time_delta(time_delta):
     hours, remainder = divmod(time_delta.seconds, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
     return '%dd %dh %dm %ds' % (time_delta.days, hours, minutes, seconds)
+
+
 as_time_delta.safe = True  # noqa: E305
 
 
@@ -239,18 +235,10 @@ def hour_min(duration):
 @register.simple_tag
 def service_status_label(status, size=None):
     template = get_template('service_log/service_event_status_label.html')
-    return template.render({
-        'colour': status.colour,
-        'name': status.name,
-        'size': '10.5' if size is None else size
-    })
+    return template.render({'colour': status.colour, 'name': status.name, 'size': '10.5' if size is None else size})
 
 
 @register.simple_tag
 def service_event_btn(event, size='xs'):
     template = get_template('service_log/service_event_btn.html')
-    return template.render({
-        'colour': event.service_status.colour,
-        'id': event.id,
-        'size': size
-    })
+    return template.render({'colour': event.service_status.colour, 'id': event.id, 'size': size})

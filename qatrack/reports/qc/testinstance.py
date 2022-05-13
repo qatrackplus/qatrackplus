@@ -146,20 +146,24 @@ class TestInstanceDetailsReport(BaseReport):
     def organize_by_unit_test_date(self):
 
         qs = self.filter_set.qs
-        unit_test_combos = list(qs.values_list(
-            "unit_test_info__unit",
-            "unit_test_info__test",
-        ).order_by(
-            "unit_test_info__unit__%s" % settings.ORDER_UNITS_BY,
-            "unit_test_info__test__display_name",
-        ).distinct())
+        unit_test_combos = list(
+            qs.values_list(
+                "unit_test_info__unit",
+                "unit_test_info__test",
+            ).order_by(
+                "unit_test_info__unit__%s" % settings.ORDER_UNITS_BY,
+                "unit_test_info__test__display_name",
+            ).distinct()
+        )
 
-        unique_dates = list(qs.order_by(
-            "test_list_instance__work_completed",
-        ).values_list(
-            "test_list_instance__work_completed",
-            flat=True,
-        ))
+        unique_dates = list(
+            qs.order_by(
+                "test_list_instance__work_completed",
+            ).values_list(
+                "test_list_instance__work_completed",
+                flat=True,
+            )
+        )
 
         cells_per_ti = 5
         date_rows = {d: i for i, d in enumerate(unique_dates)}
@@ -192,7 +196,8 @@ class TestInstanceDetailsReport(BaseReport):
         for unit_id, test_id in unit_test_combos:
 
             tis = qs.filter(
-                unit_test_info__unit_id=unit_id, unit_test_info__test_id=test_id,
+                unit_test_info__unit_id=unit_id,
+                unit_test_info__test_id=test_id,
             ).select_related(
                 "unit_test_info__test",
                 "reference",

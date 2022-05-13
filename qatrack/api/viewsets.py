@@ -2,10 +2,9 @@ from rest_framework import viewsets
 from rest_framework import mixins
 
 
-class CreateListRetrieveViewSet(mixins.CreateModelMixin,
-                                mixins.ListModelMixin,
-                                mixins.RetrieveModelMixin,
-                                viewsets.GenericViewSet):
+class CreateListRetrieveViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     """
     A viewset that provides `retrieve`, `create`, and `list` actions.
 

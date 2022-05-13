@@ -496,9 +496,8 @@ class TestChartData(TestCase):
         unit_name = self.utc1.unit.name
         tl2_name = self.tl2.name
         actual = [
-            x['value']
-            for x in data['plot_data']['series']['%s - %s :: test2 (relative to ref)' % (unit_name,
-                                                                                         tl2_name)]['series_data']
+            x['value'] for x in data['plot_data']['series']['%s - %s :: test2 (relative to ref)' %
+                                                            (unit_name, tl2_name)]['series_data']
         ]
         self.assertListEqual(actual, expected)
 
@@ -1203,8 +1202,7 @@ class TestPerformQA(TestCase):
         }
 
         utils.create_test_list_instance(
-            unit_test_collection=self.unit_test_list,
-            work_completed=timezone.now() - timezone.timedelta(days=10)
+            unit_test_collection=self.unit_test_list, work_completed=timezone.now() - timezone.timedelta(days=10)
         )
 
         self.unit_test_list.refresh_from_db()
@@ -1601,13 +1599,7 @@ result = json.load(FILE)
         self.test_list = utils.create_test_list()
         utils.create_test_list_membership(self.test_list, self.test)
 
-        content = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
+        content = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
         self.test_file = SimpleUploadedFile("TESTRUNNER_test_file.json", content)
 
         self.unit_test_info = utils.create_unit_test_info(test=self.test)
@@ -1643,13 +1635,15 @@ result = json.load(FILE)
         self.assertTrue(os.path.exists(os.path.join(settings.TMP_UPLOAD_ROOT)), data['attachment']["name"])
 
     def test_invalid_test_id(self):
-        response = self.client.post(self.url, {
-            "test_id": 200,
-            "upload": self.test_file,
-            "unit_id": self.unit_test_info.unit.id,
-            "test_list_id": self.test_list.id,
-            "meta": "{}"
-        })
+        response = self.client.post(
+            self.url, {
+                "test_id": 200,
+                "upload": self.test_file,
+                "unit_id": self.unit_test_info.unit.id,
+                "test_list_id": self.test_list.id,
+                "meta": "{}"
+            }
+        )
         data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["errors"][0], "Test with that ID does not exist")
 
@@ -1669,13 +1663,15 @@ result = json.load(FILE)
         self.assertIn("Invalid Test", data["errors"][0])
 
     def test_upload_results(self):
-        response = self.client.post(self.url, {
-            "test_id": self.test.pk,
-            "upload": self.test_file,
-            "meta": "{}",
-            "unit_id": self.unit_test_info.unit.id,
-            "test_list_id": self.test_list.id,
-        })
+        response = self.client.post(
+            self.url, {
+                "test_id": self.test.pk,
+                "upload": self.test_file,
+                "meta": "{}",
+                "unit_id": self.unit_test_info.unit.id,
+                "test_list_id": self.test_list.id,
+            }
+        )
         data = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(data["result"]["baz"]["baz1"], "test")
 
@@ -1975,8 +1971,13 @@ class TestReviewTestListInstance(TestCase):
     def test_review_tli_url_reverse(self):
         urls = [
             ("/qc/session/review/", {}),
-            ("/qc/session/review/1/", {'pk': 1}),
-            ("/qc/session/review/rtsqa-0/1/", {'pk': 1, 'rtsqa_form': 'rtsqa-0'}),
+            ("/qc/session/review/1/", {
+                'pk': 1
+            }),
+            ("/qc/session/review/rtsqa-0/1/", {
+                'pk': 1,
+                'rtsqa_form': 'rtsqa-0'
+            }),
         ]
         for url, kwargs in urls:
             assert reverse("review_test_list_instance", kwargs=kwargs) == url

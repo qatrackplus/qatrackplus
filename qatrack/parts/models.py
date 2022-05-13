@@ -58,6 +58,7 @@ class Supplier(models.Model):
                 )
             )
         return ""
+
     def __str__(self):
         return self.name
 
@@ -166,12 +167,16 @@ class Storage(models.Model):
 
     location = models.CharField(
         verbose_name=_l("location"),
-        max_length=32, blank=True, null=True,
+        max_length=32,
+        blank=True,
+        null=True,
         help_text=_l('Where is this storage located?'),
     )
     description = models.TextField(
         verbose_name=_l("description"),
-        max_length=255, null=True, blank=True,
+        max_length=255,
+        null=True,
+        blank=True,
         help_text=_l("Optional description of this storage"),
     )
 

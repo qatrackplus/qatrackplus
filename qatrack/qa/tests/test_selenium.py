@@ -658,7 +658,6 @@ class TestPerformQC(BaseQATests):
         self.click_by_css_selector("body")
         time.sleep(0.2)
 
-
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 

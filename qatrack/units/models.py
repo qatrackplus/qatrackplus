@@ -162,8 +162,16 @@ class UnitType(models.Model):
     objects = UnitTypeManager()
 
     class Meta:
-        unique_together = [('name', 'model', 'vendor', 'unit_class',)]
-        ordering = ("vendor__name", "name",)
+        unique_together = [(
+            'name',
+            'model',
+            'vendor',
+            'unit_class',
+        )]
+        ordering = (
+            "vendor__name",
+            "name",
+        )
         verbose_name = _l("unit type")
         verbose_name_plural = _l("unit types")
 
@@ -171,6 +179,7 @@ class UnitType(models.Model):
         vendor = self.vendor.natural_key() if self.vendor else ()
         unit_class = self.unit_class.natural_key() if self.unit_class else ()
         return (self.name, self.model) + vendor + unit_class
+
     natural_key.dependencies = ["units.vendor", "units.unitclass"]
 
     def __str__(self):
@@ -265,12 +274,9 @@ class Unit(models.Model):
                 return 0
             date_from = self.date_acceptance
 
-        self_uat_set = self.unitavailabletime_set.filter(
-            date_changed__range=[date_from, date_to]
-        ).order_by('date_changed')
-        self_uate_set = self.unitavailabletimeedit_set.filter(
-            date__range=[date_from, date_to]
-        ).order_by('date')
+        self_uat_set = self.unitavailabletime_set.filter(date_changed__range=[date_from, date_to]
+                                                         ).order_by('date_changed')
+        self_uate_set = self.unitavailabletimeedit_set.filter(date__range=[date_from, date_to]).order_by('date')
 
         # add latest uat where available
         latest_uat = self.unitavailabletime_set.filter(date_changed__lte=date_from).order_by("-date_changed")[:1]
@@ -281,8 +287,13 @@ class Unit(models.Model):
         uate_list = {str(uate.date): uate.hours for uate in self_uate_set}
 
         val_list = self_uat_set.values(
-            'date_changed', 'hours_sunday', 'hours_monday', 'hours_tuesday',
-            'hours_wednesday', 'hours_thursday', 'hours_friday',
+            'date_changed',
+            'hours_sunday',
+            'hours_monday',
+            'hours_tuesday',
+            'hours_wednesday',
+            'hours_thursday',
+            'hours_friday',
             'hours_saturday',
         )
 
@@ -359,15 +370,22 @@ class UnitAvailableTime(models.Model):
 
     def to_dict(self):
         return {
-            'date_changed': '{:02d}-{:02d}-{}'.format(
-                self.date_changed.day, self.date_changed.month, self.date_changed.year),
-            'hours_sunday': self.hours_sunday,
-            'hours_monday': self.hours_monday,
-            'hours_tuesday': self.hours_tuesday,
-            'hours_wednesday': self.hours_wednesday,
-            'hours_thursday': self.hours_thursday,
-            'hours_friday': self.hours_friday,
-            'hours_saturday': self.hours_saturday,
+            'date_changed':
+                '{:02d}-{:02d}-{}'.format(self.date_changed.day, self.date_changed.month, self.date_changed.year),
+            'hours_sunday':
+                self.hours_sunday,
+            'hours_monday':
+                self.hours_monday,
+            'hours_tuesday':
+                self.hours_tuesday,
+            'hours_wednesday':
+                self.hours_wednesday,
+            'hours_thursday':
+                self.hours_thursday,
+            'hours_friday':
+                self.hours_friday,
+            'hours_saturday':
+                self.hours_saturday,
         }
 
     @staticmethod

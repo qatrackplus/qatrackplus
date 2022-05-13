@@ -18,7 +18,12 @@ class RecipientGroupForm(forms.ModelForm):
 
     class Meta:
         model = models.RecipientGroup
-        fields = ("name", "groups", "users", "emails",)
+        fields = (
+            "name",
+            "groups",
+            "users",
+            "emails",
+        )
 
     def clean_emails(self):
         emails = self.cleaned_data.get("emails", "")
@@ -78,23 +83,24 @@ class RecipientGroupAdmin(BaseQATrackAdmin):
             "js/notification_admin.js",
         )
         css = {
-            'all': (
-                "select2/css/select2.css",
-            ),
+            'all': ("select2/css/select2.css",),
         }
 
     def get_groups(self, obj):
         return trim(', '.join(obj.groups.values_list("name", flat=True)))
+
     get_groups.admin_order_field = "groups__name"
     get_groups.short_description = _l("Groups")
 
     def get_users(self, obj):
         return trim(', '.join("%s (%s)" % (u.username, u.email) for u in obj.users.all()))
+
     get_users.admin_order_field = "users__username"
     get_users.short_description = _l("Users")
 
     def get_emails(self, obj):
         return trim(obj.emails)
+
     get_emails.short_description = _l("Emails")
     get_users.admin_order_field = "emails"
 
@@ -129,13 +135,12 @@ class TestListGroupAdmin(BaseQATrackAdmin):
             "js/notification_admin.js",
         )
         css = {
-            'all': (
-                "select2/css/select2.css",
-            ),
+            'all': ("select2/css/select2.css",),
         }
 
     def get_test_lists(self, obj):
         return trim(', '.join(obj.test_lists.values_list("name", flat=True)))
+
     get_test_lists.admin_order_field = "test_lists__name"
     get_test_lists.short_description = _l("Test Lists")
 
@@ -163,6 +168,7 @@ class UnitGroupAdmin(BaseQATrackAdmin):
 
     def get_units(self, obj):
         return trim(', '.join(obj.units.values_list("name", flat=True)))
+
     get_units.admin_order_field = "units__name"
     get_units.short_description = _l("Units")
 

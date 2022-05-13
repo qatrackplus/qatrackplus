@@ -11,7 +11,6 @@ from qatrack.qatrack_core import views
 
 admin.autodiscover()
 
-
 favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico"), permanent=True)
 touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-icon.png"), permanent=True)
 
@@ -55,7 +54,7 @@ urlpatterns = [
 ]
 
 js_info_dict = {
-    'packages': ('recurrence', ),
+    'packages': ('recurrence',),
 }
 urlpatterns += [url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict)]
 

@@ -1,5 +1,4 @@
 class SchedulingMixin:
-
     """A mixin class to be used when assigning 'tasks' to a unit with a
     frequency object"""
 

@@ -50,8 +50,7 @@ class TestUnitType(TestCase):
 
     def test_get_by_nk(self):
         ut = utils.create_unit_type()
-        assert models.UnitType.objects.get_by_natural_key(
-            ut.name, ut.model, vendor_name=ut.vendor.name).pk == ut.pk
+        assert models.UnitType.objects.get_by_natural_key(ut.name, ut.model, vendor_name=ut.vendor.name).pk == ut.pk
 
     def test_nk(self):
         ut = utils.create_unit_type()
@@ -61,7 +60,7 @@ class TestUnitType(TestCase):
 class TestModality:
 
     def test_nk(self):
-        assert models.Modality(name="modality").natural_key() == ("modality", )
+        assert models.Modality(name="modality").natural_key() == ("modality",)
 
     def test_str(self):
         assert str(models.Modality(name="modality")) == "modality"

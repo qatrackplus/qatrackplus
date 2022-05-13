@@ -10,6 +10,7 @@ from django.db.transaction import atomic
 
 class SetEncoder(json.JSONEncoder):
     """Allow handling of sets as lists"""
+
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
@@ -96,8 +97,10 @@ def unique(seq, idfun=None):
     """f5 from http://www.peterbe.com/plog/uniqifiers-benchmark"""
     # order preserving
     if idfun is None:
+
         def idfun(x):
             return x
+
     seen = {}
     result = []
     for item in seq:
@@ -149,6 +152,7 @@ def check_query_count():  # pragma: nocover
 
     def decorator(func):
         if settings.DEBUG:
+
             def inner(self, *args, **kwargs):
                 initial_queries = len(connection.queries)
                 t1 = time.time()
@@ -157,8 +161,10 @@ def check_query_count():  # pragma: nocover
                 final_queries = len(connection.queries)
                 print("****QUERIES****", final_queries - initial_queries, "in %.3f ms" % (t2 - t1))
                 return ret
+
             return inner
         return func
+
     return decorator
 
 
@@ -170,16 +176,10 @@ def get_bool_tols(user_klass=None, tol_klass=None):
     user = get_internal_user(user_klass)
 
     warn, __ = tol_klass.objects.get_or_create(
-        type=models.BOOLEAN,
-        bool_warning_only=True,
-        created_by=user,
-        modified_by=user
+        type=models.BOOLEAN, bool_warning_only=True, created_by=user, modified_by=user
     )
     act, __ = tol_klass.objects.get_or_create(
-        type=models.BOOLEAN,
-        bool_warning_only=False,
-        created_by=user,
-        modified_by=user
+        type=models.BOOLEAN, bool_warning_only=False, created_by=user, modified_by=user
     )
     return warn, act
 

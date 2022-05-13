@@ -42,14 +42,9 @@ def on_part_saved(sender, instance, created, **kwargs):
             subject_template="parts/subject.txt",
             text_template="parts/email.txt",
         )
-        logger.info(
-            "Sent Parts Notice for part %d at %s" % (part.id, timezone.now())
-        )
+        logger.info("Sent Parts Notice for part %d at %s" % (part.id, timezone.now()))
     except:  # noqa: E722  # pragma: nocover
-        logger.exception(
-            "Error sending Part Notice for part %d at %s." %
-            (part.id, timezone.now())
-        )
+        logger.exception("Error sending Part Notice for part %d at %s." % (part.id, timezone.now()))
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
         if not fail_silently:

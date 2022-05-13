@@ -18,9 +18,7 @@ DEBUG = False
 DEBUG_TOOLBAR = False
 
 # Who to email when server errors occur
-ADMINS = (
-    ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
-)
+ADMINS = (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),)
 MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = False
 
@@ -53,10 +51,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
         'NAME': os.path.join(PROJECT_ROOT, '..', 'db/default.db'),  # db name Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.S
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'USER': '',  # Not used with sqlite3.
+        'PASSWORD': '',  # Not used with sqlite3.S
+        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -81,7 +79,6 @@ USE_TZ = True
 
 FORMAT_MODULE_PATH = "qatrack.formats"
 
-
 # formats for strptime/strftime
 DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
 DATETIME_INPUT_FORMATS = [
@@ -98,7 +95,6 @@ DATETIME_FORMAT = "j M Y H:i"
 DATE_FORMAT = "j M Y"
 TIME_FORMAT = "H:i"
 
-
 DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
 
 # Language code for this installation. All choices can be found here:
@@ -111,7 +107,6 @@ USE_I18N = True
 
 CONSTANT_PRECISION = 8
 DEFAULT_NUMBER_FORMAT = None
-
 
 # This is the warning message given to the user when a test result is out of tolerance
 # Override this setting in local_settings.py to a locally relevant warning message
@@ -167,7 +162,6 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
     with open(SITE_SPECIFIC_CSS_PATH, 'w') as f:
         f.write("/* You can place any site specific css in this file*/\n")
 
-
 # ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE = [
@@ -196,7 +190,8 @@ TEMPLATES = [
         ],
         'APP_DIRS': True,
         'OPTIONS': {
-            'debug': False,
+            'debug':
+                False,
             'context_processors': [
                 # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
                 # list if you haven't customized them:
@@ -263,7 +258,6 @@ INSTALLED_APPS = [
     'admin_views',
 ]
 
-
 # ----------------------------------------------------------------------------
 # API settings
 
@@ -329,7 +323,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 CSRF_COOKIE_NAME = 'csrftoken'
 
-
 # needs to be set to True when running behind reverse proxy (normal deploy)
 # set to False when not running behind reverse proxy
 # Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
@@ -353,7 +346,6 @@ EMAIL_HOST_PASSWORD = 'your_password_here'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 
-
 # -----------------------------------------------------------------------------
 # Account settings
 
@@ -365,12 +357,10 @@ AUTHENTICATION_BACKENDS = [
     # 'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend',
 ]
 
-
 ACCOUNT_ACTIVATION_DAYS = 7
 ACCOUNTS_SELF_REGISTER = False
 ACCOUNTS_CLEAN_USERNAME = None
 ACCOUNTS_PASSWORD_RESET = True
-
 
 # active directory settings (not required if only using ModelBackend
 AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
@@ -400,7 +390,6 @@ AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_N
 # same name as the AD group if it doesn't exist.
 AD_MIRROR_GROUPS = False
 
-
 AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
 CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
@@ -408,7 +397,6 @@ CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
 # define a function called AD_CLEAN_USERNAME in local_settings.py if you
 # wish to clean usernames before sending to ldap server
 AD_CLEAN_USERNAME = None
-
 
 # AD FS settings. For more information and other settings, see
 # https://django-auth-adfs.readthedocs.io/en/latest/settings_ref.html
@@ -426,6 +414,7 @@ AUTH_ADFS = {
     "GROUPS_CLAIM": "group",
 }
 
+
 # ------------------------------------------------------------------------------
 # Logging Settings
 # A sample logging configuration. The only tangible logging
@@ -434,10 +423,7 @@ AUTH_ADFS = {
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 def skip_requests(record):  # noqa: E302
-    skip = (
-        record.args[0].startswith("GET /static/") or
-        record.args[0].startswith("GET /accounts/ping/")
-    )
+    skip = (record.args[0].startswith("GET /static/") or record.args[0].startswith("GET /accounts/ping/"))
     return not skip
 
 
@@ -648,10 +634,7 @@ DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
 USE_ISSUES = False  # internal development issue tracker
 
-DELETE_REASONS = (
-    ('Duplicate', 'Duplicate'),
-    ('Invalid', 'Invalid')
-)
+DELETE_REASONS = (('Duplicate', 'Duplicate'), ('Invalid', 'Invalid'))
 
 DEFAULT_AVAILABLE_TIMES = {
     'hours_sunday': datetime.timedelta(hours=0, minutes=0),
@@ -684,7 +667,10 @@ EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = ['auth_', 'qa', 'service_log', 'units',
 EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken', 'sessions_']
 EXPLORER_TASKS_ENABLED = False
 EXPLORER_ASYNC_SCHEMA = False
-EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE', 'SCHEMA', 'GRANT', 'OWNER TO']  # noqa: E501
+EXPLORER_SQL_BLACKLIST = [
+    'ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE',
+    'SCHEMA', 'GRANT', 'OWNER TO'
+]  # noqa: E501
 
 
 def EXPLORER_PERMISSION_CHANGE(request):
@@ -697,7 +683,6 @@ def EXPLORER_PERMISSION_VIEW(request):
 
 if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
     from .docker_settings import *  # NOQA
-
 
 CHROME_PATH = ""
 if os.name.lower() == "nt":
@@ -718,11 +703,9 @@ else:
         "/usr/bin/chromium-browser",
     ]
 
-
 for path in chrome_paths:
     if os.path.exists(path):
         CHROME_PATH = path
-
 
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
@@ -730,13 +713,10 @@ for path in chrome_paths:
 
 from .local_settings import *  # noqa: F403, F401
 
-
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
-
 
 _MAX_FIELDS_PER_TEST = 5  # value, json_value, user_attached, skipped, extra value for bool
 DATA_UPLOAD_MAX_NUMBER_FIELDS = max(MAX_TESTS_PER_TESTLIST * _MAX_FIELDS_PER_TEST, 1000)
-
 
 # ------------------------------------------------------------------------------
 # Directory availability & dependent paths
@@ -758,11 +738,9 @@ IS_FILE_CACHE = CACHES['default']['BACKEND'] == 'django.core.cache.backends.file
 if IS_FILE_CACHE and not os.path.isdir(CACHE_LOCATION):
     os.mkdir(CACHE_LOCATION)
 
-
 if FORCE_SCRIPT_NAME:
     # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
     ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
-
 
 # no longer using EMAIL_NOTIFICATION_USER/PWD but people may have
 # notification specific settings set.
@@ -771,7 +749,6 @@ if EMAIL_NOTIFICATION_USER and not EMAIL_HOST_USER:
 
 if EMAIL_NOTIFICATION_PWD and not EMAIL_HOST_PASSWORD:
     EMAIL_HOST_PASSWORD = EMAIL_NOTIFICATION_PWD
-
 
 # ------------------------------------------------------------------------------
 # Testing settings
@@ -788,7 +765,6 @@ if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
-
 USE_ADFS = (
     'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS or
     'django_adfs.backends.AdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS
@@ -796,7 +772,6 @@ USE_ADFS = (
 
 if USE_ADFS:
     INSTALLED_APPS.append('django_auth_adfs')
-
 
 if USE_SQL_REPORTS:
     INSTALLED_APPS += [

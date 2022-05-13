@@ -27,9 +27,8 @@ testlist_complete = Signal(providing_args=["instance", "created"])
 def update_last_instances(test_list_instance):
     utc = test_list_instance.unit_test_collection
     try:
-        last_instance = models.TestListInstance.objects.complete().filter(
-            unit_test_collection=utc
-        ).latest("work_completed")
+        last_instance = models.TestListInstance.objects.complete().filter(unit_test_collection=utc
+                                                                          ).latest("work_completed")
     except models.TestListInstance.DoesNotExist:
         last_instance = None
     except models.UnitTestCollection.DoesNotExist:
@@ -159,12 +158,7 @@ def update_unit_test_infos(collection):
         existing_tests = [x.test for x in existing_uti_units]
         missing_utis = [x for x in all_tests if x not in existing_tests]
         for test in missing_utis:
-            get_or_create_unit_test_info(
-                unit=utc.unit,
-                test=test,
-                assigned_to=utc.assigned_to,
-                active=True
-            )
+            get_or_create_unit_test_info(unit=utc.unit, test=test, assigned_to=utc.assigned_to, active=True)
 
 
 @receiver(pre_save, sender=models.Test)
@@ -179,10 +173,14 @@ def on_test_save(*args, **kwargs):
         unit_assignments = models.UnitTestInfo.objects.filter(test=test)
 
         for ua in unit_assignments:
-            if ua.reference and ua.reference.value not in (0., 1.,):
+            if ua.reference and ua.reference.value not in (
+                0.,
+                1.,
+            ):
                 raise ValidationError(
                     "Can't change test type to %s while this test is still assigned to "
-                    "%s with a non-boolean reference" % (test.type, ua.unit.name))
+                    "%s with a non-boolean reference" % (test.type, ua.unit.name)
+                )
 
 
 @receiver(testlist_complete)
@@ -190,10 +188,9 @@ def check_tli_flag(*args, **kwargs):
     """Flag this test list instance if required"""
     tli = kwargs["instance"]
     models.TestListInstance.objects.filter(pk=tli.pk).update(
-        flagged=tli.testinstance_set.filter(
-            Q(value=1, unit_test_info__test__flag_when=True) |
-            Q(value=0, unit_test_info__test__flag_when=False)
-        ).exists()
+        flagged=tli.testinstance_set.
+        filter(Q(value=1, unit_test_info__test__flag_when=True)
+               | Q(value=0, unit_test_info__test__flag_when=False)).exists()
     )
 
 

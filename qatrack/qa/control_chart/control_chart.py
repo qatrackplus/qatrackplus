@@ -15,18 +15,18 @@ from . import maximumlikelihoodfit as mlefit
 # Set some values:
 
 # Spacing:
-WSPACE = 0.05   # horizontal space between plots
-HSPACE = 0.20   # vertical space between plots
+WSPACE = 0.05  # horizontal space between plots
+HSPACE = 0.20  # vertical space between plots
 DATA_HSPACE = 0.05  # space following data; frac of # of subgroups (aesthetics)
 DATA_TSPACE = 0.2  # space above data to leave room for string.
 
-LMARGIN = 0.1    #
+LMARGIN = 0.1  #
 RMARGIN = 0.95  # definition of outer
 BMARGIN = 0.1  # borders
-TMARGIN = 0.9    #
+TMARGIN = 0.9  #
 
-HEADERX = 0.1    # x position of header
-HEADERY = 0.93   # y position of header
+HEADERX = 0.1  # x position of header
+HEADERY = 0.93  # y position of header
 STRING_XPOS = 0.02  # relative position of control chart string in x direction
 STRING_YPOS = 0.87  # relative position of control chart string in y direction
 RSTRING_YPOS = 0.93
@@ -51,22 +51,22 @@ LINEWIDTH = 3  # width of fit lines and control/range chart limits
 COLORS = ['#006400', '#CD2626', '#CD2626', '#FFC125', '#FFC125']
 STDSTYLE = ['-', '-', '-', '--', '--']
 DATALABEL = ['mean', 'range lim.', '', 'st. dev. lim.', '']
-GAUSSFORMAT = 'k'       # Format of Gaussian distribution fit line
+GAUSSFORMAT = 'k'  # Format of Gaussian distribution fit line
 GAMMAFORMAT = '#0000CD'  # Format of Gamma distributio fit line
-GAMMALINE = '--'      # Style of fit line for Gamma distribution
+GAMMALINE = '--'  # Style of fit line for Gamma distribution
 
 # Axis labels:
-CC_YAXIS = 'subgroup mean'   # y-axis label for control chart
-R_YAXIS = 'range'           # y-axis label for range chart
-HISTAXIS = 'frequency'       # axis label for histograms
+CC_YAXIS = 'subgroup mean'  # y-axis label for control chart
+R_YAXIS = 'range'  # y-axis label for range chart
+HISTAXIS = 'frequency'  # axis label for histograms
 LBL_XAXIS = 'subgroup number'  # x-axis label for range and control charts
 LBL_DATE_XAXIS = 'subgroup start date'
 
 # Data labels:
 LBL1 = 'used to calc. limits'  # labels the baseline data used to calculate limits
-LBL2 = 'all data'              # label to indicate that it reprensents all the data
+LBL2 = 'all data'  # label to indicate that it reprensents all the data
 LBL_GAUSS = "Gaussian dist. fit line"  # in legend
-LBL_GAMMA = "Gamma dist. fit line"     # in legend
+LBL_GAMMA = "Gamma dist. fit line"  # in legend
 
 header_string = '# of data points = %r |  subgroup size = %r |  # of baseline points = %r'
 control_chart_string = 'Ac   = %1.2f    Au = %1.2f    Al = %1.2f\nAu,s = %1.2f  Al,s = %1.2f'
@@ -109,18 +109,17 @@ def generate_fit(x, axes, freq, bins, binwidth):
         optParam = mlefit.gamma_fit(x, binwidth)
         norm, k, theta = optParam
         ydata = mlefit.gamma_pdf(xdata, norm, k, theta)
-        axes.plot(ydata, xdata, GAMMAFORMAT,
-                  ls=GAMMALINE, label=LBL_GAMMA, lw=LINEWIDTH)
+        axes.plot(ydata, xdata, GAMMAFORMAT, ls=GAMMALINE, label=LBL_GAMMA, lw=LINEWIDTH)
 
         return mean, sigma, fitmean, fitsigma, k, theta
     else:
         return mean, sigma, fitmean, fitsigma
 
+
 #################################################################################
 
 
 def display(fig, x, sgSize, baseline, dates=None, fit=False):
-
     """
     Display a statistical control chart for a dataset. See Pawlicki et al
     Med Phys 32 (9), 2005, pg 2777
@@ -189,15 +188,13 @@ def display(fig, x, sgSize, baseline, dates=None, fit=False):
 
     # format the plots
     plots = [axData, axHistD, axRange, axHistR]  # don't change the order
-    format_plots(plots, xbar_thresh, range_thresh,
-                 cc_fits, rc_fits, sgNum[- 1], fit, use_dates)
+    format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, sgNum[-1], fit, use_dates)
 
-    fig.text(HEADERX, HEADERY,
-             header_string % (len(x), sgSize, baseline),
-             fontsize=HFS)
+    fig.text(HEADERX, HEADERY, header_string % (len(x), sgSize, baseline), fontsize=HFS)
 
 
 ################################################################################
+
 
 def get_bins(x):
     binwidth = htg.binwidth(x)
@@ -222,22 +219,28 @@ def get_bins(x):
 
     return bins, binwidth
 
+
 ################################################################################
 
 
 def get_axes():
 
-    gs = gridspec.GridSpec(2, 2,
-                           left=LMARGIN,
-                           bottom=BMARGIN,
-                           right=RMARGIN,
-                           top=TMARGIN, wspace=WSPACE,
-                           hspace=HSPACE,
-                           width_ratios=[2, 1])
+    gs = gridspec.GridSpec(
+        2,
+        2,
+        left=LMARGIN,
+        bottom=BMARGIN,
+        right=RMARGIN,
+        top=TMARGIN,
+        wspace=WSPACE,
+        hspace=HSPACE,
+        width_ratios=[2, 1]
+    )
     return gs
 
 
 ################################################################################
+
 
 def generate_cc(ax, sgNum, data, baseline, thresh):
 
@@ -245,17 +248,15 @@ def generate_cc(ax, sgNum, data, baseline, thresh):
     style = STDSTYLE
     label = DATALABEL
 
-    prop = {'marker': DATAMARKER,
-            'ls': LINESTYLE
-            }
+    prop = {'marker': DATAMARKER, 'ls': LINESTYLE}
 
-    ax.plot(sgNum[0: baseline], data[0: baseline], color=BC, label=LBL1, **prop)
+    ax.plot(sgNum[0:baseline], data[0:baseline], color=BC, label=LBL1, **prop)
     ax.plot(sgNum[baseline:], data[baseline:], color=RC, **prop)
 
     if not isinstance(sgNum[0], datetime.date):
-        t = [0, sgNum[- 1] + sgNum[- 1] * 0.1]
+        t = [0, sgNum[-1] + sgNum[-1] * 0.1]
     else:
-        t = [sgNum[0], sgNum[- 1]]
+        t = [sgNum[0], sgNum[-1]]
     for i, val in enumerate(thresh):
         ax.plot(t, val, color[i], ls=style[i], lw=LINEWIDTH, label=label[i])
 
@@ -269,15 +270,15 @@ def generate_hist(ax, data, baseline):
     prop = {'orientation': orientation}
 
     freq, edges, ignored = ax.hist(data, bins=bins, color=RC, label=LBL2, **prop)
-    ax.hist(data[0: baseline], bins=bins, color=BC, label=LBL1, **prop)
+    ax.hist(data[0:baseline], bins=bins, color=BC, label=LBL1, **prop)
 
     return freq, bins, binwidth
 
 
 ################################################################################
 
-def format_plots(plots, xbar_thresh, range_thresh,
-                 cc_fits, rc_fits, xaxis_limit, fit, use_dates):
+
+def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit, fit, use_dates):
 
     [Ac, Au, Al, Aus, Als] = xbar_thresh
     [Rc, Ru, Rl] = range_thresh
@@ -301,7 +302,7 @@ def format_plots(plots, xbar_thresh, range_thresh,
     # if not use_dates:
     cc_xlim = (cc_xlim[0], cc_xlim[1] + (cc_xlim[1] - cc_xlim[0]) * DATA_HSPACE)
 
-    plots[0].set_xlim(cc_xlim)     # white space after data ends
+    plots[0].set_xlim(cc_xlim)  # white space after data ends
     plots[2].set_xlim(plots[0].get_xlim())  # Range chart shares x-axis with control chart
 
     plots[1].set_ylim(plots[0].get_ylim())  # Control chart shares y-axis with histogram
@@ -332,50 +333,55 @@ def format_plots(plots, xbar_thresh, range_thresh,
         if plot == plots[0]:
             plot.xaxis.set_major_formatter(nullfmt)
 
-            plot.legend(loc='upper center', bbox_to_anchor=(0.45, -0.03),
-                        ncol=4, fancybox=True, shadow=True, prop=font)
+            plot.legend(loc='upper center', bbox_to_anchor=(0.45, -0.03), ncol=4, fancybox=True, shadow=True, prop=font)
 
-            plot.text(cc_string_xpos, cc_string_ypos,
-                      control_chart_string % (Ac[0], Au[0], Al[0], Aus[0], Als[0]),
-                      fontsize=CFS)
+            plot.text(
+                cc_string_xpos,
+                cc_string_ypos,
+                control_chart_string % (Ac[0], Au[0], Al[0], Aus[0], Als[0]),
+                fontsize=CFS
+            )
 
             plot.grid(True)
 
         if plot == plots[2]:
-            plot.text(cc_string_xpos, r_string_ypos,
-                      range_chart_string % (Rc[0], Ru[0], Rl[0]),
-                      fontsize=CFS)
+            plot.text(cc_string_xpos, r_string_ypos, range_chart_string % (Rc[0], Ru[0], Rl[0]), fontsize=CFS)
 
             plot.grid(True)
 
         if plot == plots[1] or plot == plots[3]:
             plot.yaxis.set_major_formatter(nullfmt)
-            plot.legend(bbox_to_anchor=(1.05, 1.05),
-                        fancybox=True, shadow=True, prop=font)
+            plot.legend(bbox_to_anchor=(1.05, 1.05), fancybox=True, shadow=True, prop=font)
 
             if plot == plots[1] and cc_fits:
                 if len(cc_fits) == 6:
                     cm, cs, fcm, fcs, fck, fct = cc_fits
-                    plot.text(cchist_string_xpos, cchist_string_ypos,
-                              hist_string % (cm, cs, fcm, fcs, fck, fct),
-                              fontsize=HISTFS)
+                    plot.text(
+                        cchist_string_xpos,
+                        cchist_string_ypos,
+                        hist_string % (cm, cs, fcm, fcs, fck, fct),
+                        fontsize=HISTFS
+                    )
                 else:
                     cm, cs, fcm, fcs = cc_fits
-                    plot.text(cchist_string_xpos, cchist_string_ypos,
-                              short_hist_string % (cm, cs, fcm, fcs),
-                              fontsize=HISTFS)
+                    plot.text(
+                        cchist_string_xpos, cchist_string_ypos, short_hist_string % (cm, cs, fcm, fcs), fontsize=HISTFS
+                    )
 
             if plot == plots[3] and rc_fits:
                 if len(rc_fits) == 6:
                     rm, rs, frm, frs, frk, frt = rc_fits
-                    plot.text(rhist_string_xpos, rhist_string_ypos,
-                              hist_string % (rm, rs, frm, frs, frk, frt),
-                              fontsize=HISTFS)
+                    plot.text(
+                        rhist_string_xpos,
+                        rhist_string_ypos,
+                        hist_string % (rm, rs, frm, frs, frk, frt),
+                        fontsize=HISTFS
+                    )
                 else:
                     rm, rs, frm, frs = rc_fits
-                    plot.text(rhist_string_xpos, rhist_string_ypos,
-                              short_hist_string % (rm, rs, frm, frs),
-                              fontsize=HISTFS)
+                    plot.text(
+                        rhist_string_xpos, rhist_string_ypos, short_hist_string % (rm, rs, frm, frs), fontsize=HISTFS
+                    )
     if use_dates:
         # plots[2].xaxis.set_major_locator(matplotlib.dates.MonthLocator())
         plots[2].xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%d %b %Y"))
@@ -392,12 +398,13 @@ def unity_sgSize(sgNum, r, baseline):
 
 ################################################################################
 
+
 def get_subgroups(x, sgSize, dates):
 
-    sg = [x[i: i + sgSize] for i in np.arange(0, len(x), sgSize)]  # subgroups
+    sg = [x[i:i + sgSize] for i in np.arange(0, len(x), sgSize)]  # subgroups
     dates = [dates[i] for i in np.arange(0, len(x), sgSize)]
-    if len(sg[- 1]) < sgSize:
-        sg = sg[0:- 1]
+    if len(sg[-1]) < sgSize:
+        sg = sg[0:-1]
         dates = dates[0:-1]
     xbar = [np.mean(sg[i]) for i in np.arange(len(sg))]  # mean of subgroup
     xbar = np.array(xbar)
@@ -405,12 +412,13 @@ def get_subgroups(x, sgSize, dates):
     if isinstance(dates[0], datetime.date):
         sgNum = dates
     else:
-        sgNum = np.arange(1, len(xbar) + 1)                    # index of subgroup
+        sgNum = np.arange(1, len(xbar) + 1)  # index of subgroup
 
     return sg, xbar, sgNum
 
 
 ################################################################################
+
 
 def get_ranges(sg, n):
 
@@ -424,6 +432,7 @@ def get_ranges(sg, n):
 
     return r
 
+
 ################################################################################
 
 
@@ -431,10 +440,10 @@ def get_param(sg, xbar, r, bl, n):
 
     d2, d3 = get_dvalues(n)
 
-    Ac = [np.mean(xbar[0: bl]), np.mean(xbar[0: bl])]
+    Ac = [np.mean(xbar[0:bl]), np.mean(xbar[0:bl])]
 
     bias_corr = float(len(r[0:bl])) / float(len(r[0:bl]) - 1)
-    Rc = [np.mean(r[0: bl]) * bias_corr, np.mean(r[0: bl])*bias_corr]
+    Rc = [np.mean(r[0:bl]) * bias_corr, np.mean(r[0:bl]) * bias_corr]
 
     Afactor = 3.0 * Rc[0] / (d2 * np.sqrt(n))
     Au = [Ac[0] + Afactor, Ac[0] + Afactor]
@@ -446,8 +455,8 @@ def get_param(sg, xbar, r, bl, n):
     if Rl[0] < 0.0:
         Rl = [0.0, 0.0]
 
-    sumSq = np.sum(xbar[0: bl] ** 2)
-    sqSum = np.sum(xbar[0: bl]) ** 2
+    sumSq = np.sum(xbar[0:bl]**2)
+    sqSum = np.sum(xbar[0:bl])**2
     stdStat = np.sqrt((bl * sumSq - sqSum) / (bl * (bl - 1)))
 
     Afactor = 3.0 * stdStat
@@ -459,11 +468,18 @@ def get_param(sg, xbar, r, bl, n):
 
 ################################################################################
 
+
 def get_dvalues(n):
 
-    dtwo = [1.128, 1.128, 1.693, 2.059, 2.326, 2.534, 2.704, 2.847, 2.970, 3.078, 3.173, 3.258, 3.336, 3.407, 3.472, 3.735, 3.931, 4.086, 4.322, 4.498, 5.015]  # noqa: #501
+    dtwo = [
+        1.128, 1.128, 1.693, 2.059, 2.326, 2.534, 2.704, 2.847, 2.970, 3.078, 3.173, 3.258, 3.336, 3.407, 3.472, 3.735,
+        3.931, 4.086, 4.322, 4.498, 5.015
+    ]  # noqa: #501
 
-    dthree = [0.8525, 0.8525, 0.8884, 0.8798, 0.8641, 0.8480, 0.8332, 0.8198, 0.8078, 0.7971, 0.7873, 0.7785, 0.7704, 0.7630, 0.7562, 0.7287, 0.7084, 0.6927, 0.6692, 0.6521, 0.6052]  # noqa: #501
+    dthree = [
+        0.8525, 0.8525, 0.8884, 0.8798, 0.8641, 0.8480, 0.8332, 0.8198, 0.8078, 0.7971, 0.7873, 0.7785, 0.7704, 0.7630,
+        0.7562, 0.7287, 0.7084, 0.6927, 0.6692, 0.6521, 0.6052
+    ]  # noqa: #501
 
     ndata = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 40, 50, 100]
 

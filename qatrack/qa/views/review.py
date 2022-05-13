@@ -143,9 +143,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         changed_se = review_test_list_instance(test_list_instance, test_instances, statuses, self.request.user)
 
         if len(changed_se) > 0 and self.from_se:
-            msg = _(
-                'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-            ) % {
+            msg = _('Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".') % {
                 'service_event_ids': ', '.join(str(x) for x in changed_se),
                 'serviceeventstatus_name': ServiceEventStatus.get_default().name,
             }
@@ -542,8 +540,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
-            active=True,
-            unit__active=True
+            active=True, unit__active=True
         ).select_related(
             "last_instance",
             "frequency",
@@ -666,7 +663,11 @@ class OverviewObjects(JSONResponseMixin, View):
             "last_instance__testinstance_set",
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
-        ).order_by("frequency__nominal_interval", "unit__number", "name", )
+        ).order_by(
+            "frequency__nominal_interval",
+            "unit__number",
+            "name",
+        )
 
         if request.GET.get('user') == 'true':
             qs = qs.filter(visible_to__in=request.user.groups.all())

@@ -122,7 +122,6 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
             "jquery/js/jquery.min.js",
             "colorpicker/js/bootstrap-colorpicker.min.js",
             "qatrack_core/js/admin_colourpicker.js",
-
         )
         css = {
             'all': (
@@ -290,10 +289,7 @@ class ServiceEventScheduleAdminForm(forms.ModelForm):
         se_template = self.cleaned_data.get('service_event_template')
         usa = self.cleaned_data.get('unit_service_area')
         mismatched_service_area = (
-            se_template and
-            usa and
-            se_template.service_area and
-            usa.service_area != se_template.service_area
+            se_template and usa and se_template.service_area and usa.service_area != se_template.service_area
         )
         if mismatched_service_area:
             msg = "The template service area (%s) does not match the unit's service area (%s)" % (
@@ -331,15 +327,7 @@ class ServiceEventScheduleAdmin(BaseQATrackAdmin):
         q_admin.ActiveFilter,
     ]
 
-    list_display = [
-        'get_name',
-        'get_site',
-        'get_unit',
-        'get_service_area',
-        freq_name,
-        assigned_to_name,
-        "active"
-    ]
+    list_display = ['get_name', 'get_site', 'get_unit', 'get_service_area', freq_name, assigned_to_name, "active"]
 
     search_fields = [
         'service_event_template__name',
@@ -380,21 +368,25 @@ class ServiceEventScheduleAdmin(BaseQATrackAdmin):
 
     def get_name(self, ses):
         return ses.service_event_template.name
+
     get_name.short_description = _l('Template Name')
     get_name.admin_order_field = 'service_event_template__name'
 
     def get_site(self, ses):
         return ses.unit_service_area.unit.site.name if ses.unit_service_area.unit.site else _l("Other")
+
     get_site.short_description = _l('Site')
     get_site.admin_order_field = 'unit_service_area__unit__site'
 
     def get_unit(self, ses):
         return ses.unit_service_area.unit.name
+
     get_unit.short_description = _l('Unit')
     get_unit.admin_order_field = 'unit_service_area__unit'
 
     def get_service_area(self, ses):
         return ses.unit_service_area.service_area.name
+
     get_service_area.short_description = _l('Service Area')
     get_service_area.admin_order_field = 'unit_service_area__service_area.name'
 

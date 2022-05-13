@@ -33,15 +33,23 @@ def create_unit_service_area(unit=None, service_area=None):
     return usa
 
 
-def create_service_event_status(name=None, is_default=False, is_review_required=True,
-                                rts_qa_must_be_reviewed=False, colour=settings.DEFAULT_COLOURS[0]):
+def create_service_event_status(
+    name=None,
+    is_default=False,
+    is_review_required=True,
+    rts_qa_must_be_reviewed=False,
+    colour=settings.DEFAULT_COLOURS[0]
+):
 
     if name is None:
         name = 'service_event_status_%04d' % get_next_id(models.ServiceEventStatus.objects.order_by('id').last())
 
     ses, _ = models.ServiceEventStatus.objects.get_or_create(
-        name=name, is_default=is_default, is_review_required=is_review_required,
-        rts_qa_must_be_reviewed=rts_qa_must_be_reviewed, colour=colour
+        name=name,
+        is_default=is_default,
+        is_review_required=is_review_required,
+        rts_qa_must_be_reviewed=rts_qa_must_be_reviewed,
+        colour=colour
     )
 
     return ses
@@ -59,10 +67,19 @@ def create_service_type(name=None, is_review_required=False, is_active=True):
     return st
 
 
-def create_service_event(unit_service_area=None, service_type=None, service_status=None, user_created_by=None,
-                         datetime_service=timezone.now(), problem_description='problem_description',
-                         is_review_required=False, datetime_created=timezone.now(),
-                         add_test_list_instance_initiated_by=False, service_time=None, lost_time=None):
+def create_service_event(
+    unit_service_area=None,
+    service_type=None,
+    service_status=None,
+    user_created_by=None,
+    datetime_service=timezone.now(),
+    problem_description='problem_description',
+    is_review_required=False,
+    datetime_created=timezone.now(),
+    add_test_list_instance_initiated_by=False,
+    service_time=None,
+    lost_time=None
+):
 
     if unit_service_area is None:
         unit_service_area = create_unit_service_area()
@@ -74,9 +91,15 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
         user_created_by = create_user()
 
     se, _ = models.ServiceEvent.objects.get_or_create(
-        unit_service_area=unit_service_area, service_type=service_type, service_status=service_status,
-        user_created_by=user_created_by, datetime_service=datetime_service, problem_description=problem_description,
-        is_review_required=is_review_required, datetime_created=datetime_created, duration_service_time=service_time,
+        unit_service_area=unit_service_area,
+        service_type=service_type,
+        service_status=service_status,
+        user_created_by=user_created_by,
+        datetime_service=datetime_service,
+        problem_description=problem_description,
+        is_review_required=is_review_required,
+        datetime_created=datetime_created,
+        duration_service_time=service_time,
         duration_lost_time=lost_time
     )
 
@@ -91,9 +114,9 @@ def create_service_event(unit_service_area=None, service_type=None, service_stat
     return se
 
 
-def create_service_event_template(name=None, service_type=None, service_area=None,
-                                  problem_description="", work_description="",
-                                  created_by=None):
+def create_service_event_template(
+    name=None, service_type=None, service_area=None, problem_description="", work_description="", created_by=None
+):
 
     if name is None:
         name = 'name_%04d' % get_next_id(models.ServiceEventTemplate.objects.order_by('id').last())
@@ -114,8 +137,9 @@ def create_service_event_template(name=None, service_type=None, service_area=Non
     return template
 
 
-def create_service_event_schedule(service_event_template=None, unit_service_area=None,
-                                  frequency=None, assigned_to=None):
+def create_service_event_schedule(
+    service_event_template=None, unit_service_area=None, frequency=None, assigned_to=None
+):
 
     if service_event_template is None:
         service_event_template = create_service_event_template()
@@ -164,8 +188,13 @@ def create_hours(service_event=None, third_party=None, user=None, time=timezone.
     return h
 
 
-def create_return_to_service_qa(service_event=None, unit_test_collection=None, user_assigned_by=None,
-                                datetime_assigned=timezone.now(), add_test_list_instance=False):
+def create_return_to_service_qa(
+    service_event=None,
+    unit_test_collection=None,
+    user_assigned_by=None,
+    datetime_assigned=timezone.now(),
+    add_test_list_instance=False
+):
 
     if service_event is None:
         service_event = create_service_event()
@@ -175,7 +204,9 @@ def create_return_to_service_qa(service_event=None, unit_test_collection=None, u
         user_assigned_by = create_user()
 
     rtsqa, _ = models.ReturnToServiceQA.objects.get_or_create(
-        service_event=service_event, unit_test_collection=unit_test_collection, user_assigned_by=user_assigned_by,
+        service_event=service_event,
+        unit_test_collection=unit_test_collection,
+        user_assigned_by=user_assigned_by,
         datetime_assigned=datetime_assigned
     )
 
@@ -230,8 +261,15 @@ def create_part_category(name=None):
     return pc
 
 
-def create_part(part_category=None, part_number=None, name='description', add_storage=False, quantity_min=0,
-                quantity_current=1, alt_part_number=None):
+def create_part(
+    part_category=None,
+    part_number=None,
+    name='description',
+    add_storage=False,
+    quantity_min=0,
+    quantity_current=1,
+    alt_part_number=None
+):
 
     if part_category is None:
         part_category = create_part_category()
@@ -239,8 +277,12 @@ def create_part(part_category=None, part_number=None, name='description', add_st
         part_number = str(get_next_id(p_models.PartCategory.objects.order_by('id').last()))
 
     p, _ = p_models.Part.objects.get_or_create(
-        part_category=part_category, part_number=part_number, name=name, quantity_min=quantity_min,
-        quantity_current=quantity_current, alt_part_number=alt_part_number
+        part_category=part_category,
+        part_number=part_number,
+        name=name,
+        quantity_min=quantity_min,
+        quantity_current=quantity_current,
+        alt_part_number=alt_part_number
     )
 
     if add_storage:
@@ -301,8 +343,6 @@ def create_part_storage_collection(part=None, storage=None, quantity=1):
     if storage is None:
         storage = create_storage()
 
-    psc, _ = p_models.PartStorageCollection.objects.get_or_create(
-        part=part, storage=storage, quantity=quantity
-    )
+    psc, _ = p_models.PartStorageCollection.objects.get_or_create(part=part, storage=storage, quantity=quantity)
 
     return psc

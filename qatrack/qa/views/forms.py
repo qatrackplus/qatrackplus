@@ -56,12 +56,7 @@ class TestInstanceWidgetsMixin(object):
         date_value = cleaned_data.get("date_value", None)
         datetime_value = cleaned_data.get("datetime_value", None)
 
-        empty = (
-            value is None and
-            string_value in ["", None] and
-            date_value is None and
-            datetime_value is None
-        )
+        empty = (value is None and string_value in ["", None] and date_value is None and datetime_value is None)
 
         if self.unit_test_info.test.skip_required():
             # force user to enter value unless skipping test
@@ -71,8 +66,7 @@ class TestInstanceWidgetsMixin(object):
                 self._errors["value"] = self.error_class([_("Clear value if skipping")])
 
             no_comment_required = (
-                self.user.has_perm("qa.can_skip_without_comment") or
-                self.unit_test_info.test.skip_without_comment
+                self.user.has_perm("qa.can_skip_without_comment") or self.unit_test_info.test.skip_without_comment
             )
             if not no_comment_required and skipped and not comment:
                 self._errors["skipped"] = self.error_class([_("Please add comment when skipping")])
@@ -141,7 +135,10 @@ class TestInstanceWidgetsMixin(object):
 
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
-        if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE, ):
+        if self.unit_test_info.test.type in (
+            models.CONSTANT,
+            models.COMPOSITE,
+        ):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
         elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
             self.fields["string_value"].widget.attrs["readonly"] = "readonly"
@@ -312,7 +309,7 @@ class ReviewTestInstanceForm(forms.ModelForm):
 
     class Meta:
         model = models.TestInstance
-        fields = ("status", )
+        fields = ("status",)
 
 
 BaseReviewTestInstanceFormSet = inlineformset_factory(
@@ -331,10 +328,7 @@ class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet)
 class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
 
-    status = forms.ModelChoiceField(
-        queryset=models.TestInstanceStatus.objects,
-        required=False
-    )
+    status = forms.ModelChoiceField(queryset=models.TestInstanceStatus.objects, required=False)
 
     work_completed = forms.DateTimeField(required=False)
 
@@ -403,7 +397,10 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         cleaned_data = super(BaseTestListInstanceForm, self).clean()
 
-        for field in ("work_completed", "work_started",):
+        for field in (
+            "work_completed",
+            "work_started",
+        ):
             if field in self.errors:
                 self.errors[field][0] += " %s" % settings.DATETIME_HELP
 
@@ -422,9 +419,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
             if work_completed == work_started:
                 cleaned_data["work_completed"] = work_started + timezone.timedelta(seconds=60)
             elif work_completed < work_started:
-                self._errors["work_started"] = self.error_class(
-                    [_("Work started date/time can not be after work completed date/time")]
-                )
+                self._errors["work_started"] = self.error_class([
+                    _("Work started date/time can not be after work completed date/time")
+                ])
                 del cleaned_data["work_started"]
 
         if work_started:
@@ -471,6 +468,7 @@ class UpdateTestListInstanceForm(BaseTestListInstanceForm):
 
 
 class ReviewTestListInstanceForm(forms.ModelForm):
+
     class Meta:
         model = models.TestListInstance
         fields = ()

@@ -1,6 +1,5 @@
 from rest_framework import viewsets
 
-
 from qatrack.api.comments import serializers
 from django_comments.models import Comment
 

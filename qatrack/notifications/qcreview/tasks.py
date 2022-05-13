@@ -72,9 +72,7 @@ def send_qcreview_notice(notice_id, task_name=""):
         except:  # noqa: E722  # pragma: nocover
             logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
     except:  # noqa: E722  # pragma: nocover
-        logger.exception(
-            "Error sending email for QCReviewNotice %s at %s." % (notice_id, timezone.now())
-        )
+        logger.exception("Error sending email for QCReviewNotice %s at %s." % (notice_id, timezone.now()))
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
         if not fail_silently:

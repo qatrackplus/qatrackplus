@@ -155,7 +155,6 @@ class TestEditPart(TestCase):
             'part_category': self.pc.id,
             'notes': 'This is a part',
             'is_obsolete': 0,
-
             'storage-MAX_NUM_FORMS': 1000,
             'storage-MIN_NUM_FORMS': 0,
             'storage-TOTAL_FORMS': 0,
@@ -217,9 +216,7 @@ class TestPartViews(TestCase):
 
     def test_parts_searcher(self):
 
-        parts_to_find = p_models.Part.objects.filter(
-            Q(part_number__icontains='find') | Q(name__icontains='find')
-        )
+        parts_to_find = p_models.Part.objects.filter(Q(part_number__icontains='find') | Q(name__icontains='find'))
         data = {'q': 'find'}
         response = self.client.get(reverse('parts_searcher'), data=data)
         self.assertEqual(len(parts_to_find), len(response.json()['data']))

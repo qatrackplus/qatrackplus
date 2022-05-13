@@ -171,10 +171,7 @@ class TestTestListInstanceAPI(APITestCase):
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_invalid_constant_value(self):
-        models.Test.objects.filter(pk=self.t2.pk).update(
-            type=models.CONSTANT,
-            constant_value=99
-        )
+        models.Test.objects.filter(pk=self.t2.pk).update(type=models.CONSTANT, constant_value=99)
         self.data['tests']['test2']['value'] = 100
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -404,10 +401,7 @@ class TestTestListInstanceAPI(APITestCase):
         Add a composite test which depends on a constant value to our test list.
         Test list instance should be created if constant value not provided.
         """
-        models.Test.objects.filter(pk=self.t2.pk).update(
-            type=models.CONSTANT,
-            constant_value=99
-        )
+        models.Test.objects.filter(pk=self.t2.pk).update(type=models.CONSTANT, constant_value=99)
 
         utils.create_test_list_membership(self.test_list, self.tc)
         self.data['tests'].pop("test2")
@@ -421,10 +415,7 @@ class TestTestListInstanceAPI(APITestCase):
         Add a composite test which depends on a constant value to our test list.
         Test list instance should not be created if constant value provided doesn't match expected value.
         """
-        models.Test.objects.filter(pk=self.t2.pk).update(
-            type=models.CONSTANT,
-            constant_value=99
-        )
+        models.Test.objects.filter(pk=self.t2.pk).update(type=models.CONSTANT, constant_value=99)
 
         utils.create_test_list_membership(self.test_list, self.tc)
         self.data['tests']['test2'] = 100
@@ -525,13 +516,7 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -561,13 +546,7 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
         self.data['tests']['file_upload'] = {
             'value': upload_data,
             'filename': "tmp.json",
@@ -594,13 +573,7 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'comment': "test comment",
@@ -662,13 +635,7 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -906,13 +873,7 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -944,13 +905,7 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = {
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }
+        upload_data = {"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}
         upload_data['baz']['baz1'] = "edited content"
         self.data['tests']['file_upload'] = {
             'value': json.dumps(upload_data),
@@ -989,13 +944,7 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
         self.data['tests']['file_upload'] = {
             'value': base64.b64encode(upload_data),
             'filename': "tmp.json",
@@ -1070,7 +1019,11 @@ class TestPerformTestListCycleAPI(APITestCase):
             'unit_test_collection': self.utc_url,
             'work_completed': '2019-07-25 10:49:47',
             'work_started': '2019-07-25 10:49:00',
-            'tests': {'test1': {'value': 1}},
+            'tests': {
+                'test1': {
+                    'value': 1
+                }
+            },
             'day': 0,
         }
         self.day2_data = self.day1_data.copy()

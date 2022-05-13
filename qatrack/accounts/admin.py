@@ -63,6 +63,7 @@ class QATrackUserAdmin(UserAdmin):
 
     def is_admin(self, obj):
         return obj.is_staff
+
     is_admin.boolean = True
 
 
@@ -103,13 +104,17 @@ class QATrackGroupAdmin(GroupAdmin):
 
     def is_default(self, obj):
         return bool(obj.defaultgroup_set.all())
+
     is_default.boolean = True
 
 
 class ActiveDirectoryGroupMapAdmin(BaseQATrackAdmin):
 
     list_display = ("get_ad_group", "get_groups", "account_qualifier")
-    list_filter = ("groups", "account_qualifier",)
+    list_filter = (
+        "groups",
+        "account_qualifier",
+    )
     search_fields = ("ad_group", "groups__name")
 
     def get_groups(self, obj):
@@ -122,6 +127,7 @@ class ActiveDirectoryGroupMapAdmin(BaseQATrackAdmin):
         if not obj.ad_group:
             return '<em>' + _("Default Groups") + "</em>"
         return escape(obj.ad_group)
+
     get_ad_group.short_description = _l("Active Directory Group Name")
 
 

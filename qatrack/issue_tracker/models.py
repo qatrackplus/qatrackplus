@@ -1,4 +1,3 @@
-
 import re
 
 from django.contrib.auth.models import User
@@ -64,12 +63,16 @@ class Issue(models.Model):
     issue_type = models.ForeignKey(IssueType, on_delete=models.PROTECT)
     issue_priority = models.ForeignKey(IssuePriority, null=True, on_delete=models.PROTECT)
     issue_tags = models.ManyToManyField(IssueTag, blank=True, help_text='If desired, add multiple tags to this issue')
-    issue_status = models.ForeignKey(IssueStatus, on_delete=models.PROTECT, null=True, help_text='Current status of this issue')
+    issue_status = models.ForeignKey(
+        IssueStatus, on_delete=models.PROTECT, null=True, help_text='Current status of this issue'
+    )
     user_submitted_by = models.ForeignKey(User, on_delete=models.PROTECT)
 
     datetime_submitted = models.DateTimeField()
     description = models.TextField()
     error_screen = models.TextField(
-        null=True, blank=True,
-        help_text='Any error screen details. (Note the ability to click "Switch to copy-and-paste view" to copy Traceback)'
+        null=True,
+        blank=True,
+        help_text=
+        'Any error screen details. (Note the ability to click "Switch to copy-and-paste view" to copy Traceback)'
     )

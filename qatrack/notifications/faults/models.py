@@ -8,9 +8,7 @@ class FaultNotice(models.Model):
 
     LOGGED = 0
 
-    NOTIFICATION_TYPES = (
-        (LOGGED, _l("Notify when fault logged")),
-    )
+    NOTIFICATION_TYPES = ((LOGGED, _l("Notify when fault logged")),)
 
     notification_type = models.IntegerField(
         verbose_name=_l("Notification Type"),

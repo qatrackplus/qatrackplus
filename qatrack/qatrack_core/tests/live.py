@@ -23,7 +23,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 # From http://stackoverflow.com/a/20559494
 def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
+
     def outer(func):
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             assert max_retries > 0
@@ -37,7 +39,9 @@ def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
                         raise
                 if sleep_time is not None:
                     time.sleep(sleep_time)
+
         return wrapper
+
     return outer
 
 
@@ -50,15 +54,20 @@ def WebElement_click(self):
     """
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
     return self._execute(Command.CLICK_ELEMENT)
+
+
 WebElement.click = WebElement_click  # noqa: E305
 
-
 orig_send_keys = WebElement.send_keys
+
+
 @retry_if_exception(WebDriverException, 5, sleep_time=1)  # noqa: E302
 def WebElement_send_keys(self, keys):
     """Monky patch send_keys to ensure element is in view"""
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
     return orig_send_keys(self, keys)
+
+
 WebElement.send_keys = WebElement_send_keys  # noqa: E305
 
 
@@ -107,6 +116,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         def WebElement_find_element(*args, **kwargs):
             """Monky patch find element to allow retries"""
             return orig_find_element(*args, **kwargs)
+
         cls.driver.find_element = WebElement_find_element
 
         cls.driver.set_page_load_timeout(2)
@@ -142,16 +152,12 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def wait_for_page_load(self, timeout=2):
         old_page = self.driver.find_element_by_tag_name('html')
         yield
-        WebDriverWait(self.driver, timeout).until(
-            staleness_of(old_page)
-        )
+        WebDriverWait(self.driver, timeout).until(staleness_of(old_page))
 
     @retry_if_exception(Exception, 2, sleep_time=1)
     def open(self, url):
         with self.wait_for_page_load():
-            self.driver.execute_script(
-                "window.location.href='%s%s'" % (self.live_server_url, url)
-            )
+            self.driver.execute_script("window.location.href='%s%s'" % (self.live_server_url, url))
 
     def wait_for_success(self):
         self.wait.until(

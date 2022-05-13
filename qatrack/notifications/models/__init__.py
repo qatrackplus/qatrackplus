@@ -1,7 +1,5 @@
 from ..common.models import (  # noqa: F401
-    RecipientGroup,
-    TestListGroup,
-    UnitGroup,
+    RecipientGroup, TestListGroup, UnitGroup,
 )
 from ..faults.models import FaultNotice  # noqa: F401
 from ..faults_review.models import FaultsReviewNotice  # noqa: F401

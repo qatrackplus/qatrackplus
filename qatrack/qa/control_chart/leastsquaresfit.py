@@ -31,7 +31,7 @@ def bincenters(bins):
     Finds the midpoint of histogram bins from plots generated
     with matplotlib.
     """
-    bincenters = 0.5 * (bins[1:] + bins[:- 1])
+    bincenters = 0.5 * (bins[1:] + bins[:-1])
     return bincenters
 
 

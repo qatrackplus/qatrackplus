@@ -100,10 +100,7 @@ def update_faults_cache(*args, **kwargs):
 @receiver(post_delete, sender=UnitTestCollection)
 def update_active_unit_test_collections_for_unit_utc(*args, **kwargs):
     unit = kwargs['instance'].unit
-    qs = UnitTestCollection.objects.filter(
-        unit=unit,
-        active=True
-    ).order_by('name')
+    qs = UnitTestCollection.objects.filter(unit=unit, active=True).order_by('name')
     cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
 
 
@@ -111,10 +108,7 @@ def update_active_unit_test_collections_for_unit_utc(*args, **kwargs):
 @receiver(post_delete, sender=Unit)
 def update_active_unit_test_collections_for_unit(*args, **kwargs):
     unit = kwargs['instance']
-    qs = UnitTestCollection.objects.filter(
-        unit=unit,
-        active=True
-    ).order_by('name')
+    qs = UnitTestCollection.objects.filter(unit=unit, active=True).order_by('name')
     cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
 
 

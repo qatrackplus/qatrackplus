@@ -21,10 +21,12 @@ class ServiceTimesReport(ServiceEventReportMixin, BaseReport):
     report_type = "service-times"
     name = _l("Service Times")
     filter_class = filters.ServiceEventDetailsFilter
-    description = mark_safe(_l(
-        "This report summarizes the service times, including lost time, "
-        "for service events on all selected units."
-    ))
+    description = mark_safe(
+        _l(
+            "This report summarizes the service times, including lost time, "
+            "for service events on all selected units."
+        )
+    )
 
     category = _l("Service Log")
 
@@ -66,8 +68,7 @@ class ServiceTimesReport(ServiceEventReportMixin, BaseReport):
         # if the service events are filtered by service type/ service area the uptime
         # calculation won't make sense
         self.calc_uptime = (
-            len(service_areas) == len(all_service_areas) and
-            len(service_types) == len(all_service_types)
+            len(service_areas) == len(all_service_areas) and len(service_types) == len(all_service_types)
         )
 
         start_date, end_date = relative_dates(

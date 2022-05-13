@@ -29,15 +29,10 @@ PERFORMED_RTS = 'perf_rts'
 APPROVED_RTS = 'app_rts'
 DELETED_SERVICE_EVENT = 'del_se'
 
-LOG_TYPES = (
-    (NEW_SERVICE_EVENT, 'New Service Event'),
-    (MODIFIED_SERVICE_EVENT, 'Modified Service Event'),
-    (STATUS_SERVICE_EVENT, 'Service Event Status Changed'),
-    (CHANGED_RTSQA, 'Changed Return To Service'),
-    (PERFORMED_RTS, 'Performed Return To Service'),
-    (APPROVED_RTS, 'Approved Return To Service'),
-    (DELETED_SERVICE_EVENT, 'Deleted Service Event')
-)
+LOG_TYPES = ((NEW_SERVICE_EVENT, 'New Service Event'), (MODIFIED_SERVICE_EVENT, 'Modified Service Event'),
+             (STATUS_SERVICE_EVENT, 'Service Event Status Changed'), (CHANGED_RTSQA, 'Changed Return To Service'),
+             (PERFORMED_RTS, 'Performed Return To Service'), (APPROVED_RTS, 'Approved Return To Service'),
+             (DELETED_SERVICE_EVENT, 'Deleted Service Event'))
 
 
 class ServiceArea(models.Model):
@@ -89,7 +84,10 @@ class UnitServiceArea(models.Model):
     class Meta:
         verbose_name = _l('unit service area')
         verbose_name_plural = _l('unit service area memberships')
-        unique_together = ('unit', 'service_area',)
+        unique_together = (
+            'unit',
+            'service_area',
+        )
         ordering = ('unit', 'service_area')
 
     def __str__(self):
@@ -323,9 +321,7 @@ class ServiceEvent(models.Model):
         null=True,
         blank=True,
     )
-    datetime_created = models.DateTimeField(
-        _l("created"),
-    )
+    datetime_created = models.DateTimeField(_l("created"),)
     datetime_service = models.DateTimeField(
         verbose_name=_l('Date and time'), help_text=_l('Date and time service performed')
     )
@@ -386,7 +382,11 @@ class ServiceEvent(models.Model):
             ('review_serviceevent', _l('Can review service event')),
             ('view_serviceevent', _l('Can review service event')),
         )
-        default_permissions = ('add', 'change', 'delete',)
+        default_permissions = (
+            'add',
+            'change',
+            'delete',
+        )
 
         ordering = ["-datetime_service"]
 
@@ -504,12 +504,14 @@ class Hours(models.Model):
     class Meta:
         verbose_name = _l("hours")
         verbose_name_plural = _l("hours")
-        unique_together = ('service_event', 'third_party', 'user',)
+        unique_together = (
+            'service_event',
+            'third_party',
+            'user',
+        )
 
         default_permissions = ()
-        permissions = (
-            ("can_have_hours", _l("Can have hours")),
-        )
+        permissions = (("can_have_hours", _l("Can have hours")),)
 
     def user_or_thirdparty(self):
         return self.user or self.third_party
@@ -559,7 +561,11 @@ class ReturnToServiceQA(models.Model):
             ('perform_returntoserviceqa', _l('Can perform Return To Service QC')),
         )
         ordering = ['-datetime_assigned']
-        default_permissions = ('add', 'change', 'delete',)
+        default_permissions = (
+            'add',
+            'change',
+            'delete',
+        )
 
 
 class GroupLinker(models.Model):
@@ -633,9 +639,7 @@ class GroupLinkerInstance(models.Model):
         verbose_name=_l("service event"),
     )
 
-    datetime_linked = models.DateTimeField(
-        _l("linked"),
-    )
+    datetime_linked = models.DateTimeField(_l("linked"),)
 
     class Meta:
         default_permissions = ()
@@ -656,10 +660,7 @@ class ServiceLogManager(models.Manager):
 
     def log_changed_service_event(self, user, instance, extra_info):
         self.create(
-            user=user,
-            service_event=instance,
-            log_type=MODIFIED_SERVICE_EVENT,
-            extra_info=json.dumps(extra_info)
+            user=user, service_event=instance, log_type=MODIFIED_SERVICE_EVENT, extra_info=json.dumps(extra_info)
         )
 
     def log_service_event_status(self, user, instance, extra_info, status_change):
@@ -668,7 +669,10 @@ class ServiceLogManager(models.Manager):
             user=user,
             service_event=instance,
             log_type=STATUS_SERVICE_EVENT,
-            extra_info=json.dumps({'status_change': status_change, 'other_changes': extra_info})
+            extra_info=json.dumps({
+                'status_change': status_change,
+                'other_changes': extra_info
+            })
         )
 
     def log_rtsqa_changes(self, user, instance):
@@ -683,10 +687,7 @@ class ServiceLogManager(models.Manager):
     def log_service_event_delete(self, user, instance, extra_info):
 
         self.create(
-            user=user,
-            service_event=instance,
-            log_type=DELETED_SERVICE_EVENT,
-            extra_info=json.dumps(extra_info)
+            user=user, service_event=instance, log_type=DELETED_SERVICE_EVENT, extra_info=json.dumps(extra_info)
         )
 
 
