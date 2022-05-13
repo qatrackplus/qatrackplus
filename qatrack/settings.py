@@ -9,6 +9,7 @@ import datetime
 import os
 import sys
 
+from django.utils.translation import gettext_lazy as _
 import matplotlib
 
 matplotlib.use("Agg")
@@ -41,6 +42,14 @@ ROOT_URLCONF = 'qatrack.urls'
 
 SITE_ID = 1
 SITE_NAME = "QATrack+"
+
+LOCALE_PATHS = [os.path.join(PROJECT_ROOT, '../locales')]
+
+LANGUAGES = [
+    ('de', _('German')),
+    ('en', _('English')),
+    ('fr', _('French')),
+]
 
 # -----------------------------------------------------------------------------
 # Database settings
