@@ -43,10 +43,9 @@ ROOT_URLCONF = 'qatrack.urls'
 SITE_ID = 1
 SITE_NAME = "QATrack+"
 
-LOCALE_PATHS = [os.path.join(PROJECT_ROOT, '../locale')]
+LOCALE_PATHS = [os.path.join(PROJECT_ROOT, '../locale'), os.path.join(PROJECT_ROOT, '../templates/locale')]
 
 LANGUAGES = [
-    ('de', _('German')),
     ('en', _('English')),
     ('fr', _('French')),
 ]
@@ -180,6 +179,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
