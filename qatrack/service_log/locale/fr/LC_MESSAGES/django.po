@@ -1,0 +1,830 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/service_log/admin.py:274
+msgid "Not Specified"
+msgstr ""
+
+#: qatrack/service_log/admin.py:310
+#, python-format
+msgid ""
+"To prevent data loss, you can not change the Unit Service Area or Service "
+"Event Template of a ServiceEventSchedule after it has been created. The "
+"original value was: %(object_id)s"
+msgstr ""
+
+#: qatrack/service_log/forms.py:817
+msgid "This field is required."
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/error_base.html:4
+msgid "Configuration Needed"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/error_base.html:9
+msgid "Welcome to QATrack+"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:16
+#, python-format
+msgid ""
+"\n"
+"          %(user)s changed return to service required for service event "
+"%(service_event_id)s\n"
+"        "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:19
+msgid "deleted"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:24
+msgid "Test List Name"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:25
+msgid "Session Details"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:32
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:42
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:38
+msgid "Performed"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:43
+msgid "Reviewed"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:46
+msgid "Deleted"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:52
+msgid "All Deleted"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_deleted.html:17
+#, python-format
+msgid ""
+"\n"
+"          %(user)s deleted service event %(service_event_id)s\n"
+"        "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_deleted.html:24
+msgid "Reason"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_deleted.html:25
+msgid "Comment"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:17
+#, python-format
+msgid ""
+"\n"
+"          %(username)s modified service event %(service_event_id)s\n"
+"        "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:24
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:30
+msgid "Field Changed"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:25
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:31
+msgid "Old Value"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:26
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:32
+msgid "New Value"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:31
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:37
+msgid "Attachments deleted"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:43
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:49
+msgid "Attachments added"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_new.html:16
+#, python-format
+msgid ""
+"\n"
+"              %(user)s created service event %(service_event_id)s\n"
+"            "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:19
+#, python-format
+msgid ""
+"\n"
+"          %(user)s changed status of service event %(service_event_id)s from "
+"%(old_status_tag)s to %(new_status_tag)s\n"
+"        "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:26
+msgid "Other changes made"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:7
+msgid "Scheduled Service Events Overview by Due Date"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:106
+msgid "Scheduled Service Events Overview By Due Date For Your Groups"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:109
+msgid ""
+"View which scheduled service events (visible to your groups) are due or "
+"coming due soon"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:114
+msgid "Scheduled Service Events Overview By Due Date"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:116
+msgid "View which scheduled service events are due or coming due soon"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:135
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:143
+msgid "Name"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:136
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:144
+#: qatrack/service_log/templates/service_log/service_event_detail.html:115
+msgid "Unit"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:137
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:145
+msgid "Service Area"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:138
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:146
+msgid "Due Date"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:139
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:147
+msgid "Freq"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:140
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:148
+msgid "Assigned To"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:184
+#, python-format
+msgid "Nothing %(display)s"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_delete.html:34
+#, python-format
+msgid ""
+"\n"
+"            Delete Service Event %(service_event_id)s\n"
+"          "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_delete.html:82
+#: qatrack/service_log/templates/service_log/service_event_update.html:331
+#: qatrack/service_log/templates/service_log/service_event_update.html:413
+#: qatrack/service_log/templates/service_log/service_event_update.html:531
+#: qatrack/service_log/templates/service_log/service_event_update.html:590
+#: qatrack/service_log/templates/service_log/service_event_update.html:655
+msgid "Delete"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:11
+#: qatrack/service_log/templates/service_log/serviceeventtemplate_base.html:11
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:9
+msgid "Service Event"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:30
+#, python-format
+msgid ""
+"\n"
+"          Service Event %(service_event_id)s Details\n"
+"        "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:42
+#: qatrack/service_log/templates/service_log/service_event_update.html:98
+msgid "Created"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:46
+#, python-format
+msgid ""
+"\n"
+"                  by %(username)s\n"
+"                "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:56
+#: qatrack/service_log/templates/service_log/service_event_update.html:108
+msgid "Modified"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:60
+#, python-format
+msgid ""
+"\n"
+"                    by %(username)s\n"
+"                  "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:71
+#: qatrack/service_log/templates/service_log/service_event_update.html:123
+msgid "Status Changed"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:76
+#, python-format
+msgid ""
+"\n"
+"                      by %(username)s\n"
+"                    "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:80
+msgid "by System"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:94
+#: qatrack/service_log/templates/service_log/service_event_detail.html:524
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:10
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:17
+msgid "Edit"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:112
+msgid "Service date"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:118
+msgid "Service area"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:121
+msgid "Service type"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:124
+msgid "Requires review"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:136
+msgid "Template"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:142
+msgid "Previous Due Date"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:148
+msgid "No due date set"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:152
+msgid "Scheduled"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:155
+msgid "Yes"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:157
+msgid "No"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:162
+msgid "Related service events"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:178
+msgid "Initiated by"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:191
+msgid "View test list instance"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:192
+msgid "View"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:196
+msgid "New tab: view test list instance"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:214
+msgid "Problem description"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:221
+msgid "Safety precautions"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:231
+msgid "Work description"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:248
+#: qatrack/service_log/templates/service_log/service_event_update.html:271
+msgid "Involved Parties and Durations"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:253
+msgid ">Service Event Durations"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:257
+msgid "Service time (hh:mm)"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:263
+#: qatrack/service_log/templates/service_log/service_event_detail.html:273
+msgid "Not specified"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:267
+msgid "Lost time (hh:mm)"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:282
+#: qatrack/service_log/templates/service_log/service_event_update.html:298
+msgid "Group Members Involved"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:295
+#: qatrack/service_log/templates/service_log/service_event_update.html:322
+msgid "User and Third Party Work Durations"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:302
+#: qatrack/service_log/templates/service_log/service_event_update.html:329
+msgid "User or Third Party"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:303
+msgid ">Time (hh:mm)"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:320
+msgid "No work hours specified"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:333
+#: qatrack/service_log/templates/service_log/service_event_update.html:521
+msgid "Attachments"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:363
+#: qatrack/service_log/templates/service_log/service_event_update.html:395
+#: qatrack/service_log/templates/service_log/sl_dash.html:28
+msgid "Return To Service QC"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:368
+#: qatrack/service_log/templates/service_log/service_event_update.html:401
+msgid "Return To Service QC Required"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:375
+#: qatrack/service_log/templates/service_log/service_event_update.html:408
+msgid "Test List"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:376
+#: qatrack/service_log/templates/service_log/service_event_update.html:409
+msgid "Completed"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:377
+#: qatrack/service_log/templates/service_log/service_event_update.html:410
+msgid "Pass/Fail"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:378
+#: qatrack/service_log/templates/service_log/service_event_update.html:411
+msgid "Review Status"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:396
+msgid "Review test list instance"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:397
+#: qatrack/service_log/templates/service_log/service_event_update.html:778
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:20
+msgid "Review"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:401
+msgid "New tab: review test list instance"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:412
+msgid "Perform test list"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:413
+#: qatrack/service_log/templates/service_log/table_context/se_schedule_actions.html:10
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:30
+msgid "Perform"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:417
+msgid "New tab: perform test list"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:440
+#: qatrack/service_log/templates/service_log/service_event_update.html:460
+msgid "Comments"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:462
+#: qatrack/service_log/templates/service_log/service_event_update.html:485
+msgid "Post Comment"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:477
+msgid "Parts"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:483
+#: qatrack/service_log/templates/service_log/service_event_update.html:576
+msgid "Parts Used"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:492
+#: qatrack/service_log/templates/service_log/service_event_update.html:587
+msgid "Part"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:493
+#: qatrack/service_log/templates/service_log/service_event_update.html:588
+msgid "Quantity"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:494
+#: qatrack/service_log/templates/service_log/service_event_update.html:589
+msgid "From Storage"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:536
+#, python-format
+msgid ""
+"\n"
+"              Service Log For Service Event %(service_event_id)s\n"
+"            "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_down_time.html:41
+msgid "For Service Events Filtered Below..."
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_down_time.html:44
+msgid "Download Up Time Summary"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_down_time.html:61
+msgid "Calculating Down Times"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_down_time_summary.html:7
+msgid "Up Time Summary"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_down_time_summary.html:31
+msgid "Down Time Summary"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_status_label.html:8
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:16
+msgid "Click to view details of this Service Event"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:13
+#, python-format
+msgid ""
+"\n"
+"      Edit Service Event #%(service_event_id)s\n"
+"    "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:17
+msgid "Enter New Service Event"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:57
+msgid "Submitting Service Log"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:65
+#, python-format
+msgid ""
+"\n"
+"                Edit Service Event %(service_event_id)s\n"
+"              "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:69
+#, python-format
+msgid ""
+"\n"
+"                Create Service Event from template \"%(template_name)s\"\n"
+"              "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:73
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:10
+msgid "Create Service Event"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:112
+#, python-format
+msgid ""
+"\n"
+"                        by %(username)s\n"
+"                      "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:128
+#, python-format
+msgid ""
+"\n"
+"                          by %(username)s\n"
+"                        "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:132
+msgid "System"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:142
+#: qatrack/service_log/templates/service_log/service_event_update.html:652
+msgid "Save"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:201
+msgid ""
+"Create service event template with currently selected values for Unit, "
+"Service Area, Service Type, Review Required, Descriptions, and any Return to "
+"Service TestLists"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:203
+#: qatrack/service_log/templates/service_log/service_event_update.html:841
+#: qatrack/service_log/templates/service_log/serviceeventtemplate_create.html:7
+msgid "Create"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:275
+msgid "Service Event Durations"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:283
+msgid "(hh:mm)"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:330
+msgid "Time (hh:mm)"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:371
+msgid "Add another hours object."
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:373
+#: qatrack/service_log/templates/service_log/service_event_update.html:447
+#: qatrack/service_log/templates/service_log/service_event_update.html:634
+msgid "Add"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:446
+msgid "Add another RTS QC object."
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:480
+msgid "Add comment"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:530
+msgid "Filename"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:562
+msgid ""
+"Click to add attachments. (Hold Ctrl or Cmd in the dialog to include "
+"multiple attachments)"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:563
+msgid "Browse"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:669
+#, python-format
+msgid ""
+"\n"
+"                  Service Log For Service Event %(service_event_id)s\n"
+"                "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:763
+msgid "Click to choose the performed return to service test list instance"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:796
+msgid "File"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:801
+msgid "Size"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:816
+msgid "Create Template"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:839
+msgid "Cancel"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:5
+msgid "Export"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:10
+msgid "PDF"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:15
+msgid "CSV"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:20
+msgid "Excel"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/serviceeventtemplate_create.html:5
+msgid "Create Service Event Template"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:8
+msgid "Service Log Dashboard"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:34
+msgid "Incomplete"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:40
+msgid "Unreviewed"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:53
+msgid "Service Events"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:64
+msgid "Needing Review"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:80
+msgid "Recent Service Log Activity"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:85
+msgid "Show service events"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:91
+msgid "Show return to service"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:128
+#: qatrack/service_log/templates/service_log/sl_dash.html:132
+#, python-format
+msgid ""
+"\n"
+"            Loading %(unit_name)s : %(test_list_name)s\n"
+"          "
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/se_schedule_actions.html:8
+msgid "Click to perform this Service Event"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_problem_description.html:4
+msgid "Problem Description"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:7
+msgid "Click to view the Service Event associated with this RTSQC"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:18
+msgid "Review this RTSQC Test List Instance"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:36
+msgid "View Test List Instance history for this RTS QC"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:8
+msgid "Click to edit this Service Event"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:17
+msgid "Details"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:8
+msgid "Create a Service Event with this template"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:16
+msgid "Edit this template"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_tli_work_completed.html:4
+#, python-format
+msgid "Started %(datetime_started)s by %(created_by)s"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_tli_work_completed.html:4
+msgid "In Progress"
+msgstr ""
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_work_description.html:4
+msgid "Work Description"
+msgstr ""
+
+#: qatrack/service_log/views.py:238
+#, python-format
+msgid "No %(verbose_name)s found matching the query"
+msgstr ""
+
+#: qatrack/service_log/views.py:395
+msgid "Please correct the Service Event Details error below."
+msgstr ""
+
+#: qatrack/service_log/views.py:406
+#, python-format
+msgid "Due to changes detected, service event %s status has been reset to %s"
+msgstr ""
+
+#: qatrack/service_log/views.py:436
+msgid "Please correct the Parts error below."
+msgstr ""
+
+#: qatrack/service_log/views.py:444
+msgid "Please correct the User Hours error below."
+msgstr ""
+
+#: qatrack/service_log/views.py:447
+msgid "Please correct the Return to Service QC error below."
+msgstr ""
+
+#: qatrack/service_log/views.py:948 qatrack/service_log/views.py:1824
+msgid "Other"
+msgstr ""
+
+#: qatrack/service_log/views.py:1822 qatrack/service_log/views.py:1926
+msgid "Ad Hoc"
+msgstr ""

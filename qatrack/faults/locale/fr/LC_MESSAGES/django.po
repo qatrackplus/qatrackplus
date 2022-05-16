@@ -1,0 +1,354 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/faults/templates/faults/_fault_details.html:7
+#: qatrack/faults/templates/faults/fault_form.html:71
+msgid "Fault Details"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:11
+#: qatrack/faults/templates/faults/fault_list.html:82
+msgid "Fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:14
+msgid "Occurred"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:17
+msgid "Site"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:22
+#: qatrack/faults/views.py:151
+msgid "Other"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:26
+#: qatrack/faults/templates/faults/fault_list.html:83
+msgid "Unit"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:30
+msgid "Click to view all faults on this unit"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:36
+msgid "Modality / Beam"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:41
+msgid "Not Specified"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:45
+msgid "Created"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:50
+msgid "Last Modified"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:55
+msgid "Reviewed"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:64
+#: qatrack/faults/templates/faults/_fault_details.html:69
+#: qatrack/faults/templates/faults/fault_review_status.html:16
+msgid "Unreviewed "
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:77
+msgid "Fault Types"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:81
+#: qatrack/faults/templates/faults/fault_type_details.html:44
+msgid "Code"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:85
+msgid "Click to view details of this fault type"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:90
+#: qatrack/faults/templates/faults/fault_type_details.html:47
+msgid "Description"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:95
+#: qatrack/faults/templates/faults/fault_type_description.html:8
+#: qatrack/faults/templates/faults/fault_type_details.html:52
+msgid "No description available"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:101
+msgid "Related Service Events"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:104
+msgid "Service events"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:115
+msgid "No related service events"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:127
+msgid "Attachments"
+msgstr ""
+
+#: qatrack/faults/templates/faults/_fault_details.html:131
+msgid "Files"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_actions.html:6
+#, python-format
+msgid "View details of %(fault)s"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_actions.html:9
+msgid "Review"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_actions.html:11
+msgid "Details"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_actions.html:18
+#: qatrack/faults/templates/faults/fault_details.html:65
+#, python-format
+msgid "Edit details of %(fault)s"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_actions.html:19
+#: qatrack/faults/templates/faults/fault_details.html:66
+msgid "Edit"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_confirm_delete.html:34
+msgid "Are you sure you want to <strong>permanently</strong> this fault?"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:9
+#, python-format
+msgid "Fault ID %(fault_id)s"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:49
+msgid ""
+"This will redirect you to a page where you can permanently delete this fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:52
+msgid "Delete"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:57
+msgid "Unapprove This Fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:59
+msgid "Approve This Fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:82
+#: qatrack/faults/templates/faults/fault_form.html:133
+msgid "Comments"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:102
+#: qatrack/faults/templates/faults/fault_form.html:153
+msgid "Add comment"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:106
+#: qatrack/faults/templates/faults/fault_form.html:157
+msgid "Post Comment"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_details.html:122
+#, python-format
+msgid ""
+"\n"
+"              Other Occurrences of fault type %(fault_type_code)s\n"
+"            "
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_form.html:11
+msgid "Log a new fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_form.html:46
+msgid "Edit Fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_form.html:48
+msgid "Log A New Fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_form.html:79
+msgid "Reviewers"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_form.html:110
+msgid "Update Fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_form.html:112
+msgid "Log Fault"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_list.html:49
+msgid "Click to update the review status of the selected faults"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_list.html:55
+msgid "Approve Selected Faults"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_list.html:71
+msgid "Confirm Bulk Review"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_list.html:76
+msgid "You are about to update the review status for all the following faults"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_list.html:84
+msgid "# of Faults"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_list.html:97
+msgid "Cancel"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_list.html:98
+msgid "Confirm"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_occurred.html:4
+#, python-format
+msgid "Created by %(created_by)s, Last modified by %(modified_by)s"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_review_status.html:7
+#, python-format
+msgid "Reviewed by %(group)s group member %(reviewed_by)s"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_review_status.html:9
+#, python-format
+msgid "Reviewed by %(reviewed_by)s"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_actions.html:6
+#, python-format
+msgid "View details and all occurrences of the %(fault_type)s fault type"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_actions.html:8
+msgid "Details & Occurrences"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_description.html:4
+msgid "Fault Type Description"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_details.html:8
+msgid "Fault Type"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_details.html:40
+msgid "Fault Type Details"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_details.html:59
+msgid "Unit Occurrences"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_details.html:68
+msgid "Click to view all faults of this type on this unit"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_details.html:69
+msgid "View"
+msgstr ""
+
+#: qatrack/faults/templates/faults/fault_type_details.html:86
+#, python-format
+msgid ""
+"\n"
+"              Fault Type %(fault_type_code)s Occurrences\n"
+"            "
+msgstr ""
+
+#: qatrack/faults/views.py:180
+msgid "Select All"
+msgstr ""
+
+#: qatrack/faults/views.py:200
+msgid "Check to include this fault bulk setting approval statuses"
+msgstr ""
+
+#: qatrack/faults/views.py:343
+#, python-brace-format
+msgid "Successfully deleted Fault {fault_id}"
+msgstr ""
+
+#: qatrack/faults/views.py:365
+#, python-format
+msgid "Fault ID %d was created"
+msgstr ""
+
+#: qatrack/faults/views.py:368
+msgid "Please resolve the errors below and submit again"
+msgstr ""
+
+#: qatrack/faults/views.py:537
+#, python-format
+msgid "Successfully approved %(fault)s "
+msgstr ""
+
+#: qatrack/faults/views.py:539
+#, python-format
+msgid "Successfully unapproved %(fault)s "
+msgstr ""
+
+#: qatrack/faults/views.py:541
+msgid ""
+"Sorry, something went wrong trying to review this fault. It has not been "
+"updated"
+msgstr ""
+
+#: qatrack/faults/views.py:559
+#, python-format
+msgid "Successfully reviewed %(count)s faults"
+msgstr ""
+
+#: qatrack/faults/views.py:581
+msgid "Faults for"
+msgstr ""
+
+#: qatrack/faults/views.py:607
+#, python-brace-format
+msgid "{fault_type} faults for: {site_and_unit_name}"
+msgstr ""

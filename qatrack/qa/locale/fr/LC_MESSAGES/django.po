@@ -1,0 +1,1210 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/qa/admin.py:62
+msgid "New reference value"
+msgstr ""
+
+#: qatrack/qa/admin.py:65
+msgid "Set by"
+msgstr ""
+
+#: qatrack/qa/admin.py:66
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:39
+msgid "Date"
+msgstr ""
+
+#: qatrack/qa/admin.py:71
+msgid ""
+"Include an optional comment about why this reference/tolerance is being "
+"updated"
+msgstr ""
+
+#: qatrack/qa/admin.py:86 qatrack/qa/admin.py:197
+msgid "No Tolerance Set"
+msgstr ""
+
+#: qatrack/qa/admin.py:144
+msgid ""
+"You can't use a non-multiple choice tolerance with a multiple choice or "
+"string test"
+msgstr ""
+
+#: qatrack/qa/admin.py:150
+msgid ""
+"Upload test types should not have reference or tolerance set. Please clear "
+"them before saving."
+msgstr ""
+
+#: qatrack/qa/admin.py:160
+#, python-brace-format
+msgid ""
+"Reference values for this Wraparound test must be set between {low} and "
+"{high}"
+msgstr ""
+
+#: qatrack/qa/admin.py:167 qatrack/qa/models.py:1301
+msgid ""
+"Percentage based tolerances can not be used with reference value of zero (0)"
+msgstr ""
+
+#: qatrack/qa/admin.py:170
+msgid "You must set a reference value when using a numerical tolerance"
+msgstr ""
+
+#: qatrack/qa/admin.py:203
+msgid ""
+"Include an optional comment about why these references/tolerances are being "
+"updated"
+msgstr ""
+
+#: qatrack/qa/admin.py:213
+msgid "Active Unit Assignments"
+msgstr ""
+
+#: qatrack/qa/admin.py:220
+msgid "All"
+msgstr ""
+
+#: qatrack/qa/admin.py:221
+msgid "At Least One Active Unit Assignment"
+msgstr ""
+
+#: qatrack/qa/admin.py:222
+msgid "No Active Unit Assignments"
+msgstr ""
+
+#: qatrack/qa/admin.py:370
+msgid ""
+"Invalid combination of tests selected.  Tests must be either all Numerical "
+"types, all String types, or all Boolean"
+msgstr ""
+
+#: qatrack/qa/admin.py:492
+#, python-format
+msgid ""
+"A test list with the slug '%(test_name)s' already exists in the database"
+msgstr ""
+
+#: qatrack/qa/admin.py:507
+#, python-brace-format
+msgid ""
+"This test list has {test_count} tests but the maximum number allowed is "
+"{max_tests}."
+msgstr ""
+
+#: qatrack/qa/admin.py:515
+msgid ""
+"The following test macro names are duplicated (either in this test list or "
+"one of its sublists) :: "
+msgstr ""
+
+#: qatrack/qa/admin.py:552
+#, python-format
+msgid ""
+"A Test List can not be its own child. Please remove Sublist ID "
+"%(sublist_id)d and try again"
+msgstr ""
+
+#: qatrack/qa/admin.py:559
+#, python-format
+msgid ""
+"Test Lists can not be nested more than 1 level. Test List(s) "
+"%(test_list_names)s already has(have) a sublist and therefore can't be used "
+"as a sublist."
+msgstr ""
+
+#: qatrack/qa/admin.py:566
+#, python-format
+msgid ""
+"This Test List is a Sublist of Test Lists: %(sublist_name)s and therefore "
+"can't have sublists of its own."
+msgstr ""
+
+#: qatrack/qa/admin.py:647 qatrack/qa/admin.py:701
+msgid "None"
+msgstr ""
+
+#: qatrack/qa/admin.py:794 qatrack/qa/trees.py:26 qatrack/qa/trees.py:27
+#: qatrack/qa/views/base.py:328 qatrack/qa/views/base.py:485
+#: qatrack/qa/views/review.py:603 qatrack/qa/views/review.py:690
+msgid "Ad Hoc"
+msgstr ""
+
+#: qatrack/qa/admin.py:883
+msgid "Click to view parent test list"
+msgstr ""
+
+#: qatrack/qa/admin.py:894
+msgid "Click to view child test list"
+msgstr ""
+
+#: qatrack/qa/admin.py:919
+#, python-format
+msgid ""
+"You can't change the test type from %(old_test_type)s to %(new_test_type)s "
+"for a test that has already been performed. Revert to '%(old_test_type)s' "
+"before saving or create a new test with 'Save as New'."
+msgstr ""
+
+#: qatrack/qa/admin.py:943
+msgid "Invalid numerical format"
+msgstr ""
+
+#: qatrack/qa/admin.py:957
+msgid "Click to edit the reference and tolerance l(opens in new window)"
+msgstr ""
+
+#: qatrack/qa/admin.py:962
+msgid ""
+"Hidden tests can not have references and tolerances set. Please remove the "
+"references and tolerances for this test on the following units before making "
+"it hidden: "
+msgstr ""
+
+#: qatrack/qa/admin.py:1071
+msgid ""
+"Warning: Instead of using pyplot or pylab, it is recommended that you use "
+"the object oriented interface to matplotlib."
+msgstr ""
+
+#: qatrack/qa/admin.py:1078
+msgid ""
+"Warning: test procedure links should usually begin with http:// or https://"
+msgstr ""
+
+#: qatrack/qa/admin.py:1085
+#, python-format
+msgid "Created by %(username)s"
+msgstr ""
+
+#: qatrack/qa/admin.py:1094
+#, python-format
+msgid "Modified by %(username)s"
+msgstr ""
+
+#: qatrack/qa/admin.py:1205
+msgid "Active"
+msgstr ""
+
+#: qatrack/qa/admin.py:1205
+msgid "Not active"
+msgstr ""
+
+#: qatrack/qa/admin.py:1226
+msgid "Ad Hoc (Unscheduled)"
+msgstr ""
+
+#: qatrack/qa/admin.py:1239
+#, python-format
+msgid ""
+"To prevent data loss, you can not change the Unit, TestList or TestListCycle "
+"of a UnitTestCollection after it has been created. The original value was: "
+"%(object_id)s"
+msgstr ""
+
+#: qatrack/qa/admin.py:1289
+msgid "Unknown"
+msgstr ""
+
+#: qatrack/qa/admin.py:1510
+msgid "Duplicate Tolerance. A Tolerance with these values already exists"
+msgstr ""
+
+#: qatrack/qa/admin.py:1553
+msgid ""
+"There must be one default auto review rule set. Edit another rule set to be "
+"default first."
+msgstr ""
+
+#: qatrack/qa/admin.py:1589
+msgid "Click to continue this auto saved session"
+msgstr ""
+
+#: qatrack/qa/admin.py:1590
+msgid "Recover"
+msgstr ""
+
+#: qatrack/qa/models.py:562
+msgid "Boolean values must be 0 or 1"
+msgstr ""
+
+#: qatrack/qa/models.py:570 qatrack/qa/models.py:2092
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:62
+msgid "Yes"
+msgstr ""
+
+#: qatrack/qa/models.py:570 qatrack/qa/models.py:2092
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:61
+msgid "No"
+msgstr ""
+
+#: qatrack/qa/models.py:672
+msgid "Value set for tolerance or action but type is Multiple Choice"
+msgstr ""
+
+#: qatrack/qa/models.py:675
+msgid "You must give at least l passing choice for a multiple choice tolerance"
+msgstr ""
+
+#: qatrack/qa/models.py:691
+msgid ""
+"Value set for pass choices or tolerance choices but type is not Multiple "
+"Choice"
+msgstr ""
+
+#: qatrack/qa/models.py:707
+#, python-format
+msgid ""
+"You must set at least one %(tolerance_display)s or %(action_display)s level "
+"for this tolerance type"
+msgstr ""
+
+#: qatrack/qa/models.py:759
+msgid "Absolute"
+msgstr ""
+
+#: qatrack/qa/models.py:762
+msgid "Percent"
+msgstr ""
+
+#: qatrack/qa/models.py:766
+msgid "M.C."
+msgstr ""
+
+#: qatrack/qa/models.py:771
+msgid "Boolean"
+msgstr ""
+
+#: qatrack/qa/models.py:828
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:38
+msgid "Name"
+msgstr ""
+
+#: qatrack/qa/models.py:1034
+#, python-format
+msgid "%(test_type)s value provided, but Test Type is not %(test_type)s"
+msgstr ""
+
+#: qatrack/qa/models.py:1038
+#, python-format
+msgid "Test Type is %(test_type)s but no %(test_type)s value provided"
+msgstr ""
+
+#: qatrack/qa/models.py:1058
+#, python-format
+msgid ""
+"Snippet must set macro name to a value or contain a result line (e.g. "
+"%(test_name)s = my_var/another_var*2 or result = my_var/another_var*2)"
+msgstr ""
+
+#: qatrack/qa/models.py:1072
+#, python-format
+msgid "Calculation procedure invalid: %(err)s"
+msgstr ""
+
+#: qatrack/qa/models.py:1079
+msgid "Constant"
+msgstr ""
+
+#: qatrack/qa/models.py:1085 qatrack/qa/models.py:1086
+msgid "Wraparound"
+msgstr ""
+
+#: qatrack/qa/models.py:1091
+msgid "Wrap high required for Wraparound test"
+msgstr ""
+
+#: qatrack/qa/models.py:1093
+msgid "Wrap low required for Wraparound test"
+msgstr ""
+
+#: qatrack/qa/models.py:1096
+msgid "Wrap High must be less than Wrap Low"
+msgstr ""
+
+#: qatrack/qa/models.py:1103
+msgid "Multiple Choice"
+msgstr ""
+
+#: qatrack/qa/models.py:1107 qatrack/qa/models.py:1111
+msgid "You must give at least 1 choice for a multiple choice test"
+msgstr ""
+
+#: qatrack/qa/models.py:1123
+msgid "All tests require a macro name"
+msgstr ""
+
+#: qatrack/qa/models.py:1127
+msgid ""
+"Macro names must contain only letters, numbers and underscores and start "
+"with a letter or underscore"
+msgstr ""
+
+#: qatrack/qa/models.py:1307
+msgid "Test type is BOOLEAN but reference value is not 0 or 1"
+msgstr ""
+
+#: qatrack/qa/models.py:2084
+msgid "Skipped"
+msgstr ""
+
+#: qatrack/qa/models.py:2129
+#, python-format
+msgid "Zero ref with % diff tol"
+msgstr ""
+
+#: qatrack/qa/models.py:2235
+msgid ""
+"Optional field that can be used to ensure uniqueness when posting results "
+"via the API"
+msgstr ""
+
+#: qatrack/qa/models.py:2421
+msgid "All reviewed"
+msgstr ""
+
+#: qatrack/qa/models.py:2596
+#, python-format
+msgid "Day %(day_number)d"
+msgstr ""
+
+#: qatrack/qa/templates/qa/_testinstancestatus_select.html:6
+#: qatrack/qa/templates/qa/testlistinstance_review.html:292
+#: qatrack/qa/templates/qa/testlistinstance_review.html:377
+#: qatrack/qa/templates/qa/testlistinstance_review.html:485
+msgid "No description available"
+msgstr ""
+
+#: qatrack/qa/templates/qa/backup_form.html:8
+#: qatrack/qa/templates/qa/backup_form.html:30
+msgid "Create Paper Backup Forms"
+msgstr ""
+
+#: qatrack/qa/templates/qa/backup_form.html:33
+msgid ""
+"\n"
+"          Fill out the form below and submit it to generate a set of\n"
+"          paper based forms that can be used in the event of a server\n"
+"          failure.  These forms can be saved or printed to pdf and stored\n"
+"          on a local computer or network drive.\n"
+"          "
+msgstr ""
+
+#: qatrack/qa/templates/qa/backup_form.html:50
+msgid "Submit"
+msgstr ""
+
+#: qatrack/qa/templates/qa/category_tree.html:42
+#: qatrack/qa/templates/qa/category_tree.html:56
+msgid "Choose QC By Unit, Frequency, Category"
+msgstr ""
+
+#: qatrack/qa/templates/qa/category_tree.html:57
+msgid "Use the tree below to select QC by Unit, Frequency, & Test Category"
+msgstr ""
+
+#: qatrack/qa/templates/qa/category_tree.html:66
+#: qatrack/qa/templates/qa/frequency_tree.html:65
+msgid "Search"
+msgstr ""
+
+#: qatrack/qa/templates/qa/category_tree.html:74
+#: qatrack/qa/templates/qa/frequency_tree.html:73
+msgid "Loading QC Category Tree"
+msgstr ""
+
+#: qatrack/qa/templates/qa/frequency_tree.html:42
+#: qatrack/qa/templates/qa/frequency_tree.html:55
+msgid "Choose QC By Unit, Frequency"
+msgstr ""
+
+#: qatrack/qa/templates/qa/frequency_tree.html:56
+msgid "Use the tree below to select QC by Unit & Frequency"
+msgstr ""
+
+#: qatrack/qa/templates/qa/history.html:9
+#: qatrack/qa/templates/qa/testlistinstance_review.html:269
+#: qatrack/qa/templates/qa/testlistinstance_review.html:463
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:48
+msgid "Value"
+msgstr ""
+
+#: qatrack/qa/templates/qa/history.html:9
+#: qatrack/qa/templates/qa/testlistinstance_detail.html:319
+#: qatrack/qa/templates/qa/testlistinstance_review.html:331
+msgid "Diff from ref"
+msgstr ""
+
+#: qatrack/qa/templates/qa/history.html:9
+#: qatrack/qa/templates/qa/testlistinstance_detail.html:319
+#: qatrack/qa/templates/qa/testlistinstance_review.html:331
+msgid "No ref/tol set"
+msgstr ""
+
+#: qatrack/qa/templates/qa/history.html:9
+#, python-format
+msgid " %(created_by)s on %(created_on)s "
+msgstr ""
+
+#: qatrack/qa/templates/qa/history.html:33
+msgid "N/A"
+msgstr ""
+
+#: qatrack/qa/templates/qa/history.html:40
+msgid "View chart of this data"
+msgstr ""
+
+#: qatrack/qa/templates/qa/pass_fail_status.html:28
+#: qatrack/qa/views/review.py:701
+msgid "New List"
+msgstr ""
+
+#: qatrack/qa/templates/qa/qavalue_form.html:44
+msgid "Show/hide procedure & attachments for this test"
+msgstr ""
+
+#: qatrack/qa/templates/qa/qavalue_form.html:95
+msgid "Not Done"
+msgstr ""
+
+#: qatrack/qa/templates/qa/qavalue_form.html:96
+msgid "Add comment for this test"
+msgstr ""
+
+#: qatrack/qa/templates/qa/qavalue_form.html:104
+msgid "Update reference & tolerance values"
+msgstr ""
+
+#: qatrack/qa/templates/qa/qavalue_form.html:143
+msgid "Detailed procedure link"
+msgstr ""
+
+#: qatrack/qa/templates/qa/qavalue_form.html:144
+msgid "Show detailed procedure for this test"
+msgstr ""
+
+#: qatrack/qa/templates/qa/qavalue_form.html:155
+#: qatrack/qa/templates/qa/testlistinstance_review.html:426
+#: qatrack/qa/templates/qa/testlistinstance_review.html:450
+msgid "Attachments"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_confirm_delete.html:86
+#, python-format
+msgid ""
+"\n"
+"                              Are you sure you want to <strong>permanently</"
+"strong> delete %(test_list_name)s\n"
+"                              from %(work_completed)s?\n"
+"                            "
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_detail.html:69
+#: qatrack/qa/templates/qa/testlistinstance_review.html:73
+msgid "Not set"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_detail.html:128
+msgid "Unreviewed"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_detail.html:286
+#: qatrack/qa/templates/qa/testlistinstance_form.html:517
+#: qatrack/qa/templates/qa/testlistinstance_review.html:278
+#: qatrack/qa/templates/qa/testlistinstance_review.html:471
+#, python-format
+msgid "Click to view this test list instance performed at %(d)s"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_detail.html:334
+#: qatrack/qa/templates/qa/testlistinstance_review.html:346
+msgid "Click to show full results"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_detail.html:336
+#: qatrack/qa/templates/qa/testlistinstance_review.html:348
+msgid "Click to show full text"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_form.html:250
+msgid ""
+"Uncheck if you don't want to advance the due date for this test list instance"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_form.html:896
+msgid "Click to log a new fault"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_form.html:899
+#: qatrack/qa/templates/qa/testlistinstance_form.html:998
+msgid "Log Fault"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_form.html:937
+msgid "Log a new fault"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_form.html:994
+#: qatrack/qa/templates/qa/testlistinstance_list.html:98
+msgid "Cancel"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:49
+msgid ""
+"Click to update the test instance statuses for all of the selected test list "
+"instances"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:55
+msgid "Update Review Statuses"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:71
+msgid "Confirm Bulk Review"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:76
+msgid ""
+"You are about to update the review status for all test instances in the "
+"following test list instances:"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:82
+#: qatrack/qa/templates/qa/testlistinstance_review.html:60
+msgid "Test List"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:83
+#: qatrack/qa/templates/qa/testlistinstance_review.html:52
+#: qatrack/qa/views/base.py:383 qatrack/qa/views/review.py:380
+msgid "Unit"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:84
+msgid "# of Test List Instances"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:85
+#: qatrack/qa/templates/qa/testlistinstance_review.html:285
+#: qatrack/qa/templates/qa/testlistinstance_review.html:478
+msgid "Status"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_list.html:99
+msgid "Confirm"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_pdf_button.html:5
+msgid "Export"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_pdf_button.html:10
+msgid "PDF"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_pdf_button.html:15
+msgid "CSV"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_pdf_button.html:20
+msgid "Excel"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:56
+msgid "Test List Cycle"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:65
+msgid "Performed By"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:68
+msgid "User Key"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:82
+msgid "Work Started"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:85
+msgid "Work Completed"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:89
+#: qatrack/qa/templates/qa/testlistinstance_review.html:103
+msgid "In Progress"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:98
+msgid "Duration"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:125
+msgid "Last Modification"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:128
+msgid "Last Review"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:154
+msgid "Initiate Service Event"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:159
+msgid "New tab: Create new service event initiated by this test list"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:165
+msgid "Service events initiated"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:174
+#: qatrack/qa/templates/qa/testlistinstance_review.html:204
+msgid "View service event"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:180
+#: qatrack/qa/templates/qa/testlistinstance_review.html:210
+msgid "New tab: view service event"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:195
+msgid "RTS QC for Service Events"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:230
+#: qatrack/qa/views/admin.py:206
+msgid "Description"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:255
+msgid "Review"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:258
+msgid "From cycle"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:268
+#: qatrack/qa/templates/qa/testlistinstance_review.html:462
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:47
+msgid "Test"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:270
+#: qatrack/qa/templates/qa/testlistinstance_review.html:464
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:50
+msgid "Reference"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:272
+#: qatrack/qa/templates/qa/testlistinstance_review.html:466
+msgid "Difference"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:274
+#: qatrack/qa/templates/qa/testlistinstance_review.html:468
+msgid "Comment"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:276
+#: qatrack/qa/templates/qa/testlistinstance_review.html:547
+msgid "History"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:299
+#: qatrack/qa/templates/qa/testlistinstance_review.html:492
+msgid "Selected"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:506
+#: qatrack/qa/templates/qa/testlistinstance_review.html:517
+msgid "Click to update the test instance statuses"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:509
+msgid "Update Statuses"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:520
+msgid "Update Test Statuses"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:525
+msgid "Continue this list"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:529
+msgid "Continue"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:533
+msgid "Edit this list"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:536
+msgid "Edit"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:542
+#, python-format
+msgid ""
+"\n"
+"                        title=\"Click to view other instances of "
+"%(test_list_name)s on %(unit_name)s\"\n"
+"                        "
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:552
+msgid ""
+"This will redirect you to the admin site where you can permanently delete "
+"this qa session"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:555
+msgid "Delete"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:569
+msgid "Images for "
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:598
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:42
+msgid "Comments"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:618
+msgid "Add comment"
+msgstr ""
+
+#: qatrack/qa/templates/qa/testlistinstance_review.html:622
+msgid "Post Comment"
+msgstr ""
+
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:6
+msgid "Paper Backup Forms"
+msgstr ""
+
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:22
+msgid "Paper based backup forms for QC"
+msgstr ""
+
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:24
+msgid "To print, hit Ctrl-P or use the browser menus."
+msgstr ""
+
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:25
+msgid ""
+"Note, tests that require macro calculations or files to be uploaded are not "
+"included in paper based forms."
+msgstr ""
+
+#: qatrack/qa/templates/qa/unittestcollection_backup.html:51
+msgid "Tolerance"
+msgstr ""
+
+#: qatrack/qa/trees.py:21 qatrack/qa/views/base.py:330
+#: qatrack/qa/views/base.py:487 qatrack/qa/views/perform.py:1947
+msgid "Other"
+msgstr ""
+
+#: qatrack/qa/trees.py:45
+#, python-brace-format
+msgid "Click to browse QC at Site {site}"
+msgstr ""
+
+#: qatrack/qa/trees.py:52
+#, python-brace-format
+msgid "Click to perform QC on Unit #{unit_number}: {unit}"
+msgstr ""
+
+#: qatrack/qa/trees.py:57
+msgid "Unclassified"
+msgstr ""
+
+#: qatrack/qa/trees.py:63
+#, python-brace-format
+msgid "Click to peform {frequency} QC on Unit {unit}"
+msgstr ""
+
+#: qatrack/qa/trees.py:72
+#, python-brace-format
+msgid "Click to peform {tests_collection} on Unit {unit}"
+msgstr ""
+
+#: qatrack/qa/trees.py:205
+msgid "QC by Unit, Frequency, & Category"
+msgstr ""
+
+#: qatrack/qa/trees.py:267
+msgid "No categories defined"
+msgstr ""
+
+#: qatrack/qa/trees.py:271
+#, python-brace-format
+msgid "Click to peform {category} QC on {unit}"
+msgstr ""
+
+#: qatrack/qa/trees.py:315
+msgid "QC by Unit & Frequency"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:30
+msgid "Choose the unit to copy references and tolerances from"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:50
+msgid "Choose the unit to copy references and tolerances to"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:83
+msgid "This field is required"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:102
+msgid "The source and destination units must be different"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:114
+msgid "The selected test list does not exist on the source unit"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:127
+msgid "Copy References & Tolerances"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:166
+msgid "Copy references & tolerances cancelled"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:172
+msgid "References & tolerances successfully copied"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:199
+msgid "Invalid value"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:243
+msgid ""
+"You must select at least one Test, TestList, or TestListCycle for Export"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:256
+msgid "Export Test Pack"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:314
+msgid "Import Test Pack"
+msgstr ""
+
+#: qatrack/qa/views/admin.py:356
+#, python-format
+msgid "Test Pack import successfully: %(item_counts)s were imported."
+msgstr ""
+
+#: qatrack/qa/views/admin.py:360
+msgid ""
+"Sorry, but an error occurred when trying to import your TestPack. Please "
+"file a bug report."
+msgstr ""
+
+#: qatrack/qa/views/base.py:382 qatrack/qa/views/review.py:379
+msgid "Site"
+msgstr ""
+
+#: qatrack/qa/views/base.py:384 qatrack/qa/views/review.py:381
+msgid "Frequency"
+msgstr ""
+
+#: qatrack/qa/views/base.py:385 qatrack/qa/views/review.py:382
+msgid "Created By"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:64
+msgid "Value required if not skipping"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:66
+msgid "Clear value if skipping"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:72
+msgid "Please add comment when skipping"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:105
+#, python-format
+msgid "Actual value = %(constant_value)s"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:164
+#, python-brace-format
+msgid "Value for this test must be in range {low} to {high}"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:423
+msgid "Work started date/time can not be after work completed date/time"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:429
+msgid "Work started date/time can not be in the future"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:447
+msgid "Add comment about this set of tests"
+msgstr ""
+
+#: qatrack/qa/views/forms.py:485
+msgid "You do not have the required permission to review your own tests."
+msgstr ""
+
+#: qatrack/qa/views/perform.py:142
+msgid "Composite created file"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:361 qatrack/qa/views/perform.py:505
+msgid "Original file not found. Please re-upload."
+msgstr ""
+
+#: qatrack/qa/views/perform.py:375 qatrack/qa/views/perform.py:519
+msgid "Test with that ID does not exist"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:380 qatrack/qa/views/perform.py:524
+#, python-format
+msgid "Test: %(test_name)s"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:381 qatrack/qa/views/perform.py:525
+#: qatrack/qa/views/perform.py:692
+#, python-format
+msgid "Invalid Test Procedure: %(traceback)s"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:388 qatrack/qa/views/perform.py:532
+#: qatrack/qa/views/perform.py:1279 qatrack/qa/views/perform.py:1543
+#, python-format
+msgid "Uploaded %(current_datetime)s by %(username)s"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:455 qatrack/qa/views/perform.py:618
+msgid "Invalid or missing test_list_id"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:460 qatrack/qa/views/perform.py:623
+msgid "Invalid or missing unit_id"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:630
+msgid "No Valid Composite ID's"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:634
+msgid "Invalid QC Values"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:644
+msgid "Cyclic test dependency"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:659
+#, python-format
+msgid "%(test)s has a result of '%(test_result)s'"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:673
+#, python-format
+msgid "%(test)s failed with error: %(error)s."
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1129 qatrack/qa/views/perform.py:1153
+msgid ""
+"Data was not submitted succesfully. Please resolve the errors below and try "
+"again."
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1251 qatrack/qa/views/perform.py:1481
+#: qatrack/qa/views/review.py:146
+#, python-format
+msgid ""
+"Changed status of service event(s) %(service_event_ids)s to "
+"\"%(serviceeventstatus_name)s\"."
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1269
+#, python-format
+msgid "Successfully submitted %(test_list_name)s "
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1302
+msgid ""
+"There must be at least one Test Status defined before performing a TestList"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1495
+msgid "Error sending notification email."
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1505
+#, python-format
+msgid "Successfully submitted %(test_list_name)s"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1583
+#, python-format
+msgid ""
+"Tried to calculate percent diff with a zero reference value. Original value "
+"was %(test_instance_value)s"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1592
+#, python-format
+msgid ""
+"Tried to calculate percent diff with a zero reference value. UTI="
+"%(unit_test_info_id)d"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1596
+#, python-format
+msgid ""
+"Please call physics. Test %(test_name)s is configured incorrectly on this "
+"unit. Tried to calculate percent diff with a zero reference value."
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1697
+msgid "In Progress Test Lists"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1783 qatrack/qa/views/perform.py:1833
+msgid "Ad Hoc "
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1784
+#, python-format
+msgid "%(frequency_names)s Test Lists"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1886
+#, python-format
+msgid "Test Lists for Categories: %(category_names)s"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1905
+#, python-format
+msgid "Test Lists for Units: %(unit_names)s and Categories: %(category_names)s"
+msgstr ""
+
+#: qatrack/qa/views/perform.py:1948
+#, python-format
+msgid "%(site_names)s Test Lists"
+msgstr ""
+
+#: qatrack/qa/views/review.py:156
+#, python-format
+msgid "Successfully updated %(test_list_name)s"
+msgstr ""
+
+#: qatrack/qa/views/review.py:273
+msgid "Review Test List Data"
+msgstr ""
+
+#: qatrack/qa/views/review.py:289
+msgid "Review Your Test List Data"
+msgstr ""
+
+#: qatrack/qa/views/review.py:313
+#, python-format
+msgid " Review %(frequency_names)s Test Lists"
+msgstr ""
+
+#: qatrack/qa/views/review.py:331
+#, python-format
+msgid " Review %(unit_names)s Test Lists"
+msgstr ""
+
+#: qatrack/qa/views/review.py:356
+msgid "Review All Inactive Test Lists"
+msgstr ""
+
+#: qatrack/qa/views/review.py:369
+msgid "Review Your Inactive Test Lists"
+msgstr ""
+
+#: qatrack/qa/views/review.py:384
+msgid "Select All"
+msgstr ""
+
+#: qatrack/qa/views/review.py:427
+msgid ""
+"Select the review status to apply to all currently selected test instance "
+"rows"
+msgstr ""
+
+#: qatrack/qa/views/review.py:429
+msgid "Select the review status to apply to this row"
+msgstr ""
+
+#: qatrack/qa/views/review.py:441
+msgid ""
+"Check to include this test list instance when bulk setting approval statuses"
+msgstr ""
+
+#: qatrack/qa/views/review.py:461
+msgid "Unreviewed Test List Instances"
+msgstr ""
+
+#: qatrack/qa/views/review.py:475
+#, python-format
+msgid "Successfully reviewed %(count)s test list instances"
+msgstr ""
+
+#: qatrack/qa/views/review.py:490
+msgid "Unreviewed Test List Instances Visible To Your Groups"
+msgstr ""
+
+#: qatrack/qa/views/review.py:514
+#, python-format
+msgid "Unreviewed Test List Instances Visible To %(group_name)s"
+msgstr ""
+
+#: qatrack/qa/views/review.py:641
+msgid "QC Program Overview"
+msgstr ""
+
+#: qatrack/qa/views/review.py:642
+msgid "Overview of current QC status on all units"
+msgstr ""
+
+#: qatrack/qa/views/review.py:644
+msgid "QC Program Overview For Your Groups"
+msgstr ""
+
+#: qatrack/qa/views/review.py:645
+msgid "Overview of current QC status (visible to your groups) on all units"
+msgstr ""
+
+#: qatrack/qa/views/review.py:728
+#, python-format
+msgid "History for %(unit_name)s :: %(unit_test_collection_name)s"
+msgstr ""

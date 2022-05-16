@@ -1,0 +1,294 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/units/forms.py:18
+msgid "Duration can not be greater than 24 hours"
+msgstr ""
+
+#: qatrack/units/models.py:265
+#: qatrack/units/templates/units/unittype_list.html:78
+msgid "Other"
+msgstr ""
+
+#: qatrack/units/templates/units/table_context_u_actions.html:3
+msgid "Parts Cost"
+msgstr ""
+
+#: qatrack/units/templates/units/table_context_u_actions.html:4
+msgid "Available Time"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:9
+msgid "Change Units Available Time"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:39
+msgid "Change Unit Available Times"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:59
+msgid ""
+"Select one or more days to Edit the Available Time of the selected units​"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:61
+msgid "Edit Available Time"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:69
+msgid "Select an effective date to Edit the Schedule of the selected units"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:71
+msgid "Edit Schedule"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:79
+msgid ""
+"Select one or more days to Delete Available Time Changes and Schedule "
+"Changes of the selected units​"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:80
+msgid "Delete Changes"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:98
+msgid ""
+"\n"
+"                  Click to select a single day. Ctrl click to select "
+"different days. Shift click to\n"
+"                  select a group of days.​ <b>A</b> denotes Acceptance date, "
+"<b>C</b> denotes Schedule Change,\n"
+"                  Available Time Changes are identified by a label input by "
+"the user​.\n"
+"                "
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:122
+msgid "Edit available time for selected units and selected days.​"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:146
+msgid "Insert or change avaialble times for selected days and units."
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:147
+msgid "Update Available Time"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:162
+msgid "Edit schedule for selected units."
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:169
+msgid "Effective Date"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:178
+msgid "Hours (hh:mm)"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:182
+msgid "Sunday"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:183
+msgid "Monday"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:184
+msgid "Tuesday"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:185
+msgid "Wednesday"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:186
+msgid "Thursday"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:187
+msgid "Friday"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:188
+msgid "Saturday"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:192
+#: qatrack/units/templates/units/unit_available_time_change.html:195
+#: qatrack/units/templates/units/unit_available_time_change.html:198
+#: qatrack/units/templates/units/unit_available_time_change.html:201
+#: qatrack/units/templates/units/unit_available_time_change.html:204
+#: qatrack/units/templates/units/unit_available_time_change.html:207
+#: qatrack/units/templates/units/unit_available_time_change.html:210
+msgid "hours"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:224
+msgid "Update Schedule"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:237
+msgid "Delete all schedule changes for selected units and days?"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:241
+msgid "Delete"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:243
+msgid "Cancel"
+msgstr ""
+
+#: qatrack/units/templates/units/unit_available_time_change.html:258
+msgid "Loading..."
+msgstr ""
+
+#: qatrack/units/templates/units/units_list.html:41
+msgid "For units selected below..."
+msgstr ""
+
+#: qatrack/units/templates/units/units_list.html:44
+msgid "Parts Costs Reports"
+msgstr ""
+
+#: qatrack/units/templates/units/units_list.html:46
+msgid "Change Available Times"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:8
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:8
+#: qatrack/units/templates/units/unittype_list.html:8
+msgid "Choose Unit"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:19
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:63
+msgid "Choose a Unit to View Faults for"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:22
+msgid "Click a button to view faults for one of the units below."
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:31
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:83
+#: qatrack/units/templates/units/unittype_choose_for_review.html:30
+#: qatrack/units/templates/units/unittype_choose_for_review.html:83
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:39
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:99
+#: qatrack/units/templates/units/unittype_list.html:30
+#: qatrack/units/templates/units/unittype_list.html:91
+#, python-format
+msgid "Click to show %(unit_type)s units"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:32
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:84
+#: qatrack/units/templates/units/unittype_choose_for_review.html:31
+#: qatrack/units/templates/units/unittype_choose_for_review.html:84
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:40
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:100
+#: qatrack/units/templates/units/unittype_list.html:31
+#: qatrack/units/templates/units/unittype_list.html:92
+#, python-format
+msgid "Click to hide %(unit_type)s units"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_faults.html:66
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:29
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:81
+msgid "Click a button to view service events for one of the units below."
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_review.html:9
+msgid "Choose Unit for Review"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_review.html:20
+#: qatrack/units/templates/units/unittype_choose_for_review.html:64
+msgid "Review QC By Unit"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_review.html:21
+#: qatrack/units/templates/units/unittype_choose_for_review.html:65
+msgid "Choose a unit below to review its QC Data."
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_review.html:43
+#: qatrack/units/templates/units/unittype_choose_for_review.html:95
+msgid "All"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:20
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:72
+msgid "Choose a Unit to Create a New Service Event for"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:22
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:74
+msgid "Choose a Unit to View Service Events for"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:27
+#: qatrack/units/templates/units/unittype_choose_for_service_event.html:79
+msgid "Click a button to create a service event for one of the units below."
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list.html:19
+#: qatrack/units/templates/units/unittype_list.html:67
+msgid "Choose a Unit to Perform QC On"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list.html:20
+#: qatrack/units/templates/units/unittype_list.html:68
+msgid "Click a button to perform QC for one of the units below."
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list.html:45
+#, python-format
+msgid "Click to hid %(unit_type)s units"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list.html:77
+msgid "Click to view all QC at Site: "
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list_unit_button.html:16
+#, python-format
+msgid "Choose %(unit_name)s QC by Frequency"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list_unit_button.html:32
+msgid "Ad Hoc"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list_unit_button.html:43
+#, python-format
+msgid "Choose %(unit_name)s QC by Category"
+msgstr ""
+
+#: qatrack/units/templates/units/unittype_list_unit_button.html:55
+#, python-format
+msgid "Click to view all %(category_name)s QC for Unit %(unit_name)s"
+msgstr ""

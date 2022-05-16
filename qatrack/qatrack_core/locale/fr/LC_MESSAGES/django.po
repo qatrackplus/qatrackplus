@@ -1,0 +1,132 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:78
+msgid "minutes ago"
+msgstr ""
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:83
+msgid "Yesterday"
+msgstr ""
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:162
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:179
+#, python-format
+msgid "%(size)d byte"
+msgid_plural "%(size)d bytes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:181
+#, python-format
+msgid "%s KB"
+msgstr ""
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:183
+#, python-format
+msgid "%s MB"
+msgstr ""
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:185
+#, python-format
+msgid "%s GB"
+msgstr ""
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:187
+#, python-format
+msgid "%s TB"
+msgstr ""
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:189
+#, python-format
+msgid "%s PB"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:54
+msgid "Missing content_type or object_pk field."
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:61
+#, python-format
+msgid "Invalid content_type value: %(content_type)r"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:72
+#, python-format
+msgid ""
+"The given content-type %(content_type)r does not resolve to a valid model."
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:84
+#, python-format
+msgid ""
+"No object matching content-type %(content_type)r and object PK %(object_id)r "
+"exists."
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:98
+#, python-format
+msgid ""
+"Attempting to get content-type %(content_type)r and object PK %(object_id)r "
+"exists raised %(error_class)s"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:130
+msgid "The comment submission failed"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:156
+#, python-format
+msgid "comment_will_be_posted receiver %(receiver_name)r killed the comment"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:196
+msgid "Bad Request"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:196
+msgid "Please check your ALLOWED_HOST setting."
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:203
+msgid "Insufficient Permission"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:204
+msgid "Please talk to an administrator to acquire the required permission."
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:213
+msgid "Resource not found"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:214
+msgid "The page or resource you were looking for can not be found"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:223
+msgid "Server Error"
+msgstr ""
+
+#: qatrack/qatrack_core/views.py:224
+msgid ""
+"Sorry, the server experienced an error processing your request. The site "
+"admin has been notified "
+msgstr ""

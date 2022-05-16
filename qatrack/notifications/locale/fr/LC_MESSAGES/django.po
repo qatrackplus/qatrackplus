@@ -1,0 +1,282 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/notifications/common/admin.py:43
+msgid "The following emails are invalid"
+msgstr ""
+
+#: qatrack/notifications/common/admin.py:54
+msgid "You must select at least one group, user, or email address!"
+msgstr ""
+
+#: qatrack/notifications/qccompleted/admin.py:41
+msgid ""
+"You must set the number of days to follow after for Follow Up notifications."
+msgstr ""
+
+#: qatrack/notifications/qccompleted/admin.py:44
+msgid "Leave 'Follow up days' blank if not creating a Follow Up notification"
+msgstr ""
+
+#: qatrack/notifications/qccompleted/admin.py:114
+#, python-format
+msgid "#%(id)d - Follow up notification (after %(num_days)s days)"
+msgstr ""
+
+#: qatrack/notifications/qcscheduling/admin.py:42
+#: qatrack/notifications/service_log_scheduling/admin.py:40
+msgid ""
+"You must set the number of days in future to include for upcoming QC due "
+"date notices"
+msgstr ""
+
+#: qatrack/notifications/qcscheduling/admin.py:45
+#: qatrack/notifications/service_log_scheduling/admin.py:43
+msgid "Leave 'Future days' blank if not creating an Upcoming QC notification"
+msgstr ""
+
+#: qatrack/notifications/qcscheduling/admin.py:116
+#: qatrack/notifications/service_log_scheduling/admin.py:110
+#, python-format
+msgid " (next %(num_days)s days)"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:21
+#: qatrack/notifications/templates/faults_review/email.html:32
+#: qatrack/notifications/templates/parts/email.html:21
+#: qatrack/notifications/templates/service_log_review/email.html:32
+msgid "Hello"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:23
+msgid "The following fault was just logged:"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:28
+msgid "Fault"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:31
+#: qatrack/notifications/templates/parts/email.html:31
+#: qatrack/notifications/templates/service_log/email.html:34
+#: qatrack/notifications/templates/service_log/email.html:63
+#: qatrack/notifications/templates/service_log/email.html:89
+#: qatrack/notifications/templates/service_log/email.html:167
+msgid "Click to view on the site"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:38
+msgid "Fault Types"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:42
+msgid "Occurred"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:46
+#: qatrack/notifications/templates/faults_review/email.html:39
+#: qatrack/notifications/templates/service_log_review/email.html:39
+msgid "Unit"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:50
+msgid "Treatment or Imaging Modality"
+msgstr ""
+
+#: qatrack/notifications/templates/faults/email.html:55
+msgid "Not Specified"
+msgstr ""
+
+#: qatrack/notifications/templates/faults_review/email.html:4
+#: qatrack/notifications/templates/faults_review/email.html:5
+msgid "QATrack+ Faults Review Notice"
+msgstr ""
+
+#: qatrack/notifications/templates/faults_review/email.html:40
+msgid "Fault Type"
+msgstr ""
+
+#: qatrack/notifications/templates/faults_review/email.html:41
+#: qatrack/notifications/templates/service_log_review/email.html:41
+msgid "Count"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:23
+msgid "The following part is now below its low inventory threshold:"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:28
+msgid "Part Name"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:38
+msgid "Part Number"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:42
+msgid "Part Category"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:46
+msgid "New / Used"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:50
+msgid "Current Quantity"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:54
+msgid "Notification Level"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:59
+msgid "Current Known Locations"
+msgstr ""
+
+#: qatrack/notifications/templates/parts/email.html:69
+msgid "No known locations"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:22
+msgid "The following Service Event was just created"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:24
+msgid "The following Service Event was just updated"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:31
+#: qatrack/notifications/templates/service_log/email.html:86
+msgid "Service Event"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:36
+#, python-format
+msgid ""
+"\n"
+"              Service Event #%(service_event_id)s\n"
+"            "
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:43
+msgid "Created"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:47
+msgid "Unit &amp; Service Area"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:51
+msgid "Service Type"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:55
+msgid "Service Status"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:60
+msgid "Initiated By"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:71
+msgid "Problem Description"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:75
+msgid "Work Description"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:91
+#, python-format
+msgid ""
+"\n"
+"            Service Event #%(service_event_id)s\n"
+"            "
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:98
+msgid "Change Type"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:109
+msgid "Return To Service QC"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:110
+#: qatrack/notifications/templates/service_log/email.html:137
+msgid "Status"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:117
+msgid "Incomplete"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:119
+msgid "Requires Review"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:121
+msgid "Reviewed"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:128
+msgid "Changes"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:131
+msgid "Field"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:132
+msgid "Old"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:133
+msgid "New"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:145
+msgid "Attachments Deleted"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:148
+msgid "Attachments Added"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:167
+msgid "For more details, please view this Service Event on the site"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log/email.html:168
+#, python-format
+msgid ""
+"\n"
+"    Service Event #%(service_event_id)s</a>.\n"
+"  "
+msgstr ""
+
+#: qatrack/notifications/templates/service_log_review/email.html:4
+#: qatrack/notifications/templates/service_log_review/email.html:5
+msgid "QATrack+ Service Event Review Notice"
+msgstr ""
+
+#: qatrack/notifications/templates/service_log_review/email.html:40
+msgid "Service Area"
+msgstr ""

@@ -1,0 +1,137 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/accounts/admin.py:30
+msgid "Yes"
+msgstr ""
+
+#: qatrack/accounts/admin.py:31
+msgid "No"
+msgstr ""
+
+#: qatrack/accounts/admin.py:60
+msgid "Admin Status"
+msgstr ""
+
+#: qatrack/accounts/admin.py:128
+msgid "Default Groups"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/account.html:26
+msgid "Account Details"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/account.html:34
+msgid "Account Details for "
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:8
+msgid "Manage Groups & Permissions"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:48
+msgid "Group Membership & Permissions"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:56
+msgid ""
+"\n"
+"          Use the controls below to set group permissions and control group\n"
+"          membership.\n"
+"        "
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:68
+msgid "Group"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:77
+msgid "Add New Group"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:79
+msgid "Add Group"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:83
+msgid "Edit Group Name & Members"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:85
+msgid "Edit Group"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:97
+msgid "Use the icons/links below to toggle the permission"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:128
+msgid "Name"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:129
+msgid "New Group Name"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:132
+msgid "Select Users Below"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:133
+msgid "Select All"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:134
+msgid "Select None"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:138
+msgid "Username"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:139
+msgid "First Name"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:140
+msgid "Last Name"
+msgstr ""
+
+#: qatrack/accounts/templates/accounts/groups.html:162
+msgid "Close"
+msgstr ""
+
+#: qatrack/accounts/views.py:104
+msgid "Login failed with error 400: No authorization code was provided"
+msgstr ""
+
+#: qatrack/accounts/views.py:106
+msgid ""
+"Login failed with error 401: Your account is not authorized to use QATrack+"
+msgstr ""
+
+#: qatrack/accounts/views.py:108
+msgid "Login failed with error 403: Your account is disabled"
+msgstr ""
+
+#: qatrack/accounts/views.py:110
+#, python-brace-format
+msgid "Login Failed with error {status_code}: {phrase}"
+msgstr ""

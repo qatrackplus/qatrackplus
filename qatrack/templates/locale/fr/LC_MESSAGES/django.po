@@ -1,0 +1,1622 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#: qatrack/templates/site_base.html:564
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: qatrack/templates/_form_horizontal.html:71
+msgid ""
+"Click to add attachments. (Hold Ctrl or Cmd in the dialog to include "
+"multiple attachments)"
+msgstr ""
+
+#: qatrack/templates/_form_horizontal.html:72
+msgid "Browse"
+msgstr ""
+
+#: qatrack/templates/admin/app_index.html:9
+#: qatrack/templates/admin/change_form.html:44
+#: qatrack/templates/admin/change_list.html:31
+#: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:8
+#: qatrack/templates/admin/qa/testpack/export.html:17
+#: qatrack/templates/admin/qa/testpack/import.html:17
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:37
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:7
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:6
+msgid "Home"
+msgstr ""
+
+#: qatrack/templates/admin/base_site.html:22
+msgid "QATrack+ Admin Site"
+msgstr ""
+
+#: qatrack/templates/admin/base_site.html:25
+msgid "QATrack+ administration"
+msgstr ""
+
+#: qatrack/templates/admin/change_form.html:47
+#: qatrack/templates/admin/change_list.html:34
+#: qatrack/templates/admin/change_list.html:43
+msgid "Websites"
+msgstr ""
+
+#: qatrack/templates/admin/change_form.html:49
+#: qatrack/templates/admin/change_list.html:36
+#: qatrack/templates/admin/qa/testpack/export.html:18
+#: qatrack/templates/admin/qa/testpack/import.html:18
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:38
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:8
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:7
+msgid "QC"
+msgstr ""
+
+#: qatrack/templates/admin/change_form.html:55
+#: qatrack/templates/admin/index.html:29
+msgid "Add"
+msgstr ""
+
+#: qatrack/templates/admin/change_form.html:65
+#: qatrack/templates/explorer/base.html:64
+#: qatrack/templates/explorer/query.html:14
+msgid "History"
+msgstr ""
+
+#: qatrack/templates/admin/change_form.html:66
+#: qatrack/templates/admin/parts/storage/edit_inline/tabular_paginated.html:127
+#: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:30
+msgid "View on site"
+msgstr ""
+
+#: qatrack/templates/admin/change_form.html:77
+#: qatrack/templates/admin/change_list.html:71
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] ""
+msgstr[1] ""
+
+#: qatrack/templates/admin/change_list.html:62
+#, python-format
+msgid "Add %(name)s"
+msgstr ""
+
+#: qatrack/templates/admin/change_list.html:71
+msgid "Please correct the errors below."
+msgstr ""
+
+#: qatrack/templates/admin/change_list.html:82
+msgid "Filter"
+msgstr ""
+
+#: qatrack/templates/admin/index.html:18
+#, python-format
+msgid "Models available in the %(name)s application."
+msgstr ""
+
+#: qatrack/templates/admin/index.html:19
+#, python-format
+msgid "%(name)s"
+msgstr ""
+
+#: qatrack/templates/admin/index.html:35
+#: qatrack/templates/admin/parts/storage/edit_inline/tabular_paginated.html:123
+msgid "Change"
+msgstr ""
+
+#: qatrack/templates/admin/index.html:46
+msgid "You don't have permission to edit anything."
+msgstr ""
+
+#: qatrack/templates/admin/index.html:54
+msgid "Recent Actions"
+msgstr ""
+
+#: qatrack/templates/admin/index.html:55
+msgid "My Actions"
+msgstr ""
+
+#: qatrack/templates/admin/index.html:59
+msgid "None available"
+msgstr ""
+
+#: qatrack/templates/admin/index.html:73
+msgid "Unknown content"
+msgstr ""
+
+#: qatrack/templates/admin/parts/storage/edit_inline/tabular_paginated.html:102
+#: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:17
+msgid "Delete?"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlist/change_form.html:6
+msgid "This Test List is a Sublist of the following Test Lists"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlist/change_form.html:13
+msgid "This Test List is not a sublist of any other Test Lists"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:12
+#: qatrack/templates/explorer/query_list.html:65
+msgid "Delete"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:20
+#, python-format
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
+"related objects, but your account doesn't have permission to delete the "
+"following types of objects:"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:28
+#, python-format
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
+"following protected related objects:"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:82
+msgid "Yes, I'm sure"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:117
+#, python-format
+msgid "Add another %(verbose_name)s"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:120
+msgid "Remove"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:19
+msgid "Export Test Pack"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:32
+msgid ""
+"\n"
+"        On this page you may create a Test Pack for sharing test lists,\n"
+"        tests, and other QATrack+ configuration data with other QATrack+\n"
+"        installations.\n"
+"        "
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:47
+msgid "Test Lists To Export"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:49
+#: qatrack/templates/admin/qa/testpack/import.html:48
+msgid "Loading Test List table"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:53
+#: qatrack/templates/admin/qa/testpack/export.html:81
+#: qatrack/templates/admin/qa/testpack/export.html:118
+#: qatrack/templates/admin/qa/testpack/import.html:52
+#: qatrack/templates/admin/qa/testpack/import.html:80
+#: qatrack/templates/admin/qa/testpack/import.html:117
+msgid "ID"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:54
+#: qatrack/templates/admin/qa/testpack/import.html:53
+msgid "Test List"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:55
+#: qatrack/templates/admin/qa/testpack/export.html:83
+#: qatrack/templates/admin/qa/testpack/export.html:122
+#: qatrack/templates/admin/qa/testpack/export.html:182
+#: qatrack/templates/admin/qa/testpack/import.html:54
+#: qatrack/templates/admin/qa/testpack/import.html:82
+#: qatrack/templates/admin/qa/testpack/import.html:121
+#: qatrack/templates/explorer/query.html:62
+msgid "Description"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:75
+msgid "Test List Cycles To Export"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:77
+#: qatrack/templates/admin/qa/testpack/import.html:76
+msgid "Loading Test List Cycle table"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:82
+#: qatrack/templates/admin/qa/testpack/import.html:81
+msgid "Cycle"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:103
+msgid "Select Extra Tests To Export"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:107
+#: qatrack/templates/admin/qa/testpack/import.html:106
+msgid ""
+"\n"
+"              Note that there is no need to select tests that are already\n"
+"              included as part of a test list\n"
+"              "
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:114
+#: qatrack/templates/admin/qa/testpack/import.html:113
+msgid "Loading Test table"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:119
+#: qatrack/templates/admin/qa/testpack/import.html:118
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:38
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:46
+msgid "Test"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:120
+#: qatrack/templates/admin/qa/testpack/import.html:119
+msgid "Category"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:121
+#: qatrack/templates/admin/qa/testpack/import.html:120
+msgid "Type"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:143
+msgid "Summary"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:148
+#: qatrack/templates/admin/qa/testpack/import.html:189
+#: qatrack/templates/site_base.html:357
+msgid "Test Lists"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:149
+#: qatrack/templates/admin/qa/testpack/export.html:154
+#: qatrack/templates/admin/qa/testpack/export.html:159
+#: qatrack/templates/admin/qa/testpack/import.html:190
+#: qatrack/templates/admin/qa/testpack/import.html:195
+#: qatrack/templates/admin/qa/testpack/import.html:200
+msgid "0 Selected"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:153
+#: qatrack/templates/admin/qa/testpack/import.html:194
+msgid "Test Lists Cycles"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:158
+#: qatrack/templates/admin/qa/testpack/import.html:199
+msgid "Tests"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:173
+#: qatrack/templates/admin/qa/testpack/import.html:157
+msgid "Test Pack Name"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/export.html:197
+#: qatrack/templates/explorer/play.html:68
+#: qatrack/templates/explorer/query.html:117
+msgid "Download"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:19
+msgid "Import Test Pack"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:32
+msgid ""
+"\n"
+"        On this page you may import Test Lists, Test List Cycles, or "
+"individual\n"
+"        Tests from a Test Pack.\n"
+"        "
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:46
+msgid "Test Lists To Include"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:74
+msgid "Test List Cycles To Include"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:102
+msgid "Select Extra Tests To Include"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:144
+msgid "Load Test Pack"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:147
+msgid "Test Pack File"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:163
+msgid "Test Pack Created By"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:169
+msgid "Test Pack Generator Version"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:175
+msgid "Test Pack Description"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:184
+msgid "Import Summary"
+msgstr ""
+
+#: qatrack/templates/admin/qa/testpack/import.html:206
+msgid "Import"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:39
+msgid "Copy References & Tolerances"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:44
+msgid ""
+"Select the source unit and test list (or test list cycle) and destination "
+"units."
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:64
+msgid "Copy references and tolerances"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:9
+msgid "Copy References & Tolerances Preview"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:15
+msgid "Preview Copying Reference & Tolerances "
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:21
+msgid "Test List (Cycle)"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:25
+msgid "Source Unit"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:29
+msgid "Dest Unit"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:39
+msgid "Current Reference"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:40
+msgid "Current Tolerance"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:41
+#: qatrack/templates/admin/qa/unittestinfo/history.html:10
+msgid "New Reference"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:42
+#: qatrack/templates/admin/qa/unittestinfo/history.html:12
+msgid "New Tolerance"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:65
+msgid "Cancel"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:66
+msgid "Confirm"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/history.html:7
+msgid "Date/time"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/history.html:8
+msgid "User"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/history.html:9
+msgid "Old Reference"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/history.html:11
+msgid "Old Tolerance"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/history.html:13
+msgid "Comment"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:8
+msgid "Set References & Tolerances"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:14
+msgid "Set the tolerance and reference"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:41
+msgid "The tolerance and reference will be applied to"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:47
+msgid "Unit"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:48
+msgid "Current reference"
+msgstr ""
+
+#: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:49
+msgid "Current tolerance"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:37
+msgid "Reports Menu"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:39
+msgid "Click to run pre-defined reports"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:42
+msgid "Saved Reports"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:47
+msgid "Click to create a new query"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:50
+#: qatrack/templates/explorer/play.html:10
+#: qatrack/templates/explorer/query.html:11
+#: qatrack/templates/explorer/query_list.html:10
+#: qatrack/templates/explorer/querylog_list.html:8
+msgid "New Query"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:53
+msgid "Click to run ad-hoc queries"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:56
+#: qatrack/templates/explorer/play.html:11
+#: qatrack/templates/explorer/play.html:19
+#: qatrack/templates/explorer/query_list.html:11
+#: qatrack/templates/explorer/querylog_list.html:9
+#: qatrack/templates/explorer/querylog_list.html:29
+msgid "Playground"
+msgstr ""
+
+#: qatrack/templates/explorer/base.html:61
+msgid "Click to view history"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:6
+msgid "SQL Query Playground"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:12
+#: qatrack/templates/explorer/query_list.html:12
+#: qatrack/templates/explorer/querylog_list.html:10
+msgid "Logs"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:20
+msgid ""
+"The playground is for experimenting and writing ad-hoc queries. By default, "
+"nothing you do here will be saved."
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:27
+msgid "Connection"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:42
+msgid "Playground SQL"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:61
+#: qatrack/templates/explorer/play.html:71
+#: qatrack/templates/explorer/query.html:103
+#: qatrack/templates/explorer/query.html:120
+msgid "Toggle Dropdown"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:64
+msgid "Save As New Query"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:78
+#: qatrack/templates/explorer/query.html:111
+msgid "Show Schema"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:79
+#: qatrack/templates/explorer/query.html:112
+msgid "Hide Schema"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:80
+msgid "Format"
+msgstr ""
+
+#: qatrack/templates/explorer/play.html:83
+msgid "Playground Query"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:9
+msgid "Preview"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:13
+msgid "Snapshots"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:18
+#: qatrack/templates/explorer/preview_pane.html:122
+msgid "Pivot"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:28
+msgid "Show row numbers"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:30
+#, python-format
+msgid ""
+"\n"
+"                      Execution time: %(execution_time)s ms</span>\n"
+"                      "
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:37
+#, python-format
+msgid ""
+"\n"
+"                          Showing <input class=\"rows-input\" type=\"text\" "
+"name=\"rows\" id=\"rows\" value=\"%(total_rows)s\" /> of %(total_rows)s "
+"total rows.\n"
+"                        "
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:41
+#, python-format
+msgid ""
+"\n"
+"                          First <input class=\"rows-input\" type=\"text\" "
+"name=\"rows\" id=\"rows\" value=\"%(rows)s\" /> of %(total_rows)s total "
+"rows.\n"
+"                        "
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:89
+msgid "Empty Resultset"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:101
+#, python-format
+msgid "%(snapshots_length)s Snapshots <small>(oldest first)</small>"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:125
+msgid "Export to CSV"
+msgstr ""
+
+#: qatrack/templates/explorer/preview_pane.html:126
+msgid "Save Image"
+msgstr ""
+
+#: qatrack/templates/explorer/query.html:6
+msgid "SQL Query"
+msgstr ""
+
+#: qatrack/templates/explorer/query.html:38
+msgid "Title"
+msgstr ""
+
+#: qatrack/templates/explorer/query.html:79
+#: qatrack/templates/explorer/querylog_list.html:27
+msgid "SQL"
+msgstr ""
+
+#: qatrack/templates/explorer/query.html:83
+msgid "Open in playground"
+msgstr ""
+
+#: qatrack/templates/explorer/query.html:134
+msgid "Snapshot"
+msgstr ""
+
+#: qatrack/templates/explorer/query.html:140
+#, python-format
+msgid ""
+"\n"
+"                Avg. execution: %(query_avg_duration)sms. Query created by "
+"%(created_by_user_email)s on %(created_time)s.\n"
+"              "
+msgstr ""
+
+#: qatrack/templates/explorer/query_confirm_delete.html:10
+#, python-format
+msgid ""
+"\n"
+"              Are you sure you want to delete \"%(query_title)s\" ?\n"
+"            "
+msgstr ""
+
+#: qatrack/templates/explorer/query_confirm_delete.html:22
+msgid "Delete Query"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:5
+msgid "SQL Query List"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:19
+#, python-format
+msgid ""
+"\n"
+"      Your %(recent_queries_length)s Most Recently Run\n"
+"      "
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:26
+#: qatrack/templates/explorer/query_list.html:57
+msgid "Query"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:27
+msgid "Last Run"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:28
+#: qatrack/templates/explorer/query_list.html:62
+msgid "CSV"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:48
+msgid "All Queries"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:58
+msgid "Created"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:60
+msgid "Email"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:64
+msgid "Play"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:67
+msgid "Run Count"
+msgstr ""
+
+#: qatrack/templates/explorer/query_list.html:87
+#, python-format
+msgid ""
+"\n"
+"                      by %(created_by_user)s\n"
+"                    "
+msgstr ""
+
+#: qatrack/templates/explorer/querylog_list.html:4
+msgid "SQL Query History"
+msgstr ""
+
+#: qatrack/templates/explorer/querylog_list.html:16
+#, python-format
+msgid ""
+"\n"
+"      Recent Query Logs - Page %(page_num)s\n"
+"    "
+msgstr ""
+
+#: qatrack/templates/explorer/querylog_list.html:24
+msgid "Run At"
+msgstr ""
+
+#: qatrack/templates/explorer/querylog_list.html:25
+msgid "Run By"
+msgstr ""
+
+#: qatrack/templates/explorer/querylog_list.html:26
+msgid "Duration"
+msgstr ""
+
+#: qatrack/templates/explorer/querylog_list.html:28
+msgid "Query ID"
+msgstr ""
+
+#: qatrack/templates/explorer/querylog_list.html:53
+#, python-format
+msgid ""
+"\n"
+"            Page %(page_num)s of %(total_pages)s.\n"
+"          "
+msgstr ""
+
+#: qatrack/templates/explorer/schema.html:23
+msgid "Schema"
+msgstr ""
+
+#: qatrack/templates/explorer/schema.html:26
+msgid "Search"
+msgstr ""
+
+#: qatrack/templates/explorer/schema.html:30
+msgid "Collapse All"
+msgstr ""
+
+#: qatrack/templates/explorer/schema.html:33
+msgid "Expand All"
+msgstr ""
+
+#: qatrack/templates/explorer/schema_building.html:7
+msgid "Schema is building..."
+msgstr ""
+
+#: qatrack/templates/explorer/schema_building.html:8
+msgid "Please wait a minute, and refresh."
+msgstr ""
+
+#: qatrack/templates/homepage.html:16
+msgid "QATrack+ Homepage"
+msgstr ""
+
+#: qatrack/templates/homepage.html:23
+msgid "Welcome to QATrack+"
+msgstr ""
+
+#: qatrack/templates/homepage.html:29 qatrack/templates/site_base.html:170
+msgid "Perform QC"
+msgstr ""
+
+#: qatrack/templates/homepage.html:31
+msgid "Choose a Unit to perform qa on"
+msgstr ""
+
+#: qatrack/templates/homepage.html:32
+msgid "Choose a unit to perform QC for"
+msgstr ""
+
+#: qatrack/templates/homepage.html:34
+msgid "View available test lists to perform"
+msgstr ""
+
+#: qatrack/templates/homepage.html:35
+msgid "View all test lists available to perform"
+msgstr ""
+
+#: qatrack/templates/homepage.html:37 qatrack/templates/site_base.html:195
+msgid "Resume a QC session currently in progress"
+msgstr ""
+
+#: qatrack/templates/homepage.html:39
+msgid "Continue an In Progress Test List Instance"
+msgstr ""
+
+#: qatrack/templates/homepage.html:40
+#, python-format
+msgid "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress"
+msgstr ""
+
+#: qatrack/templates/homepage.html:51
+msgid "Loading QC Unit & Frequency Tree"
+msgstr ""
+
+#: qatrack/templates/homepage.html:63
+msgid "Loading QC Unit, Frequency, Category Tree"
+msgstr ""
+
+#: qatrack/templates/homepage.html:74 qatrack/templates/site_base.html:244
+msgid "Review QC"
+msgstr ""
+
+#: qatrack/templates/homepage.html:77
+msgid "Choose a Unit to review QC for"
+msgstr ""
+
+#: qatrack/templates/homepage.html:78
+msgid "Choose a unit to review QC for"
+msgstr ""
+
+#: qatrack/templates/homepage.html:80
+msgid "Review data"
+msgstr ""
+
+#: qatrack/templates/homepage.html:82
+msgid "View QC data awaiting review"
+msgstr ""
+
+#: qatrack/templates/homepage.html:96
+msgid "View trends and control charts"
+msgstr ""
+
+#: qatrack/templates/homepage.html:98
+msgid "View trends &amp; control charts"
+msgstr ""
+
+#: qatrack/templates/homepage.html:107 qatrack/templates/site_base.html:226
+#: qatrack/templates/site_base.html:416
+msgid "Service Log"
+msgstr ""
+
+#: qatrack/templates/homepage.html:111 qatrack/templates/homepage.html:116
+msgid "View all service events"
+msgstr ""
+
+#: qatrack/templates/homepage.html:120 qatrack/templates/homepage.html:125
+msgid "Open new service event"
+msgstr ""
+
+#: qatrack/templates/homepage.html:129 qatrack/templates/homepage.html:134
+#: qatrack/templates/site_base.html:490
+msgid "Service Events Needing Review"
+msgstr ""
+
+#: qatrack/templates/homepage.html:135 qatrack/templates/site_base.html:487
+msgid ""
+"There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing "
+"review"
+msgstr ""
+
+#: qatrack/templates/homepage.html:142
+msgid "View all incomplete RTS QC"
+msgstr ""
+
+#: qatrack/templates/homepage.html:147 qatrack/templates/site_base.html:228
+msgid "View all incomplete return to service QC"
+msgstr ""
+
+#: qatrack/templates/homepage.html:149
+msgid ""
+"There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} incomplete return to "
+"service test lists"
+msgstr ""
+
+#: qatrack/templates/homepage.html:155
+msgid "View unreviewed RTS QC"
+msgstr ""
+
+#: qatrack/templates/homepage.html:157
+msgid "View unreviewed return to service QC"
+msgstr ""
+
+#: qatrack/templates/homepage.html:158
+msgid ""
+"There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to "
+"service sessions"
+msgstr ""
+
+#: qatrack/templates/registration/_terms.html:5
+#, python-format
+msgid ""
+"By clicking \"Sign Up\", you are indicating that you have read and agree to "
+"the <a href=\"%(terms_url)s\">Terms of Use</a> and <a href=\"%(privacy_url)s"
+"\">Privacy Policy</a>."
+msgstr ""
+
+#: qatrack/templates/registration/base.html:30
+#: qatrack/templates/site_base.html:829
+msgid "Account"
+msgstr ""
+
+#: qatrack/templates/registration/base.html:37
+#: qatrack/templates/registration/login.html:6
+msgid "Log In"
+msgstr ""
+
+#: qatrack/templates/registration/base.html:47
+#: qatrack/templates/site_base.html:835
+msgid "Account Details"
+msgstr ""
+
+#: qatrack/templates/registration/base.html:57
+#: qatrack/templates/registration/password_change_form.html:6
+#: qatrack/templates/registration/password_change_form.html:26
+#: qatrack/templates/registration/password_reset_confirm.html:6
+#: qatrack/templates/registration/password_reset_confirm.html:17
+msgid "Change Password"
+msgstr ""
+
+#: qatrack/templates/registration/base.html:69
+msgid "Reset Password"
+msgstr ""
+
+#: qatrack/templates/registration/base.html:82
+msgid "Group Membership & Permissions"
+msgstr ""
+
+#: qatrack/templates/registration/base.html:92
+msgid "Log Out"
+msgstr ""
+
+#: qatrack/templates/registration/base.html:99
+#: qatrack/templates/registration/registration_form.html:27
+msgid "Register"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:27
+msgid "Sign in to start your session"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:34
+#: qatrack/templates/registration/password_reset_form.html:28
+#: qatrack/templates/registration/registration_form.html:35
+msgid "Note"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:35
+#: qatrack/templates/registration/password_reset_form.html:29
+#: qatrack/templates/registration/registration_form.html:36
+#, python-format
+msgid "you are already logged in as %(user)s."
+msgstr ""
+
+#: qatrack/templates/registration/login.html:48
+msgid "Login Type"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:50
+msgid "Single Sign On (Login through your hospital network)"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:51
+msgid "QATrack+"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:53
+msgid "Choose the login method you would like to use"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:60
+msgid "Click to login to using your organizations single sign on functionality"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:62
+msgid "Login with Single Sign On"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:79
+#: qatrack/templates/registration/registration_form.html:40
+msgid "Log in"
+msgstr ""
+
+#: qatrack/templates/registration/login.html:86
+msgid ""
+"If you have any trouble logging in to your account, contact the site "
+"administrator."
+msgstr ""
+
+#: qatrack/templates/registration/logout.html:5
+msgid "Logged Out"
+msgstr ""
+
+#: qatrack/templates/registration/logout.html:8
+msgid "You've been logged out."
+msgstr ""
+
+#: qatrack/templates/registration/password_change_done.html:5
+#: qatrack/templates/registration/password_change_done.html:16
+#: qatrack/templates/registration/password_reset_complete.html:5
+msgid "Password Succesfully Changed"
+msgstr ""
+
+#: qatrack/templates/registration/password_change_done.html:22
+#: qatrack/templates/registration/password_reset_complete.html:11
+#, python-format
+msgid ""
+"You may change it again by visiting <a href=\"%(password_change_url)s\">the "
+"password change page</a>."
+msgstr ""
+
+#: qatrack/templates/registration/password_change_form.html:66
+#: qatrack/templates/registration/password_reset_confirm.html:56
+msgid "Change password"
+msgstr ""
+
+#: qatrack/templates/registration/password_delete.html:5
+#: qatrack/templates/registration/password_delete.html:8
+msgid "Delete Password"
+msgstr ""
+
+#: qatrack/templates/registration/password_delete.html:10
+msgid ""
+"You may delete your password since you are currently logged in using OpenID."
+msgstr ""
+
+#: qatrack/templates/registration/password_delete.html:13
+msgid "Delete my password"
+msgstr ""
+
+#: qatrack/templates/registration/password_delete_done.html:5
+#: qatrack/templates/registration/password_delete_done.html:8
+msgid "Password Deleted"
+msgstr ""
+
+#: qatrack/templates/registration/password_delete_done.html:10
+msgid "Your password has been deleted."
+msgstr ""
+
+#: qatrack/templates/registration/password_reset_complete.html:8
+msgid "Password Successfuly Changed"
+msgstr ""
+
+#: qatrack/templates/registration/password_reset_confirm.html:17
+msgid "Bad Token"
+msgstr ""
+
+#: qatrack/templates/registration/password_reset_confirm.html:21
+#, python-format
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please request a <a href=\"%(passwd_reset_url)s\">new password reset</"
+"a>."
+msgstr ""
+
+#: qatrack/templates/registration/password_reset_done.html:5
+#: qatrack/templates/registration/password_reset_done.html:16
+#: qatrack/templates/registration/password_reset_form.html:6
+#: qatrack/templates/registration/password_reset_form.html:20
+msgid "Password Reset"
+msgstr ""
+
+#: qatrack/templates/registration/password_reset_done.html:21
+msgid ""
+"We have sent you an email. If you do not receive it within a few minutes, "
+"contact the site administrator. "
+msgstr ""
+
+#: qatrack/templates/registration/password_reset_form.html:22
+msgid ""
+"Forgotten your password? Enter your email address below, and we'll send you "
+"an email allowing you to reset it."
+msgstr ""
+
+#: qatrack/templates/registration/password_reset_form.html:64
+msgid "Reset my password"
+msgstr ""
+
+#: qatrack/templates/registration/password_set.html:6
+#: qatrack/templates/registration/password_set.html:19
+msgid "Set Password"
+msgstr ""
+
+#: qatrack/templates/registration/password_set.html:57
+msgid "Set password"
+msgstr ""
+
+#: qatrack/templates/registration/registration_form.html:6
+msgid "Sign Up"
+msgstr ""
+
+#: qatrack/templates/registration/registration_form.html:29
+msgid "Register for a QATrack+ account"
+msgstr ""
+
+#: qatrack/templates/registration/registration_form.html:40
+msgid "Already have an account?"
+msgstr ""
+
+#: qatrack/templates/registration/registration_form.html:75
+msgid "Sign up"
+msgstr ""
+
+#: qatrack/templates/registration/verification_sent.html:5
+#: qatrack/templates/registration/verification_sent.html:8
+msgid "Verify your email address"
+msgstr ""
+
+#: qatrack/templates/registration/verification_sent.html:10
+#, python-format
+msgid ""
+"We have sent you an email to <b>%(email)s</b> for verification. Follow the "
+"link provided to finalize the signup process. If you do not receive it "
+"within a few minutes, contact us at <a href=\"mailto:%(CONTACT_EMAIL)s\">"
+"%(CONTACT_EMAIL)s</a>."
+msgstr ""
+
+#: qatrack/templates/registration/verification_sent.html:11
+msgid "Go back"
+msgstr ""
+
+#: qatrack/templates/rest_framework/api.html:4
+#: qatrack/templates/rest_framework/api.html:8
+msgid "QATrack+ API"
+msgstr ""
+
+#: qatrack/templates/site_base.html:175
+msgid "QC Lists"
+msgstr ""
+
+#: qatrack/templates/site_base.html:177
+msgid "Choose a specfic Unit To Perform QC On"
+msgstr ""
+
+#: qatrack/templates/site_base.html:179
+msgid "Choose Unit"
+msgstr ""
+
+#: qatrack/templates/site_base.html:183
+msgid "View list of all available QC"
+msgstr ""
+
+#: qatrack/templates/site_base.html:185
+msgid "All QC"
+msgstr ""
+
+#: qatrack/templates/site_base.html:189
+msgid "View QC that is currently due and overdue"
+msgstr ""
+
+#: qatrack/templates/site_base.html:191 qatrack/templates/site_base.html:509
+msgid "Due & Overdue"
+msgstr ""
+
+#: qatrack/templates/site_base.html:197
+#, python-format
+msgid ""
+"There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress for "
+"your groups"
+msgstr ""
+
+#: qatrack/templates/site_base.html:200
+msgid "In Progress"
+msgstr ""
+
+#: qatrack/templates/site_base.html:204
+msgid "Tree Views"
+msgstr ""
+
+#: qatrack/templates/site_base.html:206
+msgid "View QC Organized by Unit & Frequency"
+msgstr ""
+
+#: qatrack/templates/site_base.html:211
+msgid "QC Treeview: Unit, Frequency"
+msgstr ""
+
+#: qatrack/templates/site_base.html:215
+msgid "View QC Organized by Unit, Frequency, Category"
+msgstr ""
+
+#: qatrack/templates/site_base.html:221
+msgid "QC Treeview: Unit, Frequency, Category"
+msgstr ""
+
+#: qatrack/templates/site_base.html:233
+msgid "All Incomplete Return To Service"
+msgstr ""
+
+#: qatrack/templates/site_base.html:248
+#, python-format
+msgid "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed"
+msgstr ""
+
+#: qatrack/templates/site_base.html:255
+#, python-format
+msgid ""
+"There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed"
+msgstr ""
+
+#: qatrack/templates/site_base.html:268
+msgid "QA Program Status"
+msgstr ""
+
+#: qatrack/templates/site_base.html:272
+msgid "View a summary of the status of the QC program"
+msgstr ""
+
+#: qatrack/templates/site_base.html:274
+msgid "Overview - All"
+msgstr ""
+
+#: qatrack/templates/site_base.html:280
+msgid ""
+"View a summary of the status of the QC program (QC for groups you belong to)"
+msgstr ""
+
+#: qatrack/templates/site_base.html:282
+msgid "Overview"
+msgstr ""
+
+#: qatrack/templates/site_base.html:282 qatrack/templates/site_base.html:298
+#: qatrack/templates/site_base.html:330
+msgid "Your Groups"
+msgstr ""
+
+#: qatrack/templates/site_base.html:288
+msgid "View QC grouped by due date"
+msgstr ""
+
+#: qatrack/templates/site_base.html:290 qatrack/templates/site_base.html:517
+msgid "By Due Status - All"
+msgstr ""
+
+#: qatrack/templates/site_base.html:296
+msgid "View QC for groups you belong to (QC for groups you belong to)"
+msgstr ""
+
+#: qatrack/templates/site_base.html:298
+msgid "By Due Status"
+msgstr ""
+
+#: qatrack/templates/site_base.html:308
+msgid "QC Sessions"
+msgstr ""
+
+#: qatrack/templates/site_base.html:312 qatrack/templates/site_base.html:314
+#, python-format
+msgid "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed "
+msgstr ""
+
+#: qatrack/templates/site_base.html:317
+msgid "Unreviewed - All Groups"
+msgstr ""
+
+#: qatrack/templates/site_base.html:322
+#, python-format
+msgid ""
+"There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed "
+"(QC for groups you belong to)"
+msgstr ""
+
+#: qatrack/templates/site_base.html:325
+#, python-format
+msgid ""
+"There are currently %(USERS_UNREVIEWED)s QC Sessions visible to your groups "
+"waiting to be reviewed"
+msgstr ""
+
+#: qatrack/templates/site_base.html:330 qatrack/templates/site_base.html:669
+msgid "Unreviewed"
+msgstr ""
+
+#: qatrack/templates/site_base.html:337
+#, python-format
+msgid ""
+"There are currently %(SE_RTS_UNREVIEWED_QA_COUNT)s unreviewed return to "
+"service sessions"
+msgstr ""
+
+#: qatrack/templates/site_base.html:342 qatrack/templates/site_base.html:569
+msgid "Unreviewed Return To Service"
+msgstr ""
+
+#: qatrack/templates/site_base.html:348
+msgid "Unreviewed By Visible To Group"
+msgstr ""
+
+#: qatrack/templates/site_base.html:361
+msgid "View all test lists."
+msgstr ""
+
+#: qatrack/templates/site_base.html:363
+msgid "All Groups Test Lists"
+msgstr ""
+
+#: qatrack/templates/site_base.html:369
+msgid "View all your groups test lists."
+msgstr ""
+
+#: qatrack/templates/site_base.html:374
+msgid "Your Groups Test Lists"
+msgstr ""
+
+#: qatrack/templates/site_base.html:379
+msgid "Choose a unit to review qa lists for."
+msgstr ""
+
+#: qatrack/templates/site_base.html:381
+msgid "Your Test Lists By Unit"
+msgstr ""
+
+#: qatrack/templates/site_base.html:386
+msgid "Choose a frequency to review qa lists for."
+msgstr ""
+
+#: qatrack/templates/site_base.html:388
+msgid "Your Test Lists By Frequency"
+msgstr ""
+
+#: qatrack/templates/site_base.html:394
+msgid "View all inactive test lists."
+msgstr ""
+
+#: qatrack/templates/site_base.html:396
+msgid "All Groups Inactive Test Lists"
+msgstr ""
+
+#: qatrack/templates/site_base.html:401
+msgid "View all your inactive test lists."
+msgstr ""
+
+#: qatrack/templates/site_base.html:403
+msgid "Your Groups Inactive Test Lists"
+msgstr ""
+
+#: qatrack/templates/site_base.html:419
+#, python-format
+msgid "There are currently %(SL_NOTIFICATION_TOTAL)s Service Log Action Items "
+msgstr ""
+
+#: qatrack/templates/site_base.html:429
+msgid "Service Log dashboard"
+msgstr ""
+
+#: qatrack/templates/site_base.html:431
+msgid "Service Log Dashboard"
+msgstr ""
+
+#: qatrack/templates/site_base.html:439
+msgid "Service Events"
+msgstr ""
+
+#: qatrack/templates/site_base.html:442
+msgid "Create a new service event"
+msgstr ""
+
+#: qatrack/templates/site_base.html:447
+msgid "Enter New Service Event"
+msgstr ""
+
+#: qatrack/templates/site_base.html:451
+msgid "Create a new service event for a unit"
+msgstr ""
+
+#: qatrack/templates/site_base.html:453
+msgid "Choose Unit For New Service Event"
+msgstr ""
+
+#: qatrack/templates/site_base.html:459
+msgid "View service events for a unit"
+msgstr ""
+
+#: qatrack/templates/site_base.html:464
+msgid "View All Service Events"
+msgstr ""
+
+#: qatrack/templates/site_base.html:470
+#, python-format
+msgid "View service events that are %(service_event_status)s"
+msgstr ""
+
+#: qatrack/templates/site_base.html:482
+msgid "View service events that require review"
+msgstr ""
+
+#: qatrack/templates/site_base.html:496 qatrack/templates/site_base.html:504
+msgid "Service Event Schedules"
+msgstr ""
+
+#: qatrack/templates/site_base.html:499
+msgid "View all service event schedules"
+msgstr ""
+
+#: qatrack/templates/site_base.html:507
+msgid "View Service Event Schedules that are currently due and overdue"
+msgstr ""
+
+#: qatrack/templates/site_base.html:515
+msgid "View Service Event Schedules grouped by due date"
+msgstr ""
+
+#: qatrack/templates/site_base.html:522
+msgid "View Service Event Schedules for groups you belong to"
+msgstr ""
+
+#: qatrack/templates/site_base.html:524
+msgid "By Due Status - Your Groups"
+msgstr ""
+
+#: qatrack/templates/site_base.html:534
+msgid "Return To Service QC"
+msgstr ""
+
+#: qatrack/templates/site_base.html:537
+msgid "View all return to service qa"
+msgstr ""
+
+#: qatrack/templates/site_base.html:542
+msgid "View All Return To Service"
+msgstr ""
+
+#: qatrack/templates/site_base.html:549
+msgid "View all incomplete return to service qa"
+msgstr ""
+
+#: qatrack/templates/site_base.html:554
+msgid ""
+"There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to "
+"service sessions"
+msgstr ""
+
+#: qatrack/templates/site_base.html:557
+msgid "View All Incomplete Return To Service"
+msgstr ""
+
+#: qatrack/templates/site_base.html:566
+msgid ""
+"There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to "
+"service sessions"
+msgstr ""
+
+#: qatrack/templates/site_base.html:579
+msgid "Parts"
+msgstr ""
+
+#: qatrack/templates/site_base.html:582 qatrack/templates/site_base.html:594
+msgid "Enter new part"
+msgstr ""
+
+#: qatrack/templates/site_base.html:587
+msgid "Enter New Part"
+msgstr ""
+
+#: qatrack/templates/site_base.html:598
+msgid "View All Parts"
+msgstr ""
+
+#: qatrack/templates/site_base.html:602
+msgid "Low Inventory Parts"
+msgstr ""
+
+#: qatrack/templates/site_base.html:606
+msgid "View Low Inventory Parts"
+msgstr ""
+
+#: qatrack/templates/site_base.html:612
+msgid "View Part Suppliers"
+msgstr ""
+
+#: qatrack/templates/site_base.html:616
+msgid "View All Suppliers"
+msgstr ""
+
+#: qatrack/templates/site_base.html:628
+msgid "Fault Log"
+msgstr ""
+
+#: qatrack/templates/site_base.html:631
+#, python-format
+msgid "There are currently %(FAULTS_UNREVIEWED)s Unreviewed Faults"
+msgstr ""
+
+#: qatrack/templates/site_base.html:640
+msgid "Faults"
+msgstr ""
+
+#: qatrack/templates/site_base.html:642 qatrack/templates/site_base.html:648
+msgid "Choose a specfic Unit To View Faults For"
+msgstr ""
+
+#: qatrack/templates/site_base.html:644
+msgid "Choose Unit to View Faults"
+msgstr ""
+
+#: qatrack/templates/site_base.html:653
+msgid "Enter a new fault"
+msgstr ""
+
+#: qatrack/templates/site_base.html:657 qatrack/templates/site_base.html:659
+msgid "All Faults"
+msgstr ""
+
+#: qatrack/templates/site_base.html:664 qatrack/templates/site_base.html:666
+#, python-format
+msgid ""
+"There are currently %(FAULTS_UNREVIEWED)s faults waiting to be reviewed "
+msgstr ""
+
+#: qatrack/templates/site_base.html:673
+msgid "Fault Types"
+msgstr ""
+
+#: qatrack/templates/site_base.html:675
+msgid "All Fault Types"
+msgstr ""
+
+#: qatrack/templates/site_base.html:685
+msgid "Trends and Analysis"
+msgstr ""
+
+#: qatrack/templates/site_base.html:692 qatrack/templates/site_base.html:694
+msgid "Charts"
+msgstr ""
+
+#: qatrack/templates/site_base.html:700
+msgid "Run QATrack+ Reports"
+msgstr ""
+
+#: qatrack/templates/site_base.html:702
+msgid "Reports"
+msgstr ""
+
+#: qatrack/templates/site_base.html:709
+msgid "SQL Query Tool"
+msgstr ""
+
+#: qatrack/templates/site_base.html:711
+msgid "Query Tool"
+msgstr ""
+
+#: qatrack/templates/site_base.html:721
+msgid "View service event durations and lost time"
+msgstr ""
+
+#: qatrack/templates/site_base.html:726
+msgid "Service and Lost Time"
+msgstr ""
+
+#: qatrack/templates/site_base.html:737
+msgid "Issue Tracker"
+msgstr ""
+
+#: qatrack/templates/site_base.html:742 qatrack/templates/site_base.html:748
+msgid "All Issues"
+msgstr ""
+
+#: qatrack/templates/site_base.html:755
+msgid "Create a new issue"
+msgstr ""
+
+#: qatrack/templates/site_base.html:760
+msgid "Create Issue"
+msgstr ""
+
+#: qatrack/templates/site_base.html:819
+msgid "Documentation"
+msgstr ""
+
+#: qatrack/templates/site_base.html:841
+msgid "Logout"
+msgstr ""
+
+#: qatrack/templates/site_base.html:852
+msgid "Admin"
+msgstr ""
+
+#: qatrack/templates/site_base.html:860
+msgid "Unit Available Times"
+msgstr ""
+
+#: qatrack/templates/site_base.html:871
+msgid "Groups & Permissions"
+msgstr ""
+
+#: qatrack/templates/site_base.html:884
+msgid "Login"
+msgstr ""
+
+#: qatrack/templates/site_error.html:3 qatrack/templates/site_error.html:8
+msgid "Error"
+msgstr ""
