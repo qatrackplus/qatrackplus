@@ -561,7 +561,7 @@
 
                         {% if perms.qa.can_review %}
                           <li>
-                            <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
+                            <a href="{% url 'rtsqa_list_unreviewed' %}" title="">
                               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
                               <span title="{% trans "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                 <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>

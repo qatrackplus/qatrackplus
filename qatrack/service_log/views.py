@@ -403,8 +403,10 @@ class ServiceEventUpdateCreate(
             messages.add_message(
                 self.request, messages.WARNING,
                 _(
-                    'Due to changes detected, service event %s status has been reset to %s' %
-                    (form.instance.id, default.name.lower())
+                    'Due to changes detected, service event {instance_id} status has been reset to {default_name}'.format(
+                        instance_id=form.instance.id,
+                        default_name=default.name.lower(),
+                    )
                 )
             )
             form.changed_data.append('service_status')
