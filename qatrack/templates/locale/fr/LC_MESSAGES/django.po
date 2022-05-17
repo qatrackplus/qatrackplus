@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:53+0000\n"
+"PO-Revision-Date: 2022-05-17 11:55+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -153,8 +153,9 @@ msgstr ""
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:12
 #: qatrack/templates/explorer/query_list.html:65
+#, fuzzy
 msgid "Delete"
-msgstr ""
+msgstr "Delete"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:20
 #, python-format
@@ -228,8 +229,9 @@ msgstr ""
 #: qatrack/templates/admin/qa/testpack/import.html:82
 #: qatrack/templates/admin/qa/testpack/import.html:121
 #: qatrack/templates/explorer/query.html:62
+#, fuzzy
 msgid "Description"
-msgstr ""
+msgstr "Description"
 
 #: qatrack/templates/admin/qa/testpack/export.html:75
 msgid "Test List Cycles To Export"
@@ -426,12 +428,14 @@ msgid "New Tolerance"
 msgstr ""
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:65
+#, fuzzy
 msgid "Cancel"
-msgstr ""
+msgstr "Cancel"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:66
+#, fuzzy
 msgid "Confirm"
-msgstr ""
+msgstr "Confirm"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:7
 msgid "Date/time"
@@ -466,8 +470,9 @@ msgid "The tolerance and reference will be applied to"
 msgstr ""
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:47
+#, fuzzy
 msgid "Unit"
-msgstr ""
+msgstr "Unit"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:48
 msgid "Current reference"
@@ -706,8 +711,9 @@ msgid "All Queries"
 msgstr ""
 
 #: qatrack/templates/explorer/query_list.html:58
+#, fuzzy
 msgid "Created"
-msgstr ""
+msgstr "Created"
 
 #: qatrack/templates/explorer/query_list.html:60
 msgid "Email"
@@ -1541,8 +1547,9 @@ msgid ""
 msgstr ""
 
 #: qatrack/templates/site_base.html:673
+#, fuzzy
 msgid "Fault Types"
-msgstr ""
+msgstr "Fault Types"
 
 #: qatrack/templates/site_base.html:675
 msgid "All Fault Types"
