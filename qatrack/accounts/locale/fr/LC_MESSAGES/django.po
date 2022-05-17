@@ -3,135 +3,168 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2022-05-17 11:53+0000\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
+"accounts/fr/>\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/accounts/admin.py:30
+#, fuzzy
 msgid "Yes"
-msgstr ""
+msgstr "Yes"
 
 #: qatrack/accounts/admin.py:31
+#, fuzzy
 msgid "No"
-msgstr ""
+msgstr "No"
 
 #: qatrack/accounts/admin.py:60
+#, fuzzy
 msgid "Admin Status"
-msgstr ""
+msgstr "Admin Status"
 
 #: qatrack/accounts/admin.py:128
+#, fuzzy
 msgid "Default Groups"
-msgstr ""
+msgstr "Default Groups"
 
 #: qatrack/accounts/templates/accounts/account.html:26
+#, fuzzy
 msgid "Account Details"
-msgstr ""
+msgstr "Account Details"
 
 #: qatrack/accounts/templates/accounts/account.html:34
+#, fuzzy
 msgid "Account Details for "
-msgstr ""
+msgstr "Account Details for "
 
 #: qatrack/accounts/templates/accounts/groups.html:8
+#, fuzzy
 msgid "Manage Groups & Permissions"
-msgstr ""
+msgstr "Manage Groups & Permissions"
 
 #: qatrack/accounts/templates/accounts/groups.html:48
+#, fuzzy
 msgid "Group Membership & Permissions"
-msgstr ""
+msgstr "Group Membership & Permissions"
 
 #: qatrack/accounts/templates/accounts/groups.html:56
+#, fuzzy
 msgid ""
 "\n"
 "          Use the controls below to set group permissions and control group\n"
 "          membership.\n"
 "        "
 msgstr ""
+"\n"
+"          Use the controls below to set group permissions and control group\n"
+"          membership.\n"
+"        "
 
 #: qatrack/accounts/templates/accounts/groups.html:68
+#, fuzzy
 msgid "Group"
-msgstr ""
+msgstr "Group"
 
 #: qatrack/accounts/templates/accounts/groups.html:77
+#, fuzzy
 msgid "Add New Group"
-msgstr ""
+msgstr "Add New Group"
 
 #: qatrack/accounts/templates/accounts/groups.html:79
+#, fuzzy
 msgid "Add Group"
-msgstr ""
+msgstr "Add Group"
 
 #: qatrack/accounts/templates/accounts/groups.html:83
+#, fuzzy
 msgid "Edit Group Name & Members"
-msgstr ""
+msgstr "Edit Group Name & Members"
 
 #: qatrack/accounts/templates/accounts/groups.html:85
+#, fuzzy
 msgid "Edit Group"
-msgstr ""
+msgstr "Edit Group"
 
 #: qatrack/accounts/templates/accounts/groups.html:97
+#, fuzzy
 msgid "Use the icons/links below to toggle the permission"
-msgstr ""
+msgstr "Use the icons/links below to toggle the permission"
 
 #: qatrack/accounts/templates/accounts/groups.html:128
+#, fuzzy
 msgid "Name"
-msgstr ""
+msgstr "Name"
 
 #: qatrack/accounts/templates/accounts/groups.html:129
+#, fuzzy
 msgid "New Group Name"
-msgstr ""
+msgstr "New Group Name"
 
 #: qatrack/accounts/templates/accounts/groups.html:132
+#, fuzzy
 msgid "Select Users Below"
-msgstr ""
+msgstr "Select Users Below"
 
 #: qatrack/accounts/templates/accounts/groups.html:133
+#, fuzzy
 msgid "Select All"
-msgstr ""
+msgstr "Select All"
 
 #: qatrack/accounts/templates/accounts/groups.html:134
+#, fuzzy
 msgid "Select None"
-msgstr ""
+msgstr "Select None"
 
 #: qatrack/accounts/templates/accounts/groups.html:138
+#, fuzzy
 msgid "Username"
-msgstr ""
+msgstr "Username"
 
 #: qatrack/accounts/templates/accounts/groups.html:139
+#, fuzzy
 msgid "First Name"
-msgstr ""
+msgstr "First Name"
 
 #: qatrack/accounts/templates/accounts/groups.html:140
+#, fuzzy
 msgid "Last Name"
-msgstr ""
+msgstr "Last Name"
 
 #: qatrack/accounts/templates/accounts/groups.html:162
+#, fuzzy
 msgid "Close"
-msgstr ""
+msgstr "Close"
 
 #: qatrack/accounts/views.py:104
+#, fuzzy
 msgid "Login failed with error 400: No authorization code was provided"
-msgstr ""
+msgstr "Login failed with error 400: No authorization code was provided"
 
 #: qatrack/accounts/views.py:106
+#, fuzzy
 msgid ""
 "Login failed with error 401: Your account is not authorized to use QATrack+"
 msgstr ""
+"Login failed with error 401: Your account is not authorized to use QATrack+"
 
 #: qatrack/accounts/views.py:108
+#, fuzzy
 msgid "Login failed with error 403: Your account is disabled"
-msgstr ""
+msgstr "Login failed with error 403: Your account is disabled"
 
 #: qatrack/accounts/views.py:110
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid "Login Failed with error {status_code}: {phrase}"
-msgstr ""
+msgstr "Login Failed with error {status_code}: {phrase}"
