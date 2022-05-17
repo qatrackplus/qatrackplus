@@ -173,13 +173,13 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 # ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE = [
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'qatrack.middleware.login_required.LoginRequiredMiddleware',
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
