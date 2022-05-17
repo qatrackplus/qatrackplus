@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-16 09:32-0400\n"
+"POT-Creation-Date: 2022-05-17 10:30-0400\n"
 "PO-Revision-Date: 2022-05-17 13:18+0000\n"
 "Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
@@ -757,8 +757,8 @@ msgid ""
 msgstr ""
 "\n"
 "                          First <input class=\"rows-input\" type=\"text\" "
-"name=\"rows\" id=\"rows\" value=\"%(rows)s\" /> of %(total_rows)s total rows."
-"\n"
+"name=\"rows\" id=\"rows\" value=\"%(rows)s\" /> of %(total_rows)s total "
+"rows.\n"
 "                        "
 
 #: qatrack/templates/explorer/preview_pane.html:89
@@ -1028,7 +1028,8 @@ msgstr "Continue an In Progress Test List Instance"
 #: qatrack/templates/homepage.html:40
 #, fuzzy, python-format
 msgid "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress"
-msgstr "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress"
+msgstr ""
+"There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress"
 
 #: qatrack/templates/homepage.html:51
 #, fuzzy
@@ -1151,8 +1152,8 @@ msgid ""
 "\">Privacy Policy</a>."
 msgstr ""
 "By clicking \"Sign Up\", you are indicating that you have read and agree to "
-"the <a href=\"%(terms_url)s\">Terms of Use</a> and <a href=\"%(privacy_url)"
-"s\">Privacy Policy</a>."
+"the <a href=\"%(terms_url)s\">Terms of Use</a> and <a href=\"%(privacy_url)s"
+"\">Privacy Policy</a>."
 
 #: qatrack/templates/registration/base.html:30
 #: qatrack/templates/site_base.html:829
@@ -1244,7 +1245,8 @@ msgstr "Choose the login method you would like to use"
 #: qatrack/templates/registration/login.html:60
 #, fuzzy
 msgid "Click to login to using your organizations single sign on functionality"
-msgstr "Click to login to using your organizations single sign on functionality"
+msgstr ""
+"Click to login to using your organizations single sign on functionality"
 
 #: qatrack/templates/registration/login.html:62
 #, fuzzy
@@ -1346,8 +1348,8 @@ msgid ""
 "a>."
 msgstr ""
 "The password reset link was invalid, possibly because it has already been "
-"used.  Please request a <a href=\"%(passwd_reset_url)s\">new password "
-"reset</a>."
+"used.  Please request a <a href=\"%(passwd_reset_url)s\">new password reset</"
+"a>."
 
 #: qatrack/templates/registration/password_reset_done.html:5
 #: qatrack/templates/registration/password_reset_done.html:16
@@ -1427,8 +1429,8 @@ msgid ""
 msgstr ""
 "We have sent you an email to <b>%(email)s</b> for verification. Follow the "
 "link provided to finalize the signup process. If you do not receive it "
-"within a few minutes, contact us at <a href=\"mailto:%(CONTACT_EMAIL)s\""
-">%(CONTACT_EMAIL)s</a>."
+"within a few minutes, contact us at <a href=\"mailto:%(CONTACT_EMAIL)s\">"
+"%(CONTACT_EMAIL)s</a>."
 
 #: qatrack/templates/registration/verification_sent.html:11
 #, fuzzy
@@ -1606,8 +1608,8 @@ msgid ""
 "There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed "
 "(QC for groups you belong to)"
 msgstr ""
-"There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed ("
-"QC for groups you belong to)"
+"There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed "
+"(QC for groups you belong to)"
 
 #: qatrack/templates/site_base.html:325
 #, fuzzy, python-format
@@ -1705,7 +1707,8 @@ msgstr "Your Groups Inactive Test Lists"
 #: qatrack/templates/site_base.html:419
 #, fuzzy, python-format
 msgid "There are currently %(SL_NOTIFICATION_TOTAL)s Service Log Action Items "
-msgstr "There are currently %(SL_NOTIFICATION_TOTAL)s Service Log Action Items "
+msgstr ""
+"There are currently %(SL_NOTIFICATION_TOTAL)s Service Log Action Items "
 
 #: qatrack/templates/site_base.html:429
 #, fuzzy
