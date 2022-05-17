@@ -39,8 +39,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/faults/summary.html:15
 #: qatrack/reports/tests/test_faults.py:113
 #: qatrack/reports/tests/test_faults.py:183
+#, fuzzy
 msgid "Occurred"
-msgstr ""
+msgstr "Occurred"
 
 #: qatrack/reports/faults/details.py:115 qatrack/reports/faults/summary.py:151
 #: qatrack/reports/qc/assigned_qc.py:92 qatrack/reports/qc/assigned_qc.py:252
@@ -66,8 +67,9 @@ msgstr ""
 #: qatrack/reports/tests/test_service_log.py:109
 #: qatrack/reports/tests/test_service_log.py:179
 #: qatrack/reports/tests/test_service_log.py:441
+#, fuzzy
 msgid "Site"
-msgstr ""
+msgstr "Site"
 
 #: qatrack/reports/faults/details.py:116 qatrack/reports/faults/summary.py:152
 #: qatrack/reports/qc/assigned_qc.py:93 qatrack/reports/qc/assigned_qc.py:253
@@ -101,14 +103,16 @@ msgstr ""
 #: qatrack/reports/tests/test_service_log.py:180
 #: qatrack/reports/tests/test_service_log.py:385
 #: qatrack/reports/tests/test_service_log.py:442
+#, fuzzy
 msgid "Unit"
-msgstr ""
+msgstr "Unit"
 
 #: qatrack/reports/faults/details.py:117 qatrack/reports/faults/summary.py:153
 #: qatrack/reports/tests/test_faults.py:116
 #: qatrack/reports/tests/test_faults.py:186
+#, fuzzy
 msgid "Fault Type"
-msgstr ""
+msgstr "Fault Type"
 
 #: qatrack/reports/faults/details.py:118 qatrack/reports/faults/summary.py:154
 #: qatrack/reports/templates/reports/faults/details.html:37
@@ -170,8 +174,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/details.html:111
 #: qatrack/reports/tests/test_faults.py:194
 #: qatrack/reports/tests/test_service_log.py:194
+#, fuzzy
 msgid "Related Service Events"
-msgstr ""
+msgstr "Related Service Events"
 
 #: qatrack/reports/faults/details.py:126 qatrack/reports/faults/summary.py:155
 #: qatrack/reports/qc/assigned_qc.py:97 qatrack/reports/qc/assigned_qc.py:257
@@ -211,8 +216,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/next_due.html:11
 #: qatrack/reports/templates/reports/service_log/service_times.html:11
 #: qatrack/reports/templates/reports/service_log/summary.html:11
+#, fuzzy
 msgid "Other"
-msgstr ""
+msgstr "Other"
 
 #: qatrack/reports/faults/summary.py:59
 #: qatrack/reports/qc/testlistinstance.py:340
@@ -542,8 +548,9 @@ msgstr ""
 
 #: qatrack/reports/qc/testlistinstance.py:318
 #: qatrack/reports/qc/testlistinstance.py:323
+#, fuzzy
 msgid "Reviewed"
-msgstr ""
+msgstr "Reviewed"
 
 #: qatrack/reports/qc/testlistinstance.py:319
 msgid "Auto Reviewed"
@@ -567,8 +574,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/details.html:214
 #: qatrack/reports/tests/test_qc.py:243
 #: qatrack/reports/tests/test_service_log.py:200
+#, fuzzy
 msgid "Attachments"
-msgstr ""
+msgstr "Attachments"
 
 #: qatrack/reports/service_log/assigned_templates.py:97
 #: qatrack/reports/service_log/details.py:143
@@ -856,8 +864,9 @@ msgstr ""
 
 #: qatrack/reports/templates/reports/faults/details.html:32
 #: qatrack/reports/templates/reports/faults/summary.html:17
+#, fuzzy
 msgid "Fault Types"
-msgstr ""
+msgstr "Fault Types"
 
 #: qatrack/reports/templates/reports/faults/details.html:48
 #: qatrack/reports/templates/reports/service_log/details.html:61
@@ -887,8 +896,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/faults/details.html:95
 #: qatrack/reports/templates/reports/qc/backup_forms.html:52
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:246
+#, fuzzy
 msgid "Comments"
-msgstr ""
+msgstr "Comments"
 
 #: qatrack/reports/templates/reports/faults/details.html:96
 msgid "No Comments"
@@ -937,8 +947,9 @@ msgid "Last Modification"
 msgstr ""
 
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:83
+#, fuzzy
 msgid "Description"
-msgstr ""
+msgstr "Description"
 
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:95
 msgid "Service Log Details"
