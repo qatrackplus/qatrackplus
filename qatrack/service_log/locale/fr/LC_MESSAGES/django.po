@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-17 11:33-0400\n"
+"POT-Creation-Date: 2022-05-17 12:31-0400\n"
 "PO-Revision-Date: 2022-05-17 12:52+0000\n"
 "Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
@@ -1008,31 +1008,33 @@ msgid "Please correct the Service Event Details error below."
 msgstr "Please correct the Service Event Details error below."
 
 #: qatrack/service_log/views.py:406
-#, fuzzy, python-format
-msgid "Due to changes detected, service event %s status has been reset to %s"
+#, fuzzy, python-brace-format
+msgid ""
+"Due to changes detected, service event {instance_id} status has been reset "
+"to {default_name}"
 msgstr "Due to changes detected, service event %s status has been reset to %s"
 
-#: qatrack/service_log/views.py:436
+#: qatrack/service_log/views.py:438
 #, fuzzy
 msgid "Please correct the Parts error below."
 msgstr "Please correct the Parts error below."
 
-#: qatrack/service_log/views.py:444
+#: qatrack/service_log/views.py:446
 #, fuzzy
 msgid "Please correct the User Hours error below."
 msgstr "Please correct the User Hours error below."
 
-#: qatrack/service_log/views.py:447
+#: qatrack/service_log/views.py:449
 #, fuzzy
 msgid "Please correct the Return to Service QC error below."
 msgstr "Please correct the Return to Service QC error below."
 
-#: qatrack/service_log/views.py:948 qatrack/service_log/views.py:1824
+#: qatrack/service_log/views.py:950 qatrack/service_log/views.py:1826
 #, fuzzy
 msgid "Other"
 msgstr "Other"
 
-#: qatrack/service_log/views.py:1822 qatrack/service_log/views.py:1926
+#: qatrack/service_log/views.py:1824 qatrack/service_log/views.py:1928
 #, fuzzy
 msgid "Ad Hoc"
 msgstr "Ad Hoc"
