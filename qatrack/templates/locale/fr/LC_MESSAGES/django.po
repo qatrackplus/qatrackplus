@@ -43,22 +43,26 @@ msgstr "Browse"
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:37
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:7
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:6
+#, fuzzy
 msgid "Home"
-msgstr ""
+msgstr "Home"
 
 #: qatrack/templates/admin/base_site.html:22
+#, fuzzy
 msgid "QATrack+ Admin Site"
-msgstr ""
+msgstr "QATrack+ Admin Site"
 
 #: qatrack/templates/admin/base_site.html:25
+#, fuzzy
 msgid "QATrack+ administration"
-msgstr ""
+msgstr "QATrack+ administration"
 
 #: qatrack/templates/admin/change_form.html:47
 #: qatrack/templates/admin/change_list.html:34
 #: qatrack/templates/admin/change_list.html:43
+#, fuzzy
 msgid "Websites"
-msgstr ""
+msgstr "Websites"
 
 #: qatrack/templates/admin/change_form.html:49
 #: qatrack/templates/admin/change_list.html:36
@@ -67,8 +71,9 @@ msgstr ""
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:38
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:8
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:7
+#, fuzzy
 msgid "QC"
-msgstr ""
+msgstr "QC"
 
 #: qatrack/templates/admin/change_form.html:55
 #: qatrack/templates/admin/index.html:29
@@ -92,71 +97,83 @@ msgstr "View on site"
 
 #: qatrack/templates/admin/change_form.html:77
 #: qatrack/templates/admin/change_list.html:71
+#, fuzzy
 msgid "Please correct the error below."
 msgid_plural "Please correct the errors below."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Please correct the error below."
+msgstr[1] "Please correct the errors below."
 
 #: qatrack/templates/admin/change_list.html:62
-#, python-format
+#, fuzzy, python-format
 msgid "Add %(name)s"
-msgstr ""
+msgstr "Add %(name)s"
 
 #: qatrack/templates/admin/change_list.html:71
+#, fuzzy
 msgid "Please correct the errors below."
-msgstr ""
+msgstr "Please correct the errors below."
 
 #: qatrack/templates/admin/change_list.html:82
+#, fuzzy
 msgid "Filter"
-msgstr ""
+msgstr "Filter"
 
 #: qatrack/templates/admin/index.html:18
-#, python-format
+#, fuzzy, python-format
 msgid "Models available in the %(name)s application."
-msgstr ""
+msgstr "Models available in the %(name)s application."
 
 #: qatrack/templates/admin/index.html:19
-#, python-format
+#, fuzzy, python-format
 msgid "%(name)s"
-msgstr ""
+msgstr "%(name)s"
 
 #: qatrack/templates/admin/index.html:35
 #: qatrack/templates/admin/parts/storage/edit_inline/tabular_paginated.html:123
+#, fuzzy
 msgid "Change"
-msgstr ""
+msgstr "Change"
 
 #: qatrack/templates/admin/index.html:46
+#, fuzzy
 msgid "You don't have permission to edit anything."
-msgstr ""
+msgstr "You don't have permission to edit anything."
 
 #: qatrack/templates/admin/index.html:54
+#, fuzzy
 msgid "Recent Actions"
-msgstr ""
+msgstr "Recent Actions"
 
 #: qatrack/templates/admin/index.html:55
+#, fuzzy
 msgid "My Actions"
-msgstr ""
+msgstr "My Actions"
 
 #: qatrack/templates/admin/index.html:59
+#, fuzzy
 msgid "None available"
-msgstr ""
+msgstr "None available"
 
 #: qatrack/templates/admin/index.html:73
+#, fuzzy
 msgid "Unknown content"
-msgstr ""
+msgstr "Unknown content"
 
 #: qatrack/templates/admin/parts/storage/edit_inline/tabular_paginated.html:102
 #: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:17
+#, fuzzy
 msgid "Delete?"
-msgstr ""
+msgstr "Delete?"
 
 #: qatrack/templates/admin/qa/testlist/change_form.html:6
+#, fuzzy
 msgid "This Test List is a Sublist of the following Test Lists"
-msgstr ""
+msgstr "This Test List is a Sublist of the following Test Lists"
 
 #: qatrack/templates/admin/qa/testlist/change_form.html:13
+#, fuzzy
 msgid "This Test List is not a sublist of any other Test Lists"
-msgstr ""
+msgstr "This Test List is not a sublist of any other Test Lists"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:12
 #: qatrack/templates/explorer/query_list.html:65
@@ -165,32 +182,39 @@ msgid "Delete"
 msgstr "Delete"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:20
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
 "related objects, but your account doesn't have permission to delete the "
 "following types of objects:"
 msgstr ""
+"Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
+"related objects, but your account doesn't have permission to delete the "
+"following types of objects:"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:28
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
 "following protected related objects:"
 msgstr ""
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
+"following protected related objects:"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:82
+#, fuzzy
 msgid "Yes, I'm sure"
-msgstr ""
+msgstr "Yes, I'm sure"
 
 #: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:117
-#, python-format
+#, fuzzy, python-format
 msgid "Add another %(verbose_name)s"
-msgstr ""
+msgstr "Add another %(verbose_name)s"
 
 #: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:120
+#, fuzzy
 msgid "Remove"
-msgstr ""
+msgstr "Remove"
 
 #: qatrack/templates/admin/qa/testpack/export.html:19
 #, fuzzy
@@ -198,6 +222,7 @@ msgid "Export Test Pack"
 msgstr "Export Test Pack"
 
 #: qatrack/templates/admin/qa/testpack/export.html:32
+#, fuzzy
 msgid ""
 "\n"
 "        On this page you may create a Test Pack for sharing test lists,\n"
@@ -205,15 +230,22 @@ msgid ""
 "        installations.\n"
 "        "
 msgstr ""
+"\n"
+"        On this page you may create a Test Pack for sharing test lists,\n"
+"        tests, and other QATrack+ configuration data with other QATrack+\n"
+"        installations.\n"
+"        "
 
 #: qatrack/templates/admin/qa/testpack/export.html:47
+#, fuzzy
 msgid "Test Lists To Export"
-msgstr ""
+msgstr "Test Lists To Export"
 
 #: qatrack/templates/admin/qa/testpack/export.html:49
 #: qatrack/templates/admin/qa/testpack/import.html:48
+#, fuzzy
 msgid "Loading Test List table"
-msgstr ""
+msgstr "Loading Test List table"
 
 #: qatrack/templates/admin/qa/testpack/export.html:53
 #: qatrack/templates/admin/qa/testpack/export.html:81
@@ -221,8 +253,9 @@ msgstr ""
 #: qatrack/templates/admin/qa/testpack/import.html:52
 #: qatrack/templates/admin/qa/testpack/import.html:80
 #: qatrack/templates/admin/qa/testpack/import.html:117
+#, fuzzy
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: qatrack/templates/admin/qa/testpack/export.html:54
 #: qatrack/templates/admin/qa/testpack/import.html:53
@@ -243,36 +276,46 @@ msgid "Description"
 msgstr "Description"
 
 #: qatrack/templates/admin/qa/testpack/export.html:75
+#, fuzzy
 msgid "Test List Cycles To Export"
-msgstr ""
+msgstr "Test List Cycles To Export"
 
 #: qatrack/templates/admin/qa/testpack/export.html:77
 #: qatrack/templates/admin/qa/testpack/import.html:76
+#, fuzzy
 msgid "Loading Test List Cycle table"
-msgstr ""
+msgstr "Loading Test List Cycle table"
 
 #: qatrack/templates/admin/qa/testpack/export.html:82
 #: qatrack/templates/admin/qa/testpack/import.html:81
+#, fuzzy
 msgid "Cycle"
-msgstr ""
+msgstr "Cycle"
 
 #: qatrack/templates/admin/qa/testpack/export.html:103
+#, fuzzy
 msgid "Select Extra Tests To Export"
-msgstr ""
+msgstr "Select Extra Tests To Export"
 
 #: qatrack/templates/admin/qa/testpack/export.html:107
 #: qatrack/templates/admin/qa/testpack/import.html:106
+#, fuzzy
 msgid ""
 "\n"
 "              Note that there is no need to select tests that are already\n"
 "              included as part of a test list\n"
 "              "
 msgstr ""
+"\n"
+"              Note that there is no need to select tests that are already\n"
+"              included as part of a test list\n"
+"              "
 
 #: qatrack/templates/admin/qa/testpack/export.html:114
 #: qatrack/templates/admin/qa/testpack/import.html:113
+#, fuzzy
 msgid "Loading Test table"
-msgstr ""
+msgstr "Loading Test table"
 
 #: qatrack/templates/admin/qa/testpack/export.html:119
 #: qatrack/templates/admin/qa/testpack/import.html:118
@@ -290,18 +333,21 @@ msgstr "Category"
 
 #: qatrack/templates/admin/qa/testpack/export.html:121
 #: qatrack/templates/admin/qa/testpack/import.html:120
+#, fuzzy
 msgid "Type"
-msgstr ""
+msgstr "Type"
 
 #: qatrack/templates/admin/qa/testpack/export.html:143
+#, fuzzy
 msgid "Summary"
-msgstr ""
+msgstr "Summary"
 
 #: qatrack/templates/admin/qa/testpack/export.html:148
 #: qatrack/templates/admin/qa/testpack/import.html:189
 #: qatrack/templates/site_base.html:357
+#, fuzzy
 msgid "Test Lists"
-msgstr ""
+msgstr "Test Lists"
 
 #: qatrack/templates/admin/qa/testpack/export.html:149
 #: qatrack/templates/admin/qa/testpack/export.html:154
@@ -309,23 +355,27 @@ msgstr ""
 #: qatrack/templates/admin/qa/testpack/import.html:190
 #: qatrack/templates/admin/qa/testpack/import.html:195
 #: qatrack/templates/admin/qa/testpack/import.html:200
+#, fuzzy
 msgid "0 Selected"
-msgstr ""
+msgstr "0 Selected"
 
 #: qatrack/templates/admin/qa/testpack/export.html:153
 #: qatrack/templates/admin/qa/testpack/import.html:194
+#, fuzzy
 msgid "Test Lists Cycles"
-msgstr ""
+msgstr "Test Lists Cycles"
 
 #: qatrack/templates/admin/qa/testpack/export.html:158
 #: qatrack/templates/admin/qa/testpack/import.html:199
+#, fuzzy
 msgid "Tests"
-msgstr ""
+msgstr "Tests"
 
 #: qatrack/templates/admin/qa/testpack/export.html:173
 #: qatrack/templates/admin/qa/testpack/import.html:157
+#, fuzzy
 msgid "Test Pack Name"
-msgstr ""
+msgstr "Test Pack Name"
 
 #: qatrack/templates/admin/qa/testpack/export.html:197
 #: qatrack/templates/explorer/play.html:68
@@ -340,6 +390,7 @@ msgid "Import Test Pack"
 msgstr "Import Test Pack"
 
 #: qatrack/templates/admin/qa/testpack/import.html:32
+#, fuzzy
 msgid ""
 "\n"
 "        On this page you may import Test Lists, Test List Cycles, or "
@@ -347,46 +398,61 @@ msgid ""
 "        Tests from a Test Pack.\n"
 "        "
 msgstr ""
+"\n"
+"        On this page you may import Test Lists, Test List Cycles, or "
+"individual\n"
+"        Tests from a Test Pack.\n"
+"        "
 
 #: qatrack/templates/admin/qa/testpack/import.html:46
+#, fuzzy
 msgid "Test Lists To Include"
-msgstr ""
+msgstr "Test Lists To Include"
 
 #: qatrack/templates/admin/qa/testpack/import.html:74
+#, fuzzy
 msgid "Test List Cycles To Include"
-msgstr ""
+msgstr "Test List Cycles To Include"
 
 #: qatrack/templates/admin/qa/testpack/import.html:102
+#, fuzzy
 msgid "Select Extra Tests To Include"
-msgstr ""
+msgstr "Select Extra Tests To Include"
 
 #: qatrack/templates/admin/qa/testpack/import.html:144
+#, fuzzy
 msgid "Load Test Pack"
-msgstr ""
+msgstr "Load Test Pack"
 
 #: qatrack/templates/admin/qa/testpack/import.html:147
+#, fuzzy
 msgid "Test Pack File"
-msgstr ""
+msgstr "Test Pack File"
 
 #: qatrack/templates/admin/qa/testpack/import.html:163
+#, fuzzy
 msgid "Test Pack Created By"
-msgstr ""
+msgstr "Test Pack Created By"
 
 #: qatrack/templates/admin/qa/testpack/import.html:169
+#, fuzzy
 msgid "Test Pack Generator Version"
-msgstr ""
+msgstr "Test Pack Generator Version"
 
 #: qatrack/templates/admin/qa/testpack/import.html:175
+#, fuzzy
 msgid "Test Pack Description"
-msgstr ""
+msgstr "Test Pack Description"
 
 #: qatrack/templates/admin/qa/testpack/import.html:184
+#, fuzzy
 msgid "Import Summary"
-msgstr ""
+msgstr "Import Summary"
 
 #: qatrack/templates/admin/qa/testpack/import.html:206
+#, fuzzy
 msgid "Import"
-msgstr ""
+msgstr "Import"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:39
 #, fuzzy
@@ -394,22 +460,28 @@ msgid "Copy References & Tolerances"
 msgstr "Copy References & Tolerances"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:44
+#, fuzzy
 msgid ""
 "Select the source unit and test list (or test list cycle) and destination "
 "units."
 msgstr ""
+"Select the source unit and test list (or test list cycle) and destination "
+"units."
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:64
+#, fuzzy
 msgid "Copy references and tolerances"
-msgstr ""
+msgstr "Copy references and tolerances"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:9
+#, fuzzy
 msgid "Copy References & Tolerances Preview"
-msgstr ""
+msgstr "Copy References & Tolerances Preview"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:15
+#, fuzzy
 msgid "Preview Copying Reference & Tolerances "
-msgstr ""
+msgstr "Preview Copying Reference & Tolerances "
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:21
 #, fuzzy
@@ -417,30 +489,36 @@ msgid "Test List (Cycle)"
 msgstr "Test List (Cycle)"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:25
+#, fuzzy
 msgid "Source Unit"
-msgstr ""
+msgstr "Source Unit"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:29
+#, fuzzy
 msgid "Dest Unit"
-msgstr ""
+msgstr "Dest Unit"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:39
+#, fuzzy
 msgid "Current Reference"
-msgstr ""
+msgstr "Current Reference"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:40
+#, fuzzy
 msgid "Current Tolerance"
-msgstr ""
+msgstr "Current Tolerance"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:41
 #: qatrack/templates/admin/qa/unittestinfo/history.html:10
+#, fuzzy
 msgid "New Reference"
-msgstr ""
+msgstr "New Reference"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:42
 #: qatrack/templates/admin/qa/unittestinfo/history.html:12
+#, fuzzy
 msgid "New Tolerance"
-msgstr ""
+msgstr "New Tolerance"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:65
 #, fuzzy
@@ -453,8 +531,9 @@ msgid "Confirm"
 msgstr "Confirm"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:7
+#, fuzzy
 msgid "Date/time"
-msgstr ""
+msgstr "Date/time"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:8
 #, fuzzy
@@ -462,12 +541,14 @@ msgid "User"
 msgstr "User"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:9
+#, fuzzy
 msgid "Old Reference"
-msgstr ""
+msgstr "Old Reference"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:11
+#, fuzzy
 msgid "Old Tolerance"
-msgstr ""
+msgstr "Old Tolerance"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:13
 #, fuzzy
@@ -475,16 +556,19 @@ msgid "Comment"
 msgstr "Comment"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:8
+#, fuzzy
 msgid "Set References & Tolerances"
-msgstr ""
+msgstr "Set References & Tolerances"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:14
+#, fuzzy
 msgid "Set the tolerance and reference"
-msgstr ""
+msgstr "Set the tolerance and reference"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:41
+#, fuzzy
 msgid "The tolerance and reference will be applied to"
-msgstr ""
+msgstr "The tolerance and reference will be applied to"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:47
 #, fuzzy
@@ -492,40 +576,48 @@ msgid "Unit"
 msgstr "Unit"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:48
+#, fuzzy
 msgid "Current reference"
-msgstr ""
+msgstr "Current reference"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:49
+#, fuzzy
 msgid "Current tolerance"
-msgstr ""
+msgstr "Current tolerance"
 
 #: qatrack/templates/explorer/base.html:37
+#, fuzzy
 msgid "Reports Menu"
-msgstr ""
+msgstr "Reports Menu"
 
 #: qatrack/templates/explorer/base.html:39
+#, fuzzy
 msgid "Click to run pre-defined reports"
-msgstr ""
+msgstr "Click to run pre-defined reports"
 
 #: qatrack/templates/explorer/base.html:42
+#, fuzzy
 msgid "Saved Reports"
-msgstr ""
+msgstr "Saved Reports"
 
 #: qatrack/templates/explorer/base.html:47
+#, fuzzy
 msgid "Click to create a new query"
-msgstr ""
+msgstr "Click to create a new query"
 
 #: qatrack/templates/explorer/base.html:50
 #: qatrack/templates/explorer/play.html:10
 #: qatrack/templates/explorer/query.html:11
 #: qatrack/templates/explorer/query_list.html:10
 #: qatrack/templates/explorer/querylog_list.html:8
+#, fuzzy
 msgid "New Query"
-msgstr ""
+msgstr "New Query"
 
 #: qatrack/templates/explorer/base.html:53
+#, fuzzy
 msgid "Click to run ad-hoc queries"
-msgstr ""
+msgstr "Click to run ad-hoc queries"
 
 #: qatrack/templates/explorer/base.html:56
 #: qatrack/templates/explorer/play.html:11
@@ -533,65 +625,80 @@ msgstr ""
 #: qatrack/templates/explorer/query_list.html:11
 #: qatrack/templates/explorer/querylog_list.html:9
 #: qatrack/templates/explorer/querylog_list.html:29
+#, fuzzy
 msgid "Playground"
-msgstr ""
+msgstr "Playground"
 
 #: qatrack/templates/explorer/base.html:61
+#, fuzzy
 msgid "Click to view history"
-msgstr ""
+msgstr "Click to view history"
 
 #: qatrack/templates/explorer/play.html:6
+#, fuzzy
 msgid "SQL Query Playground"
-msgstr ""
+msgstr "SQL Query Playground"
 
 #: qatrack/templates/explorer/play.html:12
 #: qatrack/templates/explorer/query_list.html:12
 #: qatrack/templates/explorer/querylog_list.html:10
+#, fuzzy
 msgid "Logs"
-msgstr ""
+msgstr "Logs"
 
 #: qatrack/templates/explorer/play.html:20
+#, fuzzy
 msgid ""
 "The playground is for experimenting and writing ad-hoc queries. By default, "
 "nothing you do here will be saved."
 msgstr ""
+"The playground is for experimenting and writing ad-hoc queries. By default, "
+"nothing you do here will be saved."
 
 #: qatrack/templates/explorer/play.html:27
+#, fuzzy
 msgid "Connection"
-msgstr ""
+msgstr "Connection"
 
 #: qatrack/templates/explorer/play.html:42
+#, fuzzy
 msgid "Playground SQL"
-msgstr ""
+msgstr "Playground SQL"
 
 #: qatrack/templates/explorer/play.html:61
 #: qatrack/templates/explorer/play.html:71
 #: qatrack/templates/explorer/query.html:103
 #: qatrack/templates/explorer/query.html:120
+#, fuzzy
 msgid "Toggle Dropdown"
-msgstr ""
+msgstr "Toggle Dropdown"
 
 #: qatrack/templates/explorer/play.html:64
+#, fuzzy
 msgid "Save As New Query"
-msgstr ""
+msgstr "Save As New Query"
 
 #: qatrack/templates/explorer/play.html:78
 #: qatrack/templates/explorer/query.html:111
+#, fuzzy
 msgid "Show Schema"
-msgstr ""
+msgstr "Show Schema"
 
 #: qatrack/templates/explorer/play.html:79
 #: qatrack/templates/explorer/query.html:112
+#, fuzzy
 msgid "Hide Schema"
-msgstr ""
+msgstr "Hide Schema"
 
 #: qatrack/templates/explorer/play.html:80
+#, fuzzy
 msgid "Format"
-msgstr ""
+msgstr "Format"
 
 #: qatrack/templates/explorer/play.html:83
+#, fuzzy
 msgid "Playground Query"
-msgstr ""
+msgstr "Playground Query"
 
 #: qatrack/templates/explorer/preview_pane.html:9
 #, fuzzy
@@ -599,28 +706,34 @@ msgid "Preview"
 msgstr "Preview"
 
 #: qatrack/templates/explorer/preview_pane.html:13
+#, fuzzy
 msgid "Snapshots"
-msgstr ""
+msgstr "Snapshots"
 
 #: qatrack/templates/explorer/preview_pane.html:18
 #: qatrack/templates/explorer/preview_pane.html:122
+#, fuzzy
 msgid "Pivot"
-msgstr ""
+msgstr "Pivot"
 
 #: qatrack/templates/explorer/preview_pane.html:28
+#, fuzzy
 msgid "Show row numbers"
-msgstr ""
+msgstr "Show row numbers"
 
 #: qatrack/templates/explorer/preview_pane.html:30
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "                      Execution time: %(execution_time)s ms</span>\n"
 "                      "
 msgstr ""
+"\n"
+"                      Execution time: %(execution_time)s ms</span>\n"
+"                      "
 
 #: qatrack/templates/explorer/preview_pane.html:37
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "                          Showing <input class=\"rows-input\" type=\"text\" "
@@ -628,9 +741,14 @@ msgid ""
 "total rows.\n"
 "                        "
 msgstr ""
+"\n"
+"                          Showing <input class=\"rows-input\" type=\"text\" "
+"name=\"rows\" id=\"rows\" value=\"%(total_rows)s\" /> of %(total_rows)s "
+"total rows.\n"
+"                        "
 
 #: qatrack/templates/explorer/preview_pane.html:41
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "                          First <input class=\"rows-input\" type=\"text\" "
@@ -638,86 +756,113 @@ msgid ""
 "rows.\n"
 "                        "
 msgstr ""
+"\n"
+"                          First <input class=\"rows-input\" type=\"text\" "
+"name=\"rows\" id=\"rows\" value=\"%(rows)s\" /> of %(total_rows)s total rows."
+"\n"
+"                        "
 
 #: qatrack/templates/explorer/preview_pane.html:89
+#, fuzzy
 msgid "Empty Resultset"
-msgstr ""
+msgstr "Empty Resultset"
 
 #: qatrack/templates/explorer/preview_pane.html:101
-#, python-format
+#, fuzzy, python-format
 msgid "%(snapshots_length)s Snapshots <small>(oldest first)</small>"
-msgstr ""
+msgstr "%(snapshots_length)s Snapshots <small>(oldest first)</small>"
 
 #: qatrack/templates/explorer/preview_pane.html:125
+#, fuzzy
 msgid "Export to CSV"
-msgstr ""
+msgstr "Export to CSV"
 
 #: qatrack/templates/explorer/preview_pane.html:126
+#, fuzzy
 msgid "Save Image"
-msgstr ""
+msgstr "Save Image"
 
 #: qatrack/templates/explorer/query.html:6
+#, fuzzy
 msgid "SQL Query"
-msgstr ""
+msgstr "SQL Query"
 
 #: qatrack/templates/explorer/query.html:38
+#, fuzzy
 msgid "Title"
-msgstr ""
+msgstr "Title"
 
 #: qatrack/templates/explorer/query.html:79
 #: qatrack/templates/explorer/querylog_list.html:27
+#, fuzzy
 msgid "SQL"
-msgstr ""
+msgstr "SQL"
 
 #: qatrack/templates/explorer/query.html:83
+#, fuzzy
 msgid "Open in playground"
-msgstr ""
+msgstr "Open in playground"
 
 #: qatrack/templates/explorer/query.html:134
+#, fuzzy
 msgid "Snapshot"
-msgstr ""
+msgstr "Snapshot"
 
 #: qatrack/templates/explorer/query.html:140
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "                Avg. execution: %(query_avg_duration)sms. Query created by "
 "%(created_by_user_email)s on %(created_time)s.\n"
 "              "
 msgstr ""
+"\n"
+"                Avg. execution: %(query_avg_duration)sms. Query created by "
+"%(created_by_user_email)s on %(created_time)s.\n"
+"              "
 
 #: qatrack/templates/explorer/query_confirm_delete.html:10
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "              Are you sure you want to delete \"%(query_title)s\" ?\n"
 "            "
 msgstr ""
+"\n"
+"              Are you sure you want to delete \"%(query_title)s\" ?\n"
+"            "
 
 #: qatrack/templates/explorer/query_confirm_delete.html:22
+#, fuzzy
 msgid "Delete Query"
-msgstr ""
+msgstr "Delete Query"
 
 #: qatrack/templates/explorer/query_list.html:5
+#, fuzzy
 msgid "SQL Query List"
-msgstr ""
+msgstr "SQL Query List"
 
 #: qatrack/templates/explorer/query_list.html:19
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "      Your %(recent_queries_length)s Most Recently Run\n"
 "      "
 msgstr ""
+"\n"
+"      Your %(recent_queries_length)s Most Recently Run\n"
+"      "
 
 #: qatrack/templates/explorer/query_list.html:26
 #: qatrack/templates/explorer/query_list.html:57
+#, fuzzy
 msgid "Query"
-msgstr ""
+msgstr "Query"
 
 #: qatrack/templates/explorer/query_list.html:27
+#, fuzzy
 msgid "Last Run"
-msgstr ""
+msgstr "Last Run"
 
 #: qatrack/templates/explorer/query_list.html:28
 #: qatrack/templates/explorer/query_list.html:62
@@ -726,8 +871,9 @@ msgid "CSV"
 msgstr "CSV"
 
 #: qatrack/templates/explorer/query_list.html:48
+#, fuzzy
 msgid "All Queries"
-msgstr ""
+msgstr "All Queries"
 
 #: qatrack/templates/explorer/query_list.html:58
 #, fuzzy
@@ -735,44 +881,56 @@ msgid "Created"
 msgstr "Created"
 
 #: qatrack/templates/explorer/query_list.html:60
+#, fuzzy
 msgid "Email"
-msgstr ""
+msgstr "Email"
 
 #: qatrack/templates/explorer/query_list.html:64
+#, fuzzy
 msgid "Play"
-msgstr ""
+msgstr "Play"
 
 #: qatrack/templates/explorer/query_list.html:67
+#, fuzzy
 msgid "Run Count"
-msgstr ""
+msgstr "Run Count"
 
 #: qatrack/templates/explorer/query_list.html:87
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "                      by %(created_by_user)s\n"
 "                    "
 msgstr ""
+"\n"
+"                      by %(created_by_user)s\n"
+"                    "
 
 #: qatrack/templates/explorer/querylog_list.html:4
+#, fuzzy
 msgid "SQL Query History"
-msgstr ""
+msgstr "SQL Query History"
 
 #: qatrack/templates/explorer/querylog_list.html:16
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "      Recent Query Logs - Page %(page_num)s\n"
 "    "
 msgstr ""
+"\n"
+"      Recent Query Logs - Page %(page_num)s\n"
+"    "
 
 #: qatrack/templates/explorer/querylog_list.html:24
+#, fuzzy
 msgid "Run At"
-msgstr ""
+msgstr "Run At"
 
 #: qatrack/templates/explorer/querylog_list.html:25
+#, fuzzy
 msgid "Run By"
-msgstr ""
+msgstr "Run By"
 
 #: qatrack/templates/explorer/querylog_list.html:26
 #, fuzzy
@@ -780,20 +938,25 @@ msgid "Duration"
 msgstr "Duration"
 
 #: qatrack/templates/explorer/querylog_list.html:28
+#, fuzzy
 msgid "Query ID"
-msgstr ""
+msgstr "Query ID"
 
 #: qatrack/templates/explorer/querylog_list.html:53
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "            Page %(page_num)s of %(total_pages)s.\n"
 "          "
 msgstr ""
+"\n"
+"            Page %(page_num)s of %(total_pages)s.\n"
+"          "
 
 #: qatrack/templates/explorer/schema.html:23
+#, fuzzy
 msgid "Schema"
-msgstr ""
+msgstr "Schema"
 
 #: qatrack/templates/explorer/schema.html:26
 #, fuzzy
@@ -801,24 +964,29 @@ msgid "Search"
 msgstr "Search"
 
 #: qatrack/templates/explorer/schema.html:30
+#, fuzzy
 msgid "Collapse All"
-msgstr ""
+msgstr "Collapse All"
 
 #: qatrack/templates/explorer/schema.html:33
+#, fuzzy
 msgid "Expand All"
-msgstr ""
+msgstr "Expand All"
 
 #: qatrack/templates/explorer/schema_building.html:7
+#, fuzzy
 msgid "Schema is building..."
-msgstr ""
+msgstr "Schema is building..."
 
 #: qatrack/templates/explorer/schema_building.html:8
+#, fuzzy
 msgid "Please wait a minute, and refresh."
-msgstr ""
+msgstr "Please wait a minute, and refresh."
 
 #: qatrack/templates/homepage.html:16
+#, fuzzy
 msgid "QATrack+ Homepage"
-msgstr ""
+msgstr "QATrack+ Homepage"
 
 #: qatrack/templates/homepage.html:23
 #, fuzzy
@@ -826,143 +994,181 @@ msgid "Welcome to QATrack+"
 msgstr "Welcome to QATrack+"
 
 #: qatrack/templates/homepage.html:29 qatrack/templates/site_base.html:170
+#, fuzzy
 msgid "Perform QC"
-msgstr ""
+msgstr "Perform QC"
 
 #: qatrack/templates/homepage.html:31
+#, fuzzy
 msgid "Choose a Unit to perform qa on"
-msgstr ""
+msgstr "Choose a Unit to perform qa on"
 
 #: qatrack/templates/homepage.html:32
+#, fuzzy
 msgid "Choose a unit to perform QC for"
-msgstr ""
+msgstr "Choose a unit to perform QC for"
 
 #: qatrack/templates/homepage.html:34
+#, fuzzy
 msgid "View available test lists to perform"
-msgstr ""
+msgstr "View available test lists to perform"
 
 #: qatrack/templates/homepage.html:35
+#, fuzzy
 msgid "View all test lists available to perform"
-msgstr ""
+msgstr "View all test lists available to perform"
 
 #: qatrack/templates/homepage.html:37 qatrack/templates/site_base.html:195
+#, fuzzy
 msgid "Resume a QC session currently in progress"
-msgstr ""
+msgstr "Resume a QC session currently in progress"
 
 #: qatrack/templates/homepage.html:39
+#, fuzzy
 msgid "Continue an In Progress Test List Instance"
-msgstr ""
+msgstr "Continue an In Progress Test List Instance"
 
 #: qatrack/templates/homepage.html:40
-#, python-format
+#, fuzzy, python-format
 msgid "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress"
-msgstr ""
+msgstr "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress"
 
 #: qatrack/templates/homepage.html:51
+#, fuzzy
 msgid "Loading QC Unit & Frequency Tree"
-msgstr ""
+msgstr "Loading QC Unit & Frequency Tree"
 
 #: qatrack/templates/homepage.html:63
+#, fuzzy
 msgid "Loading QC Unit, Frequency, Category Tree"
-msgstr ""
+msgstr "Loading QC Unit, Frequency, Category Tree"
 
 #: qatrack/templates/homepage.html:74 qatrack/templates/site_base.html:244
+#, fuzzy
 msgid "Review QC"
-msgstr ""
+msgstr "Review QC"
 
 #: qatrack/templates/homepage.html:77
+#, fuzzy
 msgid "Choose a Unit to review QC for"
-msgstr ""
+msgstr "Choose a Unit to review QC for"
 
 #: qatrack/templates/homepage.html:78
+#, fuzzy
 msgid "Choose a unit to review QC for"
-msgstr ""
+msgstr "Choose a unit to review QC for"
 
 #: qatrack/templates/homepage.html:80
+#, fuzzy
 msgid "Review data"
-msgstr ""
+msgstr "Review data"
 
 #: qatrack/templates/homepage.html:82
+#, fuzzy
 msgid "View QC data awaiting review"
-msgstr ""
+msgstr "View QC data awaiting review"
 
 #: qatrack/templates/homepage.html:96
+#, fuzzy
 msgid "View trends and control charts"
-msgstr ""
+msgstr "View trends and control charts"
 
 #: qatrack/templates/homepage.html:98
+#, fuzzy
 msgid "View trends &amp; control charts"
-msgstr ""
+msgstr "View trends &amp; control charts"
 
 #: qatrack/templates/homepage.html:107 qatrack/templates/site_base.html:226
 #: qatrack/templates/site_base.html:416
+#, fuzzy
 msgid "Service Log"
-msgstr ""
+msgstr "Service Log"
 
 #: qatrack/templates/homepage.html:111 qatrack/templates/homepage.html:116
+#, fuzzy
 msgid "View all service events"
-msgstr ""
+msgstr "View all service events"
 
 #: qatrack/templates/homepage.html:120 qatrack/templates/homepage.html:125
+#, fuzzy
 msgid "Open new service event"
-msgstr ""
+msgstr "Open new service event"
 
 #: qatrack/templates/homepage.html:129 qatrack/templates/homepage.html:134
 #: qatrack/templates/site_base.html:490
+#, fuzzy
 msgid "Service Events Needing Review"
-msgstr ""
+msgstr "Service Events Needing Review"
 
 #: qatrack/templates/homepage.html:135 qatrack/templates/site_base.html:487
+#, fuzzy
 msgid ""
 "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing "
 "review"
 msgstr ""
+"There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing "
+"review"
 
 #: qatrack/templates/homepage.html:142
+#, fuzzy
 msgid "View all incomplete RTS QC"
-msgstr ""
+msgstr "View all incomplete RTS QC"
 
 #: qatrack/templates/homepage.html:147 qatrack/templates/site_base.html:228
+#, fuzzy
 msgid "View all incomplete return to service QC"
-msgstr ""
+msgstr "View all incomplete return to service QC"
 
 #: qatrack/templates/homepage.html:149
+#, fuzzy
 msgid ""
 "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} incomplete return to "
 "service test lists"
 msgstr ""
+"There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} incomplete return to "
+"service test lists"
 
 #: qatrack/templates/homepage.html:155
+#, fuzzy
 msgid "View unreviewed RTS QC"
-msgstr ""
+msgstr "View unreviewed RTS QC"
 
 #: qatrack/templates/homepage.html:157
+#, fuzzy
 msgid "View unreviewed return to service QC"
-msgstr ""
+msgstr "View unreviewed return to service QC"
 
 #: qatrack/templates/homepage.html:158
+#, fuzzy
 msgid ""
 "There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to "
 "service sessions"
 msgstr ""
+"There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to "
+"service sessions"
 
 #: qatrack/templates/registration/_terms.html:5
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "By clicking \"Sign Up\", you are indicating that you have read and agree to "
 "the <a href=\"%(terms_url)s\">Terms of Use</a> and <a href=\"%(privacy_url)s"
 "\">Privacy Policy</a>."
 msgstr ""
+"By clicking \"Sign Up\", you are indicating that you have read and agree to "
+"the <a href=\"%(terms_url)s\">Terms of Use</a> and <a href=\"%(privacy_url)"
+"s\">Privacy Policy</a>."
 
 #: qatrack/templates/registration/base.html:30
 #: qatrack/templates/site_base.html:829
+#, fuzzy
 msgid "Account"
-msgstr ""
+msgstr "Account"
 
 #: qatrack/templates/registration/base.html:37
 #: qatrack/templates/registration/login.html:6
+#, fuzzy
 msgid "Log In"
-msgstr ""
+msgstr "Log In"
 
 #: qatrack/templates/registration/base.html:47
 #: qatrack/templates/site_base.html:835
@@ -975,12 +1181,14 @@ msgstr "Account Details"
 #: qatrack/templates/registration/password_change_form.html:26
 #: qatrack/templates/registration/password_reset_confirm.html:6
 #: qatrack/templates/registration/password_reset_confirm.html:17
+#, fuzzy
 msgid "Change Password"
-msgstr ""
+msgstr "Change Password"
 
 #: qatrack/templates/registration/base.html:69
+#, fuzzy
 msgid "Reset Password"
-msgstr ""
+msgstr "Reset Password"
 
 #: qatrack/templates/registration/base.html:82
 #, fuzzy
@@ -988,237 +1196,298 @@ msgid "Group Membership & Permissions"
 msgstr "Group Membership & Permissions"
 
 #: qatrack/templates/registration/base.html:92
+#, fuzzy
 msgid "Log Out"
-msgstr ""
+msgstr "Log Out"
 
 #: qatrack/templates/registration/base.html:99
 #: qatrack/templates/registration/registration_form.html:27
+#, fuzzy
 msgid "Register"
-msgstr ""
+msgstr "Register"
 
 #: qatrack/templates/registration/login.html:27
+#, fuzzy
 msgid "Sign in to start your session"
-msgstr ""
+msgstr "Sign in to start your session"
 
 #: qatrack/templates/registration/login.html:34
 #: qatrack/templates/registration/password_reset_form.html:28
 #: qatrack/templates/registration/registration_form.html:35
+#, fuzzy
 msgid "Note"
-msgstr ""
+msgstr "Note"
 
 #: qatrack/templates/registration/login.html:35
 #: qatrack/templates/registration/password_reset_form.html:29
 #: qatrack/templates/registration/registration_form.html:36
-#, python-format
+#, fuzzy, python-format
 msgid "you are already logged in as %(user)s."
-msgstr ""
+msgstr "you are already logged in as %(user)s."
 
 #: qatrack/templates/registration/login.html:48
+#, fuzzy
 msgid "Login Type"
-msgstr ""
+msgstr "Login Type"
 
 #: qatrack/templates/registration/login.html:50
+#, fuzzy
 msgid "Single Sign On (Login through your hospital network)"
-msgstr ""
+msgstr "Single Sign On (Login through your hospital network)"
 
 #: qatrack/templates/registration/login.html:51
+#, fuzzy
 msgid "QATrack+"
-msgstr ""
+msgstr "QATrack+"
 
 #: qatrack/templates/registration/login.html:53
+#, fuzzy
 msgid "Choose the login method you would like to use"
-msgstr ""
+msgstr "Choose the login method you would like to use"
 
 #: qatrack/templates/registration/login.html:60
+#, fuzzy
 msgid "Click to login to using your organizations single sign on functionality"
-msgstr ""
+msgstr "Click to login to using your organizations single sign on functionality"
 
 #: qatrack/templates/registration/login.html:62
+#, fuzzy
 msgid "Login with Single Sign On"
-msgstr ""
+msgstr "Login with Single Sign On"
 
 #: qatrack/templates/registration/login.html:79
 #: qatrack/templates/registration/registration_form.html:40
+#, fuzzy
 msgid "Log in"
-msgstr ""
+msgstr "Log in"
 
 #: qatrack/templates/registration/login.html:86
+#, fuzzy
 msgid ""
 "If you have any trouble logging in to your account, contact the site "
 "administrator."
 msgstr ""
+"If you have any trouble logging in to your account, contact the site "
+"administrator."
 
 #: qatrack/templates/registration/logout.html:5
+#, fuzzy
 msgid "Logged Out"
-msgstr ""
+msgstr "Logged Out"
 
 #: qatrack/templates/registration/logout.html:8
+#, fuzzy
 msgid "You've been logged out."
-msgstr ""
+msgstr "You've been logged out."
 
 #: qatrack/templates/registration/password_change_done.html:5
 #: qatrack/templates/registration/password_change_done.html:16
 #: qatrack/templates/registration/password_reset_complete.html:5
+#, fuzzy
 msgid "Password Succesfully Changed"
-msgstr ""
+msgstr "Password Succesfully Changed"
 
 #: qatrack/templates/registration/password_change_done.html:22
 #: qatrack/templates/registration/password_reset_complete.html:11
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You may change it again by visiting <a href=\"%(password_change_url)s\">the "
 "password change page</a>."
 msgstr ""
+"You may change it again by visiting <a href=\"%(password_change_url)s\">the "
+"password change page</a>."
 
 #: qatrack/templates/registration/password_change_form.html:66
 #: qatrack/templates/registration/password_reset_confirm.html:56
+#, fuzzy
 msgid "Change password"
-msgstr ""
+msgstr "Change password"
 
 #: qatrack/templates/registration/password_delete.html:5
 #: qatrack/templates/registration/password_delete.html:8
+#, fuzzy
 msgid "Delete Password"
-msgstr ""
+msgstr "Delete Password"
 
 #: qatrack/templates/registration/password_delete.html:10
+#, fuzzy
 msgid ""
 "You may delete your password since you are currently logged in using OpenID."
 msgstr ""
+"You may delete your password since you are currently logged in using OpenID."
 
 #: qatrack/templates/registration/password_delete.html:13
+#, fuzzy
 msgid "Delete my password"
-msgstr ""
+msgstr "Delete my password"
 
 #: qatrack/templates/registration/password_delete_done.html:5
 #: qatrack/templates/registration/password_delete_done.html:8
+#, fuzzy
 msgid "Password Deleted"
-msgstr ""
+msgstr "Password Deleted"
 
 #: qatrack/templates/registration/password_delete_done.html:10
+#, fuzzy
 msgid "Your password has been deleted."
-msgstr ""
+msgstr "Your password has been deleted."
 
 #: qatrack/templates/registration/password_reset_complete.html:8
+#, fuzzy
 msgid "Password Successfuly Changed"
-msgstr ""
+msgstr "Password Successfuly Changed"
 
 #: qatrack/templates/registration/password_reset_confirm.html:17
+#, fuzzy
 msgid "Bad Token"
-msgstr ""
+msgstr "Bad Token"
 
 #: qatrack/templates/registration/password_reset_confirm.html:21
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The password reset link was invalid, possibly because it has already been "
 "used.  Please request a <a href=\"%(passwd_reset_url)s\">new password reset</"
 "a>."
 msgstr ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please request a <a href=\"%(passwd_reset_url)s\">new password "
+"reset</a>."
 
 #: qatrack/templates/registration/password_reset_done.html:5
 #: qatrack/templates/registration/password_reset_done.html:16
 #: qatrack/templates/registration/password_reset_form.html:6
 #: qatrack/templates/registration/password_reset_form.html:20
+#, fuzzy
 msgid "Password Reset"
-msgstr ""
+msgstr "Password Reset"
 
 #: qatrack/templates/registration/password_reset_done.html:21
+#, fuzzy
 msgid ""
 "We have sent you an email. If you do not receive it within a few minutes, "
 "contact the site administrator. "
 msgstr ""
+"We have sent you an email. If you do not receive it within a few minutes, "
+"contact the site administrator. "
 
 #: qatrack/templates/registration/password_reset_form.html:22
+#, fuzzy
 msgid ""
 "Forgotten your password? Enter your email address below, and we'll send you "
 "an email allowing you to reset it."
 msgstr ""
+"Forgotten your password? Enter your email address below, and we'll send you "
+"an email allowing you to reset it."
 
 #: qatrack/templates/registration/password_reset_form.html:64
+#, fuzzy
 msgid "Reset my password"
-msgstr ""
+msgstr "Reset my password"
 
 #: qatrack/templates/registration/password_set.html:6
 #: qatrack/templates/registration/password_set.html:19
+#, fuzzy
 msgid "Set Password"
-msgstr ""
+msgstr "Set Password"
 
 #: qatrack/templates/registration/password_set.html:57
+#, fuzzy
 msgid "Set password"
-msgstr ""
+msgstr "Set password"
 
 #: qatrack/templates/registration/registration_form.html:6
+#, fuzzy
 msgid "Sign Up"
-msgstr ""
+msgstr "Sign Up"
 
 #: qatrack/templates/registration/registration_form.html:29
+#, fuzzy
 msgid "Register for a QATrack+ account"
-msgstr ""
+msgstr "Register for a QATrack+ account"
 
 #: qatrack/templates/registration/registration_form.html:40
+#, fuzzy
 msgid "Already have an account?"
-msgstr ""
+msgstr "Already have an account?"
 
 #: qatrack/templates/registration/registration_form.html:75
+#, fuzzy
 msgid "Sign up"
-msgstr ""
+msgstr "Sign up"
 
 #: qatrack/templates/registration/verification_sent.html:5
 #: qatrack/templates/registration/verification_sent.html:8
+#, fuzzy
 msgid "Verify your email address"
-msgstr ""
+msgstr "Verify your email address"
 
 #: qatrack/templates/registration/verification_sent.html:10
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "We have sent you an email to <b>%(email)s</b> for verification. Follow the "
 "link provided to finalize the signup process. If you do not receive it "
 "within a few minutes, contact us at <a href=\"mailto:%(CONTACT_EMAIL)s\">"
 "%(CONTACT_EMAIL)s</a>."
 msgstr ""
+"We have sent you an email to <b>%(email)s</b> for verification. Follow the "
+"link provided to finalize the signup process. If you do not receive it "
+"within a few minutes, contact us at <a href=\"mailto:%(CONTACT_EMAIL)s\""
+">%(CONTACT_EMAIL)s</a>."
 
 #: qatrack/templates/registration/verification_sent.html:11
+#, fuzzy
 msgid "Go back"
-msgstr ""
+msgstr "Go back"
 
 #: qatrack/templates/rest_framework/api.html:4
 #: qatrack/templates/rest_framework/api.html:8
+#, fuzzy
 msgid "QATrack+ API"
-msgstr ""
+msgstr "QATrack+ API"
 
 #: qatrack/templates/site_base.html:175
+#, fuzzy
 msgid "QC Lists"
-msgstr ""
+msgstr "QC Lists"
 
 #: qatrack/templates/site_base.html:177
+#, fuzzy
 msgid "Choose a specfic Unit To Perform QC On"
-msgstr ""
+msgstr "Choose a specfic Unit To Perform QC On"
 
 #: qatrack/templates/site_base.html:179
+#, fuzzy
 msgid "Choose Unit"
-msgstr ""
+msgstr "Choose Unit"
 
 #: qatrack/templates/site_base.html:183
+#, fuzzy
 msgid "View list of all available QC"
-msgstr ""
+msgstr "View list of all available QC"
 
 #: qatrack/templates/site_base.html:185
+#, fuzzy
 msgid "All QC"
-msgstr ""
+msgstr "All QC"
 
 #: qatrack/templates/site_base.html:189
+#, fuzzy
 msgid "View QC that is currently due and overdue"
-msgstr ""
+msgstr "View QC that is currently due and overdue"
 
 #: qatrack/templates/site_base.html:191 qatrack/templates/site_base.html:509
+#, fuzzy
 msgid "Due & Overdue"
-msgstr ""
+msgstr "Due & Overdue"
 
 #: qatrack/templates/site_base.html:197
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress for "
 "your groups"
 msgstr ""
+"There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress for "
+"your groups"
 
 #: qatrack/templates/site_base.html:200
 #, fuzzy
@@ -1226,108 +1495,132 @@ msgid "In Progress"
 msgstr "In Progress"
 
 #: qatrack/templates/site_base.html:204
+#, fuzzy
 msgid "Tree Views"
-msgstr ""
+msgstr "Tree Views"
 
 #: qatrack/templates/site_base.html:206
+#, fuzzy
 msgid "View QC Organized by Unit & Frequency"
-msgstr ""
+msgstr "View QC Organized by Unit & Frequency"
 
 #: qatrack/templates/site_base.html:211
+#, fuzzy
 msgid "QC Treeview: Unit, Frequency"
-msgstr ""
+msgstr "QC Treeview: Unit, Frequency"
 
 #: qatrack/templates/site_base.html:215
+#, fuzzy
 msgid "View QC Organized by Unit, Frequency, Category"
-msgstr ""
+msgstr "View QC Organized by Unit, Frequency, Category"
 
 #: qatrack/templates/site_base.html:221
+#, fuzzy
 msgid "QC Treeview: Unit, Frequency, Category"
-msgstr ""
+msgstr "QC Treeview: Unit, Frequency, Category"
 
 #: qatrack/templates/site_base.html:233
+#, fuzzy
 msgid "All Incomplete Return To Service"
-msgstr ""
+msgstr "All Incomplete Return To Service"
 
 #: qatrack/templates/site_base.html:248
-#, python-format
+#, fuzzy, python-format
 msgid "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed"
-msgstr ""
+msgstr "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed"
 
 #: qatrack/templates/site_base.html:255
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed"
 msgstr ""
+"There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed"
 
 #: qatrack/templates/site_base.html:268
+#, fuzzy
 msgid "QA Program Status"
-msgstr ""
+msgstr "QA Program Status"
 
 #: qatrack/templates/site_base.html:272
+#, fuzzy
 msgid "View a summary of the status of the QC program"
-msgstr ""
+msgstr "View a summary of the status of the QC program"
 
 #: qatrack/templates/site_base.html:274
+#, fuzzy
 msgid "Overview - All"
-msgstr ""
+msgstr "Overview - All"
 
 #: qatrack/templates/site_base.html:280
+#, fuzzy
 msgid ""
 "View a summary of the status of the QC program (QC for groups you belong to)"
 msgstr ""
+"View a summary of the status of the QC program (QC for groups you belong to)"
 
 #: qatrack/templates/site_base.html:282
+#, fuzzy
 msgid "Overview"
-msgstr ""
+msgstr "Overview"
 
 #: qatrack/templates/site_base.html:282 qatrack/templates/site_base.html:298
 #: qatrack/templates/site_base.html:330
+#, fuzzy
 msgid "Your Groups"
-msgstr ""
+msgstr "Your Groups"
 
 #: qatrack/templates/site_base.html:288
+#, fuzzy
 msgid "View QC grouped by due date"
-msgstr ""
+msgstr "View QC grouped by due date"
 
 #: qatrack/templates/site_base.html:290 qatrack/templates/site_base.html:517
+#, fuzzy
 msgid "By Due Status - All"
-msgstr ""
+msgstr "By Due Status - All"
 
 #: qatrack/templates/site_base.html:296
+#, fuzzy
 msgid "View QC for groups you belong to (QC for groups you belong to)"
-msgstr ""
+msgstr "View QC for groups you belong to (QC for groups you belong to)"
 
 #: qatrack/templates/site_base.html:298
+#, fuzzy
 msgid "By Due Status"
-msgstr ""
+msgstr "By Due Status"
 
 #: qatrack/templates/site_base.html:308
+#, fuzzy
 msgid "QC Sessions"
-msgstr ""
+msgstr "QC Sessions"
 
 #: qatrack/templates/site_base.html:312 qatrack/templates/site_base.html:314
-#, python-format
+#, fuzzy, python-format
 msgid "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed "
-msgstr ""
+msgstr "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed "
 
 #: qatrack/templates/site_base.html:317
+#, fuzzy
 msgid "Unreviewed - All Groups"
-msgstr ""
+msgstr "Unreviewed - All Groups"
 
 #: qatrack/templates/site_base.html:322
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed "
 "(QC for groups you belong to)"
 msgstr ""
+"There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed ("
+"QC for groups you belong to)"
 
 #: qatrack/templates/site_base.html:325
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "There are currently %(USERS_UNREVIEWED)s QC Sessions visible to your groups "
 "waiting to be reviewed"
 msgstr ""
+"There are currently %(USERS_UNREVIEWED)s QC Sessions visible to your groups "
+"waiting to be reviewed"
 
 #: qatrack/templates/site_base.html:330 qatrack/templates/site_base.html:669
 #, fuzzy
@@ -1335,76 +1628,93 @@ msgid "Unreviewed"
 msgstr "Unreviewed"
 
 #: qatrack/templates/site_base.html:337
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "There are currently %(SE_RTS_UNREVIEWED_QA_COUNT)s unreviewed return to "
 "service sessions"
 msgstr ""
+"There are currently %(SE_RTS_UNREVIEWED_QA_COUNT)s unreviewed return to "
+"service sessions"
 
 #: qatrack/templates/site_base.html:342 qatrack/templates/site_base.html:569
+#, fuzzy
 msgid "Unreviewed Return To Service"
-msgstr ""
+msgstr "Unreviewed Return To Service"
 
 #: qatrack/templates/site_base.html:348
+#, fuzzy
 msgid "Unreviewed By Visible To Group"
-msgstr ""
+msgstr "Unreviewed By Visible To Group"
 
 #: qatrack/templates/site_base.html:361
+#, fuzzy
 msgid "View all test lists."
-msgstr ""
+msgstr "View all test lists."
 
 #: qatrack/templates/site_base.html:363
+#, fuzzy
 msgid "All Groups Test Lists"
-msgstr ""
+msgstr "All Groups Test Lists"
 
 #: qatrack/templates/site_base.html:369
+#, fuzzy
 msgid "View all your groups test lists."
-msgstr ""
+msgstr "View all your groups test lists."
 
 #: qatrack/templates/site_base.html:374
+#, fuzzy
 msgid "Your Groups Test Lists"
-msgstr ""
+msgstr "Your Groups Test Lists"
 
 #: qatrack/templates/site_base.html:379
+#, fuzzy
 msgid "Choose a unit to review qa lists for."
-msgstr ""
+msgstr "Choose a unit to review qa lists for."
 
 #: qatrack/templates/site_base.html:381
+#, fuzzy
 msgid "Your Test Lists By Unit"
-msgstr ""
+msgstr "Your Test Lists By Unit"
 
 #: qatrack/templates/site_base.html:386
+#, fuzzy
 msgid "Choose a frequency to review qa lists for."
-msgstr ""
+msgstr "Choose a frequency to review qa lists for."
 
 #: qatrack/templates/site_base.html:388
+#, fuzzy
 msgid "Your Test Lists By Frequency"
-msgstr ""
+msgstr "Your Test Lists By Frequency"
 
 #: qatrack/templates/site_base.html:394
+#, fuzzy
 msgid "View all inactive test lists."
-msgstr ""
+msgstr "View all inactive test lists."
 
 #: qatrack/templates/site_base.html:396
+#, fuzzy
 msgid "All Groups Inactive Test Lists"
-msgstr ""
+msgstr "All Groups Inactive Test Lists"
 
 #: qatrack/templates/site_base.html:401
+#, fuzzy
 msgid "View all your inactive test lists."
-msgstr ""
+msgstr "View all your inactive test lists."
 
 #: qatrack/templates/site_base.html:403
+#, fuzzy
 msgid "Your Groups Inactive Test Lists"
-msgstr ""
+msgstr "Your Groups Inactive Test Lists"
 
 #: qatrack/templates/site_base.html:419
-#, python-format
+#, fuzzy, python-format
 msgid "There are currently %(SL_NOTIFICATION_TOTAL)s Service Log Action Items "
-msgstr ""
+msgstr "There are currently %(SL_NOTIFICATION_TOTAL)s Service Log Action Items "
 
 #: qatrack/templates/site_base.html:429
+#, fuzzy
 msgid "Service Log dashboard"
-msgstr ""
+msgstr "Service Log dashboard"
 
 #: qatrack/templates/site_base.html:431
 #, fuzzy
@@ -1417,8 +1727,9 @@ msgid "Service Events"
 msgstr "Service Events"
 
 #: qatrack/templates/site_base.html:442
+#, fuzzy
 msgid "Create a new service event"
-msgstr ""
+msgstr "Create a new service event"
 
 #: qatrack/templates/site_base.html:447
 #, fuzzy
@@ -1426,53 +1737,64 @@ msgid "Enter New Service Event"
 msgstr "Enter New Service Event"
 
 #: qatrack/templates/site_base.html:451
+#, fuzzy
 msgid "Create a new service event for a unit"
-msgstr ""
+msgstr "Create a new service event for a unit"
 
 #: qatrack/templates/site_base.html:453
+#, fuzzy
 msgid "Choose Unit For New Service Event"
-msgstr ""
+msgstr "Choose Unit For New Service Event"
 
 #: qatrack/templates/site_base.html:459
+#, fuzzy
 msgid "View service events for a unit"
-msgstr ""
+msgstr "View service events for a unit"
 
 #: qatrack/templates/site_base.html:464
+#, fuzzy
 msgid "View All Service Events"
-msgstr ""
+msgstr "View All Service Events"
 
 #: qatrack/templates/site_base.html:470
-#, python-format
+#, fuzzy, python-format
 msgid "View service events that are %(service_event_status)s"
-msgstr ""
+msgstr "View service events that are %(service_event_status)s"
 
 #: qatrack/templates/site_base.html:482
+#, fuzzy
 msgid "View service events that require review"
-msgstr ""
+msgstr "View service events that require review"
 
 #: qatrack/templates/site_base.html:496 qatrack/templates/site_base.html:504
+#, fuzzy
 msgid "Service Event Schedules"
-msgstr ""
+msgstr "Service Event Schedules"
 
 #: qatrack/templates/site_base.html:499
+#, fuzzy
 msgid "View all service event schedules"
-msgstr ""
+msgstr "View all service event schedules"
 
 #: qatrack/templates/site_base.html:507
+#, fuzzy
 msgid "View Service Event Schedules that are currently due and overdue"
-msgstr ""
+msgstr "View Service Event Schedules that are currently due and overdue"
 
 #: qatrack/templates/site_base.html:515
+#, fuzzy
 msgid "View Service Event Schedules grouped by due date"
-msgstr ""
+msgstr "View Service Event Schedules grouped by due date"
 
 #: qatrack/templates/site_base.html:522
+#, fuzzy
 msgid "View Service Event Schedules for groups you belong to"
-msgstr ""
+msgstr "View Service Event Schedules for groups you belong to"
 
 #: qatrack/templates/site_base.html:524
+#, fuzzy
 msgid "By Due Status - Your Groups"
-msgstr ""
+msgstr "By Due Status - Your Groups"
 
 #: qatrack/templates/site_base.html:534
 #, fuzzy
@@ -1480,32 +1802,42 @@ msgid "Return To Service QC"
 msgstr "Return To Service QC"
 
 #: qatrack/templates/site_base.html:537
+#, fuzzy
 msgid "View all return to service qa"
-msgstr ""
+msgstr "View all return to service qa"
 
 #: qatrack/templates/site_base.html:542
+#, fuzzy
 msgid "View All Return To Service"
-msgstr ""
+msgstr "View All Return To Service"
 
 #: qatrack/templates/site_base.html:549
+#, fuzzy
 msgid "View all incomplete return to service qa"
-msgstr ""
+msgstr "View all incomplete return to service qa"
 
 #: qatrack/templates/site_base.html:554
+#, fuzzy
 msgid ""
 "There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to "
 "service sessions"
 msgstr ""
+"There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to "
+"service sessions"
 
 #: qatrack/templates/site_base.html:557
+#, fuzzy
 msgid "View All Incomplete Return To Service"
-msgstr ""
+msgstr "View All Incomplete Return To Service"
 
 #: qatrack/templates/site_base.html:566
+#, fuzzy
 msgid ""
 "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to "
 "service sessions"
 msgstr ""
+"There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to "
+"service sessions"
 
 #: qatrack/templates/site_base.html:579
 #, fuzzy
@@ -1513,67 +1845,81 @@ msgid "Parts"
 msgstr "Parts"
 
 #: qatrack/templates/site_base.html:582 qatrack/templates/site_base.html:594
+#, fuzzy
 msgid "Enter new part"
-msgstr ""
+msgstr "Enter new part"
 
 #: qatrack/templates/site_base.html:587
+#, fuzzy
 msgid "Enter New Part"
-msgstr ""
+msgstr "Enter New Part"
 
 #: qatrack/templates/site_base.html:598
+#, fuzzy
 msgid "View All Parts"
-msgstr ""
+msgstr "View All Parts"
 
 #: qatrack/templates/site_base.html:602
+#, fuzzy
 msgid "Low Inventory Parts"
-msgstr ""
+msgstr "Low Inventory Parts"
 
 #: qatrack/templates/site_base.html:606
+#, fuzzy
 msgid "View Low Inventory Parts"
-msgstr ""
+msgstr "View Low Inventory Parts"
 
 #: qatrack/templates/site_base.html:612
+#, fuzzy
 msgid "View Part Suppliers"
-msgstr ""
+msgstr "View Part Suppliers"
 
 #: qatrack/templates/site_base.html:616
+#, fuzzy
 msgid "View All Suppliers"
-msgstr ""
+msgstr "View All Suppliers"
 
 #: qatrack/templates/site_base.html:628
+#, fuzzy
 msgid "Fault Log"
-msgstr ""
+msgstr "Fault Log"
 
 #: qatrack/templates/site_base.html:631
-#, python-format
+#, fuzzy, python-format
 msgid "There are currently %(FAULTS_UNREVIEWED)s Unreviewed Faults"
-msgstr ""
+msgstr "There are currently %(FAULTS_UNREVIEWED)s Unreviewed Faults"
 
 #: qatrack/templates/site_base.html:640
+#, fuzzy
 msgid "Faults"
-msgstr ""
+msgstr "Faults"
 
 #: qatrack/templates/site_base.html:642 qatrack/templates/site_base.html:648
+#, fuzzy
 msgid "Choose a specfic Unit To View Faults For"
-msgstr ""
+msgstr "Choose a specfic Unit To View Faults For"
 
 #: qatrack/templates/site_base.html:644
+#, fuzzy
 msgid "Choose Unit to View Faults"
-msgstr ""
+msgstr "Choose Unit to View Faults"
 
 #: qatrack/templates/site_base.html:653
+#, fuzzy
 msgid "Enter a new fault"
-msgstr ""
+msgstr "Enter a new fault"
 
 #: qatrack/templates/site_base.html:657 qatrack/templates/site_base.html:659
+#, fuzzy
 msgid "All Faults"
-msgstr ""
+msgstr "All Faults"
 
 #: qatrack/templates/site_base.html:664 qatrack/templates/site_base.html:666
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "There are currently %(FAULTS_UNREVIEWED)s faults waiting to be reviewed "
 msgstr ""
+"There are currently %(FAULTS_UNREVIEWED)s faults waiting to be reviewed "
 
 #: qatrack/templates/site_base.html:673
 #, fuzzy
@@ -1581,20 +1927,24 @@ msgid "Fault Types"
 msgstr "Fault Types"
 
 #: qatrack/templates/site_base.html:675
+#, fuzzy
 msgid "All Fault Types"
-msgstr ""
+msgstr "All Fault Types"
 
 #: qatrack/templates/site_base.html:685
+#, fuzzy
 msgid "Trends and Analysis"
-msgstr ""
+msgstr "Trends and Analysis"
 
 #: qatrack/templates/site_base.html:692 qatrack/templates/site_base.html:694
+#, fuzzy
 msgid "Charts"
-msgstr ""
+msgstr "Charts"
 
 #: qatrack/templates/site_base.html:700
+#, fuzzy
 msgid "Run QATrack+ Reports"
-msgstr ""
+msgstr "Run QATrack+ Reports"
 
 #: qatrack/templates/site_base.html:702
 #, fuzzy
@@ -1602,61 +1952,76 @@ msgid "Reports"
 msgstr "Reports"
 
 #: qatrack/templates/site_base.html:709
+#, fuzzy
 msgid "SQL Query Tool"
-msgstr ""
+msgstr "SQL Query Tool"
 
 #: qatrack/templates/site_base.html:711
+#, fuzzy
 msgid "Query Tool"
-msgstr ""
+msgstr "Query Tool"
 
 #: qatrack/templates/site_base.html:721
+#, fuzzy
 msgid "View service event durations and lost time"
-msgstr ""
+msgstr "View service event durations and lost time"
 
 #: qatrack/templates/site_base.html:726
+#, fuzzy
 msgid "Service and Lost Time"
-msgstr ""
+msgstr "Service and Lost Time"
 
 #: qatrack/templates/site_base.html:737
+#, fuzzy
 msgid "Issue Tracker"
-msgstr ""
+msgstr "Issue Tracker"
 
 #: qatrack/templates/site_base.html:742 qatrack/templates/site_base.html:748
+#, fuzzy
 msgid "All Issues"
-msgstr ""
+msgstr "All Issues"
 
 #: qatrack/templates/site_base.html:755
+#, fuzzy
 msgid "Create a new issue"
-msgstr ""
+msgstr "Create a new issue"
 
 #: qatrack/templates/site_base.html:760
+#, fuzzy
 msgid "Create Issue"
-msgstr ""
+msgstr "Create Issue"
 
 #: qatrack/templates/site_base.html:819
+#, fuzzy
 msgid "Documentation"
-msgstr ""
+msgstr "Documentation"
 
 #: qatrack/templates/site_base.html:841
+#, fuzzy
 msgid "Logout"
-msgstr ""
+msgstr "Logout"
 
 #: qatrack/templates/site_base.html:852
+#, fuzzy
 msgid "Admin"
-msgstr ""
+msgstr "Admin"
 
 #: qatrack/templates/site_base.html:860
+#, fuzzy
 msgid "Unit Available Times"
-msgstr ""
+msgstr "Unit Available Times"
 
 #: qatrack/templates/site_base.html:871
+#, fuzzy
 msgid "Groups & Permissions"
-msgstr ""
+msgstr "Groups & Permissions"
 
 #: qatrack/templates/site_base.html:884
+#, fuzzy
 msgid "Login"
-msgstr ""
+msgstr "Login"
 
 #: qatrack/templates/site_error.html:3 qatrack/templates/site_error.html:8
+#, fuzzy
 msgid "Error"
-msgstr ""
+msgstr "Error"
