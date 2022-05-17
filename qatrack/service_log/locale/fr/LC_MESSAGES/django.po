@@ -1012,7 +1012,7 @@ msgstr "Please correct the Service Event Details error below."
 msgid ""
 "Due to changes detected, service event {instance_id} status has been reset "
 "to {default_name}"
-msgstr "Due to changes detected, service event %s status has been reset to %s"
+msgstr "Due to changes detected, service event {instance_id} status has been reset to {default_name}"
 
 #: qatrack/service_log/views.py:438
 #, fuzzy
