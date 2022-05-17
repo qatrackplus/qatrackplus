@@ -20,8 +20,9 @@ msgstr ""
 "X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/units/forms.py:18
+#, fuzzy
 msgid "Duration can not be greater than 24 hours"
-msgstr ""
+msgstr "Duration can not be greater than 24 hours"
 
 #: qatrack/units/models.py:265
 #: qatrack/units/templates/units/unittype_list.html:78
@@ -30,49 +31,63 @@ msgid "Other"
 msgstr "Other"
 
 #: qatrack/units/templates/units/table_context_u_actions.html:3
+#, fuzzy
 msgid "Parts Cost"
-msgstr ""
+msgstr "Parts Cost"
 
 #: qatrack/units/templates/units/table_context_u_actions.html:4
+#, fuzzy
 msgid "Available Time"
-msgstr ""
+msgstr "Available Time"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:9
+#, fuzzy
 msgid "Change Units Available Time"
-msgstr ""
+msgstr "Change Units Available Time"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:39
+#, fuzzy
 msgid "Change Unit Available Times"
-msgstr ""
+msgstr "Change Unit Available Times"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:59
+#, fuzzy
 msgid ""
 "Select one or more days to Edit the Available Time of the selected units​"
 msgstr ""
+"Select one or more days to Edit the Available Time of the selected units​"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:61
+#, fuzzy
 msgid "Edit Available Time"
-msgstr ""
+msgstr "Edit Available Time"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:69
+#, fuzzy
 msgid "Select an effective date to Edit the Schedule of the selected units"
-msgstr ""
+msgstr "Select an effective date to Edit the Schedule of the selected units"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:71
+#, fuzzy
 msgid "Edit Schedule"
-msgstr ""
+msgstr "Edit Schedule"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:79
+#, fuzzy
 msgid ""
 "Select one or more days to Delete Available Time Changes and Schedule "
 "Changes of the selected units​"
 msgstr ""
+"Select one or more days to Delete Available Time Changes and Schedule "
+"Changes of the selected units​"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:80
+#, fuzzy
 msgid "Delete Changes"
-msgstr ""
+msgstr "Delete Changes"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:98
+#, fuzzy
 msgid ""
 "\n"
 "                  Click to select a single day. Ctrl click to select "
@@ -83,58 +98,79 @@ msgid ""
 "the user​.\n"
 "                "
 msgstr ""
+"\n"
+"                  Click to select a single day. Ctrl click to select "
+"different days. Shift click to\n"
+"                  select a group of days.​ <b>A</b> denotes Acceptance date, "
+"<b>C</b> denotes Schedule Change,\n"
+"                  Available Time Changes are identified by a label input by "
+"the user​.\n"
+"                "
 
 #: qatrack/units/templates/units/unit_available_time_change.html:122
+#, fuzzy
 msgid "Edit available time for selected units and selected days.​"
-msgstr ""
+msgstr "Edit available time for selected units and selected days.​"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:146
+#, fuzzy
 msgid "Insert or change avaialble times for selected days and units."
-msgstr ""
+msgstr "Insert or change avaialble times for selected days and units."
 
 #: qatrack/units/templates/units/unit_available_time_change.html:147
+#, fuzzy
 msgid "Update Available Time"
-msgstr ""
+msgstr "Update Available Time"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:162
+#, fuzzy
 msgid "Edit schedule for selected units."
-msgstr ""
+msgstr "Edit schedule for selected units."
 
 #: qatrack/units/templates/units/unit_available_time_change.html:169
+#, fuzzy
 msgid "Effective Date"
-msgstr ""
+msgstr "Effective Date"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:178
+#, fuzzy
 msgid "Hours (hh:mm)"
-msgstr ""
+msgstr "Hours (hh:mm)"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:182
+#, fuzzy
 msgid "Sunday"
-msgstr ""
+msgstr "Sunday"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:183
+#, fuzzy
 msgid "Monday"
-msgstr ""
+msgstr "Monday"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:184
+#, fuzzy
 msgid "Tuesday"
-msgstr ""
+msgstr "Tuesday"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:185
+#, fuzzy
 msgid "Wednesday"
-msgstr ""
+msgstr "Wednesday"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:186
+#, fuzzy
 msgid "Thursday"
-msgstr ""
+msgstr "Thursday"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:187
+#, fuzzy
 msgid "Friday"
-msgstr ""
+msgstr "Friday"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:188
+#, fuzzy
 msgid "Saturday"
-msgstr ""
+msgstr "Saturday"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:192
 #: qatrack/units/templates/units/unit_available_time_change.html:195
@@ -143,8 +179,9 @@ msgstr ""
 #: qatrack/units/templates/units/unit_available_time_change.html:204
 #: qatrack/units/templates/units/unit_available_time_change.html:207
 #: qatrack/units/templates/units/unit_available_time_change.html:210
+#, fuzzy
 msgid "hours"
-msgstr ""
+msgstr "hours"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:224
 #, fuzzy
@@ -152,8 +189,9 @@ msgid "Update Schedule"
 msgstr "Update Schedule"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:237
+#, fuzzy
 msgid "Delete all schedule changes for selected units and days?"
-msgstr ""
+msgstr "Delete all schedule changes for selected units and days?"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:241
 #, fuzzy
@@ -166,20 +204,24 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:258
+#, fuzzy
 msgid "Loading..."
-msgstr ""
+msgstr "Loading..."
 
 #: qatrack/units/templates/units/units_list.html:41
+#, fuzzy
 msgid "For units selected below..."
-msgstr ""
+msgstr "For units selected below..."
 
 #: qatrack/units/templates/units/units_list.html:44
+#, fuzzy
 msgid "Parts Costs Reports"
-msgstr ""
+msgstr "Parts Costs Reports"
 
 #: qatrack/units/templates/units/units_list.html:46
+#, fuzzy
 msgid "Change Available Times"
-msgstr ""
+msgstr "Change Available Times"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:8
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:8
@@ -190,12 +232,14 @@ msgstr "Choose Unit"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:19
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:63
+#, fuzzy
 msgid "Choose a Unit to View Faults for"
-msgstr ""
+msgstr "Choose a Unit to View Faults for"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:22
+#, fuzzy
 msgid "Click a button to view faults for one of the units below."
-msgstr ""
+msgstr "Click a button to view faults for one of the units below."
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:31
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:83
@@ -205,9 +249,9 @@ msgstr ""
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:99
 #: qatrack/units/templates/units/unittype_list.html:30
 #: qatrack/units/templates/units/unittype_list.html:91
-#, python-format
+#, fuzzy, python-format
 msgid "Click to show %(unit_type)s units"
-msgstr ""
+msgstr "Click to show %(unit_type)s units"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:32
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:84
@@ -217,29 +261,33 @@ msgstr ""
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:100
 #: qatrack/units/templates/units/unittype_list.html:31
 #: qatrack/units/templates/units/unittype_list.html:92
-#, python-format
+#, fuzzy, python-format
 msgid "Click to hide %(unit_type)s units"
-msgstr ""
+msgstr "Click to hide %(unit_type)s units"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:66
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:29
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:81
+#, fuzzy
 msgid "Click a button to view service events for one of the units below."
-msgstr ""
+msgstr "Click a button to view service events for one of the units below."
 
 #: qatrack/units/templates/units/unittype_choose_for_review.html:9
+#, fuzzy
 msgid "Choose Unit for Review"
-msgstr ""
+msgstr "Choose Unit for Review"
 
 #: qatrack/units/templates/units/unittype_choose_for_review.html:20
 #: qatrack/units/templates/units/unittype_choose_for_review.html:64
+#, fuzzy
 msgid "Review QC By Unit"
-msgstr ""
+msgstr "Review QC By Unit"
 
 #: qatrack/units/templates/units/unittype_choose_for_review.html:21
 #: qatrack/units/templates/units/unittype_choose_for_review.html:65
+#, fuzzy
 msgid "Choose a unit below to review its QC Data."
-msgstr ""
+msgstr "Choose a unit below to review its QC Data."
 
 #: qatrack/units/templates/units/unittype_choose_for_review.html:43
 #: qatrack/units/templates/units/unittype_choose_for_review.html:95
@@ -249,42 +297,48 @@ msgstr "All"
 
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:20
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:72
+#, fuzzy
 msgid "Choose a Unit to Create a New Service Event for"
-msgstr ""
+msgstr "Choose a Unit to Create a New Service Event for"
 
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:22
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:74
+#, fuzzy
 msgid "Choose a Unit to View Service Events for"
-msgstr ""
+msgstr "Choose a Unit to View Service Events for"
 
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:27
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:79
+#, fuzzy
 msgid "Click a button to create a service event for one of the units below."
-msgstr ""
+msgstr "Click a button to create a service event for one of the units below."
 
 #: qatrack/units/templates/units/unittype_list.html:19
 #: qatrack/units/templates/units/unittype_list.html:67
+#, fuzzy
 msgid "Choose a Unit to Perform QC On"
-msgstr ""
+msgstr "Choose a Unit to Perform QC On"
 
 #: qatrack/units/templates/units/unittype_list.html:20
 #: qatrack/units/templates/units/unittype_list.html:68
+#, fuzzy
 msgid "Click a button to perform QC for one of the units below."
-msgstr ""
+msgstr "Click a button to perform QC for one of the units below."
 
 #: qatrack/units/templates/units/unittype_list.html:45
-#, python-format
+#, fuzzy, python-format
 msgid "Click to hid %(unit_type)s units"
-msgstr ""
+msgstr "Click to hid %(unit_type)s units"
 
 #: qatrack/units/templates/units/unittype_list.html:77
+#, fuzzy
 msgid "Click to view all QC at Site: "
-msgstr ""
+msgstr "Click to view all QC at Site: "
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:16
-#, python-format
+#, fuzzy, python-format
 msgid "Choose %(unit_name)s QC by Frequency"
-msgstr ""
+msgstr "Choose %(unit_name)s QC by Frequency"
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:32
 #, fuzzy
@@ -292,11 +346,11 @@ msgid "Ad Hoc"
 msgstr "Ad Hoc"
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:43
-#, python-format
+#, fuzzy, python-format
 msgid "Choose %(unit_name)s QC by Category"
-msgstr ""
+msgstr "Choose %(unit_name)s QC by Category"
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:55
-#, python-format
+#, fuzzy, python-format
 msgid "Click to view all %(category_name)s QC for Unit %(unit_name)s"
-msgstr ""
+msgstr "Click to view all %(category_name)s QC for Unit %(unit_name)s"
