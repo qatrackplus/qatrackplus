@@ -174,7 +174,7 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
 # Middleware
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    #'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
