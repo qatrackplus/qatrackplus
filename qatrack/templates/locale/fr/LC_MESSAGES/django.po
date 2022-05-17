@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:57+0000\n"
+"PO-Revision-Date: 2022-05-17 11:58+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -21,14 +21,18 @@ msgstr ""
 "X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/templates/_form_horizontal.html:71
+#, fuzzy
 msgid ""
 "Click to add attachments. (Hold Ctrl or Cmd in the dialog to include "
 "multiple attachments)"
 msgstr ""
+"Click to add attachments. (Hold Ctrl or Cmd in the dialog to include "
+"multiple attachments)"
 
 #: qatrack/templates/_form_horizontal.html:72
+#, fuzzy
 msgid "Browse"
-msgstr ""
+msgstr "Browse"
 
 #: qatrack/templates/admin/app_index.html:9
 #: qatrack/templates/admin/change_form.html:44
@@ -68,8 +72,9 @@ msgstr ""
 
 #: qatrack/templates/admin/change_form.html:55
 #: qatrack/templates/admin/index.html:29
+#, fuzzy
 msgid "Add"
-msgstr ""
+msgstr "Add"
 
 #: qatrack/templates/admin/change_form.html:65
 #: qatrack/templates/explorer/base.html:64
@@ -816,8 +821,9 @@ msgid "QATrack+ Homepage"
 msgstr ""
 
 #: qatrack/templates/homepage.html:23
+#, fuzzy
 msgid "Welcome to QATrack+"
-msgstr ""
+msgstr "Welcome to QATrack+"
 
 #: qatrack/templates/homepage.html:29 qatrack/templates/site_base.html:170
 msgid "Perform QC"
@@ -1401,20 +1407,23 @@ msgid "Service Log dashboard"
 msgstr ""
 
 #: qatrack/templates/site_base.html:431
+#, fuzzy
 msgid "Service Log Dashboard"
-msgstr ""
+msgstr "Service Log Dashboard"
 
 #: qatrack/templates/site_base.html:439
+#, fuzzy
 msgid "Service Events"
-msgstr ""
+msgstr "Service Events"
 
 #: qatrack/templates/site_base.html:442
 msgid "Create a new service event"
 msgstr ""
 
 #: qatrack/templates/site_base.html:447
+#, fuzzy
 msgid "Enter New Service Event"
-msgstr ""
+msgstr "Enter New Service Event"
 
 #: qatrack/templates/site_base.html:451
 msgid "Create a new service event for a unit"
@@ -1499,8 +1508,9 @@ msgid ""
 msgstr ""
 
 #: qatrack/templates/site_base.html:579
+#, fuzzy
 msgid "Parts"
-msgstr ""
+msgstr "Parts"
 
 #: qatrack/templates/site_base.html:582 qatrack/templates/site_base.html:594
 msgid "Enter new part"
