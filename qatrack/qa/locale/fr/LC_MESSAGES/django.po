@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"PO-Revision-Date: 2022-05-17 11:56+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/qa/fr/>"
 "\n"
@@ -616,8 +616,9 @@ msgstr ""
 #: qatrack/qa/templates/qa/testlistinstance_list.html:85
 #: qatrack/qa/templates/qa/testlistinstance_review.html:285
 #: qatrack/qa/templates/qa/testlistinstance_review.html:478
+#, fuzzy
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:99
 #, fuzzy
