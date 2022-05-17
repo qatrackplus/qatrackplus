@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-17 10:30-0400\n"
-"PO-Revision-Date: 2022-05-17 13:18+0000\n"
+"PO-Revision-Date: 2022-05-17 15:26+0000\n"
 "Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -1001,9 +1001,8 @@ msgid "Choose a Unit to perform qa on"
 msgstr "Choose a Unit to perform qa on"
 
 #: qatrack/templates/homepage.html:32
-#, fuzzy
 msgid "Choose a unit to perform QC for"
-msgstr "Choose a unit to perform QC for"
+msgstr "Choisir une unité sur laquelle faire un CQ"
 
 #: qatrack/templates/homepage.html:34
 #, fuzzy
