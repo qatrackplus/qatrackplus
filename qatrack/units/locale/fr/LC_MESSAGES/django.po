@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"PO-Revision-Date: 2022-05-17 11:56+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/units/"
 "fr/>\n"
@@ -241,8 +241,9 @@ msgstr ""
 
 #: qatrack/units/templates/units/unittype_choose_for_review.html:43
 #: qatrack/units/templates/units/unittype_choose_for_review.html:95
+#, fuzzy
 msgid "All"
-msgstr ""
+msgstr "All"
 
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:20
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:72
@@ -284,8 +285,9 @@ msgid "Choose %(unit_name)s QC by Frequency"
 msgstr ""
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:32
+#, fuzzy
 msgid "Ad Hoc"
-msgstr ""
+msgstr "Ad Hoc"
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:43
 #, python-format
