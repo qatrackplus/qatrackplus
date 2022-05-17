@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:56+0000\n"
+"PO-Revision-Date: 2022-05-17 11:57+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -81,8 +81,9 @@ msgstr "History"
 #: qatrack/templates/admin/change_form.html:66
 #: qatrack/templates/admin/parts/storage/edit_inline/tabular_paginated.html:127
 #: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:30
+#, fuzzy
 msgid "View on site"
-msgstr ""
+msgstr "View on site"
 
 #: qatrack/templates/admin/change_form.html:77
 #: qatrack/templates/admin/change_list.html:71
@@ -278,8 +279,9 @@ msgstr "Test"
 
 #: qatrack/templates/admin/qa/testpack/export.html:120
 #: qatrack/templates/admin/qa/testpack/import.html:119
+#, fuzzy
 msgid "Category"
-msgstr ""
+msgstr "Category"
 
 #: qatrack/templates/admin/qa/testpack/export.html:121
 #: qatrack/templates/admin/qa/testpack/import.html:120
@@ -323,8 +325,9 @@ msgstr ""
 #: qatrack/templates/admin/qa/testpack/export.html:197
 #: qatrack/templates/explorer/play.html:68
 #: qatrack/templates/explorer/query.html:117
+#, fuzzy
 msgid "Download"
-msgstr ""
+msgstr "Download"
 
 #: qatrack/templates/admin/qa/testpack/import.html:19
 #, fuzzy
@@ -404,8 +407,9 @@ msgid "Preview Copying Reference & Tolerances "
 msgstr ""
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:21
+#, fuzzy
 msgid "Test List (Cycle)"
-msgstr ""
+msgstr "Test List (Cycle)"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:25
 msgid "Source Unit"
@@ -448,8 +452,9 @@ msgid "Date/time"
 msgstr ""
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:8
+#, fuzzy
 msgid "User"
-msgstr ""
+msgstr "User"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:9
 msgid "Old Reference"
@@ -584,8 +589,9 @@ msgid "Playground Query"
 msgstr ""
 
 #: qatrack/templates/explorer/preview_pane.html:9
+#, fuzzy
 msgid "Preview"
-msgstr ""
+msgstr "Preview"
 
 #: qatrack/templates/explorer/preview_pane.html:13
 msgid "Snapshots"
@@ -1581,8 +1587,9 @@ msgid "Run QATrack+ Reports"
 msgstr ""
 
 #: qatrack/templates/site_base.html:702
+#, fuzzy
 msgid "Reports"
-msgstr ""
+msgstr "Reports"
 
 #: qatrack/templates/site_base.html:709
 msgid "SQL Query Tool"
