@@ -3,20 +3,21 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
+"notifications/fr/>\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/notifications/common/admin.py:43
 msgid "The following emails are invalid"
@@ -70,8 +71,9 @@ msgid "The following fault was just logged:"
 msgstr ""
 
 #: qatrack/notifications/templates/faults/email.html:28
+#, fuzzy
 msgid "Fault"
-msgstr ""
+msgstr "Fault"
 
 #: qatrack/notifications/templates/faults/email.html:31
 #: qatrack/notifications/templates/parts/email.html:31
@@ -83,26 +85,30 @@ msgid "Click to view on the site"
 msgstr ""
 
 #: qatrack/notifications/templates/faults/email.html:38
+#, fuzzy
 msgid "Fault Types"
-msgstr ""
+msgstr "Fault Types"
 
 #: qatrack/notifications/templates/faults/email.html:42
+#, fuzzy
 msgid "Occurred"
-msgstr ""
+msgstr "Occurred"
 
 #: qatrack/notifications/templates/faults/email.html:46
 #: qatrack/notifications/templates/faults_review/email.html:39
 #: qatrack/notifications/templates/service_log_review/email.html:39
+#, fuzzy
 msgid "Unit"
-msgstr ""
+msgstr "Unit"
 
 #: qatrack/notifications/templates/faults/email.html:50
 msgid "Treatment or Imaging Modality"
 msgstr ""
 
 #: qatrack/notifications/templates/faults/email.html:55
+#, fuzzy
 msgid "Not Specified"
-msgstr ""
+msgstr "Not Specified"
 
 #: qatrack/notifications/templates/faults_review/email.html:4
 #: qatrack/notifications/templates/faults_review/email.html:5
@@ -110,8 +116,9 @@ msgid "QATrack+ Faults Review Notice"
 msgstr ""
 
 #: qatrack/notifications/templates/faults_review/email.html:40
+#, fuzzy
 msgid "Fault Type"
-msgstr ""
+msgstr "Fault Type"
 
 #: qatrack/notifications/templates/faults_review/email.html:41
 #: qatrack/notifications/templates/service_log_review/email.html:41
@@ -176,8 +183,9 @@ msgid ""
 msgstr ""
 
 #: qatrack/notifications/templates/service_log/email.html:43
+#, fuzzy
 msgid "Created"
-msgstr ""
+msgstr "Created"
 
 #: qatrack/notifications/templates/service_log/email.html:47
 msgid "Unit &amp; Service Area"
@@ -233,8 +241,9 @@ msgid "Requires Review"
 msgstr ""
 
 #: qatrack/notifications/templates/service_log/email.html:121
+#, fuzzy
 msgid "Reviewed"
-msgstr ""
+msgstr "Reviewed"
 
 #: qatrack/notifications/templates/service_log/email.html:128
 msgid "Changes"
