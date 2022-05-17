@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:53+0000\n"
+"PO-Revision-Date: 2022-05-17 11:55+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -20,8 +20,9 @@ msgstr ""
 "X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/service_log/admin.py:274
+#, fuzzy
 msgid "Not Specified"
-msgstr ""
+msgstr "Not Specified"
 
 #: qatrack/service_log/admin.py:310
 #, python-format
@@ -71,8 +72,9 @@ msgid "Performed"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/log_rtsqa.html:43
+#, fuzzy
 msgid "Reviewed"
-msgstr ""
+msgstr "Reviewed"
 
 #: qatrack/service_log/templates/service_log/log_rtsqa.html:46
 msgid "Deleted"
@@ -183,8 +185,9 @@ msgstr "Name"
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:136
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:144
 #: qatrack/service_log/templates/service_log/service_event_detail.html:115
+#, fuzzy
 msgid "Unit"
-msgstr ""
+msgstr "Unit"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:137
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:145
@@ -225,8 +228,9 @@ msgstr ""
 #: qatrack/service_log/templates/service_log/service_event_update.html:531
 #: qatrack/service_log/templates/service_log/service_event_update.html:590
 #: qatrack/service_log/templates/service_log/service_event_update.html:655
+#, fuzzy
 msgid "Delete"
-msgstr ""
+msgstr "Delete"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:11
 #: qatrack/service_log/templates/service_log/serviceeventtemplate_base.html:11
@@ -244,8 +248,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:42
 #: qatrack/service_log/templates/service_log/service_event_update.html:98
+#, fuzzy
 msgid "Created"
-msgstr ""
+msgstr "Created"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:46
 #, python-format
@@ -289,8 +294,9 @@ msgstr ""
 #: qatrack/service_log/templates/service_log/service_event_detail.html:524
 #: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:10
 #: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:17
+#, fuzzy
 msgid "Edit"
-msgstr ""
+msgstr "Edit"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:112
 msgid "Service date"
@@ -347,8 +353,9 @@ msgid "View test list instance"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:192
+#, fuzzy
 msgid "View"
-msgstr ""
+msgstr "View"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:196
 msgid "New tab: view test list instance"
@@ -413,8 +420,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:333
 #: qatrack/service_log/templates/service_log/service_event_update.html:521
+#, fuzzy
 msgid "Attachments"
-msgstr ""
+msgstr "Attachments"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:363
 #: qatrack/service_log/templates/service_log/service_event_update.html:395
@@ -454,8 +462,9 @@ msgstr ""
 #: qatrack/service_log/templates/service_log/service_event_detail.html:397
 #: qatrack/service_log/templates/service_log/service_event_update.html:778
 #: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:20
+#, fuzzy
 msgid "Review"
-msgstr ""
+msgstr "Review"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:401
 msgid "New tab: review test list instance"
@@ -477,13 +486,15 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:440
 #: qatrack/service_log/templates/service_log/service_event_update.html:460
+#, fuzzy
 msgid "Comments"
-msgstr ""
+msgstr "Comments"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:462
 #: qatrack/service_log/templates/service_log/service_event_update.html:485
+#, fuzzy
 msgid "Post Comment"
-msgstr ""
+msgstr "Post Comment"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:477
 msgid "Parts"
@@ -644,8 +655,9 @@ msgid "Add another RTS QC object."
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:480
+#, fuzzy
 msgid "Add comment"
-msgstr ""
+msgstr "Add comment"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:530
 msgid "Filename"
@@ -686,8 +698,9 @@ msgid "Create Template"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:839
+#, fuzzy
 msgid "Cancel"
-msgstr ""
+msgstr "Cancel"
 
 #: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:5
 msgid "Export"
@@ -775,8 +788,9 @@ msgid "Click to edit this Service Event"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:17
+#, fuzzy
 msgid "Details"
-msgstr ""
+msgstr "Details"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:8
 msgid "Create a Service Event with this template"
@@ -826,8 +840,9 @@ msgid "Please correct the Return to Service QC error below."
 msgstr ""
 
 #: qatrack/service_log/views.py:948 qatrack/service_log/views.py:1824
+#, fuzzy
 msgid "Other"
-msgstr ""
+msgstr "Other"
 
 #: qatrack/service_log/views.py:1822 qatrack/service_log/views.py:1926
 msgid "Ad Hoc"
