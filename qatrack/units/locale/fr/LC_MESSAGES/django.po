@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:57+0000\n"
+"PO-Revision-Date: 2022-05-17 11:58+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/units/"
 "fr/>\n"
@@ -184,8 +184,9 @@ msgstr ""
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:8
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:8
 #: qatrack/units/templates/units/unittype_list.html:8
+#, fuzzy
 msgid "Choose Unit"
-msgstr ""
+msgstr "Choose Unit"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:19
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:63
