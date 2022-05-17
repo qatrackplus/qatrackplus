@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:53+0000\n"
+"PO-Revision-Date: 2022-05-17 11:55+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/faults/"
 "fr/>\n"
@@ -21,286 +21,347 @@ msgstr ""
 
 #: qatrack/faults/templates/faults/_fault_details.html:7
 #: qatrack/faults/templates/faults/fault_form.html:71
+#, fuzzy
 msgid "Fault Details"
-msgstr ""
+msgstr "Fault Details"
 
 #: qatrack/faults/templates/faults/_fault_details.html:11
 #: qatrack/faults/templates/faults/fault_list.html:82
+#, fuzzy
 msgid "Fault"
-msgstr ""
+msgstr "Fault"
 
 #: qatrack/faults/templates/faults/_fault_details.html:14
+#, fuzzy
 msgid "Occurred"
-msgstr ""
+msgstr "Occurred"
 
 #: qatrack/faults/templates/faults/_fault_details.html:17
+#, fuzzy
 msgid "Site"
-msgstr ""
+msgstr "Site"
 
 #: qatrack/faults/templates/faults/_fault_details.html:22
 #: qatrack/faults/views.py:151
+#, fuzzy
 msgid "Other"
-msgstr ""
+msgstr "Other"
 
 #: qatrack/faults/templates/faults/_fault_details.html:26
 #: qatrack/faults/templates/faults/fault_list.html:83
+#, fuzzy
 msgid "Unit"
-msgstr ""
+msgstr "Unit"
 
 #: qatrack/faults/templates/faults/_fault_details.html:30
+#, fuzzy
 msgid "Click to view all faults on this unit"
-msgstr ""
+msgstr "Click to view all faults on this unit"
 
 #: qatrack/faults/templates/faults/_fault_details.html:36
+#, fuzzy
 msgid "Modality / Beam"
-msgstr ""
+msgstr "Modality / Beam"
 
 #: qatrack/faults/templates/faults/_fault_details.html:41
+#, fuzzy
 msgid "Not Specified"
-msgstr ""
+msgstr "Not Specified"
 
 #: qatrack/faults/templates/faults/_fault_details.html:45
+#, fuzzy
 msgid "Created"
-msgstr ""
+msgstr "Created"
 
 #: qatrack/faults/templates/faults/_fault_details.html:50
+#, fuzzy
 msgid "Last Modified"
-msgstr ""
+msgstr "Last Modified"
 
 #: qatrack/faults/templates/faults/_fault_details.html:55
+#, fuzzy
 msgid "Reviewed"
-msgstr ""
+msgstr "Reviewed"
 
 #: qatrack/faults/templates/faults/_fault_details.html:64
 #: qatrack/faults/templates/faults/_fault_details.html:69
 #: qatrack/faults/templates/faults/fault_review_status.html:16
+#, fuzzy
 msgid "Unreviewed "
-msgstr ""
+msgstr "Unreviewed "
 
 #: qatrack/faults/templates/faults/_fault_details.html:77
+#, fuzzy
 msgid "Fault Types"
-msgstr ""
+msgstr "Fault Types"
 
 #: qatrack/faults/templates/faults/_fault_details.html:81
 #: qatrack/faults/templates/faults/fault_type_details.html:44
+#, fuzzy
 msgid "Code"
-msgstr ""
+msgstr "Code"
 
 #: qatrack/faults/templates/faults/_fault_details.html:85
+#, fuzzy
 msgid "Click to view details of this fault type"
-msgstr ""
+msgstr "Click to view details of this fault type"
 
 #: qatrack/faults/templates/faults/_fault_details.html:90
 #: qatrack/faults/templates/faults/fault_type_details.html:47
+#, fuzzy
 msgid "Description"
-msgstr ""
+msgstr "Description"
 
 #: qatrack/faults/templates/faults/_fault_details.html:95
 #: qatrack/faults/templates/faults/fault_type_description.html:8
 #: qatrack/faults/templates/faults/fault_type_details.html:52
+#, fuzzy
 msgid "No description available"
-msgstr ""
+msgstr "No description available"
 
 #: qatrack/faults/templates/faults/_fault_details.html:101
+#, fuzzy
 msgid "Related Service Events"
-msgstr ""
+msgstr "Related Service Events"
 
 #: qatrack/faults/templates/faults/_fault_details.html:104
+#, fuzzy
 msgid "Service events"
-msgstr ""
+msgstr "Service events"
 
 #: qatrack/faults/templates/faults/_fault_details.html:115
+#, fuzzy
 msgid "No related service events"
-msgstr ""
+msgstr "No related service events"
 
 #: qatrack/faults/templates/faults/_fault_details.html:127
+#, fuzzy
 msgid "Attachments"
-msgstr ""
+msgstr "Attachments"
 
 #: qatrack/faults/templates/faults/_fault_details.html:131
+#, fuzzy
 msgid "Files"
-msgstr ""
+msgstr "Files"
 
 #: qatrack/faults/templates/faults/fault_actions.html:6
-#, python-format
+#, fuzzy, python-format
 msgid "View details of %(fault)s"
-msgstr ""
+msgstr "View details of %(fault)s"
 
 #: qatrack/faults/templates/faults/fault_actions.html:9
+#, fuzzy
 msgid "Review"
-msgstr ""
+msgstr "Review"
 
 #: qatrack/faults/templates/faults/fault_actions.html:11
+#, fuzzy
 msgid "Details"
-msgstr ""
+msgstr "Details"
 
 #: qatrack/faults/templates/faults/fault_actions.html:18
 #: qatrack/faults/templates/faults/fault_details.html:65
-#, python-format
+#, fuzzy, python-format
 msgid "Edit details of %(fault)s"
-msgstr ""
+msgstr "Edit details of %(fault)s"
 
 #: qatrack/faults/templates/faults/fault_actions.html:19
 #: qatrack/faults/templates/faults/fault_details.html:66
+#, fuzzy
 msgid "Edit"
-msgstr ""
+msgstr "Edit"
 
 #: qatrack/faults/templates/faults/fault_confirm_delete.html:34
+#, fuzzy
 msgid "Are you sure you want to <strong>permanently</strong> this fault?"
-msgstr ""
+msgstr "Are you sure you want to <strong>permanently</strong> this fault?"
 
 #: qatrack/faults/templates/faults/fault_details.html:9
-#, python-format
+#, fuzzy, python-format
 msgid "Fault ID %(fault_id)s"
-msgstr ""
+msgstr "Fault ID %(fault_id)s"
 
 #: qatrack/faults/templates/faults/fault_details.html:49
+#, fuzzy
 msgid ""
 "This will redirect you to a page where you can permanently delete this fault"
 msgstr ""
+"This will redirect you to a page where you can permanently delete this fault"
 
 #: qatrack/faults/templates/faults/fault_details.html:52
+#, fuzzy
 msgid "Delete"
-msgstr ""
+msgstr "Delete"
 
 #: qatrack/faults/templates/faults/fault_details.html:57
+#, fuzzy
 msgid "Unapprove This Fault"
-msgstr ""
+msgstr "Unapprove This Fault"
 
 #: qatrack/faults/templates/faults/fault_details.html:59
+#, fuzzy
 msgid "Approve This Fault"
-msgstr ""
+msgstr "Approve This Fault"
 
 #: qatrack/faults/templates/faults/fault_details.html:82
 #: qatrack/faults/templates/faults/fault_form.html:133
+#, fuzzy
 msgid "Comments"
-msgstr ""
+msgstr "Comments"
 
 #: qatrack/faults/templates/faults/fault_details.html:102
 #: qatrack/faults/templates/faults/fault_form.html:153
+#, fuzzy
 msgid "Add comment"
-msgstr ""
+msgstr "Add comment"
 
 #: qatrack/faults/templates/faults/fault_details.html:106
 #: qatrack/faults/templates/faults/fault_form.html:157
+#, fuzzy
 msgid "Post Comment"
-msgstr ""
+msgstr "Post Comment"
 
 #: qatrack/faults/templates/faults/fault_details.html:122
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "              Other Occurrences of fault type %(fault_type_code)s\n"
 "            "
 msgstr ""
+"\n"
+"              Other Occurrences of fault type %(fault_type_code)s\n"
+"            "
 
 #: qatrack/faults/templates/faults/fault_form.html:11
+#, fuzzy
 msgid "Log a new fault"
-msgstr ""
+msgstr "Log a new fault"
 
 #: qatrack/faults/templates/faults/fault_form.html:46
+#, fuzzy
 msgid "Edit Fault"
-msgstr ""
+msgstr "Edit Fault"
 
 #: qatrack/faults/templates/faults/fault_form.html:48
+#, fuzzy
 msgid "Log A New Fault"
-msgstr ""
+msgstr "Log A New Fault"
 
 #: qatrack/faults/templates/faults/fault_form.html:79
+#, fuzzy
 msgid "Reviewers"
-msgstr ""
+msgstr "Reviewers"
 
 #: qatrack/faults/templates/faults/fault_form.html:110
+#, fuzzy
 msgid "Update Fault"
-msgstr ""
+msgstr "Update Fault"
 
 #: qatrack/faults/templates/faults/fault_form.html:112
+#, fuzzy
 msgid "Log Fault"
-msgstr ""
+msgstr "Log Fault"
 
 #: qatrack/faults/templates/faults/fault_list.html:49
+#, fuzzy
 msgid "Click to update the review status of the selected faults"
-msgstr ""
+msgstr "Click to update the review status of the selected faults"
 
 #: qatrack/faults/templates/faults/fault_list.html:55
+#, fuzzy
 msgid "Approve Selected Faults"
-msgstr ""
+msgstr "Approve Selected Faults"
 
 #: qatrack/faults/templates/faults/fault_list.html:71
+#, fuzzy
 msgid "Confirm Bulk Review"
-msgstr ""
+msgstr "Confirm Bulk Review"
 
 #: qatrack/faults/templates/faults/fault_list.html:76
+#, fuzzy
 msgid "You are about to update the review status for all the following faults"
-msgstr ""
+msgstr "You are about to update the review status for all the following faults"
 
 #: qatrack/faults/templates/faults/fault_list.html:84
+#, fuzzy
 msgid "# of Faults"
-msgstr ""
+msgstr "# of Faults"
 
 #: qatrack/faults/templates/faults/fault_list.html:97
+#, fuzzy
 msgid "Cancel"
-msgstr ""
+msgstr "Cancel"
 
 #: qatrack/faults/templates/faults/fault_list.html:98
+#, fuzzy
 msgid "Confirm"
-msgstr ""
+msgstr "Confirm"
 
 #: qatrack/faults/templates/faults/fault_occurred.html:4
-#, python-format
+#, fuzzy, python-format
 msgid "Created by %(created_by)s, Last modified by %(modified_by)s"
-msgstr ""
+msgstr "Created by %(created_by)s, Last modified by %(modified_by)s"
 
 #: qatrack/faults/templates/faults/fault_review_status.html:7
-#, python-format
+#, fuzzy, python-format
 msgid "Reviewed by %(group)s group member %(reviewed_by)s"
-msgstr ""
+msgstr "Reviewed by %(group)s group member %(reviewed_by)s"
 
 #: qatrack/faults/templates/faults/fault_review_status.html:9
-#, python-format
+#, fuzzy, python-format
 msgid "Reviewed by %(reviewed_by)s"
-msgstr ""
+msgstr "Reviewed by %(reviewed_by)s"
 
 #: qatrack/faults/templates/faults/fault_type_actions.html:6
-#, python-format
+#, fuzzy, python-format
 msgid "View details and all occurrences of the %(fault_type)s fault type"
-msgstr ""
+msgstr "View details and all occurrences of the %(fault_type)s fault type"
 
 #: qatrack/faults/templates/faults/fault_type_actions.html:8
+#, fuzzy
 msgid "Details & Occurrences"
-msgstr ""
+msgstr "Details & Occurrences"
 
 #: qatrack/faults/templates/faults/fault_type_description.html:4
+#, fuzzy
 msgid "Fault Type Description"
-msgstr ""
+msgstr "Fault Type Description"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:8
+#, fuzzy
 msgid "Fault Type"
-msgstr ""
+msgstr "Fault Type"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:40
+#, fuzzy
 msgid "Fault Type Details"
-msgstr ""
+msgstr "Fault Type Details"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:59
+#, fuzzy
 msgid "Unit Occurrences"
-msgstr ""
+msgstr "Unit Occurrences"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:68
+#, fuzzy
 msgid "Click to view all faults of this type on this unit"
-msgstr ""
+msgstr "Click to view all faults of this type on this unit"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:69
+#, fuzzy
 msgid "View"
-msgstr ""
+msgstr "View"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:86
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "              Fault Type %(fault_type_code)s Occurrences\n"
 "            "
 msgstr ""
+"\n"
+"              Fault Type %(fault_type_code)s Occurrences\n"
+"            "
 
 #: qatrack/faults/views.py:180
 #, fuzzy
@@ -308,49 +369,55 @@ msgid "Select All"
 msgstr "Select All"
 
 #: qatrack/faults/views.py:200
+#, fuzzy
 msgid "Check to include this fault bulk setting approval statuses"
-msgstr ""
+msgstr "Check to include this fault bulk setting approval statuses"
 
 #: qatrack/faults/views.py:343
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid "Successfully deleted Fault {fault_id}"
-msgstr ""
+msgstr "Successfully deleted Fault {fault_id}"
 
 #: qatrack/faults/views.py:365
-#, python-format
+#, fuzzy, python-format
 msgid "Fault ID %d was created"
-msgstr ""
+msgstr "Fault ID %d was created"
 
 #: qatrack/faults/views.py:368
+#, fuzzy
 msgid "Please resolve the errors below and submit again"
-msgstr ""
+msgstr "Please resolve the errors below and submit again"
 
 #: qatrack/faults/views.py:537
-#, python-format
+#, fuzzy, python-format
 msgid "Successfully approved %(fault)s "
-msgstr ""
+msgstr "Successfully approved %(fault)s "
 
 #: qatrack/faults/views.py:539
-#, python-format
+#, fuzzy, python-format
 msgid "Successfully unapproved %(fault)s "
-msgstr ""
+msgstr "Successfully unapproved %(fault)s "
 
 #: qatrack/faults/views.py:541
+#, fuzzy
 msgid ""
 "Sorry, something went wrong trying to review this fault. It has not been "
 "updated"
 msgstr ""
+"Sorry, something went wrong trying to review this fault. It has not been "
+"updated"
 
 #: qatrack/faults/views.py:559
-#, python-format
+#, fuzzy, python-format
 msgid "Successfully reviewed %(count)s faults"
-msgstr ""
+msgstr "Successfully reviewed %(count)s faults"
 
 #: qatrack/faults/views.py:581
+#, fuzzy
 msgid "Faults for"
-msgstr ""
+msgstr "Faults for"
 
 #: qatrack/faults/views.py:607
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid "{fault_type} faults for: {site_and_unit_name}"
-msgstr ""
+msgstr "{fault_type} faults for: {site_and_unit_name}"
