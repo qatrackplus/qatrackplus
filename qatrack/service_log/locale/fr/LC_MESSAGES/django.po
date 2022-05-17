@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"PO-Revision-Date: 2022-05-17 11:56+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -191,8 +191,9 @@ msgstr "Unit"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:137
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:145
+#, fuzzy
 msgid "Service Area"
-msgstr ""
+msgstr "Service Area"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:138
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:146
@@ -235,8 +236,9 @@ msgstr "Delete"
 #: qatrack/service_log/templates/service_log/service_event_detail.html:11
 #: qatrack/service_log/templates/service_log/serviceeventtemplate_base.html:11
 #: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:9
+#, fuzzy
 msgid "Service Event"
-msgstr ""
+msgstr "Service Event"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:30
 #, python-format
@@ -427,8 +429,9 @@ msgstr "Attachments"
 #: qatrack/service_log/templates/service_log/service_event_detail.html:363
 #: qatrack/service_log/templates/service_log/service_event_update.html:395
 #: qatrack/service_log/templates/service_log/sl_dash.html:28
+#, fuzzy
 msgid "Return To Service QC"
-msgstr ""
+msgstr "Return To Service QC"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:368
 #: qatrack/service_log/templates/service_log/service_event_update.html:401
@@ -727,8 +730,9 @@ msgid "Service Log Dashboard"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/sl_dash.html:34
+#, fuzzy
 msgid "Incomplete"
-msgstr ""
+msgstr "Incomplete"
 
 #: qatrack/service_log/templates/service_log/sl_dash.html:40
 msgid "Unreviewed"
@@ -768,8 +772,9 @@ msgid "Click to perform this Service Event"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_problem_description.html:4
+#, fuzzy
 msgid "Problem Description"
-msgstr ""
+msgstr "Problem Description"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:7
 msgid "Click to view the Service Event associated with this RTSQC"
@@ -810,8 +815,9 @@ msgid "In Progress"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_work_description.html:4
+#, fuzzy
 msgid "Work Description"
-msgstr ""
+msgstr "Work Description"
 
 #: qatrack/service_log/views.py:238
 #, python-format
