@@ -8,7 +8,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-17 10:30-0400\n"
 "PO-Revision-Date: 2022-05-17 14:35+0000\n"
-"Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "general/fr/>\n"
 "Language: fr\n"
@@ -27,5 +27,6 @@ msgid "French"
 msgstr "Français"
 
 #: qatrack/settings.py:121
+#, fuzzy
 msgid "Do not treat"
-msgstr ""
+msgstr "Do not treat"
