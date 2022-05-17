@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"PO-Revision-Date: 2022-05-17 11:56+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "reports/fr/>\n"
@@ -21,8 +21,9 @@ msgstr ""
 "X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/reports/admin.py:88 qatrack/reports/forms.py:181
+#, fuzzy
 msgid "You must select at least one group, user, or email address!"
-msgstr ""
+msgstr "You must select at least one group, user, or email address!"
 
 #: qatrack/reports/faults/details.py:90 qatrack/reports/faults/summary.py:133
 msgid "Not specified"
@@ -590,8 +591,9 @@ msgstr "Attachments"
 #: qatrack/reports/tests/test_service_log.py:181
 #: qatrack/reports/tests/test_service_log.py:386
 #: qatrack/reports/tests/test_service_log.py:443
+#, fuzzy
 msgid "Service Area"
-msgstr ""
+msgstr "Service Area"
 
 #: qatrack/reports/service_log/assigned_templates.py:98
 #: qatrack/reports/service_log/due_dates.py:88
@@ -625,8 +627,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/summary.html:21
 #: qatrack/reports/tests/test_service_log.py:112
 #: qatrack/reports/tests/test_service_log.py:182
+#, fuzzy
 msgid "Service Type"
-msgstr ""
+msgstr "Service Type"
 
 #: qatrack/reports/service_log/details.py:145
 #: qatrack/reports/service_log/summary.py:171
@@ -653,8 +656,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/summary.html:24
 #: qatrack/reports/tests/test_service_log.py:113
 #: qatrack/reports/tests/test_service_log.py:185
+#, fuzzy
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 #: qatrack/reports/service_log/details.py:152
 #: qatrack/reports/service_log/summary.py:175
@@ -662,8 +666,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/summary.html:58
 #: qatrack/reports/tests/test_service_log.py:116
 #: qatrack/reports/tests/test_service_log.py:190
+#, fuzzy
 msgid "Problem Description"
-msgstr ""
+msgstr "Problem Description"
 
 #: qatrack/reports/service_log/details.py:153
 #: qatrack/reports/service_log/summary.py:175
@@ -671,8 +676,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/summary.html:62
 #: qatrack/reports/tests/test_service_log.py:117
 #: qatrack/reports/tests/test_service_log.py:191
+#, fuzzy
 msgid "Work Description"
-msgstr ""
+msgstr "Work Description"
 
 #: qatrack/reports/service_log/details.py:154
 #: qatrack/reports/templates/reports/service_log/details.html:75
@@ -683,8 +689,9 @@ msgstr ""
 #: qatrack/reports/service_log/details.py:155
 #: qatrack/reports/templates/reports/service_log/details.html:79
 #: qatrack/reports/tests/test_service_log.py:193
+#, fuzzy
 msgid "Initiated By"
-msgstr ""
+msgstr "Initiated By"
 
 #: qatrack/reports/service_log/details.py:157
 #: qatrack/reports/templates/reports/service_log/details.html:120
@@ -704,8 +711,9 @@ msgstr ""
 #: qatrack/reports/templates/reports/service_log/details.html:154
 #: qatrack/reports/templates/reports/service_log/details.html:170
 #: qatrack/reports/tests/test_service_log.py:197
+#, fuzzy
 msgid "Return To Service QC"
-msgstr ""
+msgstr "Return To Service QC"
 
 #: qatrack/reports/service_log/details.py:160
 #: qatrack/reports/templates/reports/service_log/details.html:179
@@ -966,8 +974,9 @@ msgstr ""
 
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:102
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:114
+#, fuzzy
 msgid "Service Event"
-msgstr ""
+msgstr "Service Event"
 
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:104
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:116
