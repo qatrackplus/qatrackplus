@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:56+0000\n"
+"PO-Revision-Date: 2022-05-17 11:57+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -198,8 +198,9 @@ msgstr "Service Area"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:138
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:146
+#, fuzzy
 msgid "Due Date"
-msgstr ""
+msgstr "Due Date"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:139
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:147
@@ -208,8 +209,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:140
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:148
+#, fuzzy
 msgid "Assigned To"
-msgstr ""
+msgstr "Assigned To"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:184
 #, python-format
@@ -265,8 +267,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:56
 #: qatrack/service_log/templates/service_log/service_event_update.html:108
+#, fuzzy
 msgid "Modified"
-msgstr ""
+msgstr "Modified"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:60
 #, python-format
@@ -318,8 +321,9 @@ msgid "Requires review"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:136
+#, fuzzy
 msgid "Template"
-msgstr ""
+msgstr "Template"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:142
 msgid "Previous Due Date"
@@ -391,8 +395,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:263
 #: qatrack/service_log/templates/service_log/service_event_detail.html:273
+#, fuzzy
 msgid "Not specified"
-msgstr ""
+msgstr "Not specified"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:267
 msgid "Lost time (hh:mm)"
@@ -400,8 +405,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:282
 #: qatrack/service_log/templates/service_log/service_event_update.html:298
+#, fuzzy
 msgid "Group Members Involved"
-msgstr ""
+msgstr "Group Members Involved"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:295
 #: qatrack/service_log/templates/service_log/service_event_update.html:322
@@ -452,13 +458,15 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:377
 #: qatrack/service_log/templates/service_log/service_event_update.html:410
+#, fuzzy
 msgid "Pass/Fail"
-msgstr ""
+msgstr "Pass/Fail"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:378
 #: qatrack/service_log/templates/service_log/service_event_update.html:411
+#, fuzzy
 msgid "Review Status"
-msgstr ""
+msgstr "Review Status"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:396
 msgid "Review test list instance"
@@ -482,8 +490,9 @@ msgstr ""
 #: qatrack/service_log/templates/service_log/service_event_detail.html:413
 #: qatrack/service_log/templates/service_log/table_context/se_schedule_actions.html:10
 #: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:30
+#, fuzzy
 msgid "Perform"
-msgstr ""
+msgstr "Perform"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:417
 msgid "New tab: perform test list"
@@ -507,8 +516,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:483
 #: qatrack/service_log/templates/service_log/service_event_update.html:576
+#, fuzzy
 msgid "Parts Used"
-msgstr ""
+msgstr "Parts Used"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:492
 #: qatrack/service_log/templates/service_log/service_event_update.html:587
@@ -617,8 +627,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:142
 #: qatrack/service_log/templates/service_log/service_event_update.html:652
+#, fuzzy
 msgid "Save"
-msgstr ""
+msgstr "Save"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:201
 msgid ""
