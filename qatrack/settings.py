@@ -43,7 +43,10 @@ ROOT_URLCONF = 'qatrack.urls'
 SITE_ID = 1
 SITE_NAME = "QATrack+"
 
-LOCALE_PATHS = [os.path.join(PROJECT_ROOT, '../locale'), os.path.join(PROJECT_ROOT, '../templates/locale')]
+LOCALE_PATHS = (
+    os.path.join(PROJECT_ROOT, '../locale'),
+    os.path.join(PROJECT_ROOT, '../templates/locale'),
+)
 
 LANGUAGES = [
     ('en', _('English')),
