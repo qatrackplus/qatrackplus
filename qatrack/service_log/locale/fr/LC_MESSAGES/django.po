@@ -97,8 +97,9 @@ msgid "Reason"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/log_service_event_deleted.html:25
+#, fuzzy
 msgid "Comment"
-msgstr ""
+msgstr "Comment"
 
 #: qatrack/service_log/templates/service_log/log_service_event_modified.html:17
 #, python-format
@@ -440,8 +441,9 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:375
 #: qatrack/service_log/templates/service_log/service_event_update.html:408
+#, fuzzy
 msgid "Test List"
-msgstr ""
+msgstr "Test List"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:376
 #: qatrack/service_log/templates/service_log/service_event_update.html:409
@@ -706,20 +708,24 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:5
+#, fuzzy
 msgid "Export"
-msgstr ""
+msgstr "Export"
 
 #: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:10
+#, fuzzy
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 #: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:15
+#, fuzzy
 msgid "CSV"
-msgstr ""
+msgstr "CSV"
 
 #: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:20
+#, fuzzy
 msgid "Excel"
-msgstr ""
+msgstr "Excel"
 
 #: qatrack/service_log/templates/service_log/serviceeventtemplate_create.html:5
 msgid "Create Service Event Template"
@@ -735,8 +741,9 @@ msgid "Incomplete"
 msgstr "Incomplete"
 
 #: qatrack/service_log/templates/service_log/sl_dash.html:40
+#, fuzzy
 msgid "Unreviewed"
-msgstr ""
+msgstr "Unreviewed"
 
 #: qatrack/service_log/templates/service_log/sl_dash.html:53
 msgid "Service Events"
@@ -811,8 +818,9 @@ msgid "Started %(datetime_started)s by %(created_by)s"
 msgstr ""
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_tli_work_completed.html:4
+#, fuzzy
 msgid "In Progress"
-msgstr ""
+msgstr "In Progress"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_work_description.html:4
 #, fuzzy
@@ -851,5 +859,6 @@ msgid "Other"
 msgstr "Other"
 
 #: qatrack/service_log/views.py:1822 qatrack/service_log/views.py:1926
+#, fuzzy
 msgid "Ad Hoc"
-msgstr ""
+msgstr "Ad Hoc"
