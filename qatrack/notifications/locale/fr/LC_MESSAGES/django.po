@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"PO-Revision-Date: 2022-05-17 11:56+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "notifications/fr/>\n"
@@ -20,55 +20,66 @@ msgstr ""
 "X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/notifications/common/admin.py:43
+#, fuzzy
 msgid "The following emails are invalid"
-msgstr ""
+msgstr "The following emails are invalid"
 
 #: qatrack/notifications/common/admin.py:54
+#, fuzzy
 msgid "You must select at least one group, user, or email address!"
-msgstr ""
+msgstr "You must select at least one group, user, or email address!"
 
 #: qatrack/notifications/qccompleted/admin.py:41
+#, fuzzy
 msgid ""
 "You must set the number of days to follow after for Follow Up notifications."
 msgstr ""
+"You must set the number of days to follow after for Follow Up notifications."
 
 #: qatrack/notifications/qccompleted/admin.py:44
+#, fuzzy
 msgid "Leave 'Follow up days' blank if not creating a Follow Up notification"
-msgstr ""
+msgstr "Leave 'Follow up days' blank if not creating a Follow Up notification"
 
 #: qatrack/notifications/qccompleted/admin.py:114
-#, python-format
+#, fuzzy, python-format
 msgid "#%(id)d - Follow up notification (after %(num_days)s days)"
-msgstr ""
+msgstr "#%(id)d - Follow up notification (after %(num_days)s days)"
 
 #: qatrack/notifications/qcscheduling/admin.py:42
 #: qatrack/notifications/service_log_scheduling/admin.py:40
+#, fuzzy
 msgid ""
 "You must set the number of days in future to include for upcoming QC due "
 "date notices"
 msgstr ""
+"You must set the number of days in future to include for upcoming QC due "
+"date notices"
 
 #: qatrack/notifications/qcscheduling/admin.py:45
 #: qatrack/notifications/service_log_scheduling/admin.py:43
+#, fuzzy
 msgid "Leave 'Future days' blank if not creating an Upcoming QC notification"
-msgstr ""
+msgstr "Leave 'Future days' blank if not creating an Upcoming QC notification"
 
 #: qatrack/notifications/qcscheduling/admin.py:116
 #: qatrack/notifications/service_log_scheduling/admin.py:110
-#, python-format
+#, fuzzy, python-format
 msgid " (next %(num_days)s days)"
-msgstr ""
+msgstr " (next %(num_days)s days)"
 
 #: qatrack/notifications/templates/faults/email.html:21
 #: qatrack/notifications/templates/faults_review/email.html:32
 #: qatrack/notifications/templates/parts/email.html:21
 #: qatrack/notifications/templates/service_log_review/email.html:32
+#, fuzzy
 msgid "Hello"
-msgstr ""
+msgstr "Hello"
 
 #: qatrack/notifications/templates/faults/email.html:23
+#, fuzzy
 msgid "The following fault was just logged:"
-msgstr ""
+msgstr "The following fault was just logged:"
 
 #: qatrack/notifications/templates/faults/email.html:28
 #, fuzzy
@@ -81,8 +92,9 @@ msgstr "Fault"
 #: qatrack/notifications/templates/service_log/email.html:63
 #: qatrack/notifications/templates/service_log/email.html:89
 #: qatrack/notifications/templates/service_log/email.html:167
+#, fuzzy
 msgid "Click to view on the site"
-msgstr ""
+msgstr "Click to view on the site"
 
 #: qatrack/notifications/templates/faults/email.html:38
 #, fuzzy
@@ -102,8 +114,9 @@ msgid "Unit"
 msgstr "Unit"
 
 #: qatrack/notifications/templates/faults/email.html:50
+#, fuzzy
 msgid "Treatment or Imaging Modality"
-msgstr ""
+msgstr "Treatment or Imaging Modality"
 
 #: qatrack/notifications/templates/faults/email.html:55
 #, fuzzy
@@ -112,8 +125,9 @@ msgstr "Not Specified"
 
 #: qatrack/notifications/templates/faults_review/email.html:4
 #: qatrack/notifications/templates/faults_review/email.html:5
+#, fuzzy
 msgid "QATrack+ Faults Review Notice"
-msgstr ""
+msgstr "QATrack+ Faults Review Notice"
 
 #: qatrack/notifications/templates/faults_review/email.html:40
 #, fuzzy
@@ -122,65 +136,81 @@ msgstr "Fault Type"
 
 #: qatrack/notifications/templates/faults_review/email.html:41
 #: qatrack/notifications/templates/service_log_review/email.html:41
+#, fuzzy
 msgid "Count"
-msgstr ""
+msgstr "Count"
 
 #: qatrack/notifications/templates/parts/email.html:23
+#, fuzzy
 msgid "The following part is now below its low inventory threshold:"
-msgstr ""
+msgstr "The following part is now below its low inventory threshold:"
 
 #: qatrack/notifications/templates/parts/email.html:28
+#, fuzzy
 msgid "Part Name"
-msgstr ""
+msgstr "Part Name"
 
 #: qatrack/notifications/templates/parts/email.html:38
+#, fuzzy
 msgid "Part Number"
-msgstr ""
+msgstr "Part Number"
 
 #: qatrack/notifications/templates/parts/email.html:42
+#, fuzzy
 msgid "Part Category"
-msgstr ""
+msgstr "Part Category"
 
 #: qatrack/notifications/templates/parts/email.html:46
+#, fuzzy
 msgid "New / Used"
-msgstr ""
+msgstr "New / Used"
 
 #: qatrack/notifications/templates/parts/email.html:50
+#, fuzzy
 msgid "Current Quantity"
-msgstr ""
+msgstr "Current Quantity"
 
 #: qatrack/notifications/templates/parts/email.html:54
+#, fuzzy
 msgid "Notification Level"
-msgstr ""
+msgstr "Notification Level"
 
 #: qatrack/notifications/templates/parts/email.html:59
+#, fuzzy
 msgid "Current Known Locations"
-msgstr ""
+msgstr "Current Known Locations"
 
 #: qatrack/notifications/templates/parts/email.html:69
+#, fuzzy
 msgid "No known locations"
-msgstr ""
+msgstr "No known locations"
 
 #: qatrack/notifications/templates/service_log/email.html:22
+#, fuzzy
 msgid "The following Service Event was just created"
-msgstr ""
+msgstr "The following Service Event was just created"
 
 #: qatrack/notifications/templates/service_log/email.html:24
+#, fuzzy
 msgid "The following Service Event was just updated"
-msgstr ""
+msgstr "The following Service Event was just updated"
 
 #: qatrack/notifications/templates/service_log/email.html:31
 #: qatrack/notifications/templates/service_log/email.html:86
+#, fuzzy
 msgid "Service Event"
-msgstr ""
+msgstr "Service Event"
 
 #: qatrack/notifications/templates/service_log/email.html:36
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "              Service Event #%(service_event_id)s\n"
 "            "
 msgstr ""
+"\n"
+"              Service Event #%(service_event_id)s\n"
+"            "
 
 #: qatrack/notifications/templates/service_log/email.html:43
 #, fuzzy
@@ -188,57 +218,71 @@ msgid "Created"
 msgstr "Created"
 
 #: qatrack/notifications/templates/service_log/email.html:47
+#, fuzzy
 msgid "Unit &amp; Service Area"
-msgstr ""
+msgstr "Unit &amp; Service Area"
 
 #: qatrack/notifications/templates/service_log/email.html:51
+#, fuzzy
 msgid "Service Type"
-msgstr ""
+msgstr "Service Type"
 
 #: qatrack/notifications/templates/service_log/email.html:55
+#, fuzzy
 msgid "Service Status"
-msgstr ""
+msgstr "Service Status"
 
 #: qatrack/notifications/templates/service_log/email.html:60
+#, fuzzy
 msgid "Initiated By"
-msgstr ""
+msgstr "Initiated By"
 
 #: qatrack/notifications/templates/service_log/email.html:71
+#, fuzzy
 msgid "Problem Description"
-msgstr ""
+msgstr "Problem Description"
 
 #: qatrack/notifications/templates/service_log/email.html:75
+#, fuzzy
 msgid "Work Description"
-msgstr ""
+msgstr "Work Description"
 
 #: qatrack/notifications/templates/service_log/email.html:91
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "            Service Event #%(service_event_id)s\n"
 "            "
 msgstr ""
+"\n"
+"            Service Event #%(service_event_id)s\n"
+"            "
 
 #: qatrack/notifications/templates/service_log/email.html:98
+#, fuzzy
 msgid "Change Type"
-msgstr ""
+msgstr "Change Type"
 
 #: qatrack/notifications/templates/service_log/email.html:109
+#, fuzzy
 msgid "Return To Service QC"
-msgstr ""
+msgstr "Return To Service QC"
 
 #: qatrack/notifications/templates/service_log/email.html:110
 #: qatrack/notifications/templates/service_log/email.html:137
+#, fuzzy
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 #: qatrack/notifications/templates/service_log/email.html:117
+#, fuzzy
 msgid "Incomplete"
-msgstr ""
+msgstr "Incomplete"
 
 #: qatrack/notifications/templates/service_log/email.html:119
+#, fuzzy
 msgid "Requires Review"
-msgstr ""
+msgstr "Requires Review"
 
 #: qatrack/notifications/templates/service_log/email.html:121
 #, fuzzy
@@ -246,46 +290,58 @@ msgid "Reviewed"
 msgstr "Reviewed"
 
 #: qatrack/notifications/templates/service_log/email.html:128
+#, fuzzy
 msgid "Changes"
-msgstr ""
+msgstr "Changes"
 
 #: qatrack/notifications/templates/service_log/email.html:131
+#, fuzzy
 msgid "Field"
-msgstr ""
+msgstr "Field"
 
 #: qatrack/notifications/templates/service_log/email.html:132
+#, fuzzy
 msgid "Old"
-msgstr ""
+msgstr "Old"
 
 #: qatrack/notifications/templates/service_log/email.html:133
+#, fuzzy
 msgid "New"
-msgstr ""
+msgstr "New"
 
 #: qatrack/notifications/templates/service_log/email.html:145
+#, fuzzy
 msgid "Attachments Deleted"
-msgstr ""
+msgstr "Attachments Deleted"
 
 #: qatrack/notifications/templates/service_log/email.html:148
+#, fuzzy
 msgid "Attachments Added"
-msgstr ""
+msgstr "Attachments Added"
 
 #: qatrack/notifications/templates/service_log/email.html:167
+#, fuzzy
 msgid "For more details, please view this Service Event on the site"
-msgstr ""
+msgstr "For more details, please view this Service Event on the site"
 
 #: qatrack/notifications/templates/service_log/email.html:168
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "\n"
 "    Service Event #%(service_event_id)s</a>.\n"
 "  "
 msgstr ""
+"\n"
+"    Service Event #%(service_event_id)s</a>.\n"
+"  "
 
 #: qatrack/notifications/templates/service_log_review/email.html:4
 #: qatrack/notifications/templates/service_log_review/email.html:5
+#, fuzzy
 msgid "QATrack+ Service Event Review Notice"
-msgstr ""
+msgstr "QATrack+ Service Event Review Notice"
 
 #: qatrack/notifications/templates/service_log_review/email.html:40
+#, fuzzy
 msgid "Service Area"
-msgstr ""
+msgstr "Service Area"
