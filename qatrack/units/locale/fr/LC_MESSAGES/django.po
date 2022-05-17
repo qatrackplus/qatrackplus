@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:56+0000\n"
+"PO-Revision-Date: 2022-05-17 11:57+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/units/"
 "fr/>\n"
@@ -147,8 +147,9 @@ msgid "hours"
 msgstr ""
 
 #: qatrack/units/templates/units/unit_available_time_change.html:224
+#, fuzzy
 msgid "Update Schedule"
-msgstr ""
+msgstr "Update Schedule"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:237
 msgid "Delete all schedule changes for selected units and days?"
