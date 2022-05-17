@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"PO-Revision-Date: 2022-05-17 11:56+0000\n"
 "Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -1448,8 +1448,9 @@ msgid "By Due Status - Your Groups"
 msgstr ""
 
 #: qatrack/templates/site_base.html:534
+#, fuzzy
 msgid "Return To Service QC"
-msgstr ""
+msgstr "Return To Service QC"
 
 #: qatrack/templates/site_base.html:537
 msgid "View all return to service qa"
