@@ -3,20 +3,21 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2022-05-17 11:55+0000\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/units/"
+"fr/>\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/units/forms.py:18
 msgid "Duration can not be greater than 24 hours"
@@ -24,8 +25,9 @@ msgstr ""
 
 #: qatrack/units/models.py:265
 #: qatrack/units/templates/units/unittype_list.html:78
+#, fuzzy
 msgid "Other"
-msgstr ""
+msgstr "Other"
 
 #: qatrack/units/templates/units/table_context_u_actions.html:3
 msgid "Parts Cost"
@@ -153,12 +155,14 @@ msgid "Delete all schedule changes for selected units and days?"
 msgstr ""
 
 #: qatrack/units/templates/units/unit_available_time_change.html:241
+#, fuzzy
 msgid "Delete"
-msgstr ""
+msgstr "Delete"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:243
+#, fuzzy
 msgid "Cancel"
-msgstr ""
+msgstr "Cancel"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:258
 msgid "Loading..."
