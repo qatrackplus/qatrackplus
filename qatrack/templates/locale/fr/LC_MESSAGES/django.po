@@ -1,16 +1,15 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>, 2022.
 #: qatrack/templates/site_base.html:564
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-16 09:32-0400\n"
-"PO-Revision-Date: 2022-05-17 11:58+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"PO-Revision-Date: 2022-05-17 12:13+0000\n"
+"Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
 "Language: fr\n"
@@ -996,7 +995,7 @@ msgstr "Welcome to QATrack+"
 #: qatrack/templates/homepage.html:29 qatrack/templates/site_base.html:170
 #, fuzzy
 msgid "Perform QC"
-msgstr "Perform QC"
+msgstr "Effectuer un CQ"
 
 #: qatrack/templates/homepage.html:31
 #, fuzzy
