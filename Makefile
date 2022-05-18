@@ -73,8 +73,10 @@ __cleardb__:
 messages:
 	python manage.py makemessages -a -e py,html
 	python manage.py makemessages -a -d djangojs
+
+compile-messages:
 	python manage.py compilemessages
 
 .PHONY: test test_simple yapf flake8 help docs-autobuild docs \
 	qatrack_daemon.conf supervisor.conf schema run __cleardb__ mysql-ro-rights \
-	messages
+	messages compile-messages

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-17 12:31-0400\n"
+"POT-Creation-Date: 2022-05-18 08:12-0400\n"
 "PO-Revision-Date: 2022-05-17 15:26+0000\n"
 "Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
@@ -986,13 +986,14 @@ msgstr "Please wait a minute, and refresh."
 msgid "QATrack+ Homepage"
 msgstr "QATrack+ Homepage"
 
+#: qatrack/templates/homepage.html:23 qatrack/templates/homepage.html:29
+#: qatrack/templates/site_base.html:170
+msgid "Perform QC"
+msgstr "Effectuer un CQ"
+
 #: qatrack/templates/homepage.html:23
 msgid "Welcome to QATrack+"
 msgstr "Bienvenue sur QATrack+"
-
-#: qatrack/templates/homepage.html:29 qatrack/templates/site_base.html:170
-msgid "Perform QC"
-msgstr "Effectuer un CQ"
 
 #: qatrack/templates/homepage.html:31
 #, fuzzy

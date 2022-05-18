@@ -45,7 +45,7 @@ SITE_NAME = "QATrack+"
 
 LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, '../locale'),
-    os.path.join(PROJECT_ROOT, '../templates/locale'),
+    os.path.join(PROJECT_ROOT, 'templates/locale'),
 )
 
 LANGUAGES = [
@@ -816,3 +816,5 @@ Q_CLUSTER = {
     'label': 'Django Q',
     'orm': 'default',
 }
+
+print(LOCALE_PATHS)
