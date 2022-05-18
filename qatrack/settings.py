@@ -816,5 +816,3 @@ Q_CLUSTER = {
     'label': 'Django Q',
     'orm': 'default',
 }
-
-print(LOCALE_PATHS)
