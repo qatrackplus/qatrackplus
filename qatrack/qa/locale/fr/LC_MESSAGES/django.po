@@ -1,17 +1,16 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-17 11:56+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
-"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/qa/fr/"
-">\n"
+"PO-Revision-Date: 2022-05-19 20:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
+"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/qa/fr/>"
+"\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -20,9 +19,8 @@ msgstr ""
 "X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/qa/admin.py:62
-#, fuzzy
 msgid "New reference value"
-msgstr "New reference value"
+msgstr "Nouvelle valeur de référence"
 
 #: qatrack/qa/admin.py:65
 #, fuzzy
@@ -31,7 +29,6 @@ msgstr "Set by"
 
 #: qatrack/qa/admin.py:66
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:39
-#, fuzzy
 msgid "Date"
 msgstr "Date"
 
@@ -322,15 +319,13 @@ msgstr "Boolean values must be 0 or 1"
 
 #: qatrack/qa/models.py:570 qatrack/qa/models.py:2092
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:62
-#, fuzzy
 msgid "Yes"
-msgstr "Yes"
+msgstr "Oui"
 
 #: qatrack/qa/models.py:570 qatrack/qa/models.py:2092
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:61
-#, fuzzy
 msgid "No"
-msgstr "No"
+msgstr "Non"
 
 #: qatrack/qa/models.py:672
 #, fuzzy
@@ -383,9 +378,8 @@ msgstr "Boolean"
 
 #: qatrack/qa/models.py:828
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:38
-#, fuzzy
 msgid "Name"
-msgstr "Name"
+msgstr "Nom"
 
 #: qatrack/qa/models.py:1034
 #, fuzzy, python-format
@@ -715,9 +709,8 @@ msgstr "Log a new fault"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:994
 #: qatrack/qa/templates/qa/testlistinstance_list.html:98
-#, fuzzy
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "Annuler"
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:49
 #, fuzzy
@@ -749,9 +742,8 @@ msgstr ""
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:82
 #: qatrack/qa/templates/qa/testlistinstance_review.html:60
-#, fuzzy
 msgid "Test List"
-msgstr "Test List"
+msgstr "liste de tests"
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:83
 #: qatrack/qa/templates/qa/testlistinstance_review.html:52
@@ -773,9 +765,8 @@ msgid "Status"
 msgstr "Status"
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:99
-#, fuzzy
 msgid "Confirm"
-msgstr "Confirm"
+msgstr "Confirmer"
 
 #: qatrack/qa/templates/qa/testlistinstance_pdf_button.html:5
 #, fuzzy
@@ -913,9 +904,8 @@ msgstr "Difference"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:274
 #: qatrack/qa/templates/qa/testlistinstance_review.html:468
-#, fuzzy
 msgid "Comment"
-msgstr "Comment"
+msgstr "Commentaire"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:276
 #: qatrack/qa/templates/qa/testlistinstance_review.html:547
