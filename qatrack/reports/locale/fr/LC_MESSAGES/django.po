@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-17 11:57+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"PO-Revision-Date: 2022-05-19 20:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "reports/fr/>\n"
 "Language: fr\n"
@@ -249,18 +248,16 @@ msgstr "Both"
 #: qatrack/reports/filters.py:284 qatrack/reports/filters.py:340
 #: qatrack/reports/filters.py:530 qatrack/reports/service_log/summary.py:114
 #: qatrack/reports/templates/reports/qc/backup_forms.html:83
-#, fuzzy
 msgid "Yes"
-msgstr "Yes"
+msgstr "Oui"
 
 #: qatrack/reports/filters.py:215 qatrack/reports/filters.py:257
 #: qatrack/reports/filters.py:284 qatrack/reports/filters.py:341
 #: qatrack/reports/filters.py:531 qatrack/reports/service_log/summary.py:114
 #: qatrack/reports/templates/reports/qc/backup_forms.html:82
 #: qatrack/reports/tests/test_service_log.py:34
-#, fuzzy
 msgid "No"
-msgstr "No"
+msgstr "Non"
 
 #: qatrack/reports/filters.py:255 qatrack/reports/filters.py:282
 #, fuzzy
@@ -348,9 +345,8 @@ msgstr ""
 #: qatrack/reports/templates/reports/qc/backup_forms.html:62
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:30
 #: qatrack/reports/templates/reports/qc/testlistinstance_summary.html:14
-#, fuzzy
 msgid "Test List"
-msgstr "Test List"
+msgstr "liste de tests"
 
 #: qatrack/reports/qc/assigned_qc.py:263
 #: qatrack/reports/service_log/assigned_qc.py:263
@@ -408,9 +404,8 @@ msgstr "Tolerance"
 #: qatrack/reports/templates/reports/qc/backup_forms.html:48
 #: qatrack/reports/templates/reports/service_log/personnel.html:84
 #: qatrack/reports/tests/test_qc.py:440
-#, fuzzy
 msgid "Name"
-msgstr "Name"
+msgstr "Nom"
 
 #: qatrack/reports/qc/due_dates.py:82
 #: qatrack/reports/qc/testlistinstance.py:155
@@ -512,15 +507,13 @@ msgstr "Performed By"
 #: qatrack/reports/qc/testlistinstance.py:341
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:251
 #: qatrack/reports/tests/test_qc.py:242 qatrack/reports/tests/test_qc.py:340
-#, fuzzy
 msgid "Comment"
-msgstr "Comment"
+msgstr "Commentaire"
 
 #: qatrack/reports/qc/testinstance.py:183
 #: qatrack/reports/templates/reports/_signature.html:16
 #: qatrack/reports/templates/reports/qc/backup_forms.html:49
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:250
-#, fuzzy
 msgid "Date"
 msgstr "Date"
 
@@ -1264,9 +1257,8 @@ msgid "Update Schedule"
 msgstr "Update Schedule"
 
 #: qatrack/reports/templates/reports/reports.html:359
-#, fuzzy
 msgid "Close"
-msgstr "Close"
+msgstr "Fermer"
 
 #: qatrack/reports/templates/reports/service_log/details.html:13
 #, fuzzy, python-format
