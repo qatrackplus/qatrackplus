@@ -40,7 +40,6 @@ urlpatterns = [
     url(r'^parts/', include('qatrack.parts.urls')),
     url(r'^faults/', include('qatrack.faults.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
-
     path('i18n/', include('django.conf.urls.i18n')),
 
     # Uncomment the next line to enable the admin:
