@@ -398,6 +398,18 @@ urls as well:
     STATIC_URL = '/qatrack_static/'
 
 
+LANGUAGE_CODE
+.............
+
+Set `LANGUAGE_CODE = '<lang>'`, where `<lang>` is a language code, for example
+`fr`, to activate translations site-wide. All choices can be found `here
+<http://www.i18nguy.com/unicode/language-identifiers.html>`__ . You can use a
+language code with a country code, for example `fr-ca`, or just the base
+language code, i.e. `fr`.
+
+Note that for this to work translations must be available in the QATrack+
+codebase. This work is ongoing.
+
 MAX_TESTS_PER_TESTLIST
 ......................
 
@@ -485,7 +497,6 @@ USE_X_FORWARDED_HOST
 Set `USE_X_FORWARDED_HOST = True` when running QATrack+ behind a reverse proxy
 and set to False for whenever you are not running behind a reverse proxy e.g.
 Set to True for CherryPy/IIS and False for Apache/mod_wsgi or development work.
-
 
 SESSION Settings
 ~~~~~~~~~~~~~~~~

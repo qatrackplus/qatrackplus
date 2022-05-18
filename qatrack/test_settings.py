@@ -8,6 +8,7 @@ AD_CLEAN_USERNAME = None
 HTTP_OR_HTTPS = "http"
 REVIEW_BULK = True
 TIME_ZONE = 'America/Toronto'
+LANGUAGE_CODE = "en"
 
 
 class SimplePasswordHasher(BasePasswordHasher):
