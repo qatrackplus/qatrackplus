@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-17 11:53+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"PO-Revision-Date: 2022-05-19 20:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "accounts/fr/>\n"
 "Language: fr\n"
@@ -20,44 +19,36 @@ msgstr ""
 "X-Generator: Weblate 4.12.1\n"
 
 #: qatrack/accounts/admin.py:30
-#, fuzzy
 msgid "Yes"
-msgstr "Yes"
+msgstr "Oui"
 
 #: qatrack/accounts/admin.py:31
-#, fuzzy
 msgid "No"
-msgstr "No"
+msgstr "Non"
 
 #: qatrack/accounts/admin.py:60
-#, fuzzy
 msgid "Admin Status"
-msgstr "Admin Status"
+msgstr "Statut d'administrateur"
 
 #: qatrack/accounts/admin.py:128
-#, fuzzy
 msgid "Default Groups"
-msgstr "Default Groups"
+msgstr "Groupes par défaut"
 
 #: qatrack/accounts/templates/accounts/account.html:26
-#, fuzzy
 msgid "Account Details"
-msgstr "Account Details"
+msgstr "Détails du compte"
 
 #: qatrack/accounts/templates/accounts/account.html:34
-#, fuzzy
 msgid "Account Details for "
-msgstr "Account Details for "
+msgstr "Détails du compte pour "
 
 #: qatrack/accounts/templates/accounts/groups.html:8
-#, fuzzy
 msgid "Manage Groups & Permissions"
-msgstr "Manage Groups & Permissions"
+msgstr "Gérer groupes et permissions"
 
 #: qatrack/accounts/templates/accounts/groups.html:48
-#, fuzzy
 msgid "Group Membership & Permissions"
-msgstr "Group Membership & Permissions"
+msgstr "Composition du groupe et permissions"
 
 #: qatrack/accounts/templates/accounts/groups.html:56
 #, fuzzy
@@ -73,14 +64,13 @@ msgstr ""
 "        "
 
 #: qatrack/accounts/templates/accounts/groups.html:68
-#, fuzzy
 msgid "Group"
-msgstr "Group"
+msgstr "Groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:77
 #, fuzzy
 msgid "Add New Group"
-msgstr "Add New Group"
+msgstr "Créer un nouveau groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:79
 #, fuzzy
@@ -103,9 +93,8 @@ msgid "Use the icons/links below to toggle the permission"
 msgstr "Use the icons/links below to toggle the permission"
 
 #: qatrack/accounts/templates/accounts/groups.html:128
-#, fuzzy
 msgid "Name"
-msgstr "Name"
+msgstr "Nom"
 
 #: qatrack/accounts/templates/accounts/groups.html:129
 #, fuzzy
@@ -128,24 +117,20 @@ msgid "Select None"
 msgstr "Select None"
 
 #: qatrack/accounts/templates/accounts/groups.html:138
-#, fuzzy
 msgid "Username"
-msgstr "Username"
+msgstr "Nom d'utilisateur"
 
 #: qatrack/accounts/templates/accounts/groups.html:139
-#, fuzzy
 msgid "First Name"
-msgstr "First Name"
+msgstr "Prénom"
 
 #: qatrack/accounts/templates/accounts/groups.html:140
-#, fuzzy
 msgid "Last Name"
-msgstr "Last Name"
+msgstr "Nom"
 
 #: qatrack/accounts/templates/accounts/groups.html:162
-#, fuzzy
 msgid "Close"
-msgstr "Close"
+msgstr "Fermer"
 
 #: qatrack/accounts/views.py:104
 #, fuzzy
