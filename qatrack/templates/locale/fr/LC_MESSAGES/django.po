@@ -2,13 +2,14 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>, 2022.
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-17 15:26+0000\n"
-"Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
+"PO-Revision-Date: 2022-05-19 20:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
 "Language: fr\n"
@@ -69,15 +70,13 @@ msgstr "Websites"
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:38
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:8
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:7
-#, fuzzy
 msgid "QC"
-msgstr "QC"
+msgstr "CQ"
 
 #: qatrack/templates/admin/change_form.html:55
 #: qatrack/templates/admin/index.html:29
-#, fuzzy
 msgid "Add"
-msgstr "Add"
+msgstr "Ajouter"
 
 #: qatrack/templates/admin/change_form.html:65
 #: qatrack/templates/explorer/base.html:64
@@ -112,9 +111,8 @@ msgid "Please correct the errors below."
 msgstr "Please correct the errors below."
 
 #: qatrack/templates/admin/change_list.html:82
-#, fuzzy
 msgid "Filter"
-msgstr "Filter"
+msgstr "Filtrer"
 
 #: qatrack/templates/admin/index.html:18
 #, fuzzy, python-format
@@ -138,14 +136,12 @@ msgid "You don't have permission to edit anything."
 msgstr "You don't have permission to edit anything."
 
 #: qatrack/templates/admin/index.html:54
-#, fuzzy
 msgid "Recent Actions"
-msgstr "Recent Actions"
+msgstr "Actions récentes"
 
 #: qatrack/templates/admin/index.html:55
-#, fuzzy
 msgid "My Actions"
-msgstr "My Actions"
+msgstr "Mes actions"
 
 #: qatrack/templates/admin/index.html:59
 #, fuzzy
@@ -257,9 +253,8 @@ msgstr "ID"
 
 #: qatrack/templates/admin/qa/testpack/export.html:54
 #: qatrack/templates/admin/qa/testpack/import.html:53
-#, fuzzy
 msgid "Test List"
-msgstr "Test List"
+msgstr "liste de tests"
 
 #: qatrack/templates/admin/qa/testpack/export.html:55
 #: qatrack/templates/admin/qa/testpack/export.html:83
@@ -403,14 +398,12 @@ msgstr ""
 "        "
 
 #: qatrack/templates/admin/qa/testpack/import.html:46
-#, fuzzy
 msgid "Test Lists To Include"
-msgstr "Test Lists To Include"
+msgstr "Listes de tests à inclure"
 
 #: qatrack/templates/admin/qa/testpack/import.html:74
-#, fuzzy
 msgid "Test List Cycles To Include"
-msgstr "Test List Cycles To Include"
+msgstr "Cycles de listes de tests à inclure"
 
 #: qatrack/templates/admin/qa/testpack/import.html:102
 #, fuzzy
@@ -497,41 +490,34 @@ msgid "Dest Unit"
 msgstr "Dest Unit"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:39
-#, fuzzy
 msgid "Current Reference"
-msgstr "Current Reference"
+msgstr "Référence actuelle"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:40
-#, fuzzy
 msgid "Current Tolerance"
-msgstr "Current Tolerance"
+msgstr "Tolérance actuelle"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:41
 #: qatrack/templates/admin/qa/unittestinfo/history.html:10
-#, fuzzy
 msgid "New Reference"
-msgstr "New Reference"
+msgstr "Nouvelle référence"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:42
 #: qatrack/templates/admin/qa/unittestinfo/history.html:12
-#, fuzzy
 msgid "New Tolerance"
-msgstr "New Tolerance"
+msgstr "Nouvelle tolérance"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:65
-#, fuzzy
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "Annuler"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:66
-#, fuzzy
 msgid "Confirm"
-msgstr "Confirm"
+msgstr "Confirmer"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:7
-#, fuzzy
 msgid "Date/time"
-msgstr "Date/time"
+msgstr "Date/heure"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:8
 #, fuzzy
@@ -539,19 +525,16 @@ msgid "User"
 msgstr "User"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:9
-#, fuzzy
 msgid "Old Reference"
-msgstr "Old Reference"
+msgstr "Ancienne référence"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:11
-#, fuzzy
 msgid "Old Tolerance"
-msgstr "Old Tolerance"
+msgstr "Ancienne tolérance"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:13
-#, fuzzy
 msgid "Comment"
-msgstr "Comment"
+msgstr "Commentaire"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:8
 #, fuzzy
@@ -574,14 +557,12 @@ msgid "Unit"
 msgstr "Unit"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:48
-#, fuzzy
 msgid "Current reference"
-msgstr "Current reference"
+msgstr "Référence actuelle"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:49
-#, fuzzy
 msgid "Current tolerance"
-msgstr "Current tolerance"
+msgstr "Tolérance actuelle"
 
 #: qatrack/templates/explorer/base.html:37
 #, fuzzy
@@ -982,9 +963,8 @@ msgid "Please wait a minute, and refresh."
 msgstr "Please wait a minute, and refresh."
 
 #: qatrack/templates/homepage.html:16
-#, fuzzy
 msgid "QATrack+ Homepage"
-msgstr "QATrack+ Homepage"
+msgstr "Page d'accueil de QATrack+"
 
 #: qatrack/templates/homepage.html:23 qatrack/templates/homepage.html:29
 #: qatrack/templates/site_base.html:170
@@ -993,7 +973,7 @@ msgstr "Effectuer un CQ"
 
 #: qatrack/templates/homepage.html:23
 msgid "Welcome to QATrack+"
-msgstr "Bienvenue sur QATrack+"
+msgstr "Bienvenue dans QATrack+"
 
 #: qatrack/templates/homepage.html:31
 #, fuzzy
@@ -1168,9 +1148,8 @@ msgstr "Log In"
 
 #: qatrack/templates/registration/base.html:47
 #: qatrack/templates/site_base.html:835
-#, fuzzy
 msgid "Account Details"
-msgstr "Account Details"
+msgstr "Détails du compte"
 
 #: qatrack/templates/registration/base.html:57
 #: qatrack/templates/registration/password_change_form.html:6
@@ -1187,9 +1166,8 @@ msgid "Reset Password"
 msgstr "Reset Password"
 
 #: qatrack/templates/registration/base.html:82
-#, fuzzy
 msgid "Group Membership & Permissions"
-msgstr "Group Membership & Permissions"
+msgstr "Composition du groupe et permissions"
 
 #: qatrack/templates/registration/base.html:92
 #, fuzzy
