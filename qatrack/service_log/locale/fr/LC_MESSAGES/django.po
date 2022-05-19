@@ -2,13 +2,14 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>, 2022.
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-17 12:52+0000\n"
-"Last-Translator: Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>\n"
+"PO-Revision-Date: 2022-05-19 20:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
 "Language: fr\n"
@@ -46,7 +47,7 @@ msgstr "Configuration Needed"
 
 #: qatrack/service_log/templates/service_log/error_base.html:9
 msgid "Welcome to QATrack+"
-msgstr "Bienvenue sur QATrack+"
+msgstr "Bienvenue dans QATrack+"
 
 #: qatrack/service_log/templates/service_log/log_rtsqa.html:16
 #, fuzzy, python-format
@@ -115,9 +116,8 @@ msgid "Reason"
 msgstr "Reason"
 
 #: qatrack/service_log/templates/service_log/log_service_event_deleted.html:25
-#, fuzzy
 msgid "Comment"
-msgstr "Comment"
+msgstr "Commentaire"
 
 #: qatrack/service_log/templates/service_log/log_service_event_modified.html:17
 #, fuzzy, python-format
@@ -220,9 +220,8 @@ msgstr "View which scheduled service events are due or coming due soon"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:135
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:143
-#, fuzzy
 msgid "Name"
-msgstr "Name"
+msgstr "Nom"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:136
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:144
@@ -404,14 +403,12 @@ msgid "Scheduled"
 msgstr "Scheduled"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:155
-#, fuzzy
 msgid "Yes"
-msgstr "Yes"
+msgstr "Oui"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:157
-#, fuzzy
 msgid "No"
-msgstr "No"
+msgstr "Non"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:162
 #, fuzzy
@@ -529,9 +526,8 @@ msgstr "Return To Service QC Required"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:375
 #: qatrack/service_log/templates/service_log/service_event_update.html:408
-#, fuzzy
 msgid "Test List"
-msgstr "Test List"
+msgstr "liste de tests"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:376
 #: qatrack/service_log/templates/service_log/service_event_update.html:409
@@ -791,9 +787,8 @@ msgstr "Add another hours object."
 #: qatrack/service_log/templates/service_log/service_event_update.html:373
 #: qatrack/service_log/templates/service_log/service_event_update.html:447
 #: qatrack/service_log/templates/service_log/service_event_update.html:634
-#, fuzzy
 msgid "Add"
-msgstr "Add"
+msgstr "Ajouter"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:446
 #, fuzzy
@@ -856,9 +851,8 @@ msgid "Create Template"
 msgstr "Create Template"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:839
-#, fuzzy
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "Annuler"
 
 #: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:5
 #, fuzzy
