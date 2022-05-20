@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>, 2022.
 # Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
+# Laurent Tantôt <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-19 20:33+0000\n"
-"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
+"PO-Revision-Date: 2022-05-21 20:33+0000\n"
+"Last-Translator: Laurent Tantôt <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
 "Language: fr\n"
@@ -42,9 +43,8 @@ msgstr "Browse"
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols.html:37
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:7
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:6
-#, fuzzy
 msgid "Home"
-msgstr "Home"
+msgstr "Accueil"
 
 #: qatrack/templates/admin/base_site.html:22
 #, fuzzy
@@ -59,9 +59,8 @@ msgstr "QATrack+ administration"
 #: qatrack/templates/admin/change_form.html:47
 #: qatrack/templates/admin/change_list.html:34
 #: qatrack/templates/admin/change_list.html:43
-#, fuzzy
 msgid "Websites"
-msgstr "Websites"
+msgstr "Sites Web"
 
 #: qatrack/templates/admin/change_form.html:49
 #: qatrack/templates/admin/change_list.html:36
@@ -81,9 +80,8 @@ msgstr "Ajouter"
 #: qatrack/templates/admin/change_form.html:65
 #: qatrack/templates/explorer/base.html:64
 #: qatrack/templates/explorer/query.html:14
-#, fuzzy
 msgid "History"
-msgstr "History"
+msgstr "Historique"
 
 #: qatrack/templates/admin/change_form.html:66
 #: qatrack/templates/admin/parts/storage/edit_inline/tabular_paginated.html:127
@@ -94,11 +92,10 @@ msgstr "View on site"
 
 #: qatrack/templates/admin/change_form.html:77
 #: qatrack/templates/admin/change_list.html:71
-#, fuzzy
 msgid "Please correct the error below."
 msgid_plural "Please correct the errors below."
-msgstr[0] "Please correct the error below."
-msgstr[1] "Please correct the errors below."
+msgstr[0] "Veuillez corriger l'erreur ci-dessous."
+msgstr[1] "Veuillez corriger les erreurs ci-dessous."
 
 #: qatrack/templates/admin/change_list.html:62
 #, fuzzy, python-format
@@ -106,18 +103,17 @@ msgid "Add %(name)s"
 msgstr "Add %(name)s"
 
 #: qatrack/templates/admin/change_list.html:71
-#, fuzzy
 msgid "Please correct the errors below."
-msgstr "Please correct the errors below."
+msgstr "Veuillez corriger les erreurs ci-dessous."
 
 #: qatrack/templates/admin/change_list.html:82
 msgid "Filter"
 msgstr "Filtrer"
 
 #: qatrack/templates/admin/index.html:18
-#, fuzzy, python-format
+#, python-format
 msgid "Models available in the %(name)s application."
-msgstr "Models available in the %(name)s application."
+msgstr "Modèles disponibles dans l'application %(name)s."
 
 #: qatrack/templates/admin/index.html:19
 #, fuzzy, python-format
@@ -976,9 +972,8 @@ msgid "Welcome to QATrack+"
 msgstr "Bienvenue dans QATrack+"
 
 #: qatrack/templates/homepage.html:31
-#, fuzzy
 msgid "Choose a Unit to perform qa on"
-msgstr "Choose a Unit to perform qa on"
+msgstr "Choisir une unité pour son effectuer un CQ"
 
 #: qatrack/templates/homepage.html:32
 msgid "Choose a unit to perform QC for"
@@ -987,7 +982,7 @@ msgstr "Choisir une unité sur laquelle faire un CQ"
 #: qatrack/templates/homepage.html:34
 #, fuzzy
 msgid "View available test lists to perform"
-msgstr "View available test lists to perform"
+msgstr "Voir les listes de tests disponibles"
 
 #: qatrack/templates/homepage.html:35
 #, fuzzy
