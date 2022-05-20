@@ -39,6 +39,8 @@ QATrack+ v3.2.0 Release Notes
 
 * Fixed a bug when trying to send reports to groups with no members
 
+* Fixed fault list review status ordering/searching bug
+
 QATrack+ v3.1.1 Release Notes
 -----------------------------
 

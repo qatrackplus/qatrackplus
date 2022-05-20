@@ -70,7 +70,7 @@ class FaultList(BaseListableView):
 
     search_fields = {
         'actions': False,
-        'review_status': 'reviewed',
+        'review_status': 'faultreviewinstance__reviewed',
         'get_fault_types': 'fault_types__code',
         'get_fault_types_descriptions': 'fault_types__description',
         'get_occurred': 'occurred',
@@ -79,7 +79,7 @@ class FaultList(BaseListableView):
 
     order_fields = {
         'actions': False,
-        'review_status': 'review_count',
+        'review_status': 'faultreviewinstance__reviewed',
         'get_fault_types': 'fault_types__code',
         'get_fault_types_description': 'fault_types__description',
         'get_occurred': 'occurred',

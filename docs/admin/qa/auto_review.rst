@@ -38,7 +38,7 @@ tests to "Approved".
    Auto review rule sets
 
 
-To choose an Auto Review Rule Set for a Test LIst, use the "Auto Review Rules" field on
+To choose an Auto Review Rule Set for a Test List, use the "Auto Review Rules" field on
 the Test List configuration page:
 
 
