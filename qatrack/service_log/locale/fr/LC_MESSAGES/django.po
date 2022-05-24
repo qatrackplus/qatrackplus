@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-19 20:33+0000\n"
+"PO-Revision-Date: 2022-05-25 13:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -982,9 +982,8 @@ msgid "Started %(datetime_started)s by %(created_by)s"
 msgstr "Started %(datetime_started)s by %(created_by)s"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_tli_work_completed.html:4
-#, fuzzy
 msgid "In Progress"
-msgstr "In Progress"
+msgstr "En cours"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_work_description.html:4
 #, fuzzy
