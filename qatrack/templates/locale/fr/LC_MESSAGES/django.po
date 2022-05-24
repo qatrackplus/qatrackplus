@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-21 20:33+0000\n"
-"Last-Translator: Laurent Tantôt <ltantot.hmr@ssss.gouv.qc.ca>\n"
+"PO-Revision-Date: 2022-05-25 13:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
 "Language: fr\n"
@@ -260,7 +260,6 @@ msgstr "liste de tests"
 #: qatrack/templates/admin/qa/testpack/import.html:82
 #: qatrack/templates/admin/qa/testpack/import.html:121
 #: qatrack/templates/explorer/query.html:62
-#, fuzzy
 msgid "Description"
 msgstr "Description"
 
@@ -310,19 +309,16 @@ msgstr "Loading Test table"
 #: qatrack/templates/admin/qa/testpack/import.html:118
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:38
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:46
-#, fuzzy
 msgid "Test"
 msgstr "Test"
 
 #: qatrack/templates/admin/qa/testpack/export.html:120
 #: qatrack/templates/admin/qa/testpack/import.html:119
-#, fuzzy
 msgid "Category"
-msgstr "Category"
+msgstr "Catégorie"
 
 #: qatrack/templates/admin/qa/testpack/export.html:121
 #: qatrack/templates/admin/qa/testpack/import.html:120
-#, fuzzy
 msgid "Type"
 msgstr "Type"
 
@@ -334,9 +330,8 @@ msgstr "Summary"
 #: qatrack/templates/admin/qa/testpack/export.html:148
 #: qatrack/templates/admin/qa/testpack/import.html:189
 #: qatrack/templates/site_base.html:357
-#, fuzzy
 msgid "Test Lists"
-msgstr "Test Lists"
+msgstr "Listes de tests"
 
 #: qatrack/templates/admin/qa/testpack/export.html:149
 #: qatrack/templates/admin/qa/testpack/export.html:154
@@ -356,7 +351,6 @@ msgstr "Test Lists Cycles"
 
 #: qatrack/templates/admin/qa/testpack/export.html:158
 #: qatrack/templates/admin/qa/testpack/import.html:199
-#, fuzzy
 msgid "Tests"
 msgstr "Tests"
 
@@ -973,7 +967,7 @@ msgstr "Bienvenue dans QATrack+"
 
 #: qatrack/templates/homepage.html:31
 msgid "Choose a Unit to perform qa on"
-msgstr "Choisir une unité pour son effectuer un CQ"
+msgstr "Choisir une unité pour effectuer un CQ"
 
 #: qatrack/templates/homepage.html:32
 msgid "Choose a unit to perform QC for"
@@ -1030,14 +1024,12 @@ msgid "Choose a unit to review QC for"
 msgstr "Choose a unit to review QC for"
 
 #: qatrack/templates/homepage.html:80
-#, fuzzy
 msgid "Review data"
-msgstr "Review data"
+msgstr "Réviser des données"
 
 #: qatrack/templates/homepage.html:82
-#, fuzzy
 msgid "View QC data awaiting review"
-msgstr "View QC data awaiting review"
+msgstr "Voir les données de CQ en attente de révision"
 
 #: qatrack/templates/homepage.html:96
 #, fuzzy
@@ -1131,15 +1123,13 @@ msgstr ""
 
 #: qatrack/templates/registration/base.html:30
 #: qatrack/templates/site_base.html:829
-#, fuzzy
 msgid "Account"
-msgstr "Account"
+msgstr "Compte"
 
 #: qatrack/templates/registration/base.html:37
 #: qatrack/templates/registration/login.html:6
-#, fuzzy
 msgid "Log In"
-msgstr "Log In"
+msgstr "Connexion"
 
 #: qatrack/templates/registration/base.html:47
 #: qatrack/templates/site_base.html:835
@@ -1151,29 +1141,26 @@ msgstr "Détails du compte"
 #: qatrack/templates/registration/password_change_form.html:26
 #: qatrack/templates/registration/password_reset_confirm.html:6
 #: qatrack/templates/registration/password_reset_confirm.html:17
-#, fuzzy
 msgid "Change Password"
-msgstr "Change Password"
+msgstr "Modification du mot de passe"
 
 #: qatrack/templates/registration/base.html:69
-#, fuzzy
 msgid "Reset Password"
-msgstr "Reset Password"
+msgstr "Réinitialisation du mot de passe"
 
 #: qatrack/templates/registration/base.html:82
 msgid "Group Membership & Permissions"
-msgstr "Composition du groupe et permissions"
+msgstr "Composition des groupes et permissions"
 
 #: qatrack/templates/registration/base.html:92
-#, fuzzy
 msgid "Log Out"
-msgstr "Log Out"
+msgstr "Déconnexion"
 
 #: qatrack/templates/registration/base.html:99
 #: qatrack/templates/registration/registration_form.html:27
 #, fuzzy
 msgid "Register"
-msgstr "Register"
+msgstr "Inscription"
 
 #: qatrack/templates/registration/login.html:27
 #, fuzzy
@@ -1183,7 +1170,6 @@ msgstr "Sign in to start your session"
 #: qatrack/templates/registration/login.html:34
 #: qatrack/templates/registration/password_reset_form.html:28
 #: qatrack/templates/registration/registration_form.html:35
-#, fuzzy
 msgid "Note"
 msgstr "Note"
 
@@ -1195,9 +1181,8 @@ msgid "you are already logged in as %(user)s."
 msgstr "you are already logged in as %(user)s."
 
 #: qatrack/templates/registration/login.html:48
-#, fuzzy
 msgid "Login Type"
-msgstr "Login Type"
+msgstr "Type de connexion"
 
 #: qatrack/templates/registration/login.html:50
 #, fuzzy
@@ -1205,7 +1190,6 @@ msgid "Single Sign On (Login through your hospital network)"
 msgstr "Single Sign On (Login through your hospital network)"
 
 #: qatrack/templates/registration/login.html:51
-#, fuzzy
 msgid "QATrack+"
 msgstr "QATrack+"
 
@@ -1227,9 +1211,8 @@ msgstr "Login with Single Sign On"
 
 #: qatrack/templates/registration/login.html:79
 #: qatrack/templates/registration/registration_form.html:40
-#, fuzzy
 msgid "Log in"
-msgstr "Log in"
+msgstr "Connexion"
 
 #: qatrack/templates/registration/login.html:86
 #, fuzzy
@@ -1241,21 +1224,19 @@ msgstr ""
 "administrator."
 
 #: qatrack/templates/registration/logout.html:5
-#, fuzzy
 msgid "Logged Out"
-msgstr "Logged Out"
+msgstr "Déconnecté"
 
 #: qatrack/templates/registration/logout.html:8
 #, fuzzy
 msgid "You've been logged out."
-msgstr "You've been logged out."
+msgstr "Vous avez été déconnecté(e)."
 
 #: qatrack/templates/registration/password_change_done.html:5
 #: qatrack/templates/registration/password_change_done.html:16
 #: qatrack/templates/registration/password_reset_complete.html:5
-#, fuzzy
 msgid "Password Succesfully Changed"
-msgstr "Password Succesfully Changed"
+msgstr "Mot de passe modifié avec succès"
 
 #: qatrack/templates/registration/password_change_done.html:22
 #: qatrack/templates/registration/password_reset_complete.html:11
@@ -1378,18 +1359,17 @@ msgstr "Register for a QATrack+ account"
 #: qatrack/templates/registration/registration_form.html:40
 #, fuzzy
 msgid "Already have an account?"
-msgstr "Already have an account?"
+msgstr "Avez-vous déjà un compte ?"
 
 #: qatrack/templates/registration/registration_form.html:75
 #, fuzzy
 msgid "Sign up"
-msgstr "Sign up"
+msgstr "Inscription"
 
 #: qatrack/templates/registration/verification_sent.html:5
 #: qatrack/templates/registration/verification_sent.html:8
-#, fuzzy
 msgid "Verify your email address"
-msgstr "Verify your email address"
+msgstr "Vérifiez votre adresse de courriel"
 
 #: qatrack/templates/registration/verification_sent.html:10
 #, fuzzy, python-format
@@ -1405,9 +1385,8 @@ msgstr ""
 "%(CONTACT_EMAIL)s</a>."
 
 #: qatrack/templates/registration/verification_sent.html:11
-#, fuzzy
 msgid "Go back"
-msgstr "Go back"
+msgstr "Retour"
 
 #: qatrack/templates/rest_framework/api.html:4
 #: qatrack/templates/rest_framework/api.html:8
@@ -1416,9 +1395,8 @@ msgid "QATrack+ API"
 msgstr "QATrack+ API"
 
 #: qatrack/templates/site_base.html:175
-#, fuzzy
 msgid "QC Lists"
-msgstr "QC Lists"
+msgstr "Listes de CQ"
 
 #: qatrack/templates/site_base.html:177
 #, fuzzy
@@ -1431,19 +1409,17 @@ msgid "Choose Unit"
 msgstr "Choose Unit"
 
 #: qatrack/templates/site_base.html:183
-#, fuzzy
 msgid "View list of all available QC"
-msgstr "View list of all available QC"
+msgstr "Voir la liste de tous les CQ disponibles"
 
 #: qatrack/templates/site_base.html:185
-#, fuzzy
 msgid "All QC"
-msgstr "All QC"
+msgstr "Tous les CQ"
 
 #: qatrack/templates/site_base.html:189
 #, fuzzy
 msgid "View QC that is currently due and overdue"
-msgstr "View QC that is currently due and overdue"
+msgstr "Voir les CQ à faire et en retard"
 
 #: qatrack/templates/site_base.html:191 qatrack/templates/site_base.html:509
 #, fuzzy
@@ -1460,34 +1436,28 @@ msgstr ""
 "your groups"
 
 #: qatrack/templates/site_base.html:200
-#, fuzzy
 msgid "In Progress"
-msgstr "In Progress"
+msgstr "En cours"
 
 #: qatrack/templates/site_base.html:204
-#, fuzzy
 msgid "Tree Views"
-msgstr "Tree Views"
+msgstr "Vues en arborescence"
 
 #: qatrack/templates/site_base.html:206
-#, fuzzy
 msgid "View QC Organized by Unit & Frequency"
-msgstr "View QC Organized by Unit & Frequency"
+msgstr "Voir les CQ organisés par unité et fréquence"
 
 #: qatrack/templates/site_base.html:211
-#, fuzzy
 msgid "QC Treeview: Unit, Frequency"
-msgstr "QC Treeview: Unit, Frequency"
+msgstr "Arborescence des CQ : unité, fréquence"
 
 #: qatrack/templates/site_base.html:215
-#, fuzzy
 msgid "View QC Organized by Unit, Frequency, Category"
-msgstr "View QC Organized by Unit, Frequency, Category"
+msgstr "Voir les CQ organisés par unité, fréquence et catégorie"
 
 #: qatrack/templates/site_base.html:221
-#, fuzzy
 msgid "QC Treeview: Unit, Frequency, Category"
-msgstr "QC Treeview: Unit, Frequency, Category"
+msgstr "Arborescence des CQ : unité, fréquence, catégorie"
 
 #: qatrack/templates/site_base.html:233
 #, fuzzy
@@ -1540,9 +1510,8 @@ msgid "Your Groups"
 msgstr "Your Groups"
 
 #: qatrack/templates/site_base.html:288
-#, fuzzy
 msgid "View QC grouped by due date"
-msgstr "View QC grouped by due date"
+msgstr "Voir les CQ groupés par date d'échéance"
 
 #: qatrack/templates/site_base.html:290 qatrack/templates/site_base.html:517
 #, fuzzy
@@ -1617,9 +1586,8 @@ msgid "Unreviewed By Visible To Group"
 msgstr "Unreviewed By Visible To Group"
 
 #: qatrack/templates/site_base.html:361
-#, fuzzy
 msgid "View all test lists."
-msgstr "View all test lists."
+msgstr "Voir toutes les listes de tests."
 
 #: qatrack/templates/site_base.html:363
 #, fuzzy
@@ -1642,9 +1610,8 @@ msgid "Choose a unit to review qa lists for."
 msgstr "Choose a unit to review qa lists for."
 
 #: qatrack/templates/site_base.html:381
-#, fuzzy
 msgid "Your Test Lists By Unit"
-msgstr "Your Test Lists By Unit"
+msgstr "Vos listes de tests par unité"
 
 #: qatrack/templates/site_base.html:386
 #, fuzzy
@@ -1652,14 +1619,12 @@ msgid "Choose a frequency to review qa lists for."
 msgstr "Choose a frequency to review qa lists for."
 
 #: qatrack/templates/site_base.html:388
-#, fuzzy
 msgid "Your Test Lists By Frequency"
-msgstr "Your Test Lists By Frequency"
+msgstr "Vos listes de tests par fréquence"
 
 #: qatrack/templates/site_base.html:394
-#, fuzzy
 msgid "View all inactive test lists."
-msgstr "View all inactive test lists."
+msgstr "Voir toutes les listes de tests inactives."
 
 #: qatrack/templates/site_base.html:396
 #, fuzzy
