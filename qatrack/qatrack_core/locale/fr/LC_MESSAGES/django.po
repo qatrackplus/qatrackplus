@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-16 19:44+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "qatrack_core/fr/>\n"
 "Language: fr\n"
@@ -25,9 +24,8 @@ msgid "minutes ago"
 msgstr "minutes ago"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:83
-#, fuzzy
 msgid "Yesterday"
-msgstr "Yesterday"
+msgstr "Hier"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:162
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:179
@@ -38,29 +36,29 @@ msgstr[0] "%(size)d byte"
 msgstr[1] "%(size)d bytes"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:181
-#, fuzzy, python-format
+#, python-format
 msgid "%s KB"
-msgstr "%s KB"
+msgstr "%s ko"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:183
-#, fuzzy, python-format
+#, python-format
 msgid "%s MB"
-msgstr "%s MB"
+msgstr "%s Mo"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:185
-#, fuzzy, python-format
+#, python-format
 msgid "%s GB"
-msgstr "%s GB"
+msgstr "%s Go"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:187
-#, fuzzy, python-format
+#, python-format
 msgid "%s TB"
-msgstr "%s TB"
+msgstr "%s To"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:189
-#, fuzzy, python-format
+#, python-format
 msgid "%s PB"
-msgstr "%s PB"
+msgstr "%s Po"
 
 #: qatrack/qatrack_core/views.py:54
 #, fuzzy
