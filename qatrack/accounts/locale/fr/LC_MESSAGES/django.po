@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-25 13:33+0000\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "accounts/fr/>\n"
@@ -68,24 +68,20 @@ msgid "Group"
 msgstr "Groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:77
-#, fuzzy
 msgid "Add New Group"
-msgstr "Créer un nouveau groupe"
+msgstr "Ajouter un nouveau groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:79
-#, fuzzy
 msgid "Add Group"
-msgstr "Add Group"
+msgstr "Ajouter un groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:83
-#, fuzzy
 msgid "Edit Group Name & Members"
-msgstr "Edit Group Name & Members"
+msgstr "Modifier le nom et les membres du groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:85
-#, fuzzy
 msgid "Edit Group"
-msgstr "Edit Group"
+msgstr "Modifier le groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:97
 #, fuzzy
@@ -99,22 +95,20 @@ msgstr "Nom"
 #: qatrack/accounts/templates/accounts/groups.html:129
 #, fuzzy
 msgid "New Group Name"
-msgstr "New Group Name"
+msgstr "Nouveau nom du groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:132
 #, fuzzy
 msgid "Select Users Below"
-msgstr "Select Users Below"
+msgstr "Sélectionner les utilisateurs ci-dessous"
 
 #: qatrack/accounts/templates/accounts/groups.html:133
-#, fuzzy
 msgid "Select All"
-msgstr "Select All"
+msgstr "Tout sélectionner"
 
 #: qatrack/accounts/templates/accounts/groups.html:134
-#, fuzzy
 msgid "Select None"
-msgstr "Select None"
+msgstr "Tout désélectionner"
 
 #: qatrack/accounts/templates/accounts/groups.html:138
 msgid "Username"
@@ -133,23 +127,24 @@ msgid "Close"
 msgstr "Fermer"
 
 #: qatrack/accounts/views.py:104
-#, fuzzy
 msgid "Login failed with error 400: No authorization code was provided"
-msgstr "Login failed with error 400: No authorization code was provided"
+msgstr ""
+"Connexion échouée due à l’erreur 400 : Aucun code d'autorisation n’a été "
+"fourni"
 
 #: qatrack/accounts/views.py:106
 #, fuzzy
 msgid ""
 "Login failed with error 401: Your account is not authorized to use QATrack+"
 msgstr ""
-"Login failed with error 401: Your account is not authorized to use QATrack+"
+"Connexion échouée due à l’erreur 401 : Votre compte n’est pas autorisé dans "
+"QATrack+"
 
 #: qatrack/accounts/views.py:108
-#, fuzzy
 msgid "Login failed with error 403: Your account is disabled"
-msgstr "Login failed with error 403: Your account is disabled"
+msgstr "Connexion échouée due à l’erreur 403 : Votre compte est désactivé"
 
 #: qatrack/accounts/views.py:110
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Login Failed with error {status_code}: {phrase}"
-msgstr "Login Failed with error {status_code}: {phrase}"
+msgstr "Connexion échouée due à l’erreur {status_code} : {phrase}"
