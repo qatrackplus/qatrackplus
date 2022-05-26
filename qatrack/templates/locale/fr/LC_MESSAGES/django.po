@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-25 13:33+0000\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -250,7 +250,7 @@ msgstr "ID"
 #: qatrack/templates/admin/qa/testpack/export.html:54
 #: qatrack/templates/admin/qa/testpack/import.html:53
 msgid "Test List"
-msgstr "liste de tests"
+msgstr "Liste de tests"
 
 #: qatrack/templates/admin/qa/testpack/export.html:55
 #: qatrack/templates/admin/qa/testpack/export.html:83
@@ -363,9 +363,8 @@ msgstr "Test Pack Name"
 #: qatrack/templates/admin/qa/testpack/export.html:197
 #: qatrack/templates/explorer/play.html:68
 #: qatrack/templates/explorer/query.html:117
-#, fuzzy
 msgid "Download"
-msgstr "Download"
+msgstr "Télécharger"
 
 #: qatrack/templates/admin/qa/testpack/import.html:19
 #, fuzzy
@@ -465,9 +464,8 @@ msgid "Preview Copying Reference & Tolerances "
 msgstr "Preview Copying Reference & Tolerances "
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:21
-#, fuzzy
 msgid "Test List (Cycle)"
-msgstr "Test List (Cycle)"
+msgstr "(Cycle de) liste de tests"
 
 #: qatrack/templates/admin/qa/unittestinfo/copy_refs_and_tols_preview.html:25
 #, fuzzy
@@ -510,9 +508,8 @@ msgid "Date/time"
 msgstr "Date/heure"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:8
-#, fuzzy
 msgid "User"
-msgstr "User"
+msgstr "Utilisateur"
 
 #: qatrack/templates/admin/qa/unittestinfo/history.html:9
 msgid "Old Reference"
@@ -542,7 +539,6 @@ msgid "The tolerance and reference will be applied to"
 msgstr "The tolerance and reference will be applied to"
 
 #: qatrack/templates/admin/qa/unittestinfo/set_multiple_refs_and_tols.html:47
-#, fuzzy
 msgid "Unit"
 msgstr "Unit"
 
@@ -902,9 +898,8 @@ msgid "Run By"
 msgstr "Run By"
 
 #: qatrack/templates/explorer/querylog_list.html:26
-#, fuzzy
 msgid "Duration"
-msgstr "Duration"
+msgstr "Durée"
 
 #: qatrack/templates/explorer/querylog_list.html:28
 #, fuzzy
@@ -1883,9 +1878,8 @@ msgid "Run QATrack+ Reports"
 msgstr "Run QATrack+ Reports"
 
 #: qatrack/templates/site_base.html:702
-#, fuzzy
 msgid "Reports"
-msgstr "Reports"
+msgstr "Rapports"
 
 #: qatrack/templates/site_base.html:709
 #, fuzzy
