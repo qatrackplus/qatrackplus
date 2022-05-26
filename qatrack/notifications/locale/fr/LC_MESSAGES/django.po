@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-17 11:56+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "notifications/fr/>\n"
 "Language: fr\n"
@@ -25,9 +24,10 @@ msgid "The following emails are invalid"
 msgstr "The following emails are invalid"
 
 #: qatrack/notifications/common/admin.py:54
-#, fuzzy
 msgid "You must select at least one group, user, or email address!"
-msgstr "You must select at least one group, user, or email address!"
+msgstr ""
+"Vous devez sélectionner au moins un groupe, un utilisateur ou une adresse "
+"courriel !"
 
 #: qatrack/notifications/qccompleted/admin.py:41
 #, fuzzy
@@ -64,17 +64,16 @@ msgstr "Leave 'Future days' blank if not creating an Upcoming QC notification"
 
 #: qatrack/notifications/qcscheduling/admin.py:116
 #: qatrack/notifications/service_log_scheduling/admin.py:110
-#, fuzzy, python-format
+#, python-format
 msgid " (next %(num_days)s days)"
-msgstr " (next %(num_days)s days)"
+msgstr " (%(num_days)s prochains jours)"
 
 #: qatrack/notifications/templates/faults/email.html:21
 #: qatrack/notifications/templates/faults_review/email.html:32
 #: qatrack/notifications/templates/parts/email.html:21
 #: qatrack/notifications/templates/service_log_review/email.html:32
-#, fuzzy
 msgid "Hello"
-msgstr "Hello"
+msgstr "Bonjour"
 
 #: qatrack/notifications/templates/faults/email.html:23
 #, fuzzy
@@ -109,7 +108,6 @@ msgstr "Occurred"
 #: qatrack/notifications/templates/faults/email.html:46
 #: qatrack/notifications/templates/faults_review/email.html:39
 #: qatrack/notifications/templates/service_log_review/email.html:39
-#, fuzzy
 msgid "Unit"
 msgstr "Unit"
 
@@ -238,9 +236,8 @@ msgid "Initiated By"
 msgstr "Initiated By"
 
 #: qatrack/notifications/templates/service_log/email.html:71
-#, fuzzy
 msgid "Problem Description"
-msgstr "Problem Description"
+msgstr "Description du problème"
 
 #: qatrack/notifications/templates/service_log/email.html:75
 #, fuzzy
@@ -270,9 +267,8 @@ msgstr "Return To Service QC"
 
 #: qatrack/notifications/templates/service_log/email.html:110
 #: qatrack/notifications/templates/service_log/email.html:137
-#, fuzzy
 msgid "Status"
-msgstr "Status"
+msgstr "Statut"
 
 #: qatrack/notifications/templates/service_log/email.html:117
 #, fuzzy
