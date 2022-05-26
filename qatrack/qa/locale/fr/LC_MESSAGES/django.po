@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-25 13:33+0000\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/qa/fr/>"
 "\n"
@@ -181,7 +181,7 @@ msgstr ""
 #: qatrack/qa/admin.py:647 qatrack/qa/admin.py:701
 #, fuzzy
 msgid "None"
-msgstr "None"
+msgstr "Aucun"
 
 #: qatrack/qa/admin.py:794 qatrack/qa/trees.py:26 qatrack/qa/trees.py:27
 #: qatrack/qa/views/base.py:328 qatrack/qa/views/base.py:485
@@ -461,9 +461,8 @@ msgid "Test type is BOOLEAN but reference value is not 0 or 1"
 msgstr "Test type is BOOLEAN but reference value is not 0 or 1"
 
 #: qatrack/qa/models.py:2084
-#, fuzzy
 msgid "Skipped"
-msgstr "Skipped"
+msgstr "Sauté"
 
 #: qatrack/qa/models.py:2129
 #, fuzzy, python-format
@@ -563,9 +562,8 @@ msgstr "Use the tree below to select QC by Unit & Frequency"
 #: qatrack/qa/templates/qa/testlistinstance_review.html:269
 #: qatrack/qa/templates/qa/testlistinstance_review.html:463
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:48
-#, fuzzy
 msgid "Value"
-msgstr "Value"
+msgstr "Valeur"
 
 #: qatrack/qa/templates/qa/history.html:9
 #: qatrack/qa/templates/qa/testlistinstance_detail.html:319
@@ -587,9 +585,8 @@ msgid " %(created_by)s on %(created_on)s "
 msgstr " %(created_by)s on %(created_on)s "
 
 #: qatrack/qa/templates/qa/history.html:33
-#, fuzzy
 msgid "N/A"
-msgstr "N/A"
+msgstr "S/O"
 
 #: qatrack/qa/templates/qa/history.html:40
 #, fuzzy
@@ -744,12 +741,11 @@ msgstr ""
 #: qatrack/qa/templates/qa/testlistinstance_list.html:82
 #: qatrack/qa/templates/qa/testlistinstance_review.html:60
 msgid "Test List"
-msgstr "liste de tests"
+msgstr "Liste de tests"
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:83
 #: qatrack/qa/templates/qa/testlistinstance_review.html:52
 #: qatrack/qa/views/base.py:383 qatrack/qa/views/review.py:380
-#, fuzzy
 msgid "Unit"
 msgstr "Unit"
 
@@ -761,9 +757,8 @@ msgstr "# of Test List Instances"
 #: qatrack/qa/templates/qa/testlistinstance_list.html:85
 #: qatrack/qa/templates/qa/testlistinstance_review.html:285
 #: qatrack/qa/templates/qa/testlistinstance_review.html:478
-#, fuzzy
 msgid "Status"
-msgstr "Status"
+msgstr "Statut"
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:99
 msgid "Confirm"
@@ -790,14 +785,12 @@ msgid "Excel"
 msgstr "Excel"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:56
-#, fuzzy
 msgid "Test List Cycle"
-msgstr "Test List Cycle"
+msgstr "Cycle de listes de tests"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:65
-#, fuzzy
 msgid "Performed By"
-msgstr "Performed By"
+msgstr "Effectué par"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:68
 #, fuzzy
@@ -820,14 +813,12 @@ msgid "In Progress"
 msgstr "En cours"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:98
-#, fuzzy
 msgid "Duration"
-msgstr "Duration"
+msgstr "Durée"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:125
-#, fuzzy
 msgid "Last Modification"
-msgstr "Last Modification"
+msgstr "Dernière modification"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:128
 #, fuzzy
@@ -890,9 +881,8 @@ msgstr "Test"
 #: qatrack/qa/templates/qa/testlistinstance_review.html:270
 #: qatrack/qa/templates/qa/testlistinstance_review.html:464
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:50
-#, fuzzy
 msgid "Reference"
-msgstr "Reference"
+msgstr "Référence"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:272
 #: qatrack/qa/templates/qa/testlistinstance_review.html:466
@@ -986,9 +976,8 @@ msgstr "Images for "
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:598
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:42
-#, fuzzy
 msgid "Comments"
-msgstr "Comments"
+msgstr "Commentaires"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:618
 #, fuzzy
@@ -1025,15 +1014,13 @@ msgstr ""
 "included in paper based forms."
 
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:51
-#, fuzzy
 msgid "Tolerance"
-msgstr "Tolerance"
+msgstr "Tolérance"
 
 #: qatrack/qa/trees.py:21 qatrack/qa/views/base.py:330
 #: qatrack/qa/views/base.py:487 qatrack/qa/views/perform.py:1947
-#, fuzzy
 msgid "Other"
-msgstr "Other"
+msgstr "Autre"
 
 #: qatrack/qa/trees.py:45
 #, fuzzy, python-brace-format
@@ -1157,19 +1144,16 @@ msgstr ""
 "file a bug report."
 
 #: qatrack/qa/views/base.py:382 qatrack/qa/views/review.py:379
-#, fuzzy
 msgid "Site"
 msgstr "Site"
 
 #: qatrack/qa/views/base.py:384 qatrack/qa/views/review.py:381
-#, fuzzy
 msgid "Frequency"
-msgstr "Frequency"
+msgstr "Fréquence"
 
 #: qatrack/qa/views/base.py:385 qatrack/qa/views/review.py:382
-#, fuzzy
 msgid "Created By"
-msgstr "Created By"
+msgstr "Créé par"
 
 #: qatrack/qa/views/forms.py:64
 #, fuzzy
@@ -1418,9 +1402,8 @@ msgid "Review Your Inactive Test Lists"
 msgstr "Review Your Inactive Test Lists"
 
 #: qatrack/qa/views/review.py:384
-#, fuzzy
 msgid "Select All"
-msgstr "Select All"
+msgstr "Tout sélectionner"
 
 #: qatrack/qa/views/review.py:427
 #, fuzzy
