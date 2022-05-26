@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-25 13:33+0000\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -226,7 +226,6 @@ msgstr "Nom"
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:136
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:144
 #: qatrack/service_log/templates/service_log/service_event_detail.html:115
-#, fuzzy
 msgid "Unit"
 msgstr "Unit"
 
@@ -238,9 +237,8 @@ msgstr "Service Area"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:138
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:146
-#, fuzzy
 msgid "Due Date"
-msgstr "Due Date"
+msgstr "Date d'échéance"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:139
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:147
@@ -250,9 +248,8 @@ msgstr "Freq"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:140
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:148
-#, fuzzy
 msgid "Assigned To"
-msgstr "Assigned To"
+msgstr "Assigné à"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:184
 #, fuzzy, python-format
@@ -319,7 +316,7 @@ msgstr ""
 #: qatrack/service_log/templates/service_log/service_event_update.html:108
 #, fuzzy
 msgid "Modified"
-msgstr "Modified"
+msgstr "Modifié le"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:60
 #, fuzzy, python-format
@@ -470,7 +467,7 @@ msgstr "Service time (hh:mm)"
 #: qatrack/service_log/templates/service_log/service_event_detail.html:273
 #, fuzzy
 msgid "Not specified"
-msgstr "Not specified"
+msgstr "Non spécifié"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:267
 #, fuzzy
@@ -527,7 +524,7 @@ msgstr "Return To Service QC Required"
 #: qatrack/service_log/templates/service_log/service_event_detail.html:375
 #: qatrack/service_log/templates/service_log/service_event_update.html:408
 msgid "Test List"
-msgstr "liste de tests"
+msgstr "Liste de tests"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:376
 #: qatrack/service_log/templates/service_log/service_event_update.html:409
@@ -537,9 +534,8 @@ msgstr "Completed"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:377
 #: qatrack/service_log/templates/service_log/service_event_update.html:410
-#, fuzzy
 msgid "Pass/Fail"
-msgstr "Pass/Fail"
+msgstr "Ruéssi/Échoué"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:378
 #: qatrack/service_log/templates/service_log/service_event_update.html:411
@@ -572,9 +568,8 @@ msgstr "Perform test list"
 #: qatrack/service_log/templates/service_log/service_event_detail.html:413
 #: qatrack/service_log/templates/service_log/table_context/se_schedule_actions.html:10
 #: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:30
-#, fuzzy
 msgid "Perform"
-msgstr "Perform"
+msgstr "Effectuer"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:417
 #, fuzzy
@@ -583,9 +578,8 @@ msgstr "New tab: perform test list"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:440
 #: qatrack/service_log/templates/service_log/service_event_update.html:460
-#, fuzzy
 msgid "Comments"
-msgstr "Comments"
+msgstr "Commentaires"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:462
 #: qatrack/service_log/templates/service_log/service_event_update.html:485
@@ -742,9 +736,8 @@ msgstr "System"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:142
 #: qatrack/service_log/templates/service_log/service_event_update.html:652
-#, fuzzy
 msgid "Save"
-msgstr "Save"
+msgstr "Enregistrer"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:201
 #, fuzzy
@@ -937,9 +930,8 @@ msgid "Click to perform this Service Event"
 msgstr "Click to perform this Service Event"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_problem_description.html:4
-#, fuzzy
 msgid "Problem Description"
-msgstr "Problem Description"
+msgstr "Description du problème"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:7
 #, fuzzy
@@ -1025,9 +1017,8 @@ msgid "Please correct the Return to Service QC error below."
 msgstr "Please correct the Return to Service QC error below."
 
 #: qatrack/service_log/views.py:950 qatrack/service_log/views.py:1826
-#, fuzzy
 msgid "Other"
-msgstr "Other"
+msgstr "Autre"
 
 #: qatrack/service_log/views.py:1824 qatrack/service_log/views.py:1928
 #, fuzzy
