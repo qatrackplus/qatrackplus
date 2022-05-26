@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-25 13:33+0000\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/faults/"
 "fr/>\n"
@@ -36,19 +36,16 @@ msgid "Occurred"
 msgstr "Occurred"
 
 #: qatrack/faults/templates/faults/_fault_details.html:17
-#, fuzzy
 msgid "Site"
 msgstr "Site"
 
 #: qatrack/faults/templates/faults/_fault_details.html:22
 #: qatrack/faults/views.py:151
-#, fuzzy
 msgid "Other"
-msgstr "Other"
+msgstr "Autre"
 
 #: qatrack/faults/templates/faults/_fault_details.html:26
 #: qatrack/faults/templates/faults/fault_list.html:83
-#, fuzzy
 msgid "Unit"
 msgstr "Unit"
 
@@ -203,9 +200,8 @@ msgstr "Approve This Fault"
 
 #: qatrack/faults/templates/faults/fault_details.html:82
 #: qatrack/faults/templates/faults/fault_form.html:133
-#, fuzzy
 msgid "Comments"
-msgstr "Comments"
+msgstr "Commentaires"
 
 #: qatrack/faults/templates/faults/fault_details.html:102
 #: qatrack/faults/templates/faults/fault_form.html:153
@@ -360,9 +356,8 @@ msgstr ""
 "            "
 
 #: qatrack/faults/views.py:180
-#, fuzzy
 msgid "Select All"
-msgstr "Select All"
+msgstr "Tout sélectionner"
 
 #: qatrack/faults/views.py:200
 #, fuzzy
