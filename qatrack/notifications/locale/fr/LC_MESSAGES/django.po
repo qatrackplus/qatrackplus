@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-26 21:33+0000\n"
+"PO-Revision-Date: 2022-05-28 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "notifications/fr/>\n"
@@ -83,7 +83,7 @@ msgstr "The following fault was just logged:"
 #: qatrack/notifications/templates/faults/email.html:28
 #, fuzzy
 msgid "Fault"
-msgstr "Fault"
+msgstr "Anomalie"
 
 #: qatrack/notifications/templates/faults/email.html:31
 #: qatrack/notifications/templates/parts/email.html:31
