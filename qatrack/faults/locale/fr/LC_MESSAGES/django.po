@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-28 14:33+0000\n"
+"PO-Revision-Date: 2022-05-31 15:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/faults/"
 "fr/>\n"
@@ -52,7 +52,7 @@ msgstr "Unit"
 #: qatrack/faults/templates/faults/_fault_details.html:30
 #, fuzzy
 msgid "Click to view all faults on this unit"
-msgstr "Click to view all faults on this unit"
+msgstr "Cliquer pour voir toutes les anomalies sur cette unité"
 
 #: qatrack/faults/templates/faults/_fault_details.html:36
 msgid "Modality / Beam"
