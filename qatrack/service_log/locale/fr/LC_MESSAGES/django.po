@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-26 21:33+0000\n"
+"PO-Revision-Date: 2022-06-01 19:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -273,9 +273,8 @@ msgstr ""
 #: qatrack/service_log/templates/service_log/service_event_update.html:531
 #: qatrack/service_log/templates/service_log/service_event_update.html:590
 #: qatrack/service_log/templates/service_log/service_event_update.html:655
-#, fuzzy
 msgid "Delete"
-msgstr "Delete"
+msgstr "Supprimer"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:11
 #: qatrack/service_log/templates/service_log/serviceeventtemplate_base.html:11
@@ -423,9 +422,8 @@ msgid "View test list instance"
 msgstr "View test list instance"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:192
-#, fuzzy
 msgid "View"
-msgstr "View"
+msgstr "Voir"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:196
 #, fuzzy
@@ -583,9 +581,8 @@ msgstr "Commentaires"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:462
 #: qatrack/service_log/templates/service_log/service_event_update.html:485
-#, fuzzy
 msgid "Post Comment"
-msgstr "Post Comment"
+msgstr "Poster le commentaire"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:477
 #, fuzzy
@@ -789,9 +786,8 @@ msgid "Add another RTS QC object."
 msgstr "Add another RTS QC object."
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:480
-#, fuzzy
 msgid "Add comment"
-msgstr "Add comment"
+msgstr "Ajouter un commentaire"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:530
 #, fuzzy
@@ -954,9 +950,8 @@ msgid "Click to edit this Service Event"
 msgstr "Click to edit this Service Event"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:17
-#, fuzzy
 msgid "Details"
-msgstr "Details"
+msgstr "Détails"
 
 #: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:8
 #, fuzzy
