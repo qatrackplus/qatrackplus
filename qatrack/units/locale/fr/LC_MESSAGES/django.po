@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-28 14:33+0000\n"
+"PO-Revision-Date: 2022-06-01 19:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/units/"
 "fr/>\n"
@@ -191,9 +191,8 @@ msgid "Delete all schedule changes for selected units and days?"
 msgstr "Delete all schedule changes for selected units and days?"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:241
-#, fuzzy
 msgid "Delete"
-msgstr "Delete"
+msgstr "Supprimer"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:243
 msgid "Cancel"
