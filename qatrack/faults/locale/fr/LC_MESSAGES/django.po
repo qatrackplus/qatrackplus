@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-31 15:33+0000\n"
+"PO-Revision-Date: 2022-06-01 19:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/faults/"
 "fr/>\n"
@@ -88,7 +88,7 @@ msgstr "Unreviewed "
 #: qatrack/faults/templates/faults/_fault_details.html:77
 #, fuzzy
 msgid "Fault Types"
-msgstr "Fault Types"
+msgstr "Types d’anomalie"
 
 #: qatrack/faults/templates/faults/_fault_details.html:81
 #: qatrack/faults/templates/faults/fault_type_details.html:44
@@ -99,7 +99,7 @@ msgstr "Code"
 #: qatrack/faults/templates/faults/_fault_details.html:85
 #, fuzzy
 msgid "Click to view details of this fault type"
-msgstr "Click to view details of this fault type"
+msgstr "Cliquer pour voir les détails de ce type d’anomalie"
 
 #: qatrack/faults/templates/faults/_fault_details.html:90
 #: qatrack/faults/templates/faults/fault_type_details.html:47
@@ -134,9 +134,8 @@ msgid "Attachments"
 msgstr "Attachments"
 
 #: qatrack/faults/templates/faults/_fault_details.html:131
-#, fuzzy
 msgid "Files"
-msgstr "Files"
+msgstr "Fichiers"
 
 #: qatrack/faults/templates/faults/fault_actions.html:6
 #, fuzzy, python-format
@@ -149,9 +148,8 @@ msgid "Review"
 msgstr "Review"
 
 #: qatrack/faults/templates/faults/fault_actions.html:11
-#, fuzzy
 msgid "Details"
-msgstr "Details"
+msgstr "Détails"
 
 #: qatrack/faults/templates/faults/fault_actions.html:18
 #: qatrack/faults/templates/faults/fault_details.html:65
@@ -176,16 +174,15 @@ msgid "Fault ID %(fault_id)s"
 msgstr "Fault ID %(fault_id)s"
 
 #: qatrack/faults/templates/faults/fault_details.html:49
-#, fuzzy
 msgid ""
 "This will redirect you to a page where you can permanently delete this fault"
 msgstr ""
-"This will redirect you to a page where you can permanently delete this fault"
+"Vous serez redirigé(e) vers une page où vous pourrez supprimer "
+"définitivement cette anomalie"
 
 #: qatrack/faults/templates/faults/fault_details.html:52
-#, fuzzy
 msgid "Delete"
-msgstr "Delete"
+msgstr "Supprimer"
 
 #: qatrack/faults/templates/faults/fault_details.html:57
 #, fuzzy
@@ -204,15 +201,13 @@ msgstr "Commentaires"
 
 #: qatrack/faults/templates/faults/fault_details.html:102
 #: qatrack/faults/templates/faults/fault_form.html:153
-#, fuzzy
 msgid "Add comment"
-msgstr "Add comment"
+msgstr "Ajouter un commentaire"
 
 #: qatrack/faults/templates/faults/fault_details.html:106
 #: qatrack/faults/templates/faults/fault_form.html:157
-#, fuzzy
 msgid "Post Comment"
-msgstr "Post Comment"
+msgstr "Poster le commentaire"
 
 #: qatrack/faults/templates/faults/fault_details.html:122
 #, fuzzy, python-format
@@ -248,7 +243,7 @@ msgstr "Reviewers"
 #: qatrack/faults/templates/faults/fault_form.html:110
 #, fuzzy
 msgid "Update Fault"
-msgstr "Update Fault"
+msgstr "Mettre l’anomalie à jour"
 
 #: qatrack/faults/templates/faults/fault_form.html:112
 #, fuzzy
@@ -276,9 +271,8 @@ msgid "You are about to update the review status for all the following faults"
 msgstr "You are about to update the review status for all the following faults"
 
 #: qatrack/faults/templates/faults/fault_list.html:84
-#, fuzzy
 msgid "# of Faults"
-msgstr "# of Faults"
+msgstr "Nombre d’anomalies"
 
 #: qatrack/faults/templates/faults/fault_list.html:97
 msgid "Cancel"
@@ -296,52 +290,52 @@ msgstr "Created by %(created_by)s, Last modified by %(modified_by)s"
 #: qatrack/faults/templates/faults/fault_review_status.html:7
 #, fuzzy, python-format
 msgid "Reviewed by %(group)s group member %(reviewed_by)s"
-msgstr "Reviewed by %(group)s group member %(reviewed_by)s"
+msgstr "Révisé par %(reviewed_by)s du groupe %(group)s"
 
 #: qatrack/faults/templates/faults/fault_review_status.html:9
 #, fuzzy, python-format
 msgid "Reviewed by %(reviewed_by)s"
-msgstr "Reviewed by %(reviewed_by)s"
+msgstr "Révisé par %(reviewed_by)s"
 
 #: qatrack/faults/templates/faults/fault_type_actions.html:6
 #, fuzzy, python-format
 msgid "View details and all occurrences of the %(fault_type)s fault type"
-msgstr "View details and all occurrences of the %(fault_type)s fault type"
+msgstr ""
+"Voir les détails et toutes les occurrences du type d’anomalie %(fault_type)s"
 
 #: qatrack/faults/templates/faults/fault_type_actions.html:8
 #, fuzzy
 msgid "Details & Occurrences"
-msgstr "Details & Occurrences"
+msgstr "Détails et Occurrences"
 
 #: qatrack/faults/templates/faults/fault_type_description.html:4
 #, fuzzy
 msgid "Fault Type Description"
-msgstr "Fault Type Description"
+msgstr "Description du type d’anomalie"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:8
 #, fuzzy
 msgid "Fault Type"
-msgstr "Fault Type"
+msgstr "Type d’anomalie"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:40
 #, fuzzy
 msgid "Fault Type Details"
-msgstr "Fault Type Details"
+msgstr "Détails du type d’anomalie"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:59
 #, fuzzy
 msgid "Unit Occurrences"
-msgstr "Unit Occurrences"
+msgstr "Occurrences par unité"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:68
 #, fuzzy
 msgid "Click to view all faults of this type on this unit"
-msgstr "Click to view all faults of this type on this unit"
+msgstr "Cliquer pour voir toutes les anomalies de ce type sur cette unité"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:69
-#, fuzzy
 msgid "View"
-msgstr "View"
+msgstr "Voir"
 
 #: qatrack/faults/templates/faults/fault_type_details.html:86
 #, fuzzy, python-format
