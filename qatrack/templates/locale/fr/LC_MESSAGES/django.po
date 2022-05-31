@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-26 21:33+0000\n"
+"PO-Revision-Date: 2022-06-01 19:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -167,9 +167,8 @@ msgstr "This Test List is not a sublist of any other Test Lists"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:12
 #: qatrack/templates/explorer/query_list.html:65
-#, fuzzy
 msgid "Delete"
-msgstr "Delete"
+msgstr "Supprimer"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:20
 #, fuzzy, python-format
@@ -1855,7 +1854,7 @@ msgstr ""
 #: qatrack/templates/site_base.html:673
 #, fuzzy
 msgid "Fault Types"
-msgstr "Fault Types"
+msgstr "Types d’anomalie"
 
 #: qatrack/templates/site_base.html:675
 #, fuzzy
