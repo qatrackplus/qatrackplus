@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-01 19:33+0000\n"
+"PO-Revision-Date: 2022-06-10 18:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "templates/fr/>\n"
@@ -30,9 +30,8 @@ msgstr ""
 "multiple attachments)"
 
 #: qatrack/templates/_form_horizontal.html:72
-#, fuzzy
 msgid "Browse"
-msgstr "Browse"
+msgstr "Parcourir"
 
 #: qatrack/templates/admin/app_index.html:9
 #: qatrack/templates/admin/change_form.html:44
@@ -47,14 +46,12 @@ msgid "Home"
 msgstr "Accueil"
 
 #: qatrack/templates/admin/base_site.html:22
-#, fuzzy
 msgid "QATrack+ Admin Site"
-msgstr "QATrack+ Admin Site"
+msgstr "Gestion de QATrack+"
 
 #: qatrack/templates/admin/base_site.html:25
-#, fuzzy
 msgid "QATrack+ administration"
-msgstr "QATrack+ administration"
+msgstr "Gestion de QATrack+"
 
 #: qatrack/templates/admin/change_form.html:47
 #: qatrack/templates/admin/change_list.html:34
@@ -100,7 +97,7 @@ msgstr[1] "Veuillez corriger les erreurs ci-dessous."
 #: qatrack/templates/admin/change_list.html:62
 #, fuzzy, python-format
 msgid "Add %(name)s"
-msgstr "Add %(name)s"
+msgstr "Ajouter %(name)s"
 
 #: qatrack/templates/admin/change_list.html:71
 msgid "Please correct the errors below."
