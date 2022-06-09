@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-01 19:33+0000\n"
+"PO-Revision-Date: 2022-06-10 18:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -804,9 +804,8 @@ msgstr ""
 "multiple attachments)"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:563
-#, fuzzy
 msgid "Browse"
-msgstr "Browse"
+msgstr "Parcourir"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:669
 #, fuzzy, python-format
