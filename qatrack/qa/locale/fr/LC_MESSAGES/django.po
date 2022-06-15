@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-01 19:33+0000\n"
+"PO-Revision-Date: 2022-06-16 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/qa/fr/>"
 "\n"
@@ -537,9 +537,8 @@ msgstr "Use the tree below to select QC by Unit, Frequency, & Test Category"
 
 #: qatrack/qa/templates/qa/category_tree.html:66
 #: qatrack/qa/templates/qa/frequency_tree.html:65
-#, fuzzy
 msgid "Search"
-msgstr "Search"
+msgstr "Rechercher"
 
 #: qatrack/qa/templates/qa/category_tree.html:74
 #: qatrack/qa/templates/qa/frequency_tree.html:73
@@ -747,7 +746,7 @@ msgstr "Liste de tests"
 #: qatrack/qa/templates/qa/testlistinstance_review.html:52
 #: qatrack/qa/views/base.py:383 qatrack/qa/views/review.py:380
 msgid "Unit"
-msgstr "Unit"
+msgstr "Unité"
 
 #: qatrack/qa/templates/qa/testlistinstance_list.html:84
 #, fuzzy
@@ -775,7 +774,6 @@ msgid "PDF"
 msgstr "PDF"
 
 #: qatrack/qa/templates/qa/testlistinstance_pdf_button.html:15
-#, fuzzy
 msgid "CSV"
 msgstr "CSV"
 
@@ -1090,9 +1088,8 @@ msgid "The selected test list does not exist on the source unit"
 msgstr "The selected test list does not exist on the source unit"
 
 #: qatrack/qa/views/admin.py:127
-#, fuzzy
 msgid "Copy References & Tolerances"
-msgstr "Copy References & Tolerances"
+msgstr "Copier des références et des tolérances"
 
 #: qatrack/qa/views/admin.py:166
 #, fuzzy
@@ -1122,9 +1119,8 @@ msgid "Export Test Pack"
 msgstr "Export Test Pack"
 
 #: qatrack/qa/views/admin.py:314
-#, fuzzy
 msgid "Import Test Pack"
-msgstr "Import Test Pack"
+msgstr "Importer un paquet de tests"
 
 #: qatrack/qa/views/admin.py:356
 #, fuzzy, python-format
