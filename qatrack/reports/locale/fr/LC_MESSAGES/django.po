@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-01 19:33+0000\n"
+"PO-Revision-Date: 2022-06-16 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "reports/fr/>\n"
@@ -105,7 +105,7 @@ msgstr "Site"
 #: qatrack/reports/tests/test_service_log.py:385
 #: qatrack/reports/tests/test_service_log.py:442
 msgid "Unit"
-msgstr "Unit"
+msgstr "Unité"
 
 #: qatrack/reports/faults/details.py:117 qatrack/reports/faults/summary.py:153
 #: qatrack/reports/tests/test_faults.py:116
@@ -1119,9 +1119,8 @@ msgid "Click to view a preview of this report in PDF format"
 msgstr "Click to view a preview of this report in PDF format"
 
 #: qatrack/reports/templates/reports/reports.html:216
-#, fuzzy
 msgid "Preview"
-msgstr "Preview"
+msgstr "Aperçu"
 
 #: qatrack/reports/templates/reports/reports.html:219
 #, fuzzy
