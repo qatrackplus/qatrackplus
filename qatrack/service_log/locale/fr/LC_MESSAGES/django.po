@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-10 18:33+0000\n"
+"PO-Revision-Date: 2022-06-16 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "service_log/fr/>\n"
@@ -227,7 +227,7 @@ msgstr "Nom"
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:144
 #: qatrack/service_log/templates/service_log/service_event_detail.html:115
 msgid "Unit"
-msgstr "Unit"
+msgstr "Unité"
 
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:137
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:145
@@ -296,9 +296,8 @@ msgstr ""
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:42
 #: qatrack/service_log/templates/service_log/service_event_update.html:98
-#, fuzzy
 msgid "Created"
-msgstr "Created"
+msgstr "Créée le"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:46
 #, fuzzy, python-format
@@ -853,7 +852,6 @@ msgid "PDF"
 msgstr "PDF"
 
 #: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:15
-#, fuzzy
 msgid "CSV"
 msgstr "CSV"
 
