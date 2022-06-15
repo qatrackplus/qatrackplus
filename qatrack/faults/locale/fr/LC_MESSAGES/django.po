@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-01 19:33+0000\n"
+"PO-Revision-Date: 2022-06-16 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/faults/"
 "fr/>\n"
@@ -47,7 +47,7 @@ msgstr "Autre"
 #: qatrack/faults/templates/faults/_fault_details.html:26
 #: qatrack/faults/templates/faults/fault_list.html:83
 msgid "Unit"
-msgstr "Unit"
+msgstr "Unité"
 
 #: qatrack/faults/templates/faults/_fault_details.html:30
 #, fuzzy
@@ -64,9 +64,8 @@ msgid "Not Specified"
 msgstr "Not Specified"
 
 #: qatrack/faults/templates/faults/_fault_details.html:45
-#, fuzzy
 msgid "Created"
-msgstr "Created"
+msgstr "Créée le"
 
 #: qatrack/faults/templates/faults/_fault_details.html:50
 #, fuzzy
