@@ -36,7 +36,7 @@ yapf:
 		.
 
 flake8:
-	flake8 --exclude .eggs
+	flake8 --exclude .eggs .
 
 docs:
 	cd docs && make html
