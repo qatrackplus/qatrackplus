@@ -32,7 +32,9 @@ QA
 Faults
 ~~~~~~
 
-* Fault ID column size has been reduced. 
+* Fault Type codes are now required to be unique.  A migration has been added
+  to update the code to a unique value for any duplicate fault codes.
+* Fault ID column size has been reduced in the fault list views
 * Fault review users are now shown as full names instead of usernames where possible
 * The ability to create new fault types on the fly when entering faults is
   now restricted to users with the "Can Add Fault Type" permission
