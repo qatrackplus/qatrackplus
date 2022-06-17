@@ -34,6 +34,7 @@ class FaultType(models.Model):
         max_length=255,
         help_text=_l('Enter the fault code or number'),
         db_index=True,
+        unique=True,
     )
     slug = models.SlugField(
         max_length=255,
