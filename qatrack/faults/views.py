@@ -81,7 +81,7 @@ class FaultList(BaseListableView):
         'actions': False,
         'review_status': 'faultreviewinstance__reviewed',
         'get_fault_types': 'fault_types__code',
-        'get_fault_types_description': 'fault_types__description',
+        'get_fault_types_descriptions': 'fault_types__description',
         'get_occurred': 'occurred',
     }
 
