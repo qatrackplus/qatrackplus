@@ -1,7 +1,6 @@
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import Permission, User
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, Q, QuerySet
 from django.urls import reverse
@@ -179,14 +178,7 @@ class ReturnToServiceQAForm(forms.ModelForm):
             self.unit_field = u_models.Unit.objects.get(pk=self.data['unit_field'])
 
         if self.unit_field:
-            uf_cache = cache.get('active_unit_test_collections_for_unit_%s' % self.unit_field.id, None)
-            if not uf_cache:
-                uf_cache = qa_models.UnitTestCollection.objects.filter(
-                    unit=self.unit_field,
-                    active=True,
-                ).order_by('name')
-                cache.set('active_unit_test_collections_for_unit_%s' % self.unit_field.id, uf_cache)
-
+            uf_cache = qa_models.get_active_unit_test_collections_for_unit(self.unit_field)
             self.fields['unit_test_collection'].queryset = uf_cache
 
             self.fields['unit_test_collection'].widget.attrs.update({
