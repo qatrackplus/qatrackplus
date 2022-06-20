@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-17 11:55+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"PO-Revision-Date: 2022-06-21 14:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "attachments/fr/>\n"
 "Language: fr\n"
@@ -25,11 +24,9 @@ msgid "Unlabeled"
 msgstr "Unlabeled"
 
 #: qatrack/attachments/models.py:183
-#, fuzzy
 msgid "Attachment"
-msgstr "Attachment"
+msgstr "Pièce jointe"
 
 #: qatrack/attachments/models.py:183
-#, fuzzy
 msgid "No Owner"
-msgstr "No Owner"
+msgstr "Sans propriétaire"
