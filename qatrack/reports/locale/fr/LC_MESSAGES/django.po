@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-16 14:33+0000\n"
+"PO-Revision-Date: 2022-06-21 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "reports/fr/>\n"
@@ -583,9 +583,8 @@ msgid "Auto Reviewed"
 msgstr "Auto Reviewed"
 
 #: qatrack/reports/qc/testlistinstance.py:331
-#, fuzzy
 msgid "Attachment"
-msgstr "Attachment"
+msgstr "Pièce jointe"
 
 #: qatrack/reports/qc/testlistinstance.py:339
 #: qatrack/reports/templates/reports/qc/testlistinstance_details.html:134
