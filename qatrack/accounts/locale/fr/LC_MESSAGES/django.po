@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-05-26 21:33+0000\n"
+"PO-Revision-Date: 2022-06-21 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
 "accounts/fr/>\n"
@@ -84,21 +84,18 @@ msgid "Edit Group"
 msgstr "Modifier le groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:97
-#, fuzzy
 msgid "Use the icons/links below to toggle the permission"
-msgstr "Use the icons/links below to toggle the permission"
+msgstr "Utiliser les icones/liens ci-dessous pour activer les permission"
 
 #: qatrack/accounts/templates/accounts/groups.html:128
 msgid "Name"
 msgstr "Nom"
 
 #: qatrack/accounts/templates/accounts/groups.html:129
-#, fuzzy
 msgid "New Group Name"
 msgstr "Nouveau nom du groupe"
 
 #: qatrack/accounts/templates/accounts/groups.html:132
-#, fuzzy
 msgid "Select Users Below"
 msgstr "Sélectionner les utilisateurs ci-dessous"
 
@@ -129,11 +126,10 @@ msgstr "Fermer"
 #: qatrack/accounts/views.py:104
 msgid "Login failed with error 400: No authorization code was provided"
 msgstr ""
-"Connexion échouée due à l’erreur 400 : Aucun code d'autorisation n’a été "
+"Connexion échouée due à l’erreur 400 : Aucun code d'autorisation n’a été "
 "fourni"
 
 #: qatrack/accounts/views.py:106
-#, fuzzy
 msgid ""
 "Login failed with error 401: Your account is not authorized to use QATrack+"
 msgstr ""
