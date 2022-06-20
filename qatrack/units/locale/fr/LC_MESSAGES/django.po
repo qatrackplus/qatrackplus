@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-05-18 08:12-0400\n"
-"PO-Revision-Date: 2022-06-01 19:33+0000\n"
+"PO-Revision-Date: 2022-06-21 14:33+0000\n"
 "Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
 "Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/units/"
 "fr/>\n"
@@ -28,24 +28,20 @@ msgid "Other"
 msgstr "Autre"
 
 #: qatrack/units/templates/units/table_context_u_actions.html:3
-#, fuzzy
 msgid "Parts Cost"
-msgstr "Parts Cost"
+msgstr "Coût des pièces"
 
 #: qatrack/units/templates/units/table_context_u_actions.html:4
-#, fuzzy
 msgid "Available Time"
-msgstr "Available Time"
+msgstr "Temps disponible"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:9
-#, fuzzy
 msgid "Change Units Available Time"
-msgstr "Change Units Available Time"
+msgstr "Modifier le temps disponible des unités"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:39
-#, fuzzy
 msgid "Change Unit Available Times"
-msgstr "Change Unit Available Times"
+msgstr "Modifier les temps disponibles d’une unité"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:59
 #, fuzzy
@@ -55,9 +51,8 @@ msgstr ""
 "Select one or more days to Edit the Available Time of the selected units​"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:61
-#, fuzzy
 msgid "Edit Available Time"
-msgstr "Edit Available Time"
+msgstr "Modifier le temps disponible"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:69
 #, fuzzy
@@ -65,9 +60,8 @@ msgid "Select an effective date to Edit the Schedule of the selected units"
 msgstr "Select an effective date to Edit the Schedule of the selected units"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:71
-#, fuzzy
 msgid "Edit Schedule"
-msgstr "Edit Schedule"
+msgstr "Modifier l’horaire"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:79
 #, fuzzy
@@ -79,9 +73,8 @@ msgstr ""
 "Changes of the selected units​"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:80
-#, fuzzy
 msgid "Delete Changes"
-msgstr "Delete Changes"
+msgstr "Effacer les changements"
 
 #: qatrack/units/templates/units/unit_available_time_change.html:98
 #, fuzzy
