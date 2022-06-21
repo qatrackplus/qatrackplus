@@ -178,8 +178,8 @@ class ReturnToServiceQAForm(forms.ModelForm):
             self.unit_field = u_models.Unit.objects.get(pk=self.data['unit_field'])
 
         if self.unit_field:
-            uf_cache = qa_models.get_active_unit_test_collections_for_unit(self.unit_field)
-            self.fields['unit_test_collection'].queryset = uf_cache
+            utc_queryset = qa_models.get_active_unit_test_collections_for_unit(self.unit_field)
+            self.fields['unit_test_collection'].queryset = utc_queryset
 
             self.fields['unit_test_collection'].widget.attrs.update({
                 'disabled': not self.user.has_perm('service_log.add_returntoserviceqa')
