@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -321,6 +321,22 @@ PERMISSIONS += (
 def default_autoreviewruleset():
     default = AutoReviewRuleSet.objects.filter(is_default=True).first()
     return default.id if default else None
+
+
+def set_active_unit_test_collections_for_unit_cache(unit: Unit) -> QuerySet:
+    """Set the cached queryset for active unit test collections for a unit"""
+    qs = UnitTestCollection.objects.filter(
+        unit=unit,
+        active=True
+    ).order_by('name')
+    cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
+    return qs
+
+
+def get_active_unit_test_collections_for_unit(unit: Unit) -> QuerySet:
+    """Return cached queryset of active unit test collections for a specific unit"""
+    uf_cache = cache.get(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id))
+    return uf_cache or set_active_unit_test_collections_for_unit_cache(unit)
 
 
 class FrequencyManager(models.Manager):

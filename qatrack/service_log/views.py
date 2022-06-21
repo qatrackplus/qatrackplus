@@ -253,7 +253,12 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
         kwargs['se_schedule'] = self.se_schedule
         return kwargs
 
-    def set_schedule(self):
+    def set_schedule(self) -> None:
+        """Check if we are performing a scheduled service event and set the
+        se_schedule attribute appropriately.  Schedules are filtered to ensure
+        they are visible to the current user.  Raises a 404 if no valid
+        schedule can be found."""
+
         se_schedule_id = self.request.GET.get('se_schedule')
         self.se_schedule = None
         if se_schedule_id:
@@ -283,25 +288,43 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             context_data['se_statuses'] = {se.id: se.service_status.id for se in self.object.service_event_related.all()}
         else:
             context_data['se_statuses'] = {}
+
         context_data['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
         context_data['se_types_review'] = {st.id: int(st.is_review_required) for st in sl_models.ServiceType.objects.all()}
         context_data['template_form'] = forms.ServiceEventTemplateForm(request=self.request)
+        context_data['se_schedule'] = self.se_schedule
+
+        # initial_rts_utcs are used to populate the empty forms of the formset.
+        # By default, we don't add any initial return to service UTC's since
+        # the user can select the appropriate RTS QA (or they can select a
+        # template and the RTS QA will get populated on the front end).
+        # However if we are using a scheduled service even template, this list
+        # will get populated by the templates return to service QC UTCS below
+        #
+        # Also, if we are editing an existing service event initial_rts_utcs will
+        # remain empty since the initial RTS QA will have been set during the initial
+        # service event creation.
+        initial_rts_utcs = []
 
         unit_field_value = self.object.unit_service_area.unit if self.object else None
-        initial_utcs = [{'unit_test_collection': rts_utc} for rts_utc in self.object.returntoserviceqa_set.all()] if self.object else []
         if not unit_field_value:
+            # We are not editing an existing service event
+
             try:
                 if self.request.GET.get('ib'):
+                    # service event is being initiated from a specific test list instance
                     unit_field_value = qa_models.TestListInstance.objects.get(
-                        pk=self.request.GET.get('ib')).unit_test_collection.unit
+                        pk=self.request.GET.get('ib')
+                    ).unit_test_collection.unit
                 elif self.request.GET.get('u'):
+                    # service event is being initiated from the "Choose Unit For Service Event" page
                     unit_field_value = u_models.Unit.objects.get(pk=self.request.GET.get('u'))
-                elif self.request.GET.get('se_schedule'):
-                    schedule = get_object_or_404(
-                        sl_models.ServiceEventSchedule, pk=self.request.GET.get('se_schedule')
-                    )
-                    template = schedule.service_event_template
-                    unit_field_value = schedule.unit_service_area.unit
+                elif self.se_schedule:
+                    # user is performing a scheduled service event template
+                    unit_field_value = self.se_schedule.unit_service_area.unit
+                    template = self.se_schedule.service_event_template
+
+                    # get initial RTS form data based on RTS UTC's associated with the template
                     tl_ct = ContentType.objects.get_for_model(qa_models.TestList)
                     tl_utcs = qa_models.UnitTestCollection.objects.filter(
                         unit=unit_field_value,
@@ -316,11 +339,15 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                         object_id__in=template.return_to_service_cycles.values_list("pk", flat=True),
                         active=True,
                     )
-                    initial_utcs = [{'unit_test_collection': rts_utc} for rts_utc in list(tl_utcs) + list(tlc_utcs)]
+                    initial_rts_utcs = [{'unit_test_collection': rts_utc} for rts_utc in list(tl_utcs) + list(tlc_utcs)]
             except ObjectDoesNotExist:
                 pass
 
+<<<<<<< HEAD
         extra_rtsqa_forms = 2 if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
+=======
+        extra_rtsqa_forms = max(2, len(initial_rts_utcs) + 1) if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
+>>>>>>> 3.1.1
         if self.request.method == 'POST':
 
             context_data['hours_formset'] = forms.HoursFormset(
@@ -346,7 +373,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     "test_list_instance__testinstance_set",
                     'unit_test_collection__tests_object'
                 ),
-                # initial=initial_utcs
             )
             context_data['part_used_formset'] = p_forms.PartUsedFormset(
                 self.request.POST,
@@ -374,7 +400,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
                     "test_list_instance__testinstance_set",
                     'unit_test_collection__tests_object'
                 ),
-                initial=initial_utcs
+                initial=initial_rts_utcs,  # initial values for extra form data, empty if not using a template
             )
             context_data['part_used_formset'] = p_forms.PartUsedFormset(
                 instance=self.object,
@@ -383,14 +409,6 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             )
 
         context_data['attachments'] = self.object.attachment_set.all() if self.object else []
-
-        schedule_id = self.request.GET.get('se_schedule')
-        if schedule_id:
-            try:
-                schedule = sl_models.ServiceEventSchedule.objects.get(id=schedule_id)
-                context_data['se_schedule'] = schedule
-            except sl_models.ServiceEventSchedule.DoesNotExist:
-                pass
 
         if self.request.GET.get('next'):
             context_data['next_url'] = self.request.GET.get('next')
