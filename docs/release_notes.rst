@@ -29,6 +29,11 @@ QA
     * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
       remedied.
 
+Service Log
+~~~~~~~~~~~
+
+* Fixed a bug with Return To Service work forms being populated with incorrect data
+
 Faults
 ~~~~~~
 
