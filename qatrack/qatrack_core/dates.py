@@ -1,7 +1,6 @@
 import calendar
 import datetime
 
-from django.conf import settings
 from django.utils import timezone
 from django.utils.formats import get_format
 
@@ -42,7 +41,7 @@ def last_month_dates(dt=None):
     return month_start_and_end(year, month)
 
 
-def format_datetime(dt, fmt=get_format("DATETIME_INPUT_FORMATS")):
+def format_datetime(dt, fmt=get_format("DATETIME_INPUT_FORMATS")[0]):
     """Take a date time and return as string formatted date time after converting to localtime"""
 
     if not dt:
@@ -54,12 +53,12 @@ def format_datetime(dt, fmt=get_format("DATETIME_INPUT_FORMATS")):
     return dt.strftime(fmt)
 
 
-def format_as_date(dt, fmt=get_format("DATE_INPUT_FORMATS")):
+def format_as_date(dt, fmt=get_format("DATE_INPUT_FORMATS")[0]):
     """Take a date time and return as string formatted date after converting to localtime"""
     return format_datetime(dt, fmt=fmt)
 
 
-def format_as_time(dt, fmt=get_format("DATE_INPUT_FORMATS")):
+def format_as_time(dt, fmt=get_format("DATE_INPUT_FORMATS")[0]):
     return format_datetime(dt, fmt=fmt)
 
 
