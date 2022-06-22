@@ -19,3 +19,7 @@ MOMENT_DATETIME_FMT = 'DD MMM YYYY HH:mm'
 FLATPICKR_DATE_FMT = 'd M Y'
 FLATPICKR_DATETIME_FMT = 'd M Y H:i'
 DATERANGEPICKER_DATE_FMT = 'DD MMM YYYY'
+
+# For using in settings.py
+# ensure this gives same result as MOMENT_DATETIME_FMT
+PYTHON_DATETIME_FORMAT = "%d %b %Y %H:%M"

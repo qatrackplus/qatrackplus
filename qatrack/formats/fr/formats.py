@@ -3,13 +3,13 @@ DATE_FORMAT = "Y-M-j"
 TIME_FORMAT = "H:i"
 DATE_INPUT_FORMATS = [
     "%Y-%m-%d", 
-    # "%Y %m %d"
+    "%Y %m %d"
 ]
 DATETIME_INPUT_FORMATS = [
     "%Y-%m-%d %H:%M",
     "%Y-%m-%d %H:%M:%S",
-    # "%Y %m %d %H:%M",
-    # "%Y %m %d %H:%M:%S",
+    "%Y %m %d %H:%M",
+    "%Y %m %d %H:%M:%S",
     "%Y-%m-%d %H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S.%fZ",
 ]
@@ -22,3 +22,7 @@ MOMENT_DATETIME_FMT = 'YYYY-MM-DD HH:mm'
 FLATPICKR_DATE_FMT = 'Y-m-d'
 FLATPICKR_DATETIME_FMT = 'Y-m-d H:i'
 DATERANGEPICKER_DATE_FMT = 'YYYY-MM-DD'
+
+# For using in local_settings.py
+# ensure this gives same result as MOMENT_DATETIME_FMT
+PYTHON_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
