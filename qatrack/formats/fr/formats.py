@@ -23,6 +23,6 @@ FLATPICKR_DATE_FMT = 'Y-m-d'
 FLATPICKR_DATETIME_FMT = 'Y-m-d H:i'
 DATERANGEPICKER_DATE_FMT = 'YYYY-MM-DD'
 
-# For using in local_settings.py
-# ensure this gives same result as MOMENT_DATETIME_FMT
+# For using in local_settings.py, to translate DATETIME_HELP.
+# Ensure this gives same result as MOMENT_DATETIME_FMT
 PYTHON_DATETIME_FORMAT = "%Y-%m-%d %H:%M"

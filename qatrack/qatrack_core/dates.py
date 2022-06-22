@@ -42,7 +42,7 @@ def last_month_dates(dt=None):
     return month_start_and_end(year, month)
 
 
-def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
+def format_datetime(dt, fmt=get_format("DATETIME_INPUT_FORMATS")):
     """Take a date time and return as string formatted date time after converting to localtime"""
 
     if not dt:
@@ -54,12 +54,12 @@ def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
     return dt.strftime(fmt)
 
 
-def format_as_date(dt, fmt=settings.DATE_INPUT_FORMATS[0]):
+def format_as_date(dt, fmt=get_format("DATE_INPUT_FORMATS")):
     """Take a date time and return as string formatted date after converting to localtime"""
     return format_datetime(dt, fmt=fmt)
 
 
-def format_as_time(dt, fmt=settings.TIME_INPUT_FORMATS[0]):
+def format_as_time(dt, fmt=get_format("DATE_INPUT_FORMATS")):
     return format_datetime(dt, fmt=fmt)
 
 
