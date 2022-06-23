@@ -173,44 +173,44 @@ needs to be created.
 .. code-block:: python
 
    # project root/
-   #    locale
-   #        <language code>
-   #    qatrack
-   #    accounts
-   #        locale
-   #            <language code>
-   #    attachments
-   #        locale
-   #            <language code>
-   #    faults
-   #        locale
-   #            <language code>
-   #    notifications
-   #        locale
-   #            <language code>
-   #    qa
-   #        locale
-   #            <language code>
-   #    qatrack_core
-   #        locale
-   #            <language code>
-   #    reports
-   #        locale
-   #            <language code>
-   #    service_log
-   #        locale
-   #            <language code>
-   #    units
-   #        locale
-   #            <language code>
-   #    templates
-   #        locale
-   #            <language code>
+   #    locale/
+   #        <language code>/
+   #    qatrack/
+   #        accounts/
+   #            locale/
+   #                <language code>/
+   #        attachments/
+   #            locale/
+   #                <language code>/
+   #        faults/
+   #            locale/
+   #                <language code>/
+   #        notifications/
+   #            locale/
+   #                <language code>/
+   #        qa/
+   #            locale/
+   #                <language code>/
+   #        qatrack_core/
+   #            locale/
+   #                <language code>/
+   #        reports/
+   #            locale/
+   #                <language code>/
+   #        service_log/
+   #            locale/
+   #                <language code>/
+   #        units/
+   #            locale/
+   #                <language code>/
+   #        templates/
+   #            locale/
+   #                <language code>/
 
-All choices of loanguage codes can be found `here
+All choices of language codes can be found `here
 <http://www.i18nguy.com/unicode/language-identifiers.html>`__ . You can use a
 language code with a country code, for example `fr-ca`, or just the base
-language code, i.e. `fr`.
+language code, e.g. `fr`.
 
 **Create message files**
 
@@ -234,36 +234,39 @@ files, e.g. `poedit
 
 **Commit the message files to repo**
 
-The `*.po` files should be commited to the repository.
+The `*.po` files should be commited to the repository. Once the `*.po` message
+files are compiled, `*.mo` files are created alongside the `*.po` files. These
+do not need to be put in the repository.
 
 **Specify datetime formats for the language**
 
 The datetime formats also need
-to be localized. To do so, create a module under formats named after the
-language code (see 
+to be localized. To do so, create a module under `<project root>/qatrack/formats/`
+named after the language code (see 
 `Django docs on format localization
 <https://docs.djangoproject.com/en/4.0/topics/i18n/formatting/#creating-custom-format-files>`_)
 with the following structure and the following contents:
 
 .. code-block:: python
 
-   # formats/
-   #    __init__py
-   #    <language code>
-   #        __init__.py
-   #        formats.py
+   # qatrack/
+   #    formats/
+   #        __init__py
+   #        <language code>/
+   #            __init__.py
+   #            formats.py
 
 .. code-block:: python
 
-    # formats/__init__.py
-    from . import en, fr  # and any other language code
+    # qatrack/formats/__init__.py
+    from . import en, fr  # and any other existing language code
 
 .. code-block:: python
 
-    # formats/<language code>/__init__.py
-    from . import formats  # and any other language code
+    # qatrack/formats/<language code>/__init__.py
+    from . import formats
 
-Example `formats/<language code>/formats.py`:
+Example `qatrack/formats/<language code>/formats.py`:
 
 .. code-block:: python
 
@@ -285,19 +288,19 @@ Example `formats/<language code>/formats.py`:
     TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
 
     # JavaScript formats
-    # https://momentjs.com/docs/#/displaying/format/
+    # see https://momentjs.com/docs/#/displaying/format/
     MOMENT_DATE_DATA_FMT = "YYYY-MM-DD"
     MOMENT_DATE_FMT = "YYYY-MM-DD"
     MOMENT_DATETIME_FMT = 'YYYY-MM-DD HH:mm'
-    # https://flatpickr.js.org/formatting/
+    # see https://flatpickr.js.org/formatting/
     FLATPICKR_DATE_FMT = 'Y-m-d'
     FLATPICKR_DATETIME_FMT = 'Y-m-d H:i'
-    # https://api.jqueryui.com/datepicker/
+    # see https://api.jqueryui.com/datepicker/
     DATERANGEPICKER_DATE_FMT = 'YYYY-MM-DD'
 
     # For using in local_settings.py, to translate DATETIME_HELP.
     # Ensure this gives same result as MOMENT_DATETIME_FMT
-    # https://docs.python.org/3.9/library/datetime.html#strftime-and-strptime-format-codes
+    # see https://docs.python.org/3.9/library/datetime.html#strftime-and-strptime-format-codes
     PYTHON_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
 
 

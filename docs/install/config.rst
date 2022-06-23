@@ -405,7 +405,7 @@ Set `LANGUAGE_CODE = '<lang>'`, where `<lang>` is a language code, for example
 `fr`, to activate translations site-wide. All choices can be found `here
 <http://www.i18nguy.com/unicode/language-identifiers.html>`__ . You can use a
 language code with a country code, for example `fr-ca`, or just the base
-language code, i.e. `fr`.
+language code, e.g. `fr`.
 
 Note that for this to work translations must be available in the QATrack+
 codebase. This work is ongoing.
