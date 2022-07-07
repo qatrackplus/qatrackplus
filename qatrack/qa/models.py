@@ -429,6 +429,8 @@ class Frequency(models.Model):
         if not self.pk:
             start = timezone.datetime(2012, 1, 1)
             tz = timezone.get_current_timezone()
+            # note that DTSTART always relates to the current timezone
+            # see https://stackoverflow.com/a/47275021/79802
             self.recurrences.dtstart = tz.localize(start)
 
         self.nominal_interval = scheduling.calc_nominal_interval(self)
