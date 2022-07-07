@@ -343,11 +343,7 @@ class ServiceEventUpdateCreate(LoginRequiredMixin, PermissionRequiredMixin, Sing
             except ObjectDoesNotExist:
                 pass
 
-<<<<<<< HEAD
         extra_rtsqa_forms = 2 if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
-=======
-        extra_rtsqa_forms = max(2, len(initial_rts_utcs) + 1) if self.request.user.has_perm('service_log.add_returntoserviceqa') else 0
->>>>>>> 3.1.1
         if self.request.method == 'POST':
 
             context_data['hours_formset'] = forms.HoursFormset(
