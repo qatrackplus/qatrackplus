@@ -16,16 +16,6 @@ class SupplierViewSet(viewsets.ModelViewSet):
     )
 
 
-class StorageViewSet(viewsets.ModelViewSet):
-    queryset = models.Storage.objects.all()
-    serializer_class = serializers.StorageSerializer
-    filterset_class = filters.StorageFilter
-    filter_backends = (
-        backends.RestFrameworkFilterBackend,
-        OrderingFilter,
-    )
-
-
 class PartCategoryViewSet(viewsets.ModelViewSet):
     queryset = models.PartCategory.objects.all()
     serializer_class = serializers.PartCategorySerializer
