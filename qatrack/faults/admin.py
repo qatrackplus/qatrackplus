@@ -75,10 +75,12 @@ class FaultAdmin(SaveUserQATrackAdmin):
 
     def name(self, obj):
         return str(obj)
+
     name.admin_order_field = "pk"
 
     def get_fault_types(self, obj):
         return ", ".join(ft.code for ft in obj.fault_types.all())
+
     get_fault_types.order_field = "fault_types__code"
     get_fault_types.short_description = _l("Fault Types")
 
@@ -86,9 +88,7 @@ class FaultAdmin(SaveUserQATrackAdmin):
 class FaultReviewGroupAdmin(BaseQATrackAdmin):
 
     list_display = ("group", "required")
-    search_fields = (
-        "group__name",
-    )
+    search_fields = ("group__name",)
 
 
 admin.site.register([models.FaultType], FaultTypeAdmin)

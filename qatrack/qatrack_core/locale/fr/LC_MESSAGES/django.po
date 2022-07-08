@@ -1,0 +1,150 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-18 08:12-0400\n"
+"PO-Revision-Date: 2022-05-26 21:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
+"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
+"qatrack_core/fr/>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.12.1\n"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:78
+#, fuzzy
+msgid "minutes ago"
+msgstr "minutes ago"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:83
+msgid "Yesterday"
+msgstr "Hier"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:162
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:179
+#, fuzzy, python-format
+msgid "%(size)d byte"
+msgid_plural "%(size)d bytes"
+msgstr[0] "%(size)d byte"
+msgstr[1] "%(size)d bytes"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:181
+#, python-format
+msgid "%s KB"
+msgstr "%s ko"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:183
+#, python-format
+msgid "%s MB"
+msgstr "%s Mo"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:185
+#, python-format
+msgid "%s GB"
+msgstr "%s Go"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:187
+#, python-format
+msgid "%s TB"
+msgstr "%s To"
+
+#: qatrack/qatrack_core/templatetags/qatrack_tags.py:189
+#, python-format
+msgid "%s PB"
+msgstr "%s Po"
+
+#: qatrack/qatrack_core/views.py:54
+#, fuzzy
+msgid "Missing content_type or object_pk field."
+msgstr "Missing content_type or object_pk field."
+
+#: qatrack/qatrack_core/views.py:61
+#, fuzzy, python-format
+msgid "Invalid content_type value: %(content_type)r"
+msgstr "Invalid content_type value: %(content_type)r"
+
+#: qatrack/qatrack_core/views.py:72
+#, fuzzy, python-format
+msgid ""
+"The given content-type %(content_type)r does not resolve to a valid model."
+msgstr ""
+"The given content-type %(content_type)r does not resolve to a valid model."
+
+#: qatrack/qatrack_core/views.py:84
+#, fuzzy, python-format
+msgid ""
+"No object matching content-type %(content_type)r and object PK %(object_id)r "
+"exists."
+msgstr ""
+"No object matching content-type %(content_type)r and object PK %(object_id)r "
+"exists."
+
+#: qatrack/qatrack_core/views.py:98
+#, fuzzy, python-format
+msgid ""
+"Attempting to get content-type %(content_type)r and object PK %(object_id)r "
+"exists raised %(error_class)s"
+msgstr ""
+"Attempting to get content-type %(content_type)r and object PK %(object_id)r "
+"exists raised %(error_class)s"
+
+#: qatrack/qatrack_core/views.py:130
+#, fuzzy
+msgid "The comment submission failed"
+msgstr "The comment submission failed"
+
+#: qatrack/qatrack_core/views.py:156
+#, fuzzy, python-format
+msgid "comment_will_be_posted receiver %(receiver_name)r killed the comment"
+msgstr "comment_will_be_posted receiver %(receiver_name)r killed the comment"
+
+#: qatrack/qatrack_core/views.py:196
+#, fuzzy
+msgid "Bad Request"
+msgstr "Bad Request"
+
+#: qatrack/qatrack_core/views.py:196
+#, fuzzy
+msgid "Please check your ALLOWED_HOST setting."
+msgstr "Please check your ALLOWED_HOST setting."
+
+#: qatrack/qatrack_core/views.py:203
+#, fuzzy
+msgid "Insufficient Permission"
+msgstr "Insufficient Permission"
+
+#: qatrack/qatrack_core/views.py:204
+#, fuzzy
+msgid "Please talk to an administrator to acquire the required permission."
+msgstr "Please talk to an administrator to acquire the required permission."
+
+#: qatrack/qatrack_core/views.py:213
+#, fuzzy
+msgid "Resource not found"
+msgstr "Resource not found"
+
+#: qatrack/qatrack_core/views.py:214
+#, fuzzy
+msgid "The page or resource you were looking for can not be found"
+msgstr "The page or resource you were looking for can not be found"
+
+#: qatrack/qatrack_core/views.py:223
+#, fuzzy
+msgid "Server Error"
+msgstr "Server Error"
+
+#: qatrack/qatrack_core/views.py:224
+#, fuzzy
+msgid ""
+"Sorry, the server experienced an error processing your request. The site "
+"admin has been notified "
+msgstr ""
+"Sorry, the server experienced an error processing your request. The site "
+"admin has been notified "

@@ -11,9 +11,7 @@ class PartCategoryGroup(models.Model):
 
     part_categories = models.ManyToManyField(
         PartCategory,
-        help_text=_l(
-            "Select which Part Categories should be included in this notification group."
-        ),
+        help_text=_l("Select which Part Categories should be included in this notification group."),
     )
 
     def __str__(self):
@@ -24,9 +22,9 @@ class PartNotice(models.Model):
 
     LOW_INVENTORY = 'low_inventory'
 
-    NOTIFICATION_TYPES = (
-        (LOW_INVENTORY, _l("Notify when inventory for a part falls below it's Low Inventory threshold")),
-    )
+    NOTIFICATION_TYPES = ((
+        LOW_INVENTORY, _l("Notify when inventory for a part falls below it's Low Inventory threshold")
+    ),)
 
     notification_type = models.CharField(
         verbose_name=_l("Notification Type"),

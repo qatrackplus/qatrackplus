@@ -119,9 +119,7 @@ class FaultList(BaseListableView):
         }
 
     def get_queryset(self):
-        return super().get_queryset().annotate(
-            review_count=Max("faultreviewinstance"),
-        )
+        return super().get_queryset().annotate(review_count=Max("faultreviewinstance"),)
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -290,9 +288,7 @@ class EditFault(PermissionRequiredMixin, UpdateView):
         reviewed = timezone.now()
         for review_form in context['review_forms']:
 
-            frg = models.FaultReviewGroup.objects.filter(
-                group__name=review_form.cleaned_data['group'],
-            ).first()
+            frg = models.FaultReviewGroup.objects.filter(group__name=review_form.cleaned_data['group'],).first()
 
             reviewed_by = review_form.cleaned_data['reviewed_by']
 
@@ -451,9 +447,7 @@ def save_valid_review_forms(forms, fault):
         if not reviewed_by:
             continue
 
-        frg = models.FaultReviewGroup.objects.filter(
-            group__name=review_form.cleaned_data['group'],
-        ).first()
+        frg = models.FaultReviewGroup.objects.filter(group__name=review_form.cleaned_data['group'],).first()
         models.FaultReviewInstance.objects.create(
             reviewed=reviewed,
             reviewed_by=reviewed_by,
@@ -532,12 +526,14 @@ def create_reviews_for_fault(fault, user):
     reviewed = timezone.now()
     reviews = []
     for frg in frgs:
-        reviews.append(models.FaultReviewInstance(
-            reviewed=reviewed,
-            reviewed_by=user,
-            fault=fault,
-            fault_review_group=frg,
-        ))
+        reviews.append(
+            models.FaultReviewInstance(
+                reviewed=reviewed,
+                reviewed_by=user,
+                fault=fault,
+                fault_review_group=frg,
+            )
+        )
     return reviews
 
 
@@ -683,9 +679,7 @@ class FaultTypeList(BaseListableView):
         }
 
     def get_queryset(self):
-        return super().get_queryset().order_by("code").annotate(
-            count=Count("faults"),
-        )
+        return super().get_queryset().order_by("code").annotate(count=Count("faults"),)
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -712,9 +706,7 @@ class FaultTypeDetails(FaultList):
     template_name = 'faults/fault_type_details.html'
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            fault_types__slug=self.kwargs['slug'],
-        )
+        return super().get_queryset().filter(fault_types__slug=self.kwargs['slug'],)
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -725,9 +717,7 @@ class FaultTypeDetails(FaultList):
             "unit__name",
             "unit__number",
             "unit_id",
-        ).annotate(
-            unit_count=Count("unit__%s" % settings.ORDER_UNITS_BY)
-        ).order_by(
+        ).annotate(unit_count=Count("unit__%s" % settings.ORDER_UNITS_BY)).order_by(
             "-unit_count",
         )
         context['fault_type'] = fault_type

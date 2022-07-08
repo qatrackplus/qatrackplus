@@ -97,18 +97,18 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         if self.request.method == 'POST':
 
             context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(
-                self.request.POST,
-                instance=self.object,
-                prefix='supplier'
+                self.request.POST, instance=self.object, prefix='supplier'
             )
             context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(
-                self.request.POST,
-                instance=self.object,
-                prefix='storage'
+                self.request.POST, instance=self.object, prefix='storage'
             )
         else:
-            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(instance=self.object, prefix='supplier')  # noqa: E501
-            context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(instance=self.object, prefix='storage')  # noqa: E501
+            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(
+                instance=self.object, prefix='supplier'
+            )  # noqa: E501
+            context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(
+                instance=self.object, prefix='storage'
+            )  # noqa: E501
 
         context_data['attachments'] = self.object.attachment_set.all() if self.object else []
         return context_data
@@ -181,8 +181,7 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
                 if isinstance(storage_field, str):
                     psc_instance.storage = p_models.Storage.objects.create(
-                        room=sto_form.cleaned_data['room'],
-                        location=storage_field
+                        room=sto_form.cleaned_data['room'], location=storage_field
                     )
                 else:
                     psc_instance.storage = storage_field

@@ -87,11 +87,13 @@ class PartNoticeAdmin(BaseQATrackAdmin):
 
     def get_categories(self, obj):
         return obj.part_categories.name if obj.part_categories else ""
+
     get_categories.admin_order_field = "part_categories__name"
     get_categories.short_description = _l("Part Categories Group")
 
     def get_recipients(self, obj):
         return obj.recipients.name
+
     get_recipients.admin_order_field = "recipients__name"
     get_recipients.short_description = _l("Recipient Group")
 
@@ -118,6 +120,7 @@ class PartCategoryGroupAdmin(BaseQATrackAdmin):
 
     def get_categories(self, obj):
         return trim(', '.join(obj.part_categories.values_list("name", flat=True)))
+
     get_categories.admin_order_field = "part_categories__name"
     get_categories.short_description = _l("Part Categories")
 

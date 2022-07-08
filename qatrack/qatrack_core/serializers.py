@@ -40,7 +40,11 @@ class QATrackJSONEncoder(DjangoJSONEncoder):
             return int(o)
         elif isinstance(o, NP_FLOAT_TYPES):
             return float(o)
-        elif isinstance(o, (range, zip, set,)):
+        elif isinstance(o, (
+            range,
+            zip,
+            set,
+        )):
             return list(o)
 
         for m in serializing_methods:

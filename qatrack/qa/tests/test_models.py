@@ -417,7 +417,8 @@ result = foo + bar
     def test_invalid_clean_slug(self):
         test = self.create_test()
 
-        invalid = ("0 foo", "foo ", " foo" "foo bar", "foo*bar", "%foo", "foo$")
+        invalid = ("0 foo", "foo ", " foo"
+                   "foo bar", "foo*bar", "%foo", "foo$")
 
         for i in invalid:
             test.slug = i
@@ -1080,11 +1081,8 @@ class TestUnitTestCollection(TestCase):
 
         self.assertEqual(scheduling.NO_DUE_DATE, utc.due_status())
 
-        weekly_statuses = ((-10, scheduling.OVERDUE),
-                           (-8, scheduling.DUE),
-                           (-7, scheduling.DUE),
-                           (-6, scheduling.NOT_DUE),
-                           (1, scheduling.NOT_DUE))
+        weekly_statuses = ((-10, scheduling.OVERDUE), (-8, scheduling.DUE), (-7, scheduling.DUE),
+                           (-6, scheduling.NOT_DUE), (1, scheduling.NOT_DUE))
         for delta, due_status in weekly_statuses:
             wc = now + timezone.timedelta(days=delta)
             utils.create_test_list_instance(unit_test_collection=utc, work_completed=wc)

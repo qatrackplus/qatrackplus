@@ -40,10 +40,8 @@ class Command(BaseCommand):
         status = all_status.filter(slug=kwargs['status'][0]).first()
         if not status:
             print(
-                "'%s' is not a valid status slug. Options are: %s" % (
-                    kwargs['status'][0],
-                    ', '.join(all_status.values_list("slug", flat=True))
-                )
+                "'%s' is not a valid status slug. Options are: %s" %
+                (kwargs['status'][0], ', '.join(all_status.values_list("slug", flat=True)))
             )
             return
 
@@ -61,9 +59,8 @@ class Command(BaseCommand):
             return
 
         prompt = (
-            "Are you sure you want to set the review status of %d unreviewed TestListInstances to %s (y/N): " % (
-                counts, status
-            )
+            "Are you sure you want to set the review status of %d unreviewed TestListInstances to %s (y/N): " %
+            (counts, status)
         )
 
         confirm = input(prompt)

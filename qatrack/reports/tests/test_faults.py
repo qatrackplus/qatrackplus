@@ -31,7 +31,7 @@ class TestFaultSummaryReport(TestCase):
 
     def test_get_review_status_details(self):
         details = faults.FaultSummaryReport().get_review_status_details("")
-        assert details == (_("Review Status"), _(""))
+        assert details == (_("Review Status"), "")
         details = faults.FaultSummaryReport().get_review_status_details("unreviewed")
         assert details == (_("Review Status"), _("Unreviewed Only"))
         details = faults.FaultSummaryReport().get_review_status_details("reviewed")

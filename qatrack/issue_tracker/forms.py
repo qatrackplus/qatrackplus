@@ -1,4 +1,3 @@
-
 from django import forms
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db.models import ObjectDoesNotExist, Q
@@ -12,19 +11,16 @@ class IssueForm(BetterModelForm):
 
     class Meta:
         model = i_models.Issue
-        fieldsets = [
-            ('hidden_fields', {
-                'fields': [],
-            }),
-            ('required_fields', {
-                'fields': [
-                    'issue_type', 'issue_priority', 'issue_tags', 'description', 'error_screen'
-                ],
-            }),
-            ('optional_fields', {
-                'fields': []
-            })
-        ]
+        fieldsets = [('hidden_fields', {
+            'fields': [],
+        }),
+                     (
+                         'required_fields', {
+                             'fields': ['issue_type', 'issue_priority', 'issue_tags', 'description', 'error_screen'],
+                         }
+                     ), ('optional_fields', {
+                         'fields': []
+                     })]
 
     def __init__(self, *args, **kwargs):
         super(IssueForm, self).__init__(*args, **kwargs)

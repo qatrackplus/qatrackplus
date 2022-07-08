@@ -6,7 +6,6 @@ from qatrack.api import views
 
 schema_view = get_schema_view(title='QATrack+ API')
 
-
 urlpatterns = [
     url(r'^$', views.all_api_roots, name="api-root"),
     url(r'^get-token/', auth_views.obtain_auth_token, name="get-token"),

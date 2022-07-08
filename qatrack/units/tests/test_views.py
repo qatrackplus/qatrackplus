@@ -66,7 +66,7 @@ class TestUnitType(TestCase):
 class TestModality:
 
     def test_nk(self):
-        assert models.Modality(name="modality").natural_key() == ("modality", )
+        assert models.Modality(name="modality").natural_key() == ("modality",)
 
 
 class TestUnitAvailableTime(TestCase):

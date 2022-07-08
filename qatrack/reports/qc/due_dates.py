@@ -124,9 +124,7 @@ class DueAndOverdueQCReport(DueDatesReportMixin, BaseReport):
     template = "reports/qc/next_due.html"
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            due_date__lte=end_of_day(timezone.now())
-        ).exclude(due_date=None)
+        return super().get_queryset().filter(due_date__lte=end_of_day(timezone.now())).exclude(due_date=None)
 
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or _("due-and-overdue-report")), report_format)

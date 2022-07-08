@@ -15,10 +15,12 @@ class AssignedQCReport(filters.UnitTestCollectionFilterDetailsMixin, BaseReport)
     report_type = "qc-assignment-summary"
     name = _l("QC Assignment Summary")
     filter_class = filters.UnitTestCollectionFilter
-    description = mark_safe(_l(
-        "This report includes a summary of all Test Lists (Cycles) assigned to "
-        "selected sites, units, frequencies, and groups."
-    ))
+    description = mark_safe(
+        _l(
+            "This report includes a summary of all Test Lists (Cycles) assigned to "
+            "selected sites, units, frequencies, and groups."
+        )
+    )
     category = _l("QC")
 
     template = "reports/qc/assigned_qc.html"
@@ -114,10 +116,12 @@ class AssignedQCDetailsReport(filters.UnitTestCollectionFilterDetailsMixin, Base
     report_type = "qc-assignment-details"
     name = _l("QC Assignment Details")
     filter_class = filters.AssignedQCDetailsFilter
-    description = mark_safe(_l(
-        "This report includes details of all Test Lists (Cycles) assigned to "
-        "selected sites, units, frequencies, and groups."
-    ))
+    description = mark_safe(
+        _l(
+            "This report includes details of all Test Lists (Cycles) assigned to "
+            "selected sites, units, frequencies, and groups."
+        )
+    )
     category = _l("QC")
 
     template = "reports/qc/assigned_qc_details.html"
@@ -272,10 +276,12 @@ class PaperBackupForms(AssignedQCDetailsReport):
     report_type = "qc-paper-backup-forms"
     name = _l("QC Paper Backup Forms")
     filter_class = filters.AssignedQCDetailsFilter
-    description = mark_safe(_l(
-        "This report generates pdf backup forms which can be used in place of QATrack+ "
-        "in case your QATrack+ installation is offline for some reason."
-    ))
+    description = mark_safe(
+        _l(
+            "This report generates pdf backup forms which can be used in place of QATrack+ "
+            "in case your QATrack+ installation is offline for some reason."
+        )
+    )
     category = _l("QC Backup Forms")
 
     template = "reports/qc/backup_forms.html"

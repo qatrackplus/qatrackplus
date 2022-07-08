@@ -393,6 +393,12 @@ Apache to serve:
 
     python manage.py collectstatic
 
+If you want to use a translation, you'll need to compile translation messages:
+
+.. code-block:: bash
+    
+    python manage.py compilemessages
+
 
 Setting up Django Q
 ------------------- 

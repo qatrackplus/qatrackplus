@@ -32,11 +32,11 @@ yapf:
 	yapf --verbose --in-place --recursive --parallel \
 		-e*fixtures* -e*migration* -e*.git* -e*tmp* -e*deploy* \
 		-e*media* -e deploy  -e env -e*templates* -e*backups* -e*ipynb* -e*static* \
-		-e*logs* -e*cache* -e*init.d* -e*emails* -e*postgres* -e*uploads* \
+		-e*logs* -e*cache* -e*init.d* -e*emails* -e*postgres* -e*uploads* -e*.eggs*\
 		.
 
 flake8:
-	flake8 .
+	flake8 --exclude .eggs .
 
 docs:
 	cd docs && make html
@@ -70,5 +70,13 @@ run:
 __cleardb__:
 	python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"
 
+messages:
+	python manage.py makemessages -a -e py,html
+	python manage.py makemessages -a -d djangojs
+
+compile-messages:
+	python manage.py compilemessages
+
 .PHONY: test test_simple yapf flake8 help docs-autobuild docs \
-	qatrack_daemon.conf supervisor.conf schema run __cleardb__ mysql-ro-rights
+	qatrack_daemon.conf supervisor.conf schema run __cleardb__ mysql-ro-rights \
+	messages compile-messages

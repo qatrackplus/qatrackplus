@@ -29,7 +29,9 @@ class BaseTree:
 
         node = {
             'text': text,
-            'state': {'expanded': int(bool(expanded))},
+            'state': {
+                'expanded': int(bool(expanded))
+            },
         }
         if nodes is not False:
             node['nodes'] = nodes or []

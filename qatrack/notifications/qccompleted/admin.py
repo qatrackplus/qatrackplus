@@ -81,10 +81,11 @@ class QCCompletedAdmin(BaseQATrackAdmin):
         (
             "Filters", {
                 'fields': ['units', 'test_lists'],
-                'description': _l(
-                    "By using the below filters, you may limit this notification to "
-                    "certain units or test lists."
-                ),
+                'description':
+                    _l(
+                        "By using the below filters, you may limit this notification to "
+                        "certain units or test lists."
+                    ),
             }
         ),
     )
@@ -111,24 +112,29 @@ class QCCompletedAdmin(BaseQATrackAdmin):
     def get_notification_type(self, obj):
         if obj.notification_type == models.QCCompletedNotice.FOLLOW_UP:
             return _("#%(id)d - Follow up notification (after %(num_days)s days)") % {
-                'num_days': obj.follow_up_days, 'id': obj.id,
+                'num_days': obj.follow_up_days,
+                'id': obj.id,
             }
         return "#%s - %s" % (obj.pk, obj.get_notification_type_display())
+
     get_notification_type.admin_order_field = "notification_type"
     get_notification_type.short_description = _l("Notification Type")
 
     def get_units(self, obj):
         return obj.units.name if obj.units else ""
+
     get_units.admin_order_field = "units__name"
     get_units.short_description = _l("Units Group")
 
     def get_recipients(self, obj):
         return obj.recipients.name
+
     get_recipients.admin_order_field = "recipients__name"
     get_recipients.short_description = _l("Recipient Group")
 
     def get_testlists(self, obj):
         return obj.test_lists.name if obj.test_lists else ""
+
     get_testlists.admin_order_field = "test_lists__name"
     get_testlists.short_description = _l("TestList Group")
 

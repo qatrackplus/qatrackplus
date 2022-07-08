@@ -13,8 +13,16 @@ urlpatterns = [
     url(r'^event/review-required/$', views.ServiceEventsReviewRequiredList.as_view(), name="sl_list_review_required"),
     url(r'^event/review/choose-unit/$', views.ChooseUnitForViewSE.as_view(), name="sl_unit_view_se"),
     url(r'^event/unit/(?P<unit_number>\d+)/$', views.ServiceEventsByUnitList.as_view(), name="sl_list_by_unit"),
-    url(r'^event/initiated-by/(?P<tli_pk>\d+)/$', views.ServiceEventsInitiatedByList.as_view(), name="sl_list_initiated_by"),
-    url(r'^event/return-to-service-for/(?P<tli_pk>\d+)/$', views.ServiceEventsReturnToServiceForList.as_view(), name="sl_list_return_to_service_for"),
+    url(
+        r'^event/initiated-by/(?P<tli_pk>\d+)/$',
+        views.ServiceEventsInitiatedByList.as_view(),
+        name="sl_list_initiated_by"
+    ),
+    url(
+        r'^event/return-to-service-for/(?P<tli_pk>\d+)/$',
+        views.ServiceEventsReturnToServiceForList.as_view(),
+        name="sl_list_return_to_service_for"
+    ),
     url(r'^event/status/(?P<pk>\d+)/$', views.ServiceEventsByStatusList.as_view(), name="sl_list_by_status"),
     url(r'^event/report/(?P<pk>\d+)/$', views.service_log_report, name="sl_service_event_report"),
     url(r'^rtsqa/$', views.ReturnToServiceQABaseList.as_view(), name="rtsqa_list_all"),
@@ -33,5 +41,9 @@ urlpatterns = [
     url(r'^event/schedule/all/$', views.ServiceEventScheduleList.as_view(), name='se_schedule_list_all'),
     url(r'^event/schedule/due-and-overdue/$', views.DueAndOverdue.as_view(), name='se_schedule_due'),
     url(r'^event/schedule/due-dates/$', views.DueDateOverview.as_view(), name='se_schedule_overview_due_dates'),
-    url(r'^event/schedule/due-dates-user/$', views.DueDateOverview.as_view(), name='se_schedule_overview_due_dates_user'),
+    url(
+        r'^event/schedule/due-dates-user/$',
+        views.DueDateOverview.as_view(),
+        name='se_schedule_overview_due_dates_user'
+    ),
 ]

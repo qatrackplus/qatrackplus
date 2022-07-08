@@ -12,10 +12,9 @@ def limit_offset_pagination_factory(page_size=10):
     return CustomPageSizePagination
 
 
-class CreateListRetrieveViewSet(mixins.CreateModelMixin,
-                                mixins.ListModelMixin,
-                                mixins.RetrieveModelMixin,
-                                viewsets.GenericViewSet):
+class CreateListRetrieveViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     """
     A viewset that provides `retrieve`, `create`, and `list` actions.
 

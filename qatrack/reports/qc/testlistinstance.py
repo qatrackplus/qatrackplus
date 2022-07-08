@@ -24,10 +24,12 @@ class TestListInstanceSummaryReport(BaseReport):
     report_type = "testlistinstance_summary"
     name = _l("Test List Instance Summary")
     filter_class = filters.TestListInstanceFilter
-    description = mark_safe(_l(
-        "This report lists all Test List Instances from a given time period for "
-        "selected sites, units, frequencies, and groups."
-    ))
+    description = mark_safe(
+        _l(
+            "This report lists all Test List Instances from a given time period for "
+            "selected sites, units, frequencies, and groups."
+        )
+    )
 
     MAX_TLIS = getattr(settings, "REPORT_QCSUMMARYREPORT_MAX_TLIS", 5000)
 
@@ -74,9 +76,9 @@ class TestListInstanceSummaryReport(BaseReport):
         context = super().get_context()
 
         # since we're grouping by site, we need to handle sites separately
-        sites = self.filter_set.qs.order_by(
-            "unit_test_collection__unit__site__name"
-        ).values_list("unit_test_collection__unit__site", flat=True).distinct()
+        sites = self.filter_set.qs.order_by("unit_test_collection__unit__site__name").values_list(
+            "unit_test_collection__unit__site", flat=True
+        ).distinct()
 
         sites_data = []
 
@@ -104,11 +106,7 @@ class TestListInstanceSummaryReport(BaseReport):
     def get_tlis_for_site(self, qs, site):
         """Get Test List Instances from filtered queryset for input site"""
 
-        tlis = qs.filter(
-            unit_test_collection__unit__site=site,
-        ).exclude(
-            Q(work_completed=None) | Q(in_progress=True),
-        )
+        tlis = qs.filter(unit_test_collection__unit__site=site,).exclude(Q(work_completed=None) | Q(in_progress=True),)
 
         tlis = tlis.order_by(
             "unit_test_collection__unit__%s" % settings.ORDER_UNITS_BY,
@@ -265,9 +263,7 @@ class TestListInstanceDetailsReport(BaseReport):
     def get_comments(self, utcs):
         from django_comments.models import Comment
         ct = ContentType.objects.get(model="testlistinstance").pk
-        tlis = models.TestListInstance.objects.filter(
-            unit_test_collection__id__in=utcs.values_list("id"),
-        )
+        tlis = models.TestListInstance.objects.filter(unit_test_collection__id__in=utcs.values_list("id"),)
 
         comments_qs = Comment.objects.filter(
             content_type_id=ct,
@@ -311,7 +307,8 @@ class TestListInstanceDetailsReport(BaseReport):
                 [_("Created By") + ":", format_user(tli.created_by)],
                 [_("Work Started") + ":", format_as_date(tli.work_started)],
                 [_("Work Completed") + ":", format_as_date(tli.work_completed)],
-                [_("Duration") + ":", _("In Progress") if tli.in_progress else as_time_delta(tli.duration())],
+                [_("Duration") + ":",
+                 _("In Progress") if tli.in_progress else as_time_delta(tli.duration())],
                 [_("Modified") + ":", format_as_date(tli.modified)],
                 [_("Modified By") + ":", format_user(tli.modified_by)],
                 [_("Review Satus") + ":", tli.review_status.name],

@@ -85,15 +85,8 @@ class IssueList(BaseListableView):
     multi_separator = '<span class="padding-0-10">|</span>'
 
     fields = (
-        'actions',
-        'pk',
-        'issue_type__name',
-        'issue_priority__name',
-        'user_submitted_by__username',
-        'description',
-        'datetime_submitted',
-        'issue_tags__name',
-        'issue_status__name'
+        'actions', 'pk', 'issue_type__name', 'issue_priority__name', 'user_submitted_by__username', 'description',
+        'datetime_submitted', 'issue_tags__name', 'issue_status__name'
     )
 
     headers = {
@@ -124,26 +117,13 @@ class IssueList(BaseListableView):
         'actions': False,
     }
 
-    order_fields = {
-        'actions': False,
-        'datetime_submitted': 'datetime_submitted',
-        'issue_tags__name': False
-    }
+    order_fields = {'actions': False, 'datetime_submitted': 'datetime_submitted', 'issue_tags__name': False}
 
-    date_ranges = {
-        'datetime_submitted': (TODAY, YESTERDAY, LAST_WEEK, LAST_MONTH)
-    }
+    date_ranges = {'datetime_submitted': (TODAY, YESTERDAY, LAST_WEEK, LAST_MONTH)}
 
-    select_related = (
-        'issue_type',
-        'issue_priority',
-        'user_submitted_by',
-        'issue_status'
-    )
+    select_related = ('issue_type', 'issue_priority', 'user_submitted_by', 'issue_status')
 
-    prefetch_related = (
-        'issue_tags',
-    )
+    prefetch_related = ('issue_tags',)
 
     def get_icon(self):
         return 'fa-bug'

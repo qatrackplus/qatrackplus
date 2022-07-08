@@ -398,6 +398,57 @@ urls as well:
     STATIC_URL = '/qatrack_static/'
 
 
+LANGUAGE_CODE
+.............
+
+Set `LANGUAGE_CODE = '<lang>'`, where `<lang>` is a language code, for example
+`fr`, to activate translations site-wide. All choices can be found `here
+<http://www.i18nguy.com/unicode/language-identifiers.html>`__ . You can use a
+language code with a country code, for example `fr-ca`, or just the base
+language code, e.g. `fr`.
+
+Note that for this to work translations must be available in the QATrack+
+codebase. This work is ongoing.
+
+DATETIME_HELP
+.............
+
+Set `DATETIME_HELP` to a string that will help the user with the datetime
+input format. This help appears as a tooltip on datetime widgets in the
+frontend.
+
+`DATETIME_HELP` has a default value in `settings.py`` which is appropriate for
+English and can be overridden by redefining it in `local_settings.py`.
+
+It is recommended to directly translate `DATETIME_HELP` in the language of your
+choice. For example, with `LANGUAGE_CODE='fr'`:
+
+.. code-block:: python
+
+    # local_settings.py
+
+    import datetime
+    from . import formats
+
+    LANGUAGE_CODE = 'fr'
+
+    # A date for the example
+    _dt = datetime.datetime(2012, 5, 31, hour=14, minute=30)
+
+    # Get the date format presented to the user in the frontend
+    _datetime_format = getattr(formats, LANGUAGE_CODE).formats.MOMENT_DATETIME_FMT
+
+    # Translate format to French
+    _datetime_format = _datetime_format.replace("Y", "A").replace("D", "J")
+
+    # Format example date with the same format
+    _formatted_dt = datetime.datetime.strftime(
+        _dt, getattr(formats, LANGUAGE_CODE).formats.PYTHON_DATETIME_FORMAT
+    )
+
+    # Override DATETIME_HELP from settings.py for local language
+    DATETIME_HELP = f"Format {_datetime_format} (avec l'heure en format 24h, p. ex. {_formatted_dt})"
+
 MAX_TESTS_PER_TESTLIST
 ......................
 
@@ -492,7 +543,6 @@ USE_X_FORWARDED_HOST
 Set `USE_X_FORWARDED_HOST = True` when running QATrack+ behind a reverse proxy
 and set to False for whenever you are not running behind a reverse proxy e.g.
 Set to True for CherryPy/IIS and False for Apache/mod_wsgi or development work.
-
 
 SESSION Settings
 ~~~~~~~~~~~~~~~~

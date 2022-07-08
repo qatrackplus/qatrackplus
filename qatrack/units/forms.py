@@ -21,9 +21,12 @@ def max_24hr(value: timedelta) -> None:
 
 year_select = forms.ChoiceField(
     required=False,
-    choices=[(y, y) for y in range(timezone.now().year - 20, timezone.now().year + 10)],
+    choices=[(y, y) for y in range(timezone.now().year - 20,
+                                   timezone.now().year + 10)],
     initial=timezone.now().year
-).widget.render('year_select', timezone.now().year, attrs={'id': 'id_year_select'})
+).widget.render(
+    'year_select', timezone.now().year, attrs={'id': 'id_year_select'}
+)
 
 month_select = forms.ChoiceField(
     required=False,

@@ -25,9 +25,7 @@ def part_list_in_storage(s):
             # 'admin:%s_%s_change' % ('parts',  'part'),
             args=[p.part.id]
         )
-        parts_html += '<li class="part_list_entry"><a href="%s">(%s) - %s</a></li>' % (
-            href, p.quantity, p.part
-        )
+        parts_html += '<li class="part_list_entry"><a href="%s">(%s) - %s</a></li>' % (href, p.quantity, p.part)
     parts_html += '</ul>'
 
     return mark_safe(div % parts_html)

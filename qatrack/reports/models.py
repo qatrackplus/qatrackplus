@@ -68,7 +68,10 @@ class SavedReport(models.Model):
             ("can_create_sql_reports", _l("Can create SQL Data Reports")),
         )
 
-        ordering = ("title", "created",)
+        ordering = (
+            "title",
+            "created",
+        )
 
     def get_filter_class(self):
         return report_class(self.report_type).filter_class
@@ -106,9 +109,7 @@ class ReportNote(models.Model):
 
     report = models.ForeignKey(SavedReport, on_delete=models.CASCADE)
 
-    heading = models.TextField(
-        help_text=_l("Add a heading for this note"),
-    )
+    heading = models.TextField(help_text=_l("Add a heading for this note"),)
     content = models.TextField(
         help_text=_l("Add the content of this note"),
         blank=True,

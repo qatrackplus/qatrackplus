@@ -20,6 +20,7 @@ from qatrack.units.tests import utils as u_utils
 
 
 class TestFaultType:
+
     def test_str(self):
         assert str(FaultType(code="code")) == "code"
 
@@ -142,7 +143,8 @@ class TestModalityFilter(TestCase):
         f = utils.create_fault(unit=self.unit, user=self.user, fault_type=self.fault_type)
 
         correct_modality = utils.create_fault(
-            unit=self.unit, user=self.user, fault_type=f.fault_types.first(), modality=self.modality)
+            unit=self.unit, user=self.user, fault_type=f.fault_types.first(), modality=self.modality
+        )
 
         with mock.patch.object(self.mf, "value", return_value=self.modality.id):
             qs = self.mf.queryset(None, Fault.objects.all())
@@ -918,12 +920,7 @@ class TestFaultTypeAutocomplete(TestCase):
 
         fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
         results = self.client.get(self.url, {'q': 'ft 2'}).json()['results']
-        expected = [{
-            'id': fts[2].code,
-            'text': "ft 2",
-            'code': fts[2].code,
-            'description': ''
-        }]
+        expected = [{'id': fts[2].code, 'text': "ft 2", 'code': fts[2].code, 'description': ''}]
         assert results == expected
 
     def test_query_exact_case_insensitive_match(self):
@@ -950,9 +947,24 @@ class TestFaultTypeAutocomplete(TestCase):
 
         results = self.client.get(self.url, {'q': 'ft 21'}).json()['results']
         assert results == [
-            {'id': "ft 21", 'text': "ft 21", 'code': "ft 21", 'description': ''},
-            {'id': "ft 212", 'text': "ft 212: description", 'code': "ft 212", 'description': 'description'},
-            {'id': "ft 213", 'text': "ft 213", 'code': "ft 213", 'description': ''},
+            {
+                'id': "ft 21",
+                'text': "ft 21",
+                'code': "ft 21",
+                'description': ''
+            },
+            {
+                'id': "ft 212",
+                'text': "ft 212: description",
+                'code': "ft 212",
+                'description': 'description'
+            },
+            {
+                'id': "ft 213",
+                'text': "ft 213",
+                'code': "ft 213",
+                'description': ''
+            },
         ]
 
     def test_query_exact_match_with_whitespace_plus_others(self):

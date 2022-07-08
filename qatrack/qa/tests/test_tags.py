@@ -39,9 +39,7 @@ class TestTags(TestCase):
 
     def test_as_pass_fail_status(self):
 
-        tli = utils.create_test_list_instance(
-            unit_test_collection=self.unit_test_list
-        )
+        tli = utils.create_test_list_instance(unit_test_collection=self.unit_test_list)
         rendered = qa_tags.as_pass_fail_status(tli)
         self.assertIsInstance(rendered, str)
 
@@ -92,7 +90,10 @@ class TestRefTolSpan(TestCase):
         r = models.Reference(value=1)
         tol = models.Tolerance(
             type=models.ABSOLUTE,
-            act_low=-2, tol_low=-1, tol_high=1, act_high=2,
+            act_low=-2,
+            tol_low=-1,
+            tol_high=1,
+            act_high=2,
         )
         result = qa_tags.reference_tolerance_span(t, r, tol)
         self.assertIn("%s L" % (settings.TEST_STATUS_DISPLAY_SHORT['action']), result)
@@ -127,7 +128,10 @@ class TestToleranceForReference(TestCase):
         r = models.Reference(value=1)
         tol = models.Tolerance(
             type=models.ABSOLUTE,
-            act_low=-2, tol_low=-1, tol_high=1, act_high=2,
+            act_low=-2,
+            tol_low=-1,
+            tol_high=1,
+            act_high=2,
         )
 
         self.assertIn("Between 0 &amp; 2", qa_tags.tolerance_for_reference(tol, r))

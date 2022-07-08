@@ -93,13 +93,10 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             qualified_groups = ActiveDirectoryGroupMap.qualified_ad_group_names()
             if qualified_groups:
                 if len(set(qualified_groups) & set(user_attrs['member_of'])) == 0:
-                    self.logger.info(
-                        (
-                            "successfully authenticated: %s but they don't belong to a qualified group. "
-                            "Qualified Groups: %s AD member_of: %s"
-                        ) %
-                        (username, ', '.join(qualified_groups), ', '.join(user_attrs['member_of']))
-                    )
+                    self.logger.info((
+                        "successfully authenticated: %s but they don't belong to a qualified group. "
+                        "Qualified Groups: %s AD member_of: %s"
+                    ) % (username, ', '.join(qualified_groups), ', '.join(user_attrs['member_of'])))
                     return None
 
             self.logger.debug("successfully authenticated: %s" % username)
@@ -236,11 +233,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         """
         if settings.AD_CLEAN_USERNAME and callable(settings.AD_CLEAN_USERNAME):
             return settings.AD_CLEAN_USERNAME(username)
-        return username.replace(
-            settings.CLEAN_USERNAME_STRING, ""
-        ).replace(
-            settings.AD_CLEAN_USERNAME_STRING, ""
-        )
+        return username.replace(settings.CLEAN_USERNAME_STRING, "").replace(settings.AD_CLEAN_USERNAME_STRING, "")
 
 
 class WindowsIntegratedAuthenticationBackend(ModelBackend):
@@ -396,7 +389,9 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
             if adfs_settings.GROUPS_CLAIM in claims:
                 claim_groups = claims[adfs_settings.GROUPS_CLAIM]
                 if not isinstance(claim_groups, list):
-                    claim_groups = [claim_groups, ]
+                    claim_groups = [
+                        claim_groups,
+                    ]
             else:
                 self.logger.debug(
                     "The configured groups claim '{}' was not found in the access token".format(

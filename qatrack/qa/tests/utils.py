@@ -129,20 +129,11 @@ def create_cycle(test_lists=None, name=None):
         name = 'test_list_cycle_%04d' % get_next_id(models.TestListCycle.objects.order_by('id').last())
 
     user = create_user()
-    cycle = models.TestListCycle(
-        name=name,
-        slug=name,
-        created_by=user,
-        modified_by=user
-    )
+    cycle = models.TestListCycle(name=name, slug=name, created_by=user, modified_by=user)
     cycle.save()
     if test_lists:
         for order, test_list in enumerate(test_lists):
-            tlcm = models.TestListCycleMembership(
-                test_list=test_list,
-                cycle=cycle,
-                order=order
-            )
+            tlcm = models.TestListCycleMembership(test_list=test_list, cycle=cycle, order=order)
             tlcm.save()
 
     return cycle
@@ -195,16 +186,21 @@ def create_reference(name="ref", ref_type=models.NUMERICAL, value=1, created_by=
     if created_by is None:
         created_by = create_user()
 
-    r = models.Reference(
-        name=name, type=ref_type, value=value,
-        created_by=created_by, modified_by=created_by
-    )
+    r = models.Reference(name=name, type=ref_type, value=value, created_by=created_by, modified_by=created_by)
     r.save()
     return r
 
 
-def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=1, act_high=2, created_by=None,
-                     mc_pass_choices='', mc_tol_choices=''):
+def create_tolerance(
+    tol_type=models.ABSOLUTE,
+    act_low=-2,
+    tol_low=-1,
+    tol_high=1,
+    act_high=2,
+    created_by=None,
+    mc_pass_choices='',
+    mc_tol_choices=''
+):
 
     if created_by is None:
         created_by = create_user()
@@ -215,7 +211,8 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
         tol_low=tol_low,
         tol_high=tol_high,
         act_high=act_high,
-        created_by=created_by, modified_by=created_by
+        created_by=created_by,
+        modified_by=created_by
     )
 
     if tol_type == models.MULTIPLE_CHOICE:
@@ -223,7 +220,8 @@ def create_tolerance(tol_type=models.ABSOLUTE, act_low=-2, tol_low=-1, tol_high=
             type=tol_type,
             mc_tol_choices=mc_tol_choices,
             mc_pass_choices=mc_pass_choices,
-            created_by=created_by, modified_by=created_by
+            created_by=created_by,
+            modified_by=created_by
         )
 
     tol = models.Tolerance(**kwargs)
@@ -265,12 +263,7 @@ def create_unit_test_info(unit=None, test=None, assigned_to=None, ref=None, tol=
         assigned_to = create_group()
 
     uti = models.UnitTestInfo(
-        unit=unit,
-        test=test,
-        reference=ref,
-        tolerance=tol,
-        assigned_to=assigned_to,
-        active=active
+        unit=unit, test=test, reference=ref, tolerance=tol, assigned_to=assigned_to, active=active
     )
     uti.save()
     return uti
@@ -319,10 +312,6 @@ def create_sublist(parent_test_list=None, child_test_list=None, order=1):
     if child_test_list is None:
         child_test_list = create_test_list()
 
-    s = models.Sublist(
-        parent=parent_test_list,
-        child=child_test_list,
-        order=order
-    )
+    s = models.Sublist(parent=parent_test_list, child=child_test_list, order=order)
     s.save()
     return s

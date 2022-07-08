@@ -109,9 +109,7 @@ class ReportScheduleAdmin(BasicSaveUserAdmin):
         'created',
     )
 
-    list_filter = (
-        "report__report_type",
-    )
+    list_filter = ("report__report_type",)
 
     search_fields = [
         "title",
@@ -137,16 +135,19 @@ class ReportScheduleAdmin(BasicSaveUserAdmin):
 
     def get_report_type(self, obj):
         return obj.report.get_report_type_display()
+
     get_report_type.admin_order_field = "report__report_type"
     get_report_type.short_description = _l("Report Type")
 
     def get_report_format(self, obj):
         return obj.report.get_report_format_display()
+
     get_report_format.admin_order_field = "report__report_format"
     get_report_format.short_description = _l("Report Format")
 
     def get_report_title(self, obj):
         return obj.report.title
+
     get_report_title.admin_order_field = "report__report_title"
     get_report_title.short_description = _l("Report Title")
 

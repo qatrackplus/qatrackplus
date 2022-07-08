@@ -28,18 +28,21 @@ BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|
 
 
 class FrequencySerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Frequency
         fields = "__all__"
 
 
 class ReviewStatusSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.ReviewStatus
         fields = "__all__"
 
 
 class AutoReviewRuleSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.AutoReviewRule
         fields = "__all__"
@@ -53,24 +56,28 @@ class AutoReviewRuleSetSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ReferenceSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Reference
         fields = "__all__"
 
 
 class ToleranceSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Tolerance
         fields = "__all__"
 
 
 class CategorySerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Category
         fields = "__all__"
 
 
 class TestSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Test
         fields = "__all__"
@@ -91,12 +98,14 @@ class TestListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class UnitTestInfoSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.UnitTestInfo
         fields = "__all__"
 
 
 class TestListMembershipSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.TestListMembership
         fields = "__all__"
@@ -148,6 +157,7 @@ class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TestInstanceCreator(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.TestInstance
         fields = ["value", "string_value", "date_value", "datetime_value", "skipped", "comment", "macro"]

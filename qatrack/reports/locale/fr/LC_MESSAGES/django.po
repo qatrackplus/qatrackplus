@@ -1,0 +1,1347 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-18 08:12-0400\n"
+"PO-Revision-Date: 2022-06-21 14:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
+"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
+"reports/fr/>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.12.1\n"
+
+#: qatrack/reports/admin.py:88 qatrack/reports/forms.py:181
+msgid "You must select at least one group, user, or email address!"
+msgstr ""
+"Vous devez sélectionner au moins un groupe, un utilisateur ou une adresse "
+"courriel !"
+
+#: qatrack/reports/faults/details.py:90 qatrack/reports/faults/summary.py:133
+#, fuzzy
+msgid "Not specified"
+msgstr "Non spécifié"
+
+#: qatrack/reports/faults/details.py:113 qatrack/reports/faults/summary.py:149
+#: qatrack/reports/tests/test_faults.py:112
+#: qatrack/reports/tests/test_faults.py:182
+#, fuzzy
+msgid "Fault ID"
+msgstr "Fault ID"
+
+#: qatrack/reports/faults/details.py:114 qatrack/reports/faults/summary.py:150
+#: qatrack/reports/templates/reports/faults/details.html:22
+#: qatrack/reports/templates/reports/faults/summary.html:15
+#: qatrack/reports/tests/test_faults.py:113
+#: qatrack/reports/tests/test_faults.py:183
+#, fuzzy
+msgid "Occurred"
+msgstr "Occurred"
+
+#: qatrack/reports/faults/details.py:115 qatrack/reports/faults/summary.py:151
+#: qatrack/reports/qc/assigned_qc.py:92 qatrack/reports/qc/assigned_qc.py:252
+#: qatrack/reports/qc/testinstance.py:117
+#: qatrack/reports/qc/testlistinstance.py:152
+#: qatrack/reports/service_log/assigned_qc.py:92
+#: qatrack/reports/service_log/assigned_qc.py:252
+#: qatrack/reports/service_log/assigned_templates.py:95
+#: qatrack/reports/service_log/details.py:141
+#: qatrack/reports/service_log/service_times.py:168
+#: qatrack/reports/service_log/summary.py:166
+#: qatrack/reports/templates/reports/faults/details.html:11
+#: qatrack/reports/templates/reports/faults/summary.html:11
+#: qatrack/reports/templates/reports/qc/assigned_qc.html:11
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:11
+#: qatrack/reports/templates/reports/service_log/assigned_templates.html:11
+#: qatrack/reports/templates/reports/service_log/details.html:11
+#: qatrack/reports/templates/reports/service_log/service_times.html:11
+#: qatrack/reports/templates/reports/service_log/summary.html:11
+#: qatrack/reports/tests/test_faults.py:114
+#: qatrack/reports/tests/test_faults.py:184
+#: qatrack/reports/tests/test_qc.py:334 qatrack/reports/tests/test_qc.py:494
+#: qatrack/reports/tests/test_service_log.py:109
+#: qatrack/reports/tests/test_service_log.py:179
+#: qatrack/reports/tests/test_service_log.py:441
+msgid "Site"
+msgstr "Site"
+
+#: qatrack/reports/faults/details.py:116 qatrack/reports/faults/summary.py:152
+#: qatrack/reports/qc/assigned_qc.py:93 qatrack/reports/qc/assigned_qc.py:253
+#: qatrack/reports/qc/due_dates.py:79 qatrack/reports/qc/testinstance.py:116
+#: qatrack/reports/qc/testlistinstance.py:153
+#: qatrack/reports/service_log/assigned_qc.py:93
+#: qatrack/reports/service_log/assigned_qc.py:253
+#: qatrack/reports/service_log/assigned_templates.py:96
+#: qatrack/reports/service_log/details.py:142
+#: qatrack/reports/service_log/due_dates.py:86
+#: qatrack/reports/service_log/service_times.py:169
+#: qatrack/reports/service_log/summary.py:167
+#: qatrack/reports/templates/reports/faults/details.html:27
+#: qatrack/reports/templates/reports/faults/summary.html:16
+#: qatrack/reports/templates/reports/qc/assigned_qc.html:17
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:16
+#: qatrack/reports/templates/reports/qc/backup_forms.html:25
+#: qatrack/reports/templates/reports/qc/next_due.html:17
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:27
+#: qatrack/reports/templates/reports/qc/testlistinstance_summary.html:13
+#: qatrack/reports/templates/reports/service_log/assigned_templates.html:17
+#: qatrack/reports/templates/reports/service_log/details.html:19
+#: qatrack/reports/templates/reports/service_log/next_due.html:17
+#: qatrack/reports/templates/reports/service_log/service_times.html:16
+#: qatrack/reports/templates/reports/service_log/summary.html:19
+#: qatrack/reports/tests/test_faults.py:115
+#: qatrack/reports/tests/test_faults.py:185
+#: qatrack/reports/tests/test_qc.py:333 qatrack/reports/tests/test_qc.py:440
+#: qatrack/reports/tests/test_qc.py:495
+#: qatrack/reports/tests/test_service_log.py:110
+#: qatrack/reports/tests/test_service_log.py:180
+#: qatrack/reports/tests/test_service_log.py:385
+#: qatrack/reports/tests/test_service_log.py:442
+msgid "Unit"
+msgstr "Unité"
+
+#: qatrack/reports/faults/details.py:117 qatrack/reports/faults/summary.py:153
+#: qatrack/reports/tests/test_faults.py:116
+#: qatrack/reports/tests/test_faults.py:186
+#, fuzzy
+msgid "Fault Type"
+msgstr "Type d’anomalie"
+
+#: qatrack/reports/faults/details.py:118 qatrack/reports/faults/summary.py:154
+#: qatrack/reports/templates/reports/faults/details.html:37
+#: qatrack/reports/templates/reports/faults/summary.html:18
+#: qatrack/reports/tests/test_faults.py:117
+#: qatrack/reports/tests/test_faults.py:187
+msgid "Modality"
+msgstr "Modalité"
+
+#: qatrack/reports/faults/details.py:119
+#: qatrack/reports/qc/testlistinstance.py:308
+#: qatrack/reports/service_log/details.py:148
+#: qatrack/reports/templates/reports/faults/details.html:42
+#: qatrack/reports/templates/reports/service_log/details.html:55
+#: qatrack/reports/tests/test_faults.py:188
+#: qatrack/reports/tests/test_service_log.py:186
+msgid "Created By"
+msgstr "Créé par"
+
+#: qatrack/reports/faults/details.py:120
+#: qatrack/reports/service_log/details.py:149
+#: qatrack/reports/tests/test_faults.py:189
+#: qatrack/reports/tests/test_service_log.py:187
+msgid "Created Date"
+msgstr "Créé le"
+
+#: qatrack/reports/faults/details.py:121
+#: qatrack/reports/service_log/details.py:150
+#: qatrack/reports/tests/test_faults.py:190
+#: qatrack/reports/tests/test_service_log.py:188
+msgid "Modified By"
+msgstr "Modifié par"
+
+#: qatrack/reports/faults/details.py:122
+#: qatrack/reports/service_log/details.py:151
+#: qatrack/reports/tests/test_faults.py:191
+#: qatrack/reports/tests/test_service_log.py:189
+msgid "Modified Date"
+msgstr "Modifié le"
+
+#: qatrack/reports/faults/details.py:123
+#: qatrack/reports/qc/testlistinstance.py:319
+#: qatrack/reports/qc/testlistinstance.py:324
+#: qatrack/reports/templates/reports/faults/details.html:54
+#: qatrack/reports/tests/test_faults.py:192
+#, fuzzy
+msgid "Reviewed By"
+msgstr "Reviewed By"
+
+#: qatrack/reports/faults/details.py:124
+#: qatrack/reports/tests/test_faults.py:193
+#, fuzzy
+msgid "Reviewed Date"
+msgstr "Reviewed Date"
+
+#: qatrack/reports/faults/details.py:125
+#: qatrack/reports/service_log/details.py:156
+#: qatrack/reports/templates/reports/faults/details.html:63
+#: qatrack/reports/templates/reports/faults/details.html:77
+#: qatrack/reports/templates/reports/service_log/details.html:97
+#: qatrack/reports/templates/reports/service_log/details.html:111
+#: qatrack/reports/tests/test_faults.py:194
+#: qatrack/reports/tests/test_service_log.py:194
+#, fuzzy
+msgid "Related Service Events"
+msgstr "Related Service Events"
+
+#: qatrack/reports/faults/details.py:126 qatrack/reports/faults/summary.py:155
+#: qatrack/reports/qc/assigned_qc.py:97 qatrack/reports/qc/assigned_qc.py:257
+#: qatrack/reports/qc/testlistinstance.py:158
+#: qatrack/reports/service_log/assigned_qc.py:97
+#: qatrack/reports/service_log/assigned_qc.py:257
+#: qatrack/reports/service_log/assigned_templates.py:101
+#: qatrack/reports/service_log/details.py:163
+#: qatrack/reports/service_log/summary.py:177
+#: qatrack/reports/tests/test_faults.py:118
+#: qatrack/reports/tests/test_faults.py:195
+#: qatrack/reports/tests/test_qc.py:499
+#: qatrack/reports/tests/test_service_log.py:118
+#: qatrack/reports/tests/test_service_log.py:201
+#: qatrack/reports/tests/test_service_log.py:447
+#, fuzzy
+msgid "Link"
+msgstr "Lien"
+
+#: qatrack/reports/faults/summary.py:56 qatrack/reports/filters.py:246
+#: qatrack/reports/filters.py:269 qatrack/reports/qc/assigned_qc.py:252
+#: qatrack/reports/qc/due_dates.py:78 qatrack/reports/qc/testinstance.py:181
+#: qatrack/reports/qc/testlistinstance.py:67
+#: qatrack/reports/service_log/assigned_qc.py:252
+#: qatrack/reports/service_log/due_dates.py:84
+#: qatrack/reports/service_log/personnel.py:43
+#: qatrack/reports/service_log/summary.py:47
+#: qatrack/reports/templates/reports/faults/details.html:11
+#: qatrack/reports/templates/reports/faults/summary.html:11
+#: qatrack/reports/templates/reports/qc/assigned_qc.html:11
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:11
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:17
+#: qatrack/reports/templates/reports/qc/backup_forms.html:26
+#: qatrack/reports/templates/reports/qc/next_due.html:11
+#: qatrack/reports/templates/reports/qc/testlistinstance_summary.html:9
+#: qatrack/reports/templates/reports/service_log/assigned_templates.html:11
+#: qatrack/reports/templates/reports/service_log/details.html:11
+#: qatrack/reports/templates/reports/service_log/next_due.html:11
+#: qatrack/reports/templates/reports/service_log/service_times.html:11
+#: qatrack/reports/templates/reports/service_log/summary.html:11
+msgid "Other"
+msgstr "Autre"
+
+#: qatrack/reports/faults/summary.py:59
+#: qatrack/reports/qc/testlistinstance.py:340
+#: qatrack/reports/tests/test_faults.py:34
+#: qatrack/reports/tests/test_faults.py:36
+#: qatrack/reports/tests/test_faults.py:38 qatrack/reports/tests/test_qc.py:241
+#, fuzzy
+msgid "Review Status"
+msgstr "Review Status"
+
+#: qatrack/reports/filters.py:213 qatrack/reports/filters.py:339
+#: qatrack/reports/filters.py:529
+#, fuzzy
+msgid "Both"
+msgstr "Both"
+
+#: qatrack/reports/filters.py:214 qatrack/reports/filters.py:257
+#: qatrack/reports/filters.py:284 qatrack/reports/filters.py:340
+#: qatrack/reports/filters.py:530 qatrack/reports/service_log/summary.py:114
+#: qatrack/reports/templates/reports/qc/backup_forms.html:83
+msgid "Yes"
+msgstr "Oui"
+
+#: qatrack/reports/filters.py:215 qatrack/reports/filters.py:257
+#: qatrack/reports/filters.py:284 qatrack/reports/filters.py:341
+#: qatrack/reports/filters.py:531 qatrack/reports/service_log/summary.py:114
+#: qatrack/reports/templates/reports/qc/backup_forms.html:82
+#: qatrack/reports/tests/test_service_log.py:34
+msgid "No"
+msgstr "Non"
+
+#: qatrack/reports/filters.py:255 qatrack/reports/filters.py:282
+#, fuzzy
+msgid "Either"
+msgstr "Either"
+
+#: qatrack/reports/filters.py:258 qatrack/reports/filters.py:285
+#, fuzzy
+msgid "Active Only"
+msgstr "Active Only"
+
+#: qatrack/reports/qc/assigned_qc.py:58 qatrack/reports/qc/assigned_qc.py:215
+#: qatrack/reports/qc/due_dates.py:58
+#: qatrack/reports/service_log/assigned_qc.py:58
+#: qatrack/reports/service_log/assigned_qc.py:215
+#: qatrack/reports/service_log/assigned_templates.py:57
+#: qatrack/reports/service_log/due_dates.py:64
+#, fuzzy
+msgid "Ad Hoc"
+msgstr "Ad Hoc"
+
+#: qatrack/reports/qc/assigned_qc.py:94 qatrack/reports/qc/assigned_qc.py:254
+#: qatrack/reports/service_log/assigned_qc.py:94
+#: qatrack/reports/service_log/assigned_qc.py:254
+#: qatrack/reports/tests/test_qc.py:496
+msgid "Test list (Cycle)"
+msgstr "(Cycle de) liste de tests"
+
+#: qatrack/reports/qc/assigned_qc.py:95 qatrack/reports/qc/assigned_qc.py:255
+#: qatrack/reports/qc/due_dates.py:81
+#: qatrack/reports/service_log/assigned_qc.py:95
+#: qatrack/reports/service_log/assigned_qc.py:255
+#: qatrack/reports/service_log/assigned_templates.py:99
+#: qatrack/reports/service_log/due_dates.py:89
+#: qatrack/reports/templates/reports/qc/assigned_qc.html:19
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:29
+#: qatrack/reports/templates/reports/qc/backup_forms.html:38
+#: qatrack/reports/templates/reports/qc/next_due.html:19
+#: qatrack/reports/templates/reports/service_log/assigned_templates.html:20
+#: qatrack/reports/templates/reports/service_log/next_due.html:20
+#: qatrack/reports/tests/test_qc.py:441 qatrack/reports/tests/test_qc.py:497
+#: qatrack/reports/tests/test_service_log.py:388
+#: qatrack/reports/tests/test_service_log.py:445
+msgid "Frequency"
+msgstr "Fréquence"
+
+#: qatrack/reports/qc/assigned_qc.py:96 qatrack/reports/qc/assigned_qc.py:256
+#: qatrack/reports/qc/due_dates.py:84
+#: qatrack/reports/service_log/assigned_qc.py:96
+#: qatrack/reports/service_log/assigned_qc.py:256
+#: qatrack/reports/service_log/assigned_templates.py:100
+#: qatrack/reports/service_log/due_dates.py:92
+#: qatrack/reports/templates/reports/qc/assigned_qc.html:20
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:32
+#: qatrack/reports/templates/reports/qc/backup_forms.html:41
+#: qatrack/reports/templates/reports/qc/next_due.html:22
+#: qatrack/reports/templates/reports/service_log/assigned_templates.html:21
+#: qatrack/reports/templates/reports/service_log/next_due.html:23
+#: qatrack/reports/tests/test_qc.py:444 qatrack/reports/tests/test_qc.py:498
+#: qatrack/reports/tests/test_service_log.py:391
+#: qatrack/reports/tests/test_service_log.py:446
+msgid "Assigned To"
+msgstr "Assigné à"
+
+#: qatrack/reports/qc/assigned_qc.py:136
+#: qatrack/reports/service_log/assigned_qc.py:136
+#, python-format
+msgid ""
+"This report can only be generated with %(max_num_unit_assignments)d or fewer "
+"Test List Assignments.  Your filters are including %(num_unit_assignments)d. "
+"Please reduce the number of Sites, Units, Frequencies, or Assigned To Groups."
+msgstr ""
+"Ce rapport ne peut être généré qu'avec un maximum de "
+"%(max_num_unit_assignments)d assignations de listes de tests. Vos filtres en "
+"incluent %(num_unit_assignments)d ; veuillez donc réduire le nombre de "
+"sites, d'unités, de fréquences ou de groupes assignés."
+
+#: qatrack/reports/qc/assigned_qc.py:261
+#: qatrack/reports/service_log/assigned_qc.py:261
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:26
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:46
+#: qatrack/reports/templates/reports/qc/backup_forms.html:35
+#: qatrack/reports/templates/reports/qc/backup_forms.html:62
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:30
+#: qatrack/reports/templates/reports/qc/testlistinstance_summary.html:14
+msgid "Test List"
+msgstr "Liste de tests"
+
+#: qatrack/reports/qc/assigned_qc.py:263
+#: qatrack/reports/service_log/assigned_qc.py:263
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:49
+#: qatrack/reports/templates/reports/qc/backup_forms.html:65
+#, fuzzy
+msgid "Cycle Day"
+msgstr "Jour du cycle"
+
+#: qatrack/reports/qc/assigned_qc.py:265 qatrack/reports/qc/testinstance.py:56
+#: qatrack/reports/qc/testinstance.py:115
+#: qatrack/reports/qc/testlistinstance.py:335
+#: qatrack/reports/service_log/assigned_qc.py:265
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:54
+#: qatrack/reports/templates/reports/qc/backup_forms.html:70
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:130
+#: qatrack/reports/tests/test_qc.py:236 qatrack/reports/tests/test_qc.py:332
+msgid "Test"
+msgstr "Test"
+
+#: qatrack/reports/qc/assigned_qc.py:265
+#: qatrack/reports/service_log/assigned_qc.py:265
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:55
+msgid "Category"
+msgstr "Catégorie"
+
+#: qatrack/reports/qc/assigned_qc.py:265 qatrack/reports/qc/testinstance.py:119
+#: qatrack/reports/qc/testinstance.py:187
+#: qatrack/reports/qc/testlistinstance.py:337
+#: qatrack/reports/service_log/assigned_qc.py:265
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:56
+#: qatrack/reports/templates/reports/qc/backup_forms.html:72
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:132
+#: qatrack/reports/tests/test_qc.py:238 qatrack/reports/tests/test_qc.py:336
+msgid "Reference"
+msgstr "Référence"
+
+#: qatrack/reports/qc/assigned_qc.py:265 qatrack/reports/qc/testinstance.py:120
+#: qatrack/reports/qc/testinstance.py:188
+#: qatrack/reports/qc/testlistinstance.py:338
+#: qatrack/reports/service_log/assigned_qc.py:265
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:57
+#: qatrack/reports/templates/reports/qc/backup_forms.html:73
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:133
+#: qatrack/reports/tests/test_qc.py:239 qatrack/reports/tests/test_qc.py:337
+msgid "Tolerance"
+msgstr "Tolérance"
+
+#: qatrack/reports/qc/due_dates.py:80
+#: qatrack/reports/service_log/personnel.py:158
+#: qatrack/reports/templates/reports/qc/backup_forms.html:48
+#: qatrack/reports/templates/reports/service_log/personnel.html:84
+#: qatrack/reports/tests/test_qc.py:440
+msgid "Name"
+msgstr "Nom"
+
+#: qatrack/reports/qc/due_dates.py:82
+#: qatrack/reports/qc/testlistinstance.py:155
+#: qatrack/reports/service_log/due_dates.py:90
+#: qatrack/reports/templates/reports/qc/next_due.html:20
+#: qatrack/reports/templates/reports/qc/testlistinstance_summary.html:15
+#: qatrack/reports/templates/reports/service_log/next_due.html:21
+#: qatrack/reports/tests/test_qc.py:442
+#: qatrack/reports/tests/test_service_log.py:389
+msgid "Due Date"
+msgstr "Date d'échéance"
+
+#: qatrack/reports/qc/due_dates.py:83
+#: qatrack/reports/service_log/due_dates.py:91
+#: qatrack/reports/tests/test_qc.py:443
+#: qatrack/reports/tests/test_service_log.py:390
+#, fuzzy
+msgid "Window"
+msgstr "Fenêtre"
+
+#: qatrack/reports/qc/due_dates.py:85
+#: qatrack/reports/service_log/due_dates.py:93
+#: qatrack/reports/tests/test_qc.py:445
+#: qatrack/reports/tests/test_service_log.py:392
+msgid "Perform"
+msgstr "Effectuer"
+
+#: qatrack/reports/qc/due_dates.py:112
+#, fuzzy
+msgid "next-due-dates-report"
+msgstr "next-due-dates-report"
+
+#: qatrack/reports/qc/due_dates.py:129
+#, fuzzy
+msgid "due-and-overdue-report"
+msgstr "due-and-overdue-report"
+
+#: qatrack/reports/qc/testinstance.py:37
+#, fuzzy, python-format
+msgid ""
+"This report can only be generated with %(max_num_test_instances)d or fewer "
+"Test Instances.  Your filters are including %(num_test_instances)d. Please "
+"reduce the number of Tests, Sites, Units, or Work Completed time period."
+msgstr ""
+"This report can only be generated with %(max_num_test_instances)d or fewer "
+"Test Instances.  Your filters are including %(num_test_instances)d. Please "
+"reduce the number of Tests, Sites, Units, or Work Completed time period."
+
+#: qatrack/reports/qc/testinstance.py:52
+#, fuzzy
+msgid "test-instance-details"
+msgstr "test-instance-details"
+
+#: qatrack/reports/qc/testinstance.py:73
+#, fuzzy, python-brace-format
+msgid ""
+"Sorry, '{organization}' is not supported for Preview or PDF reports. Switch "
+"to Excel or CSV format, or use 'One Test Instance Per Row'"
+msgstr ""
+"Sorry, '{organization}' is not supported for Preview or PDF reports. Switch "
+"to Excel or CSV format, or use 'One Test Instance Per Row'"
+
+#: qatrack/reports/qc/testinstance.py:114
+#: qatrack/reports/qc/testlistinstance.py:156
+#: qatrack/reports/qc/testlistinstance.py:310
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:53
+#: qatrack/reports/templates/reports/qc/testlistinstance_summary.html:16
+#: qatrack/reports/tests/test_qc.py:331
+#, fuzzy
+msgid "Work Completed"
+msgstr "Work Completed"
+
+#: qatrack/reports/qc/testinstance.py:118
+#: qatrack/reports/qc/testlistinstance.py:336
+#: qatrack/reports/templates/reports/qc/backup_forms.html:71
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:131
+#: qatrack/reports/tests/test_qc.py:237 qatrack/reports/tests/test_qc.py:335
+msgid "Value"
+msgstr "Valeur"
+
+#: qatrack/reports/qc/testinstance.py:121 qatrack/reports/tests/test_qc.py:338
+msgid "Skipped"
+msgstr "Sauté"
+
+#: qatrack/reports/qc/testinstance.py:122
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:40
+#: qatrack/reports/tests/test_qc.py:339
+msgid "Performed By"
+msgstr "Effectué par"
+
+#: qatrack/reports/qc/testinstance.py:123
+#: qatrack/reports/qc/testinstance.py:190
+#: qatrack/reports/qc/testlistinstance.py:328
+#: qatrack/reports/qc/testlistinstance.py:341
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:251
+#: qatrack/reports/tests/test_qc.py:242 qatrack/reports/tests/test_qc.py:340
+msgid "Comment"
+msgstr "Commentaire"
+
+#: qatrack/reports/qc/testinstance.py:183
+#: qatrack/reports/templates/reports/_signature.html:16
+#: qatrack/reports/templates/reports/qc/backup_forms.html:49
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:250
+msgid "Date"
+msgstr "Date"
+
+#: qatrack/reports/qc/testinstance.py:189
+msgid "Peformed By"
+msgstr "Effectué par"
+
+#: qatrack/reports/qc/testlistinstance.py:141
+#, fuzzy
+msgid "Click to view on site"
+msgstr "Click to view on site"
+
+#: qatrack/reports/qc/testlistinstance.py:154
+msgid "Test list"
+msgstr "Liste de tests"
+
+#: qatrack/reports/qc/testlistinstance.py:157
+#: qatrack/reports/templates/reports/qc/testlistinstance_summary.html:17
+#, fuzzy
+msgid "Pass/Fail Status"
+msgstr "Réussi/Échoué"
+
+#: qatrack/reports/qc/testlistinstance.py:249
+#: qatrack/reports/templates/reports/service_log/service_times.html:45
+msgid "N/A"
+msgstr "S/O"
+
+#: qatrack/reports/qc/testlistinstance.py:290 qatrack/reports/reports.py:319
+msgid "Report Title:"
+msgstr "Titre du rapport :"
+
+#: qatrack/reports/qc/testlistinstance.py:291 qatrack/reports/reports.py:320
+#, fuzzy
+msgid "View On Site:"
+msgstr "View On Site:"
+
+#: qatrack/reports/qc/testlistinstance.py:292 qatrack/reports/reports.py:321
+msgid "Report Type:"
+msgstr "Type de rapport :"
+
+#: qatrack/reports/qc/testlistinstance.py:293 qatrack/reports/reports.py:322
+msgid "Report Description:"
+msgstr "Description du rapport :"
+
+#: qatrack/reports/qc/testlistinstance.py:294 qatrack/reports/reports.py:323
+#, fuzzy
+msgid "Generated:"
+msgstr "Généré le :"
+
+#: qatrack/reports/qc/testlistinstance.py:309
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:50
+#, fuzzy
+msgid "Work Started"
+msgstr "Work Started"
+
+#: qatrack/reports/qc/testlistinstance.py:311
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:62
+msgid "Duration"
+msgstr "Durée"
+
+#: qatrack/reports/qc/testlistinstance.py:312
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:56
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:67
+msgid "In Progress"
+msgstr "En cours"
+
+#: qatrack/reports/qc/testlistinstance.py:313
+#, fuzzy
+msgid "Modified"
+msgstr "Modifié le"
+
+#: qatrack/reports/qc/testlistinstance.py:314
+msgid "Mofified By"
+msgstr "Modifié par"
+
+#: qatrack/reports/qc/testlistinstance.py:318
+#: qatrack/reports/qc/testlistinstance.py:323
+#, fuzzy
+msgid "Reviewed"
+msgstr "Reviewed"
+
+#: qatrack/reports/qc/testlistinstance.py:319
+#, fuzzy
+msgid "Auto Reviewed"
+msgstr "Auto Reviewed"
+
+#: qatrack/reports/qc/testlistinstance.py:331
+msgid "Attachment"
+msgstr "Pièce jointe"
+
+#: qatrack/reports/qc/testlistinstance.py:339
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:134
+#: qatrack/reports/tests/test_qc.py:240
+msgid "Pass/Fail"
+msgstr "Ruéssi/Échoué"
+
+#: qatrack/reports/qc/testlistinstance.py:342
+#: qatrack/reports/service_log/details.py:162
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:205
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:229
+#: qatrack/reports/templates/reports/service_log/details.html:214
+#: qatrack/reports/tests/test_qc.py:243
+#: qatrack/reports/tests/test_service_log.py:200
+#, fuzzy
+msgid "Attachments"
+msgstr "Attachments"
+
+#: qatrack/reports/service_log/assigned_templates.py:97
+#: qatrack/reports/service_log/details.py:143
+#: qatrack/reports/service_log/due_dates.py:87
+#: qatrack/reports/service_log/summary.py:168
+#: qatrack/reports/templates/reports/service_log/assigned_templates.html:18
+#: qatrack/reports/templates/reports/service_log/details.html:20
+#: qatrack/reports/templates/reports/service_log/next_due.html:18
+#: qatrack/reports/templates/reports/service_log/summary.html:20
+#: qatrack/reports/tests/test_service_log.py:111
+#: qatrack/reports/tests/test_service_log.py:181
+#: qatrack/reports/tests/test_service_log.py:386
+#: qatrack/reports/tests/test_service_log.py:443
+#, fuzzy
+msgid "Service Area"
+msgstr "Service Area"
+
+#: qatrack/reports/service_log/assigned_templates.py:98
+#: qatrack/reports/service_log/due_dates.py:88
+#: qatrack/reports/templates/reports/service_log/assigned_templates.html:19
+#: qatrack/reports/tests/test_service_log.py:387
+#: qatrack/reports/tests/test_service_log.py:444
+#, fuzzy
+msgid "Template Name"
+msgstr "Template Name"
+
+#: qatrack/reports/service_log/details.py:139
+#: qatrack/reports/service_log/summary.py:164
+#: qatrack/reports/tests/test_service_log.py:107
+#: qatrack/reports/tests/test_service_log.py:177
+#, fuzzy
+msgid "Service Event ID"
+msgstr "Service Event ID"
+
+#: qatrack/reports/service_log/details.py:140
+#: qatrack/reports/service_log/summary.py:165
+#: qatrack/reports/templates/reports/service_log/details.html:18
+#: qatrack/reports/templates/reports/service_log/summary.html:18
+#: qatrack/reports/tests/test_service_log.py:108
+#: qatrack/reports/tests/test_service_log.py:178
+#, fuzzy
+msgid "Service Date"
+msgstr "Service Date"
+
+#: qatrack/reports/service_log/details.py:144
+#: qatrack/reports/service_log/service_times.py:170
+#: qatrack/reports/service_log/summary.py:169
+#: qatrack/reports/templates/reports/service_log/details.html:21
+#: qatrack/reports/templates/reports/service_log/service_times.html:17
+#: qatrack/reports/templates/reports/service_log/summary.html:21
+#: qatrack/reports/tests/test_service_log.py:112
+#: qatrack/reports/tests/test_service_log.py:182
+#, fuzzy
+msgid "Service Type"
+msgstr "Service Type"
+
+#: qatrack/reports/service_log/details.py:145
+#: qatrack/reports/service_log/summary.py:171
+#: qatrack/reports/templates/reports/service_log/details.html:22
+#: qatrack/reports/templates/reports/service_log/summary.html:22
+#: qatrack/reports/tests/test_service_log.py:114
+#: qatrack/reports/tests/test_service_log.py:183
+#, fuzzy
+msgid "Service Time"
+msgstr "Service Time"
+
+#: qatrack/reports/service_log/details.py:146
+#: qatrack/reports/service_log/summary.py:172
+#: qatrack/reports/templates/reports/service_log/details.html:23
+#: qatrack/reports/templates/reports/service_log/summary.html:23
+#: qatrack/reports/tests/test_service_log.py:115
+#: qatrack/reports/tests/test_service_log.py:184
+msgid "Lost Time"
+msgstr "Temps perdu"
+
+#: qatrack/reports/service_log/details.py:147
+#: qatrack/reports/service_log/summary.py:170
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:135
+#: qatrack/reports/templates/reports/service_log/details.html:24
+#: qatrack/reports/templates/reports/service_log/summary.html:24
+#: qatrack/reports/tests/test_service_log.py:113
+#: qatrack/reports/tests/test_service_log.py:185
+msgid "Status"
+msgstr "Statut"
+
+#: qatrack/reports/service_log/details.py:152
+#: qatrack/reports/service_log/summary.py:175
+#: qatrack/reports/templates/reports/service_log/details.html:67
+#: qatrack/reports/templates/reports/service_log/summary.html:58
+#: qatrack/reports/tests/test_service_log.py:116
+#: qatrack/reports/tests/test_service_log.py:190
+msgid "Problem Description"
+msgstr "Description du problème"
+
+#: qatrack/reports/service_log/details.py:153
+#: qatrack/reports/service_log/summary.py:175
+#: qatrack/reports/templates/reports/service_log/details.html:71
+#: qatrack/reports/templates/reports/service_log/summary.html:62
+#: qatrack/reports/tests/test_service_log.py:117
+#: qatrack/reports/tests/test_service_log.py:191
+#, fuzzy
+msgid "Work Description"
+msgstr "Work Description"
+
+#: qatrack/reports/service_log/details.py:154
+#: qatrack/reports/templates/reports/service_log/details.html:75
+#: qatrack/reports/tests/test_service_log.py:192
+#, fuzzy
+msgid "Safety Precautions"
+msgstr "Safety Precautions"
+
+#: qatrack/reports/service_log/details.py:155
+#: qatrack/reports/templates/reports/service_log/details.html:79
+#: qatrack/reports/tests/test_service_log.py:193
+#, fuzzy
+msgid "Initiated By"
+msgstr "Initiated By"
+
+#: qatrack/reports/service_log/details.py:157
+#: qatrack/reports/templates/reports/service_log/details.html:120
+#: qatrack/reports/templates/reports/service_log/details.html:128
+#: qatrack/reports/tests/test_service_log.py:195
+#, fuzzy
+msgid "Group Members Involved"
+msgstr "Group Members Involved"
+
+#: qatrack/reports/service_log/details.py:158
+#: qatrack/reports/templates/reports/service_log/details.html:137
+#: qatrack/reports/templates/reports/service_log/details.html:145
+#: qatrack/reports/tests/test_service_log.py:196
+#, fuzzy
+msgid "Work Durations"
+msgstr "Work Durations"
+
+#: qatrack/reports/service_log/details.py:159
+#: qatrack/reports/templates/reports/service_log/details.html:154
+#: qatrack/reports/templates/reports/service_log/details.html:170
+#: qatrack/reports/tests/test_service_log.py:197
+#, fuzzy
+msgid "Return To Service QC"
+msgstr "Return To Service QC"
+
+#: qatrack/reports/service_log/details.py:160
+#: qatrack/reports/templates/reports/service_log/details.html:179
+#: qatrack/reports/templates/reports/service_log/details.html:188
+#: qatrack/reports/tests/test_service_log.py:198
+#, fuzzy
+msgid "Return To Service Comments"
+msgstr "Return To Service Comments"
+
+#: qatrack/reports/service_log/details.py:161
+#: qatrack/reports/templates/reports/service_log/details.html:197
+#: qatrack/reports/templates/reports/service_log/details.html:208
+#: qatrack/reports/tests/test_service_log.py:199
+#, fuzzy
+msgid "Parts Used"
+msgstr "Parts Used"
+
+#: qatrack/reports/service_log/details.py:184
+#: qatrack/reports/templates/reports/service_log/details.html:166
+#, fuzzy
+msgid "Not completed"
+msgstr "Not completed"
+
+#: qatrack/reports/service_log/due_dates.py:124
+#, fuzzy
+msgid "next-due-dates-for-sl-report"
+msgstr "next-due-dates-for-sl-report"
+
+#: qatrack/reports/service_log/due_dates.py:141
+#, fuzzy
+msgid "due-and-overdue-sl-report"
+msgstr "due-and-overdue-sl-report"
+
+#: qatrack/reports/service_log/personnel.py:144
+#: qatrack/reports/templates/reports/service_log/personnel.html:11
+#, fuzzy
+msgid "Group Members Involved Summary"
+msgstr "Group Members Involved Summary"
+
+#: qatrack/reports/service_log/personnel.py:145
+#: qatrack/reports/service_log/personnel.py:152
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:249
+#: qatrack/reports/templates/reports/service_log/personnel.html:17
+#: qatrack/reports/templates/reports/service_log/personnel.html:58
+msgid "User"
+msgstr "Utilisateur"
+
+#: qatrack/reports/service_log/personnel.py:145
+#: qatrack/reports/templates/reports/service_log/personnel.html:18
+#, fuzzy
+msgid "Linked Group Name"
+msgstr "Linked Group Name"
+
+#: qatrack/reports/service_log/personnel.py:145
+#: qatrack/reports/service_log/personnel.py:152
+#: qatrack/reports/service_log/personnel.py:158
+#: qatrack/reports/service_log/service_times.py:171
+#: qatrack/reports/templates/reports/service_log/personnel.html:19
+#: qatrack/reports/templates/reports/service_log/personnel.html:60
+#: qatrack/reports/templates/reports/service_log/personnel.html:87
+#: qatrack/reports/templates/reports/service_log/service_times.html:18
+#, fuzzy
+msgid "# of Service Events"
+msgstr "# of Service Events"
+
+#: qatrack/reports/service_log/personnel.py:151
+#: qatrack/reports/templates/reports/service_log/personnel.html:53
+#, fuzzy
+msgid "QATrack+ User Hours Summary"
+msgstr "QATrack+ User Hours Summary"
+
+#: qatrack/reports/service_log/personnel.py:152
+#: qatrack/reports/service_log/personnel.py:158
+#: qatrack/reports/templates/reports/service_log/personnel.html:59
+#: qatrack/reports/templates/reports/service_log/personnel.html:86
+msgid "Total Time (HH:MM)"
+msgstr "Temps total (HH:MM)"
+
+#: qatrack/reports/service_log/personnel.py:157
+#: qatrack/reports/templates/reports/service_log/personnel.html:79
+#, fuzzy
+msgid "Third Party Hours Summary"
+msgstr "Third Party Hours Summary"
+
+#: qatrack/reports/service_log/personnel.py:158
+#: qatrack/reports/templates/reports/service_log/personnel.html:85
+msgid "Vendor"
+msgstr "Fabricant"
+
+#: qatrack/reports/service_log/service_times.py:172
+#: qatrack/reports/templates/reports/service_log/service_times.html:19
+#, fuzzy
+msgid "Service Time (HH:MM)"
+msgstr "Service Time (HH:MM)"
+
+#: qatrack/reports/service_log/service_times.py:173
+#: qatrack/reports/templates/reports/service_log/service_times.html:20
+#, fuzzy
+msgid "Lost Time (HH:MM)"
+msgstr "Lost Time (HH:MM)"
+
+#: qatrack/reports/service_log/service_times.py:174
+#, fuzzy
+msgid "Down Time (%)"
+msgstr "Down Time (%)"
+
+#: qatrack/reports/service_log/service_times.py:175
+#: qatrack/reports/templates/reports/service_log/service_times.html:22
+#, fuzzy
+msgid "Available Time (HH:MM)"
+msgstr "Available Time (HH:MM)"
+
+#: qatrack/reports/service_log/service_times.py:176
+#, fuzzy
+msgid "Uptime (%)"
+msgstr "Uptime (%)"
+
+#: qatrack/reports/service_log/service_times.py:204
+#, fuzzy
+msgid "Totals:"
+msgstr "Totals:"
+
+#: qatrack/reports/service_log/summary.py:114
+#: qatrack/reports/tests/test_service_log.py:34
+#, fuzzy
+msgid "Include Description"
+msgstr "Include Description"
+
+#: qatrack/reports/templates/reports/_details.html:5
+#, fuzzy
+msgid "Report Information"
+msgstr "Report Information"
+
+#: qatrack/reports/templates/reports/_details.html:8
+#, fuzzy
+msgid "Report Type"
+msgstr "Report Type"
+
+#: qatrack/reports/templates/reports/_details.html:11
+#, fuzzy
+msgid "Generated"
+msgstr "Generated"
+
+#: qatrack/reports/templates/reports/_details.html:15
+#, fuzzy
+msgid "View on site"
+msgstr "View on site"
+
+#: qatrack/reports/templates/reports/_details.html:17
+#, fuzzy
+msgid "View Report on Site"
+msgstr "View Report on Site"
+
+#: qatrack/reports/templates/reports/_details.html:23
+#, fuzzy
+msgid "Report Description"
+msgstr "Report Description"
+
+#: qatrack/reports/templates/reports/_details.html:29
+#, fuzzy
+msgid "Filter Details"
+msgstr "Filter Details"
+
+#: qatrack/reports/templates/reports/_header.html:6
+#, fuzzy
+msgid "QATrack+ Reports"
+msgstr "QATrack+ Reports"
+
+#: qatrack/reports/templates/reports/_notes.html:15
+#: qatrack/reports/templates/reports/reports.html:170
+msgid "Notes"
+msgstr "Notes"
+
+#: qatrack/reports/templates/reports/_signature.html:11
+msgid "Signature"
+msgstr "Signature"
+
+#: qatrack/reports/templates/reports/faults/details.html:16
+#, fuzzy
+msgid "Fault #"
+msgstr "Fault #"
+
+#: qatrack/reports/templates/reports/faults/details.html:32
+#: qatrack/reports/templates/reports/faults/summary.html:17
+#, fuzzy
+msgid "Fault Types"
+msgstr "Types d’anomalie"
+
+#: qatrack/reports/templates/reports/faults/details.html:48
+#: qatrack/reports/templates/reports/service_log/details.html:61
+msgid "Last Modified By"
+msgstr "Dernière modification par"
+
+#: qatrack/reports/templates/reports/faults/details.html:67
+#: qatrack/reports/templates/reports/service_log/details.html:101
+#, fuzzy
+msgid "Click to view relate Service Event"
+msgstr "Click to view relate Service Event"
+
+#: qatrack/reports/templates/reports/faults/details.html:68
+#: qatrack/reports/templates/reports/service_log/details.html:102
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                    Service Event #%(service_event_id)s\n"
+"                    "
+msgstr ""
+"\n"
+"                    Service Event #%(service_event_id)s\n"
+"                    "
+
+#: qatrack/reports/templates/reports/faults/details.html:78
+#: qatrack/reports/templates/reports/service_log/details.html:112
+#, fuzzy
+msgid "No associated Service Events"
+msgstr "No associated Service Events"
+
+#: qatrack/reports/templates/reports/faults/details.html:86
+#: qatrack/reports/templates/reports/faults/details.html:95
+#: qatrack/reports/templates/reports/qc/backup_forms.html:52
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:246
+msgid "Comments"
+msgstr "Commentaires"
+
+#: qatrack/reports/templates/reports/faults/details.html:96
+msgid "No Comments"
+msgstr "Pas de commentaires"
+
+#: qatrack/reports/templates/reports/faults/summary.html:26
+#, fuzzy
+msgid "Click to view this fault"
+msgstr "Click to view this fault"
+
+#: qatrack/reports/templates/reports/qc/assigned_qc.html:18
+#: qatrack/reports/templates/reports/qc/next_due.html:18
+msgid "Test List (Cycle)"
+msgstr "(Cycle de) liste de tests"
+
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:20
+#: qatrack/reports/templates/reports/qc/backup_forms.html:29
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:36
+msgid "Test List Cycle"
+msgstr "Cycle de listes de tests"
+
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:23
+#: qatrack/reports/templates/reports/qc/backup_forms.html:32
+msgid "Test List Members"
+msgstr "Éléments de la liste de tests"
+
+#: qatrack/reports/templates/reports/qc/assigned_qc_details.html:35
+#: qatrack/reports/templates/reports/qc/backup_forms.html:44
+msgid "Visible To"
+msgstr "Visible par"
+
+#: qatrack/reports/templates/reports/qc/next_due.html:21
+#: qatrack/reports/templates/reports/service_log/next_due.html:22
+#, fuzzy
+msgid "Due Window"
+msgstr "Due Window"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:20
+msgid "Test List Instance Details"
+msgstr "Détails de l’instance de liste de tests"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:43
+#, fuzzy
+msgid "Reviewed by"
+msgstr "Reviewed by"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:71
+msgid "Last Modification"
+msgstr "Dernière modification"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:83
+msgid "Description"
+msgstr "Description"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:95
+#, fuzzy
+msgid "Service Log Details"
+msgstr "Service Log Details"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:97
+#, fuzzy
+msgid "Events Initiated"
+msgstr "Events Initiated"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:101
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:113
+#, fuzzy
+msgid "View service event"
+msgstr "View service event"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:102
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:114
+#, fuzzy
+msgid "Service Event"
+msgstr "Service Event"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:104
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:116
+#, fuzzy
+msgid "None"
+msgstr "Aucun"
+
+#: qatrack/reports/templates/reports/qc/testlistinstance_details.html:108
+#, fuzzy
+msgid "RtS for Events"
+msgstr "RtS for Events"
+
+#: qatrack/reports/templates/reports/reports.html:8
+msgid "Reports"
+msgstr "Rapports"
+
+#: qatrack/reports/templates/reports/reports.html:50
+#, fuzzy
+msgid "Report Configuration"
+msgstr "Report Configuration"
+
+#: qatrack/reports/templates/reports/reports.html:55
+#, fuzzy
+msgid ""
+"\n"
+"            Choose a report type and then use the Report Filters to "
+"configure\n"
+"            the report you want to generate.\n"
+"            "
+msgstr ""
+"\n"
+"            Choose a report type and then use the Report Filters to "
+"configure\n"
+"            the report you want to generate.\n"
+"            "
+
+#: qatrack/reports/templates/reports/reports.html:80
+msgid "Remove Comment"
+msgstr "Effacer le commentaire"
+
+#: qatrack/reports/templates/reports/reports.html:145
+#, fuzzy
+msgid "Currently editing"
+msgstr "En cours d’édition"
+
+#: qatrack/reports/templates/reports/reports.html:149
+msgid "New Report"
+msgstr "Nouveau rapport"
+
+#: qatrack/reports/templates/reports/reports.html:151
+#, fuzzy
+msgid "Clear report"
+msgstr "Vider le rapport"
+
+#: qatrack/reports/templates/reports/reports.html:154
+msgid "Delete report"
+msgstr "Effacer le rapport"
+
+#: qatrack/reports/templates/reports/reports.html:173
+msgid "Add a note to this report"
+msgstr "Ajouter une note au rapport"
+
+#: qatrack/reports/templates/reports/reports.html:178
+msgid "Add Note"
+msgstr "Ajouter une note"
+
+#: qatrack/reports/templates/reports/reports.html:202
+#, fuzzy
+msgid "Report Filters"
+msgstr "Report Filters"
+
+#: qatrack/reports/templates/reports/reports.html:215
+#, fuzzy
+msgid "Click to view a preview of this report in PDF format"
+msgstr "Click to view a preview of this report in PDF format"
+
+#: qatrack/reports/templates/reports/reports.html:216
+msgid "Preview"
+msgstr "Aperçu"
+
+#: qatrack/reports/templates/reports/reports.html:219
+#, fuzzy
+msgid "Click to download this report in the selected format"
+msgstr "Click to download this report in the selected format"
+
+#: qatrack/reports/templates/reports/reports.html:220
+msgid "Download"
+msgstr "Télécharger"
+
+#: qatrack/reports/templates/reports/reports.html:223
+#, fuzzy
+msgid "Click to save this report so it can be re-run later"
+msgstr "Click to save this report so it can be re-run later"
+
+#: qatrack/reports/templates/reports/reports.html:224
+msgid "Save"
+msgstr "Enregistrer"
+
+#: qatrack/reports/templates/reports/reports.html:240
+msgid "Saved & Scheduled Reports"
+msgstr "Rapports enregistrés ou planifiés"
+
+#: qatrack/reports/templates/reports/reports.html:244
+#, fuzzy
+msgid ""
+"Click a link below to edit an existing reports. You may search by report "
+"title, creator, or recipient. Reports may only be edited and scheduled by "
+"the creator."
+msgstr ""
+"Click a link below to edit an existing reports. You may search by report "
+"title, creator, or recipient. Reports may only be edited and scheduled by "
+"the creator."
+
+#: qatrack/reports/templates/reports/reports.html:248
+msgid "Report"
+msgstr "Rapport"
+
+#: qatrack/reports/templates/reports/reports.html:249
+#, fuzzy
+msgid "Creator"
+msgstr "Creator"
+
+#: qatrack/reports/templates/reports/reports.html:271
+#, fuzzy
+msgid "Report Preview"
+msgstr "Report Preview"
+
+#: qatrack/reports/templates/reports/reports.html:303
+msgid "Are you sure you want to delete this report?"
+msgstr "Êtes-vous sûr de vouloir effacer ce rapport ?"
+
+#: qatrack/reports/templates/reports/reports.html:309
+msgid "Yes, Delete"
+msgstr "Oui, effacer"
+
+#: qatrack/reports/templates/reports/reports.html:313
+msgid "No, Cancel"
+msgstr "Non, annuler"
+
+#: qatrack/reports/templates/reports/reports.html:347
+#, fuzzy
+msgid "Click to clear this reports schedule"
+msgstr "Click to clear this reports schedule"
+
+#: qatrack/reports/templates/reports/reports.html:349
+#, fuzzy
+msgid "Clear Schedule"
+msgstr "Vider l'échéancier"
+
+#: qatrack/reports/templates/reports/reports.html:354
+#, fuzzy
+msgid "Update Schedule"
+msgstr "Mettre l'échéancier à jour"
+
+#: qatrack/reports/templates/reports/reports.html:359
+msgid "Close"
+msgstr "Fermer"
+
+#: qatrack/reports/templates/reports/service_log/details.html:13
+#, fuzzy, python-format
+msgid "Service Event #%(service_event_id)s"
+msgstr "Service Event #%(service_event_id)s"
+
+#: qatrack/reports/templates/reports/service_log/details.html:30
+#: qatrack/reports/templates/reports/service_log/summary.html:32
+#, fuzzy
+msgid "Click to view this service event"
+msgstr "Click to view this service event"
+
+#: qatrack/reports/templates/reports/service_log/details.html:41
+#: qatrack/reports/templates/reports/service_log/details.html:48
+#: qatrack/reports/templates/reports/service_log/summary.html:43
+#: qatrack/reports/templates/reports/service_log/summary.html:50
+#, fuzzy
+msgid "Not Set"
+msgstr "Not Set"
+
+#: qatrack/reports/templates/reports/service_log/details.html:82
+#, fuzzy
+msgid "Click to view this QC Session"
+msgstr "Click to view this QC Session"
+
+#: qatrack/reports/templates/reports/service_log/details.html:89
+#, fuzzy
+msgid "No associated QC Session"
+msgstr "No associated QC Session"
+
+#: qatrack/reports/templates/reports/service_log/details.html:129
+#, fuzzy
+msgid "No linked group members"
+msgstr "No linked group members"
+
+#: qatrack/reports/templates/reports/service_log/details.html:146
+#, fuzzy
+msgid "No work durations"
+msgstr "No work durations"
+
+#: qatrack/reports/templates/reports/service_log/details.html:159
+#, fuzzy
+msgid "Click to view QC session details"
+msgstr "Click to view QC session details"
+
+#: qatrack/reports/templates/reports/service_log/details.html:171
+#, fuzzy
+msgid "No Return To Service QC assigned"
+msgstr "No Return To Service QC assigned"
+
+#: qatrack/reports/templates/reports/service_log/details.html:189
+#, fuzzy
+msgid "No Return To Service Comments"
+msgstr "No Return To Service Comments"
+
+#: qatrack/reports/templates/reports/service_log/details.html:202
+#, fuzzy
+msgid "Storage not specified"
+msgstr "Storage not specified"
+
+#: qatrack/reports/templates/reports/service_log/details.html:209
+#, fuzzy
+msgid "No Parts Used"
+msgstr "No Parts Used"
+
+#: qatrack/reports/templates/reports/service_log/details.html:217
+#, fuzzy
+msgid "Click to download attachment"
+msgstr "Click to download attachment"
+
+#: qatrack/reports/templates/reports/service_log/details.html:220
+#, fuzzy
+msgid "No Attachments"
+msgstr "No Attachments"
+
+#: qatrack/reports/templates/reports/service_log/next_due.html:19
+#, fuzzy
+msgid "Template"
+msgstr "Template"
+
+#: qatrack/reports/templates/reports/service_log/personnel.html:46
+#, fuzzy
+msgid "No Group Members Involved found"
+msgstr "No Group Members Involved found"
+
+#: qatrack/reports/templates/reports/service_log/personnel.html:73
+#, fuzzy
+msgid "No user hours found"
+msgstr "No user hours found"
+
+#: qatrack/reports/templates/reports/service_log/personnel.html:101
+#, fuzzy
+msgid "No third party user hours found"
+msgstr "No third party user hours found"
+
+#: qatrack/reports/templates/reports/service_log/service_times.html:21
+#, fuzzy, python-format
+msgid "Down Time (%%)"
+msgstr "Down Time (%%)"
+
+#: qatrack/reports/templates/reports/service_log/service_times.html:23
+#, fuzzy, python-format
+msgid "Uptime (%%)"
+msgstr "Uptime (%%)"
+
+#: qatrack/reports/templates/reports/service_log/service_times.html:51
+#, fuzzy
+msgid "No Service Events"
+msgstr "No Service Events"
+
+#: qatrack/reports/templates/reports/service_log/service_times.html:66
+#, fuzzy
+msgid "Totals"
+msgstr "Totals"
+
+#: qatrack/reports/tests/test_faults.py:36
+#, fuzzy
+msgid "Unreviewed Only"
+msgstr "Unreviewed Only"
+
+#: qatrack/reports/tests/test_faults.py:38
+#, fuzzy
+msgid "Reviewed Only"
+msgstr "Reviewed Only"
+
+#: qatrack/reports/views.py:164
+msgid "Your report was saved"
+msgstr "Votre rapport a été enregistré"
+
+#: qatrack/reports/views.py:214 qatrack/reports/views.py:236
+#, fuzzy
+msgid "Report does not exist"
+msgstr "Le rapport n’existe pas"
+
+#: qatrack/reports/views.py:232
+msgid "Your report was deleted"
+msgstr "Votre rapport a été supprimé"
+
+#: qatrack/reports/views.py:275
+#, fuzzy
+msgid "Schedule updated successfully!"
+msgstr "Schedule updated successfully!"
+
+#: qatrack/reports/views.py:302
+#, fuzzy
+msgid "Schedule cleared"
+msgstr "Schedule cleared"

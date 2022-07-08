@@ -82,10 +82,11 @@ class QCSchedulingAdmin(BaseQATrackAdmin):
         (
             "Filters", {
                 'fields': ['units', 'test_lists'],
-                'description': _l(
-                    "By using the below filters, you may limit this notification to "
-                    "certain units or test lists."
-                ),
+                'description':
+                    _l(
+                        "By using the below filters, you may limit this notification to "
+                        "certain units or test lists."
+                    ),
             }
         ),
     )
@@ -117,16 +118,19 @@ class QCSchedulingAdmin(BaseQATrackAdmin):
 
     def get_units(self, obj):
         return obj.units.name if obj.units else ""
+
     get_units.admin_order_field = "units__name"
     get_units.short_description = _l("Units Group")
 
     def get_recipients(self, obj):
         return obj.recipients.name
+
     get_recipients.admin_order_field = "recipients__name"
     get_recipients.short_description = _l("Recipient Group")
 
     def get_testlists(self, obj):
         return obj.test_lists.name if obj.test_lists else ""
+
     get_testlists.admin_order_field = "test_lists__name"
     get_testlists.short_description = _l("TestList Group")
 

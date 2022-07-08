@@ -170,9 +170,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -312,9 +310,7 @@ class SchedulingFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -502,9 +498,7 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit_service_area__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -548,13 +542,8 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     class Meta:
         model = sl_models.ServiceEventSchedule
         fields = [
-            "unit_service_area__unit__site",
-            "unit_service_area__unit",
-            "unit_service_area__service_area",
-            "service_event_template",
-            "frequency",
-            "assigned_to",
-            "active"
+            "unit_service_area__unit__site", "unit_service_area__unit", "unit_service_area__service_area",
+            "service_event_template", "frequency", "assigned_to", "active"
         ]
 
     def __init__(self, *args, **kwargs):

@@ -11,7 +11,6 @@ from qatrack.qatrack_core import views
 
 admin.autodiscover()
 
-
 favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico"), permanent=True)
 touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-icon.png"), permanent=True)
 
@@ -41,6 +40,7 @@ urlpatterns = [
     url(r'^parts/', include('qatrack.parts.urls')),
     url(r'^faults/', include('qatrack.faults.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
+    path('i18n/', include('django.conf.urls.i18n')),
 
     # Uncomment the next line to enable the admin:
     path(r'admin/', admin.site.urls),
@@ -55,7 +55,7 @@ urlpatterns = [
 ]
 
 js_info_dict = {
-    'packages': ('recurrence', ),
+    'packages': ('recurrence',),
 }
 urlpatterns += [url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict)]
 

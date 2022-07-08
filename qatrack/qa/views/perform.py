@@ -54,7 +54,6 @@ from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
 
 pd.plotting.register_matplotlib_converters()  # required so matplotlib can convert dates correctly
 
-
 DEFAULT_CALCULATION_CONTEXT = {
     "dicom": dicom,
     "pydicom": dicom,
@@ -254,7 +253,11 @@ def get_context_refs_tols(unit, tests):
         unit=unit,
         test_id__in=ids,
         active=True,
-    ).select_related("reference", "test", "tolerance",).values(
+    ).select_related(
+        "reference",
+        "test",
+        "tolerance",
+    ).values(
         "test__slug",
         "reference__value",
         "tolerance__type",
@@ -277,7 +280,6 @@ def get_context_refs_tols(unit, tests):
 
 
 def cleanup_matplotlib():
-
     """
     At the end of any view which may use mpl.pyplot to generate a plot
     we need to clean the figure, to attempt to  prevent any crosstalk
@@ -374,7 +376,8 @@ class UploadHandler:
         except Exception:
             msg = traceback.format_exc(
                 limit=5, chain=True
-            ).split("__QAT+COMP_")[-1].replace("<module>", _("Test: %(test_name)s") % {'test_name': test.name})
+            ).split("__QAT+COMP_")[-1].replace("<module>",
+                                               _("Test: %(test_name)s") % {'test_name': test.name})
             results["errors"].append(_("Invalid Test Procedure: %(traceback)s") % {'traceback': msg})
 
         return results
@@ -411,20 +414,26 @@ class UploadHandler:
         comments = self.data["comments"]
         skips = self.data.get("skips", {})
         self.calculation_context.update({
-            "FILE": open(self.attachment.attachment.path, "r"),
-            "BIN_FILE": self.attachment.attachment,
-            "META": meta_data,
-            "REFS": refs,
-            "TOLS": tols,
-            "UTILS": CompositeUtils(
-                self.user,
-                self.unit,
-                self.test_list,
+            "FILE":
+                open(self.attachment.attachment.path, "r"),
+            "BIN_FILE":
+                self.attachment.attachment,
+            "META":
                 meta_data,
-                self.calculation_context,
-                comments,
-                skips,
-            ),
+            "REFS":
+                refs,
+            "TOLS":
+                tols,
+            "UTILS":
+                CompositeUtils(
+                    self.user,
+                    self.unit,
+                    self.test_list,
+                    meta_data,
+                    self.calculation_context,
+                    comments,
+                    skips,
+                ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -511,7 +520,8 @@ class Upload(JSONResponseMixin, View):
         except Exception:
             msg = traceback.format_exc(
                 limit=5, chain=True
-            ).split("__QAT+COMP_")[-1].replace("<module>", _("Test: %(test_name)s") % {'test_name': test.name})
+            ).split("__QAT+COMP_")[-1].replace("<module>",
+                                               _("Test: %(test_name)s") % {'test_name': test.name})
             results["errors"].append(_("Invalid Test Procedure: %(traceback)s") % {'traceback': msg})
 
         return self.render_json_response(results)
@@ -556,20 +566,26 @@ class Upload(JSONResponseMixin, View):
             f = self.attachment.attachment
 
         self.calculation_context.update({
-            "FILE": f,
-            "BIN_FILE": self.attachment.attachment,
-            "META": meta_data,
-            "REFS": refs,
-            "TOLS": tols,
-            "UTILS": CompositeUtils(
-                self.request.user,
-                self.unit,
-                self.test_list,
+            "FILE":
+                f,
+            "BIN_FILE":
+                self.attachment.attachment,
+            "META":
                 meta_data,
-                self.calculation_context,
-                comments,
-                skips,
-            ),
+            "REFS":
+                refs,
+            "TOLS":
+                tols,
+            "UTILS":
+                CompositeUtils(
+                    self.request.user,
+                    self.unit,
+                    self.test_list,
+                    meta_data,
+                    self.calculation_context,
+                    comments,
+                    skips,
+                ),
         })
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
 
@@ -673,7 +689,9 @@ class CompositePerformer:
 
                 results[slug] = {
                     'value': None,
-                    'error': _("Invalid Test Procedure: %(traceback)s") % {'traceback': msg},
+                    'error': _("Invalid Test Procedure: %(traceback)s") % {
+                        'traceback': msg
+                    },
                     'comment': "",
                     'user_attached': [],
                 }
@@ -719,9 +737,7 @@ class CompositePerformer:
         else:
             filter_ = lambda t: t.type in models.COMPOSITE_TYPES  # noqa: E731
 
-        self.composite_tests = {
-            t.slug: t.calculation_procedure for t in self.all_tests if filter_(t)
-        }
+        self.composite_tests = {t.slug: t.calculation_procedure for t in self.all_tests if filter_(t)}
 
     def set_test_types(self):
         """retrieve calculation procs for all composite tests"""
@@ -749,18 +765,22 @@ class CompositePerformer:
         comments = self.data.get("comments", {})
         skips = self.data.get("skips", {})
         self.calculation_context.update({
-            "META": meta_data,
-            "REFS": refs,
-            "TOLS": tols,
-            "UTILS": CompositeUtils(
-                self.user,
-                self.unit,
-                self.test_list,
+            "META":
                 meta_data,
-                self.calculation_context,
-                comments,
-                skips,
-            ),
+            "REFS":
+                refs,
+            "TOLS":
+                tols,
+            "UTILS":
+                CompositeUtils(
+                    self.user,
+                    self.unit,
+                    self.test_list,
+                    meta_data,
+                    self.calculation_context,
+                    comments,
+                    skips,
+                ),
         })
 
         self.calculation_context.update(DEFAULT_CALCULATION_CONTEXT)
@@ -943,9 +963,8 @@ class ChooseUnit(TemplateView):
 
             unit_types = collections.defaultdict(list)
             for unit in q:
-                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']).distinct().values(
-                    'slug', 'name'
-                )
+                unit['frequencies'] = freq_qs.filter(unittestcollections__unit_id=unit['unit__id']
+                                                     ).distinct().values('slug', 'name')
                 unit['categories'] = get_unit_categories(unit['unit__id'])
                 unit_types[(unit["unit__type__name"], unit["unit__type__collapse"])].append(unit)
 
@@ -1222,9 +1241,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
         changed_se = self.object.update_service_event_statuses()
 
         if len(changed_se) > 0:
-            msg = _(
-                'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-            ) % {
+            msg = _('Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".') % {
                 'service_event_ids': ', '.join(str(x) for x in changed_se),
                 'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
             }
@@ -1329,14 +1346,12 @@ class PerformQA(PermissionRequiredMixin, CreateView):
             context['rtsqa_for_se'] = rtsqa.service_event
 
         context['attachments'] = (
-            context['test_list'].attachment_set.all() |
-            self.unit_test_col.tests_object.attachment_set.all()
+            context['test_list'].attachment_set.all() | self.unit_test_col.tests_object.attachment_set.all()
         )
 
         context['top_divs_span'] = 1
         has_perms = (
-            self.request.user.has_perm('qa.can_review') or
-            self.request.user.has_perm('qa.can_review_own_tests') or
+            self.request.user.has_perm('qa.can_review') or self.request.user.has_perm('qa.can_review_own_tests') or
             self.request.user.has_perm('qa.can_override_date')
         )
         if has_perms:
@@ -1456,12 +1471,11 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             changed_se = self.object.update_service_event_statuses()
 
             if len(changed_se) > 0:
-                msg = _(
-                    'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-                ) % {
-                    'service_event_ids': ', '.join(str(x) for x in changed_se),
-                    'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
-                }
+                msg = _('Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
+                        ) % {
+                            'service_event_ids': ', '.join(str(x) for x in changed_se),
+                            'serviceeventstatus_name': sl_models.ServiceEventStatus.get_default().name,
+                        }
                 messages.add_message(request=self.request, level=messages.INFO, message=msg)
             if initially_requires_reviewed != self.object.is_reviewed:
                 for se in sl_models.ServiceEvent.objects.filter(returntoserviceqa__test_list_instance=self.object):
@@ -1556,17 +1570,22 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             ti.comment = _(
                 "Tried to calculate percent diff with a zero reference value. "
                 "Original value was %(test_instance_value)s"
-            ) % {'test_instance_value': ti.value}
+            ) % {
+                'test_instance_value': ti.value
+            }
             ti.value = None
             ti.save()
 
-            logger.error(_(
-                "Tried to calculate percent diff with a zero reference value. UTI=%(unit_test_info_id)d"
-            ) % {'unit_test_info_id': ti.unit_test_info.pk})
+            logger.error(
+                _("Tried to calculate percent diff with a zero reference value. UTI=%(unit_test_info_id)d") %
+                {'unit_test_info_id': ti.unit_test_info.pk}
+            )
             msg = _(
                 "Please call physics. Test %(test_name)s is configured incorrectly on this unit. "
                 "Tried to calculate percent diff with a zero reference value."
-            ) % {'test_name': ti.unit_test_info.test.name}
+            ) % {
+                'test_name': ti.unit_test_info.test.name
+            }
             messages.error(self.request, msg)
 
     def template_unit_test_infos(self):
@@ -1605,7 +1624,8 @@ class EditTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
         context['top_divs_span'] = 0
         if self.request.user.has_perm('qa.can_review') or self.request.user.has_perm(
-                'qa.can_review_own_tests') or self.request.user.has_perm('qa.can_override_date'):
+            'qa.can_review_own_tests'
+        ) or self.request.user.has_perm('qa.can_override_date'):
             context['top_divs_span'] += 1
         if len(context['attachments']) > 0:
             context['top_divs_span'] += 1

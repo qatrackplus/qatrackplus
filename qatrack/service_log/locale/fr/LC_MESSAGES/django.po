@@ -1,0 +1,1018 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Vincent Leduc <vleduc.hmr@ssss.gouv.qc.ca>, 2022.
+# Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>, 2022.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-18 08:12-0400\n"
+"PO-Revision-Date: 2022-06-16 14:33+0000\n"
+"Last-Translator: Laurent Tantot <ltantot.hmr@ssss.gouv.qc.ca>\n"
+"Language-Team: French <http://weblate.radonc.hmr/projects/qatrackplus/"
+"service_log/fr/>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.12.1\n"
+
+#: qatrack/service_log/admin.py:274
+#, fuzzy
+msgid "Not Specified"
+msgstr "Not Specified"
+
+#: qatrack/service_log/admin.py:310
+#, fuzzy, python-format
+msgid ""
+"To prevent data loss, you can not change the Unit Service Area or Service "
+"Event Template of a ServiceEventSchedule after it has been created. The "
+"original value was: %(object_id)s"
+msgstr ""
+"To prevent data loss, you can not change the Unit Service Area or Service "
+"Event Template of a ServiceEventSchedule after it has been created. The "
+"original value was: %(object_id)s"
+
+#: qatrack/service_log/forms.py:817
+#, fuzzy
+msgid "This field is required."
+msgstr "This field is required."
+
+#: qatrack/service_log/templates/service_log/error_base.html:4
+#, fuzzy
+msgid "Configuration Needed"
+msgstr "Configuration Needed"
+
+#: qatrack/service_log/templates/service_log/error_base.html:9
+msgid "Welcome to QATrack+"
+msgstr "Bienvenue dans QATrack+"
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:16
+#, fuzzy, python-format
+msgid ""
+"\n"
+"          %(user)s changed return to service required for service event "
+"%(service_event_id)s\n"
+"        "
+msgstr ""
+"\n"
+"          %(user)s changed return to service required for service event "
+"%(service_event_id)s\n"
+"        "
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:19
+#, fuzzy
+msgid "deleted"
+msgstr "deleted"
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:24
+#, fuzzy
+msgid "Test List Name"
+msgstr "Test List Name"
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:25
+#, fuzzy
+msgid "Session Details"
+msgstr "Session Details"
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:32
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:42
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:38
+#, fuzzy
+msgid "Performed"
+msgstr "Performed"
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:43
+#, fuzzy
+msgid "Reviewed"
+msgstr "Reviewed"
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:46
+#, fuzzy
+msgid "Deleted"
+msgstr "Deleted"
+
+#: qatrack/service_log/templates/service_log/log_rtsqa.html:52
+#, fuzzy
+msgid "All Deleted"
+msgstr "All Deleted"
+
+#: qatrack/service_log/templates/service_log/log_service_event_deleted.html:17
+#, fuzzy, python-format
+msgid ""
+"\n"
+"          %(user)s deleted service event %(service_event_id)s\n"
+"        "
+msgstr ""
+"\n"
+"          %(user)s deleted service event %(service_event_id)s\n"
+"        "
+
+#: qatrack/service_log/templates/service_log/log_service_event_deleted.html:24
+#, fuzzy
+msgid "Reason"
+msgstr "Reason"
+
+#: qatrack/service_log/templates/service_log/log_service_event_deleted.html:25
+msgid "Comment"
+msgstr "Commentaire"
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:17
+#, fuzzy, python-format
+msgid ""
+"\n"
+"          %(username)s modified service event %(service_event_id)s\n"
+"        "
+msgstr ""
+"\n"
+"          %(username)s modified service event %(service_event_id)s\n"
+"        "
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:24
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:30
+#, fuzzy
+msgid "Field Changed"
+msgstr "Field Changed"
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:25
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:31
+#, fuzzy
+msgid "Old Value"
+msgstr "Old Value"
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:26
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:32
+#, fuzzy
+msgid "New Value"
+msgstr "New Value"
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:31
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:37
+#, fuzzy
+msgid "Attachments deleted"
+msgstr "Attachments deleted"
+
+#: qatrack/service_log/templates/service_log/log_service_event_modified.html:43
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:49
+#, fuzzy
+msgid "Attachments added"
+msgstr "Attachments added"
+
+#: qatrack/service_log/templates/service_log/log_service_event_new.html:16
+#, fuzzy, python-format
+msgid ""
+"\n"
+"              %(user)s created service event %(service_event_id)s\n"
+"            "
+msgstr ""
+"\n"
+"              %(user)s created service event %(service_event_id)s\n"
+"            "
+
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:19
+#, fuzzy, python-format
+msgid ""
+"\n"
+"          %(user)s changed status of service event %(service_event_id)s from "
+"%(old_status_tag)s to %(new_status_tag)s\n"
+"        "
+msgstr ""
+"\n"
+"          %(user)s changed status of service event %(service_event_id)s from "
+"%(old_status_tag)s to %(new_status_tag)s\n"
+"        "
+
+#: qatrack/service_log/templates/service_log/log_service_event_status.html:26
+#, fuzzy
+msgid "Other changes made"
+msgstr "Other changes made"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:7
+#, fuzzy
+msgid "Scheduled Service Events Overview by Due Date"
+msgstr "Scheduled Service Events Overview by Due Date"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:106
+#, fuzzy
+msgid "Scheduled Service Events Overview By Due Date For Your Groups"
+msgstr "Scheduled Service Events Overview By Due Date For Your Groups"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:109
+#, fuzzy
+msgid ""
+"View which scheduled service events (visible to your groups) are due or "
+"coming due soon"
+msgstr ""
+"View which scheduled service events (visible to your groups) are due or "
+"coming due soon"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:114
+#, fuzzy
+msgid "Scheduled Service Events Overview By Due Date"
+msgstr "Scheduled Service Events Overview By Due Date"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:116
+#, fuzzy
+msgid "View which scheduled service events are due or coming due soon"
+msgstr "View which scheduled service events are due or coming due soon"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:135
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:143
+msgid "Name"
+msgstr "Nom"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:136
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:144
+#: qatrack/service_log/templates/service_log/service_event_detail.html:115
+msgid "Unit"
+msgstr "Unité"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:137
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:145
+#, fuzzy
+msgid "Service Area"
+msgstr "Service Area"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:138
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:146
+msgid "Due Date"
+msgstr "Date d'échéance"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:139
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:147
+#, fuzzy
+msgid "Freq"
+msgstr "Freq"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:140
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:148
+msgid "Assigned To"
+msgstr "Assigné à"
+
+#: qatrack/service_log/templates/service_log/overview_by_due_date.html:184
+#, fuzzy, python-format
+msgid "Nothing %(display)s"
+msgstr "Nothing %(display)s"
+
+#: qatrack/service_log/templates/service_log/service_event_delete.html:34
+#, fuzzy, python-format
+msgid ""
+"\n"
+"            Delete Service Event %(service_event_id)s\n"
+"          "
+msgstr ""
+"\n"
+"            Delete Service Event %(service_event_id)s\n"
+"          "
+
+#: qatrack/service_log/templates/service_log/service_event_delete.html:82
+#: qatrack/service_log/templates/service_log/service_event_update.html:331
+#: qatrack/service_log/templates/service_log/service_event_update.html:413
+#: qatrack/service_log/templates/service_log/service_event_update.html:531
+#: qatrack/service_log/templates/service_log/service_event_update.html:590
+#: qatrack/service_log/templates/service_log/service_event_update.html:655
+msgid "Delete"
+msgstr "Supprimer"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:11
+#: qatrack/service_log/templates/service_log/serviceeventtemplate_base.html:11
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:9
+#, fuzzy
+msgid "Service Event"
+msgstr "Service Event"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:30
+#, fuzzy, python-format
+msgid ""
+"\n"
+"          Service Event %(service_event_id)s Details\n"
+"        "
+msgstr ""
+"\n"
+"          Service Event %(service_event_id)s Details\n"
+"        "
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:42
+#: qatrack/service_log/templates/service_log/service_event_update.html:98
+msgid "Created"
+msgstr "Créée le"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:46
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                  by %(username)s\n"
+"                "
+msgstr ""
+"\n"
+"                  by %(username)s\n"
+"                "
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:56
+#: qatrack/service_log/templates/service_log/service_event_update.html:108
+#, fuzzy
+msgid "Modified"
+msgstr "Modifié le"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:60
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                    by %(username)s\n"
+"                  "
+msgstr ""
+"\n"
+"                    by %(username)s\n"
+"                  "
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:71
+#: qatrack/service_log/templates/service_log/service_event_update.html:123
+#, fuzzy
+msgid "Status Changed"
+msgstr "Status Changed"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:76
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                      by %(username)s\n"
+"                    "
+msgstr ""
+"\n"
+"                      by %(username)s\n"
+"                    "
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:80
+#, fuzzy
+msgid "by System"
+msgstr "by System"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:94
+#: qatrack/service_log/templates/service_log/service_event_detail.html:524
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:10
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:17
+#, fuzzy
+msgid "Edit"
+msgstr "Edit"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:112
+#, fuzzy
+msgid "Service date"
+msgstr "Service date"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:118
+#, fuzzy
+msgid "Service area"
+msgstr "Service area"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:121
+#, fuzzy
+msgid "Service type"
+msgstr "Service type"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:124
+#, fuzzy
+msgid "Requires review"
+msgstr "Requires review"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:136
+#, fuzzy
+msgid "Template"
+msgstr "Template"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:142
+#, fuzzy
+msgid "Previous Due Date"
+msgstr "Previous Due Date"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:148
+#, fuzzy
+msgid "No due date set"
+msgstr "No due date set"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:152
+#, fuzzy
+msgid "Scheduled"
+msgstr "Scheduled"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:155
+msgid "Yes"
+msgstr "Oui"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:157
+msgid "No"
+msgstr "Non"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:162
+#, fuzzy
+msgid "Related service events"
+msgstr "Related service events"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:178
+#, fuzzy
+msgid "Initiated by"
+msgstr "Initiated by"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:191
+#, fuzzy
+msgid "View test list instance"
+msgstr "View test list instance"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:192
+msgid "View"
+msgstr "Voir"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:196
+#, fuzzy
+msgid "New tab: view test list instance"
+msgstr "New tab: view test list instance"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:214
+#, fuzzy
+msgid "Problem description"
+msgstr "Problem description"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:221
+#, fuzzy
+msgid "Safety precautions"
+msgstr "Safety precautions"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:231
+#, fuzzy
+msgid "Work description"
+msgstr "Work description"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:248
+#: qatrack/service_log/templates/service_log/service_event_update.html:271
+#, fuzzy
+msgid "Involved Parties and Durations"
+msgstr "Involved Parties and Durations"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:253
+#, fuzzy
+msgid ">Service Event Durations"
+msgstr ">Service Event Durations"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:257
+#, fuzzy
+msgid "Service time (hh:mm)"
+msgstr "Service time (hh:mm)"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:263
+#: qatrack/service_log/templates/service_log/service_event_detail.html:273
+#, fuzzy
+msgid "Not specified"
+msgstr "Non spécifié"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:267
+#, fuzzy
+msgid "Lost time (hh:mm)"
+msgstr "Lost time (hh:mm)"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:282
+#: qatrack/service_log/templates/service_log/service_event_update.html:298
+#, fuzzy
+msgid "Group Members Involved"
+msgstr "Group Members Involved"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:295
+#: qatrack/service_log/templates/service_log/service_event_update.html:322
+#, fuzzy
+msgid "User and Third Party Work Durations"
+msgstr "User and Third Party Work Durations"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:302
+#: qatrack/service_log/templates/service_log/service_event_update.html:329
+#, fuzzy
+msgid "User or Third Party"
+msgstr "User or Third Party"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:303
+#, fuzzy
+msgid ">Time (hh:mm)"
+msgstr ">Time (hh:mm)"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:320
+#, fuzzy
+msgid "No work hours specified"
+msgstr "No work hours specified"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:333
+#: qatrack/service_log/templates/service_log/service_event_update.html:521
+#, fuzzy
+msgid "Attachments"
+msgstr "Attachments"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:363
+#: qatrack/service_log/templates/service_log/service_event_update.html:395
+#: qatrack/service_log/templates/service_log/sl_dash.html:28
+#, fuzzy
+msgid "Return To Service QC"
+msgstr "Return To Service QC"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:368
+#: qatrack/service_log/templates/service_log/service_event_update.html:401
+#, fuzzy
+msgid "Return To Service QC Required"
+msgstr "Return To Service QC Required"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:375
+#: qatrack/service_log/templates/service_log/service_event_update.html:408
+msgid "Test List"
+msgstr "Liste de tests"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:376
+#: qatrack/service_log/templates/service_log/service_event_update.html:409
+#, fuzzy
+msgid "Completed"
+msgstr "Completed"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:377
+#: qatrack/service_log/templates/service_log/service_event_update.html:410
+msgid "Pass/Fail"
+msgstr "Ruéssi/Échoué"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:378
+#: qatrack/service_log/templates/service_log/service_event_update.html:411
+#, fuzzy
+msgid "Review Status"
+msgstr "Review Status"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:396
+#, fuzzy
+msgid "Review test list instance"
+msgstr "Review test list instance"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:397
+#: qatrack/service_log/templates/service_log/service_event_update.html:778
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:20
+#, fuzzy
+msgid "Review"
+msgstr "Review"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:401
+#, fuzzy
+msgid "New tab: review test list instance"
+msgstr "New tab: review test list instance"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:412
+#, fuzzy
+msgid "Perform test list"
+msgstr "Perform test list"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:413
+#: qatrack/service_log/templates/service_log/table_context/se_schedule_actions.html:10
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:30
+msgid "Perform"
+msgstr "Effectuer"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:417
+#, fuzzy
+msgid "New tab: perform test list"
+msgstr "New tab: perform test list"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:440
+#: qatrack/service_log/templates/service_log/service_event_update.html:460
+msgid "Comments"
+msgstr "Commentaires"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:462
+#: qatrack/service_log/templates/service_log/service_event_update.html:485
+msgid "Post Comment"
+msgstr "Poster le commentaire"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:477
+#, fuzzy
+msgid "Parts"
+msgstr "Parts"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:483
+#: qatrack/service_log/templates/service_log/service_event_update.html:576
+#, fuzzy
+msgid "Parts Used"
+msgstr "Parts Used"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:492
+#: qatrack/service_log/templates/service_log/service_event_update.html:587
+#, fuzzy
+msgid "Part"
+msgstr "Part"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:493
+#: qatrack/service_log/templates/service_log/service_event_update.html:588
+#, fuzzy
+msgid "Quantity"
+msgstr "Quantity"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:494
+#: qatrack/service_log/templates/service_log/service_event_update.html:589
+#, fuzzy
+msgid "From Storage"
+msgstr "From Storage"
+
+#: qatrack/service_log/templates/service_log/service_event_detail.html:536
+#, fuzzy, python-format
+msgid ""
+"\n"
+"              Service Log For Service Event %(service_event_id)s\n"
+"            "
+msgstr ""
+"\n"
+"              Service Log For Service Event %(service_event_id)s\n"
+"            "
+
+#: qatrack/service_log/templates/service_log/service_event_down_time.html:41
+#, fuzzy
+msgid "For Service Events Filtered Below..."
+msgstr "For Service Events Filtered Below..."
+
+#: qatrack/service_log/templates/service_log/service_event_down_time.html:44
+#, fuzzy
+msgid "Download Up Time Summary"
+msgstr "Download Up Time Summary"
+
+#: qatrack/service_log/templates/service_log/service_event_down_time.html:61
+#, fuzzy
+msgid "Calculating Down Times"
+msgstr "Calculating Down Times"
+
+#: qatrack/service_log/templates/service_log/service_event_down_time_summary.html:7
+#, fuzzy
+msgid "Up Time Summary"
+msgstr "Up Time Summary"
+
+#: qatrack/service_log/templates/service_log/service_event_down_time_summary.html:31
+#, fuzzy
+msgid "Down Time Summary"
+msgstr "Down Time Summary"
+
+#: qatrack/service_log/templates/service_log/service_event_status_label.html:8
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:16
+#, fuzzy
+msgid "Click to view details of this Service Event"
+msgstr "Click to view details of this Service Event"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:13
+#, fuzzy, python-format
+msgid ""
+"\n"
+"      Edit Service Event #%(service_event_id)s\n"
+"    "
+msgstr ""
+"\n"
+"      Edit Service Event #%(service_event_id)s\n"
+"    "
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:17
+#, fuzzy
+msgid "Enter New Service Event"
+msgstr "Enter New Service Event"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:57
+#, fuzzy
+msgid "Submitting Service Log"
+msgstr "Submitting Service Log"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:65
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                Edit Service Event %(service_event_id)s\n"
+"              "
+msgstr ""
+"\n"
+"                Edit Service Event %(service_event_id)s\n"
+"              "
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:69
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                Create Service Event from template \"%(template_name)s\"\n"
+"              "
+msgstr ""
+"\n"
+"                Create Service Event from template \"%(template_name)s\"\n"
+"              "
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:73
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:10
+#, fuzzy
+msgid "Create Service Event"
+msgstr "Create Service Event"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:112
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                        by %(username)s\n"
+"                      "
+msgstr ""
+"\n"
+"                        by %(username)s\n"
+"                      "
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:128
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                          by %(username)s\n"
+"                        "
+msgstr ""
+"\n"
+"                          by %(username)s\n"
+"                        "
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:132
+#, fuzzy
+msgid "System"
+msgstr "System"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:142
+#: qatrack/service_log/templates/service_log/service_event_update.html:652
+msgid "Save"
+msgstr "Enregistrer"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:201
+#, fuzzy
+msgid ""
+"Create service event template with currently selected values for Unit, "
+"Service Area, Service Type, Review Required, Descriptions, and any Return to "
+"Service TestLists"
+msgstr ""
+"Create service event template with currently selected values for Unit, "
+"Service Area, Service Type, Review Required, Descriptions, and any Return to "
+"Service TestLists"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:203
+#: qatrack/service_log/templates/service_log/service_event_update.html:841
+#: qatrack/service_log/templates/service_log/serviceeventtemplate_create.html:7
+#, fuzzy
+msgid "Create"
+msgstr "Create"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:275
+#, fuzzy
+msgid "Service Event Durations"
+msgstr "Service Event Durations"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:283
+#, fuzzy
+msgid "(hh:mm)"
+msgstr "(hh:mm)"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:330
+#, fuzzy
+msgid "Time (hh:mm)"
+msgstr "Time (hh:mm)"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:371
+#, fuzzy
+msgid "Add another hours object."
+msgstr "Add another hours object."
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:373
+#: qatrack/service_log/templates/service_log/service_event_update.html:447
+#: qatrack/service_log/templates/service_log/service_event_update.html:634
+msgid "Add"
+msgstr "Ajouter"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:446
+#, fuzzy
+msgid "Add another RTS QC object."
+msgstr "Add another RTS QC object."
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:480
+msgid "Add comment"
+msgstr "Ajouter un commentaire"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:530
+#, fuzzy
+msgid "Filename"
+msgstr "Filename"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:562
+#, fuzzy
+msgid ""
+"Click to add attachments. (Hold Ctrl or Cmd in the dialog to include "
+"multiple attachments)"
+msgstr ""
+"Click to add attachments. (Hold Ctrl or Cmd in the dialog to include "
+"multiple attachments)"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:563
+msgid "Browse"
+msgstr "Parcourir"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:669
+#, fuzzy, python-format
+msgid ""
+"\n"
+"                  Service Log For Service Event %(service_event_id)s\n"
+"                "
+msgstr ""
+"\n"
+"                  Service Log For Service Event %(service_event_id)s\n"
+"                "
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:763
+#, fuzzy
+msgid "Click to choose the performed return to service test list instance"
+msgstr "Click to choose the performed return to service test list instance"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:796
+#, fuzzy
+msgid "File"
+msgstr "File"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:801
+#, fuzzy
+msgid "Size"
+msgstr "Size"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:816
+#, fuzzy
+msgid "Create Template"
+msgstr "Create Template"
+
+#: qatrack/service_log/templates/service_log/service_event_update.html:839
+msgid "Cancel"
+msgstr "Annuler"
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:5
+#, fuzzy
+msgid "Export"
+msgstr "Export"
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:10
+#, fuzzy
+msgid "PDF"
+msgstr "PDF"
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:15
+msgid "CSV"
+msgstr "CSV"
+
+#: qatrack/service_log/templates/service_log/serviceevent_pdf_button.html:20
+#, fuzzy
+msgid "Excel"
+msgstr "Excel"
+
+#: qatrack/service_log/templates/service_log/serviceeventtemplate_create.html:5
+#, fuzzy
+msgid "Create Service Event Template"
+msgstr "Create Service Event Template"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:8
+#, fuzzy
+msgid "Service Log Dashboard"
+msgstr "Service Log Dashboard"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:34
+#, fuzzy
+msgid "Incomplete"
+msgstr "Incomplete"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:40
+#, fuzzy
+msgid "Unreviewed"
+msgstr "Unreviewed"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:53
+#, fuzzy
+msgid "Service Events"
+msgstr "Service Events"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:64
+#, fuzzy
+msgid "Needing Review"
+msgstr "Needing Review"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:80
+#, fuzzy
+msgid "Recent Service Log Activity"
+msgstr "Recent Service Log Activity"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:85
+#, fuzzy
+msgid "Show service events"
+msgstr "Show service events"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:91
+#, fuzzy
+msgid "Show return to service"
+msgstr "Show return to service"
+
+#: qatrack/service_log/templates/service_log/sl_dash.html:128
+#: qatrack/service_log/templates/service_log/sl_dash.html:132
+#, fuzzy, python-format
+msgid ""
+"\n"
+"            Loading %(unit_name)s : %(test_list_name)s\n"
+"          "
+msgstr ""
+"\n"
+"            Loading %(unit_name)s : %(test_list_name)s\n"
+"          "
+
+#: qatrack/service_log/templates/service_log/table_context/se_schedule_actions.html:8
+#, fuzzy
+msgid "Click to perform this Service Event"
+msgstr "Click to perform this Service Event"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_problem_description.html:4
+msgid "Problem Description"
+msgstr "Description du problème"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:7
+#, fuzzy
+msgid "Click to view the Service Event associated with this RTSQC"
+msgstr "Click to view the Service Event associated with this RTSQC"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:18
+#, fuzzy
+msgid "Review this RTSQC Test List Instance"
+msgstr "Review this RTSQC Test List Instance"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_rtsqa_actions.html:36
+#, fuzzy
+msgid "View Test List Instance history for this RTS QC"
+msgstr "View Test List Instance history for this RTS QC"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:8
+#, fuzzy
+msgid "Click to edit this Service Event"
+msgstr "Click to edit this Service Event"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_se_actions.html:17
+msgid "Details"
+msgstr "Détails"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:8
+#, fuzzy
+msgid "Create a Service Event with this template"
+msgstr "Create a Service Event with this template"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:16
+#, fuzzy
+msgid "Edit this template"
+msgstr "Edit this template"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_tli_work_completed.html:4
+#, fuzzy, python-format
+msgid "Started %(datetime_started)s by %(created_by)s"
+msgstr "Started %(datetime_started)s by %(created_by)s"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_tli_work_completed.html:4
+msgid "In Progress"
+msgstr "En cours"
+
+#: qatrack/service_log/templates/service_log/table_context/table_context_work_description.html:4
+#, fuzzy
+msgid "Work Description"
+msgstr "Work Description"
+
+#: qatrack/service_log/views.py:238
+#, fuzzy, python-format
+msgid "No %(verbose_name)s found matching the query"
+msgstr "No %(verbose_name)s found matching the query"
+
+#: qatrack/service_log/views.py:395
+#, fuzzy
+msgid "Please correct the Service Event Details error below."
+msgstr "Please correct the Service Event Details error below."
+
+#: qatrack/service_log/views.py:406
+#, fuzzy, python-brace-format
+msgid ""
+"Due to changes detected, service event {instance_id} status has been reset "
+"to {default_name}"
+msgstr ""
+"Due to changes detected, service event {instance_id} status has been reset "
+"to {default_name}"
+
+#: qatrack/service_log/views.py:438
+#, fuzzy
+msgid "Please correct the Parts error below."
+msgstr "Please correct the Parts error below."
+
+#: qatrack/service_log/views.py:446
+#, fuzzy
+msgid "Please correct the User Hours error below."
+msgstr "Please correct the User Hours error below."
+
+#: qatrack/service_log/views.py:449
+#, fuzzy
+msgid "Please correct the Return to Service QC error below."
+msgstr "Please correct the Return to Service QC error below."
+
+#: qatrack/service_log/views.py:950 qatrack/service_log/views.py:1826
+msgid "Other"
+msgstr "Autre"
+
+#: qatrack/service_log/views.py:1824 qatrack/service_log/views.py:1928
+#, fuzzy
+msgid "Ad Hoc"
+msgstr "Ad Hoc"

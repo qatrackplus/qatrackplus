@@ -25,8 +25,19 @@ class UserViewSet(MultiSerializerMixin, viewsets.ReadOnlyModelViewSet):
         'list': UserListSerializer,
     }
     filterset_class = filters.UserFilter
-    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
-    ordering_fields = ("username", "first_name", "last_name", "email", "is_staff", "is_active", "is_superuser",)
+    filter_backends = (
+        backends.RestFrameworkFilterBackend,
+        OrderingFilter,
+    )
+    ordering_fields = (
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "is_staff",
+        "is_active",
+        "is_superuser",
+    )
     ordering = ("username",)
 
 
@@ -40,7 +51,10 @@ class GroupViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         'list': GroupListSerializer,
     }
     filterset_class = filters.GroupFilter
-    filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+    filter_backends = (
+        backends.RestFrameworkFilterBackend,
+        OrderingFilter,
+    )
 
     def update(self, request, *args, **kwargs):
 

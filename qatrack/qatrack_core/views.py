@@ -61,11 +61,13 @@ def ajax_comment(request, next=None, using=None):
             'message': _('Invalid content_type value: %(content_type)r') % {
                 'content_type': escape(ctype)
             }
-        }, status=500)
+        },
+                            status=500)
     except AttributeError:
         return JsonResponse(
             {
-                'error': True,
+                'error':
+                    True,
                 'message':
                     _('The given content-type %(content_type)r does not resolve to a valid model.') % {
                         'content_type': escape(ctype)
@@ -76,26 +78,30 @@ def ajax_comment(request, next=None, using=None):
     except ObjectDoesNotExist:
         return JsonResponse(
             {
-                'error': True,
-                'message': _('No object matching content-type %(content_type)r and object PK %(object_id)r exists.') % {
-                    'content_type': escape(ctype),
-                    'object_id': escape(object_pk)
-                },
+                'error':
+                    True,
+                'message':
+                    _('No object matching content-type %(content_type)r and object PK %(object_id)r exists.') % {
+                        'content_type': escape(ctype),
+                        'object_id': escape(object_pk)
+                    },
             },
             status=500,
         )
     except (ValueError, ValidationError) as e:
         return JsonResponse(
             {
-                'error': True,
-                'message': _(
-                    'Attempting to get content-type %(content_type)r and '
-                    'object PK %(object_id)r exists raised %(error_class)s'
-                ) % {
-                    'content_type': escape(ctype),
-                    'object_id': escape(object_pk),
-                    'error_class': e.__class__.__name__,
-                }
+                'error':
+                    True,
+                'message':
+                    _(
+                        'Attempting to get content-type %(content_type)r and '
+                        'object PK %(object_id)r exists raised %(error_class)s'
+                    ) % {
+                        'content_type': escape(ctype),
+                        'object_id': escape(object_pk),
+                        'error_class': e.__class__.__name__,
+                    }
             },
             status=500,
         )
@@ -144,10 +150,12 @@ def ajax_comment(request, next=None, using=None):
         if response is False:
             return JsonResponse(
                 {
-                    'error': True,
-                    'message': _('comment_will_be_posted receiver %(receiver_name)r killed the comment') % {
-                        'receiver_name': receiver.__name__,
-                    },
+                    'error':
+                        True,
+                    'message':
+                        _('comment_will_be_posted receiver %(receiver_name)r killed the comment') % {
+                            'receiver_name': receiver.__name__,
+                        },
                 },
                 status=500,
             )
@@ -168,7 +176,10 @@ def ajax_comment(request, next=None, using=None):
         'c_id': comment.id,
         'user_name': comment.user.get_full_name(),
         'submit_date': comment.submit_date,
-        'template': render_to_string('comments/comment.html', {'comment': comment, 'hidden': True})
+        'template': render_to_string('comments/comment.html', {
+            'comment': comment,
+            'hidden': True
+        })
     })
 
 

@@ -79,10 +79,8 @@ class ServiceEventSchedulingAdmin(BaseQATrackAdmin):
         (
             "Filters", {
                 'fields': ['units'],
-                'description': _l(
-                    "By using the below filters, you may limit this notification to "
-                    "certain units."
-                ),
+                'description': _l("By using the below filters, you may limit this notification to "
+                                  "certain units."),
             }
         ),
     )
@@ -114,11 +112,13 @@ class ServiceEventSchedulingAdmin(BaseQATrackAdmin):
 
     def get_units(self, obj):
         return obj.units.name if obj.units else ""
+
     get_units.admin_order_field = "units__name"
     get_units.short_description = _l("Units Group")
 
     def get_recipients(self, obj):
         return obj.recipients.name
+
     get_recipients.admin_order_field = "recipients__name"
     get_recipients.short_description = _l("Recipient Group")
 

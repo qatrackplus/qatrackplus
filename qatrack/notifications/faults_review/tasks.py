@@ -47,9 +47,7 @@ def send_faultsreview_notice(notice_id, task_name=""):
     if notice:
 
         if not notice.send_required():
-            logger.info(
-                "Send of FaultsReviewNotice %s requested, but no Faults to notify about" % notice_id
-            )
+            logger.info("Send of FaultsReviewNotice %s requested, but no Faults to notify about" % notice_id)
             return
 
         recipients = notice.recipients.recipient_emails()
@@ -57,9 +55,7 @@ def send_faultsreview_notice(notice_id, task_name=""):
             logger.info("Send of FaultsReviewNotice %s requested, but no recipients" % notice_id)
             return
     else:
-        logger.info(
-            "Send of FaultsReviewNotice %s requested, but no such FaultsReviewNotice exists" % notice_id
-        )
+        logger.info("Send of FaultsReviewNotice %s requested, but no such FaultsReviewNotice exists" % notice_id)
         return
 
     try:
@@ -76,9 +72,7 @@ def send_faultsreview_notice(notice_id, task_name=""):
         except:  # noqa: E722  # pragma: nocover
             logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
     except:  # noqa: E722  # pragma: nocover
-        logger.exception(
-            "Error sending email for FaultsReviewNotice %s at %s." % (notice_id, timezone.now())
-        )
+        logger.exception("Error sending email for FaultsReviewNotice %s at %s." % (notice_id, timezone.now()))
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
         if not fail_silently:

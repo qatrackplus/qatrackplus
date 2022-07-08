@@ -31,9 +31,9 @@ class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
         context = super().get_context()
         qs = self.filter_set.qs
 
-        sites = self.filter_set.qs.order_by(
-            "unit_service_area__unit__site__name"
-        ).values_list("unit_service_area__unit__site", flat=True).distinct()
+        sites = self.filter_set.qs.order_by("unit_service_area__unit__site__name").values_list(
+            "unit_service_area__unit__site", flat=True
+        ).distinct()
 
         sites_data = []
 
@@ -82,14 +82,16 @@ class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
                 [],
                 [],
                 [site],
-                [_("Unit"),
-                 _("Service Area"),
-                 _("Template Name"),
-                 _("Frequency"),
-                 _("Due Date"),
-                 _("Window"),
-                 _("Assigned To"),
-                 _("Perform")],
+                [
+                    _("Unit"),
+                    _("Service Area"),
+                    _("Template Name"),
+                    _("Frequency"),
+                    _("Due Date"),
+                    _("Window"),
+                    _("Assigned To"),
+                    _("Perform")
+                ],
             ])
 
             for row in site_rows:
@@ -133,9 +135,7 @@ class DueAndOverdueServiceEventScheduleReport(DueDatesReportMixin, BaseReport):
     template = "reports/service_log/next_due.html"
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            due_date__lte=end_of_day(timezone.now())
-        ).exclude(due_date=None)
+        return super().get_queryset().filter(due_date__lte=end_of_day(timezone.now())).exclude(due_date=None)
 
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or _("due-and-overdue-sl-report")), report_format)

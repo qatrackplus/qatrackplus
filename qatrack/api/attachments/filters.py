@@ -14,6 +14,6 @@ class AttachmentFilter(filters.FilterSet):
         }
         filter_overrides = {
             FileField: {
-                 'filter_class': filters.CharFilter,
-             },
+                'filter_class': filters.CharFilter,
+            },
         }

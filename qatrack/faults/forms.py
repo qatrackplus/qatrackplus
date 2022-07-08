@@ -153,9 +153,7 @@ class FaultForm(BetterModelForm):
 
 class InlineReviewForm(forms.Form):
 
-    group = forms.CharField(
-        widget=forms.TextInput(attrs={'readonly': 'readonly'}),
-    )
+    group = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}),)
 
     reviewed_by = UserChoiceField(
         queryset=User.objects.none(),
