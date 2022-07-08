@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import (
     GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -1346,7 +1347,7 @@ class UnitTestInfoManager(models.Manager):
 
 class UnitTestInfo(models.Model):
 
-    unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     test = models.ForeignKey(Test, on_delete=models.PROTECT)
 
     reference = models.ForeignKey(
@@ -1399,7 +1400,7 @@ class UnitTestInfo(models.Model):
 
 class UnitTestInfoChange(models.Model):
 
-    unit_test_info = models.ForeignKey(UnitTestInfo, on_delete=models.PROTECT)
+    unit_test_info = models.ForeignKey(UnitTestInfo, on_delete=models.CASCADE)
     reference = models.ForeignKey(
         Reference,
         verbose_name=_l("Old Reference"),

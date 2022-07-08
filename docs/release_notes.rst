@@ -41,6 +41,10 @@ QATrack+ v3.2.0 Release Notes
 
 * Fixed fault list review status ordering/searching bug
 
+* Deleting a unit will now cascade and delete UnitTestInfo & UnitTest objects.
+  Existing QA data will still prevent a Unit from being deleted.
+
+
 QATrack+ v3.1.1 Release Notes
 -----------------------------
 
