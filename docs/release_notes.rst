@@ -21,13 +21,14 @@ QA
   local_settings.py file.
 * The maximum frequency of autosaves has been reduced to once per 4s. This an attempt
   to work around occasional deadlocks with SQL Server.
-* Pylinac has been updated:
+* Pylinac has been updated (TODO: version):
     * An issue with CatPhan modules CNR calculations return NaN due to the modules not having
       background ROIs defined has been fixed
     * A bug with DMLC VMAT tests with valleys in their profiles that fell below 50% of Dmax has
       been fixed.
     * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
       remedied.
+* A bug with QA Frequency recurrence rule start dates has been fixed
 
 Service Log
 ~~~~~~~~~~~
