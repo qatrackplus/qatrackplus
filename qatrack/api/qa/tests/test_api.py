@@ -109,6 +109,30 @@ class TestTestListInstanceAPI(APITestCase):
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
             assert v == self.data['tests'][t.slug]['value']
 
+    def test_create_with_blank_comment(self):
+        """A blank comment should not result in a 400"""
+        self.data['comment'] = ""
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tli = models.TestListInstance.objects.latest('pk')
+        assert tli.comments.count() == 0
+
+    def test_create_with_null_comment(self):
+        """A blank comment should not result in a 400"""
+        self.data['comment'] = None
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tli = models.TestListInstance.objects.latest('pk')
+        assert tli.comments.count() == 0
+
+    def test_create_with_valid_comment(self):
+        """A blank comment should not result in a 400"""
+        self.data['comment'] = "test list comment"
+        response = self.client.post(self.create_url, self.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        tli = models.TestListInstance.objects.latest('pk')
+        assert tli.comments.first().comment == "test list comment"
+
     def test_create_order(self):
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED

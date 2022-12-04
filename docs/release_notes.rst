@@ -61,6 +61,11 @@ API
 * The AutoReviewRuleSetFilter API end point has been fixed.
 * Fixed the `fault_types` field of the API's FaultSerializer
 * The API schema view will no longer throw a 500 error.
+* Submitting a null or blank comment when performing QA via the API (e.g. with
+  post data like `{..., "comment": ""}`) would previously result in a 400 Bad
+  Request error being returned.  This has been adjusted so that a null or blank
+  comment is now valid (no comment will be created) and will not block the QA
+  Session from being created.
 
 Reports
 ~~~~~~~

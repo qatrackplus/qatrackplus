@@ -175,7 +175,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     work_completed = serializers.DateTimeField(default=lambda: timezone.now())
 
-    comment = serializers.CharField(required=False)
+    comment = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     tests = serializers.DictField()
     status = serializers.HyperlinkedRelatedField(
         view_name="testinstancestatus-detail",
