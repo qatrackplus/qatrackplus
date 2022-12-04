@@ -1320,7 +1320,6 @@ class UnitTestInfo(models.Model):
         Group,
         help_text=_l("QC group that this test list should nominally be performed by"),
         null=True,
-        blank=True,
         on_delete=models.SET_NULL,
     )
 

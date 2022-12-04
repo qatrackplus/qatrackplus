@@ -29,6 +29,7 @@ QA
     * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
       remedied.
 * A bug with QA Frequency recurrence rule start dates has been fixed
+* The Assign Test Lists to Units admin page will no longer allow a blank Assigned to Field
 
 Service Log
 ~~~~~~~~~~~
