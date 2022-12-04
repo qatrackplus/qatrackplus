@@ -425,15 +425,7 @@ class Frequency(models.Model):
     def save(self, *args, **kwargs):
         """Make sure all recurrences have a start date and calculate an
         approximate time between recurrences."""
-
-        if not self.pk:
-            start = timezone.datetime(2012, 1, 1)
-            tz = timezone.get_current_timezone()
-            # note that DTSTART always relates to the current timezone
-            # see https://stackoverflow.com/a/47275021/79802
-            self.recurrences.dtstart = tz.localize(start)
-
-        self.nominal_interval = scheduling.calc_nominal_interval(self)
+        self.nominal_interval = scheduling.calc_nominal_interval(self.recurrences)
         super().save(*args, **kwargs)
 
     def natural_key(self):
@@ -1320,6 +1312,7 @@ class UnitTestInfo(models.Model):
         Group,
         help_text=_l("QC group that this test list should nominally be performed by"),
         null=True,
+        blank=True,
         on_delete=models.SET_NULL,
     )
 

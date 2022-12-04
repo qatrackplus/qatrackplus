@@ -69,7 +69,7 @@ class TestFrequency(TestCase):
             window_end=7,
         )
         f.save()
-        assert str(f.recurrences) == 'DTSTART:20120101T000000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=7'
+        assert str(f.recurrences) == 'DTSTART:20120101T050000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=7'
 
 
 class TestStatus(TestCase):

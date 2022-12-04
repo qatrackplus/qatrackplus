@@ -351,8 +351,9 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text('ADD UNIT TEST COLLECTION')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
 
-        self.select_by_index("id_unit", 1)
-        self.select_by_index("id_frequency", 1)
+        self.select_by_index("id_unit", -1)
+        time.sleep(0.5)
+        self.select_by_index("id_frequency", -1)
         self.select_by_index("id_assigned_to", 0)
         self.select_by_index("id_content_type", 1)
         self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()
@@ -657,7 +658,6 @@ class TestPerformQC(BaseQATests):
         self.driver.find_element_by_css_selector(".qa-string .qa-input").send_keys("test")
         self.click_by_css_selector("body")
         time.sleep(0.2)
-
 
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
