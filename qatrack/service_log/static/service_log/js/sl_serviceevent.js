@@ -891,7 +891,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $service_type.val(values['service_type']).trigger("change");
                 $service_type.prop('disabled', true);
             }else {
-                $service_type.prop('disabled', true);
+                $service_type.prop('disabled', false);
             }
 
             if (values['service_area']){
@@ -928,7 +928,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             }
             var template_st_not_set = $template.val() && !$service_type.val();
             if (!template_st_not_set){
-                $service_type.prop('disabled', true);
+                $service_type.prop('disabled', false);
             }
             $review_required_fake.prop('disabled', true);
             $('.rtsqa-utc').filter(function() { return $(this).val(); }).prop('disabled', true);
