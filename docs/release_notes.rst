@@ -62,13 +62,21 @@ API
 * Fixed the `fault_types` field of the API's FaultSerializer
 * The API schema view will no longer throw a 500 error.
 
+Reports
+~~~~~~~
+
+* The Active filter for Service Log Scheduling report filters worked for "Both"
+  but not "Yes" or "No". This has now been fixed.  In addition, the wrong set
+  of filters was being displayed for the Next Due Dates for Scheduled Service
+  Events report.  This has also been addressed.
+
+* Reports now respect the active/inactive status of units as well as the 
+  active/inactive status of test list assignments.
 
 Miscellaneous
 ~~~~~~~~~~~~~
 
 * A few documentation typo fixes
-* Reports now respect the active/inactive status of units as well as the 
-  active/inactive status of test list assignments.
 * Fixed a permissions check for deleting faults
 * Reviewing faults now use the term "Acknowledge" instead of "Approve"
 
