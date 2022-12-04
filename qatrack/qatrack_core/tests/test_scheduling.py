@@ -1,3 +1,5 @@
+from django.test import TestCase
+from django.test.utils import override_settings
 from django.utils import timezone
 import pytz
 import recurrence
@@ -334,3 +336,18 @@ class TestCalcDueDate:
         # due date in Dec is 9 4 week periods after April 15 which is Dec 23
         expected_due_date = self.make_dt(timezone.datetime(2018, 12, 23, 7, 0))
         assert scheduling.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
+
+
+class TestRelocalizeRecurrences(TestCase):
+
+    def test_find_models_with_recurrence(self):
+        models = scheduling.RecurrenceFieldMixin.recurrence_models()
+        assert len(models) == 7  # ReportSchedule, Frequency, 5 notice types
+
+    def test_relocalize(self):
+        f = qautils.create_frequency()
+        assert 'DTSTART:20120101T05' in str(f.recurrences)  # starts in US/Eastern
+        with override_settings(TIME_ZONE="US/Pacific"):
+            scheduling.RecurrenceFieldMixin.relocalize_recurrences()
+            f.refresh_from_db()
+            assert 'DTSTART:20120101T08' in str(f.recurrences)  # should now be in US/Pacific

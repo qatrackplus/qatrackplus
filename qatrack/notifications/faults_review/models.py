@@ -8,9 +8,10 @@ from recurrence.fields import RecurrenceField
 
 from qatrack.faults.models import Fault
 from qatrack.notifications.common.models import RecipientGroup, UnitGroup
+from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 
 
-class FaultsReviewNotice(models.Model):
+class FaultsReviewNotice(RecurrenceFieldMixin, models.Model):
 
     UNREVIEWED = 0
 

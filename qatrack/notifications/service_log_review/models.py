@@ -7,10 +7,11 @@ from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.notifications.common.models import RecipientGroup, UnitGroup
+from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 from qatrack.service_log.models import ServiceEvent
 
 
-class ServiceEventReviewNotice(models.Model):
+class ServiceEventReviewNotice(RecurrenceFieldMixin, models.Model):
 
     UNREVIEWED = 0
 

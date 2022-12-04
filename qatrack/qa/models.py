@@ -28,7 +28,7 @@ from qatrack.qa.testpack import TestPackMixin
 from qatrack.qatrack_core import scheduling
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.qatrack_core.fields import JSONField
-from qatrack.qatrack_core.scheduling import SchedulingMixin
+from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin, SchedulingMixin
 from qatrack.units.models import Unit
 
 # All available test types
@@ -371,7 +371,7 @@ class FrequencyManager(models.Manager):
         return self.get(slug=slug)
 
 
-class Frequency(models.Model):
+class Frequency(RecurrenceFieldMixin, models.Model):
     """Frequencies for performing QC tasks with configurable due dates"""
 
     name = models.CharField(max_length=50, unique=True, help_text=_l("Display name for this frequency"))

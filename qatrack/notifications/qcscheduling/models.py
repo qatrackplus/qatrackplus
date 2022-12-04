@@ -13,10 +13,11 @@ from qatrack.notifications.common.models import (
     UnitGroup,
 )
 from qatrack.qa.models import UnitTestCollection
+from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 from qatrack.qatrack_core.utils import today_start_end
 
 
-class QCSchedulingNotice(models.Model):
+class QCSchedulingNotice(RecurrenceFieldMixin, models.Model):
 
     ALL = 0
     DUE = 10
