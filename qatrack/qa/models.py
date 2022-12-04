@@ -2386,37 +2386,37 @@ class TestListInstance(models.Model):
         }
 
     def auto_review(self):
-        """set review status of the current value if allowed.
+        """Set review status of this QA session if all test pass/fail
+        statuses translate to a common review status.
 
-        Any skipped tests, or comments on the test list instance or test
-        instances, disqualify this test list instance from auto review.
+        Any skipped tests, or comments on the QA session or test
+        instances, disqualify this QA session from auto review.
         """
 
-        if self.test_list.autoreviewruleset_id is None or self.comments.all().exists():
+        if self.test_list.autoreviewruleset_id is None or self.in_progress or self.comments.all().exists():
             return
 
         rules = self.test_list.autoreviewruleset.rules_map()
 
-        statuses = set()
+        test_instance_review_statuses = set()
         for ti in self.testinstance_set.values("pass_fail", "comment", "skipped", "unit_test_info__test__hidden"):
-            if ti['comment'] or (ti['skipped'] and not ti['unit_test_info__test__hidden']):
+            if ti['comment'] and not ti['skipped'] and not ti['unit_test_info__test__hidden']:
+                # any non skipped, non hidden test with a comment should force manual review
                 return
 
             matched_rule = rules.get(ti['pass_fail'])
             if matched_rule is None:
                 return
 
-            statuses.add(matched_rule)
+            test_instance_review_statuses.add(matched_rule)
 
-        all_same_status = len(statuses) == 1
+        all_same_status = len(test_instance_review_statuses) == 1
         if not all_same_status:
             return
 
-        status = statuses.pop()
-        if status:
-            self.review_status = status
-            self.review_date = timezone.now()
-            self.save()
+        self.review_status = test_instance_review_statuses.pop()
+        self.reviewed = timezone.now()
+        self.save()
 
     @property
     def is_reviewed(self):
