@@ -59,6 +59,16 @@ class TestTags(TestCase):
         ti.save()
         qa_tags.as_review_status(tli)
 
+    def test_as_review_status_with_label(self):
+        tli = utils.create_test_list_instance()
+        status = qa_tags.as_review_status(tli, show_label=True)
+        assert tli.review_status.name in status
+
+    def test_as_review_status_no_label_default(self):
+        tli = utils.create_test_list_instance()
+        status = qa_tags.as_review_status(tli)
+        assert tli.review_status.name not in status
+
 
 class TestRefTolSpan(TestCase):
 

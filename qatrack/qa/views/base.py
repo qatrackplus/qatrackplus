@@ -74,6 +74,7 @@ class TestListInstanceMixin(SelectRelatedMixin, PrefetchRelatedMixin):
     prefetch_related = [
         "testinstance_set__unit_test_info",
         "testinstance_set__unit_test_info__test",
+        "testinstance_set__unit_test_info__test__category",
         "testinstance_set__reference",
         "testinstance_set__tolerance",
         "testinstance_set__attachment_set",

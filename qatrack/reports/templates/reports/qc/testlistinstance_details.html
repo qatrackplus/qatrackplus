@@ -41,7 +41,7 @@
           <dd>{{ tli.created_by }} {% if tli.created_by.email %} ({{ tli.created_by.email }}){% endif %}</dd>
 
           <dt>{% trans "Reviewed Status" %}:</dt>
-          <dd>{{ tli|as_review_status }}</dd>
+          <dd>{{ tli|as_review_status:True }}</dd>
 
           <dt>{% trans "Reviewed by" %}:</dt>
           <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}} {% else %}<em>Not reviewed</em>{% endif %}</dd>
