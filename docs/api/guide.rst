@@ -45,7 +45,7 @@ your-token-here`. For example:
 
 
 Note, you can also create an API token in the QATrack+ admin section by going
-to `/admin/authtoken/token` and clicking `Add Token`:
+to `/admin/authtoken/tokenproxy` and clicking `Add Token`:
 
 .. image:: token.png
 
