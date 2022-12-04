@@ -245,22 +245,14 @@ class TestListInstanceDetailsReport(BaseReport):
 
         form = self.get_filter_form()
         utcs = models.UnitTestCollection.objects.filter(pk__in=form.cleaned_data['unit_test_collection'])
+        utcs = utcs.select_related('unit', 'unit__site')
         context['utcs'] = utcs
 
         context['site_name'] = ', '.join(sorted(set(utc.unit.site.name if utc.unit.site else _("N/A") for utc in utcs)))
 
-        context['test_list_borders'] = self.get_borders(utcs)
         context['comments'] = self.get_comments(utcs)
         context['perms'] = PermWrapper(self.user)
         return context
-
-    def get_borders(self, utcs):
-        borders = {}
-        for utc in utcs:
-            for tl in utc.tests_object.all_lists():
-                borders[tl.pk] = tl.sublist_borders()
-
-        return borders
 
     def get_comments(self, utcs):
         from django_comments.models import Comment
