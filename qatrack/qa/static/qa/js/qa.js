@@ -1174,7 +1174,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 complete: on_complete
             });
         };
-        this.autosave = _.throttle(this.autosave_, 2000, {'trailing': true});
+        this.autosave = _.debounce(this.autosave_, 4000, {'trailing': true});
 
         this.has_failing = function(){
             return _.filter(self.test_instances, function(ti){

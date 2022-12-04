@@ -52,6 +52,8 @@ docker_initialisation.initialisation()
 
 echo "$initialisation" | python /usr/src/qatrackplus/manage.py shell
 
+python manage.py migrate
+python manage.py createcachetable
 chmod a+x deploy/docker/cron_backup.sh
 /usr/bin/crontab deploy/docker/crontab
 /etc/init.d/cron status

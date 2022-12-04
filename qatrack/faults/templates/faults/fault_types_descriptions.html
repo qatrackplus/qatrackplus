@@ -1,0 +1,11 @@
+{% load i18n %}
+{% for fault_type in fault.fault_types.all %}
+  <span>
+    {% if fault_type.description %}
+      <abbr title="{{ fault_type.description }}">
+        {{ fault_type.description }}
+      </abbr>
+    {% endif %}
+  </span>
+  {% if not forloop.last %}, {% endif %}
+{% endfor %}

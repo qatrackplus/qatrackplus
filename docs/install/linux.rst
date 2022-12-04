@@ -1,6 +1,6 @@
 .. _linux_install_31:
 
-New Installation of QATrack+ v3.1.0 on Ubuntu Linux
+New Installation of QATrack+ v3.1.1 on Ubuntu Linux
 ===================================================
 
 .. note::
@@ -20,9 +20,9 @@ officially supported or tested.
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
-* :ref:`Upgrading an existing v0.3.0 installation to v3.1.0
+* :ref:`Upgrading an existing v0.3.0 installation to v3.1.1
   <linux_upgrading_030_to_31>`. 
-*  :ref:`Upgrading an existing v0.2.X installation to v3.1.0 <linux_upgrading_02X_to_31>`. 
+*  :ref:`Upgrading an existing v0.2.X installation to v3.1.1 <linux_upgrading_02X_to_31>`. 
 
 The steps we will be undertaking are:
 
@@ -91,7 +91,7 @@ QATrack+.  To checkout the code enter the following commands:
     cd web
     git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
-    git checkout v3.1.0
+    git checkout v3.1.1
 
 
 Installing a Database System
@@ -204,7 +204,7 @@ Setting up our Python environment (including virtualenv)
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 3.1.0, runs on Python 3.6, 3.7, 3.8, & 3.9 Check your version of
+Version 3.1.1, runs on Python 3.6, 3.7, 3.8, & 3.9 Check your version of
 python3 with the command:
 
 .. code-block:: bash

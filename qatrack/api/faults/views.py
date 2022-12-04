@@ -7,7 +7,7 @@ from qatrack.faults import models
 
 
 class FaultViewSet(viewsets.ModelViewSet):
-    queryset = models.Fault.objects.all()
+    queryset = models.Fault.objects.prefetch_related("fault_types").all()
     serializer_class = serializers.FaultSerializer
     filterset_class = filters.FaultFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)

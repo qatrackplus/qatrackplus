@@ -1,7 +1,7 @@
 .. _win_upgrading_02X_to_31:
 
 
-Upgrading an existing Windows v0.2.X installation to v3.1.0
+Upgrading an existing Windows v0.2.X installation to v3.1.1
 ===========================================================
 
 This document will walk you through migrating an existing v0.2.X version of
@@ -430,4 +430,4 @@ Next Steps
 ----------
 
 Now that you have upgraded to 0.3.0, you should proceed directly to
-:ref:`upgrading to v3.1.0 from v0.3.0 <win_upgrading_030_to_31>`;
+:ref:`upgrading to v3.1.1 from v0.3.0 <win_upgrading_030_to_31>`;

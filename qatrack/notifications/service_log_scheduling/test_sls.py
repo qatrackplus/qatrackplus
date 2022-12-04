@@ -159,6 +159,21 @@ class TestServiceEventSchedulingModel(TestCase):
         )
         assert list(notice.schedules_to_notify()) == [self.sch1]
 
+    def test_inactive_unit_not_included(self):
+        self.sch1.due_date = timezone.now() + timezone.timedelta(hours=24)
+        self.sch1.save()
+        self.sch2.due_date = timezone.now() + timezone.timedelta(hours=2 * 24)
+        self.sch2.unit_service_area.unit.active = False
+        self.sch2.unit_service_area.unit.save()
+
+        notice = ServiceEventSchedulingNotice.objects.create(
+            future_days=7,
+            recipients=self.recipients,
+            notification_type=ServiceEventSchedulingNotice.UPCOMING,
+            time="0:00",
+        )
+        assert list(notice.schedules_to_notify()) == [self.sch1]
+
     def test_upcoming_one_overdue_no_groups(self):
         self.sch1.due_date = timezone.now() + timezone.timedelta(hours=24)
         self.sch1.save()

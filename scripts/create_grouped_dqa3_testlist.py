@@ -4,37 +4,64 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.utils.text import slugify  # noqa: #402
+from django.utils.text import slugify as django_slugify  # noqa: #402
 
 from qatrack.qa import models
-
 from qatrack.qa.testpack import create_testpack
 from qatrack.qa.utils import get_internal_user  # noqa: #402
+
 user = get_internal_user()
 
+TEST_TO_SLUG_REPLACEMENTS = [
+    ("/", "_"),
+    (" ", "_"),
+    ("-", "_"),
+    ("[mm]", "mm"),
+    ("[°]", "deg"),
+    ("[%]", "per")
+]
 
-def run(*args):
-    nargs_wrong = len(args) < 2
+
+def slugify(value):
+    """Convert value to valid QATrack+ slug"""
+
+    for repl, with_ in TEST_TO_SLUG_REPLACEMENTS:
+        value = value.replace(repl, with_)
+
+    value = django_slugify(value)
+
+    while "__" in value:
+        value = value.replace("__", "_")
+
+    if value[0] in '0123456789':
+        value = "_" + value
+
+    return value.lower()
+
+
+def run(*args, **kwargs):
+    nargs_wrong = len(args) < 3
     if not nargs_wrong:
         mode = args[0]
-        beams = ','.join(args[1:])
+        tl_name = args[1]
+        beams = ','.join(args[2:])
         beams = [b.strip() for b in beams.strip(" ,").split(",") if b.strip()]
 
     if nargs_wrong or mode not in ["db", "testpack"]:
-        print("Usage python manage.py runscript create_grouped_dqa3_testlist --script-args {testpack,db} {beam1} {beam2} ... {beamN}")  # noqa: E501
+        print("Usage python manage.py runscript create_grouped_dqa3_testlist --script-args {testpack,db} \"DQA3 Test Results\" {beam1} {beam2} ... {beamN}")  # noqa: E501
         print("To create a test list:")
-        print("    python manage.py runscript create_grouped_dqa3_testlist --script-args testpack 6X 6FFF 10X 10FFF 18X \"6X EDW60\"")  # noqa: E501
+        print("    python manage.py runscript create_grouped_dqa3_testlist --script-args testpack \"DQA3 Test Results\" 6X 6FFF 10X 10FFF 18X \"6X EDW60\"")  # noqa: E501
         print("To create a test pack:")
-        print("    python manage.py runscript create_grouped_dqa3_testlist --script-args db 6X 6FFF 10X 10FFF 18X \"6X EDW60\" 6E 9E 12E")  # noqa: E501
+        print("    python manage.py runscript create_grouped_dqa3_testlist --script-args db \"DQA3 Test Results\" 6X 6FFF 10X 10FFF 18X \"6X EDW60\" 6E 9E 12E")  # noqa: E501
     else:
-        create_dqa3(mode, beams)
+        create_dqa3(mode, tl_name, beams)
 
 
 class Rollback(Exception):
     pass
 
 
-def create_dqa3(mode, beams):
+def create_dqa3(mode, tl_name, beams):
 
     params = [
         "Signature",
@@ -78,16 +105,16 @@ def create_dqa3(mode, beams):
             cat, _ = models.Category.objects.get_or_create(
                 name=cat,
                 defaults={
-                    "slug": slugify(cat),
+                    "slug": django_slugify(cat),
                     "description": cat,
                 },
             )
 
-            parent_test_list_name = f"Daily QA3 Results"
+            parent_test_list_name = tl_name
             print(f"Creating Test List: {parent_test_list_name}")
             parent_test_list, _ = models.TestList.objects.get_or_create(
                 name=parent_test_list_name,
-                slug=slugify(parent_test_list_name),
+                slug=django_slugify(parent_test_list_name),
                 defaults={
                     "created_by": user,
                     "modified_by": user,
@@ -100,7 +127,7 @@ def create_dqa3(mode, beams):
                 print(f"Creating Test List: {test_list_name}")
                 test_list, _ = models.TestList.objects.get_or_create(
                     name=test_list_name,
-                    slug=slugify(test_list_name),
+                    slug=django_slugify(test_list_name),
                     defaults={
                         "created_by": user,
                         "modified_by": user,
@@ -117,7 +144,7 @@ def create_dqa3(mode, beams):
                         unit = "%" if 'shift' not in param.lower() and 'size' not in param.lower() else "cm"
                     name = f"{beam}: {param} ({unit})" if unit else f"{beam}: {param}"
                     test_name = f"DQA3 Results: {name}"
-                    slug = ("%s_%s" % (slugify(param), slugify(beam))).lower().replace("-", "_")
+                    slug = slugify("%s_%s" % (param, beam))
                     print(f"\tCreating Test: {test_name} ({slug})")
                     test, _ = models.Test.objects.get_or_create(
                         name=test_name,
@@ -141,7 +168,7 @@ def create_dqa3(mode, beams):
 
             if mode == "testpack":
                 tp = create_testpack(test_lists=[parent_test_list])
-                fname = "grouped-dqa3-qcpump-test-list.tpk" % beam.lower()
+                fname = "grouped-dqa3-qcpump-test-list.tpk"
                 json.dump(tp, open(fname, "w"), indent=2)
                 print("Wrote '%s' Test Pack to %s" % (parent_test_list.name, fname))
                 raise Rollback("Rollback so we don't actually save the tests")

@@ -17,11 +17,12 @@ class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
     category = _l("QC")
 
     def get_queryset(self):
-        return models.UnitTestCollection.objects.select_related(
+        qs = models.UnitTestCollection.objects.select_related(
             "assigned_to",
             "unit",
             "frequency",
-        ).exclude(active=False)
+        )
+        return qs
 
     def get_context(self):
 
@@ -102,7 +103,7 @@ class NextDueDatesReport(DueDatesReportMixin, BaseReport):
 
     report_type = "next_due"
     name = _l("Next Due Dates for QC")
-    filter_class = filters.SchedulingFilter
+    filter_class = filters.UnitTestCollectionSchedulingFilter
     description = mark_safe(_l("This report shows QC tests whose next due date fall in the selected time period."))
 
     category = _l("Scheduling")

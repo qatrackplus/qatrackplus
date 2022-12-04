@@ -172,6 +172,21 @@ class TestQCSchedulingModel(TestCase):
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
+    def test_inactive_unit_not_included(self):
+        self.utc1.due_date = timezone.now() + timezone.timedelta(hours=24)
+        self.utc1.save()
+        self.utc2.due_date = timezone.now() + timezone.timedelta(hours=2 * 24)
+        self.utc2.unit.active = False
+        self.utc2.unit.save()
+
+        notice = QCSchedulingNotice.objects.create(
+            future_days=7,
+            recipients=self.recipients,
+            notification_type=QCSchedulingNotice.UPCOMING,
+            time="0:00",
+        )
+        assert list(notice.utcs_to_notify()) == [self.utc1]
+
     def test_upcoming_one_overdue_no_groups(self):
         self.utc1.due_date = timezone.now() + timezone.timedelta(hours=24)
         self.utc1.save()

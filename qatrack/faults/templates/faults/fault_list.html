@@ -13,6 +13,7 @@
   <link href="{% static "daterangepicker/css/daterangepicker.css" %}?v={{VERSION}}" rel="stylesheet">
   <link href="{% static "qatrack_core/css/tables.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
   <link href="{% static "qatrack_core/css/custom-daterangepicker.css" %}?v={{CSS_VERSION}}" rel="stylesheet">
+  <link href="{% static "faults/css/faults.css" %}?v={{VERSION}}" rel="stylesheet">
 {% endblock extra_css %}
 
 {% block extra_js %}
@@ -52,7 +53,7 @@
 
               >
                 <i class="fa fa-save"></i>
-                {% trans "Approve Selected Faults" %}
+                {% trans "Acknowledge Selected Faults" %}
               </button>
             </div>
           </div>

@@ -16,7 +16,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as e_c
 
 # Create your tests here.
-from qatrack.qa.models import Group, TestInstance, User
+from qatrack.qa.models import Group, TestInstance, User, UnitTestCollection
 from qatrack.qa.tests import utils
 from qatrack.qa.tests.test_selenium import BaseQATests
 from qatrack.reports import (
@@ -29,6 +29,9 @@ from qatrack.reports import (
     tasks,
     views,
 )
+from qatrack.service_log.models import ServiceEventSchedule
+
+from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestReportForm:
@@ -522,7 +525,7 @@ class TestFilters(TestCase):
         assert 'organization' in f.form.cleaned_data
 
     def test_schedulingfilter_due_date(self):
-        f = filters.SchedulingFilter()
+        f = filters.UnitTestCollectionSchedulingFilter()
         assert f.form.fields['due_date'].widget.attrs['class'] == "futuredate"
 
     def test_dueandoverdue_unit_site_choices(self):
@@ -536,6 +539,78 @@ class TestFilters(TestCase):
     def test_utcfilter(self):
         f = filters.TestListInstanceByUTCFilter()
         assert f.form.fields['work_completed'].widget.attrs['class'] == "pastdate"
+
+    def test_inactive_utc_filters(self):
+        """Ensure active/inactive units are filtered appropriately based on
+        UTC active status"""
+
+        u1 = utils.create_unit()
+        u2 = utils.create_unit()
+        utc1 = utils.create_unit_test_collection(unit=u1)
+        utc2 = utils.create_unit_test_collection(unit=u2, active=False)
+        qs = UnitTestCollection.objects.filter().all()
+
+        active_expected = [(True, [utc1]), (False, [utc2]), (None, [utc1, utc2])]
+        for active, expected_utcs in active_expected:
+
+            for ft in [filters.UnitTestCollectionFilter, filters.UnitTestCollectionSchedulingFilter]:
+                f = ft()
+                f.form.cleaned_data = {'active': active}
+                assert set(f.filter_queryset(qs)) == set(expected_utcs)
+
+    def test_inactive_unit_filters(self):
+        """Ensure active/inactive units are filtered appropriately based on
+        unit active status"""
+
+        u1 = utils.create_unit()
+        u2 = utils.create_unit()
+        u2.active = False
+        u2.save()
+        utc1 = utils.create_unit_test_collection(unit=u1)
+        utc2 = utils.create_unit_test_collection(unit=u2)
+        qs = UnitTestCollection.objects.filter().all()
+
+        active_expected = [(True, [utc1]), (False, [utc2]), (None, [utc1, utc2])]
+        for active, expected_utcs in active_expected:
+
+            for ft in [filters.UnitTestCollectionFilter, filters.UnitTestCollectionSchedulingFilter]:
+                f = ft()
+                f.form.cleaned_data = {'active': active}
+                assert set(f.filter_queryset(qs)) == set(expected_utcs)
+
+    def test_inactive_ses_filters(self):
+        """Ensure active/inactive units are filtered appropriately based on
+        service event scheduel active status"""
+
+        usa1 = sl_utils.create_unit_service_area()
+        usa2 = sl_utils.create_unit_service_area()
+        ses1 = sl_utils.create_service_event_schedule(unit_service_area=usa1)
+        ses2 = sl_utils.create_service_event_schedule(unit_service_area=usa2, active=False)
+        qs = ServiceEventSchedule.objects.filter().all()
+
+        active_expected = [(True, [ses1]), (False, [ses2]), (None, [ses1, ses2])]
+        for active, expected_ses in active_expected:
+            f = filters.ScheduledServiceEventFilter()
+            f.form.cleaned_data = {'active': active}
+            assert set(f.filter_queryset(qs)) == set(expected_ses)
+
+    def test_inactive_ses_unit_filters(self):
+        """Ensure active/inactive units are filtered appropriately based on
+        unit active status"""
+
+        usa1 = sl_utils.create_unit_service_area()
+        usa2 = sl_utils.create_unit_service_area()
+        usa2.unit.active = False
+        usa2.unit.save()
+        ses1 = sl_utils.create_service_event_schedule(unit_service_area=usa1)
+        ses2 = sl_utils.create_service_event_schedule(unit_service_area=usa2)
+        qs = ServiceEventSchedule.objects.filter().all()
+
+        active_expected = [(True, [ses1]), (False, [ses2]), (None, [ses1, ses2])]
+        for active, expected_ses in active_expected:
+            f = filters.ScheduledServiceEventFilter()
+            f.form.cleaned_data = {'active': active}
+            assert set(f.filter_queryset(qs)) == set(expected_ses)
 
 
 class TestInstanceToFormFields(TestCase):

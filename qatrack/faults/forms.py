@@ -5,7 +5,7 @@ from django.utils.text import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
 
 from qatrack.faults import models
-from qatrack.qatrack_core.forms import MultipleCharField
+from qatrack.qatrack_core.forms import MultipleCharField, UserChoiceField
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.units import models as u_models
@@ -21,7 +21,7 @@ class FaultForm(BetterModelForm):
     comment = forms.CharField(
         widget=forms.Textarea,
         required=False,
-        help_text=_l("Include any relevant comments."),
+        help_text=_l("Include any relevant comment i.e. describe what you were doing when the fault occurred"),
     )
 
     unit = forms.ChoiceField(
@@ -62,14 +62,15 @@ class FaultForm(BetterModelForm):
             'occurred',
             'unit',
             'modality',
+            'comment',
             'fault_types_field',
             'related_service_events',
-            'comment',
         ]
 
     def __init__(self, *args, **kwargs):
 
         include_related_ses = kwargs.pop("include_related_ses", True)
+        user = kwargs.pop("user", None)
 
         super().__init__(*args, **kwargs)
 
@@ -103,7 +104,8 @@ class FaultForm(BetterModelForm):
                 if not self.data['%s-unit' % self.prefix]:
                     self.fields['related_service_events'].widget.attrs.update({'disabled': True})
 
-        self.fields['unit'].choices = unit_site_unit_type_choices(include_empty=True, serviceable_only=True)
+        self.fields['unit'].choices = unit_site_unit_type_choices(
+            include_empty=True, serviceable_only=True, visible_for_user=user)
 
         for f in self.fields:
             self.fields[f].widget.attrs['class'] = 'form-control'
@@ -126,6 +128,7 @@ class FaultForm(BetterModelForm):
         if 'comment' in self.fields:
             self.fields['comment'].widget.attrs['class'] += 'autosize'
             self.fields['comment'].widget.attrs['cols'] = 8
+            self.fields['comment'].widget.attrs['rows'] = 3
 
     def clean_fault_types_field(self):
         fault_types = self.cleaned_data.get('fault_types_field')
@@ -154,7 +157,7 @@ class InlineReviewForm(forms.Form):
         widget=forms.TextInput(attrs={'readonly': 'readonly'}),
     )
 
-    reviewed_by = forms.ModelChoiceField(
+    reviewed_by = UserChoiceField(
         queryset=User.objects.none(),
         help_text=_l("Select the user from this group who reviewed this fault"),
         required=False,
@@ -174,7 +177,7 @@ class InlineReviewForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['group'].initial = fault_review_group.group.name
         self.fields['reviewed_by'].required = fault_review_group.required
-        self.fields['reviewed_by'].queryset = fault_review_group.group.user_set.all()
+        self.fields['reviewed_by'].queryset = fault_review_group.group.user_set.filter(is_active=True).all()
 
 
 class ReviewFaultForm(BetterModelForm):

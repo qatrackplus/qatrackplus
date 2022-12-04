@@ -112,7 +112,7 @@ review.
 
    Select the fault you want to review
 
-On the details page you can click the **Approve This Fault** button to mark
+On the details page you can click the **Acknowledge This Fault** button to mark
 this fault as reviewed, click the **Edit** button to edit the fault, click
 the **Delete** button to delete the fault, or view other occurrences of the
 same type of fault at the bottom of the page.

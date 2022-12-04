@@ -13,7 +13,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -290,6 +290,11 @@ PERMISSIONS += (
         _l("Faults"),
         (
             (
+                'faults.view_fault',
+                _l("Can View Faults"),
+                _l("Gives user the ability to view machine faults"),
+            ),
+            (
                 'faults.add_fault',
                 _l("Can Add Faults"),
                 _l("Gives user the ability to log machine faults"),
@@ -338,6 +343,22 @@ def autoreviewruleset_cache(rule_id):
         cache_val = update_autoreviewruleset_cache()
 
     return cache_val[rule_id]
+
+
+def set_active_unit_test_collections_for_unit_cache(unit: Unit) -> QuerySet:
+    """Set the cached queryset for active unit test collections for a unit"""
+    qs = UnitTestCollection.objects.filter(
+        unit=unit,
+        active=True
+    ).order_by('name')
+    cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
+    return qs
+
+
+def get_active_unit_test_collections_for_unit(unit: Unit) -> QuerySet:
+    """Return cached queryset of active unit test collections for a specific unit"""
+    uf_cache = cache.get(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id))
+    return uf_cache or set_active_unit_test_collections_for_unit_cache(unit)
 
 
 class FrequencyManager(models.Manager):
@@ -402,7 +423,9 @@ class Frequency(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        self.nominal_interval = scheduling.calc_nominal_interval(self)
+        """Make sure all recurrences have a start date and calculate an
+        approximate time between recurrences."""
+        self.nominal_interval = scheduling.calc_nominal_interval(self.recurrences)
         super().save(*args, **kwargs)
 
     def natural_key(self):
@@ -2193,7 +2216,7 @@ class TestListInstanceManager(models.Manager):
     def in_progress(self, user=None):
         qs = self.get_queryset().filter(in_progress=True)
         if user:
-            qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all())
+            qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all()).distinct()
         return qs.order_by("-work_completed")
 
     def your_in_progress_count(self, user):
