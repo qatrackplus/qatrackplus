@@ -88,6 +88,7 @@ Miscellaneous
 * A few documentation typo fixes
 * Fixed a permissions check for deleting faults
 * Reviewing faults now use the term "Acknowledge" instead of "Approve"
+* Admin access will no longer be required to access the page for editing units available times.
 
 
 QATrack+ v3.1.0.1 Release Notes
