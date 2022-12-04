@@ -1373,13 +1373,6 @@ class FrequencyAdmin(BaseQATrackAdmin):
             'all': ["cal-heatmap/css/cal-heatmap.css"],
         }
 
-    def save_model(self, request, obj, form, change):
-        """set user and modified date time"""
-        if not obj.pk:
-            from_ = timezone.datetime(2012, 1, 1, tzinfo=timezone.get_current_timezone())
-            obj.recurrences.dtstart = from_
-        super().save_model(request, obj, form, change)
-
     @mark_safe
     def get_recurrences(self, obj):
         rules = str(obj.recurrences).replace("RRULE:", "").split("\n")[1:]

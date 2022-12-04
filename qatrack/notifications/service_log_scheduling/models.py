@@ -7,11 +7,12 @@ from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.notifications.common.models import RecipientGroup, UnitGroup
+from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 from qatrack.qatrack_core.utils import today_start_end
 from qatrack.service_log.models import ServiceEventSchedule
 
 
-class ServiceEventSchedulingNotice(models.Model):
+class ServiceEventSchedulingNotice(RecurrenceFieldMixin, models.Model):
 
     ALL = 0
     DUE = 10
