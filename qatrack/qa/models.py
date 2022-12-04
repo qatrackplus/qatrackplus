@@ -1341,7 +1341,7 @@ class UnitTestInfoManager(models.Manager):
 
 class UnitTestInfo(models.Model):
 
-    unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     test = models.ForeignKey(Test, on_delete=models.PROTECT)
 
     reference = models.ForeignKey(
@@ -1394,7 +1394,7 @@ class UnitTestInfo(models.Model):
 
 class UnitTestInfoChange(models.Model):
 
-    unit_test_info = models.ForeignKey(UnitTestInfo, on_delete=models.PROTECT)
+    unit_test_info = models.ForeignKey(UnitTestInfo, on_delete=models.CASCADE)
     reference = models.ForeignKey(
         Reference,
         verbose_name=_l("Old Reference"),
