@@ -35,6 +35,8 @@ Service Log
 
 * Fixed a bug with Return To Service work forms being populated with incorrect data
 
+* The first Service Event Status created will now automatically be set to the default
+
 Faults
 ~~~~~~
 
@@ -77,6 +79,7 @@ Reports
 
 * Reports now respect the active/inactive status of units as well as the 
   active/inactive status of test list assignments.
+
 
 Miscellaneous
 ~~~~~~~~~~~~~
