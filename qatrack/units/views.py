@@ -53,7 +53,7 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, TemplateView):
         return context
 
 
-@permission_required(Permission.objects.filter(codename='change_unitavailabletime'))
+@permission_required('units.change_unitavailabletime')
 @csrf_protect
 def handle_unit_available_time(request):
 
@@ -96,7 +96,7 @@ def handle_unit_available_time(request):
     return get_unit_available_time_data(request)
 
 
-@permission_required(Permission.objects.filter(codename='change_unitavailabletime'))
+@permission_required('units.change_unitavailabletime')
 @csrf_protect
 def handle_unit_available_time_edit(request):
 
@@ -132,7 +132,7 @@ def handle_unit_available_time_edit(request):
     return get_unit_available_time_data(request)
 
 
-@permission_required(Permission.objects.filter(codename='change_unitavailabletime'))
+@permission_required('change_unitavailabletime')
 @csrf_protect
 def delete_schedules(request):
 

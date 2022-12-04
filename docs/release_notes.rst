@@ -35,8 +35,9 @@ Service Log
 ~~~~~~~~~~~
 
 * Fixed a bug with Return To Service work forms being populated with incorrect data
-
 * The first Service Event Status created will now automatically be set to the default
+* The Service Type field was being incorrectly when entering a new service
+  event using a Service Log Template without a Service Type set. This has been fixed.
 
 Faults
 ~~~~~~
@@ -89,6 +90,8 @@ Miscellaneous
 * Fixed a permissions check for deleting faults
 * Reviewing faults now use the term "Acknowledge" instead of "Approve"
 * Admin access will no longer be required to access the page for editing units available times.
+* A permissions check for editing unit available times has been fixed. Anyone with the
+  'Change Unit Available Time' permission should be able to edit available times now.
 
 
 QATrack+ v3.1.0.1 Release Notes
