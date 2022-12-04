@@ -58,6 +58,19 @@ class TestFrequency(TestCase):
     def test_classical(self):
         assert models.Frequency(window_start=None).classical
 
+    def test_rrule_start_set_correctly(self):
+        """Ensure the start date of the recurrence rule is set correctly"""
+        rrule = 'RRULE:FREQ=MONTHLY;BYMONTHDAY=7'
+        f = models.Frequency(
+            name="monthly 7th",
+            slug="monthly-7th",
+            recurrences=rrule,
+            window_start=6,
+            window_end=7,
+        )
+        f.save()
+        assert str(f.recurrences) == 'DTSTART:20120101T050000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=7'
+
 
 class TestStatus(TestCase):
 

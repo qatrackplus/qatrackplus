@@ -404,13 +404,7 @@ class Frequency(models.Model):
     def save(self, *args, **kwargs):
         """Make sure all recurrences have a start date and calculate an
         approximate time between recurrences."""
-
-        if not self.pk:
-            start = timezone.datetime(2012, 1, 1)
-            tz = timezone.get_current_timezone()
-            self.recurrences.dtstart = tz.localize(start)
-
-        self.nominal_interval = scheduling.calc_nominal_interval(self)
+        self.nominal_interval = scheduling.calc_nominal_interval(self.recurrences)
         super().save(*args, **kwargs)
 
     def natural_key(self):

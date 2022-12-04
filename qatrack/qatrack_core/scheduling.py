@@ -76,15 +76,15 @@ def should_update_schedule(date, due_date, frequency):
     return start is None or start <= date
 
 
-def calc_nominal_interval(frequency):
+def calc_nominal_interval(recurrences):
     """Calculate avg number of days between tests for ordering purposes"""
     tz = timezone.get_current_timezone()
-    occurrences = frequency.recurrences.occurrences(
+    occurrences = recurrences.occurrences(
         dtstart=tz.localize(timezone.datetime(2012, 1, 1)),
-        dtend=end_of_day(tz.localize(timezone.datetime(2012, 12, 31))),
+        dtend=end_of_day(tz.localize(timezone.datetime(2017, 12, 31))),
     )
     deltas = [(t2 - t1).total_seconds() / (60 * 60 * 24) for t1, t2 in zip(occurrences, occurrences[1:])]
-    return sum(deltas) / len(deltas)
+    return sum(deltas) / len(deltas) if deltas else None
 
 
 class SchedulingMixin:

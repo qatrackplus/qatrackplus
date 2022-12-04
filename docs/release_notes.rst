@@ -61,18 +61,23 @@ QA
   local_settings.py file.
 * The maximum frequency of autosaves has been reduced to once per 4s. This an attempt
   to work around occasional deadlocks with SQL Server.
-* Pylinac has been updated:
+* Pylinac has been updated (TODO: version):
     * An issue with CatPhan modules CNR calculations return NaN due to the modules not having
       background ROIs defined has been fixed
     * A bug with DMLC VMAT tests with valleys in their profiles that fell below 50% of Dmax has
       been fixed.
     * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
       remedied.
+* A bug with QA Frequency recurrence rule start dates has been fixed
+* The Assign Test Lists to Units admin page will no longer allow a blank Assigned to Field
 
 Service Log
 ~~~~~~~~~~~
 
 * Fixed a bug with Return To Service work forms being populated with incorrect data
+* The first Service Event Status created will now automatically be set to the default
+* The Service Type field was being incorrectly when entering a new service
+  event using a Service Log Template without a Service Type set. This has been fixed.
 
 Faults
 ~~~~~~
@@ -100,16 +105,33 @@ API
 * The AutoReviewRuleSetFilter API end point has been fixed.
 * Fixed the `fault_types` field of the API's FaultSerializer
 * The API schema view will no longer throw a 500 error.
+* Submitting a null or blank comment when performing QA via the API (e.g. with
+  post data like `{..., "comment": ""}`) would previously result in a 400 Bad
+  Request error being returned.  This has been adjusted so that a null or blank
+  comment is now valid (no comment will be created) and will not block the QA
+  Session from being created.
+
+Reports
+~~~~~~~
+
+* The Active filter for Service Log Scheduling report filters worked for "Both"
+  but not "Yes" or "No". This has now been fixed.  In addition, the wrong set
+  of filters was being displayed for the Next Due Dates for Scheduled Service
+  Events report.  This has also been addressed.
+
+* Reports now respect the active/inactive status of units as well as the 
+  active/inactive status of test list assignments.
 
 
 Miscellaneous
 ~~~~~~~~~~~~~
 
 * A few documentation typo fixes
-* Reports now respect the active/inactive status of units as well as the 
-  active/inactive status of test list assignments.
 * Fixed a permissions check for deleting faults
 * Reviewing faults now use the term "Acknowledge" instead of "Approve"
+* Admin access will no longer be required to access the page for editing units available times.
+* A permissions check for editing unit available times has been fixed. Anyone with the
+  'Change Unit Available Time' permission should be able to edit available times now.
 
 
 QATrack+ v3.1.0.1 Release Notes

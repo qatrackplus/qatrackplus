@@ -35,6 +35,7 @@ from qatrack.qatrack_core.admin import (
     BasicSaveUserAdmin,
     SaveUserMixin,
 )
+from qatrack.qatrack_core import scheduling
 from qatrack.units.forms import unit_site_unit_type_choices
 from qatrack.units.models import Site, Unit
 
@@ -1525,9 +1526,40 @@ class TestListCycleAdmin(SaveUserMixin, SaveInlineAttachmentUserMixin, BaseQATra
         return qs.prefetch_related("test_lists")
 
 
+class FrequencyForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Frequency
+        fields = (
+            'name',
+            'slug',
+            'recurrences',
+            'window_start',
+            'window_end',
+        )
+
+    def clean(self):
+        """Ensure the define frequency has a valid set of occurences"""
+
+        super().clean()
+
+        recurrences = self.cleaned_data.get('recurrences')
+        if recurrences and scheduling.calc_nominal_interval(recurrences) is None:
+            self.add_error(
+                'recurrences',
+                'This frequency has zero occurences. Please adjust the schedule and try again'
+            )
+        elif recurrences and len(recurrences.rrules) == 0:
+            self.add_error(
+                'recurrences',
+                'This frequency has exclusion rules only. Please adjust the schedule and try again'
+            )
+        return self.cleaned_data
+
+
 class FrequencyAdmin(BaseQATrackAdmin):
     prepopulated_fields = {'slug': ('name',)}
-    model = models.Frequency
+    form = FrequencyForm
     fields = (
         "name",
         "slug",

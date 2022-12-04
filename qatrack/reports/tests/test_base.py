@@ -525,7 +525,7 @@ class TestFilters(TestCase):
         assert 'organization' in f.form.cleaned_data
 
     def test_schedulingfilter_due_date(self):
-        f = filters.SchedulingFilter()
+        f = filters.UnitTestCollectionSchedulingFilter()
         assert f.form.fields['due_date'].widget.attrs['class'] == "futuredate"
 
     def test_dueandoverdue_unit_site_choices(self):
@@ -553,7 +553,7 @@ class TestFilters(TestCase):
         active_expected = [(True, [utc1]), (False, [utc2]), (None, [utc1, utc2])]
         for active, expected_utcs in active_expected:
 
-            for ft in [filters.UnitTestCollectionFilter, filters.SchedulingFilter]:
+            for ft in [filters.UnitTestCollectionFilter, filters.UnitTestCollectionSchedulingFilter]:
                 f = ft()
                 f.form.cleaned_data = {'active': active}
                 assert set(f.filter_queryset(qs)) == set(expected_utcs)
@@ -573,7 +573,7 @@ class TestFilters(TestCase):
         active_expected = [(True, [utc1]), (False, [utc2]), (None, [utc1, utc2])]
         for active, expected_utcs in active_expected:
 
-            for ft in [filters.UnitTestCollectionFilter, filters.SchedulingFilter]:
+            for ft in [filters.UnitTestCollectionFilter, filters.UnitTestCollectionSchedulingFilter]:
                 f = ft()
                 f.form.cleaned_data = {'active': active}
                 assert set(f.filter_queryset(qs)) == set(expected_utcs)

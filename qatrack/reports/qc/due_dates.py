@@ -103,7 +103,7 @@ class NextDueDatesReport(DueDatesReportMixin, BaseReport):
 
     report_type = "next_due"
     name = _l("Next Due Dates for QC")
-    filter_class = filters.SchedulingFilter
+    filter_class = filters.UnitTestCollectionSchedulingFilter
     description = mark_safe(_l("This report shows QC tests whose next due date fall in the selected time period."))
 
     category = _l("Scheduling")
