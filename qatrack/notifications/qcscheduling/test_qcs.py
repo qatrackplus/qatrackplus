@@ -3,7 +3,6 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
 from qatrack.notifications.models import (
     QCSchedulingNotice,
@@ -360,6 +359,7 @@ class TestQCSchedulingEmails(TestCase):
 
         self.notice = QCSchedulingNotice.objects.create(
             recipients=self.recipients,
+            recurrences="RRULE:FREQ=DAILY",
             notification_type=QCSchedulingNotice.UPCOMING_AND_DUE,
             future_days=7,
             time="0:00",
@@ -401,8 +401,6 @@ class TestQCSchedulingEmails(TestCase):
         assert Schedule.objects.count() == 1
 
     def test_run_scheduling_notices(self):
-
-        self.notice.recurrences = recurrence.Recurrence(rrules=[recurrence.Rule(recurrence.DAILY)])
         self.notice.time = (timezone.localtime(timezone.now()) + timezone.timedelta(minutes=1)).time()
         self.notice.save()
         tasks.run_scheduling_notices()

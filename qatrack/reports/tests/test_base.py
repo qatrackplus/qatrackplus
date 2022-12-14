@@ -1144,7 +1144,6 @@ class TestReportTasks(TestCase):
             modified_by=self.user,
         )
         self.schedule = models.ReportSchedule.objects.create(
-            pk=123,
             report=self.report,
             time="00:00",
             schedule="RRULE:FREQ=DAILY",
