@@ -86,8 +86,6 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
     """
 
     start_today, end_today = today_start_end()
-    start_today = start_today.replace(tzinfo=None)
-    end_today = end_today.replace(tzinfo=None)
     now = timezone.localtime(timezone.now()).replace(tzinfo=None)
     start_time, end_time = (now, now + timezone.timedelta(minutes=15))
 
@@ -111,7 +109,8 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
         # day, between will just return ~timezone.now() if the report is to be
         # sent today.  If we make reports available at a higher frequency this
         # check will need to be adjusted.
-        occurences = getattr(instance, recurrence_field).between(start_today, end_today)
+        # note: inc=True required to catch daily recurrences
+        occurences = getattr(instance, recurrence_field).between(start_today, end_today, inc=True)
         logger.info(
             "Occurences for %s %s: %s (between %s & %s)" % (
                 model._meta.model_name,

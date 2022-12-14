@@ -3,7 +3,6 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
 from qatrack.faults.models import Fault
 import qatrack.faults.tests.utils as utils
@@ -161,6 +160,7 @@ class TestFaultsReviewEmails(TestCase):
 
         self.notice = FaultsReviewNotice.objects.create(
             recipients=self.recipients,
+            recurrences="RRULE:FREQ=DAILY",
             notification_type=FaultsReviewNotice.UNREVIEWED,
             time="0:00",
         )
@@ -211,7 +211,6 @@ class TestFaultsReviewEmails(TestCase):
         assert Schedule.objects.count() == 1
 
     def test_run_review_notices(self):
-        self.notice.recurrences = recurrence.Recurrence(rrules=[recurrence.Rule(recurrence.DAILY)])
         self.notice.time = (timezone.localtime(timezone.now()) + timezone.timedelta(minutes=1)).time()
         self.notice.save()
         tasks.run_faults_review_notices()

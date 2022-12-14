@@ -298,6 +298,7 @@ class TestServiceEventSchedulingEmails(TestCase):
 
         self.notice = ServiceEventSchedulingNotice.objects.create(
             recipients=self.recipients,
+            recurrences="RRULE:FREQ=DAILY",
             notification_type=ServiceEventSchedulingNotice.UPCOMING_AND_DUE,
             future_days=7,
             time="0:00",
@@ -350,8 +351,6 @@ class TestServiceEventSchedulingEmails(TestCase):
         assert Schedule.objects.count() == 1
 
     def test_run_scheduling_notices(self):
-
-        self.notice.recurrences = recurrence.Recurrence(rrules=[recurrence.Rule(recurrence.DAILY)])
         self.notice.time = (timezone.localtime(timezone.now()) + timezone.timedelta(minutes=1)).time()
         self.notice.save()
         tasks.run_scheduling_notices()
