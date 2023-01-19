@@ -21,6 +21,14 @@ def calc_due_date(completed, due_date, frequency):
     completed is prior to qc window the due date return will be the same as
     input due_date."""
 
+    # The behaviour of recurrence rules differs slightly depending on the
+    # timezone of the datetimes so it's important datetimes are localized
+    # correctly before calculating the next occurence.
+    tz = pytz.timezone(settings.TIME_ZONE)
+    completed = completed.astimezone(tz)
+    if due_date:
+        due_date = due_date.astimezone(tz)
+
     if frequency is None:
         return None
 
