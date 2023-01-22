@@ -30,6 +30,15 @@ QA
       remedied.
 * A bug with QA Frequency recurrence rule start dates has been fixed
 * The Assign Test Lists to Units admin page will no longer allow a blank Assigned to Field
+* Sometimes a test which was skipped by default would not get unskipped when a user
+  performed the test.  This has been resolved.
+
+* The confirmation dialogue for reviewing QA was not showing the status
+  correctly.  This has now been resolved.
+
+* Due dates were being calculated incorrectly sometimes when the UTC date and
+  the local date differed.
+
 
 Service Log
 ~~~~~~~~~~~
@@ -82,6 +91,11 @@ Reports
 * Reports now respect the active/inactive status of units as well as the 
   active/inactive status of test list assignments.
 
+* Units are now displayed correctly in the test instance report filters.
+
+* A Chrome update caused the PDF report generation to fail due to trying to access
+  already opened files. This has been fixed.
+
 
 Miscellaneous
 ~~~~~~~~~~~~~
@@ -95,7 +109,7 @@ Miscellaneous
 
 
 QATrack+ v3.1.0.1 Release Notes
------------------------------
+-------------------------------
 
 .. _release_notes_3101:
 
@@ -157,7 +171,7 @@ Major Features
 
 * A new :ref:`Query Tool <reports-query_tool>` has been added for advanced
   query and reporting.  (You must set :ref:`USE_SQL_REPORTS =
-  True<qatrack_config>` in your local_settings.py file to use this feature).
+  True<qatrack-config>` in your local_settings.py file to use this feature).
 
 * :ref:`Notifications <notifications>` have been expanded & improved.
     * You can now send notifications on test lists being completed.

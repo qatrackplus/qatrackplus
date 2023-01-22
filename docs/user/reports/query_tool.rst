@@ -9,7 +9,7 @@ Query Tool
     read-only database user, and configured QATrack+ to use this read-only user
     in it's :ref:`DATABASES <databases>` setting.
 
-    You must also set :ref:`USE_SQL_REPORTS = True<qatrack_config>` in your
+    You must also set :ref:`USE_SQL_REPORTS = True<qatrack-config>` in your
     local_settings.py file.  If you are using SQL Server your readonly database
     options may also need to set `AUTOCOMMIT = False`.
 
