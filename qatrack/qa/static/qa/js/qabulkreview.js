@@ -33,7 +33,7 @@ require(['jquery', 'lodash'], function ($, _) {
     var siteIdx = headers.indexOf("site");
     var unitIdx = headers.indexOf("unit");
     var testListNameIdx = headers.indexOf("test list name");
-    var statusIdx = headers.indexOf("");
+    var statusIdx = headers.indexOf("bulk review");
 
     $("#submit-review").click(function(){
 
