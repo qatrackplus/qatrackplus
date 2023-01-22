@@ -833,6 +833,8 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
         _.each(tli.test_instances, function(ti){
             if (!skips.hasOwnProperty(ti.test_info.test.slug)) {
+              // if test is not in this set of skips (e.g. after a composite
+              // calc) then we can't set its skip value
               return;
             }
             var skip = skips[ti.test_info.test.slug];
