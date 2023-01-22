@@ -832,6 +832,9 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function set_skips(skips){
 
         _.each(tli.test_instances, function(ti){
+            if (!skips.hasOwnProperty(ti.test_info.test.slug)) {
+              return;
+            }
             var skip = skips[ti.test_info.test.slug];
             if (skip !== ti.skipped){
                 ti.set_skip(skip);
