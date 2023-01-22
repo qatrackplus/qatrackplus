@@ -96,6 +96,10 @@ Reports
 * A Chrome update caused the PDF report generation to fail due to trying to access
   already opened files. This has been fixed.
 
+* If the "Difference" column is shown when reviewing QA (i.e. `REVIEW_DIFF_COL
+  = True`) then the test list instance details report will now also show the
+  difference column.
+
 
 Miscellaneous
 ~~~~~~~~~~~~~
