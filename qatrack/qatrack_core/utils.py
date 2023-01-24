@@ -22,16 +22,14 @@ def chrometopdf(html, name=""):
 
         tmp_html = open(path, "wb")
         tmp_html.write(html.encode("UTF-8"))
-        tmp_html.flush()
-
-        out_file = open(out_path, "wb")
+        tmp_html.close()
 
         command = [
             settings.CHROME_PATH,
             '--headless',
             '--disable-gpu',
             '--no-sandbox',
-            '--print-to-pdf=%s' % out_file.name,
+            '--print-to-pdf=%s' % out_path,
             "file://%s" % tmp_html.name,
         ]
 
@@ -42,13 +40,17 @@ def chrometopdf(html, name=""):
         stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
         subprocess.call(command, stdout=stdout, stderr=stderr)
 
-        pdf = open(out_file.name, 'r+b').read()
+        out_file = open(out_path, 'r+b')
+        pdf = out_file.read()
+        out_file.close()
 
     except OSError:
         raise OSError("chrome '%s' executable not found" % (settings.CHROME_PATH))
-    finally:
-        tmp_html.close()
-        out_file.close()
+    finally:        
+        if not tmp_html.closed:
+            tmp_html.close()
+        if not out_file.closed:
+            out_file.close()
         try:
             os.unlink(tmp_html.name)
         except:  # noqa: E722

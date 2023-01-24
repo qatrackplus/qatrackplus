@@ -11,6 +11,7 @@ from qatrack.reports.reports import (
     BaseReport,
     format_user,
 )
+from qatrack.units import models as u_models
 
 
 class TestInstanceDetailsReport(BaseReport):
@@ -55,6 +56,12 @@ class TestInstanceDetailsReport(BaseReport):
         return (
             _("Test"),
             ', '.join(models.Test.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
+        )
+
+    def get_unit_test_info__unit_details(self, val):
+        return (
+            _("Unit"),
+            ', '.join(u_models.Unit.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
         )
 
     def get_organization_details(self, val):

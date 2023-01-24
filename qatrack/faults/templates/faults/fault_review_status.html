@@ -1,17 +1,22 @@
 {% load i18n %}
+{% load qatrack_tags %}
 
 {% for fri in fault.faultreviewinstance_set.all %}
   <span data-timestamp="{{ fri.reviewed|date:"U"}}">
     <abbr
       {% if fri.fault_review_group %}
-        title="{% blocktrans with reviewed_by=fri.reviewed_by group=fri.fault_review_group %}Reviewed by {{ group }} group member {{ reviewed_by }}{% endblocktrans %}"
+        title="{% blocktrans with reviewed_by=fri.reviewed_by|get_user_name group=fri.fault_review_group.group.name %}Reviewed by {{ group }} group member {{ reviewed_by }}{% endblocktrans %}"
       {% else %}
-        title="{% blocktrans with reviewed_by=fri.reviewed_by %}Reviewed by {{ reviewed_by }}{% endblocktrans %}"
+        title="{% blocktrans with reviewed_by=fri.reviewed_by|get_user_name %}Reviewed by {{ reviewed_by }}{% endblocktrans %}"
       {% endif %}
     >
       {{ fri.reviewed }}
     </abbr>
   </span>
+  {% if not forloop.last %}&nbsp;{% endif %}
 {% empty %}
   <em>{% trans "Unreviewed " %}
 {% endfor %}
+{% if comments %}
+    &nbsp;<span class="label label-info">{{ comments }} <i class="fa fa-comment" aria-hidden="true"></i></span>
+{% endif %}

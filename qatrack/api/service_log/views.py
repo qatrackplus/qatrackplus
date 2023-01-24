@@ -10,7 +10,7 @@ from qatrack.service_log import models
 
 
 class ServiceAreaViewSet(viewsets.ModelViewSet):
-    queryset = models.ServiceArea.objects.all()
+    queryset = models.ServiceArea.objects.prefetch_related("units")
     serializer_class = serializers.ServiceAreaSerializer
     filterset_class = filters.ServiceAreaFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
@@ -38,7 +38,7 @@ class ServiceEventStatusViewSet(viewsets.ModelViewSet):
 
 
 class ServiceEventViewSet(viewsets.ModelViewSet):
-    queryset = models.ServiceEvent.objects.all()
+    queryset = models.ServiceEvent.objects.prefetch_related("service_event_related").all()
     serializer_class = serializers.ServiceEventSerializer
     filterset_class = filters.ServiceEventFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)

@@ -1,6 +1,107 @@
 Release Notes
 =============
 
+QATrack+ v3.1.1 Release Notes
+-----------------------------
+
+.. _release_notes_311:
+
+
+This is a follow up release to address a few issues that were found in v3.1.0. The following
+issues have been addressed:
+
+QA
+~~
+
+* Added basic multiple choice plotting support
+* Fixed a Test admin bug with the display of "Test item visible in charts"
+* A message warning you about being logged out or your server not being
+  reachable will be shown after 3 consecutive unauthenticated or failed
+  pings.  In order to disable this check set `PING_INTERVAL_S = 0` in your
+  local_settings.py file.
+* The maximum frequency of autosaves has been reduced to once per 4s. This an attempt
+  to work around occasional deadlocks with SQL Server.
+* Pylinac has been updated (TODO: version):
+    * An issue with CatPhan modules CNR calculations return NaN due to the modules not having
+      background ROIs defined has been fixed
+    * A bug with DMLC VMAT tests with valleys in their profiles that fell below 50% of Dmax has
+      been fixed.
+    * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
+      remedied.
+* A bug with QA Frequency recurrence rule start dates has been fixed
+* The Assign Test Lists to Units admin page will no longer allow a blank Assigned to Field
+
+Service Log
+~~~~~~~~~~~
+
+* Fixed a bug with Return To Service work forms being populated with incorrect data
+* The first Service Event Status created will now automatically be set to the default
+* The Service Type field was being incorrectly when entering a new service
+  event using a Service Log Template without a Service Type set. This has been fixed.
+
+Faults
+~~~~~~
+
+* Fault Type codes are now required to be unique.  A migration has been added
+  to update the code to a unique value for any duplicate fault codes.
+* Fault ID column size has been reduced in the fault list views
+* Fault review users are now shown as full names instead of usernames where possible
+* The ability to create new fault types on the fly when entering faults is
+  now restricted to users with the "Can Add Fault Type" permission
+* Fault type matches are now case insensitive and surrounding whitespace will be stripped
+* Fix fault table ordering and search issues with Description & Review Status columns
+
+
+Parts
+~~~~~
+
+Parts tables now allow you to sort/filter by room
+
+API
+~~~
+
+* Fixed a file upload API bug where QATrack+ would try to base64 decode a null value
+* The UnitTestCollection API end point should no longer return duplicated results.
+* The AutoReviewRuleSetFilter API end point has been fixed.
+* Fixed the `fault_types` field of the API's FaultSerializer
+* The API schema view will no longer throw a 500 error.
+* Submitting a null or blank comment when performing QA via the API (e.g. with
+  post data like `{..., "comment": ""}`) would previously result in a 400 Bad
+  Request error being returned.  This has been adjusted so that a null or blank
+  comment is now valid (no comment will be created) and will not block the QA
+  Session from being created.
+
+Reports
+~~~~~~~
+
+* The Active filter for Service Log Scheduling report filters worked for "Both"
+  but not "Yes" or "No". This has now been fixed.  In addition, the wrong set
+  of filters was being displayed for the Next Due Dates for Scheduled Service
+  Events report.  This has also been addressed.
+
+* Reports now respect the active/inactive status of units as well as the 
+  active/inactive status of test list assignments.
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* A few documentation typo fixes
+* Fixed a permissions check for deleting faults
+* Reviewing faults now use the term "Acknowledge" instead of "Approve"
+* Admin access will no longer be required to access the page for editing units available times.
+* A permissions check for editing unit available times has been fixed. Anyone with the
+  'Change Unit Available Time' permission should be able to edit available times now.
+
+
+QATrack+ v3.1.0.1 Release Notes
+-----------------------------
+
+.. _release_notes_3101:
+
+* Attempt to fix an issue with Django Q not being able to find report types on Windows
+
+
 QATrack+ v3.1.0 Release Notes
 -----------------------------
 

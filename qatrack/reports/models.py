@@ -6,6 +6,15 @@ from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
 from qatrack.qatrack_core.fields import JSONField
+from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
+
+# ensure Django-Q can pick up all report types on Windows
+from qatrack.reports import (  # noqa: F401
+    faults,
+    qc,
+    service_log,
+)
+
 from qatrack.reports.reports import report_class
 
 
@@ -107,7 +116,9 @@ class ReportNote(models.Model):
     )
 
 
-class ReportSchedule(models.Model):
+class ReportSchedule(RecurrenceFieldMixin, models.Model):
+
+    recurrence_field_name = "schedule"
 
     TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
 

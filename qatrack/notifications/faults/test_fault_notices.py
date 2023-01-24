@@ -76,6 +76,7 @@ class TestFaultNoticeEmails(TestCase):
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
+        self.utc = qa_utils.create_unit_test_collection(unit=self.unit)
 
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
@@ -107,6 +108,7 @@ class TestFaultNoticeEmails(TestCase):
         notification.save()
         create_url = reverse("fault_create")
         user = User.objects.create_superuser("faultuser", "a@b.com", "password")
+        user.groups.add(self.group)
         self.client.force_login(user)
         ft1 = models.FaultType.objects.create(code="fault type 1")
         ft2 = models.FaultType.objects.create(code="fault type 2")

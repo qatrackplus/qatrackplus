@@ -1,7 +1,7 @@
 .. _linux_upgrading_030_to_31:
 
 
-Upgrading an existing Linux v0.3.0 installation to v3.1.0
+Upgrading an existing Linux v0.3.0 installation to v3.1.1
 =========================================================
 
 .. note::
@@ -11,7 +11,7 @@ Upgrading an existing Linux v0.3.0 installation to v3.1.0
 
 
 This guide will walk you through upgrading your existing v0.3.0 installation to
-v3.1.0.  If you currently have a 0.2.x version of QATrack+, you first need to
+v3.1.1.  If you currently have a 0.2.x version of QATrack+, you first need to
 follow the :ref:`instructions to upgrade to 0.3.0 <linux_upgrading_02x_to_31>`,
 before carrying out these instructions.
 
@@ -88,7 +88,7 @@ Now confirm your restore worked:
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 3.1.0, runs on Python 3.6, 3.7, 3.8, & 3.9. Check your version of
+Version 3.1.1, runs on Python 3.6, 3.7, 3.8, & 3.9. Check your version of
 Python 3 with the command:
 
 .. code-block:: bash
@@ -126,7 +126,7 @@ following commands:
     cd ~/web/qatrackplus
     git remote set-url origin https://github.com/qatrackplus/qatrackplus.git
     git fetch origin
-    git checkout v3.1.0
+    git checkout v3.1.1
 
 
 Setting up our Python environment (including virtualenv)

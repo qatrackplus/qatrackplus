@@ -36,6 +36,7 @@
             DEBUG: '{{ DEBUG }}',
             USE_SQL_REPORTS: '{{ USE_SQL_REPORTS }}',
             CSRF_COOKIE_NAME: '{{ CSRF_COOKIE_NAME }}',
+            PING_INTERVAL_S: {{ PING_INTERVAL_S }},
 
             MOMENT_DATE_DATA_FMT: '{{ MOMENT_DATE_DATA_FMT }}',
             MOMENT_DATE_FMT: '{{ MOMENT_DATE_FMT }}',
@@ -484,7 +485,7 @@
                                 <i class="fa fa-wrench fa-stack-custom-main"></i>
                                 <i class="fa fa-exclamation fa-stack-custom-sub upper-left hover-sub-info"></i>
                               </i>
-                              <span title="{% trans "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review" %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                              <span title="{% blocktrans %}There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing review{% endblocktrans %}" class="label {% if SE_NEEDING_REVIEW_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                   <span class="total-unreviewed-count">{{ SE_NEEDING_REVIEW_COUNT }}</span>
                               </span>
                               {% trans "Service Events Needing Review" %}
@@ -551,7 +552,7 @@
                                 <i class="fa fa-pencil-square-o fa-stack-custom-main"></i>
                                 <i class="fa fa-share fa-rotate-180 fa-stack-custom-sub lower-extra-left hover-sub-info"></i>
                               </i>
-                              <span title="{% trans "There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                              <span title="{% blocktrans %}There are currently {{SE_RTS_INCOMPLETE_QA_COUNT}} unreviewed return to service sessions{% endblocktrans %}" class="label {% if SE_RTS_INCOMPLETE_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                 <span class="total-unreviewed-count">{{SE_RTS_INCOMPLETE_QA_COUNT}}</span>
                               </span>
                               {% trans "View All Incomplete Return To Service" %}
@@ -561,9 +562,9 @@
 
                         {% if perms.qa.can_review %}
                           <li>
-                            <a href="{% url 'rtsqa_list_unreviewed' %}" title="{% trans "" %}">
+                            <a href="{% url 'rtsqa_list_unreviewed' %}">
                               <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                              <span title="{% trans "There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions" %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                              <span title="{% blocktrans %}There are currently {{SE_RTS_UNREVIEWED_QA_COUNT}} unreviewed return to service sessions{% endblocktrans %}" class="label {% if SE_RTS_UNREVIEWED_QA_COUNT == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                                 <span class="total-unreviewed-count">{{SE_RTS_UNREVIEWED_QA_COUNT}}</span>
                               </span>
                               {% trans "Unreviewed Return To Service" %}
@@ -843,15 +844,17 @@
               </li>
             </ul>
 
-            {% if user.is_staff %}
+            {% if user.is_staff or perms.units.change_unitavailable_time %}
               <h4 class="control-sidebar-heading">Admin Options</h4>
               <ul class="control-sidebar-menu">
-                <li>
-                  <a href="{% url 'admin:index' %}" class="margin-left-10 control-sidebar-subheading">
-                    <i class="fa fa-cog fa-fw"></i>
-                    {% trans "Admin" %}
-                  </a>
-                </li>
+                {% if user.is_staff %}
+                  <li>
+                    <a href="{% url 'admin:index' %}" class="margin-left-10 control-sidebar-subheading">
+                      <i class="fa fa-cog fa-fw"></i>
+                      {% trans "Admin" %}
+                    </a>
+                  </li>
+                {% endif %}
                 <li class="hover-parent">
                   <a href="{% url 'unit_available_time' %}" class="margin-left-10 control-sidebar-subheading">
                     <i class="fa fa-stack fa-fw">

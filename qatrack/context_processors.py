@@ -12,7 +12,7 @@ from django.utils.formats import get_format
 
 from qatrack.faults.models import Fault
 from qatrack.parts.models import PartStorageCollection, PartUsed
-from qatrack.qa.models import TestListInstance, UnitTestCollection
+from qatrack.qa.models import TestListInstance, UnitTestCollection, set_active_unit_test_collections_for_unit_cache
 from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,
@@ -100,22 +100,14 @@ def update_faults_cache(*args, **kwargs):
 @receiver(post_delete, sender=UnitTestCollection)
 def update_active_unit_test_collections_for_unit_utc(*args, **kwargs):
     unit = kwargs['instance'].unit
-    qs = UnitTestCollection.objects.filter(
-        unit=unit,
-        active=True
-    ).order_by('name')
-    cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
+    set_active_unit_test_collections_for_unit_cache(unit)
 
 
 @receiver(post_save, sender=Unit)
 @receiver(post_delete, sender=Unit)
 def update_active_unit_test_collections_for_unit(*args, **kwargs):
     unit = kwargs['instance']
-    qs = UnitTestCollection.objects.filter(
-        unit=unit,
-        active=True
-    ).order_by('name')
-    cache.set(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(unit.id), qs)
+    set_active_unit_test_collections_for_unit_cache(unit)
 
 
 @receiver(post_save, sender=ServiceEventStatus)
@@ -143,6 +135,7 @@ def site(request):
         'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,
         'USE_SQL_REPORTS': settings.USE_SQL_REPORTS,
         'USE_ISSUES': settings.USE_ISSUES,
+        'PING_INTERVAL_S': settings.PING_INTERVAL_S,
 
         # JavaScript Date Formats
         'MOMENT_DATE_DATA_FMT': get_format("MOMENT_DATE_DATA_FMT"),

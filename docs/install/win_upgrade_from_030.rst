@@ -1,10 +1,10 @@
 .. _win_upgrading_030_to_31:
 
-Upgrading an existing Windows v0.3.0 installation to v3.1.0
+Upgrading an existing Windows v0.3.0 installation to v3.1.1
 ===========================================================
 
 This guide will walk you through upgrading your existing v0.3.0 installation to
-v3.1.0.  If you currently have a 0.2.x version of QATrack+, you first need to
+v3.1.1.  If you currently have a 0.2.x version of QATrack+, you first need to
 follow the :ref:`instructions to upgrade to 0.3.0 <win_upgrading_02x_to_31>`,
 before carrying out these instructions.
 
@@ -147,7 +147,7 @@ Database Role Membership page select 'db_datareader'.  Click OK.
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 3.1.0, runs best on Python 3.7, 3.8, & 3.9 (3.6 works ok but installing
+Version 3.1.1, runs best on Python 3.7, 3.8, & 3.9 (3.6 works ok but installing
 dependencies is more complicated). Check your version of Python 3 by opening a
 PowerShell prompt and entering:
 
@@ -160,17 +160,17 @@ a more up to date version of Python before proceeding (see https://python.org).
 You will need to re-open your PowerShell Window after installing Pyton.
 
 
-Checking out version 3.1.0
+Checking out version 3.1.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we must check out the code for version 3.1.0 in a PowerShell window:
+First we must check out the code for version 3.1.1 in a PowerShell window:
 
 .. code-block:: console
 
     cd C:\deploy\qatrackplus
     git remote set-url origin https://github.com/qatrackplus/qatrackplus.git
     git fetch origin
-    git checkout v3.1.0
+    git checkout v3.1.1
 
 
 Setting up our Python environment (including virtualenv)
@@ -304,7 +304,7 @@ PowerShell and click "Run as Administrator") and run the following commands:
 Open the Windows Services dialog and confirm the `QATrack 31 CherryPy Service`
 is installed and has a status of `Running`.  
 
-Your QATrack+ 3.1.0 installation is now installed as a Windows Service running
+Your QATrack+ 3.1.1 installation is now installed as a Windows Service running
 on port 8080 (see note below).  You may also wish to configure the service to
 email you in the event of a crash (see the Recovery tab of the
 QATrackCherryPyService configuration dialogue).
