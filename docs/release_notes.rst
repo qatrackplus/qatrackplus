@@ -100,6 +100,8 @@ Reports
   = True`) then the test list instance details report will now also show the
   difference column.
 
+* Fixed an issue with scheduled reports failing for some report types
+
 
 Miscellaneous
 ~~~~~~~~~~~~~
