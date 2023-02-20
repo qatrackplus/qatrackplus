@@ -115,7 +115,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                         var units = $units.val();
                         var frequencies = [];
                         _.each(units, function (unit) {
-                            frequencies = _.union(frequencies, QACharts.unit_frequencies[unit]);
+                            frequencies = _.union(frequencies, window.QACharts.unit_frequencies[unit]);
                         });
                         return frequencies;
                     },
@@ -2385,7 +2385,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 $date_range.data('daterangepicker').setStartDate(moment(date_range.split(' - ')[0], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
                 $date_range.data('daterangepicker').setEndDate(moment(date_range.split(' - ')[1], siteConfig.MOMENT_DATE_FMT).format(siteConfig.MOMENT_DATE_FMT));
             }
-            $status_selector.val(statuses.length === 0 ? [1, 2] : statuses).change();
+            $status_selector.val(statuses.length === 0 ? window.QACharts.default_statuses : statuses).change();
             $show_events.prop('checked', show_events);
 
             update_chart();
