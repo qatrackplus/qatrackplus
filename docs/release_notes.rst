@@ -39,6 +39,9 @@ QA
 * Due dates were being calculated incorrectly sometimes when the UTC date and
   the local date differed.
 
+* Fixed issue with `UTILS.previous_instance` and
+  `UTILS.previous_test_list_instance` would not be fetched if they were
+  completed within the last minute.  
 
 Service Log
 ~~~~~~~~~~~
@@ -101,6 +104,10 @@ Reports
   difference column.
 
 * Fixed an issue with scheduled reports failing for some report types
+
+* Fixed an issue with Excel report emails failing
+
+* Add new 3 month, 6 month, 90 days, and 180 days date filters 
 
 
 Miscellaneous

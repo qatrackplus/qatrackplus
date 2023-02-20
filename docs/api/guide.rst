@@ -532,6 +532,11 @@ FAQ
   an invalid authorization token http header with your request. Check to ensure
   your auth token is set correctly.
 
+- **Q: My hospital uses a corporate proxy and I am having issues accessing the API.**:
+
+  See a potential solution here: https://github.com/qatrackplus/qatrackplus/issues/585
+
+
 API Tutorial Example
 --------------------
 

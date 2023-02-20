@@ -200,6 +200,14 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
             moment().subtract(30, 'days'),
             moment()
         ],
+        "Last 90 Days": [
+            moment().subtract(90, 'days'),
+            moment()
+        ],
+        "Last 180 Days": [
+            moment().subtract(90, 'days'),
+            moment()
+        ],
         "Last 365 Days": [
             moment().subtract(365, 'days'),
             moment()
@@ -224,6 +232,14 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
             moment().subtract(1, 'months').startOf('month'),
             moment().subtract(1, 'months').endOf('month')
         ],
+        "Last 3 Months": [
+            moment().subtract(3, 'months').startOf('month'),
+            moment().subtract(1, 'months').endOf('month')
+        ],
+        "Last 6 Months": [
+            moment().subtract(6, 'months').startOf('month'),
+            moment().subtract(1, 'months').endOf('month')
+        ],
         "Last Year": [
             moment().subtract(1, 'years').startOf('year'),
             moment().subtract(1, 'years').endOf('year')
@@ -234,12 +250,16 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         "Today": [moment(), moment()],
         "Next 7 Days": [moment(), moment().add(7, 'days')],
         "Next 30 Days": [moment(), moment().add(30, 'days')],
+        "Next 90 Days": [moment(), moment().add(90, 'days')],
+        "Next 180 Days": [moment(), moment().add(180, 'days')],
         "Next 365 Days": [moment(), moment().add(365, 'days')],
         "This Week": [moment().startOf('week'), moment().endOf('week')],
         "This Month": [moment().startOf('month'), moment().endOf('month')],
         "This Year": [moment().startOf('year'), moment().endOf('year')],
         "Next Week": [moment().add(1, 'weeks').startOf('week'), moment().add(1, 'weeks').endOf('week')],
         "Next Month": [moment().add(1, 'months').startOf('month'), moment().add(1, 'months').endOf('month')],
+        "Next 3 Months": [moment().add(1, 'months').startOf('month'), moment().add(3, 'months').endOf('month')],
+        "Next 6 Months": [moment().add(1, 'months').startOf('month'), moment().add(6, 'months').endOf('month')],
         "Next Year": [moment().add(1, 'years').startOf('year'), moment().add(1, 'years').endOf('year')]
     };
 

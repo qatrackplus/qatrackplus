@@ -1,4 +1,5 @@
 import logging
+from io import BytesIO
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -59,11 +60,14 @@ def send_email_to_users(
     message.attach_alternative(html_body, "text/html")
 
     for name, attachment, mimetype in attachments:
+        if isinstance(attachment, BytesIO):
+            attachment.seek(0)
+            attachment = attachment.read()
         message.attach(name, attachment, mimetype)
 
     try:
         message.send(fail_silently=False)
-    except Exception as e:  # noqa: E722  # pragma: nocover
+    except Exception:  # noqa: E722  # pragma: nocover
         logger.exception("Error sending email.")
         if not fail_silently:
             raise

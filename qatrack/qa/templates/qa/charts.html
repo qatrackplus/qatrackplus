@@ -21,7 +21,8 @@
     <script>
         var QACharts = {
             unit_frequencies:{{unit_frequencies|safe}},
-            unit_testlist_active: {{ active_unit_test_list|safe }}
+            unit_testlist_active: {{ active_unit_test_list|safe }},
+            default_statuses: {{ default_statuses|safe }}
         };
     </script>
 {% endblock %}

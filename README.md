@@ -46,7 +46,7 @@ The main features include:
 ## Documentation & Release Notes
 
 The latest version is 3.1.1 Please review the
-[release_notes](https://docs.qatrackplus.com/en/latest/release_notes.html)
+[release_notes](https://docs.qatrackplus.com/en/stable/release_notes.html)
 before installing or upgrading.
 
 The [documentation for versions 0.3.0+ can be found online](http://docs.qatrackplus.com)
