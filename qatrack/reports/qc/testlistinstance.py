@@ -252,6 +252,7 @@ class TestListInstanceDetailsReport(BaseReport):
 
         context['comments'] = self.get_comments(utcs)
         context['perms'] = PermWrapper(self.user)
+        context['review_diff_col'] = settings.REVIEW_DIFF_COL
         return context
 
     def get_comments(self, utcs):
@@ -326,15 +327,20 @@ class TestListInstanceDetailsReport(BaseReport):
                 rows.append([_("Attachment") + ":", a.label, self.make_url(a.attachment.url, plain=True)])
 
             rows.append([])
-            rows.append([
+            headers = [
                 _("Test"),
                 _("Value"),
                 _("Reference"),
                 _("Tolerance"),
+            ]
+            if settings.REVIEW_DIFF_COL:
+                headers.append("Difference")
+            headers.extend([
                 _("Pass/Fail"),
                 _("Comment"),
                 _("Attachments"),
             ])
+            rows.append(headers)
 
             for ti, history in tli.history()[0]:
                 row = [
@@ -342,9 +348,13 @@ class TestListInstanceDetailsReport(BaseReport):
                     ti.value_display(coerce_numerical=False),
                     ti.reference.value_display() if ti.reference else "",
                     ti.tolerance.name if ti.tolerance else "",
+                ]
+                if settings.REVIEW_DIFF_COL and not ti.string_value:
+                    row.append(ti.diff_display())
+                row.extend([
                     ti.get_pass_fail_display(),
                     ti.comment,
-                ]
+                ])
                 for a in ti.attachment_set.all():
                     row.append(self.make_url(a.attachment.url, plain=True))
 

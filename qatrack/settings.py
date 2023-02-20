@@ -278,6 +278,14 @@ REST_FRAMEWORK = {
     'DATETIME_INPUT_FORMATS': DATETIME_INPUT_FORMATS,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_FILTER_BACKENDS': ('rest_framework_filters.backends.RestFrameworkFilterBackend',),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '1000/min',
+        'testlistinstance': '500/min',
+    },
 }
 
 # -----------------------------------------------------------------------------
@@ -732,7 +740,7 @@ for path in chrome_paths:
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-from .local_settings import *  # noqa: F403, F401
+from .local_settings import *  # noqa: F403, F401, E402
 
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG

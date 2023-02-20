@@ -58,7 +58,7 @@ class RelativeDateRangeFilter(django_filters.CharFilter):
 
         try:
             start_date, end_date = relative_dates(value).range()
-        except:  # noqa: E722
+        except Exception:
             # custom period
             start_date, end_date = value
 

@@ -1544,7 +1544,7 @@ class FrequencyForm(forms.ModelForm):
         super().clean()
 
         recurrences = self.cleaned_data.get('recurrences')
-        if recurrences and scheduling.calc_nominal_interval(recurrences) is None:
+        if recurrences and not scheduling.calc_nominal_interval(recurrences):
             self.add_error(
                 'recurrences',
                 'This frequency has zero occurences. Please adjust the schedule and try again'

@@ -84,14 +84,15 @@ class SavedReport(models.Model):
 
     def get_report(self, user=None):
         ReportClass = report_class(self.report_type)
-        return ReportClass(base_opts=self.base_opts, report_opts=self.filters)
+        user = user or self.created_by
+        return ReportClass(base_opts=self.base_opts, report_opts=self.filters, user=user)
 
     def get_report_type_display(self):
         return report_class(self.report_type).name
 
     def render(self, user=None):
         """create in memory file containing rendering of report"""
-        report = self.get_report()
+        report = self.get_report(user)
         return report.render(self.report_format)
 
     def __str__(self):

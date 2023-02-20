@@ -42,6 +42,7 @@ from qatrack.qatrack_core.dates import (
     format_datetime,
     parse_date,
     parse_datetime,
+    round_to_next_minute,
 )
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.qatrack_core.templatetags.qatrack_tags import filesizeformat
@@ -149,6 +150,11 @@ class CompositeUtils:
 
     def previous_test_list_instance(self, include_in_progress=False):
         before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        if before:
+            # work started/work_completed only have minute level precision.  In
+            # order to capture results completed in the last minute, we need to
+            # set our time limit to the next full minute
+            before = round_to_next_minute(before)
         qs = models.TestListInstance.objects.filter(
             test_list=self.test_list,
             unit_test_collection__unit=self.unit,
@@ -169,6 +175,12 @@ class CompositeUtils:
             slug = test
 
         before = self.meta.get("work_started", self.meta.get("work_completed")) or timezone.now()
+        if before:
+            # work started/work_completed only have minute level precision.  In
+            # order to capture results completed in the last minute, we need to
+            # set our time limit to the next full minute
+            before = round_to_next_minute(before)
+
         qs = models.TestInstance.objects.filter(
             unit_test_info__test__slug=slug,
             unit_test_info__unit=self.unit,

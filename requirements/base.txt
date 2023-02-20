@@ -1,7 +1,7 @@
 -e git+https://github.com/randlet/django-genericdropdown.git@473ff52610af659f7d2a3616a6e3322e21673b4d#egg=django_genericdropdown
 -e git+https://github.com/randlet/django-recurrence.git@b3a73e8e03952107e58382922fec37aead31fd6f#egg=django-recurrence
 -e git+https://github.com/randlet/django-sql-explorer.git@12802fe83f9c45fd0bbe9610cb442dcfc5666d44#egg=django-sql-explorer
-black==20.8b1
+black==23.1.0
 Django==2.2.18
 django-q==1.3.4
 PyVirtualDisplay==2.0

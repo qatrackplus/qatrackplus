@@ -134,6 +134,9 @@
                 <th style="width: 10%"  class="review-value">{% trans "Value" %}</th>
                 <th style="width: 8%" class="review-ref">{% trans "Reference" %}</th>
                 <th style="width: 25%">{% trans "Tolerance" %}</th>
+                {% if review_diff_col %}
+                  <th style="width: 10%" class="review-status">{% trans "Difference" %}</th>
+                {% endif %}
                 <th style="width: 10%" class="review-status">{% trans "Pass/Fail" %}</th>
               </tr>
             </thead>
@@ -188,6 +191,11 @@
                           {{ ti.tolerance.name }}
                       {% endif %}
                     </td>
+                    {% if review_diff_col %}
+                      <td class="review-diff">
+                        {% if not ti.string_value %}{{ti.diff_display}}{% endif %}
+                      </td>
+                    {% endif %}
                     <td class="review-status no-wrap">
                       {{ti.get_pass_fail_display}}
                     </td>

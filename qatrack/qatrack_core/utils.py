@@ -22,16 +22,14 @@ def chrometopdf(html, name=""):
 
         tmp_html = open(path, "wb")
         tmp_html.write(html.encode("UTF-8"))
-        tmp_html.flush()
-
-        out_file = open(out_path, "wb")
+        tmp_html.close()
 
         command = [
             settings.CHROME_PATH,
             '--headless',
             '--disable-gpu',
             '--no-sandbox',
-            '--print-to-pdf=%s' % out_file.name,
+            '--print-to-pdf=%s' % out_path,
             "file://%s" % tmp_html.name,
         ]
 
@@ -42,13 +40,17 @@ def chrometopdf(html, name=""):
         stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
         subprocess.call(command, stdout=stdout, stderr=stderr)
 
-        pdf = open(out_file.name, 'r+b').read()
+        out_file = open(out_path, 'r+b')
+        pdf = out_file.read()
+        out_file.close()
 
     except OSError:
         raise OSError("chrome '%s' executable not found" % (settings.CHROME_PATH))
     finally:
-        tmp_html.close()
-        out_file.close()
+        if not tmp_html.closed:
+            tmp_html.close()
+        if not out_file.closed:
+            out_file.close()
         try:
             os.unlink(tmp_html.name)
         except:  # noqa: E722
@@ -91,12 +93,16 @@ class relative_dates:
     FUTURE_RANGES = [
         "next 7 days",
         "next 30 days",
+        "next 90 days",
+        "next 180 days",
         "next 365 days",
         "this week",
         "this month",
         "this year",
         "next week",
         "next month",
+        "next 3 months",
+        "next 6 months",
         "next year",
         "today",
     ]
@@ -105,12 +111,16 @@ class relative_dates:
         "today",
         "last 7 days",
         "last 30 days",
+        "last 90 days",
+        "last 180 days",
         "last 365 days",
         "this week",
         "this month",
         "this year",
         "last week",
         "last month",
+        "last 3 months",
+        "last 6 months",
         "last year",
     ]
 
@@ -169,6 +179,10 @@ class relative_dates:
         elif 'week' in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(days=1, weekday=rdelta.SU)
             end = end_of_day(self.pivot) + rdelta.relativedelta(days=7, weekday=rdelta.SA)
+        elif 'months' in dr:
+            __, num, interval = dr.split()
+            start = start_of_day(self.pivot) + rdelta.relativedelta(months=1, day=1)
+            end = end_of_day(self.pivot) + rdelta.relativedelta(months=int(num), day=31)
         elif 'month' in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=1, day=31)
@@ -187,6 +201,10 @@ class relative_dates:
         elif 'week' in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(weekday=rdelta.SU(-1))
             end = end_of_day(self.pivot) + rdelta.relativedelta(weekday=rdelta.SA(1))
+        elif 'months' in dr:
+            __, num, interval = dr.split()
+            start = start_of_day(self.pivot) + rdelta.relativedelta(months=1, day=1)
+            end = end_of_day(self.pivot) + rdelta.relativedelta(months=int(num), day=31)
         elif 'month' in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=0, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=0, day=31)
@@ -207,6 +225,10 @@ class relative_dates:
         elif 'week' in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(weekday=rdelta.SU(-2))
             end = end_of_day(self.pivot) + rdelta.relativedelta(weeks=-1, weekday=rdelta.SA(1))
+        elif 'months' in dr:
+            __, num, interval = dr.split()
+            start = start_of_day(self.pivot) + rdelta.relativedelta(months=-int(num), day=1)
+            end = end_of_day(self.pivot) + rdelta.relativedelta(months=-1, day=31)
         elif 'month' in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=-1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=-1, day=31)
