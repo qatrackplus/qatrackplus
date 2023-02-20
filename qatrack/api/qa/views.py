@@ -145,6 +145,7 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         'partial_update': serializers.TestListInstanceCreator,
     }
     http_method_names = ['get', 'post', 'patch']
+    throttle_scope = "testlistinstance"
 
     def create(self, request, *args, **kwargs):
         data = dict(request.data.items())
