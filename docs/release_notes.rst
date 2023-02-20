@@ -39,6 +39,9 @@ QA
 * Due dates were being calculated incorrectly sometimes when the UTC date and
   the local date differed.
 
+* Fixed issue with `UTILS.previous_instance` and
+  `UTILS.previous_test_list_instance` would not be fetched if they were
+  completed within the last minute.  
 
 Service Log
 ~~~~~~~~~~~
