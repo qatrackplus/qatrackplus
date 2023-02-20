@@ -1088,7 +1088,12 @@ class Test(models.Model, TestPackMixin):
                 errors.append(msg)
 
         try:
-            versions = [black.TargetVersion.PY35, black.TargetVersion.PY36]
+            versions = {
+                black.TargetVersion.PY36,
+                black.TargetVersion.PY37,
+                black.TargetVersion.PY38,
+                black.TargetVersion.PY39,
+            }
             mode = black.FileMode(target_versions=versions, line_length=settings.COMPOSITE_MAX_LINE_LENGTH)
             formatted = black.format_str(self.calculation_procedure, mode=mode)
             if settings.COMPOSITE_AUTO_FORMAT:
