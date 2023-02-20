@@ -6,7 +6,7 @@
     <a target="_blank"
         href="{{ tli.get_absolute_url }}"
         class="label {{hist.pass_fail}} history-value"
-        title="{% if test.is_upload %} {{ hist.upload_name|safe }} {% elif hist.string_value %}{{ hist.value_display|slice:"100" }}{% else %} {% trans "Value" %}={{ hist.value_display|safe }}; {% if hist.diff_display %} {% trans "Diff from ref" %}={{hist.diff_display}} {%else%} {% trans "No ref/tol set" %} {%endif%} {% endif %}; {% blocktrans with created_by=hist.created_by created_on=hist.work_completed %} {{ created_by }} on {{ created_on }} {% endblocktrans %}; {{ hist.status }}"
+        title="{% if test.is_upload %} {{ hist.upload_name|safe }} {% elif hist.string_value %}{{ hist.value_display|slice:"100" }}{% else %} {% trans "Value" %}={{ hist.value_display|safe }}; {% if hist.diff_display %} {% trans "Diff from ref" %}={{hist.diff_display}} {%else%} {% trans "No ref/tol set" %} {%endif%} {% endif %}; {% blocktrans with created_by=tli.created_by created_on=tli.work_completed %} {{ created_by }} on {{ created_on }} {% endblocktrans %}; {{ hist.status }}"
     >
       {% if test.is_string_type or test.is_date_type %}
         <span class="label {{hist.pass_fail}}">

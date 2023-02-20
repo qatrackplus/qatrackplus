@@ -379,6 +379,32 @@ class TestDueDateReport(TestCase):
         ])
         assert header_count == 2
 
+    def test_generate_next_due_dates_active_filter_true(self):
+        """If a unit is inactive, it should not be included in filterset when active is True"""
+        site = USite.objects.create(name="site")
+        unit = u_utils.create_unit(site=site)
+        unit.active = False
+        unit.save()
+        usa = sl_utils.create_unit_service_area(unit=unit)
+        sch = sl_utils.create_service_event_schedule(unit_service_area=usa)
+        sch.due_date = timezone.now() + timezone.timedelta(days=1)
+        sch.save()
+        for ReportType in [sl.NextScheduledServiceEventsDueDatesReport, sl.DueAndOverdueServiceEventScheduleReport]:
+            rep = ReportType(report_opts={'active': True})
+            assert rep.filter_set.qs.count() == 0
+
+    def test_generate_next_due_dates_active_filter_false(self):
+        """If a unit is active, it should not be included in filterset when active is False"""
+        site = USite.objects.create(name="site")
+        unit = u_utils.create_unit(site=site)
+        usa = sl_utils.create_unit_service_area(unit=unit)
+        sch = sl_utils.create_service_event_schedule(unit_service_area=usa)
+        sch.due_date = timezone.now() + timezone.timedelta(days=1)
+        sch.save()
+        for ReportType in [sl.NextScheduledServiceEventsDueDatesReport, sl.DueAndOverdueServiceEventScheduleReport]:
+            rep = sl.NextScheduledServiceEventsDueDatesReport(report_opts={'active': False})
+            assert rep.filter_set.qs.count() == 0
+
 
 class TestAssignedTemplatesReport(TestCase):
 

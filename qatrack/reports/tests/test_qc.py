@@ -168,6 +168,7 @@ class TestTestListInstanceDetailsReport(TestCase):
         rep.report_format = "pdf"
         rep.to_html()
 
+    @override_settings(REVIEW_DIFF_COL=True)
     def test_to_table(self):
 
         site = USite.objects.create(name="site")
@@ -223,6 +224,7 @@ class TestTestListInstanceDetailsReport(TestCase):
             _('Value'),
             _('Reference'),
             _('Tolerance'),
+            _('Difference'),
             _('Pass/Fail'),
             _('Comment'),
             _('Attachments'),

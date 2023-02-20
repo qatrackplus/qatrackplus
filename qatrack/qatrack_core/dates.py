@@ -75,6 +75,11 @@ def parse_datetime(dt_str):
             continue
 
 
+def round_to_next_minute(dt):
+    """Round a datetime up to the nearest minute"""
+    return dt.replace(second=0) + timezone.timedelta(minutes=1)
+
+
 def parse_date(dt_str, as_date=True):
     """Take a string and return date object"""
     for fmt in get_format("DATE_INPUT_FORMATS"):

@@ -243,22 +243,15 @@ class TestListInstanceDetailsReport(BaseReport):
 
         form = self.get_filter_form()
         utcs = models.UnitTestCollection.objects.filter(pk__in=form.cleaned_data['unit_test_collection'])
+        utcs = utcs.select_related('unit', 'unit__site')
         context['utcs'] = utcs
 
         context['site_name'] = ', '.join(sorted(set(utc.unit.site.name if utc.unit.site else _("N/A") for utc in utcs)))
 
-        context['test_list_borders'] = self.get_borders(utcs)
         context['comments'] = self.get_comments(utcs)
         context['perms'] = PermWrapper(self.user)
+        context['review_diff_col'] = settings.REVIEW_DIFF_COL
         return context
-
-    def get_borders(self, utcs):
-        borders = {}
-        for utc in utcs:
-            for tl in utc.tests_object.all_lists():
-                borders[tl.pk] = tl.sublist_borders()
-
-        return borders
 
     def get_comments(self, utcs):
         from django_comments.models import Comment
@@ -331,15 +324,20 @@ class TestListInstanceDetailsReport(BaseReport):
                 rows.append([_("Attachment") + ":", a.label, self.make_url(a.attachment.url, plain=True)])
 
             rows.append([])
-            rows.append([
+            headers = [
                 _("Test"),
                 _("Value"),
                 _("Reference"),
                 _("Tolerance"),
+            ]
+            if settings.REVIEW_DIFF_COL:
+                headers.append("Difference")
+            headers.extend([
                 _("Pass/Fail"),
                 _("Comment"),
                 _("Attachments"),
             ])
+            rows.append(headers)
 
             for ti, history in tli.history()[0]:
                 row = [
@@ -347,9 +345,13 @@ class TestListInstanceDetailsReport(BaseReport):
                     ti.value_display(coerce_numerical=False),
                     ti.reference.value_display() if ti.reference else "",
                     ti.tolerance.name if ti.tolerance else "",
+                ]
+                if settings.REVIEW_DIFF_COL and not ti.string_value:
+                    row.append(ti.diff_display())
+                row.extend([
                     ti.get_pass_fail_display(),
                     ti.comment,
-                ]
+                ])
                 for a in ti.attachment_set.all():
                     row.append(self.make_url(a.attachment.url, plain=True))
 

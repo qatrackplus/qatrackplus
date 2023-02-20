@@ -359,8 +359,9 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text('ADD UNIT TEST COLLECTION')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
 
-        self.select_by_index("id_unit", 1)
-        self.select_by_index("id_frequency", 1)
+        self.select_by_index("id_unit", -1)
+        time.sleep(0.5)
+        self.select_by_index("id_frequency", -1)
         self.select_by_index("id_assigned_to", 0)
         self.select_by_index("id_content_type", 1)
         self.driver.find_element_by_css_selector('#id_visible_to_from > option:nth-child(1)').click()

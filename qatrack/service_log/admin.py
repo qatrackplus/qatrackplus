@@ -34,6 +34,8 @@ class ServiceEventStatusFormAdmin(forms.ModelForm):
         is_default = self.cleaned_data['is_default']
         if not is_default and self.initial.get('is_default', False):
             raise forms.ValidationError('There must be one default status. Edit another status to be default first.')
+        elif not ServiceEventStatus.objects.filter(is_default=True).first():
+            is_default = True
         return is_default
 
 

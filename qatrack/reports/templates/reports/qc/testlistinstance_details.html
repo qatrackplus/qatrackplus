@@ -40,6 +40,9 @@
           <dt>{% trans "Performed By" %}:</dt>
           <dd>{{ tli.created_by }} {% if tli.created_by.email %} ({{ tli.created_by.email }}){% endif %}</dd>
 
+          <dt>{% trans "Reviewed Status" %}:</dt>
+          <dd>{{ tli|as_review_status:True }}</dd>
+
           <dt>{% trans "Reviewed by" %}:</dt>
           <dd>{% if tli.reviewed_by %}{{tli.reviewed_by}} @ {{tli.reviewed}} {% else %}<em>Not reviewed</em>{% endif %}</dd>
         </dl>
@@ -131,8 +134,10 @@
                 <th style="width: 10%"  class="review-value">{% trans "Value" %}</th>
                 <th style="width: 8%" class="review-ref">{% trans "Reference" %}</th>
                 <th style="width: 25%">{% trans "Tolerance" %}</th>
+                {% if review_diff_col %}
+                  <th style="width: 10%" class="review-status">{% trans "Difference" %}</th>
+                {% endif %}
                 <th style="width: 10%" class="review-status">{% trans "Pass/Fail" %}</th>
-                <th style="width: 10%" class="review-status">{% trans "Status" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -186,23 +191,25 @@
                           {{ ti.tolerance.name }}
                       {% endif %}
                     </td>
-                    <td class="review-status">
+                    {% if review_diff_col %}
+                      <td class="review-diff">
+                        {% if not ti.string_value %}{{ti.diff_display}}{% endif %}
+                      </td>
+                    {% endif %}
+                    <td class="review-status no-wrap">
                       {{ti.get_pass_fail_display}}
-                    </td>
-                    <td class="review-status">
-                      {{ti.status.name}}
                     </td>
                   </tr>
 
                   {% if ti.comment %}
                   <tr>
-                    <td colspan="6" style="padding-left: 20px;"><em>Comment: {{ ti.comment }}</em></td>
+                    <td colspan="5" style="padding-left: 20px;"><em>Comment: {{ ti.comment }}</em></td>
                   </tr>
                   {% endif %}
 
                   {% if ti.attachment_set.exists %}
                     <tr class="qa-attach no-hover">
-                      <td colspan="6" style="padding-left: 20px"><em>{% trans "Attachments" %}:
+                      <td colspan="5" style="padding-left: 20px"><em>{% trans "Attachments" %}:
                           {% for attach in ti.attachment_set.all %}
                             {{ attach|attachment_link:True }}
                             {% if not forloop.last %}, {% endif %}

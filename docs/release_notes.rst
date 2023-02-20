@@ -65,18 +65,35 @@ QA
   local_settings.py file.
 * The maximum frequency of autosaves has been reduced to once per 4s. This an attempt
   to work around occasional deadlocks with SQL Server.
-* Pylinac has been updated:
+* Pylinac has been updated (TODO: version):
     * An issue with CatPhan modules CNR calculations return NaN due to the modules not having
       background ROIs defined has been fixed
     * A bug with DMLC VMAT tests with valleys in their profiles that fell below 50% of Dmax has
       been fixed.
     * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
       remedied.
+* A bug with QA Frequency recurrence rule start dates has been fixed
+* The Assign Test Lists to Units admin page will no longer allow a blank Assigned to Field
+* Sometimes a test which was skipped by default would not get unskipped when a user
+  performed the test.  This has been resolved.
+
+* The confirmation dialogue for reviewing QA was not showing the status
+  correctly.  This has now been resolved.
+
+* Due dates were being calculated incorrectly sometimes when the UTC date and
+  the local date differed.
+
+* Fixed issue with `UTILS.previous_instance` and
+  `UTILS.previous_test_list_instance` would not be fetched if they were
+  completed within the last minute.  
 
 Service Log
 ~~~~~~~~~~~
 
 * Fixed a bug with Return To Service work forms being populated with incorrect data
+* The first Service Event Status created will now automatically be set to the default
+* The Service Type field was being incorrectly when entering a new service
+  event using a Service Log Template without a Service Type set. This has been fixed.
 
 Faults
 ~~~~~~
@@ -104,20 +121,52 @@ API
 * The AutoReviewRuleSetFilter API end point has been fixed.
 * Fixed the `fault_types` field of the API's FaultSerializer
 * The API schema view will no longer throw a 500 error.
+* Submitting a null or blank comment when performing QA via the API (e.g. with
+  post data like `{..., "comment": ""}`) would previously result in a 400 Bad
+  Request error being returned.  This has been adjusted so that a null or blank
+  comment is now valid (no comment will be created) and will not block the QA
+  Session from being created.
+
+Reports
+~~~~~~~
+
+* The Active filter for Service Log Scheduling report filters worked for "Both"
+  but not "Yes" or "No". This has now been fixed.  In addition, the wrong set
+  of filters was being displayed for the Next Due Dates for Scheduled Service
+  Events report.  This has also been addressed.
+
+* Reports now respect the active/inactive status of units as well as the 
+  active/inactive status of test list assignments.
+
+* Units are now displayed correctly in the test instance report filters.
+
+* A Chrome update caused the PDF report generation to fail due to trying to access
+  already opened files. This has been fixed.
+
+* If the "Difference" column is shown when reviewing QA (i.e. `REVIEW_DIFF_COL
+  = True`) then the test list instance details report will now also show the
+  difference column.
+
+* Fixed an issue with scheduled reports failing for some report types
+
+* Fixed an issue with Excel report emails failing
+
+* Add new 3 month, 6 month, 90 days, and 180 days date filters 
 
 
 Miscellaneous
 ~~~~~~~~~~~~~
 
 * A few documentation typo fixes
-* Reports now respect the active/inactive status of units as well as the 
-  active/inactive status of test list assignments.
 * Fixed a permissions check for deleting faults
 * Reviewing faults now use the term "Acknowledge" instead of "Approve"
+* Admin access will no longer be required to access the page for editing units available times.
+* A permissions check for editing unit available times has been fixed. Anyone with the
+  'Change Unit Available Time' permission should be able to edit available times now.
 
 
 QATrack+ v3.1.0.1 Release Notes
------------------------------
+-------------------------------
 
 .. _release_notes_3101:
 
@@ -179,7 +228,7 @@ Major Features
 
 * A new :ref:`Query Tool <reports-query_tool>` has been added for advanced
   query and reporting.  (You must set :ref:`USE_SQL_REPORTS =
-  True<qatrack_config>` in your local_settings.py file to use this feature).
+  True<qatrack-config>` in your local_settings.py file to use this feature).
 
 * :ref:`Notifications <notifications>` have been expanded & improved.
     * You can now send notifications on test lists being completed.

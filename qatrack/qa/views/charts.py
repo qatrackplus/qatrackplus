@@ -101,6 +101,17 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         self.set_unit_frequencies()
 
         now = timezone.now().astimezone(timezone.get_current_timezone()).date()
+        default_unreviewed = models.ReviewStatus.objects.filter(
+            requires_review=True,
+            export_by_default=True,
+            valid=True,
+        ).first()
+        default_reviewed = models.ReviewStatus.objects.filter(
+            requires_review=False,
+            export_by_default=True,
+            valid=True,
+        ).first()
+        default_statuses = [s.pk for s in [default_unreviewed, default_reviewed] if s]
 
         c = {
             'from_date': now - timezone.timedelta(days=365),
@@ -110,6 +121,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'test_lists': self.test_lists,
             'categories': models.Category.objects.all(),
             'statuses': models.ReviewStatus.objects.all(),
+            'default_statuses': default_statuses,
             'service_types': sl_models.ServiceType.objects.all(),
             'sites': list(Site.objects.values('pk', 'name')),
             'units': Unit.objects.values('pk', 'name', 'active', 'site_id'),
@@ -542,7 +554,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         """look for a number in GET and convert it to the given datatype"""
         try:
             v = dtype(self.request.GET.get(param, default))
-        except:  # noqa: E507, E722
+        except Exception:
             v = default
         return v
 

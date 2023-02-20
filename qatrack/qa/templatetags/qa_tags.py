@@ -144,7 +144,7 @@ def as_pass_fail_status(test_list_instance, show_label=True):
 
 
 @register.filter
-def as_review_status(test_list_instance):
+def as_review_status(test_list_instance, show_label=False):
     comment_count = test_list_instance.testinstance_set.exclude(Q(comment="") | Q(comment=None)).count()
     comment_count += test_list_instance.comments.count()
     template = get_template("qa/review_status.html")
@@ -152,6 +152,7 @@ def as_review_status(test_list_instance):
         "instance": test_list_instance,
         "comments": comment_count,
         "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS'],
+        "show_label": show_label,
     }
     return template.render(c)
 

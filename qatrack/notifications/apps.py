@@ -19,6 +19,10 @@ def do_scheduling(sender, **kwargs):
             "QATrack+ Service Event Review Notices",
         ),
         (
+            "qatrack.notifications.service_log_scheduling.tasks.run_scheduling_notices",
+            "QATrack+ Service Event Scheduling Notices",
+        ),
+        (
             "qatrack.notifications.faults_review.tasks.run_faults_review_notices",
             "QATrack+ Fault Review Notices",
         ),

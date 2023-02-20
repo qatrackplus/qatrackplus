@@ -67,7 +67,27 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
 
         if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
             context['cycle_name'] = self.object.unit_test_collection.name
+
+        context['history_dates'] = self.get_history_dates()
         return context
+
+    def get_history_dates(self):
+        """Get historical urls and dates for the N most recent test list instances
+        "testinstance_set__unit_test_info__test",
+        performed prior to this instance"""
+
+        tlis = self.object.unit_test_collection.testlistinstance_set.filter(
+            work_completed__lt=self.object.work_completed,
+        ).order_by(
+            '-work_completed'
+        ).values_list(
+            'pk',
+            'work_completed',
+        )[:settings.NHIST]
+        dates = []
+        for pk, work_completed in tlis:
+            dates.append((reverse("view_qa_session", kwargs={"pk": pk}), work_completed))
+        return dates
 
 
 def test_list_instance_report(request, pk):

@@ -1907,6 +1907,26 @@ class TestEditTestListInstance(TestCase):
         self.assertNotIn(ti.comment, ("", None))
 
 
+class TestTestListInstanceDetails(TestCase):
+
+    def test_get_history_dates_no_prior(self):
+        tli = utils.create_qa_session()
+        view = views.review.TestListInstanceDetails()
+        view.object = tli
+        assert view.get_history_dates() == []
+
+    def test_get_history_dates_with_prior(self):
+        first_tli = utils.create_qa_session()
+        expected_history = []
+        for i in range(3):
+            work_completed = first_tli.work_completed - timezone.timedelta(days=1)
+            tli = utils.create_qa_session(first_tli.unit_test_collection, work_completed)
+            expected_history.append((tli.get_absolute_url(), tli.work_completed))
+        view = views.review.TestListInstanceDetails()
+        view.object = first_tli
+        assert view.get_history_dates() == expected_history
+
+
 class TestReviewTestListInstance(TestCase):
 
     def setUp(self):

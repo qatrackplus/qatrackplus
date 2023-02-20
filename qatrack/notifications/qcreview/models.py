@@ -12,9 +12,10 @@ from qatrack.notifications.common.models import (
     UnitGroup,
 )
 from qatrack.qa.models import TestListInstance
+from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 
 
-class QCReviewNotice(models.Model):
+class QCReviewNotice(RecurrenceFieldMixin, models.Model):
 
     UNREVIEWED = 0
 

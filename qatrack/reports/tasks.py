@@ -57,7 +57,7 @@ def send_report(schedule_id, task_name=""):
         logger.info("Send of ReportSchedule %s requested, but no such ReportSchedule exists" % schedule_id)
         return
 
-    fname, attach = s.report.render()
+    fname, attach = s.report.render(user=s.created_by)
 
     try:
         send_email_to_users(
