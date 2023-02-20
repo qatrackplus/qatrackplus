@@ -30,7 +30,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 
-VERSION = "3.1.0"
+VERSION = "3.1.1"
 BUG_REPORT_URL = "https://github.com/qatrackplus/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -271,12 +271,21 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':
         ('rest_framework.authentication.TokenAuthentication', 'rest_framework.authentication.SessionAuthentication'),
     # Use Django's standard `django.contrib.auth` permissions
+    'DEFAULT_SCHEMA_CLASS': 'qatrack.api.schemas.QATrackAutoSchema',
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
     'DATETIME_INPUT_FORMATS': DATETIME_INPUT_FORMATS,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_FILTER_BACKENDS': ('rest_framework_filters.backends.RestFrameworkFilterBackend',),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '1000/min',
+        'testlistinstance': '500/min',
+    },
 }
 
 # -----------------------------------------------------------------------------
@@ -467,7 +476,7 @@ LOGGING = {
     },
     'handlers': {
         'mail_admins': {
-            'level': 'ERROR',
+            'level': 'CRITICAL',
             'filters': [],
             'class': 'django.utils.log.AdminEmailHandler'
         },
@@ -579,6 +588,8 @@ FORCE_SCRIPT_NAME = None
 PAGINATE_DEFAULT = 50
 
 NHIST = 5  # number of historical test results to show when reviewing/performing qa
+
+PING_INTERVAL_S = 5  # how often to ping server when performing QA. Set to 0 to disable ping
 
 ICON_SETTINGS = {
     'SHOW_STATUS_ICONS_PERFORM': True,
@@ -728,7 +739,7 @@ for path in chrome_paths:
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-from .local_settings import *  # noqa: F403, F401
+from .local_settings import *  # noqa: F403, F401, E402
 
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG

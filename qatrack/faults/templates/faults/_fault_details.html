@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load attach_tags %}
+{% load qatrack_tags %}
 
 <div class="row">
 
@@ -44,12 +45,12 @@
 
       <dt>{% trans "Created" %}:</dt>
       <dd>
-        {{ fault.created_by}} @ {{ fault.created }}
+        {{ fault.created_by | get_user_name }} @ {{ fault.created }}
       </dd>
 
       <dt>{% trans "Last Modified"  %}:</dt>
       <dd>
-        {{ fault.modified_by}} @ {{ fault.modified }}
+        {{ fault.modified_by | get_user_name }} @ {{ fault.modified }}
       </dd>
 
       <dt>{% trans "Reviewed" %}:</dt>
@@ -59,7 +60,7 @@
             <li>
               {% if group %}{{ group }}{% if required %}*{% endif %}: {% endif %}
               {% if reviewed_by %}
-                {{ reviewed_by }} @ {{ reviewed }}
+                {{ reviewed_by | get_user_name}} @ {{ reviewed }}
               {% else %}
                 <em>{% trans "Unreviewed " %}</em>
               {% endif %}

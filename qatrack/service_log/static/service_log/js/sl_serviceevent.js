@@ -26,7 +26,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             $service_event_form = $('#service-event-form'),
             $service_save = $('.service-save'),
             $tli_display = $('<div class="row" style="display: none;"></div>'),
-            $date_time = $('#id_datetime_service'),
+            $date_time = $('.daterangepicker-input'),
             $attachInput = $('#id_se_attachments'),
             $attach_deletes = $('.attach-delete'),
             $user_or_thirdparty = $('.user_or_thirdparty'),
@@ -88,25 +88,29 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             }
         }).overrideSelect2Keys();
 
-        var init_date = null;
-        if (from_se_schedule){
-            init_date = moment().format(siteConfig.MOMENT_DATETIME_FMT);
-        }
-        $date_time.flatpickr({
-            enableTime: true,
-            time_24hr: true,
-            minuteIncrement: 1,
-            dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
-            allowInput: true,
-            defaultDate: init_date,
-            onOpen: [
-                function(selectedDates, dateStr, instance) {
-                    if (dateStr === '') {
-                        instance.setDate(moment()._d);
+        $.each($date_time, function(idx, dt){
+            var init_date = null;
+            var $dt = $(dt);
+            if (from_se_schedule && $dt.attr("id") === "id_datetime_service"){
+                init_date = moment().format(siteConfig.MOMENT_DATETIME_FMT);
+            }
+            $dt.flatpickr({
+                enableTime: true,
+                time_24hr: true,
+                minuteIncrement: 1,
+                dateFormat: siteConfig.FLATPICKR_DATETIME_FMT,
+                allowInput: true,
+                defaultDate: init_date,
+                onOpen: [
+                    function(selectedDates, dateStr, instance) {
+                        if (dateStr === '') {
+                            instance.setDate(moment()._d);
+                        }
                     }
-                }
-            ]
+                ]
+            });
         });
+
 
         $('.inputmask').inputmask('99:99', {numericInput: true, placeholder: "_", removeMaskOnSubmit: true});
 
@@ -887,7 +891,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                 $service_type.val(values['service_type']).trigger("change");
                 $service_type.prop('disabled', true);
             }else {
-                $service_type.prop('disabled', true);
+                $service_type.prop('disabled', false);
             }
 
             if (values['service_area']){
@@ -924,7 +928,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             }
             var template_st_not_set = $template.val() && !$service_type.val();
             if (!template_st_not_set){
-                $service_type.prop('disabled', true);
+                $service_type.prop('disabled', false);
             }
             $review_required_fake.prop('disabled', true);
             $('.rtsqa-utc').filter(function() { return $(this).val(); }).prop('disabled', true);

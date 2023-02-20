@@ -2,6 +2,7 @@ from itertools import groupby
 
 import dateutil.parser
 from django import forms
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
@@ -57,7 +58,7 @@ class RelativeDateRangeFilter(django_filters.CharFilter):
 
         try:
             start_date, end_date = relative_dates(value).range()
-        except:  # noqa: E722
+        except Exception:
             # custom period
             start_date, end_date = value
 
@@ -213,6 +214,22 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
             ('3', _('No')),
         )
 
+    def filter_queryset(self, queryset):
+        """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
+
+        # don't let the default filtering filter by active since we'll do it
+        # ourselves below
+        active = self.form.cleaned_data.pop('active', None)
+
+        qs = super().filter_queryset(queryset)
+
+        # note active can be None (Both), False (Inactive), or True (Active Only)
+        if active is True:
+            qs = qs.filter(Q(active=True) & Q(unit__active=True))
+        elif active is False:
+            qs = qs.filter(Q(active=False) | Q(unit__active=False))
+        return qs
+
 
 class AssignedQCDetailsFilter(UnitTestCollectionFilter):
 
@@ -283,7 +300,7 @@ class ServiceEventScheduleFilterDetailsMixin:
         return (_("Active Only"), det)
 
 
-class SchedulingFilter(BaseReportFilterSet):
+class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
 
     due_date = RelativeDateRangeFilter(
         label=_l("Time Period"),
@@ -325,7 +342,7 @@ class SchedulingFilter(BaseReportFilterSet):
 
     class Meta:
         model = models.UnitTestCollection
-        fields = ["due_date", "assigned_to", "unit__site", "unit"]
+        fields = ["due_date", "assigned_to", "unit__site", "unit", "frequency"]
 
     def __init__(self, *args, **kwargs):
 
@@ -338,6 +355,22 @@ class SchedulingFilter(BaseReportFilterSet):
             ('2', _('Yes')),
             ('3', _('No')),
         )
+
+    def filter_queryset(self, queryset):
+        """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
+
+        # don't let the default filtering filter by active since we'll do it
+        # ourselves below
+        active = self.form.cleaned_data.pop('active', None)
+
+        qs = super().filter_queryset(queryset)
+
+        # note active can be None (Both), False (Inactive), or True (Active Only)
+        if active is True:
+            qs = qs.filter(Q(active=True) & Q(unit__active=True))
+        elif active is False:
+            qs = qs.filter(Q(active=False) | Q(unit__active=False))
+        return qs
 
 
 class TestDataFilter(BaseReportFilterSet):
@@ -460,6 +493,7 @@ class ServiceEventDetailsFilter(BaseServiceEventFilter):
 
 
 class ScheduledServiceEventFilter(BaseReportFilterSet):
+    """ServiceEventSchedule filter equivalent to the UnitTestCollectionFilter"""
 
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
@@ -488,10 +522,9 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     )
 
     service_event_template = django_filters.filters.ModelMultipleChoiceFilter(
-        label=_l("Site"),
-        null_label=_l("Other"),
-        queryset=umodels.Site.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all units)"),
+        label=_l("Service Event Template"),
+        queryset=sl_models.ServiceEventTemplate.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more Service Event Templates"),
     )
 
     frequency = django_filters.filters.ModelMultipleChoiceFilter(
@@ -530,6 +563,82 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
             ('3', _('No')),
         )
 
+    def filter_queryset(self, queryset):
+        """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
+
+        # don't let the default filtering filter by active since we'll do it
+        # ourselves below
+        active = self.form.cleaned_data.pop('active', None)
+
+        qs = super().filter_queryset(queryset)
+
+        # note active can be None (Both), False (Inactive), or True (Active Only)
+        if active is True:
+            qs = qs.filter(Q(active=True) & Q(unit_service_area__unit__active=True))
+        elif active is False:
+            qs = qs.filter(Q(active=False) | Q(unit_service_area__unit__active=False))
+        return qs
+
+
+class ServiceEventSchedulingFilter(BaseReportFilterSet):
+    """Service Event Schedule equivalent of UnitTestCollectionSchedulingFilter"""
+    due_date = RelativeDateRangeFilter(
+        label=_l("Time Period"),
+        help_text=_l("Dates to include scheduled QA data from"),
+    )
+    assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Assigned To"),
+        queryset=models.Group.objects.order_by("name"),
+        help_text=_l(
+            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
+        ),
+    )
+    unit_service_area__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Site"),
+        queryset=umodels.Site.objects.all(),
+        help_text=_l("Use this filter to limit report to one or more sites (leave blank to include all sites)"),
+    )
+    unit_service_area__unit = django_filters.filters.MultipleChoiceFilter(
+        label=_l("Unit"),
+        help_text=_l("Use this filter to limit report to one or more units (leave blank to include all units)"),
+    )
+    frequency = django_filters.filters.ModelMultipleChoiceFilter(
+        label=_l("Frequency"),
+        queryset=models.Frequency.objects.order_by('nominal_interval'),
+        null_label=_l("Ad Hoc"),
+        help_text=_l(
+            "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
+        ),
+    )
+    active = django_filters.filters.BooleanFilter(
+        label=_l("Active"),
+        help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
+        initial='2',
+    )
+    class Meta:
+        model = sl_models.ServiceEventSchedule
+        fields = ["due_date", "assigned_to", "unit_service_area__unit__site", "unit_service_area__unit", "frequency"]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.form.fields['due_date'].widget.attrs['class'] = "futuredate"
+        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices()
+        self.form.fields['active'].widget.choices = (
+            ('1', _('Both')),
+            ('2', _('Yes')),
+            ('3', _('No')),
+        )
+    def filter_queryset(self, queryset):
+        """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
+        # don't let the default filtering filter by active since we'll do it
+        # ourselves below
+        active = self.form.cleaned_data.pop('active', None)
+        qs = super().filter_queryset(queryset)
+        # note active can be None (Both), False (Inactive), or True (Active Only)
+        if active is True:
+            qs = qs.filter(Q(active=True) & Q(unit_service_area__unit__active=True))
+        elif active is False:
+            qs = qs.filter(Q(active=False) | Q(unit_service_area__unit__active=False))
+        return qs
 
 class BaseFaultFilter(BaseReportFilterSet):
 

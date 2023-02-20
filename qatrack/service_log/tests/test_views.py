@@ -1,3 +1,4 @@
+from unittest import mock
 import json
 
 from django.contrib.auth.models import Permission, User
@@ -304,6 +305,7 @@ class TestCreateServiceEvent(TestCase):
             'unit_field': self.u_1.id,
             'unit_field_fake': self.u_1.id,
             'service_area_field': self.usa_1.service_area.id,
+            'service_area_field_fake': self.usa_1.service_area.id,
             'service_type': st.id,
             'problem_description': 'uhhhhh ohhhh',
             'work_description': 'stuff was done',
@@ -496,6 +498,75 @@ class TestCreateServiceEvent(TestCase):
         psc.refresh_from_db()
         self.assertEqual(initial_quantity, psc.quantity)
 
+    def test_set_schedule(self):
+        """set_schedule should set a schedule object on the view object
+        for a request with se_schedule as a get parameter."""
+        group = create_group()
+        schedule = sl_utils.create_service_event_schedule()
+        schedule.visible_to.add(group)
+        self.user.groups.add(group)
+        view = views.ServiceEventUpdateCreate()
+        view.request = mock.Mock(user=self.user, GET={'se_schedule': schedule.pk})
+        view.set_schedule()
+        assert view.se_schedule == schedule
+
+    def test_set_schedule_no_schedule(self):
+        """set_schedule should set se_schedule to None for a request with no se_schedule GET parameter."""
+        view = views.ServiceEventUpdateCreate()
+        view.request = mock.Mock(user=self.user, GET={})
+        view.set_schedule()
+        assert view.se_schedule is None
+
+    def test_initial_rts_form_initiated_by_test_list_instance(self):
+        """Initial RTS formset should have no QA set when being initiated
+        by a specific test list instance."""
+        tli = qa_utils.create_test_list_instance()
+        view = views.ServiceEventUpdateCreate()
+        view.user = self.user
+        view.object = None
+        view.request = mock.Mock(user=self.user, GET={'ib': tli.pk})
+        formset = view.get_context_data()['rtsqa_formset']
+        assert 'unit_test_collection' not in formset[0].initial
+
+    def test_initial_rts_form_initiated_for_unit(self):
+        """Initial RTS formset should have no QA set when being initiated
+        for a specific unit"""
+        tli = qa_utils.create_test_list_instance()
+        view = views.ServiceEventUpdateCreate()
+        view.user = self.user
+        view.object = None
+        view.request = mock.Mock(user=self.user, GET={'u': tli.unit_test_collection.unit.pk})
+        formset = view.get_context_data()['rtsqa_formset']
+        assert 'unit_test_collection' not in formset[0].initial
+
+    def test_initial_rts_form_initiated_by_schedule(self):
+        """Initial RTS formset should have correct  QA set when being initiated
+        for a specific unit"""
+
+        # create a schedule visible to our user
+        group = create_group()
+        schedule = sl_utils.create_service_event_schedule()
+        schedule.visible_to.add(group)
+        self.user.groups.add(group)
+
+        # add RTS qa to the template. The test list also needs to be assigned
+        # to the unit in order for it to be populated in the form.
+        tl = qa_utils.create_test_list()
+        utc1 = qa_utils.create_unit_test_collection(
+            unit=schedule.unit_service_area.unit, assigned_to=group, test_collection=tl)
+        utc2 = qa_utils.create_unit_test_collection(
+            unit=schedule.unit_service_area.unit, assigned_to=group, test_collection=tl)
+        schedule.service_event_template.return_to_service_test_lists.add(tl)
+
+        # ensure initial UTC's are set correctly based on template
+        view = views.ServiceEventUpdateCreate()
+        view.user = self.user
+        view.object = None
+        view.request = mock.Mock(user=self.user, GET={'se_schedule': schedule.pk})
+        formset = view.get_context_data()['rtsqa_formset']
+        assert formset[0].initial['unit_test_collection'] == utc1
+        assert formset[1].initial['unit_test_collection'] == utc2
+
 
 class TestEditServiceEvent(TestCase):
 
@@ -584,6 +655,7 @@ class TestEditServiceEvent(TestCase):
             'safety_precautions': 'safety_precautions',
             'problem_description': 'problem_description',
             'service_area_field': self.se.unit_service_area.service_area.id,
+            'service_area_field_fake': self.se.unit_service_area.service_area.id,
             'unit_field': self.se.unit_service_area.unit.id,
             'unit_field_fake': self.se.unit_service_area.unit.id,
             'qafollowup_notes': 'qafollowup_notes',
@@ -658,6 +730,19 @@ class TestEditServiceEvent(TestCase):
 
         response = self.client.post(self.url, data=data)
         self.assertTrue('service_status' in response.context_data['form'].errors)
+
+    def test_initial_rts_form_existing_service_event(self):
+        """RTS formset should only have existing RTS QA set for the forms when
+        editing an existing service event. """
+
+        rtsqa = sl_utils.create_return_to_service_qa()
+        view = views.ServiceEventUpdateCreate()
+        view.user = self.user
+        view.object = rtsqa.service_event
+        view.request = mock.Mock(user=self.user, GET={})
+        formset = view.get_context_data()['rtsqa_formset']
+        assert formset[0].initial['unit_test_collection'] == rtsqa.unit_test_collection.id
+        assert 'unit_test_collection' not in formset[1].initial
 
 
 class TestServiceLogViews(TestCase):

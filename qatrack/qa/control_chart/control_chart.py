@@ -301,6 +301,10 @@ def format_plots(plots, xbar_thresh, range_thresh,
     # if not use_dates:
     cc_xlim = (cc_xlim[0], cc_xlim[1] + (cc_xlim[1] - cc_xlim[0]) * DATA_HSPACE)
 
+    if use_dates and (cc_xlim[1] - cc_xlim[0] < 1):
+        cc_xlim[0] -= 3600
+        cc_xlim[1] += 3600
+
     plots[0].set_xlim(cc_xlim)     # white space after data ends
     plots[2].set_xlim(plots[0].get_xlim())  # Range chart shares x-axis with control chart
 

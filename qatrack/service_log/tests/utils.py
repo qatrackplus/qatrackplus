@@ -115,7 +115,7 @@ def create_service_event_template(name=None, service_type=None, service_area=Non
 
 
 def create_service_event_schedule(service_event_template=None, unit_service_area=None,
-                                  frequency=None, assigned_to=None):
+                                  frequency=None, assigned_to=None, active=True):
 
     if service_event_template is None:
         service_event_template = create_service_event_template()
@@ -131,6 +131,7 @@ def create_service_event_schedule(service_event_template=None, unit_service_area
         unit_service_area=unit_service_area,
         assigned_to=assigned_to,
         frequency=frequency,
+        active=active,
     )
 
     return ses

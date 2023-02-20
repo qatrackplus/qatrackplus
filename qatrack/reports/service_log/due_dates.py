@@ -24,7 +24,7 @@ class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
             "unit_service_area__unit",
             "unit_service_area__service_area",
             "frequency",
-        ).exclude(active=False)
+        )
 
     def get_context(self):
 
@@ -110,7 +110,7 @@ class NextScheduledServiceEventsDueDatesReport(DueDatesReportMixin, BaseReport):
 
     report_type = "service_event_next_due"
     name = _l("Next Due Dates for Scheduled Service Events")
-    filter_class = filters.SchedulingFilter
+    filter_class = filters.ServiceEventSchedulingFilter
     description = mark_safe(
         _l("This report shows scheduled service events whose next due date fall in the selected time period.")
     )

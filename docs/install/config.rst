@@ -416,6 +416,13 @@ ORDER_UNITS_BY
 Set `ORDER_UNITS_BY = 'name'` in your `local_settings.py` file in order to
 order units by `name` rather than `number`
 
+PING_INTERVAL_S
+...............
+
+Controls how often (in seconds) the server is "pinged" when performing QC or
+entering service log data. Set to `PING_INTERVAL_S = 0` to disable the ping
+check.  Default is `PING_INTERVAL_S = 5`
+
 REVIEW_DIFF_COL
 ...............
 

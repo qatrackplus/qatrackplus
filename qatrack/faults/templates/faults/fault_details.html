@@ -44,7 +44,7 @@
                 <form id="review-form" action="{% url "fault_review" pk=fault.id %}" method="POST">
                   {% csrf_token %}
                   {% include "_form_horizontal.html" with form=review_form %}
-                  {% if perms.faults.can_delete %}
+                  {% if perms.faults.delete_fault %}
                     <a class="btn btn-danger btn-flat"
                        title="{% trans "This will redirect you to a page where you can permanently delete this fault" %}"
                        href="{% url 'fault_delete' pk=fault.pk %}"
@@ -54,9 +54,9 @@
                   {% endif %}
                   {% if perms.faults.can_review %}
                     {% if fault.faultreviewinstance_set.count %}
-                      <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unapprove This Fault" %}</button>
+                      <button id="review-fault" type="submit" class="btn btn-warning btn-flat margin-r-5 pull-right">{% trans "Unacknowledge This Fault" %}</button>
                     {% else %}
-                      <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Approve This Fault" %}</button>
+                      <button id="review-fault" type="submit" class="btn btn-primary btn-flat margin-r-5 pull-right">{% trans "Acknowledge This Fault" %}</button>
                     {% endif %}
                   {% endif %}
                   {% if perms.faults.change_fault %}

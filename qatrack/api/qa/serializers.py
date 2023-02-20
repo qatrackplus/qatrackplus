@@ -175,7 +175,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     work_completed = serializers.DateTimeField(default=lambda: timezone.now())
 
-    comment = serializers.CharField(required=False)
+    comment = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     tests = serializers.DictField()
     status = serializers.HyperlinkedRelatedField(
         view_name="testinstancestatus-detail",
@@ -377,7 +377,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     def type_okay(self, type_, val):
         if type_ in models.STRING_TYPES + models.DATE_TYPES and not isinstance(val, str):
             try:
-                json.dumps(val)
+                json.dumps(val, cls=QATrackJSONEncoder)
             except Exception:
                 return False
         elif type_ in models.NUMERICAL_TYPES and not isinstance(val, Number):
@@ -462,7 +462,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 content = d['value']
 
                 if d.get("encoding", "base64") == "base64":
-                    if not BASE64_RE.match(content):
+                    if not (content and BASE64_RE.match(content)):
                         raise serializers.ValidationError(
                             "base64 encoding requested but content does not appear to be base64"
                         )

@@ -8,6 +8,7 @@ from rest_framework_filters import backends
 
 from qatrack.api.qa import filters, serializers
 from qatrack.api.serializers import MultiSerializerMixin
+from qatrack.api.viewsets import limit_offset_pagination_factory
 from qatrack.qa import models
 from qatrack.qa.views import perform
 
@@ -42,7 +43,7 @@ class AutoReviewRuleViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class AutoReviewRuleSetViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.AutoReviewRuleSet.objects.all()
+    queryset = models.AutoReviewRuleSet.objects.prefetch_related("rules")
     serializer_class = serializers.AutoReviewRuleSetSerializer
     filterset_class = filters.AutoReviewRuleSetFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
@@ -114,29 +115,37 @@ class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
     ).prefetch_related(
         "visible_to",
         "tests_object",
-    )
+    ).distinct()
     serializer_class = serializers.UnitTestCollectionSerializer
     filterset_class = filters.UnitTestCollectionFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+    pagination_class = limit_offset_pagination_factory(page_size=10)
 
 
 class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.TestInstance.objects.all()
+    queryset = models.TestInstance.objects.prefetch_related("attachment_set").all()
     serializer_class = serializers.TestInstanceSerializer
     filterset_class = filters.TestInstanceFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
 class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
-    queryset = models.TestListInstance.objects.prefetch_related("attachment_set").all()
+    queryset = models.TestListInstance.objects.prefetch_related(
+        "attachment_set",
+        "testinstance_set",
+        "testinstance_set__attachment_set",
+        "comments",
+    ).all()
     serializer_class = serializers.TestListInstanceSerializer
     filterset_class = filters.TestListInstanceFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
+    pagination_class = limit_offset_pagination_factory(page_size=10)
     action_serializers = {
         'create': serializers.TestListInstanceCreator,
         'partial_update': serializers.TestListInstanceCreator,
     }
     http_method_names = ['get', 'post', 'patch']
+    throttle_scope = "testlistinstance"
 
     def create(self, request, *args, **kwargs):
         data = dict(request.data.items())
@@ -181,7 +190,7 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
 
 
 class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.TestListCycle.objects.all()
+    queryset = models.TestListCycle.objects.prefetch_related("test_lists").all()
     serializer_class = serializers.TestListCycleSerializer
     filterset_class = filters.TestListCycleFilter
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)

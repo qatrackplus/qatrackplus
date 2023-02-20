@@ -3,7 +3,6 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
 from qatrack.notifications.models import (
     QCSchedulingNotice,
@@ -163,6 +162,21 @@ class TestQCSchedulingModel(TestCase):
         self.utc2.due_date = timezone.now() + timezone.timedelta(hours=2 * 24)
         self.utc2.active = False
         self.utc2.save()
+
+        notice = QCSchedulingNotice.objects.create(
+            future_days=7,
+            recipients=self.recipients,
+            notification_type=QCSchedulingNotice.UPCOMING,
+            time="0:00",
+        )
+        assert list(notice.utcs_to_notify()) == [self.utc1]
+
+    def test_inactive_unit_not_included(self):
+        self.utc1.due_date = timezone.now() + timezone.timedelta(hours=24)
+        self.utc1.save()
+        self.utc2.due_date = timezone.now() + timezone.timedelta(hours=2 * 24)
+        self.utc2.unit.active = False
+        self.utc2.unit.save()
 
         notice = QCSchedulingNotice.objects.create(
             future_days=7,
@@ -345,6 +359,7 @@ class TestQCSchedulingEmails(TestCase):
 
         self.notice = QCSchedulingNotice.objects.create(
             recipients=self.recipients,
+            recurrences="RRULE:FREQ=DAILY",
             notification_type=QCSchedulingNotice.UPCOMING_AND_DUE,
             future_days=7,
             time="0:00",
@@ -386,8 +401,6 @@ class TestQCSchedulingEmails(TestCase):
         assert Schedule.objects.count() == 1
 
     def test_run_scheduling_notices(self):
-
-        self.notice.recurrences = recurrence.Recurrence(rrules=[recurrence.Rule(recurrence.DAILY)])
         self.notice.time = (timezone.localtime(timezone.now()) + timezone.timedelta(minutes=1)).time()
         self.notice.save()
         tasks.run_scheduling_notices()

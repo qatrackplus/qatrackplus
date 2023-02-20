@@ -1,7 +1,7 @@
 .. _linux_upgrading_02X_to_31:
 
 
-Upgrading an existing Linux v0.2.X installation to v3.1.0
+Upgrading an existing Linux v0.2.X installation to v3.1.1
 =========================================================
 
 
@@ -379,4 +379,4 @@ Next Steps
 ----------
 
 Now that you have upgraded to 0.3.0, you should proceed directly to
-:ref:`upgrading to v3.1.0 from v0.3.0 <linux_upgrading_030_to_31>`;
+:ref:`upgrading to v3.1.1 from v0.3.0 <linux_upgrading_030_to_31>`;

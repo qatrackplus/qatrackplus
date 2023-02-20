@@ -832,6 +832,11 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
     function set_skips(skips){
 
         _.each(tli.test_instances, function(ti){
+            if (!skips.hasOwnProperty(ti.test_info.test.slug)) {
+              // if test is not in this set of skips (e.g. after a composite
+              // calc) then we can't set its skip value
+              return;
+            }
             var skip = skips[ti.test_info.test.slug];
             if (skip !== ti.skipped){
                 ti.set_skip(skip);
@@ -1174,7 +1179,7 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
                 complete: on_complete
             });
         };
-        this.autosave = _.throttle(this.autosave_, 2000, {'trailing': true});
+        this.autosave = _.debounce(this.autosave_, 4000, {'trailing': true});
 
         this.has_failing = function(){
             return _.filter(self.test_instances, function(ti){

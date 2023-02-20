@@ -20,9 +20,9 @@ class FaultTypeFilter(filters.FilterSet):
 
 class FaultFilter(filters.FilterSet):
 
-    fault_type = filters.RelatedFilter(
+    fault_types = filters.RelatedFilter(
         FaultTypeFilter,
-        field_name="fault_type",
+        field_name="fault_types",
         queryset=models.FaultType.objects.all(),
     )
     unit = filters.RelatedFilter(UnitFilter, field_name='unit', queryset=Unit.objects.all())

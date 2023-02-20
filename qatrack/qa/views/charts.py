@@ -105,6 +105,17 @@ class ChartView(PermissionRequiredMixin, TemplateView):
         self.set_unit_frequencies()
 
         now = timezone.now().astimezone(timezone.get_current_timezone()).date()
+        default_unreviewed = models.TestInstanceStatus.objects.filter(
+            requires_review=True,
+            export_by_default=True,
+            valid=True,
+        ).first()
+        default_reviewed = models.TestInstanceStatus.objects.filter(
+            requires_review=False,
+            export_by_default=True,
+            valid=True,
+        ).first()
+        default_statuses = [s.pk for s in [default_unreviewed, default_reviewed] if s]
 
         c = {
             'from_date': now - timezone.timedelta(days=365),
@@ -114,6 +125,7 @@ class ChartView(PermissionRequiredMixin, TemplateView):
             'test_lists': self.test_lists,
             'categories': models.Category.objects.all(),
             'statuses': models.TestInstanceStatus.objects.all(),
+            'default_statuses': default_statuses,
             'service_types': sl_models.ServiceType.objects.all(),
             'sites': [{
                 "pk": "",
@@ -201,7 +213,7 @@ class BaseChartView(View):
     """
 
     def get(self, request):
-
+        self._test_choices_cache = {}
         try:
             self.get_plot_data()
         except ProgrammingError as e:
@@ -281,7 +293,22 @@ class BaseChartView(View):
     def test_instance_to_point(self, ti, relative=False):
         """Grab relevent plot data from a :model:`qa.TestInstance`"""
 
-        if relative and ti.reference and ti.value is not None:
+        if ti.unit_test_info.test.type == models.MULTIPLE_CHOICE:
+            key = (ti.unit_test_info.test_id, ti.string_value)
+            ref_value = None
+            if key in self._test_choices_cache:
+                value = self._test_choices_cache.get(key)
+            else:
+                try:
+                    choices = [x.strip() for x in ti.unit_test_info.test.choices.split(",")]
+                    value = choices.index(ti.string_value) + 1
+                except ValueError:
+                    # choice no longer exists
+                    value = None
+
+                self._test_choices_cache[key] = value
+
+        elif relative and ti.reference and ti.value is not None:
 
             ref_is_not_zero = ti.reference.value != 0.
             has_percent_tol = (ti.tolerance and ti.tolerance.type == models.PERCENT)
@@ -400,8 +427,6 @@ class BaseChartView(View):
         units = Unit.objects.filter(pk__in=units)
         statuses = models.TestInstanceStatus.objects.filter(pk__in=statuses)
         service_types = sl_models.ServiceType.objects.filter(pk__in=service_types)
-
-        # test_list_names = {tl.id: tl.name for tl in test_lists}
 
         if not combine_data:
             # retrieve test instances for every possible permutation of the
@@ -531,7 +556,7 @@ class ControlChartImage(PermissionRequiredMixin, BaseChartView):
         """look for a number in GET and convert it to the given datatype"""
         try:
             v = dtype(self.request.GET.get(param, default))
-        except:  # noqa: E507
+        except Exception:
             v = default
         return v
 

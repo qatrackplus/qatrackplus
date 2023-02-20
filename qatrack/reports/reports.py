@@ -33,7 +33,7 @@ ORDERED_CONTENT_TYPES = [CSV, PDF, XLS]
 
 
 def register_class(target_class):
-    if target_class.__name__ in REPORT_REGISTRY:
+    if target_class.__name__ in REPORT_REGISTRY:  # pragma: nocover
         msg = "Trying to register %s but a class with the name %s already exists in the report registry" % (
             target_class, target_class.__name__
         )
@@ -120,8 +120,11 @@ class BaseReport(object, metaclass=ReportMeta):
         self.report_format = report_format
         try:
             content = getattr(self, "to_%s" % report_format)()
-        except AttributeError:  # pragma: nocover
-            raise Http404("Unknown report format %s" % report_format)
+        except AttributeError as e:  # pragma: nocover
+            if report_format in str(e):
+                raise Http404("Unknown report format %s" % report_format)
+            else:
+                raise
         return self.get_filename(report_format), content
 
     def render_to_response(self, report_format):

@@ -2,7 +2,7 @@ Welcome to QATrack+'s documentation!
 ====================================
 
 
-About QATrack+ v3.1.0
+About QATrack+ v3.1.1
 ---------------------
 
 QATrack+ is a fully configurable, free, and open source (MIT License) web

@@ -271,7 +271,7 @@ class PaperBackupForms(AssignedQCDetailsReport):
 
     report_type = "qc-paper-backup-forms"
     name = _l("QC Paper Backup Forms")
-    filter_class = filters.UnitTestCollectionFilter
+    filter_class = filters.AssignedQCDetailsFilter
     description = mark_safe(_l(
         "This report generates pdf backup forms which can be used in place of QATrack+ "
         "in case your QATrack+ installation is offline for some reason."

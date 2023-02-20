@@ -58,15 +58,10 @@ class AutoReviewRuleFilter(filters.FilterSet):
 
 class AutoReviewRuleSetFilter(filters.FilterSet):
 
-    status = filters.RelatedFilter(
-        TestInstanceStatusFilter,
-        field_name="status",
-        queryset=models.TestInstanceStatus.objects.all(),
-    )
-
-    pass_fail = filters.Filter(
-        field_name="pass_fail",
-        widget=widgets.Select(choices=[('', 'Any')] + list(models.PASS_FAIL_CHOICES)),
+    rules = filters.RelatedFilter(
+        AutoReviewRuleFilter,
+        field_name="rules",
+        queryset=models.AutoReviewRule.objects.all(),
     )
 
     class Meta:
