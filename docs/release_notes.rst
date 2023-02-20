@@ -105,6 +105,8 @@ Reports
 
 * Fixed an issue with scheduled reports failing for some report types
 
+* Fixed an issue with Excel report emails failing
+
 * Add new 3 month, 6 month, 90 days, and 180 days date filters 
 
 
