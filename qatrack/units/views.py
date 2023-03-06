@@ -132,7 +132,7 @@ def handle_unit_available_time_edit(request):
     return get_unit_available_time_data(request)
 
 
-@permission_required('change_unitavailabletime')
+@permission_required('units.change_unitavailabletime')
 @csrf_protect
 def delete_schedules(request):
 

@@ -1606,7 +1606,7 @@ def handle_unit_down_time(request):
 
 class CreateServiceEventTemplateAjax(JSONResponseMixin, PermissionRequiredMixin, BaseCreateView):
 
-    permission_required = 'add_serviceeventtemplate'
+    permission_required = 'service_log.add_serviceeventtemplate'
     model = sl_models.ServiceEventTemplate
     form_class = forms.ServiceEventTemplateForm
 

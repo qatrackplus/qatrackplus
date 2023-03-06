@@ -106,7 +106,7 @@ We're now ready to install all the libraries QATrack+ depends on.
     .\venvs\qatrack31\Scripts\Activate.ps1
     python -m pip install --upgrade pip
     cd qatrackplus
-    git checkout v3.1.1
+    git checkout v3.1.1.1
     pip install -r requirements\win.txt
 
 
