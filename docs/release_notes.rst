@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+
+QATrack+ v3.1.1.1 Release Notes
+-------------------------------
+* Fixed a permission check bug for users creating service event templates
+
+
 QATrack+ v3.1.1 Release Notes
 -----------------------------
 
