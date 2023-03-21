@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+.. _release_notes_311:
+
+QATrack+ v3.1.1.2 Release Notes
+-------------------------------
+* Fixed issue with Chromes font rendering in PDF reports
 
 QATrack+ v3.1.1.1 Release Notes
 -------------------------------
@@ -9,9 +14,6 @@ QATrack+ v3.1.1.1 Release Notes
 
 QATrack+ v3.1.1 Release Notes
 -----------------------------
-
-.. _release_notes_311:
-
 
 This is a follow up release to address a few issues that were found in v3.1.0. The following
 issues have been addressed:
