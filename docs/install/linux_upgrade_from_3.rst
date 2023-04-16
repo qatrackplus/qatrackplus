@@ -1,7 +1,7 @@
 .. _linux_upgrading_31:
 
 
-Upgrading an existing Linux v3.X.Y installation to v3.1.1.2
+Upgrading an existing Linux v3.X.Y installation to v3.1.1.3
 ===========================================================
 
 .. note::
@@ -11,7 +11,7 @@ Upgrading an existing Linux v3.X.Y installation to v3.1.1.2
 
 
 This guide will walk you through upgrading your existing v3.X.Y installation to
-v3.1.1.2.  If you currently have a 0.3.x version of QATrack+, you first need to
+v3.1.1.3.  If you currently have a 0.3.x version of QATrack+, you first need to
 follow the :ref:`instructions to upgrade to 3.1 <linux_upgrading_030_to_31>`,
 before carrying out these instructions.
 
@@ -52,7 +52,7 @@ Make sure your existing packages are up to date
     sudo apt upgrade
 
 
-Check out version 3.1.1.2
+Check out version 3.1.1.3
 -------------------------
 
 We can now grab the latest version of QATrack+.  To checkout the code enter the
@@ -62,7 +62,7 @@ following commands:
 
     cd ~/web/qatrackplus
     git fetch origin
-    git checkout v3.1.1.2
+    git checkout v3.1.1.3
 
 
 Updating our Python environment

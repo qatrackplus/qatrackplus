@@ -3,6 +3,11 @@ Release Notes
 
 .. _release_notes_311:
 
+QATrack+ v3.1.1.3 Release Notes
+-------------------------------
+* Fixed issue with migration from 0.3.x to 3.1.1
+
+
 QATrack+ v3.1.1.2 Release Notes
 -------------------------------
 * Fixed issue with Chromes font rendering in PDF reports
