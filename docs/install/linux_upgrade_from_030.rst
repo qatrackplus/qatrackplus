@@ -1,8 +1,8 @@
 .. _linux_upgrading_030_to_31:
 
 
-Upgrading an existing Linux v0.3.0 installation to v3.1.1
-=========================================================
+Upgrading an existing Linux v0.3.0 installation to v3.1.1.3
+===========================================================
 
 .. note::
 

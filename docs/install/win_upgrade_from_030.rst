@@ -1,7 +1,7 @@
 .. _win_upgrading_030_to_31:
 
-Upgrading an existing Windows v0.3.0 installation to v3.1.1
-===========================================================
+Upgrading an existing Windows v0.3.0 installation to v3.1.1.3
+=============================================================
 
 This guide will walk you through upgrading your existing v0.3.0 installation to
 v3.1.1.  If you currently have a 0.2.x version of QATrack+, you first need to
