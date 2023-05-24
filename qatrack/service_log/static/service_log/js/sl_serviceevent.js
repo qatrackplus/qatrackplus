@@ -70,7 +70,7 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
         // General fields ------------------------------------------------------------------------------
         autosize($('textarea.autosize'));
 
-        $('.select2:visible, #template-modal .select2:not(#template_unit)').select2({
+        var s2 = $('.select2:visible, #template-modal .select2:not(#template_unit)').select2({
             minimumResultsForSearch: 10,
             width: '100%',
             templateSelection: function(a) {
@@ -86,7 +86,13 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
                     return a.text;
                 }
             }
-        }).overrideSelect2Keys();
+        })
+
+        try {
+          s2.overrideSelect2Keys();
+        }catch(e) {
+          // IE11 fail
+        }
 
         $.each($date_time, function(idx, dt){
             var init_date = null;
