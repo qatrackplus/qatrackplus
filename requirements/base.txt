@@ -2,7 +2,6 @@
 -e git+https://github.com/randlet/django-genericdropdown.git@56dbaf6b4f518a3946e5e253fec85ede175f3727#egg=django_genericdropdown
 -e git+https://github.com/randlet/django-listable.git@efff32a4ceaa795d5b1a32dc75decacef3de90e8#egg=django_listable
 Django==1.11.20
-PyVirtualDisplay==0.2
 beautifulsoup4==4.6.0
 coreapi==2.3.3
 coverage==4.5.1
@@ -24,9 +23,9 @@ django-widget-tweaks==1.4.1
 freezegun==1.0.0
 html5lib==1.0.1
 markdown==2.6.11
-matplotlib==2.2.2
+matplotlib
 numpy<=1.15.2
-pandas>=0.22.0,<0.25
+pandas
 pep8==1.7.0
 pydicom==1.1.0
 scikit-image<0.14.0; python_version == '3.4'
@@ -42,5 +41,5 @@ python-dateutil==2.8.1
 pytz==2018.4
 reportlab==3.5.8
 requests==2.21.0
-scipy<=1.1.0
-selenium==3.11.0
+scipy
+selenium
