@@ -28,7 +28,7 @@ numpy<=1.15.2
 pandas==1.0.5
 pep8==1.7.0
 pydicom==1.1.0
-scikit-image==0.17.3
+scikit-image==0.17.2
 scikit-learn==1.0.2
 pylinac==2.1.0.1; python_version < '3.6'
 pylinac==2.2.0; python_version >= '3.6'
