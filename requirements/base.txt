@@ -23,13 +23,13 @@ django-widget-tweaks==1.4.1
 freezegun==1.0.0
 html5lib==1.0.1
 markdown==2.6.11
-matplotlib
+matplotlib==3.3.4
 numpy<=1.15.2
-pandas
+pandas==1.0.5
 pep8==1.7.0
 pydicom==1.1.0
-scikit-image<0.14.0; python_version == '3.4'
-scikit-learn<1.0; python_version == '3.4'
+scikit-image==0.17.3
+scikit-learn==1.0.2
 pylinac==2.1.0.1; python_version < '3.6'
 pylinac==2.2.0; python_version >= '3.6'
 pynliner==0.8.0
@@ -41,5 +41,4 @@ python-dateutil==2.8.1
 pytz==2018.4
 reportlab==3.5.8
 requests==2.21.0
-scipy
-selenium
+scipy==1.5.4
