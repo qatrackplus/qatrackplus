@@ -19,21 +19,33 @@ def test_arrs_to_test_list_arrs(apps, schema):
 
     TestList = apps.get_model("qa", "TestList")
     Test = apps.get_model("qa", "Test")
-
     for test_list in TestList.objects.all():
-        children = TestList.objects.filter(pk__in=test_list.children.values_list("child__pk", flat=True))
+        children = TestList.objects.filter(
+            pk__in=test_list.children.values_list("child__pk", flat=True)
+        )
         all_lists = TestList.objects.filter(pk=test_list.pk) | children
-        tests = Test.objects.filter(testlistmembership__test_list__in=all_lists).distinct()
-        arrs = tests.exclude(autoreviewruleset_id=None).values_list("autoreviewruleset_id", flat=True)
+        tests = Test.objects.filter(
+            testlistmembership__test_list__in=all_lists
+        ).distinct()
+
+        # "id" must be included here otherwise if all tests have a uniform set
+        # of rules the queryset will only return a single autoreviewruleset_id
+        # (i.e. arrs.count() == 1, even though there may be N tests) and the
+        # rules_all_same check below will be False.  See RAM-2864
+        arrs = tests.exclude(autoreviewruleset_id=None).values_list(
+            "id", "autoreviewruleset_id",
+        )
         no_auto_review = len(arrs) == 0
         if no_auto_review:
+            test_list.autoreviewruleset_id = None
+            test_list.save()
             continue
 
         all_have_auto_review = len(arrs) == len(tests)
-        rules_all_same = len(set(arrs)) == 1
+        rules_all_same = len(set([arr[1] for arr in arrs])) == 1
         uniform_rules = rules_all_same and all_have_auto_review
         if uniform_rules:
-            test_list.autoreviewruleset_id = arrs[0]
+            test_list.autoreviewruleset_id = arrs[0][1]
             test_list.save()
         else:
             msg = (
