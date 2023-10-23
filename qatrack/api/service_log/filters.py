@@ -4,11 +4,12 @@ import rest_framework_filters as filters
 from qatrack.api.auth.filters import GroupFilter, UserFilter
 from qatrack.api.filters import MaxDateFilter, MinDateFilter
 from qatrack.api.qa.filters import (
+    FrequencyFilter,
     TestListInstanceFilter,
     UnitTestCollectionFilter,
 )
 from qatrack.api.units.filters import UnitFilter, VendorFilter
-from qatrack.qa.models import TestListInstance, UnitTestCollection
+from qatrack.qa.models import Frequency, TestListInstance, UnitTestCollection
 from qatrack.service_log import models
 from qatrack.units.models import Unit, Vendor
 
@@ -66,6 +67,33 @@ class ServiceEventStatusFilter(filters.FilterSet):
         }
 
 
+class ServiceEventScheduleFilter(filters.FilterSet):
+
+    unit_service_area = filters.RelatedFilter(
+        UnitServiceAreaFilter,
+        field_name="unit_service_area",
+        queryset=models.UnitServiceArea.objects.select_related("unit", "service_area"),
+    )
+
+    frequency = filters.RelatedFilter(
+        FrequencyFilter, field_name="frequency", queryset=Frequency.objects.all()
+    )
+    assigned_to = filters.RelatedFilter(
+        GroupFilter, field_name="assigned_to", queryset=Group.objects.all()
+    )
+
+    due_date_min = MinDateFilter(field_name="due_date")
+    due_date_max = MaxDateFilter(field_name="due_date")
+
+    class Meta:
+        model = models.ServiceEventSchedule
+        fields = {
+            "auto_schedule": ["exact"],
+            "active": ["exact"],
+        }
+
+
+
 class ServiceEventFilter(filters.FilterSet):
 
     unit_service_area = filters.RelatedFilter(
@@ -121,6 +149,37 @@ class ServiceEventFilter(filters.FilterSet):
             'duration_lost_time': ['lte', 'gte'],
             'is_review_required': ['exact'],
         }
+
+
+class ServiceEventTemplateFilter(filters.FilterSet):
+
+    service_type = filters.RelatedFilter(
+        ServiceTypeFilter,
+        field_name="service_type",
+        queryset=models.ServiceType.objects.all(),
+    )
+    service_area = filters.RelatedFilter(
+        ServiceAreaFilter,
+        field_name="service_area",
+        queryset=models.ServiceArea.objects.all(),
+    )
+    created_by = filters.RelatedFilter(
+        UserFilter, field_name="created_by", queryset=User.objects.all()
+    )
+    modified_by = filters.RelatedFilter(
+        UserFilter, field_name="modified_by", queryset=User.objects.all()
+    )
+
+    class Meta:
+        model = models.ServiceEventTemplate
+        fields = {
+            "created": ["exact"],
+            "modified": ["exact"],
+            "problem_description": ["exact", "icontains", "contains", "in"],
+            "work_description": ["exact", "icontains", "contains", "in"],
+            "is_review_required": ["exact"],
+        }
+
 
 
 class ThirdPartyFilter(filters.FilterSet):
