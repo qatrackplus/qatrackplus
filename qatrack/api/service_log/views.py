@@ -87,6 +87,48 @@ class ServiceEventScheduleViewSet(viewsets.ModelViewSet):
     filter_backends = (backends.RestFrameworkFilterBackend, OrderingFilter,)
 
 
+class ServiceEventTemplateViewSet(viewsets.ModelViewSet):
+    queryset = (
+        models.ServiceEventTemplate.objects.select_related(
+            "service_type",
+            "service_area",
+        )
+        .prefetch_related(
+            "return_to_service_test_lists",
+            "return_to_service_cycles",
+        )
+        .all()
+    )
+    serializer_class = serializers.ServiceEventTemplateSerializer
+    filterset_class = filters.ServiceEventTemplateFilter
+    filter_backends = (
+        backends.RestFrameworkFilterBackend,
+        OrderingFilter,
+    )
+
+
+class ServiceEventScheduleViewSet(viewsets.ModelViewSet):
+    queryset = (
+        models.ServiceEventSchedule.objects.select_related(
+            "unit_service_area",
+            "service_event_template",
+            "frequency",
+            "assigned_to",
+            "last_instance",
+        )
+        .prefetch_related(
+            "visible_to",
+        )
+        .all()
+    )
+    serializer_class = serializers.ServiceEventScheduleSerializer
+    filterset_class = filters.ServiceEventScheduleFilter
+    filter_backends = (
+        backends.RestFrameworkFilterBackend,
+        OrderingFilter,
+    )
+
+
 class ThirdPartyViewSet(viewsets.ModelViewSet):
     queryset = models.ThirdParty.objects.all()
     serializer_class = serializers.ThirdPartySerializer

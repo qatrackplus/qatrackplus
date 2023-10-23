@@ -50,6 +50,22 @@ QATrack+ v3.1.1 Release Notes
 
 .. _release_notes_311:
 
+QATrack+ v3.1.1.3 Release Notes
+-------------------------------
+* Fixed issue with migration from 0.3.x to 3.1.1
+
+
+QATrack+ v3.1.1.2 Release Notes
+-------------------------------
+* Fixed issue with Chromes font rendering in PDF reports
+
+QATrack+ v3.1.1.1 Release Notes
+-------------------------------
+* Fixed a permission check bug for users creating service event templates
+
+
+QATrack+ v3.1.1 Release Notes
+-----------------------------
 
 This is a follow up release to address a few issues that were found in v3.1.0. The following
 issues have been addressed:

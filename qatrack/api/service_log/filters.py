@@ -71,12 +71,16 @@ class ServiceEventScheduleFilter(filters.FilterSet):
 
     unit_service_area = filters.RelatedFilter(
         UnitServiceAreaFilter,
-        field_name='unit_service_area',
+        field_name="unit_service_area",
         queryset=models.UnitServiceArea.objects.select_related("unit", "service_area"),
     )
 
-    frequency = filters.RelatedFilter(FrequencyFilter, field_name="frequency", queryset=Frequency.objects.all())
-    assigned_to = filters.RelatedFilter(GroupFilter, field_name="assigned_to", queryset=Group.objects.all())
+    frequency = filters.RelatedFilter(
+        FrequencyFilter, field_name="frequency", queryset=Frequency.objects.all()
+    )
+    assigned_to = filters.RelatedFilter(
+        GroupFilter, field_name="assigned_to", queryset=Group.objects.all()
+    )
 
     due_date_min = MinDateFilter(field_name="due_date")
     due_date_max = MaxDateFilter(field_name="due_date")
@@ -84,8 +88,8 @@ class ServiceEventScheduleFilter(filters.FilterSet):
     class Meta:
         model = models.ServiceEventSchedule
         fields = {
-            "auto_schedule": ['exact'],
-            "active": ['exact'],
+            "auto_schedule": ["exact"],
+            "active": ["exact"],
         }
 
 
@@ -179,6 +183,37 @@ class ServiceEventTemplateFilter(filters.FilterSet):
             'work_description': ['exact', 'icontains', 'contains', 'in'],
             'is_review_required': ['exact'],
         }
+
+
+class ServiceEventTemplateFilter(filters.FilterSet):
+
+    service_type = filters.RelatedFilter(
+        ServiceTypeFilter,
+        field_name="service_type",
+        queryset=models.ServiceType.objects.all(),
+    )
+    service_area = filters.RelatedFilter(
+        ServiceAreaFilter,
+        field_name="service_area",
+        queryset=models.ServiceArea.objects.all(),
+    )
+    created_by = filters.RelatedFilter(
+        UserFilter, field_name="created_by", queryset=User.objects.all()
+    )
+    modified_by = filters.RelatedFilter(
+        UserFilter, field_name="modified_by", queryset=User.objects.all()
+    )
+
+    class Meta:
+        model = models.ServiceEventTemplate
+        fields = {
+            "created": ["exact"],
+            "modified": ["exact"],
+            "problem_description": ["exact", "icontains", "contains", "in"],
+            "work_description": ["exact", "icontains", "contains", "in"],
+            "is_review_required": ["exact"],
+        }
+
 
 
 class ThirdPartyFilter(filters.FilterSet):

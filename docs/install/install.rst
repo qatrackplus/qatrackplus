@@ -19,6 +19,7 @@ be expensive!).
    :caption: Ubuntu Linux
 
    linux
+   linux_upgrade_from_3
    linux_upgrade_from_030
    linux_upgrade_from_02X
 
@@ -28,6 +29,7 @@ be expensive!).
    :caption: Windows Server
 
    win
+   win_upgrade_from_3
    win_upgrade_from_030
    win_upgrade_from_02X
 

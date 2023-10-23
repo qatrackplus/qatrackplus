@@ -20,6 +20,8 @@ officially supported or tested.
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
+* :ref:`Upgrading an existing v3.x.y installation to v3.1.1.3
+  <linux_upgrading_31>`. 
 * :ref:`Upgrading an existing v0.3.0 installation to v3.1.1
   <linux_upgrading_030_to_31>`. 
 *  :ref:`Upgrading an existing v0.2.X installation to v3.1.1 <linux_upgrading_02X_to_31>`. 
@@ -91,7 +93,7 @@ QATrack+.  To checkout the code enter the following commands:
     cd web
     git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
-    git checkout v3.1.1
+    git checkout v3.1.1.3
 
 
 Installing a Database System

@@ -1,8 +1,8 @@
 .. _linux_upgrading_030_to_31:
 
 
-Upgrading an existing Linux v0.3.0 installation to v3.1.1
-=========================================================
+Upgrading an existing Linux v0.3.0 installation to v3.1.1.3
+===========================================================
 
 .. note::
 
@@ -126,7 +126,7 @@ following commands:
     cd ~/web/qatrackplus
     git remote set-url origin https://github.com/qatrackplus/qatrackplus.git
     git fetch origin
-    git checkout v3.1.1
+    git checkout v3.1.1.3
 
 
 Setting up our Python environment (including virtualenv)
