@@ -536,6 +536,15 @@ Who should be emailed when internal QATrack+ errors occur:
     )
     MANAGERS = ADMINS
 
+Default Sender
+~~~~~~~~~~~
+The default "from" address for notification emails (e.g. password reset requests):
+
+.. code-block:: python
+
+    DEFAULT_FROM_EMAIL = "email@yourplace.com"
+
+This may need to be the same as EMAIL_HOST_USER depending on server settings
 
 
 Email host settings
