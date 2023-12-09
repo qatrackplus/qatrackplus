@@ -41,7 +41,7 @@ Open a PowerShell Window and enter the following commands:
     cd C:\deploy
     .\venvs\qatrack31\Scripts\Activate.ps1
     cd qatrackplus
-    python manage.py QATrack3CherryPyService.py restart
+    python QATrack3CherryPyService.py restart
     Stop-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
     Start-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
 
