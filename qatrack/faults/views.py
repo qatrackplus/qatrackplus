@@ -418,16 +418,6 @@ def save_valid_fault_form(form, request):
     fault.modified_by = request.user
     fault.save()
 
-    new_faults = set(models.FaultType.objects.filter(code__in=form.cleaned_data['fault_types_field']))
-    cur_faults = set(fault.fault_types.all())
-    to_remove = cur_faults - new_faults
-    to_add = new_faults - cur_faults
-    fault.fault_types.remove(*to_remove)
-    fault.fault_types.add(*to_add)
-    related_service_events = form.cleaned_data.get('related_service_events', [])
-    sers = sl_models.ServiceEvent.objects.filter(pk__in=related_service_events)
-    fault.related_service_events.set(sers)
-
     comment = form.cleaned_data.get('comment', '')
     if comment:
         comment = Comment(
@@ -438,6 +428,16 @@ def save_valid_fault_form(form, request):
             site=get_current_site(request)
         )
         comment.save()
+
+    new_faults = set(models.FaultType.objects.filter(code__in=form.cleaned_data['fault_types_field']))
+    cur_faults = set(fault.fault_types.all())
+    to_remove = cur_faults - new_faults
+    to_add = new_faults - cur_faults
+    fault.fault_types.remove(*to_remove)
+    fault.fault_types.add(*to_add)
+    related_service_events = form.cleaned_data.get('related_service_events', [])
+    sers = sl_models.ServiceEvent.objects.filter(pk__in=related_service_events)
+    fault.related_service_events.set(sers)
 
     for f in request.FILES.getlist('fault-attachments'):
         Attachment.objects.create(

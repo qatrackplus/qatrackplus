@@ -1,6 +1,6 @@
 .. _win_upgrading_030_to_31:
 
-Upgrading an existing Windows v0.3.0 installation to v3.1.1.3
+Upgrading an existing Windows v0.3.0 installation to v3.1.1.4
 =============================================================
 
 This guide will walk you through upgrading your existing v0.3.0 installation to
@@ -170,7 +170,7 @@ First we must check out the code for version 3.1.1 in a PowerShell window:
     cd C:\deploy\qatrackplus
     git remote set-url origin https://github.com/qatrackplus/qatrackplus.git
     git fetch origin
-    git checkout v3.1.1.3
+    git checkout v3.1.1.4
 
 
 Setting up our Python environment (including virtualenv)

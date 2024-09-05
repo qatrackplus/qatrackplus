@@ -38,6 +38,19 @@ class ServiceEventSerializer(serializers.HyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class ServiceEventTemplateSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.ServiceEventTemplate
+        fields = "__all__"
+
+
+class ServiceEventScheduleSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = models.ServiceEventSchedule
+        fields = "__all__"
+
+
 class ThirdPartySerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:

@@ -1,7 +1,7 @@
 .. _win_upgrading_02X_to_31:
 
 
-Upgrading an existing Windows v0.2.X installation to v3.1.1.3
+Upgrading an existing Windows v0.2.X installation to v3.1.1.4
 =============================================================
 
 This document will walk you through migrating an existing v0.2.X version of
