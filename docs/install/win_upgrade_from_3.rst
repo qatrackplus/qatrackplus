@@ -1,10 +1,10 @@
 .. _win_upgrading_31:
 
-Upgrading an existing Windows v3.X.Y installation to v3.1.1.3
+Upgrading an existing Windows v3.X.Y installation to v3.1.1.4
 =============================================================
 
 This guide will walk you through upgrading your existing v3.X.Y installation to
-v3.1.1.3.  If you currently have a 0.3.x version of QATrack+, you first need to
+v3.1.1.4.  If you currently have a 0.3.x version of QATrack+, you first need to
 follow the :ref:`instructions to upgrade to 3.1 <win_upgrading_030_to_31>`,
 before carrying out these instructions.
 
@@ -44,16 +44,16 @@ Select `Copy-only backup` and make sure the `Backup component` is set to
     Backup Dialog
 
 
-Checking out version 3.1.1.3
+Checking out version 3.1.1.4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we must check out the code for version 3.1.1.3 in a PowerShell window:
+First we must check out the code for version 3.1.1.4 in a PowerShell window:
 
 .. code-block:: console
 
     cd C:\deploy\qatrackplus
     git fetch origin
-    git checkout v3.1.1.3
+    git checkout v3.1.1.4
 
 
 Updating our Python environment

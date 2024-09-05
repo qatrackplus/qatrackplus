@@ -22,7 +22,7 @@ with SQL Server 2016 & 2019 database
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
-* :ref:`Upgrading an existing v3.x.y installation to v3.1.1.3
+* :ref:`Upgrading an existing v3.x.y installation to v3.1.1.4
   <win_upgrading_31>`. 
 * :ref:`Upgrading an existing v0.3.0 installation to v3.1.1
   <win_upgrading_030_to_31>`. 
@@ -108,7 +108,7 @@ We're now ready to install all the libraries QATrack+ depends on.
     .\venvs\qatrack31\Scripts\Activate.ps1
     python -m pip install --upgrade pip
     cd qatrackplus
-    git checkout v3.1.1.3
+    git checkout v3.1.1.4
     pip install -r requirements\win.txt
 
 
