@@ -135,7 +135,14 @@ require(['jquery', 'lodash', 'moment', 'autosize', 'select2', 'flatpickr', 'sl_u
             templateSelection: generate_status_label,
             minimumResultsForSearch: 10,
             width: '100%'
-        }).overrideSelect2Keys();
+        });
+
+        try {
+          // https://github.com/qatrackplus/qatrackplus/issues/679
+          $service_status.overrideSelect2Keys();
+        } catch (e) {
+        }
+
 
         // Service Type and Review Required --------------------------------------------------------------
         $service_type.change(function() {

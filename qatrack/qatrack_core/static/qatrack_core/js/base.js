@@ -1,4 +1,3 @@
-
 require(['jquery'], function ($) {
     /* add filter to IE*/
     if (!Array.prototype.filter)
@@ -45,7 +44,7 @@ require(['jquery'], function ($) {
 
 
     $.fn.preventDoubleSubmit = function() {
-      jQuery(this).submit(function() {
+      $(this).submit(function() {
         if (this.beenSubmitted)
           return false;
         else{
@@ -53,7 +52,7 @@ require(['jquery'], function ($) {
           this.beenSubmitted = true;
         }
       });
-      return jQuery(this);
+      return $(this);
     };
 
     var KEYS = {
@@ -102,101 +101,98 @@ require(['jquery'], function ($) {
             DASH: 189
         };
 
-    (function ($) {
+    $.fn.extend({
 
-        $.fn.extend({
+        overrideSelect2Keys: function () {
+            this.each(function () {
+                new $.overrideSelect2Keys($(this));
+            });
+            return this;
+        }
+    });
 
-            overrideSelect2Keys: function () {
-                this.each(function () {
-                    new $.overrideSelect2Keys($(this));
-                });
-                return this;
+    $.overrideSelect2Keys = function (els) {
+        var self = $(els).data('select2');
+        delete self.listeners.keypress;
+        self.on('keypress', function (evt) {
+            var key = evt.which;
+
+            if (self.isOpen()) {
+                if (key === KEYS.ENTER) {
+                    self.trigger('results:select');
+
+                    evt.preventDefault();
+                } else if ((key === KEYS.SPACE && evt.ctrlKey)) {
+                    self.trigger('results:toggle');
+
+                    evt.preventDefault();
+                } else if (key === KEYS.UP) {
+                    self.trigger('results:previous');
+
+                    evt.preventDefault();
+                } else if (key === KEYS.DOWN) {
+                    self.trigger('results:next');
+
+                    evt.preventDefault();
+                } else if (key === KEYS.ESC || key === KEYS.TAB) {
+                    self.close();
+
+                    evt.preventDefault();
+                }
+            } else {
+                if (key === KEYS.ENTER || key === KEYS.SPACE ||
+                    ((key === KEYS.DOWN || key === KEYS.UP) && evt.altKey)) {
+                    self.open();
+
+                    evt.preventDefault();
+                }
+                if (key === KEYS.DOWN) {
+                    var val = self.$element.find('option:selected').nextAll(":enabled").first().val();
+                    if (undefined !== val) {
+                        self.$element.val(val);
+                        self.$element.trigger('change');
+                    }
+                    evt.preventDefault();
+                }
+                if (key === KEYS.UP) {
+                    var val = self.$element.find('option:selected').prevAll(":enabled").first().val();
+                    if (undefined !== val) {
+                        self.$element.val(val);
+                        self.$element.trigger('change');
+                    }
+                    evt.preventDefault();
+                }
+                if (((65 <= key && key <= 90) || (48 <= key && key <= 57) || (key === KEYS.DASH))) {
+                    if (!self.keys_pressed) {
+                        self.keys_pressed = [key];
+                        self.key_timer = setTimeout(function () {
+                            self.keys_pressed = [];
+                        }, 1000)
+                    } else {
+                        self.keys_pressed.push(key);
+                        clearTimeout(self.key_timer);
+                        self.key_timer = setTimeout(function () {
+                            self.keys_pressed = [];
+                        }, 1000)
+                    }
+                    var best_options = self.$element.find('option:enabled');
+                    $.each(self.keys_pressed, function (i, v) {
+                        $.each(best_options, function (ii, vv) {
+                            if (KEYS[$(vv).text().charAt(i).toLowerCase()] !== v) {
+                                best_options = best_options.not(vv);
+                            }
+                        });
+                    });
+                    self.$element.val(best_options.first().val());
+                    self.$element.trigger('change');
+                    evt.preventDefault();
+                }
             }
         });
-
-        $.overrideSelect2Keys = function (els) {
-            var self = $(els).data('select2');
-            delete self.listeners.keypress;
-            self.on('keypress', function (evt) {
-                var key = evt.which;
-
-                if (self.isOpen()) {
-                    if (key === KEYS.ENTER) {
-                        self.trigger('results:select');
-
-                        evt.preventDefault();
-                    } else if ((key === KEYS.SPACE && evt.ctrlKey)) {
-                        self.trigger('results:toggle');
-
-                        evt.preventDefault();
-                    } else if (key === KEYS.UP) {
-                        self.trigger('results:previous');
-
-                        evt.preventDefault();
-                    } else if (key === KEYS.DOWN) {
-                        self.trigger('results:next');
-
-                        evt.preventDefault();
-                    } else if (key === KEYS.ESC || key === KEYS.TAB) {
-                        self.close();
-
-                        evt.preventDefault();
-                    }
-                } else {
-                    if (key === KEYS.ENTER || key === KEYS.SPACE ||
-                        ((key === KEYS.DOWN || key === KEYS.UP) && evt.altKey)) {
-                        self.open();
-
-                        evt.preventDefault();
-                    }
-                    if (key === KEYS.DOWN) {
-                        var val = self.$element.find('option:selected').nextAll(":enabled").first().val();
-                        if (undefined !== val) {
-                            self.$element.val(val);
-                            self.$element.trigger('change');
-                        }
-                        evt.preventDefault();
-                    }
-                    if (key === KEYS.UP) {
-                        var val = self.$element.find('option:selected').prevAll(":enabled").first().val();
-                        if (undefined !== val) {
-                            self.$element.val(val);
-                            self.$element.trigger('change');
-                        }
-                        evt.preventDefault();
-                    }
-                    if (((65 <= key && key <= 90) || (48 <= key && key <= 57) || (key === KEYS.DASH))) {
-                        if (!self.keys_pressed) {
-                            self.keys_pressed = [key];
-                            self.key_timer = setTimeout(function () {
-                                self.keys_pressed = [];
-                            }, 1000)
-                        } else {
-                            self.keys_pressed.push(key);
-                            clearTimeout(self.key_timer);
-                            self.key_timer = setTimeout(function () {
-                                self.keys_pressed = [];
-                            }, 1000)
-                        }
-                        var best_options = self.$element.find('option:enabled');
-                        $.each(self.keys_pressed, function (i, v) {
-                            $.each(best_options, function (ii, vv) {
-                                if (KEYS[$(vv).text().charAt(i).toLowerCase()] !== v) {
-                                    best_options = best_options.not(vv);
-                                }
-                            });
-                        });
-                        self.$element.val(best_options.first().val());
-                        self.$element.trigger('change');
-                        evt.preventDefault();
-                    }
-                }
-            });
-            self.on('select2:selecting', function (evt) {
-                console.log(self);
-            });
-        };
-    })(jQuery);
+        self.on('select2:selecting', function (evt) {
+            console.log(self);
+        });
+    };
 
     var $tab_content = $('body > div.wrapper > aside > div.tab-content'),
         $control_sidebar = $('body > div.wrapper > aside.control-sidebar'),
