@@ -664,7 +664,7 @@
                       <li>
                         <a href="{% url  "fault_list_unreviewed" %}" title="{% blocktrans %}There are currently {{ FAULTS_UNREVIEWED }} faults waiting to be reviewed {% endblocktrans %}">
                           <i class="fa fa-question-circle fa-lg fa-fw" aria-hidden="true"></i>
-                          <span title="{% blocktrans %}There are currently {{ FAULTS_UNREVIEWED }} faults waiting to be reviewed {% endblocktrans %}" class="label {% if UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
+                          <span title="{% blocktrans %}There are currently {{ FAULTS_UNREVIEWED }} faults waiting to be reviewed {% endblocktrans %}" class="label {% if FAULTS_UNREVIEWED == 0%}label-success{%else%}label-warning{%endif%} unreviewed-count-wrapper">
                               <span class="total-unreviewed-count">{{ FAULTS_UNREVIEWED }}</span>
                           </span>
                           {% trans "Unreviewed" %}
