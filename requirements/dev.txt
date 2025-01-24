@@ -1,11 +1,19 @@
 -r base.txt
+Jinja2==3.1.2
+Sphinx==7.4.7
 flake8
 ipdb
 ipython
 isort
 pylint==1.6.4
 sphinx-autobuild==0.7.1
-sphinx-rtd-theme==0.3.1
-sphinx==1.7.5
+sphinx-rtd-theme==3.0.2
+sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-jquery==4.1
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-serializinghtml==2.0.0
+sphinxcontrib-websupport==1.2.4
 yapf
-Jinja2==3.1.2
