@@ -8,3 +8,4 @@ sphinx-autobuild==0.7.1
 sphinx-rtd-theme==0.3.1
 sphinx==1.7.5
 yapf
+Jinja2==3.1.2
