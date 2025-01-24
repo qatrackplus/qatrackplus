@@ -1,3 +1,12 @@
+# Important Notice
+
+QATrack+ no longer has a maintainer. Please see the announcement on
+the [QATrack+ Mailing List](https://groups.google.com/g/qatrack/c/79EoHF4U54Y)
+
+If you are interested in taking over the project, please contact Randy Taylor
+(randy@randlet.com).
+
+
 # QATrack+
 ###### Copyright 2012 The Ottawa Hospital Cancer Center
 ---
