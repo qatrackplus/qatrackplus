@@ -48,7 +48,7 @@ pytest==6.2.2
 python-dateutil==2.8.1
 pytz==2021.1
 reportlab==3.5.59
-requests==2.21.0
+requests<=3
 scipy<=1.5.4
 selenium==3.141.0
 xlrd==2.0.1
