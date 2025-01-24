@@ -2,7 +2,7 @@ Important Notice
 ================
 
 QATrack+ no longer has a maintainer. Please see the announcement on
-the `QATrack+ Mailing List <https://groups.google.com/g/qatrack/c/79EoHF4U54Y>`.
+the `QATrack+ Mailing List <https://groups.google.com/g/qatrack/c/79EoHF4U54Y>`_.
 
 Welcome to QATrack+'s documentation!
 ====================================
