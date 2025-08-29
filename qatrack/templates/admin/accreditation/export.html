@@ -1,0 +1,210 @@
+{# TODO: This template is currently a copy of the testpack export template and needs to be updated for accreditation-specific functionality #}
+{# TODO: Replace test list references with organizations and documents #}
+{# TODO: Update table IDs and data to match accreditation models #}
+{# TODO: Ensure proper integration with accreditation export JavaScript #}
+
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list widget_tweaks %}
+
+{% block extrastyle %}
+  {{ block.super }}
+
+  <link href="{% static "fontawsome/css/font-awesome.min.css" %}" rel="stylesheet">
+  <link href="{% static "css/bootstrap-grid.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/jquery.dataTables.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='accreditation' %}">{% trans "Accreditation" %}</a> &rsaquo;
+    {% trans "Export Accreditation Data" %}
+  </div>
+{% endblock %}
+
+{% block coltype %}flex{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <p>
+        {% blocktrans %}
+        On this page you may create an Accreditation Pack for sharing organizations,
+        documents, and requirements with other QATrack+ installations.
+        {% endblocktrans %}
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-sm-8">
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>{% trans "Organizations To Export" %}</h2>
+
+          <em class="loading">{% trans "Loading Organizations table" %}...</em>
+          <table id="organizations-table" style="display: none">
+            <thead>
+              <tr>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Organization" %}</th>
+                <th>{% trans "Country" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for org in organizations %}
+                <tr>
+                  <td>{{ org.id }}</td>
+                  <td>{{ org.name }}</td>
+                  <td>{{ org.country }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>{% trans "Documents To Export" %}</h2>
+
+          <em class="loading">{% trans "Loading Documents table" %}...</em>
+          <table id="documents-table" style="display: none">
+            <thead>
+              <tr>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Document" %}</th>
+                <th>{% trans "Organization" %}</th>
+                <th>{% trans "Tag Name" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doc in documents %}
+                <tr>
+                  <td>{{ doc.id }}</td>
+                  <td>{{ doc.name }}</td>
+                  <td>{{ doc.organization.name }}</td>
+                  <td>{{ doc.tag_name }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <h2>{% trans "Summary" %}</h2>
+      <hr/>
+      <div id="summary">
+
+        <div class="row">
+          <div class="col-sm-6">{% trans "Organizations" %}:</div>
+          <div class="col-sm-6" style="text-align: right" id="organizations-summary">{% trans "0 Selected" %}</div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6">{% trans "Documents" %}:</div>
+          <div class="col-sm-6" style="text-align: right" id="documents-summary">{% trans "0 Selected" %}</div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6">{% trans "Requirements" %}:</div>
+          <div class="col-sm-6" style="text-align: right" id="requirements-summary">{% trans "0 Selected" %}</div>
+        </div>
+
+      </div>
+      <hr/>
+      <form method="post" action class="form-horizontal">
+        {% csrf_token %}
+        <div>
+          {{ form.organizations }}
+          {{ form.documents }}
+        </div>
+        
+        <div class="row">
+          <div class="col-sm-6">
+            {% trans "Export Name" %}:
+          </div>
+          <div class="col-sm-6" style="text-align: right">
+            {{ form.name|attr:"style:width: 100%" }}
+            {{ form.name.errors }}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            {% trans "Description" %}:</div>
+          <div class="col-sm-6" style="">
+            {{ form.description|attr:"style:width: 100%" }}
+            {{ form.description.errors }}
+          </div>
+        </div>
+        {% if form.non_field_errors %}
+          <ul class="errorlist nonfield">
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <div class="submit-row">
+          <input type="submit" value="{% trans "Download" %}" class="default">
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+
+<script src="{% static "jquery/js/jquery.min.js" %}"></script>
+
+<script src="{% static "datatables/1.10/js/datatables.min.js" %}"></script>
+<script src="{% static "accreditation/js/accreditation-export.js" %}?v=1.1"></script>
+
+<script>
+// Success message and redirect after export
+$(document).ready(function() {
+    $("form").on("submit", function(e) {
+        // Show loading message
+        $("input[type='submit']").val("Processing...").prop("disabled", true);
+        
+        // After a short delay, show success message and redirect
+        setTimeout(function() {
+            // Show success message
+            var successMsg = $('<div class="alert alert-success" style="margin: 20px 0; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">' +
+                '<strong>Success!</strong> Accreditation data exported successfully. Redirecting back to previous page...' +
+                '</div>');
+            
+            $('.container-fluid').prepend(successMsg);
+            
+            // Redirect after 2 seconds
+            setTimeout(function() {
+                var referrer = document.referrer;
+                
+                if (referrer && referrer.includes('/admin/')) {
+                    window.location.href = referrer;
+                } else {
+                    // Fallback to accreditation organization list
+                    window.location.href = '/admin/accreditation/organization/';
+                }
+            }, 2000);
+        }, 3000); // Wait 3 seconds for download to start
+    });
+});
+</script>
+
+{% endblock %}

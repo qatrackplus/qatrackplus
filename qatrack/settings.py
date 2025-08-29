@@ -228,7 +228,7 @@ INSTALLED_APPS = [
     'widget_tweaks', 'dynamic_raw_id', 'mptt', 'django_mptt_admin', 'qatrack.cache', 'qatrack.accounts',
     'qatrack.units', 'qatrack.qa', 'qatrack.qatrack_core', 'qatrack.notifications', 'qatrack.contacts',
     'qatrack.issue_tracker', 'qatrack.service_log', 'qatrack.parts', 'qatrack.faults', 'qatrack.attachments',
-    'qatrack.reports', 'qatrack.form_utils'
+    'qatrack.reports', 'qatrack.form_utils', 'qatrack.accreditation'
 ]
 
 # ----------------------------------------------------------------------------

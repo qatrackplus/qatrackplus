@@ -1,0 +1,7 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{# Requirements don't have individual export/import - they are exported as part of documents/organizations #}
+{% block object-tools-items %}
+    {{ block.super }}
+{% endblock %}

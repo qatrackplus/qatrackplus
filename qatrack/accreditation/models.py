@@ -34,6 +34,8 @@ class Organization(models.Model, TestPackMixin):
         created_by/modified_by: User who created/modified the record
     """
     
+    NK_FIELDS = ['name']
+    
     name = models.CharField(
         max_length=255,
         verbose_name=_("Organization Name"),
@@ -143,6 +145,8 @@ class Document(models.Model, TestPackMixin):
         created/modified: Audit trail timestamps
         created_by/modified_by: User who created/modified the record
     """
+    
+    NK_FIELDS = ['organization', 'name']
     
     organization = models.ForeignKey(
         Organization,
@@ -280,6 +284,8 @@ class Requirement(models.Model, TestPackMixin):
         created/modified: Audit trail timestamps
         created_by/modified_by: User who created/modified the record
     """
+    
+    NK_FIELDS = ['document', 'tag_name']
     
     # Choice field definitions with comprehensive options
     PERIODICITY_CHOICES = [

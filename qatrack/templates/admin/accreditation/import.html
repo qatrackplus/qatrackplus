@@ -1,0 +1,214 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list widget_tweaks %}
+
+{% block extrastyle %}
+  {{ block.super }}
+
+  <link href="{% static "fontawsome/css/font-awesome.min.css" %}" rel="stylesheet">
+  <link href="{% static "css/bootstrap-grid.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/css/datatables.min.css" %}" rel="stylesheet">
+  <link href="{% static "datatables/1.10/DataTables-1.10.18/css/jquery.dataTables.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='accreditation' %}">{% trans "Accreditation" %}</a> &rsaquo;
+    {% trans "Import Accreditation Data" %}
+  </div>
+{% endblock %}
+
+{% block coltype %}flex{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <p>
+        {% blocktrans %}
+        On this page you may import Organizations, Documents, and Requirements
+        from an Accreditation Pack.
+        {% endblocktrans %}
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-sm-8">
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>{% trans "Organizations To Include" %}</h2>
+
+          <em class="loading">{% trans "Loading Organizations table" %}...</em>
+          <table id="organizations-table" style="display: none">
+            <thead>
+              <tr>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Organization" %}</th>
+                <th>{% trans "Country" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for org in organizations %}
+                <tr>
+                  <td>{{ org.id }}</td>
+                  <td>{{ org.name }}</td>
+                  <td>{{ org.country }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>{% trans "Documents To Include" %}</h2>
+
+          <em class="loading">{% trans "Loading Documents table" %}...</em>
+          <table id="documents-table" style="display: none">
+            <thead>
+              <tr>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Document" %}</th>
+                <th>{% trans "Organization" %}</th>
+                <th>{% trans "Tag Name" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doc in documents %}
+                <tr>
+                  <td>{{ doc.id }}</td>
+                  <td>{{ doc.name }}</td>
+                  <td>{{ doc.organization.name }}</td>
+                  <td>{{ doc.tag_name }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 tp-container">
+          <hr/>
+          <h2>{% trans "Requirements To Include" %}</h2>
+
+          <em class="loading">{% trans "Loading Requirements table" %}...</em>
+          <table id="requirements-table" style="display: none">
+            <thead>
+              <tr>
+                <th>{% trans "ID" %}</th>
+                <th>{% trans "Requirement" %}</th>
+                <th>{% trans "Document" %}</th>
+                <th>{% trans "Periodicity" %}</th>
+                <th>{% trans "Compliance Level" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in requirements %}
+                <tr>
+                  <td>{{ req.id }}</td>
+                  <td>{{ req.tag_name }}</td>
+                  <td>{{ req.document.name }}</td>
+                  <td>{{ req.get_periodicity_display }}</td>
+                  <td>{{ req.get_compliance_level_display }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="col-sm-4">
+      <div class="row">
+        <div class="col-sm-12">
+          <hr/>
+          <h2>{% trans "Import Summary" %}</h2>
+          <p>{% trans "Select the items you want to import from the tables on the left." %}</p>
+          
+          <div class="row">
+            <div class="col-sm-6">
+              <strong>{% trans "Organizations:" %}</strong>
+              <div id="organizations-summary">{% trans "None" %}</div>
+            </div>
+            <div class="col-sm-6">
+              <strong>{% trans "Documents:" %}</strong>
+              <div id="documents-summary">{% trans "None" %}</div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-sm-6">
+              <strong>{% trans "Requirements:" %}</strong>
+              <div id="requirements-summary">{% trans "None" %}</div>
+            </div>
+          </div>
+          
+          <hr/>
+          
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Hidden fields for selected items -->
+            {{ form.organizations }}
+            {{ form.documents }}
+            {{ form.requirements }}
+            {{ form.accreditation_data }}
+            
+            <!-- File upload field -->
+            <div class="form-group">
+              <label for="{{ form.accreditation_file.id_for_label }}">
+                {% trans "Accreditation File (.accr):" %}
+              </label>
+              {{ form.accreditation_file }}
+              {% if form.accreditation_file.errors %}
+                <div class="alert alert-danger">
+                  {{ form.accreditation_file.errors }}
+                </div>
+              {% endif %}
+            </div>
+            
+            <!-- Upload status -->
+            <div id="upload-status"></div>
+            
+            <!-- Submit button -->
+            <button type="submit" class="button">
+              {% trans "Import Selected Items" %}
+            </button>
+          </form>
+          
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<script src="{% static "jquery/js/jquery.min.js" %}"></script>
+<script src="{% static "datatables/1.10/js/datatables.min.js" %}"></script>
+<script src="{% static "accreditation/js/accreditation-import.js" %}"></script>
+
+<script>
+$(document).ready(function() {
+  // Initialize tables when page loads
+  initializeTables();
+  
+  // Handle file upload
+  $("#id_accreditation_file").change(handleFileUpload);
+});
+</script>
+{% endblock %}
