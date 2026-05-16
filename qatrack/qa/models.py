@@ -1,6 +1,6 @@
 import re
 
-import black
+import ast
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -1183,19 +1183,11 @@ class Test(models.Model, TestPackMixin):
                 ) % {"test_name": self.slug}
                 errors.append(msg)
 
-        try:
-            versions = {
-                black.TargetVersion.PY36,
-                black.TargetVersion.PY37,
-                black.TargetVersion.PY38,
-                black.TargetVersion.PY39,
-            }
-            mode = black.FileMode(target_versions=versions, line_length=settings.COMPOSITE_MAX_LINE_LENGTH)
-            formatted = black.format_str(self.calculation_procedure, mode=mode)
-            if settings.COMPOSITE_AUTO_FORMAT:
-                self.calculation_procedure = formatted
-        except Exception as err:
-            errors.append(_("Calculation procedure invalid: %(err)s" % {"err": str(err)}))
+        if self.calculation_procedure:
+            try:
+                ast.parse(self.calculation_procedure)
+            except Exception as err:
+                errors.append(_("Calculation procedure invalid: %(err)s" % {"err": str(err)}))
 
         if errors:
             raise ValidationError({"calculation_procedure": errors})
