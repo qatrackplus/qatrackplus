@@ -5,22 +5,46 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0014_qcschedulingnotice_last_sent'),
+        ("notifications", "0014_qcschedulingnotice_last_sent"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ServiceEventNotice',
+            name="ServiceEventNotice",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('notification_type', models.IntegerField(choices=[(0, 'Notify when a Service Event is created or modified')], default=0, verbose_name='Notification Type')),
-                ('recipients', models.ForeignKey(help_text='Choose the group of recipients who should receive these notifications', on_delete=django.db.models.deletion.PROTECT, to='notifications.RecipientGroup', verbose_name='Recipients')),
-                ('units', models.ForeignKey(blank=True, help_text='Select which group of Units this notification should be limited to. Leave blank to include all units', null=True, on_delete=django.db.models.deletion.PROTECT, to='notifications.UnitGroup', verbose_name='Unit Group filter')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "notification_type",
+                    models.IntegerField(
+                        choices=[(0, "Notify when a Service Event is created or modified")],
+                        default=0,
+                        verbose_name="Notification Type",
+                    ),
+                ),
+                (
+                    "recipients",
+                    models.ForeignKey(
+                        help_text="Choose the group of recipients who should receive these notifications",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="notifications.RecipientGroup",
+                        verbose_name="Recipients",
+                    ),
+                ),
+                (
+                    "units",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Select which group of Units this notification should be limited to. Leave blank to include all units",
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="notifications.UnitGroup",
+                        verbose_name="Unit Group filter",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Service Event Notice',
+                "verbose_name": "Service Event Notice",
             },
         ),
     ]

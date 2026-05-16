@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0013_site_slugs'),
+        ("units", "0013_site_slugs"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='site',
-            name='slug',
-            field=models.SlugField(help_text='Unique identifier made of lowercase characters and underscores for this site', unique=True),
+            model_name="site",
+            name="slug",
+            field=models.SlugField(
+                help_text="Unique identifier made of lowercase characters and underscores for this site", unique=True
+            ),
         ),
     ]

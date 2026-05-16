@@ -13,7 +13,6 @@ from qatrack.service_log.models import ServiceEventSchedule
 
 
 class ServiceEventSchedulingNotice(RecurrenceFieldMixin, models.Model):
-
     ALL = 0
     DUE = 10
     UPCOMING_AND_DUE = 20

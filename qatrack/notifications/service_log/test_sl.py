@@ -16,7 +16,6 @@ from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestServiceLogEmails(TestCase):
-
     def setUp(self):
         self.unit1 = utils.create_unit(name="unit1", number=1)
         self.unit2 = utils.create_unit(name="unit2", number=2)
@@ -26,8 +25,8 @@ class TestServiceLogEmails(TestCase):
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.utc1.unit)
 
-        self.group = Group.objects.latest('pk')
-        self.user = User.objects.latest('pk')
+        self.group = Group.objects.latest("pk")
+        self.user = User.objects.latest("pk")
         self.user.groups.add(self.group)
         self.user.email = "example@example.com"
         self.user.save()
@@ -35,7 +34,7 @@ class TestServiceLogEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -72,7 +71,6 @@ class TestServiceLogEmails(TestCase):
 
 
 class TestServiceLogAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.ServiceEventNoticeAdmin(model=ServiceEventNotice, admin_site=AdminSite())
 

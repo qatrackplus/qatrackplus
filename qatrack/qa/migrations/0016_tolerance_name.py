@@ -3,19 +3,17 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import uuid
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0015_auto_20180601_1212'),
+        ("qa", "0015_auto_20180601_1212"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tolerance',
-            name='name',
+            model_name="tolerance",
+            name="name",
             field=models.CharField(editable=False, max_length=255, null=True),
         ),
     ]

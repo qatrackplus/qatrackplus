@@ -11,35 +11,32 @@ from qatrack.units.models import Unit
 
 
 class FrequencyFilter(filters.FilterSet):
-
     class Meta:
         model = models.Frequency
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "slug": ['exact', 'icontains', 'contains', 'in'],
-            "nominal_interval": ['exact', 'in', 'gte', 'lte'],
-            "window_start": ['exact', 'in', 'gte', 'lte'],
-            "window_end": ['exact', 'in', 'gte', 'lte'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "slug": ["exact", "icontains", "contains", "in"],
+            "nominal_interval": ["exact", "in", "gte", "lte"],
+            "window_start": ["exact", "in", "gte", "lte"],
+            "window_end": ["exact", "in", "gte", "lte"],
         }
 
 
 class TestInstanceStatusFilter(filters.FilterSet):
-
     class Meta:
         model = models.TestInstanceStatus
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "slug": ['exact', 'icontains', 'contains', 'in'],
-            "description": ['icontains'],
-            "is_default": ['exact'],
-            "requires_review": ['exact'],
-            "export_by_default": ['exact'],
-            "valid": ['exact'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "slug": ["exact", "icontains", "contains", "in"],
+            "description": ["icontains"],
+            "is_default": ["exact"],
+            "requires_review": ["exact"],
+            "export_by_default": ["exact"],
+            "valid": ["exact"],
         }
 
 
 class AutoReviewRuleFilter(filters.FilterSet):
-
     status = filters.RelatedFilter(
         TestInstanceStatusFilter,
         field_name="status",
@@ -48,16 +45,15 @@ class AutoReviewRuleFilter(filters.FilterSet):
 
     pass_fail = filters.Filter(
         field_name="pass_fail",
-        widget=widgets.Select(choices=[('', 'Any')] + list(models.PASS_FAIL_CHOICES)),
+        widget=widgets.Select(choices=[("", "Any")] + list(models.PASS_FAIL_CHOICES)),
     )
 
     class Meta:
         model = models.AutoReviewRule
-        fields = ['status', 'pass_fail']
+        fields = ["status", "pass_fail"]
 
 
 class AutoReviewRuleSetFilter(filters.FilterSet):
-
     rules = filters.RelatedFilter(
         AutoReviewRuleFilter,
         field_name="rules",
@@ -67,19 +63,18 @@ class AutoReviewRuleSetFilter(filters.FilterSet):
     class Meta:
         model = models.AutoReviewRuleSet
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "is_default": ['exact'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "is_default": ["exact"],
         }
 
 
 class ReferenceFilter(filters.FilterSet):
-
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
     type = filters.Filter(
         field_name="type",
-        widget=widgets.Select(choices=[('', 'Any')] + list(models.REF_TYPE_CHOICES)),
+        widget=widgets.Select(choices=[("", "Any")] + list(models.REF_TYPE_CHOICES)),
     )
 
     created_min = MinDateFilter(field_name="created")
@@ -90,54 +85,51 @@ class ReferenceFilter(filters.FilterSet):
     class Meta:
         model = models.Reference
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "value": ['exact', 'in', 'gte', 'lte'],
-            "created": ['exact'],
-            "modified": ['exact'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "value": ["exact", "in", "gte", "lte"],
+            "created": ["exact"],
+            "modified": ["exact"],
         }
 
 
 class ToleranceFilter(filters.FilterSet):
-
     type = filters.Filter(
         field_name="type",
-        widget=widgets.Select(choices=[('', 'Any')] + list(models.TOL_TYPE_CHOICES)),
+        widget=widgets.Select(choices=[("", "Any")] + list(models.TOL_TYPE_CHOICES)),
     )
 
     class Meta:
         model = models.Tolerance
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "act_low": ['exact', 'in', 'gte', 'lte'],
-            "tol_low": ['exact', 'in', 'gte', 'lte'],
-            "tol_high": ['exact', 'in', 'gte', 'lte'],
-            "act_high": ['exact', 'in', 'gte', 'lte'],
-            "mc_pass_choices": ['icontains', 'in'],
-            "mc_tol_choices": ['icontains', 'in'],
-            "bool_warning_only": ['exact'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "act_low": ["exact", "in", "gte", "lte"],
+            "tol_low": ["exact", "in", "gte", "lte"],
+            "tol_high": ["exact", "in", "gte", "lte"],
+            "act_high": ["exact", "in", "gte", "lte"],
+            "mc_pass_choices": ["icontains", "in"],
+            "mc_tol_choices": ["icontains", "in"],
+            "bool_warning_only": ["exact"],
         }
 
 
 class CategoryFilter(filters.FilterSet):
-
     class Meta:
         model = models.Category
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "slug": ['exact', 'icontains', 'contains', 'in'],
-            "description": ['icontains'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "slug": ["exact", "icontains", "contains", "in"],
+            "description": ["icontains"],
         }
 
 
 class TestFilter(filters.FilterSet):
-
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
     category = filters.RelatedFilter(CategoryFilter, field_name="category", queryset=models.Category.objects.all())
 
     type = filters.Filter(
         field_name="type",
-        widget=widgets.Select(choices=[('', 'Any')] + list(models.TEST_TYPE_CHOICES)),
+        widget=widgets.Select(choices=[("", "Any")] + list(models.TEST_TYPE_CHOICES)),
     )
 
     created_min = MinDateFilter(field_name="created")
@@ -148,23 +140,22 @@ class TestFilter(filters.FilterSet):
     class Meta:
         model = models.Test
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "slug": ['exact', 'icontains', 'contains', 'in'],
-            "description": ['icontains'],
-            "procedure": ['icontains'],
-            "chart_visibility": ['exact'],
-            "hidden": ['exact'],
-            "skip_without_comment": ['exact'],
-            "display_image": ['exact'],
-            "choices": ['icontains', 'in'],
-            "constant_value": ['exact', 'in', 'gte', 'lte'],
-            "created": ['exact'],
-            "modified": ['exact'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "slug": ["exact", "icontains", "contains", "in"],
+            "description": ["icontains"],
+            "procedure": ["icontains"],
+            "chart_visibility": ["exact"],
+            "hidden": ["exact"],
+            "skip_without_comment": ["exact"],
+            "display_image": ["exact"],
+            "choices": ["icontains", "in"],
+            "constant_value": ["exact", "in", "gte", "lte"],
+            "created": ["exact"],
+            "modified": ["exact"],
         }
 
 
 class TestListFilter(filters.FilterSet):
-
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
     tests = filters.RelatedFilter(TestFilter, field_name="tests", queryset=models.Test.objects.all())
@@ -182,17 +173,16 @@ class TestListFilter(filters.FilterSet):
     class Meta:
         model = models.TestList
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "slug": ['exact', 'icontains', 'contains', 'in'],
-            "description": ['icontains'],
-            "warning_message": ['icontains'],
-            "created": ['exact'],
-            "modified": ['exact'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "slug": ["exact", "icontains", "contains", "in"],
+            "description": ["icontains"],
+            "warning_message": ["icontains"],
+            "created": ["exact"],
+            "modified": ["exact"],
         }
 
 
 class TestListCycleFilter(filters.FilterSet):
-
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
     modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
     test_lists = filters.RelatedFilter(TestListFilter, field_name="test_lists", queryset=models.TestList.objects.all())
@@ -210,18 +200,17 @@ class TestListCycleFilter(filters.FilterSet):
     class Meta:
         model = models.TestListCycle
         fields = {
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "slug": ['exact', 'icontains', 'contains', 'in'],
-            "description": ['icontains'],
-            "drop_down_label": ['icontains', 'in'],
-            "day_option_text": ['icontains', 'in'],
-            "created": ['exact'],
-            "modified": ['exact'],
+            "name": ["exact", "icontains", "contains", "in"],
+            "slug": ["exact", "icontains", "contains", "in"],
+            "description": ["icontains"],
+            "drop_down_label": ["icontains", "in"],
+            "day_option_text": ["icontains", "in"],
+            "created": ["exact"],
+            "modified": ["exact"],
         }
 
 
 class UnitTestCollectionFilter(filters.FilterSet):
-
     unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=Unit.objects.all())
     frequency = filters.RelatedFilter(FrequencyFilter, field_name="frequency", queryset=models.Frequency.objects.all())
     assigned_to = filters.RelatedFilter(GroupFilter, field_name="assigned_to", queryset=Group.objects.all())
@@ -241,15 +230,14 @@ class UnitTestCollectionFilter(filters.FilterSet):
     class Meta:
         model = models.UnitTestCollection
         fields = {
-            "auto_schedule": ['exact'],
-            "active": ['exact'],
-            "name": ['exact', 'icontains', 'contains', 'in'],
-            "content_type": ['exact'],
+            "auto_schedule": ["exact"],
+            "active": ["exact"],
+            "name": ["exact", "icontains", "contains", "in"],
+            "content_type": ["exact"],
         }
 
 
 class TestListInstanceFilter(filters.FilterSet):
-
     attachments = filters.RelatedFilter(
         AttachmentFilter,
         field_name="attachment",
@@ -287,22 +275,21 @@ class TestListInstanceFilter(filters.FilterSet):
     class Meta:
         model = models.TestListInstance
         fields = {
-            "due_date": ['exact', "in"],
-            "in_progress": ['exact'],
-            "include_for_scheduling": ['exact'],
-            "reviewed": ['exact'],
-            "all_reviewed": ['exact'],
-            "day": ['exact', 'in'],
-            "user_key": ['exact'],
-            "work_started": ['exact', "in"],
-            "work_completed": ['exact', "in"],
-            "created": ['exact', "in"],
-            "modified": ['exact', "in"],
+            "due_date": ["exact", "in"],
+            "in_progress": ["exact"],
+            "include_for_scheduling": ["exact"],
+            "reviewed": ["exact"],
+            "all_reviewed": ["exact"],
+            "day": ["exact", "in"],
+            "user_key": ["exact"],
+            "work_started": ["exact", "in"],
+            "work_completed": ["exact", "in"],
+            "created": ["exact", "in"],
+            "modified": ["exact", "in"],
         }
 
 
 class UnitTestInfoFilter(filters.FilterSet):
-
     unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=Unit.objects.all())
     test = filters.RelatedFilter(TestFilter, field_name="test", queryset=models.Test.objects.all())
     reference = filters.RelatedFilter(ReferenceFilter, field_name="reference", queryset=models.Reference.objects.all())
@@ -311,37 +298,34 @@ class UnitTestInfoFilter(filters.FilterSet):
     class Meta:
         model = models.UnitTestInfo
         fields = {
-            "active": ['exact'],
+            "active": ["exact"],
         }
 
 
 class TestListMembershipFilter(filters.FilterSet):
-
     test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
     test = filters.RelatedFilter(TestFilter, field_name="test", queryset=models.Test.objects.all())
 
     class Meta:
         model = models.TestListMembership
         fields = {
-            "order": ['exact', 'in'],
+            "order": ["exact", "in"],
         }
 
 
 class SublistFilter(filters.FilterSet):
-
     parent = filters.RelatedFilter(TestListFilter, field_name="parent", queryset=models.TestList.objects.all())
     child = filters.RelatedFilter(TestListFilter, field_name="child", queryset=models.TestList.objects.all())
 
     class Meta:
         model = models.Sublist
         fields = {
-            "order": ['exact', 'in'],
-            "outline": ['exact'],
+            "order": ["exact", "in"],
+            "outline": ["exact"],
         }
 
 
 class TestInstanceFilter(filters.FilterSet):
-
     attachments = filters.RelatedFilter(
         AttachmentFilter,
         field_name="attachment",
@@ -368,7 +352,7 @@ class TestInstanceFilter(filters.FilterSet):
 
     pass_fail = filters.Filter(
         field_name="pass_fail",
-        widget=widgets.Select(choices=[('', 'Any')] + list(models.PASS_FAIL_CHOICES)),
+        widget=widgets.Select(choices=[("", "Any")] + list(models.PASS_FAIL_CHOICES)),
     )
 
     created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
@@ -391,25 +375,24 @@ class TestInstanceFilter(filters.FilterSet):
     class Meta:
         model = models.TestInstance
         fields = {
-            "review_date": ['exact'],
-            "value": ['exact', 'in', 'gte', 'lte'],
-            "string_value": ['exact', 'icontains', 'contains', 'in'],
-            "skipped": ['exact'],
-            "comment": ['exact', 'icontains', 'contains', 'in'],
-            "work_started": ['exact'],
-            "work_completed": ['exact'],
-            "created": ['exact'],
-            "modified": ['exact'],
+            "review_date": ["exact"],
+            "value": ["exact", "in", "gte", "lte"],
+            "string_value": ["exact", "icontains", "contains", "in"],
+            "skipped": ["exact"],
+            "comment": ["exact", "icontains", "contains", "in"],
+            "work_started": ["exact"],
+            "work_completed": ["exact"],
+            "created": ["exact"],
+            "modified": ["exact"],
         }
 
 
 class TestListCycleMembershipFilter(filters.FilterSet):
-
     test_list = filters.RelatedFilter(TestListFilter, field_name="test_list", queryset=models.TestList.objects.all())
     cycle = filters.RelatedFilter(TestListCycleFilter, field_name="cycle", queryset=models.TestListCycle.objects.all())
 
     class Meta:
         model = models.TestListCycleMembership
         fields = {
-            "order": ['exact', 'in'],
+            "order": ["exact", "in"],
         }

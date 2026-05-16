@@ -9,11 +9,10 @@ from qatrack.notifications.models import QCSchedulingNotice
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
-logger = logging.getLogger('django-q2')
+logger = logging.getLogger("django-q2")
 
 
 def run_scheduling_notices():
-
     run_periodic_scheduler(
         QCSchedulingNotice,
         "run_scheduling_notices",
@@ -24,7 +23,6 @@ def run_scheduling_notices():
 
 
 def schedule_scheduling_notice(notice, send_time):
-
     logger.info("Scheduling notification %s for %s" % (notice.pk, send_time))
     name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
 
@@ -41,11 +39,9 @@ def schedule_scheduling_notice(notice, send_time):
 
 
 def send_scheduling_notice(notice_id, task_name=""):
-
     notice = QCSchedulingNotice.objects.filter(id=notice_id).first()
 
     if notice:
-
         if not notice.send_required():
             logger.info("Send of QCSchedulingNotice %s requested, but no QC to notify about" % notice_id)
             return
@@ -62,7 +58,7 @@ def send_scheduling_notice(notice_id, task_name=""):
         send_email_to_users(
             recipients,
             "qcscheduling/email.html",
-            context={'notice': notice},
+            context={"notice": notice},
             subject_template="qcscheduling/subject.txt",
             text_template="qcscheduling/email.txt",
         )

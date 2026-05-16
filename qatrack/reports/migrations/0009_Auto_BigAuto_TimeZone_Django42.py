@@ -34,23 +34,17 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="reportnote",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="reportschedule",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="savedreport",
             name="created_by",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
-            ),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name="savedreport",
@@ -60,9 +54,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="savedreport",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="savedreport",
@@ -86,9 +78,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="savedreport",
             name="title",
-            field=models.CharField(
-                help_text="Give your report a descriptive title", max_length=255
-            ),
+            field=models.CharField(help_text="Give your report a descriptive title", max_length=255),
         ),
         migrations.AlterField(
             model_name="savedreport",

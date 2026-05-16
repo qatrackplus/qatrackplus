@@ -6,15 +6,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0001_initial'),
+        ("parts", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='part',
-            name='suppliers',
-            field=models.ManyToManyField(blank=True, help_text='Suppliers of this part', related_name='parts', through='parts.PartSupplierCollection', to='parts.Supplier'),
+            model_name="part",
+            name="suppliers",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="Suppliers of this part",
+                related_name="parts",
+                through="parts.PartSupplierCollection",
+                to="parts.Supplier",
+            ),
         ),
     ]

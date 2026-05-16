@@ -33,7 +33,7 @@ def do_scheduling(sender, **kwargs):
 
 
 class NotificationsConfig(AppConfig):
-    name = 'qatrack.notifications'
+    name = "qatrack.notifications"
     verbose_name = _l("Notifications")
 
     def ready(self):

@@ -1,8 +1,8 @@
+import recurrence
 from django.apps import apps
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-import recurrence
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
@@ -25,11 +25,10 @@ def create_category(name="cat", slug="cat", description="cat"):
 
 
 def create_status(name=None, slug=None, is_default=True, requires_review=True):
-
     if name is None:
-        name = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+        name = "status_%04d" % get_next_id(models.TestInstanceStatus.objects.order_by("id").last())
     if slug is None:
-        slug = 'status_%04d' % get_next_id(models.TestInstanceStatus.objects.order_by('id').last())
+        slug = "status_%04d" % get_next_id(models.TestInstanceStatus.objects.order_by("id").last())
 
     status = models.TestInstanceStatus(name=name, slug=slug, is_default=is_default, requires_review=requires_review)
     status.save()
@@ -61,16 +60,15 @@ def create_test(
         wrap_high=wrap_high,
         wrap_low=wrap_low,
         procedure=procedure,
-        constant_value=constant_value
+        constant_value=constant_value,
     )
     test.save()
     return test
 
 
 def create_test_list(name=None):
-
     if name is None:
-        name = 'test_list_%04d' % get_next_id(models.TestList.objects.order_by('id').last())
+        name = "test_list_%04d" % get_next_id(models.TestList.objects.order_by("id").last())
     user = create_user()
     test_list = models.TestList(
         name=name,
@@ -105,16 +103,15 @@ def create_test_list_instance(
         work_started=work_started,
         test_list=test_list,
         day=day,
-        in_progress=in_progress
+        in_progress=in_progress,
     )
     tli.save()
     return tli
 
 
 def create_cycle(test_lists=None, name=None):
-
     if name is None:
-        name = 'test_list_cycle_%04d' % get_next_id(models.TestListCycle.objects.order_by('id').last())
+        name = "test_list_cycle_%04d" % get_next_id(models.TestListCycle.objects.order_by("id").last())
 
     user = create_user()
     cycle = models.TestListCycle(name=name, slug=name, created_by=user, modified_by=user)
@@ -128,7 +125,6 @@ def create_cycle(test_lists=None, name=None):
 
 
 def create_test_list_membership(test_list=None, test=None, order=0):
-
     if test_list is None:
         test_list = create_test_list()
     if test is None:
@@ -140,9 +136,8 @@ def create_test_list_membership(test_list=None, test=None, order=0):
 
 
 def create_test_instance(
-    test_list_instance=None, unit_test_info=None, value=1., created_by=None, work_completed=None, status=None
+    test_list_instance=None, unit_test_info=None, value=1.0, created_by=None, work_completed=None, status=None
 ):
-
     if test_list_instance is None:
         test_list_instance = create_test_list_instance()
 
@@ -166,7 +161,7 @@ def create_test_instance(
         status=status,
         work_completed=work_completed,
         work_started=work_started,
-        test_list_instance=test_list_instance
+        test_list_instance=test_list_instance,
     )
 
     ti.save()
@@ -174,7 +169,6 @@ def create_test_instance(
 
 
 def create_modality(energy=6, particle=PHOTON, name=None):
-
     if name is None:
         if particle == "photon":
             unit, particle = "MV", "Photon"
@@ -188,9 +182,8 @@ def create_modality(energy=6, particle=PHOTON, name=None):
 
 
 def create_vendor(name=None):
-
     if name is None:
-        name = 'vendor_%04d' % get_next_id(Vendor.objects.order_by('id').last())
+        name = "vendor_%04d" % get_next_id(Vendor.objects.order_by("id").last())
 
     v, _ = Vendor.objects.get_or_create(name=name)
 
@@ -198,9 +191,8 @@ def create_vendor(name=None):
 
 
 def create_unit_type(name=None, vendor=None, model="model"):
-
     if name is None:
-        name = 'unit_type_%04d' % get_next_id(UnitType.objects.order_by('id').last())
+        name = "unit_type_%04d" % get_next_id(UnitType.objects.order_by("id").last())
     if vendor is None:
         vendor = create_vendor()
     ut, _ = UnitType.objects.get_or_create(name=name, vendor=vendor, model=model)
@@ -209,19 +201,17 @@ def create_unit_type(name=None, vendor=None, model="model"):
 
 
 def create_site(name=None):
-
     if name is None:
-        name = 'site_%04d' % get_next_id(Site.objects.order_by('id').last())
+        name = "site_%04d" % get_next_id(Site.objects.order_by("id").last())
 
     return Site.objects.create(name=name)
 
 
 def create_unit(name=None, number=None, tipe=None, site=None, active=True):
-
     if name is None:
-        name = 'unit_%04d' % get_next_id(models.Unit.objects.order_by('id').last())
+        name = "unit_%04d" % get_next_id(models.Unit.objects.order_by("id").last())
     if number is None:
-        last = models.Unit.objects.order_by('number').last()
+        last = models.Unit.objects.order_by("number").last()
         number = last.number + 1 if last else 0
     if tipe is None:
         tipe = create_unit_type()
@@ -256,10 +246,9 @@ def create_tolerance(
     tol_high=1,
     act_high=2,
     created_by=None,
-    mc_pass_choices='',
-    mc_tol_choices=''
+    mc_pass_choices="",
+    mc_tol_choices="",
 ):
-
     if created_by is None:
         created_by = create_user()
 
@@ -270,7 +259,7 @@ def create_tolerance(
         tol_high=tol_high,
         act_high=act_high,
         created_by=created_by,
-        modified_by=created_by
+        modified_by=created_by,
     )
 
     if tol_type == models.MULTIPLE_CHOICE:
@@ -279,7 +268,7 @@ def create_tolerance(
             mc_tol_choices=mc_tol_choices,
             mc_pass_choices=mc_pass_choices,
             created_by=created_by,
-            modified_by=created_by
+            modified_by=created_by,
         )
 
     tol = models.Tolerance(**kwargs)
@@ -289,7 +278,7 @@ def create_tolerance(
 
 def create_frequency(name=None, slug=None, interval=1, window_end=1, save=True):
     if name is None or slug is None:
-        name = 'frequency_%04d' % get_next_id(models.Frequency.objects.order_by('id').last())
+        name = "frequency_%04d" % get_next_id(models.Frequency.objects.order_by("id").last())
         slug = name
 
     rule = recurrence.Rule(freq=recurrence.DAILY, interval=interval)
@@ -310,7 +299,6 @@ def create_frequency(name=None, slug=None, interval=1, window_end=1, save=True):
 
 
 def create_unit_test_info(unit=None, test=None, assigned_to=None, ref=None, tol=None, active=True):
-
     if unit is None:
         unit = create_unit()
 
@@ -330,7 +318,6 @@ def create_unit_test_info(unit=None, test=None, assigned_to=None, ref=None, tol=
 def create_unit_test_collection(
     unit=None, frequency=None, test_collection=None, assigned_to=None, null_frequency=False, active=True
 ):
-
     if unit is None:
         unit = create_unit()
 
@@ -349,7 +336,7 @@ def create_unit_test_collection(
         content_type=ContentType.objects.get_for_model(test_collection),
         frequency=frequency,
         assigned_to=assigned_to,
-        active=active
+        active=active,
     )
 
     utc.save()
@@ -364,7 +351,6 @@ def datetimes_same(date1, date2, nminutes=1):
 
 
 def create_sublist(parent_test_list=None, child_test_list=None, order=1):
-
     if parent_test_list is None:
         parent_test_list = create_test_list()
     if child_test_list is None:

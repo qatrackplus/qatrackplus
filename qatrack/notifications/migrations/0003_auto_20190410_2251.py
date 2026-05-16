@@ -5,28 +5,41 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0011_auto_20190410_1101'),
+        ("units", "0011_auto_20190410_1101"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('auth', '0009_alter_user_last_name_max_length'),
-        ('notifications', '0002_auto_20161003_2213'),
+        ("auth", "0009_alter_user_last_name_max_length"),
+        ("notifications", "0002_auto_20161003_2213"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='notificationsubscription',
-            name='groups',
-            field=models.ManyToManyField(blank=True, help_text='Select which groups this notification should be sent to.', related_name='notificationsubscriptions', to='auth.Group'),
+            model_name="notificationsubscription",
+            name="groups",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="Select which groups this notification should be sent to.",
+                related_name="notificationsubscriptions",
+                to="auth.Group",
+            ),
         ),
         migrations.AddField(
-            model_name='notificationsubscription',
-            name='units',
-            field=models.ManyToManyField(blank=True, help_text='Select which Units notifications should be sent to this group for. Leave blank to include all units', to='units.Unit'),
+            model_name="notificationsubscription",
+            name="units",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="Select which Units notifications should be sent to this group for. Leave blank to include all units",
+                to="units.Unit",
+            ),
         ),
         migrations.AddField(
-            model_name='notificationsubscription',
-            name='users',
-            field=models.ManyToManyField(blank=True, help_text='Select individual users to include in these notifications', related_name='notificationsubscriptions', to=settings.AUTH_USER_MODEL),
+            model_name="notificationsubscription",
+            name="users",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="Select individual users to include in these notifications",
+                related_name="notificationsubscriptions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

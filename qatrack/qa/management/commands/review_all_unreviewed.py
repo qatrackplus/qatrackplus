@@ -15,11 +15,11 @@ from qatrack.service_log.models import ServiceEvent, ServiceLog
 class Command(BaseCommand):
     """A management command to review all unreviewed TestListInstances"""
 
-    help = 'Command to mark all unreviewed TestListInstances as reviewed'
+    help = "Command to mark all unreviewed TestListInstances as reviewed"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--user',
+            "--user",
             nargs=1,
             required=True,
             dest="user",
@@ -27,7 +27,7 @@ class Command(BaseCommand):
             type=str,
         )
         parser.add_argument(
-            '--status',
+            "--status",
             required=True,
             nargs=1,
             dest="status",
@@ -36,20 +36,19 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-
         all_status = TestInstanceStatus.objects.all()
-        status = all_status.filter(slug=kwargs['status'][0]).first()
+        status = all_status.filter(slug=kwargs["status"][0]).first()
         if not status:
             print(
-                "'%s' is not a valid status slug. Options are: %s" %
-                (kwargs['status'][0], ', '.join(all_status.values_list("slug", flat=True)))
+                "'%s' is not a valid status slug. Options are: %s"
+                % (kwargs["status"][0], ", ".join(all_status.values_list("slug", flat=True)))
             )
             return
 
         users = User.objects.all()
-        user = users.filter(username=kwargs['user'][0]).first()
+        user = users.filter(username=kwargs["user"][0]).first()
         if not user:
-            print("'%s' is not a valid username." % kwargs['user'][0])
+            print("'%s' is not a valid username." % kwargs["user"][0])
             return
 
         objs = TestListInstance.objects.unreviewed()
@@ -59,13 +58,13 @@ class Command(BaseCommand):
             print("No unreviewed instances")
             return
 
-        prompt = (
-            "Are you sure you want to set the review status of %d unreviewed TestListInstances to %s (y/N): " %
-            (counts, status)
+        prompt = "Are you sure you want to set the review status of %d unreviewed TestListInstances to %s (y/N): " % (
+            counts,
+            status,
         )
 
         confirm = input(prompt)
-        if confirm.lower() != 'y':
+        if confirm.lower() != "y":
             print("Action cancelled")
             return
 

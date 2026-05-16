@@ -12,7 +12,6 @@ from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 
 
 class FaultsReviewNotice(RecurrenceFieldMixin, models.Model):
-
     UNREVIEWED = 0
 
     NOTIFICATION_TYPES = ((UNREVIEWED, _l("Notify about Faults awaiting review")),)
@@ -85,17 +84,20 @@ class FaultsReviewNotice(RecurrenceFieldMixin, models.Model):
         )
 
     def faults_by_unit_fault_type(self):
-
         faults = self.faults()
-        return faults.values(
-            "unit__name",
-            "fault_types__code",
-        ).order_by(
-            "unit__name",
-            "fault_types__code",
-        ).annotate(
-            Count("unit__name"),
-            Count("fault_types__code"),
+        return (
+            faults.values(
+                "unit__name",
+                "fault_types__code",
+            )
+            .order_by(
+                "unit__name",
+                "fault_types__code",
+            )
+            .annotate(
+                Count("unit__name"),
+                Count("fault_types__code"),
+            )
         )
 
     def send_required(self):

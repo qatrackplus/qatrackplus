@@ -1,12 +1,12 @@
 from itertools import groupby
 
 import dateutil.parser
+import django_filters
 from django import forms
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-import django_filters
 
 from qatrack.qa import models
 from qatrack.qatrack_core.utils import relative_dates
@@ -20,9 +20,7 @@ class NonNullBooleanFilter(django_filters.filters.BooleanFilter):
 
 
 class RelativeDateRangeField(forms.fields.CharField):
-
     def clean(self, value):
-
         val = super().clean(value)
 
         custom = val.lower() not in relative_dates.ALL_DATE_RANGES
@@ -33,8 +31,8 @@ class RelativeDateRangeField(forms.fields.CharField):
             is_dashed_format = val.count("-") == 5
             if is_dashed_format:
                 explode = val.split("-")
-                start = '-'.join(explode[:3])
-                end = '-'.join(explode[3:])
+                start = "-".join(explode[:3])
+                end = "-".join(explode[3:])
             else:
                 start, end = [x.strip() for x in val.split("-")]
             tz = timezone.get_current_timezone()
@@ -52,7 +50,6 @@ class RelativeDateRangeFilter(django_filters.CharFilter):
     field_class = RelativeDateRangeField
 
     def filter(self, qs, value):
-
         if not value:
             return qs  # pragma: no cover
 
@@ -68,7 +65,6 @@ class RelativeDateRangeFilter(django_filters.CharFilter):
 
 
 class BaseReportFilterSet(django_filters.FilterSet):
-
     def filter_queryset(self, queryset):
         """
         Remove non model field filters before filtering then add them back so
@@ -85,7 +81,6 @@ class BaseReportFilterSet(django_filters.FilterSet):
 
 
 class TestListInstanceFilter(BaseReportFilterSet):
-
     work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
         help_text=_l("Dates to include QC data from"),
@@ -126,20 +121,18 @@ class TestListInstanceFilter(BaseReportFilterSet):
             "work_completed",
             "unit_test_collection__unit__site",
             "unit_test_collection__unit",
-            'unit_test_collection__frequency',
-            'unit_test_collection__assigned_to',
+            "unit_test_collection__frequency",
+            "unit_test_collection__assigned_to",
         ]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['work_completed'].widget.attrs['class'] = "pastdate"
-        self.form.fields['unit_test_collection__unit'].choices = unit_site_unit_type_choices()
+        self.form.fields["work_completed"].widget.attrs["class"] = "pastdate"
+        self.form.fields["unit_test_collection__unit"].choices = unit_site_unit_type_choices()
 
 
 class TestListInstanceByUTCFilter(BaseReportFilterSet):
-
     work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
         help_text=_l("Dates to include QC data from"),
@@ -159,15 +152,13 @@ class TestListInstanceByUTCFilter(BaseReportFilterSet):
         ]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['work_completed'].widget.attrs['class'] = "pastdate"
-        self.form.fields['unit_test_collection'].choices = utc_choices()
+        self.form.fields["work_completed"].widget.attrs["class"] = "pastdate"
+        self.form.fields["unit_test_collection"].choices = utc_choices()
 
 
 class UnitTestCollectionFilter(BaseReportFilterSet):
-
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
@@ -198,7 +189,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
     active = django_filters.filters.BooleanFilter(
         label=_l("Active"),
         help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
-        initial='2',
+        initial="2",
     )
 
     class Meta:
@@ -206,14 +197,13 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         fields = ["unit__site", "unit", "frequency", "assigned_to", "active"]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['unit'].choices = unit_site_unit_type_choices()
-        self.form.fields['active'].widget.choices = (
-            ('1', _('Both')),
-            ('2', _('Yes')),
-            ('3', _('No')),
+        self.form.fields["unit"].choices = unit_site_unit_type_choices()
+        self.form.fields["active"].widget.choices = (
+            ("1", _("Both")),
+            ("2", _("Yes")),
+            ("3", _("No")),
         )
 
     def filter_queryset(self, queryset):
@@ -221,7 +211,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
 
         # don't let the default filtering filter by active since we'll do it
         # ourselves below
-        active = self.form.cleaned_data.pop('active', None)
+        active = self.form.cleaned_data.pop("active", None)
 
         qs = super().filter_queryset(queryset)
 
@@ -234,7 +224,6 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
 
 
 class AssignedQCDetailsFilter(UnitTestCollectionFilter):
-
     refs_tols = django_filters.filters.ChoiceFilter(
         label=_l("References & Tolerances"),
         choices=[
@@ -253,15 +242,14 @@ class AssignedQCDetailsFilter(UnitTestCollectionFilter):
 
 
 class UnitTestCollectionFilterDetailsMixin:
-
     def get_unit__site_details(self, val):
         sites = [x.name if x != "null" else "Other" for x in val]
         return ("Site(s)", ", ".join(sites))
 
     def get_unit_details(self, val):
         units = models.Unit.objects.select_related("site").filter(pk__in=val)
-        units = ('%s - %s' % (u.site.name if u.site else _("Other"), u.name) for u in units)
-        return ("Unit(s)", ', '.join(units))
+        units = ("%s - %s" % (u.site.name if u.site else _("Other"), u.name) for u in units)
+        return ("Unit(s)", ", ".join(units))
 
     def get_frequency_details(self, val):
         freqs = [x.name if x != "null" else "Ad Hoc" for x in val]
@@ -276,19 +264,18 @@ class UnitTestCollectionFilterDetailsMixin:
 
 
 class ServiceEventScheduleFilterDetailsMixin:
-
     def get_unit_service_area__unit__site_details(self, val):
         sites = [x.name if x != "null" else "Other" for x in val]
         return ("Site(s)", ", ".join(sites))
 
     def get_unit_service_area__unit_details(self, val):
         units = models.Unit.objects.select_related("site").filter(pk__in=val)
-        units = ('%s - %s' % (u.site.name if u.site else _("Other"), u.name) for u in units)
-        return ("Unit(s)", ', '.join(units))
+        units = ("%s - %s" % (u.site.name if u.site else _("Other"), u.name) for u in units)
+        return ("Unit(s)", ", ".join(units))
 
     def get_unit_service_area__service_area_details(self, val):
         service_areas = [sa.name for sa in val]
-        return ("Service Area(s)", ', '.join(service_areas))
+        return ("Service Area(s)", ", ".join(service_areas))
 
     def get_frequency_details(self, val):
         freqs = [x.name if x != "null" else "Ad Hoc" for x in val]
@@ -303,7 +290,6 @@ class ServiceEventScheduleFilterDetailsMixin:
 
 
 class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
-
     due_date = RelativeDateRangeFilter(
         label=_l("Time Period"),
         help_text=_l("Dates to include scheduled QC data from"),
@@ -339,7 +325,7 @@ class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
     active = django_filters.filters.BooleanFilter(
         label=_l("Active"),
         help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
-        initial='2',
+        initial="2",
     )
 
     class Meta:
@@ -347,15 +333,14 @@ class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
         fields = ["due_date", "assigned_to", "unit__site", "unit", "frequency"]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['due_date'].widget.attrs['class'] = "futuredate"
-        self.form.fields['unit'].choices = unit_site_unit_type_choices()
-        self.form.fields['active'].widget.choices = (
-            ('1', _('Both')),
-            ('2', _('Yes')),
-            ('3', _('No')),
+        self.form.fields["due_date"].widget.attrs["class"] = "futuredate"
+        self.form.fields["unit"].choices = unit_site_unit_type_choices()
+        self.form.fields["active"].widget.choices = (
+            ("1", _("Both")),
+            ("2", _("Yes")),
+            ("3", _("No")),
         )
 
     def filter_queryset(self, queryset):
@@ -363,7 +348,7 @@ class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
 
         # don't let the default filtering filter by active since we'll do it
         # ourselves below
-        active = self.form.cleaned_data.pop('active', None)
+        active = self.form.cleaned_data.pop("active", None)
 
         qs = super().filter_queryset(queryset)
 
@@ -376,7 +361,6 @@ class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
 
 
 class TestDataFilter(BaseReportFilterSet):
-
     test_list_instance__work_completed = RelativeDateRangeFilter(
         label=_l("Work Completed"),
         help_text=_l("Dates to include QC data from"),
@@ -420,25 +404,23 @@ class TestDataFilter(BaseReportFilterSet):
         ]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['test_list_instance__work_completed'].widget.attrs['class'] = "pastdate"
-        self.form.fields['test_list_instance__work_completed'].initial = "Last 365 days"
-        self.form.fields['unit_test_info__unit'].choices = unit_site_unit_type_choices()
-        self.form.fields['unit_test_info__test'].choices = test_category_choices()
+        self.form.fields["test_list_instance__work_completed"].widget.attrs["class"] = "pastdate"
+        self.form.fields["test_list_instance__work_completed"].initial = "Last 365 days"
+        self.form.fields["unit_test_info__unit"].choices = unit_site_unit_type_choices()
+        self.form.fields["unit_test_info__test"].choices = test_category_choices()
 
 
 def test_category_choices():
     tests = []
     qs = models.Test.objects.values("category__name", "pk", "name").order_by("category__name", "name")
-    for g, ts in groupby(qs, lambda v: v['category__name']):
-        tests.append((g, [(t['pk'], t['name']) for t in ts]))
+    for g, ts in groupby(qs, lambda v: v["category__name"]):
+        tests.append((g, [(t["pk"], t["name"]) for t in ts]))
     return tests
 
 
 class BaseServiceEventFilter(BaseReportFilterSet):
-
     datetime_service = RelativeDateRangeFilter(
         label=_l("Service Date"),
         help_text=_l("Dates to include Service Events from"),
@@ -477,16 +459,14 @@ class BaseServiceEventFilter(BaseReportFilterSet):
         fields = ["datetime_service", "unit_service_area__unit__site", "unit_service_area__unit", "service_type"]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices(serviceable_only=True)
-        self.form.fields['datetime_service'].widget.attrs['class'] = "pastdate"
-        self.form.fields['datetime_service'].initial = "Last 365 days"
+        self.form.fields["unit_service_area__unit"].choices = unit_site_unit_type_choices(serviceable_only=True)
+        self.form.fields["datetime_service"].widget.attrs["class"] = "pastdate"
+        self.form.fields["datetime_service"].initial = "Last 365 days"
 
 
 class ServiceEventSummaryFilter(BaseServiceEventFilter):
-
     include_description = NonNullBooleanFilter(
         label=_l("Include Description"),
         help_text=_l("Uncheck if you don't want to include Problem & Work descriptions in this report"),
@@ -543,25 +523,29 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     active = django_filters.filters.BooleanFilter(
         label=_l("Active"),
         help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
-        initial='2',
+        initial="2",
     )
 
     class Meta:
         model = sl_models.ServiceEventSchedule
         fields = [
-            "unit_service_area__unit__site", "unit_service_area__unit", "unit_service_area__service_area",
-            "service_event_template", "frequency", "assigned_to", "active"
+            "unit_service_area__unit__site",
+            "unit_service_area__unit",
+            "unit_service_area__service_area",
+            "service_event_template",
+            "frequency",
+            "assigned_to",
+            "active",
         ]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices()
-        self.form.fields['active'].widget.choices = (
-            ('1', _('Both')),
-            ('2', _('Yes')),
-            ('3', _('No')),
+        self.form.fields["unit_service_area__unit"].choices = unit_site_unit_type_choices()
+        self.form.fields["active"].widget.choices = (
+            ("1", _("Both")),
+            ("2", _("Yes")),
+            ("3", _("No")),
         )
 
     def filter_queryset(self, queryset):
@@ -569,7 +553,7 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
 
         # don't let the default filtering filter by active since we'll do it
         # ourselves below
-        active = self.form.cleaned_data.pop('active', None)
+        active = self.form.cleaned_data.pop("active", None)
 
         qs = super().filter_queryset(queryset)
 
@@ -583,6 +567,7 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
 
 class ServiceEventSchedulingFilter(BaseReportFilterSet):
     """Service Event Schedule equivalent of UnitTestCollectionSchedulingFilter"""
+
     due_date = RelativeDateRangeFilter(
         label=_l("Time Period"),
         help_text=_l("Dates to include scheduled QA data from"),
@@ -603,7 +588,7 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
     )
     frequency = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Frequency"),
-        queryset=models.Frequency.objects.order_by('nominal_interval'),
+        queryset=models.Frequency.objects.order_by("nominal_interval"),
         null_label=_l("Ad Hoc"),
         help_text=_l(
             "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
@@ -612,7 +597,7 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
     active = django_filters.filters.BooleanFilter(
         label=_l("Active"),
         help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
-        initial='2',
+        initial="2",
     )
 
     class Meta:
@@ -621,19 +606,19 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.form.fields['due_date'].widget.attrs['class'] = "futuredate"
-        self.form.fields['unit_service_area__unit'].choices = unit_site_unit_type_choices()
-        self.form.fields['active'].widget.choices = (
-            ('1', _('Both')),
-            ('2', _('Yes')),
-            ('3', _('No')),
+        self.form.fields["due_date"].widget.attrs["class"] = "futuredate"
+        self.form.fields["unit_service_area__unit"].choices = unit_site_unit_type_choices()
+        self.form.fields["active"].widget.choices = (
+            ("1", _("Both")),
+            ("2", _("Yes")),
+            ("3", _("No")),
         )
 
     def filter_queryset(self, queryset):
         """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
         # don't let the default filtering filter by active since we'll do it
         # ourselves below
-        active = self.form.cleaned_data.pop('active', None)
+        active = self.form.cleaned_data.pop("active", None)
         qs = super().filter_queryset(queryset)
         # note active can be None (Both), False (Inactive), or True (Active Only)
         if active is True:
@@ -644,7 +629,6 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
 
 
 class BaseFaultFilter(BaseReportFilterSet):
-
     occurred = RelativeDateRangeFilter(
         label=_l("Occurred"),
         help_text=_l("Dates to include faults from"),
@@ -687,12 +671,11 @@ class BaseFaultFilter(BaseReportFilterSet):
         fields = ["occurred", "unit__site", "unit", "modality"]
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.form.fields['unit'].choices = unit_site_unit_type_choices()
-        self.form.fields['occurred'].widget.attrs['class'] = "pastdate"
-        self.form.fields['occurred'].initial = "Last 365 days"
+        self.form.fields["unit"].choices = unit_site_unit_type_choices()
+        self.form.fields["occurred"].widget.attrs["class"] = "pastdate"
+        self.form.fields["occurred"].initial = "Last 365 days"
 
 
 class FaultSummaryFilter(BaseFaultFilter):

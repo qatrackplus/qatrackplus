@@ -4,28 +4,42 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0019_auto_20181214_2209'),
+        ("service_log", "0019_auto_20181214_2209"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='returntoserviceqa',
-            options={'default_permissions': ('add', 'change', 'delete'), 'ordering': ['-datetime_assigned'], 'permissions': (('view_returntoserviceqa', 'Can view return to service qa'), ('perform_returntoserviceqa', 'Can perform return to service qa'))},
+            name="returntoserviceqa",
+            options={
+                "default_permissions": ("add", "change", "delete"),
+                "ordering": ["-datetime_assigned"],
+                "permissions": (
+                    ("view_returntoserviceqa", "Can view return to service qa"),
+                    ("perform_returntoserviceqa", "Can perform return to service qa"),
+                ),
+            },
         ),
         migrations.AlterModelOptions(
-            name='serviceevent',
-            options={'default_permissions': ('add', 'change', 'delete'), 'get_latest_by': 'datetime_service', 'ordering': ['-datetime_service'], 'permissions': (('review_serviceevent', 'Can review service event'), ('view_serviceevent', 'Can review service event'))},
+            name="serviceevent",
+            options={
+                "default_permissions": ("add", "change", "delete"),
+                "get_latest_by": "datetime_service",
+                "ordering": ["-datetime_service"],
+                "permissions": (
+                    ("review_serviceevent", "Can review service event"),
+                    ("view_serviceevent", "Can review service event"),
+                ),
+            },
         ),
         migrations.AlterField(
-            model_name='serviceevent',
-            name='is_active',
+            model_name="serviceevent",
+            name="is_active",
             field=models.BooleanField(blank=True, default=True),
         ),
         migrations.AlterField(
-            model_name='serviceevent',
-            name='is_review_required',
+            model_name="serviceevent",
+            name="is_review_required",
             field=models.BooleanField(blank=True, default=True),
         ),
     ]

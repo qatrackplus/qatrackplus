@@ -7,9 +7,9 @@ TEMPLATE_DBG = True
 
 # SQLite example
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db/default.db',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "db/default.db",
     }
 }
 
@@ -47,8 +47,7 @@ DATABASES = {
 """
 
 
-
-DATABASES['readonly'] = DATABASES['default']
+DATABASES["readonly"] = DATABASES["default"]
 
 # Test-specific settings
 NOTIFICATIONS_ON = False
@@ -56,7 +55,7 @@ DEFAULT_NUMBER_FORMAT = None
 AD_CLEAN_USERNAME = None
 HTTP_OR_HTTPS = "http"
 REVIEW_BULK = True
-TIME_ZONE = 'America/Toronto'
+TIME_ZONE = "America/Toronto"
 
 # Selenium browser configuration for testing
 # Set to True to use headless browser for testing (requires xvfb)
@@ -65,6 +64,7 @@ SELENIUM_VIRTUAL_DISPLAY = False
 
 # Test-specific password hasher for faster testing
 from django.contrib.auth.hashers import BasePasswordHasher
+
 
 class SimplePasswordHasher(BasePasswordHasher):
     """A simple hasher inspired by django-plainpasswordhasher"""
@@ -89,8 +89,9 @@ class SimplePasswordHasher(BasePasswordHasher):
         """
         return {"algorithm": "dumb", "hash": encoded.split("$", 2)[2]}
 
+
 PASSWORD_HASHERS = ("qatrack.test_settings.SimplePasswordHasher",)
 
-AUTHENTICATION_BACKENDS = ['qatrack.accounts.backends.QATrackAccountBackend']
+AUTHENTICATION_BACKENDS = ["qatrack.accounts.backends.QATrackAccountBackend"]
 
 # Customize any of the above settings as needed for your test environment

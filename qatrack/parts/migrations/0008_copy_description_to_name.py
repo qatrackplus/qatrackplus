@@ -11,11 +11,9 @@ logger = logging.getLogger("qatrack.migrations")
 
 
 def copy_description_to_name(apps, schema):
-
     Part = apps.get_model("parts", "Part")
 
     for p in Part.objects.all():
-
         if len(p.description.strip()) > 255:
             msg = "Description of part ID %d: %s will be truncated to 255 characters" % (p.id, p.description)
             print(msg)
@@ -26,17 +24,13 @@ def copy_description_to_name(apps, schema):
 
 
 def copy_name_to_description(apps, schema):
-
     Part = apps.get_model("parts", "Part")
     Part.objects.all().update(description=F("name"))
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0007_part_name'),
+        ("parts", "0007_part_name"),
     ]
 
-    operations = [
-        migrations.RunPython(copy_description_to_name, copy_name_to_description)
-    ]
+    operations = [migrations.RunPython(copy_description_to_name, copy_name_to_description)]

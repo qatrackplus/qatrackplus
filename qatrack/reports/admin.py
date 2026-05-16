@@ -1,5 +1,5 @@
-from django.contrib import admin
 import django.forms as forms
+from django.contrib import admin
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -9,11 +9,9 @@ from qatrack.reports.reports import report_type_choices
 
 
 class SavedReportForm(forms.ModelForm):
-
     report_type = forms.ChoiceField()
 
     class Meta:
-
         model = SavedReport
         fields = (
             "title",
@@ -25,14 +23,12 @@ class SavedReportForm(forms.ModelForm):
         )
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
-        self.fields['report_type'].choices = report_type_choices()
+        self.fields["report_type"].choices = report_type_choices()
 
 
 @admin.register(SavedReport)
 class SavedReportAdmin(BaseQATrackAdmin):
-
     list_display = (
         "title",
         "report_type",
@@ -66,9 +62,7 @@ class SavedReportAdmin(BaseQATrackAdmin):
 
 
 class ReportScheduleForm(forms.ModelForm):
-
     class Meta:
-
         model = ReportSchedule
         fields = (
             "report",
@@ -80,10 +74,9 @@ class ReportScheduleForm(forms.ModelForm):
         )
 
     def clean(self):
-
         cleaned_data = super().clean()
-        no_groups = len(cleaned_data.get('groups', [])) == 0
-        no_users = len(cleaned_data.get('users', [])) == 0
+        no_groups = len(cleaned_data.get("groups", [])) == 0
+        no_users = len(cleaned_data.get("users", [])) == 0
         no_emails = len([x for x in cleaned_data.get("emails", "").split(",") if x]) == 0
         if no_groups and no_users and no_emails:
             msg = _("You must select at least one group, user, or email address!")
@@ -94,17 +87,16 @@ class ReportScheduleForm(forms.ModelForm):
 
 @admin.register(ReportSchedule)
 class ReportScheduleAdmin(BasicSaveUserAdmin):
-
     form = ReportScheduleForm
 
     list_display = (
-        'get_report_title',
-        'get_report_type',
-        'get_report_format',
-        'schedule',
-        'last_sent',
-        'created_by',
-        'created',
+        "get_report_title",
+        "get_report_type",
+        "get_report_format",
+        "schedule",
+        "last_sent",
+        "created_by",
+        "created",
     )
 
     list_filter = ("report__report_type",)
@@ -119,12 +111,12 @@ class ReportScheduleAdmin(BasicSaveUserAdmin):
     class Media:
         js = (
             "admin/js/jquery.init.js",
-            'jquery/js/jquery.min.js',
+            "jquery/js/jquery.min.js",
             "select2/js/select2.js",
             "js/reportschedule_admin.js",
         )
         css = {
-            'all': ("select2/css/select2.css",),
+            "all": ("select2/css/select2.css",),
         }
 
     def get_queryset(self, request):  # pragma: nocover

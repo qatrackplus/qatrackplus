@@ -1,6 +1,6 @@
+import time
 from contextlib import contextmanager
 from functools import wraps
-import time
 
 from django.conf import settings
 from django.contrib.staticfiles.handlers import StaticFilesHandler
@@ -41,9 +41,7 @@ def setup_view(view, request, *args, **kwargs):
 
 # From http://stackoverflow.com/a/20559494
 def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
-
     def outer(func):
-
         @wraps(func)
         def wrapper(*args, **kwargs):
             assert max_retries > 0
@@ -100,28 +98,29 @@ class LiveServerSingleThread(LiveServerThread):
 
 class StaticLiveServerSingleThreadedTestCase(StaticLiveServerTestCase):
     "A thin sub-class which only sets the single-threaded server as a class"
+
     server_thread_class = LiveServerSingleThread
 
     static_handler = StaticFilesHandler
 
 
 class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
-
     @classmethod
     def setUpClass(cls):
-        use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
-        browser_setting = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
+        use_virtual_display = getattr(settings, "SELENIUM_VIRTUAL_DISPLAY", False)
+        getattr(settings, "SELENIUM_BROWSER", "firefox")
 
         if use_virtual_display:
             # Make sure xvfb is installed
             from pyvirtualdisplay import Display
+
             cls.display = Display(visible=0, size=(1920, 1080))
             cls.display.start()
         else:
             cls.display = None
 
         if use_chrome:
-            chrome_driver_path = getattr(settings, 'SELENIUM_CHROME_PATH', '')
+            chrome_driver_path = getattr(settings, "SELENIUM_CHROME_PATH", "")
             cls.driver = webdriver.Chrome(executable_path=chrome_driver_path)
         else:
             ff_profile = FirefoxProfile()
@@ -146,8 +145,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @classmethod
     def maximize(cls):
-
-        if getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False):
+        if getattr(settings, "SELENIUM_VIRTUAL_DISPLAY", False):
             for i in range(5):
                 try:
                     cls.driver.maximize_window()
@@ -166,7 +164,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @contextmanager
     def wait_for_page_load(self, timeout=10):
-        old_page = self.driver.find_element(By.TAG_NAME, 'html')
+        old_page = self.driver.find_element(By.TAG_NAME, "html")
         yield
         WebDriverWait(self.driver, timeout).until(staleness_of(old_page))
 
@@ -178,16 +176,16 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def login(self):
         self.open("/accounts/login/")
 
-        self.driver.find_element(By.ID, 'id_username').send_keys(self.user.username)
-        self.driver.find_element(By.ID, 'id_password').send_keys(self.password)
-        self.driver.find_element(By.CSS_SELECTOR, 'button').click()
+        self.driver.find_element(By.ID, "id_username").send_keys(self.user.username)
+        self.driver.find_element(By.ID, "id_password").send_keys(self.password)
+        self.driver.find_element(By.CSS_SELECTOR, "button").click()
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
     def load_admin(self):
         self.open("/admin/")
-        self.driver.find_element(By.ID, 'id_username').send_keys(self.user.username)
-        self.driver.find_element(By.ID, 'id_password').send_keys(self.password)
-        self.driver.find_element(By.CSS_SELECTOR, 'button').click()
+        self.driver.find_element(By.ID, "id_username").send_keys(self.user.username)
+        self.driver.find_element(By.ID, "id_password").send_keys(self.password)
+        self.driver.find_element(By.CSS_SELECTOR, "button").click()
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
@@ -201,6 +199,5 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         )
 
     def setUp(self):
-
-        self.password = 'password'
+        self.password = "password"
         self.user = create_user(pwd=self.password)

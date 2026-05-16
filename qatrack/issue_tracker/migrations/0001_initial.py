@@ -8,7 +8,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -17,29 +16,29 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Issue',
+            name="Issue",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('datetime_submitted', models.DateTimeField()),
-                ('description', models.TextField()),
-                ('error_screen', models.TextField(blank=True, null=True)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("datetime_submitted", models.DateTimeField()),
+                ("description", models.TextField()),
+                ("error_screen", models.TextField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='IssueType',
+            name="IssueType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=32)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=32)),
             ],
         ),
         migrations.AddField(
-            model_name='issue',
-            name='issue_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='issue_tracker.IssueType'),
+            model_name="issue",
+            name="issue_type",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="issue_tracker.IssueType"),
         ),
         migrations.AddField(
-            model_name='issue',
-            name='user_submitted_by',
+            model_name="issue",
+            name="user_submitted_by",
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
     ]

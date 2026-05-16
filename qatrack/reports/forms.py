@@ -20,30 +20,35 @@ class ReportForm(forms.ModelForm):
     class Meta:
         model = models.SavedReport
         fields = (
-            "title", "report_type", "report_format", "visible_to", "include_signature", "include_logo", "paper_size"
+            "title",
+            "report_type",
+            "report_format",
+            "visible_to",
+            "include_signature",
+            "include_logo",
+            "paper_size",
         )
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        f = self.fields['report_type']
-        choices = [('', '------------')] + reports.report_type_choices()
+        f = self.fields["report_type"]
+        choices = [("", "------------")] + reports.report_type_choices()
         f.widget = ToolTipSelect(titles=reports.report_descriptions(), choices=choices)
-        self.fields['include_logo'].label = _("Include Logo")
-        self.fields['include_logo'].help_text = _("Include the organization logo in reports?")
-        self.fields['paper_size'].label = _("Paper Size")
-        self.fields['paper_size'].required = False  # Make not required since model has default
+        self.fields["include_logo"].label = _("Include Logo")
+        self.fields["include_logo"].help_text = _("Include the organization logo in reports?")
+        self.fields["paper_size"].label = _("Paper Size")
+        self.fields["paper_size"].required = False  # Make not required since model has default
 
         # Set default if no initial value provided
-        if not self.initial.get('paper_size') and not self.data.get('root-paper_size'):
-            self.fields['paper_size'].initial = 'letter'
+        if not self.initial.get("paper_size") and not self.data.get("root-paper_size"):
+            self.fields["paper_size"].initial = "letter"
 
     def clean_paper_size(self):
         """Ensure paper_size has a default value if not provided"""
-        paper_size = self.cleaned_data.get('paper_size')
+        paper_size = self.cleaned_data.get("paper_size")
         if not paper_size:
-            return 'letter'
+            return "letter"
         return paper_size
 
 
@@ -57,17 +62,17 @@ ReportNoteFormSet = forms.inlineformset_factory(
         "content",
     ),
     widgets={
-        'heading': forms.TextInput(),
-        'content': forms.Textarea(attrs={'rows': 3}),
+        "heading": forms.TextInput(),
+        "content": forms.Textarea(attrs={"rows": 3}),
     },
 )
 
 
 def value_to_serializable(val, val_type=None):
     """Convert input report form value to something serializable TODO:: handle
-    other input types (single date or datetime) """
+    other input types (single date or datetime)"""
 
-    if 'daterange' in val_type.lower() and not isinstance(val, str):
+    if "daterange" in val_type.lower() and not isinstance(val, str):
         d1 = format_as_date(parser.parse(val[0]))
         d2 = format_as_date(parser.parse(val[1]))
         val = "%s - %s" % (d1, d2)
@@ -86,15 +91,12 @@ def value_to_serializable(val, val_type=None):
 
 
 def serialize_forms(forms, data_attr="initial"):
-
     form_data = {}
 
     for form in forms:
-
-        prefix = form.prefix + "-" if form.prefix else ''
+        prefix = form.prefix + "-" if form.prefix else ""
 
         for k, v in getattr(form, data_attr).items():
-
             if k not in form.fields:  # pragma: no cover
                 continue
 
@@ -130,11 +132,10 @@ def serialize_savedreport(instance):
 
 
 def serialize_savedreport_notes(instance):
-
     notes_formset = ReportNoteFormSet(instance=instance)
     return {
-        'notes': serialize_forms(notes_formset.forms),
-        'count': instance.reportnote_set.count(),
+        "notes": serialize_forms(notes_formset.forms),
+        "count": instance.reportnote_set.count(),
     }
 
 
@@ -158,7 +159,6 @@ def serialize_form_data(form_data):
 
     data = {}
     for k, v in form_data.items():
-
         if isinstance(v, Model):
             v = v.pk
         else:
@@ -182,17 +182,15 @@ class ReportScheduleForm(forms.ModelForm):
         fields = ("report", "schedule", "time", "groups", "users", "emails")
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.fields['report'].widget = forms.HiddenInput()
-        self.fields['emails'].widget.attrs['rows'] = 1
+        self.fields["report"].widget = forms.HiddenInput()
+        self.fields["emails"].widget.attrs["rows"] = 1
 
     def clean(self):
-
         cleaned_data = super().clean()
-        no_groups = len(cleaned_data.get('groups', [])) == 0
-        no_users = len(cleaned_data.get('users', [])) == 0
+        no_groups = len(cleaned_data.get("groups", [])) == 0
+        no_users = len(cleaned_data.get("users", [])) == 0
         no_emails = len([x for x in cleaned_data.get("emails", "").split(",") if x]) == 0
         if no_groups and no_users and no_emails:
             msg = _("You must select at least one group, user, or email address!")

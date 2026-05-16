@@ -2,15 +2,14 @@
 Test module specifically for zoneinfo migration functionality.
 Tests all the key areas that were changed from pytz to zoneinfo.
 """
-import calendar
-from datetime import datetime, date, timedelta
-from unittest.mock import patch
 
+from datetime import date, timedelta
+from zoneinfo import ZoneInfo
+
+import recurrence
 from django.conf import settings
 from django.test import TestCase, override_settings
 from django.utils import timezone
-from zoneinfo import ZoneInfo
-import recurrence
 
 from qatrack.qa import models
 from qatrack.qa.tests import utils as qautils
@@ -215,7 +214,7 @@ class TestRecurrenceStringAssignment(TestCase):
 
         # Should have been converted to a proper recurrence object
         self.assertIsNotNone(frequency.recurrences)
-        self.assertTrue(hasattr(frequency.recurrences, 'dtstart'))
+        self.assertTrue(hasattr(frequency.recurrences, "dtstart"))
         self.assertEqual(frequency.recurrences.dtstart.tzinfo, self.tz)
 
     def test_string_assignment_with_rrule_prefix(self):
@@ -225,7 +224,7 @@ class TestRecurrenceStringAssignment(TestCase):
         frequency.recurrences = "RRULE:FREQ=WEEKLY;INTERVAL=2"
 
         self.assertIsNotNone(frequency.recurrences)
-        self.assertTrue(hasattr(frequency.recurrences, 'dtstart'))
+        self.assertTrue(hasattr(frequency.recurrences, "dtstart"))
         self.assertEqual(frequency.recurrences.dtstart.tzinfo, self.tz)
 
     def test_recurrence_object_assignment(self):
@@ -251,7 +250,7 @@ class TestRecurrenceStringAssignment(TestCase):
         # The RecurrenceField itself creates a default recurrence object when assigned ""
         # This is the field's default behavior, not our custom conversion
         self.assertIsNotNone(frequency.recurrences)
-        self.assertTrue(hasattr(frequency.recurrences, 'dtstart'))
+        self.assertTrue(hasattr(frequency.recurrences, "dtstart"))
 
     def test_non_recurrence_field_assignment(self):
         """Test that assignments to other fields are not affected"""

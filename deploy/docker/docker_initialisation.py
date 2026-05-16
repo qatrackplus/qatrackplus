@@ -12,16 +12,14 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-"""A set of utilities to manage the docker instance of qatrack
-"""
+"""A set of utilities to manage the docker instance of qatrack"""
 
-from glob import glob
 import os
+from glob import glob
 
+import numpy as np
 from django.contrib.auth.models import User
 from django.core.management import call_command
-import numpy as np
-
 from docker_utilities import QATRACK_DIRECTORY, wait_for_postrgres
 
 FIXTURES_GLOB: str = os.path.join(QATRACK_DIRECTORY, "fixtures/defaults/*/*")
@@ -32,24 +30,24 @@ def initialisation():
     boots
     """
 
-    print('Waiting for postgres...')
+    print("Waiting for postgres...")
     wait_for_postrgres()
-    print('Connected to postgres')
+    print("Connected to postgres")
 
-    call_command('migrate', interactive=False)
+    call_command("migrate", interactive=False)
 
     all_users = User.objects.all()
     is_superuser = [user.is_superuser for user in all_users]
 
     if not np.any(is_superuser):
-        admin_user = 'admin'
-        admin_password = 'admin'
-        admin_email = 'admin@example.com'
+        admin_user = "admin"
+        admin_password = "admin"
+        admin_email = "admin@example.com"
 
         User.objects.create_superuser(admin_user, admin_email, admin_password)
 
         fixtures = sorted(glob(FIXTURES_GLOB))
         for fixture in fixtures:
-            call_command('loaddata', fixture)
+            call_command("loaddata", fixture)
 
-    call_command('collectstatic', interactive=False)
+    call_command("collectstatic", interactive=False)

@@ -10,9 +10,9 @@ def root_url(app, request, format=None):
     return root + app
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes((IsAuthenticated,))
 def all_api_roots(request, format=None):
-    apps = ['auth', 'attachments', 'contenttypes', 'faults', 'units', 'qa', 'servicelog', 'schema']
+    apps = ["auth", "attachments", "contenttypes", "faults", "units", "qa", "servicelog", "schema"]
     roots = {app: root_url(app, request, format=format) for app in apps}
     return Response(roots)

@@ -15,72 +15,52 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="autoreviewrule",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="autoreviewruleset",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="autosave",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="category",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="frequency",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="reference",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="sublist",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="test",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="testinstance",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="testinstancestatus",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="testlist",
@@ -95,9 +75,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="testlist",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="testlist",
@@ -122,9 +100,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="testlistcycle",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="testlistcycle",
@@ -139,50 +115,36 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="testlistcyclemembership",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="testlistinstance",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="testlistmembership",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="tolerance",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="unittestcollection",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="unittestinfo",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="unittestinfochange",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
     ]

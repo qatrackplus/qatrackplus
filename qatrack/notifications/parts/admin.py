@@ -19,15 +19,18 @@ class PartNoticeAdminForm(forms.ModelForm):
         )
 
     def get_queryset(self, request):  # pragma: nocover
-        return super().get_queryset(request).prefetch_related(
-            "recipients__users",
-            "recipients__groups",
-            "part_categories__part_categories",
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "recipients__users",
+                "recipients__groups",
+                "part_categories__part_categories",
+            )
         )
 
 
 class PartNoticeAdmin(BaseQATrackAdmin):
-
     list_display = ["get_notification_type", "get_recipients", "get_categories"]
     list_filter = ["notification_type", "recipients", "part_categories"]
     search_fields = [
@@ -46,40 +49,50 @@ class PartNoticeAdmin(BaseQATrackAdmin):
     form = PartNoticeAdminForm
 
     fieldsets = (
-        (None, {
-            'fields': ["notification_type"],
-        }),
         (
-            "Recipients", {
-                'fields': ["recipients"],
-                'description': _l("Select which recipient group should receive this notification."),
-            }
+            None,
+            {
+                "fields": ["notification_type"],
+            },
         ),
         (
-            "Filters", {
-                'fields': ['part_categories'],
-                'description':
-                    _l("By using the below filters, you may limit this notification to certain part categories."),
-            }
+            "Recipients",
+            {
+                "fields": ["recipients"],
+                "description": _l("Select which recipient group should receive this notification."),
+            },
+        ),
+        (
+            "Filters",
+            {
+                "fields": ["part_categories"],
+                "description": _l(
+                    "By using the below filters, you may limit this notification to certain part categories."
+                ),
+            },
         ),
     )
 
     class Media:
         js = (
-            'admin/js/jquery.init.js',
-            'jquery/js/jquery.min.js',
+            "admin/js/jquery.init.js",
+            "jquery/js/jquery.min.js",
             "select2/js/select2.js",
             "js/notification_admin.js",
         )
         css = {
-            'all': ("select2/css/select2.css",),
+            "all": ("select2/css/select2.css",),
         }
 
     def get_queryset(self, request):  # pragma: nocover
-        return super().get_queryset(request).prefetch_related(
-            "recipients__users",
-            "recipients__groups",
-            "part_categories__part_categories",
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "recipients__users",
+                "recipients__groups",
+                "part_categories__part_categories",
+            )
         )
 
     def get_notification_type(self, obj):
@@ -101,7 +114,6 @@ class PartNoticeAdmin(BaseQATrackAdmin):
 
 
 class PartCategoryGroupAdmin(BaseQATrackAdmin):
-
     list_display = ["name", "get_categories"]
     list_filter = ["part_categories"]
     search_fields = [
@@ -111,13 +123,13 @@ class PartCategoryGroupAdmin(BaseQATrackAdmin):
 
     class Media:
         js = (
-            'admin/js/jquery.init.js',
-            'jquery/js/jquery.min.js',
+            "admin/js/jquery.init.js",
+            "jquery/js/jquery.min.js",
             "select2/js/select2.js",
             "js/notification_admin.js",
         )
         css = {
-            'all': ("select2/css/select2.css",),
+            "all": ("select2/css/select2.css",),
         }
 
     @admin.display(
@@ -125,7 +137,7 @@ class PartCategoryGroupAdmin(BaseQATrackAdmin):
         ordering="part_categories__name",
     )
     def get_categories(self, obj):
-        return trim(', '.join(obj.part_categories.values_list("name", flat=True)))
+        return trim(", ".join(obj.part_categories.values_list("name", flat=True)))
 
 
 admin.site.register([models.PartNotice], PartNoticeAdmin)

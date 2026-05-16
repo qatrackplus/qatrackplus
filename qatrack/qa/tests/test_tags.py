@@ -1,9 +1,9 @@
 from unittest import mock
 
+import recurrence
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
-import recurrence
 
 from qatrack.qa import models
 from qatrack.qa.templatetags import qa_tags
@@ -24,9 +24,9 @@ class TestTags(TestCase):
     def test_qa_value_form(self):
         form = forms.CreateTestInstanceForm()
         perms = {
-            'qa': {
-                'can_view_history': False,
-                'can_view_ref_tol': False,
+            "qa": {
+                "can_view_history": False,
+                "can_view_ref_tol": False,
             }
         }
         user = None
@@ -38,7 +38,6 @@ class TestTags(TestCase):
         self.assertIsInstance(rendered, str)
 
     def test_as_pass_fail_status(self):
-
         tli = utils.create_test_list_instance(unit_test_collection=self.unit_test_list)
         rendered = qa_tags.as_pass_fail_status(tli)
         self.assertIsInstance(rendered, str)
@@ -59,7 +58,6 @@ class TestTags(TestCase):
 
 
 class TestRefTolSpan(TestCase):
-
     def test_no_ref(self):
         t = models.Test(type=models.BOOLEAN)
         self.assertIn("No Ref", qa_tags.reference_tolerance_span(t, None, None))
@@ -96,7 +94,7 @@ class TestRefTolSpan(TestCase):
             act_high=2,
         )
         result = qa_tags.reference_tolerance_span(t, r, tol)
-        self.assertIn("%s L" % (settings.TEST_STATUS_DISPLAY_SHORT['action']), result)
+        self.assertIn("%s L" % (settings.TEST_STATUS_DISPLAY_SHORT["action"]), result)
 
     def test_percent(self):
         t = models.Test(type=models.NUMERICAL)
@@ -107,14 +105,13 @@ class TestRefTolSpan(TestCase):
 
 
 class TestToleranceForReference(TestCase):
-
     def test_no_ref(self):
         tol = models.Tolerance(type=models.PERCENT)
         self.assertEqual("", qa_tags.tolerance_for_reference(tol, None))
 
     def test_bool(self):
         r = models.Reference(value=1, type=models.BOOLEAN)
-        self.assertIn("%s: Yes" % (settings.TEST_STATUS_DISPLAY['ok']), qa_tags.tolerance_for_reference(None, r))
+        self.assertIn("%s: Yes" % (settings.TEST_STATUS_DISPLAY["ok"]), qa_tags.tolerance_for_reference(None, r))
 
     def test_no_tol(self):
         r = models.Reference(value=1)
@@ -122,7 +119,7 @@ class TestToleranceForReference(TestCase):
 
     def test_multiple_choice(self):
         tol = models.Tolerance(type=models.MULTIPLE_CHOICE, mc_tol_choices="foo", mc_pass_choices="")
-        assert "%s: foo" % (settings.TEST_STATUS_DISPLAY['tolerance']) in qa_tags.tolerance_for_reference(tol, None)
+        assert "%s: foo" % (settings.TEST_STATUS_DISPLAY["tolerance"]) in qa_tags.tolerance_for_reference(tol, None)
 
     def test_absolute(self):
         r = models.Reference(value=1)
@@ -138,7 +135,6 @@ class TestToleranceForReference(TestCase):
 
 
 class TestAsQCWindow:
-
     @property
     def wed(self):
         """Generate a Wed frequency with a 1 day window_start and 1 day window_end"""

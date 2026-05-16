@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 def add_default_autoreviewruleset(apps, schema):
-
     AutoReviewRule = apps.get_model("qa", "AutoReviewRule")
     rules = list(AutoReviewRule.objects.all())
     if not rules:
@@ -20,11 +19,8 @@ def add_default_autoreviewruleset(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0039_auto_20191016_1401'),
+        ("qa", "0039_auto_20191016_1401"),
     ]
 
-    operations = [
-        migrations.RunPython(add_default_autoreviewruleset, lambda apps, schema: None)
-    ]
+    operations = [migrations.RunPython(add_default_autoreviewruleset, lambda apps, schema: None)]

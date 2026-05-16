@@ -2,21 +2,20 @@ import logging
 
 from django.conf import settings
 from django.db.models import Q
-from django.db.models.signals import m2m_changed, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
 from qatrack.parts import models
 from qatrack.qatrack_core.email import send_email_to_users
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger("qatrack")
 
 
 @receiver(post_save, sender=models.Part)
 def on_part_saved(sender, instance, created, **kwargs):
-
-    update_fields = kwargs['update_fields']
-    quantity_did_not_change = update_fields is None or 'quantity_current' not in update_fields
+    update_fields = kwargs["update_fields"]
+    quantity_did_not_change = update_fields is None or "quantity_current" not in update_fields
     if created or quantity_did_not_change:
         return
 
@@ -31,7 +30,7 @@ def on_part_saved(sender, instance, created, **kwargs):
         return
 
     context = {
-        'part': part,
+        "part": part,
     }
 
     try:
@@ -52,7 +51,6 @@ def on_part_saved(sender, instance, created, **kwargs):
 
 
 def get_notification_recipients(part):
-
     from qatrack.notifications.parts import models
 
     subs = models.PartNotice.objects.filter(

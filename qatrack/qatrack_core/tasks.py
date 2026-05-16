@@ -1,21 +1,20 @@
-from functools import wraps
 import logging
 import os
+from functools import wraps
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db import ProgrammingError, connection
 from django.utils import timezone
 from django_q.models import Schedule
 from django_q.tasks import schedule
-from zoneinfo import ZoneInfo
 
 from qatrack.qatrack_core.utils import today_start_end
 
-logger = logging.getLogger('django-q2')
+logger = logging.getLogger("django-q2")
 
 
 def qatrack_task_wrapper(func):
-
     @wraps(func)
     def wrapped(*args, **kwargs):
         if os.name.lower() == "nt":
@@ -39,15 +38,14 @@ def _schedule_periodic_task(function, task_name, interval_min=None, next_run=Non
     if next_run is None:
         # set initial schedule to 7.5 minutes after then next quarter hour
         # the schedule will then run every 15 minutes at HH:07:30, HH:22:30, HH:37:30, HH:52:30
-        next_run = now.replace(
-            minute=0, second=0, microsecond=0
-        ) + timezone.timedelta(seconds=int(interval_min * 60 / 2.))
+        next_run = now.replace(minute=0, second=0, microsecond=0) + timezone.timedelta(
+            seconds=int(interval_min * 60 / 2.0)
+        )
 
         while next_run < now:
             next_run += timezone.timedelta(minutes=interval_min)
 
     try:
-
         sch = Schedule.objects.get(name=task_name)
         sch.func = function
         sch.minutes = interval_min
@@ -56,7 +54,6 @@ def _schedule_periodic_task(function, task_name, interval_min=None, next_run=Non
         logger.info("%s next run updated to %s" % (function, next_run))
 
     except Schedule.DoesNotExist:
-
         schedule(
             function,
             name=task_name,
@@ -72,17 +69,17 @@ def _schedule_periodic_task(function, task_name, interval_min=None, next_run=Non
 def run_periodic_scheduler(model, log_name, handler, time_field="time", recurrence_field="recurrence"):
     """Check a model with a recurring schedule for instances that should be run in the next time period.
 
-        model: the Django model to check,
+    model: the Django model to check,
 
-        log_name: short description to include in log strings,
+    log_name: short description to include in log strings,
 
-        handler: a function that will be called when an instance should be run
-        in the current time period must accept an instance of model, and a
-        datetime when the task should be scheduled for. The handler function
-        should perform the actual scheduling of the task.
+    handler: a function that will be called when an instance should be run
+    in the current time period must accept an instance of model, and a
+    datetime when the task should be scheduled for. The handler function
+    should perform the actual scheduling of the task.
 
-        time_field: The name of the field that holds what time the task should be run
-        recurrence_field: The name of the field that holds the recurrence field
+    time_field: The name of the field that holds what time the task should be run
+    recurrence_field: The name of the field that holds the recurrence field
     """
 
     start_today, end_today = today_start_end()
@@ -104,7 +101,6 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
 
     # now look at recurrences occuring today and see if they should be sent now
     for instance in instances:
-
         # since our recurrence can only occur with a maximum frequency of 1 /
         # day, between will just return ~timezone.now() if the report is to be
         # sent today.  If we make reports available at a higher frequency this
@@ -112,7 +108,8 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
         # note: inc=True required to catch daily recurrences
         occurences = getattr(instance, recurrence_field).between(start_today, end_today, inc=True)
         logger.info(
-            "Occurences for %s %s: %s (between %s & %s)" % (
+            "Occurences for %s %s: %s (between %s & %s)"
+            % (
                 model._meta.model_name,
                 instance.id,
                 occurences,

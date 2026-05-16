@@ -5,15 +5,19 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0014_auto_20171027_1151'),
+        ("issue_tracker", "0014_auto_20171027_1151"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='issue',
-            name='issue_status',
-            field=models.ForeignKey(help_text='Current status of this issue', null=True, on_delete=django.db.models.deletion.PROTECT, to='issue_tracker.IssueStatus'),
+            model_name="issue",
+            name="issue_status",
+            field=models.ForeignKey(
+                help_text="Current status of this issue",
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="issue_tracker.IssueStatus",
+            ),
         ),
     ]

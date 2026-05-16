@@ -10,23 +10,23 @@ from django.utils.text import slugify
 
 def weasyprint_to_pdf(html, name="", paper_size="letter"):
     """Convert HTML to PDF using WeasyPrint with proper paper size support
-    
+
     Args:
         html: HTML content to convert
         name: Optional name for temporary files
         paper_size: Paper size for PDF ('letter' or 'a4')
     """
     try:
-        from weasyprint import HTML, CSS
+        from weasyprint import CSS, HTML
     except ImportError:
         raise ImportError("WeasyPrint not installed. Install with: uv pip install weasyprint")
-    
+
     import tempfile
     import uuid
-    
+
     if not name:
         name = uuid.uuid4().hex[:10]
-    
+
     # Define paper size CSS separately from layout CSS
     paper_css = """
     @page {
@@ -34,20 +34,20 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         margin: 20px 20px 20px 30px;
     }
     """ % paper_size.lower()
-    
+
     # Define layout CSS separately
     layout_css = """
     /* Basic resets */
     * {
         box-sizing: border-box;
     }
-    
+
     body {
         margin: 0;
         padding: 0;
         width: 100%%;
     }
-    
+
     /* Bootstrap grid emulation */
     .row {
         display: flex;
@@ -56,48 +56,48 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         margin-left: -15px;
         width: 100%%;
     }
-    
+
     .col-xs-4 {
         flex: 0 0 33.333333%%;
         max-width: 33.333333%%;
         padding-right: 15px;
         padding-left: 15px;
     }
-    
+
     .col-xs-8 {
         flex: 0 0 66.666667%%;
         max-width: 66.666667%%;
         padding-right: 15px;
         padding-left: 15px;
     }
-    
+
     .col-xs-12 {
         flex: 0 0 100%%;
         max-width: 100%%;
         padding-right: 15px;
         padding-left: 15px;
     }
-    
+
     /* Text alignment */
     .text-right {
         text-align: right !important;
     }
-    
+
     /* Logo styling */
     .logo {
         max-height: 60px;
         margin-top: 20px;
         float: right;
     }
-    
+
     .logo-visible {
         opacity: 1;
     }
-    
+
     .logo-hidden {
         opacity: 0;
     }
-    
+
     /* Container */
     .container {
         width: 100%%;
@@ -106,19 +106,19 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         margin-right: auto;
         margin-left: auto;
     }
-    
+
     /* Header specific */
     h1.pdf {
         margin-top: 20px;
         color: #777;
     }
-    
+
     h5 {
         color: #1c9aea;
         font-weight: bold;
         padding-left: 4px;
     }
-    
+
     /* Filter details styling */
     .dl-horizontal {
         margin: 0;
@@ -129,7 +129,7 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         display: table;
         clear: both;
     }
-    
+
     .dl-horizontal dt {
         float: left;
         clear: left;
@@ -140,7 +140,7 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         padding-right: 10px;
         word-wrap: break-word; /* Allow long words to wrap */
     }
-    
+
     .dl-horizontal dd {
         display: block;
         overflow: hidden; /* Establishes a new block formatting context */
@@ -148,21 +148,21 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         padding-left: 10px;
         min-height: 20px;
     }
-    
+
     /* Report details section */
     .report-details {
         margin-top: 1em;
         margin-bottom: 1em;
     }
     """
-    
+
     # Create WeasyPrint documents with both CSS rules
     html_doc = HTML(string=html)
     css_docs = [
         CSS(string=paper_css),
         CSS(string=layout_css),
     ]
-    
+
     # Generate PDF and return as bytes
     with tempfile.NamedTemporaryFile() as pdf_file:
         html_doc.write_pdf(pdf_file.name, stylesheets=css_docs)
@@ -183,7 +183,6 @@ def chrometopdf(html, name="", paper_size="letter"):
     out_file = None
 
     try:
-
         if not name:
             name = uuid.uuid4().hex[:10]
 
@@ -200,23 +199,23 @@ def chrometopdf(html, name="", paper_size="letter"):
 
         command = [
             settings.CHROME_PATH,
-            '--headless',
-            '--disable-gpu',
-            '--no-sandbox',
-            '--print-to-pdf=%s' % out_path,
-            '--print-to-pdf-no-header',
-            '--print-to-pdf-paper-format=%s' % paper_format,
+            "--headless",
+            "--disable-gpu",
+            "--no-sandbox",
+            "--print-to-pdf=%s" % out_path,
+            "--print-to-pdf-no-header",
+            "--print-to-pdf-paper-format=%s" % paper_format,
             "file://%s" % tmp_html.name,
         ]
 
         if os.name.lower() == "nt":
-            command = ' '.join(command)
+            command = " ".join(command)
 
-        stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
-        stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
+        stdout = open(os.path.join(settings.LOG_ROOT, "report-stdout.txt"), "a")
+        stderr = open(os.path.join(settings.LOG_ROOT, "report-stderr.txt"), "a")
         subprocess.call(command, stdout=stdout, stderr=stderr)
 
-        out_file = open(out_path, 'r+b')
+        out_file = open(out_path, "r+b")
         pdf = out_file.read()
         out_file.close()
 
@@ -271,7 +270,6 @@ def today_end():
 
 
 class relative_dates:
-
     FUTURE_RANGES = [
         "next 7 days",
         "next 30 days",
@@ -326,7 +324,7 @@ class relative_dates:
             end_dt = rd.end
         """
 
-        if not date_range.lower() in self.ALL_DATE_RANGES:
+        if date_range.lower() not in self.ALL_DATE_RANGES:
             raise ValueError("%s is not a valid date range string")
 
         self.date_range = date_range.strip().lower()
@@ -334,7 +332,6 @@ class relative_dates:
         self.pivot = (pivot or timezone.now()).astimezone(timezone.get_current_timezone())
 
     def range(self):
-
         if self.date_range.startswith("today"):
             return start_of_day(self.pivot), end_of_day(self.pivot)
         elif self.date_range.startswith("next"):
@@ -351,24 +348,23 @@ class relative_dates:
         return self.range()[1]
 
     def _next_interval(self):
-
         dr = self.date_range
 
-        if 'days' in dr:
+        if "days" in dr:
             __, num, interval = dr.split()
             start = start_of_day(self.pivot)
             end = end_of_day(start + timezone.timedelta(days=int(num)))
-        elif 'week' in dr:
+        elif "week" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(days=1, weekday=rdelta.SU)
             end = end_of_day(self.pivot) + rdelta.relativedelta(days=7, weekday=rdelta.SA)
-        elif 'months' in dr:
+        elif "months" in dr:
             __, num, interval = dr.split()
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=int(num), day=31)
-        elif 'month' in dr:
+        elif "month" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=1, day=31)
-        elif 'year' in dr:
+        elif "year" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(years=1, month=1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(years=1, month=12, day=31)
         return start, end
@@ -376,45 +372,44 @@ class relative_dates:
     def _this_interval(self):
         dr = self.date_range
 
-        if 'days' in dr:
+        if "days" in dr:
             __, num, interval = dr.split()
             start = start_of_day(self.pivot)
             end = end_of_day(start + timezone.timedelta(days=int(num)))
-        elif 'week' in dr:
+        elif "week" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(weekday=rdelta.SU(-1))
             end = end_of_day(self.pivot) + rdelta.relativedelta(weekday=rdelta.SA(1))
-        elif 'months' in dr:
+        elif "months" in dr:
             __, num, interval = dr.split()
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=int(num), day=31)
-        elif 'month' in dr:
+        elif "month" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=0, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=0, day=31)
-        elif 'year' in dr:
+        elif "year" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(month=1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(month=12, day=31)
 
         return start, end
 
     def _last_interval(self):
-
         dr = self.date_range
 
-        if 'days' in dr:
+        if "days" in dr:
             __, num, interval = dr.split()
             end = end_of_day(self.pivot)
             start = start_of_day(end + timezone.timedelta(days=-int(num)))
-        elif 'week' in dr:
+        elif "week" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(weekday=rdelta.SU(-2))
             end = end_of_day(self.pivot) + rdelta.relativedelta(weeks=-1, weekday=rdelta.SA(1))
-        elif 'months' in dr:
+        elif "months" in dr:
             __, num, interval = dr.split()
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=-int(num), day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=-1, day=31)
-        elif 'month' in dr:
+        elif "month" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(months=-1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(months=-1, day=31)
-        elif 'year' in dr:
+        elif "year" in dr:
             start = start_of_day(self.pivot) + rdelta.relativedelta(years=-1, month=1, day=1)
             end = end_of_day(self.pivot) + rdelta.relativedelta(years=-1, month=12, day=31)
         return start, end

@@ -6,38 +6,73 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('auth', '0011_update_proxy_permissions'),
-        ('faults', '0005_auto_20210317_1538'),
+        ("auth", "0011_update_proxy_permissions"),
+        ("faults", "0005_auto_20210317_1538"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FaultReviewGroup',
+            name="FaultReviewGroup",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('required', models.BooleanField(default=True, help_text='Is review by this group required in order to consider a fault reviewed', verbose_name='required')),
-                ('group', models.OneToOneField(help_text='Select the group responsible for reviewing a fault', on_delete=django.db.models.deletion.PROTECT, to='auth.Group', verbose_name='group')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "required",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Is review by this group required in order to consider a fault reviewed",
+                        verbose_name="required",
+                    ),
+                ),
+                (
+                    "group",
+                    models.OneToOneField(
+                        help_text="Select the group responsible for reviewing a fault",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="auth.Group",
+                        verbose_name="group",
+                    ),
+                ),
             ],
         ),
         migrations.RemoveField(
-            model_name='fault',
-            name='reviewed',
+            model_name="fault",
+            name="reviewed",
         ),
         migrations.RemoveField(
-            model_name='fault',
-            name='reviewed_by',
+            model_name="fault",
+            name="reviewed_by",
         ),
         migrations.CreateModel(
-            name='FaultReviewInstance',
+            name="FaultReviewInstance",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('reviewed', models.DateTimeField(auto_now_add=True, verbose_name='review date & time')),
-                ('fault', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='faults.Fault', verbose_name='fault')),
-                ('fault_review_group', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='faults.FaultReviewGroup', verbose_name='fault review group instance')),
-                ('reviewed_by', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.PROTECT, related_name='faults_reviewed', to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("reviewed", models.DateTimeField(auto_now_add=True, verbose_name="review date & time")),
+                (
+                    "fault",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="faults.Fault", verbose_name="fault"
+                    ),
+                ),
+                (
+                    "fault_review_group",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="faults.FaultReviewGroup",
+                        verbose_name="fault review group instance",
+                    ),
+                ),
+                (
+                    "reviewed_by",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="faults_reviewed",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

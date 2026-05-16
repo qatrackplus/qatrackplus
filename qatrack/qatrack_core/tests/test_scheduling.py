@@ -1,12 +1,10 @@
-import calendar
-import datetime
+from zoneinfo import ZoneInfo
 
+import recurrence
 from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
-from zoneinfo import ZoneInfo
-import recurrence
 
 from qatrack.qa import models
 from qatrack.qa.tests import utils as qautils
@@ -14,7 +12,6 @@ from qatrack.qatrack_core import dates, scheduling
 
 
 class TestDateFunctions:
-
     def test_last_month_dates_jan(self):
         dt = timezone.datetime(2019, 1, 15, tzinfo=timezone.utc)
         start, end = dates.last_month_dates(dt)
@@ -35,7 +32,6 @@ class TestDateFunctions:
 
 
 class TestCalcDueDate(TestCase):
-
     def setUp(self):
         self.tz = ZoneInfo("America/Toronto")
         self.rule = qautils.create_frequency()
@@ -120,7 +116,6 @@ class TestCalcDueDate(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_due_date_daily(self):
-
         self.rule.recurrences = "FREQ=DAILY;INTERVAL=1"
         self.rule.save()
 
@@ -134,7 +129,6 @@ class TestCalcDueDate(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_due_date_weekly(self):
-
         self.rule.recurrences = "FREQ=WEEKLY;INTERVAL=1"
         self.rule.save()
 
@@ -386,7 +380,7 @@ class TestCalcDueDate(TestCase):
         # due date in Nov is 8 4 week periods after April 15 which is Nov 25
         # due date in Dec is 9 4 week periods after April 15 which is Dec 23
         expected_due_date = self.make_dt(timezone.datetime(2018, 12, 23, 7, 0))
-        assert (scheduling.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date())
+        assert scheduling.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
 
     def test_first_of_month_us_classical_offset(self):
         """Ensure due date is calculated correctly when the UTC date is ahead
@@ -438,15 +432,14 @@ class TestCalcDueDate(TestCase):
 
 
 class TestRelocalizeRecurrences(TestCase):
-
     def test_find_models_with_recurrence(self):
         models = scheduling.RecurrenceFieldMixin.recurrence_models()
         assert len(models) == 7  # ReportSchedule, Frequency, 5 notice types
 
     def test_relocalize(self):
         f = qautils.create_frequency()
-        assert 'DTSTART:20120101T05' in str(f.recurrences)  # starts in America/New_York
+        assert "DTSTART:20120101T05" in str(f.recurrences)  # starts in America/New_York
         with override_settings(TIME_ZONE="America/Los_Angeles"):
             scheduling.RecurrenceFieldMixin.relocalize_recurrences()
             f.refresh_from_db()
-            assert 'DTSTART:20120101T08' in str(f.recurrences)  # should now be in America/Los_Angeles
+            assert "DTSTART:20120101T08" in str(f.recurrences)  # should now be in America/Los_Angeles

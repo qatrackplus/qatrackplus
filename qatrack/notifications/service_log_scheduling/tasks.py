@@ -9,11 +9,10 @@ from qatrack.notifications.models import ServiceEventSchedulingNotice
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
-logger = logging.getLogger('django-q2')
+logger = logging.getLogger("django-q2")
 
 
 def run_scheduling_notices():
-
     run_periodic_scheduler(
         ServiceEventSchedulingNotice,
         "run_service_log_scheduling_notices",
@@ -24,7 +23,6 @@ def run_scheduling_notices():
 
 
 def schedule_service_event_scheduling_notice(notice, send_time):
-
     logger.info("Service Event Scheduling notification %s for %s" % (notice.pk, send_time))
     name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
 
@@ -41,15 +39,13 @@ def schedule_service_event_scheduling_notice(notice, send_time):
 
 
 def send_scheduling_notice(notice_id, task_name=""):
-
     notice = ServiceEventSchedulingNotice.objects.filter(id=notice_id).first()
 
     if notice:
-
         if not notice.send_required():
             logger.info(
-                "Send of ServiceEventSchedulingNotice %s requested, but no Service Event Schedules to notify about" %
-                notice_id
+                "Send of ServiceEventSchedulingNotice %s requested, but no Service Event Schedules to notify about"
+                % notice_id
             )  # noqa: E501
             return
 
@@ -59,8 +55,8 @@ def send_scheduling_notice(notice_id, task_name=""):
             return
     else:
         logger.info(
-            "Send of ServiceEventSchedulingNotice %s requested, but no such ServiceEventSchedulingNotice exists" %
-            notice_id
+            "Send of ServiceEventSchedulingNotice %s requested, but no such ServiceEventSchedulingNotice exists"
+            % notice_id
         )  # noqa: E501
         return
 
@@ -68,7 +64,7 @@ def send_scheduling_notice(notice_id, task_name=""):
         send_email_to_users(
             recipients,
             "service_log_scheduling/email.html",
-            context={'notice': notice},
+            context={"notice": notice},
             subject_template="service_log_scheduling/subject.txt",
             text_template="service_log_scheduling/email.txt",
         )

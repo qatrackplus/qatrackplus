@@ -5,5 +5,5 @@ from qatrack.attachments import models
 
 
 class AttachmentViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.Attachment.objects.all().order_by('-created')
+    queryset = models.Attachment.objects.all().order_by("-created")
     serializer_class = serializers.AttachmentSerializer

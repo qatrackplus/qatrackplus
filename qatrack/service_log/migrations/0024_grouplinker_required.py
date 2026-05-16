@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0023_merge_20190903_1429'),
+        ("service_log", "0023_merge_20190903_1429"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='grouplinker',
-            name='required',
-            field=models.BooleanField(default=False, help_text='Force users to add user from this group linker when creating a service event', verbose_name='Required'),
+            model_name="grouplinker",
+            name="required",
+            field=models.BooleanField(
+                default=False,
+                help_text="Force users to add user from this group linker when creating a service event",
+                verbose_name="Required",
+            ),
         ),
     ]

@@ -1,27 +1,32 @@
 from django import forms
 from django.test import TestCase
 
-from qatrack.qatrack_core.forms import BetterFormMixin, BetterModelForm
+from qatrack.qatrack_core.forms import BetterFormMixin
 
 
 class TestForm(BetterFormMixin, forms.Form):
     """A test form with fieldsets."""
+
     name = forms.CharField()
     age = forms.IntegerField()
     email = forms.EmailField()
 
     fieldsets = [
         (
-            'personal', {
-                'fields': ['name', 'age'],
-                'legend': 'Personal Information',
-                'classes': ['personal-info'],
-                'description': 'Your personal details',
-            }
+            "personal",
+            {
+                "fields": ["name", "age"],
+                "legend": "Personal Information",
+                "classes": ["personal-info"],
+                "description": "Your personal details",
+            },
         ),
-        ('contact', {
-            'fields': ['email'],
-        }),
+        (
+            "contact",
+            {
+                "fields": ["email"],
+            },
+        ),
     ]
 
 
@@ -38,19 +43,19 @@ class BetterFormMixinTest(TestCase):
 
         # Test personal fieldset
         name, options = fieldsets[0]
-        self.assertEqual(name, 'personal')
-        self.assertEqual(options['fields'], ['name', 'age'])
-        self.assertEqual(options['legend'], 'Personal Information')
-        self.assertEqual(options['classes'], ['personal-info'])
-        self.assertEqual(options['description'], 'Your personal details')
+        self.assertEqual(name, "personal")
+        self.assertEqual(options["fields"], ["name", "age"])
+        self.assertEqual(options["legend"], "Personal Information")
+        self.assertEqual(options["classes"], ["personal-info"])
+        self.assertEqual(options["description"], "Your personal details")
 
         # Test contact fieldset
         name, options = fieldsets[1]
-        self.assertEqual(name, 'contact')
-        self.assertEqual(options['fields'], ['email'])
-        self.assertEqual(options['legend'], 'Contact')
-        self.assertEqual(options['classes'], ())
-        self.assertEqual(options['description'], '')
+        self.assertEqual(name, "contact")
+        self.assertEqual(options["fields"], ["email"])
+        self.assertEqual(options["legend"], "Contact")
+        self.assertEqual(options["classes"], ())
+        self.assertEqual(options["description"], "")
 
     def test_as_fieldset(self):
         """Test that as_fieldset renders the correct HTML."""
@@ -58,7 +63,7 @@ class BetterFormMixinTest(TestCase):
 
         # Check for fieldset elements
         self.assertIn('<fieldset class="personal-info">', html)
-        self.assertIn('<legend>Personal Information</legend>', html)
+        self.assertIn("<legend>Personal Information</legend>", html)
         self.assertIn('<p class="description">Your personal details</p>', html)
 
         # Check for form fields
@@ -78,7 +83,7 @@ class BetterFormMixinTest(TestCase):
         self.assertEqual(len(fieldsets), 1)
         name, options = fieldsets[0]
         self.assertIsNone(name)
-        self.assertEqual(options['fields'], ['name'])
+        self.assertEqual(options["fields"], ["name"])
 
     def test_missing_field(self):
         """Test that fieldsets handle missing fields gracefully."""
@@ -86,9 +91,12 @@ class BetterFormMixinTest(TestCase):
         class MissingFieldForm(BetterFormMixin, forms.Form):
             name = forms.CharField()
             fieldsets = [
-                ('test', {
-                    'fields': ['name', 'nonexistent_field'],
-                }),
+                (
+                    "test",
+                    {
+                        "fields": ["name", "nonexistent_field"],
+                    },
+                ),
             ]
 
         form = MissingFieldForm()
@@ -96,4 +104,4 @@ class BetterFormMixinTest(TestCase):
 
         self.assertEqual(len(fieldsets), 1)
         name, options = fieldsets[0]
-        self.assertEqual(options['fields'], ['name'])  # nonexistent_field should be filtered out
+        self.assertEqual(options["fields"], ["name"])  # nonexistent_field should be filtered out

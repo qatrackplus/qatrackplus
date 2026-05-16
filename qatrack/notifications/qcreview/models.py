@@ -16,7 +16,6 @@ from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 
 
 class QCReviewNotice(RecurrenceFieldMixin, models.Model):
-
     UNREVIEWED = 0
 
     NOTIFICATION_TYPES = ((UNREVIEWED, _l("Notify about test list instances awaiting review")),)
@@ -102,17 +101,20 @@ class QCReviewNotice(RecurrenceFieldMixin, models.Model):
         return tlis.order_by("unit_test_collection__unit__%s" % settings.ORDER_UNITS_BY, "unit_test_collection__name")
 
     def tlis_by_unit_utc(self):
-
         tlis = self.tlis()
-        return tlis.values(
-            "unit_test_collection__unit__name",
-            "unit_test_collection__name",
-        ).order_by(
-            "unit_test_collection__unit__name",
-            "unit_test_collection__name",
-        ).annotate(
-            Count("unit_test_collection__unit__name"),
-            Count("unit_test_collection__name"),
+        return (
+            tlis.values(
+                "unit_test_collection__unit__name",
+                "unit_test_collection__name",
+            )
+            .order_by(
+                "unit_test_collection__unit__name",
+                "unit_test_collection__name",
+            )
+            .annotate(
+                Count("unit_test_collection__unit__name"),
+                Count("unit_test_collection__name"),
+            )
         )
 
     def send_required(self):

@@ -8,7 +8,6 @@ from qatrack.units.models import Site
 
 
 class SupplierFilter(filters.FilterSet):
-
     class Meta:
         model = models.Supplier
         fields = {
@@ -18,7 +17,6 @@ class SupplierFilter(filters.FilterSet):
 
 
 class RoomFilter(filters.FilterSet):
-
     site = filters.RelatedFilter(SiteFilter, field_name="site", queryset=Site.objects.all())
 
     class Meta:
@@ -29,7 +27,6 @@ class RoomFilter(filters.FilterSet):
 
 
 class StorageFilter(filters.FilterSet):
-
     room = filters.RelatedFilter(RoomFilter, field_name="room", queryset=models.Room.objects.all())
 
     class Meta:
@@ -41,7 +38,6 @@ class StorageFilter(filters.FilterSet):
 
 
 class PartCategoryFilter(filters.FilterSet):
-
     class Meta:
         model = models.PartCategory
         fields = {
@@ -50,7 +46,6 @@ class PartCategoryFilter(filters.FilterSet):
 
 
 class PartFilter(filters.FilterSet):
-
     part_category = filters.RelatedFilter(
         PartCategoryFilter,
         field_name="part_category",
@@ -74,7 +69,6 @@ class PartFilter(filters.FilterSet):
 
 
 class PartStorageCollectionFilter(filters.FilterSet):
-
     part = filters.RelatedFilter(PartFilter, field_name="part", queryset=models.Part.objects.all())
     storage = filters.RelatedFilter(StorageFilter, field_name="storage", queryset=models.Storage.objects.all())
 
@@ -86,7 +80,6 @@ class PartStorageCollectionFilter(filters.FilterSet):
 
 
 class PartSupplierCollectionFilter(filters.FilterSet):
-
     part = filters.RelatedFilter(PartFilter, field_name="part", queryset=models.Part.objects.all())
     supplier = filters.RelatedFilter(SupplierFilter, field_name="supplier", queryset=models.Supplier.objects.all())
 
@@ -98,7 +91,6 @@ class PartSupplierCollectionFilter(filters.FilterSet):
 
 
 class PartUsedFilter(filters.FilterSet):
-
     service_event = filters.RelatedFilter(
         ServiceEventFilter, field_name="service_event", queryset=ServiceEvent.objects.all()
     )

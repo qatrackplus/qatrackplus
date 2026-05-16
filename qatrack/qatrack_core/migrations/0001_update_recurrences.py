@@ -23,7 +23,7 @@ def update_recurrences(apps, schema_editor):
             model = apps.get_model(app_label, model_name)
             recurrence_start = timezone.datetime(2012, 1, 1).replace(tzinfo=tz)
             for obj in model.objects.all():
-                if hasattr(obj, 'recurrences'):
+                if hasattr(obj, "recurrences"):
                     if obj.recurrences:
                         obj.recurrences.dtstart = recurrence_start
                     obj.save()
@@ -32,14 +32,12 @@ def update_recurrences(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('reports', '0008_auto_20200722_1707'),
-        ('notifications', '0024_serviceeventschedulingnotice'),
-        ('qa', '0058_testlistinstance_user_key'),
+        ("reports", "0008_auto_20200722_1707"),
+        ("notifications", "0024_serviceeventschedulingnotice"),
+        ("qa", "0058_testlistinstance_user_key"),
     ]
 
     operations = [
         migrations.RunPython(update_recurrences, lambda apps, schema: None),
     ]
-

@@ -32,7 +32,6 @@ def update_last_instances(service_event):
 
 @receiver(post_save, sender=models.ServiceEvent)
 def on_service_event_saved(*args, **kwargs):
-
     if not loaded_from_fixture(kwargs):
         update_last_instances(kwargs["instance"])
 

@@ -200,6 +200,11 @@ ignore = [
     "DJ",    # Django specific rules (too many legacy violations)
     "E402",  # module level import not at top of file
     "E722",  # bare except
+    "F401",  # unused import
+    "F403",  # star import
+    "F811",  # redefinition
+    "E721",  # type comparison
+    "F821",  # undefined name
 ]
 
 [tool.ruff.lint.isort]

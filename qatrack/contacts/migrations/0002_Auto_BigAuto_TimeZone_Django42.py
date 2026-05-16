@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="contact",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
     ]

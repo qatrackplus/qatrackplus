@@ -7,15 +7,16 @@ import qatrack.attachments.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('attachments', '0003_attachment_serviceevent'),
+        ("attachments", "0003_attachment_serviceevent"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='attachment',
-            name='attachment',
-            field=models.FileField(max_length=255, upload_to=qatrack.attachments.models.get_upload_path, verbose_name='Attachment'),
+            model_name="attachment",
+            name="attachment",
+            field=models.FileField(
+                max_length=255, upload_to=qatrack.attachments.models.get_upload_path, verbose_name="Attachment"
+            ),
         ),
     ]

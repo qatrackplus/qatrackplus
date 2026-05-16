@@ -13,7 +13,7 @@ from qatrack.qatrack_core.tasks import (
 from qatrack.reports.models import ReportSchedule
 from qatrack.reports.reports import CONTENT_TYPES
 
-logger = logging.getLogger('django-q2')
+logger = logging.getLogger("django-q2")
 
 
 @qatrack_task_wrapper
@@ -27,7 +27,6 @@ def run_reports():
 
 @qatrack_task_wrapper
 def schedule_report(s, send_time):
-
     logger.info("Scheduling report %s for %s" % (s.report_id, send_time))
     name = "Send report %d %s" % (s.report_id, send_time.isoformat())
     schedule(
@@ -44,7 +43,6 @@ def schedule_report(s, send_time):
 
 @qatrack_task_wrapper
 def send_report(schedule_id, task_name=""):
-
     logger.info("Attempting Send of ReportSchedule %s" % schedule_id)
 
     s = ReportSchedule.objects.filter(id=schedule_id).first()
@@ -63,10 +61,7 @@ def send_report(schedule_id, task_name=""):
         send_email_to_users(
             recipients,
             "reports/email.html",
-            context={
-                'report': s.report,
-                "report_schedule": s
-            },
+            context={"report": s.report, "report_schedule": s},
             subject_template="reports/email_subject.txt",
             text_template="reports/email.txt",
             attachments=[(fname, attach, CONTENT_TYPES[s.report.report_format])],

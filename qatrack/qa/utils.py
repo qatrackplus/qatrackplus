@@ -27,7 +27,7 @@ def to_precision(x, p):
 
     x = float(x)
 
-    if x == 0.:
+    if x == 0.0:
         return "0"
 
     out = []
@@ -44,11 +44,11 @@ def to_precision(x, p):
         tens = math.pow(10, e - p + 1)
         n = math.floor(x / tens)
 
-    if abs((n + 1.) * tens - x) <= abs(n * tens - x):
+    if abs((n + 1.0) * tens - x) <= abs(n * tens - x):
         n = n + 1
 
     if n >= math.pow(10, p):
-        n = n / 10.
+        n = n / 10.0
         e = e + 1
 
     m = "%.*g" % (p, n)
@@ -58,17 +58,17 @@ def to_precision(x, p):
         if p > 1:
             out.append(".")
             out.extend(m[1:p])
-        out.append('e')
+        out.append("e")
         if e > 0:
             out.append("+")
         out.append(str(e))
     elif e == (p - 1):
         out.append(m)
     elif e >= 0:
-        out.append(m[:e + 1])
+        out.append(m[: e + 1])
         if e + 1 < len(m):
             out.append(".")
-            out.extend(m[e + 1:])
+            out.extend(m[e + 1 :])
     else:
         out.append("0.")
         out.extend(["0"] * -(e + 1))
@@ -138,7 +138,7 @@ def almost_equal(a, b, significant=7):
     except ZeroDivisionError:
         sc_a = 0.0
 
-    return abs(sc_b - sc_a) <= math.pow(10., -(significant - 1))
+    return abs(sc_b - sc_a) <= math.pow(10.0, -(significant - 1))
 
 
 def check_query_count():  # pragma: nocover
@@ -147,8 +147,9 @@ def check_query_count():  # pragma: nocover
     is making
     """
 
-    from django.db import connection
     import time
+
+    from django.db import connection
 
     def decorator(func):
         if settings.DEBUG:
@@ -169,8 +170,8 @@ def check_query_count():  # pragma: nocover
 
 
 def get_bool_tols(user_klass=None, tol_klass=None):
-
     from qatrack.qa import models
+
     user_klass = user_klass or models.User
     tol_klass = tol_klass or models.Tolerance
     user = get_internal_user(user_klass)
@@ -185,9 +186,10 @@ def get_bool_tols(user_klass=None, tol_klass=None):
 
 
 def get_internal_user(user_klass=None):
+    from django.contrib.auth.hashers import make_password
 
     from qatrack.qa import models
-    from django.contrib.auth.hashers import make_password
+
     user_klass = user_klass or models.User
 
     try:
@@ -206,7 +208,7 @@ def format_qc_value(val, format_str, _try_default=True):
     (*args)" and then trying new "<foo>".format(*args) style. If both of those
     methods fail, then we try using settings.DEFAULT_NUMBER_FORMAT before
     falling back to using to_precision and settings.CONSTANT_PRECISION.  If
-    that also fails, just return  str(val).  """
+    that also fails, just return  str(val)."""
 
     if format_str:
         try:
@@ -268,7 +270,6 @@ def copy_unit_config(from_unit, to_unit):
         for day in range(len(utc.tests_object)):
             __, tl = utc.get_list(day=day)
             for t in tl.ordered_tests():
-
                 uti_old = UnitTestInfo.objects.get(unit=from_unit, test=t)
                 if t.id in existing_utis:
                     continue

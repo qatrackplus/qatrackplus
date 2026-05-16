@@ -10,7 +10,6 @@ class MultipleCharField(forms.CharField):
 
 
 class UserChoiceField(forms.ModelChoiceField):
-
     def label_from_instance(self, obj):
         return obj.get_full_name()
 
@@ -27,7 +26,7 @@ class BetterFormMixin:
         if not isinstance(self, BetterFormMixin):
             # Copy our methods to the form instance
             form_instance = args[0] if args else self
-            for attr in ['get_fieldsets', 'add_fieldset', 'as_fieldset', '_html_fieldset']:
+            for attr in ["get_fieldsets", "add_fieldset", "as_fieldset", "_html_fieldset"]:
                 method = getattr(BetterFormMixin, attr)
                 bound_method = method.__get__(form_instance, form_instance.__class__)
                 setattr(form_instance, attr, bound_method)
@@ -47,25 +46,27 @@ class BetterFormMixin:
         """
         if self._cached_fieldsets is None:
             self._cached_fieldsets = []
-            if hasattr(self, 'fieldsets') and self.fieldsets:
+            if hasattr(self, "fieldsets") and self.fieldsets:
                 for name, options in self.fieldsets:
-                    fields = options.get('fields', ())
+                    fields = options.get("fields", ())
                     # Make sure we have access to the form's fields
-                    form_fields = getattr(self, 'fields', {})
+                    form_fields = getattr(self, "fields", {})
                     filtered_fields = [f for f in fields if f in form_fields]
-                    self._cached_fieldsets.append((
-                        name, {
-                            'fields': filtered_fields,
-                            'legend': options.get('legend',
-                                                  name.replace('_', ' ').title() if name else None),
-                            'classes': options.get('classes', ()),
-                            'description': options.get('description', ''),
-                        }
-                    ))
+                    self._cached_fieldsets.append(
+                        (
+                            name,
+                            {
+                                "fields": filtered_fields,
+                                "legend": options.get("legend", name.replace("_", " ").title() if name else None),
+                                "classes": options.get("classes", ()),
+                                "description": options.get("description", ""),
+                            },
+                        )
+                    )
             else:
                 # Make sure we have access to the form's fields
-                form_fields = getattr(self, 'fields', {})
-                self._cached_fieldsets = [(None, {'fields': list(form_fields.keys())})]
+                form_fields = getattr(self, "fields", {})
+                self._cached_fieldsets = [(None, {"fields": list(form_fields.keys())})]
         return self._cached_fieldsets
 
     def add_fieldset(self, name, options):
@@ -84,36 +85,37 @@ class BetterFormMixin:
         output = []
         for name, options in self.get_fieldsets():
             output.append(self._html_fieldset(name, options))
-        return mark_safe('\n'.join(output))
+        return mark_safe("\n".join(output))
 
     def _html_fieldset(self, name, options):
         """Return an individual fieldset as HTML."""
         if name:
-            legend = options.get('legend', name)
-            classes = ' '.join(options.get('classes', []))
+            legend = options.get("legend", name)
+            classes = " ".join(options.get("classes", []))
             if classes:
                 fieldset_tpl = '<fieldset class="%s">' % classes
             else:
-                fieldset_tpl = '<fieldset>'
+                fieldset_tpl = "<fieldset>"
             output = [fieldset_tpl]
             if legend:
-                output.append('<legend>%s</legend>' % legend)
+                output.append("<legend>%s</legend>" % legend)
         else:
             output = []
 
-        if options.get('description'):
-            output.append('<p class="description">%s</p>' % options['description'])
+        if options.get("description"):
+            output.append('<p class="description">%s</p>' % options["description"])
 
-        for field_name in options['fields']:
-            if field_name in getattr(self, 'fields', {}):
+        for field_name in options["fields"]:
+            if field_name in getattr(self, "fields", {}):
                 output.append(str(self[field_name]))
 
         if name:
-            output.append('</fieldset>')
+            output.append("</fieldset>")
 
-        return '\n'.join(output)
+        return "\n".join(output)
 
 
 class BetterModelForm(BetterFormMixin, forms.ModelForm):
     """A ModelForm subclass that includes fieldset support."""
+
     pass

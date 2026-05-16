@@ -6,16 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0006_auto_20180725_1230'),
+        ("parts", "0006_auto_20180725_1230"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='part',
-            name='name',
-            field=models.CharField(default='temp name', help_text='Brief name describing this part', max_length=255),
+            model_name="part",
+            name="name",
+            field=models.CharField(default="temp name", help_text="Brief name describing this part", max_length=255),
             preserve_default=False,
         ),
     ]

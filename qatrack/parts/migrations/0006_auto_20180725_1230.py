@@ -8,20 +8,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0005_auto_20180601_1212'),
+        ("parts", "0005_auto_20180601_1212"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='part',
-            name='alt_part_number',
-            field=models.CharField(blank=True, max_length=32, null=True, verbose_name='Alternate part number'),
+            model_name="part",
+            name="alt_part_number",
+            field=models.CharField(blank=True, max_length=32, null=True, verbose_name="Alternate part number"),
         ),
         migrations.AlterField(
-            model_name='part',
-            name='cost',
-            field=models.DecimalField(blank=True, decimal_places=2, default=0, help_text='Cost of this part', max_digits=10, null=True, validators=[django.core.validators.MinValueValidator(Decimal('0.00'))]),
+            model_name="part",
+            name="cost",
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                default=0,
+                help_text="Cost of this part",
+                max_digits=10,
+                null=True,
+                validators=[django.core.validators.MinValueValidator(Decimal("0.00"))],
+            ),
         ),
     ]

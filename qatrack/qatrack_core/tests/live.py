@@ -1,20 +1,18 @@
+import shutil
+import time
 from contextlib import contextmanager
 from functools import wraps
-import time
-import shutil
 
+import pytest
 from django.conf import settings
 from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.servers.basehttp import WSGIServer
 from django.test.testcases import LiveServerThread, QuietWSGIRequestHandler
-import pytest
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as e_c
@@ -25,9 +23,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 # From http://stackoverflow.com/a/20559494
 def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
-
     def outer(func):
-
         @wraps(func)
         def wrapper(*args, **kwargs):
             assert max_retries > 0
@@ -84,6 +80,7 @@ class LiveServerSingleThread(LiveServerThread):
 
 class StaticLiveServerSingleThreadedTestCase(StaticLiveServerTestCase):
     "A thin sub-class which only sets the single-threaded server as a class"
+
     server_thread_class = LiveServerSingleThread
 
     static_handler = StaticFilesHandler
@@ -91,30 +88,30 @@ class StaticLiveServerSingleThreadedTestCase(StaticLiveServerTestCase):
 
 @pytest.mark.selenium
 class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
-
     @classmethod
     def setUpClass(cls):
-        use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
-        browser_setting = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
+        use_virtual_display = getattr(settings, "SELENIUM_VIRTUAL_DISPLAY", False)
+        browser_setting = getattr(settings, "SELENIUM_BROWSER", "firefox")
 
         if use_virtual_display:
             # Make sure xvfb is installed
             from pyvirtualdisplay import Display
+
             cls.display = Display(visible=0, size=(1920, 1080))
             cls.display.start()
         else:
             cls.display = None
 
-        if browser_setting == 'chromium':
-            from selenium.webdriver.chrome.service import Service as ChromeService
+        if browser_setting == "chromium":
             from selenium.webdriver.chrome.options import Options as ChromeOptions
+            from selenium.webdriver.chrome.service import Service as ChromeService
 
-            chromium_driver_path = getattr(settings, 'SELENIUM_CHROMIUM_DRIVER_PATH', '')
+            chromium_driver_path = getattr(settings, "SELENIUM_CHROMIUM_DRIVER_PATH", "")
             chrome_options = ChromeOptions()
             if use_virtual_display:
-                chrome_options.add_argument('--headless')
-                chrome_options.add_argument('--no-sandbox')
-                chrome_options.add_argument('--disable-dev-shm-usage')
+                chrome_options.add_argument("--headless")
+                chrome_options.add_argument("--no-sandbox")
+                chrome_options.add_argument("--disable-dev-shm-usage")
 
             if chromium_driver_path:
                 service = ChromeService(executable_path=chromium_driver_path)
@@ -122,22 +119,22 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             else:
                 cls.driver = webdriver.Chrome(options=chrome_options)
         else:
-            from selenium.webdriver.firefox.service import Service as FirefoxService
             from selenium.webdriver.firefox.options import Options as FirefoxOptions
+            from selenium.webdriver.firefox.service import Service as FirefoxService
 
             ff_options = FirefoxOptions()
             if use_virtual_display:
-                ff_options.add_argument('--headless')
+                ff_options.add_argument("--headless")
             else:
-                ff_options.add_argument('--disable-headless')
+                ff_options.add_argument("--disable-headless")
 
-            firefox_driver_path = getattr(settings, 'SELENIUM_FIREFOX_DRIVER_PATH', '')
+            firefox_driver_path = getattr(settings, "SELENIUM_FIREFOX_DRIVER_PATH", "")
             if firefox_driver_path:
                 service = FirefoxService(executable_path=firefox_driver_path)
             else:
                 # Try to use system geckodriver
-                service = FirefoxService(executable_path=shutil.which('geckodriver'))
-                
+                service = FirefoxService(executable_path=shutil.which("geckodriver"))
+
             cls.driver = webdriver.Firefox(service=service, options=ff_options)
 
         orig_find_element = cls.driver.find_element
@@ -160,8 +157,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @classmethod
     def maximize(cls):
-
-        if getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False):
+        if getattr(settings, "SELENIUM_VIRTUAL_DISPLAY", False):
             for i in range(5):
                 try:
                     cls.driver.maximize_window()
@@ -180,7 +176,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @contextmanager
     def wait_for_page_load(self, timeout=2):
-        old_page = self.driver.find_element(By.TAG_NAME, 'html')
+        old_page = self.driver.find_element(By.TAG_NAME, "html")
         yield
         WebDriverWait(self.driver, timeout).until(staleness_of(old_page))
 
@@ -235,13 +231,11 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             select.select_by_index(index)
 
     def select_by_text(self, el_id, text):
-
         self.scroll_into_view(el_id)
         try:
             select = Select(self.driver.find_element(By.ID, el_id))
             select.select_by_visible_text(text)
         except:  # noqa: E722
-
             sel2 = self.driver.find_element(By.ID, "select2-%s-container" % el_id)
             sel2.click()
 
@@ -252,19 +246,17 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                     break
 
     def select_by_value(self, el_id, val):
-
         self.scroll_into_view(el_id)
         try:
             select = Select(self.driver.find_element(By.ID, el_id))
             select.select_by_value(val)
         except:  # noqa: E722
-
             sel2 = self.driver.find_element(By.ID, "select2-%s-container" % el_id)
             sel2.click()
 
             els = self.driver.find_elements(By.CLASS_NAME, "select2-results__option")
             for el in els:
-                if el.get_attribute('id').endswith(val):
+                if el.get_attribute("id").endswith(val):
                     el.click()
                     break
 

@@ -9,9 +9,8 @@ from qatrack.qa.utils import get_bool_tols, get_internal_user
 
 
 def create_bool_tolerances(apps, schema):
-
-    Tolerance = apps.get_model('qa', 'Tolerance')
-    User = apps.get_model('auth', 'User')
+    Tolerance = apps.get_model("qa", "Tolerance")
+    User = apps.get_model("auth", "User")
 
     get_internal_user(User)
 
@@ -19,21 +18,25 @@ def create_bool_tolerances(apps, schema):
 
 
 def delete_bool_tolerances(apps, schema):
-    Tolerance = apps.get_model('qa', 'Tolerance')
+    Tolerance = apps.get_model("qa", "Tolerance")
     Tolerance.objects.filter(type=BOOLEAN).delete()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0004_auto_20171103_1615'),
+        ("qa", "0004_auto_20171103_1615"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tolerance',
-            name='bool_warning_only',
-            field=models.BooleanField(default=False, editable=False, help_text='Boolean tests not matching references should be considered at tolerance rather than action', verbose_name='Boolean Warning Only'),
+            model_name="tolerance",
+            name="bool_warning_only",
+            field=models.BooleanField(
+                default=False,
+                editable=False,
+                help_text="Boolean tests not matching references should be considered at tolerance rather than action",
+                verbose_name="Boolean Warning Only",
+            ),
         ),
-        migrations.RunPython(create_bool_tolerances, delete_bool_tolerances)
+        migrations.RunPython(create_bool_tolerances, delete_bool_tolerances),
     ]

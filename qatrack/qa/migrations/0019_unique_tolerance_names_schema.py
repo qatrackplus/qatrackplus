@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0018_unique_tolerance_names'),
+        ("qa", "0018_unique_tolerance_names"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tolerance',
-            name='name',
+            model_name="tolerance",
+            name="name",
             field=models.CharField(editable=False, max_length=255, unique=True),
         ),
     ]

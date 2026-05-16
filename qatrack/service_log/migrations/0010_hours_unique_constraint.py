@@ -26,22 +26,23 @@ DROP_PARTIAL_INDEX = """
     DROP INDEX hours_bothnull_uni_idx;
 """
 
+
 def forward(apps, schema_editor):
-    if schema_editor.connection.vendor == 'mysql':
+    if schema_editor.connection.vendor == "mysql":
         return
     migrations.RunSQL(CREATE_PARTIAL_INDEX)
 
-def reverse(apps, schema_editor):
 
-    if schema_editor.connection.vendor == 'mysql':
+def reverse(apps, schema_editor):
+    if schema_editor.connection.vendor == "mysql":
         return
 
     migrations.RunSQL(DROP_PARTIAL_INDEX)
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('service_log', '0009_auto_20180411_1644'),
+        ("service_log", "0009_auto_20180411_1644"),
     ]
 
     operations = [migrations.RunPython(forward, reverse)]

@@ -35,11 +35,10 @@ from qatrack.units.models import Unit
 # signals import  needs to be here so signals get registered
 from .. import signals  # NOQA
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger("qatrack")
 
 
 def generate_review_status_context(test_list_instance):
-
     if not test_list_instance:
         return {}
 
@@ -59,7 +58,7 @@ def generate_review_status_context(test_list_instance):
     c = {
         "statuses": dict(statuses),
         "comments": comment_count,
-        "show_icons": settings.ICON_SETTINGS['SHOW_REVIEW_ICONS']
+        "show_icons": settings.ICON_SETTINGS["SHOW_REVIEW_ICONS"],
     }
 
     return c
@@ -105,21 +104,24 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
                     f.history = test_history
 
     def get_context_data(self, **kwargs):
-
         context = super(BaseEditTestListInstance, self).get_context_data(**kwargs)
 
         # override the default queryset for the formset so that we can pull in all the
         # reference/tolerance data without the ORM generating lots of extra queries
-        test_instances = self.object.testinstance_set.order_by("order", "created").select_related(
-            "status",
-            "reference",
-            "tolerance",
-            "unit_test_info__test",
-            "unit_test_info__test__category",
-            "unit_test_info__unit",
-        ).prefetch_related(
-            "unit_test_info__test__attachment_set",
-            "attachment_set",
+        test_instances = (
+            self.object.testinstance_set.order_by("order", "created")
+            .select_related(
+                "status",
+                "reference",
+                "tolerance",
+                "unit_test_info__test",
+                "unit_test_info__test__category",
+                "unit_test_info__unit",
+            )
+            .prefetch_related(
+                "unit_test_info__test__attachment_set",
+                "attachment_set",
+            )
         )
 
         if self.request.method == "POST":
@@ -128,7 +130,7 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
                 self.request.FILES,
                 instance=self.object,
                 queryset=test_instances,
-                user=self.request.user
+                user=self.request.user,
             )
         else:
             formset = self.formset_class(instance=self.object, queryset=test_instances, user=self.request.user)
@@ -144,12 +146,12 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         context["unit_test_collection"] = self.object.unit_test_collection
         context["current_day"] = self.object.day + 1
 
-        if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
-            context['cycle_name'] = self.object.unit_test_collection.name
+        if self.object.unit_test_collection.tests_object.__class__.__name__ == "TestListCycle":
+            context["cycle_name"] = self.object.unit_test_collection.name
 
-        context['borders'] = self.object.test_list.sublist_borders()
+        context["borders"] = self.object.test_list.sublist_borders()
 
-        context['attachments'] = self.object.unit_test_collection.tests_object.attachment_set.all()
+        context["attachments"] = self.object.unit_test_collection.tests_object.attachment_set.all()
 
         rtsqas = sl_models.ReturnToServiceQA.objects.filter(test_list_instance=self.object)
         se_rtsqa = []
@@ -157,10 +159,10 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
             if f.service_event not in se_rtsqa:
                 se_rtsqa.append(f.service_event)
 
-        context['service_events_rtsqa'] = se_rtsqa
+        context["service_events_rtsqa"] = se_rtsqa
 
         se_ib = sl_models.ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
-        context['service_events_ib'] = se_ib
+        context["service_events_ib"] = se_ib
 
         return context
 
@@ -177,7 +179,6 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
 
 
 class UTCList(BaseListableView):
-
     model = models.UnitTestCollection
 
     action = "perform"
@@ -202,7 +203,7 @@ class UTCList(BaseListableView):
         "unit__name": "unit__number",
         "last_instance_pass_fail": False,
         "last_instance_review_status": False,
-        "due_date": "due_date"
+        "due_date": "due_date",
     }
 
     widgets = {
@@ -211,12 +212,12 @@ class UTCList(BaseListableView):
         "frequency__name": SELECT_MULTI,
         "assigned_to__name": SELECT_MULTI,
         "last_instance__work_completed": DATE_RANGE,
-        "due_date": DATE_RANGE
+        "due_date": DATE_RANGE,
     }
 
     date_ranges = {
         "last_instance__work_completed": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
-        "due_date": [YESTERDAY, TODAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK]
+        "due_date": [YESTERDAY, TODAY, TOMORROW, LAST_WEEK, THIS_WEEK, NEXT_WEEK],
     }
 
     select_related = (
@@ -240,12 +241,12 @@ class UTCList(BaseListableView):
     }
 
     prefetch_related = (
-        'last_instance__testinstance_set',
-        'last_instance__testinstance_set__status',
-        'last_instance__reviewed_by',
-        'last_instance__modified_by',
-        'last_instance__created_by',
-        'last_instance__comments',
+        "last_instance__testinstance_set",
+        "last_instance__testinstance_set__status",
+        "last_instance__reviewed_by",
+        "last_instance__modified_by",
+        "last_instance__created_by",
+        "last_instance__comments",
     )
 
     order_by = ["unit__name", "frequency__name", "name"]
@@ -260,15 +261,14 @@ class UTCList(BaseListableView):
 
         # Store templates on view initialization so we don't have to reload them for every row!
         self.templates = {
-            'actions': get_template("qa/unittestcollection_actions.html"),
-            'work_completed': get_template("qa/testlistinstance_work_completed.html"),
-            'review_status': get_template("qa/testlistinstance_review_status.html"),
-            'pass_fail': get_template("qa/pass_fail_status.html"),
-            'due_date': get_template("qa/due_date.html"),
+            "actions": get_template("qa/unittestcollection_actions.html"),
+            "work_completed": get_template("qa/testlistinstance_work_completed.html"),
+            "review_status": get_template("qa/testlistinstance_review_status.html"),
+            "pass_fail": get_template("qa/pass_fail_status.html"),
+            "due_date": get_template("qa/due_date.html"),
         }
 
     def get_fields(self, request=None):
-
         fields = (
             "actions",
             "name",
@@ -290,15 +290,15 @@ class UTCList(BaseListableView):
         return fields
 
     def get_icon(self):
-        return 'fa-pencil-square-o'
+        return "fa-pencil-square-o"
 
     def get_context_data(self, *args, **kwargs):
         context = super(UTCList, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
-        context['view_name'] = current_url
-        context['action'] = self.action
-        context['page_title'] = self.get_page_title()
-        context['icon'] = self.get_icon()
+        context["view_name"] = current_url
+        context["action"] = self.action
+        context["page_title"] = self.get_page_title()
+        context["icon"] = self.get_icon()
 
         return context
 
@@ -324,48 +324,47 @@ class UTCList(BaseListableView):
         return qs
 
     def get_filters(self, field, queryset=None):
-
         filters = super(UTCList, self).get_filters(field, queryset=queryset)
 
-        if field == 'frequency__name':
-            filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
-        elif field == 'unit__site__name':
-            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
+        if field == "frequency__name":
+            filters = [(NONEORNULL, _("Ad Hoc")) if f == (NONEORNULL, "None") else f for f in filters]
+        elif field == "unit__site__name":
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, "None") else f for f in filters]
 
         return filters
 
     def frequency__name(self, utc):
-        return utc.frequency.name if utc.frequency else 'Ad Hoc'
+        return utc.frequency.name if utc.frequency else "Ad Hoc"
 
     def actions(self, utc):
-        template = self.templates['actions']
+        template = self.templates["actions"]
         perms = PermWrapper(self.request.user)
-        c = {'utc': utc, 'request': self.request, 'action': self.action, 'perms': perms}
+        c = {"utc": utc, "request": self.request, "action": self.action, "perms": perms}
         return template.render(c)
 
     def due_date(self, utc):
-        template = self.templates['due_date']
-        c = {'unit_test_collection': utc, 'show_icons': settings.ICON_SETTINGS['SHOW_DUE_ICONS']}
+        template = self.templates["due_date"]
+        c = {"unit_test_collection": utc, "show_icons": settings.ICON_SETTINGS["SHOW_DUE_ICONS"]}
         return template.render(c)
 
     def last_instance__work_completed(self, utc):
-        template = self.templates['work_completed']
+        template = self.templates["work_completed"]
         c = {"instance": utc.last_instance}
         return template.render(c)
 
     def last_instance_review_status(self, utc):
-        template = self.templates['review_status']
-        c = {'instance': utc.last_instance, 'perms': PermWrapper(self.request.user), 'request': self.request}
+        template = self.templates["review_status"]
+        c = {"instance": utc.last_instance, "perms": PermWrapper(self.request.user), "request": self.request}
         c.update(generate_review_status_context(utc.last_instance))
         return template.render(c)
 
     def last_instance_pass_fail(self, utc):
-        template = self.templates['pass_fail']
+        template = self.templates["pass_fail"]
         c = {
-            'instance': utc.last_instance,
-            'exclude': [models.NO_TOL],
-            'show_label': settings.ICON_SETTINGS['SHOW_STATUS_LABELS_LISTING'],
-            'show_icons': settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
+            "instance": utc.last_instance,
+            "exclude": [models.NO_TOL],
+            "show_label": settings.ICON_SETTINGS["SHOW_STATUS_LABELS_LISTING"],
+            "show_icons": settings.ICON_SETTINGS["SHOW_STATUS_ICONS_LISTING"],
         }
         return template.render(c)
 
@@ -398,7 +397,7 @@ class TestListInstances(BaseListableView):
         "unit_test_collection__unit__site__name": SELECT_MULTI,
         "unit_test_collection__unit__name": SELECT_MULTI,
         "created_by__username": SELECT_MULTI,
-        "work_completed": DATE_RANGE
+        "work_completed": DATE_RANGE,
     }
 
     date_ranges = {"work_completed": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR]}
@@ -430,33 +429,32 @@ class TestListInstances(BaseListableView):
     )
 
     prefetch_related = (
-        'testinstance_set',
-        'testinstance_set__status',
-        'rtsqa_for_tli',
-        'rtsqa_for_tli__service_event',
-        'serviceevents_initiated',
-        'comments',
-        'attachment_set',
+        "testinstance_set",
+        "testinstance_set__status",
+        "rtsqa_for_tli",
+        "rtsqa_for_tli__service_event",
+        "serviceevents_initiated",
+        "comments",
+        "attachment_set",
     )
 
     def __init__(self, *args, **kwargs):
         super(TestListInstances, self).__init__(*args, **kwargs)
 
         self.templates = {
-            'actions': get_template("qa/testlistinstance_actions.html"),
-            'work_completed': get_template("qa/testlistinstance_work_completed.html"),
-            'review_status': get_template("qa/testlistinstance_review_status.html"),
-            'pass_fail': get_template("qa/pass_fail_status.html"),
+            "actions": get_template("qa/testlistinstance_actions.html"),
+            "work_completed": get_template("qa/testlistinstance_work_completed.html"),
+            "review_status": get_template("qa/testlistinstance_review_status.html"),
+            "pass_fail": get_template("qa/pass_fail_status.html"),
         }
 
     def get_icon(self):
-        return 'fa-question-circle'
+        return "fa-question-circle"
 
     def get_page_title(self):
         return "All Test Collections"
 
     def get_fields(self, request=None):
-
         fields = ("actions",)
 
         multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
@@ -479,19 +477,18 @@ class TestListInstances(BaseListableView):
     def get_context_data(self, *args, **kwargs):
         context = super(TestListInstances, self).get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
-        context['view_name'] = current_url
-        context['icon'] = self.get_icon()
+        context["view_name"] = current_url
+        context["icon"] = self.get_icon()
         context["page_title"] = self.get_page_title()
         return context
 
     def get_filters(self, field, queryset=None):
-
         filters = super(TestListInstances, self).get_filters(field, queryset=queryset)
 
-        if field == 'unit_test_collection__frequency__name':
-            filters = [(NONEORNULL, _('Ad Hoc')) if f == (NONEORNULL, 'None') else f for f in filters]
+        if field == "unit_test_collection__frequency__name":
+            filters = [(NONEORNULL, _("Ad Hoc")) if f == (NONEORNULL, "None") else f for f in filters]
         elif field == "unit_test_collection__unit__site__name":
-            filters = [(NONEORNULL, _('Other')) if f == (NONEORNULL, 'None') else f for f in filters]
+            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, "None") else f for f in filters]
 
         return filters
 
@@ -506,7 +503,7 @@ class TestListInstances(BaseListableView):
         return freq.name if freq else "Ad Hoc"
 
     def actions(self, tli):
-        template = self.templates['actions']
+        template = self.templates["actions"]
 
         rtsqas = tli.rtsqa_for_tli.all()
         se_rtsqa = []
@@ -517,41 +514,41 @@ class TestListInstances(BaseListableView):
         se_ib = tli.serviceevents_initiated.all()
 
         c = {
-            'instance': tli,
-            'perms': PermWrapper(self.request.user),
-            'request': self.request,
-            'show_initiate_se': True,
-            'initiated_se': se_ib,
-            'num_initiated_se': len(se_ib),
-            'show_rtsqa_se': True,
-            'rtsqa_for_se': se_rtsqa,
-            'num_rtsqa_se': len(se_rtsqa),
+            "instance": tli,
+            "perms": PermWrapper(self.request.user),
+            "request": self.request,
+            "show_initiate_se": True,
+            "initiated_se": se_ib,
+            "num_initiated_se": len(se_ib),
+            "show_rtsqa_se": True,
+            "rtsqa_for_se": se_rtsqa,
+            "num_rtsqa_se": len(se_rtsqa),
         }
         return template.render(c)
 
     def work_completed(self, tli):
-        template = self.templates['work_completed']
+        template = self.templates["work_completed"]
         return template.render({"instance": tli})
 
     def review_status(self, tli):
-        template = self.templates['review_status']
+        template = self.templates["review_status"]
         c = {
             "instance": tli,
             "perms": PermWrapper(self.request.user),
             "request": self.request,
-            "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'],
-            "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_REVIEW']
+            "show_label": settings.ICON_SETTINGS["SHOW_REVIEW_LABELS_LISTING"],
+            "show_icons": settings.ICON_SETTINGS["SHOW_STATUS_ICONS_REVIEW"],
         }
         c.update(generate_review_status_context(tli))
         return template.render(c)
 
     def pass_fail(self, tli):
-        template = self.templates['pass_fail']
+        template = self.templates["pass_fail"]
         c = {
             "instance": tli,
             "exclude": [models.NO_TOL],
-            "show_label": settings.ICON_SETTINGS['SHOW_REVIEW_LABELS_LISTING'],
-            "show_icons": settings.ICON_SETTINGS['SHOW_STATUS_ICONS_LISTING']
+            "show_label": settings.ICON_SETTINGS["SHOW_REVIEW_LABELS_LISTING"],
+            "show_icons": settings.ICON_SETTINGS["SHOW_STATUS_ICONS_LISTING"],
         }
         return template.render(c)
 

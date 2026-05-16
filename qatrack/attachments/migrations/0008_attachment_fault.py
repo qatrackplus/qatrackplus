@@ -5,16 +5,17 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('faults', '0010_auto_20210323_1324'),
-        ('attachments', '0007_attachment_part'),
+        ("faults", "0010_auto_20210323_1324"),
+        ("attachments", "0007_attachment_part"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='attachment',
-            name='fault',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='faults.Fault'),
+            model_name="attachment",
+            name="fault",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to="faults.Fault"
+            ),
         ),
     ]

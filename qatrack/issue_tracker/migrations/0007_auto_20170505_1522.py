@@ -6,15 +6,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0006_issuetag_description'),
+        ("issue_tracker", "0006_issuetag_description"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='issue',
-            name='error_screen',
-            field=models.TextField(blank=True, help_text='Any error screen details. (Note the ability to click "Switch to copy-and-paste view" to copy Traceback)', null=True),
+            model_name="issue",
+            name="error_screen",
+            field=models.TextField(
+                blank=True,
+                help_text='Any error screen details. (Note the ability to click "Switch to copy-and-paste view" to copy Traceback)',
+                null=True,
+            ),
         ),
     ]

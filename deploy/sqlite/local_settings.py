@@ -2,30 +2,30 @@
 DEBUG = False
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
-        'NAME': 'qatrackplus31',  # Or path to database file if using sqlite3.
-        'USER': '',  # Not used with sqlite3.
-        'PASSWORD': '',  # Not used with sqlite3.
-        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
+        "NAME": "qatrackplus31",  # Or path to database file if using sqlite3.
+        "USER": "",  # Not used with sqlite3.
+        "PASSWORD": "",  # Not used with sqlite3.
+        "HOST": "",  # Set to empty string for localhost. Not used with sqlite3.
+        "PORT": "",  # Set to empty string for default. Not used with sqlite3.
     },
-    'readonly': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
-        'NAME': 'qatrackplus31',  # Or path to database file if using sqlite3.
-        'USER': '',  # Not used with sqlite3.
-        'PASSWORD': '',  # Not used with sqlite3.
-        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
-    }
+    "readonly": {
+        "ENGINE": "django.db.backends.sqlite3",  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
+        "NAME": "qatrackplus31",  # Or path to database file if using sqlite3.
+        "USER": "",  # Not used with sqlite3.
+        "PASSWORD": "",  # Not used with sqlite3.
+        "HOST": "",  # Set to empty string for localhost. Not used with sqlite3.
+        "PORT": "",  # Set to empty string for default. Not used with sqlite3.
+    },
 }
 
 
 # Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
-ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
+ALLOWED_HOSTS = ["XX.XXX.XXX.XX"]
 
 # Set to False to disable the SQL Query Tool
-USE_SQL_REPORTS =  True
+USE_SQL_REPORTS = True
 
 # If you host your QATrack+ instance at a non root url (e.g. 12.345.678.9/qatrack)
 # then you need to uncomment (and possibly modify) the following settings
@@ -36,9 +36,7 @@ USE_SQL_REPORTS =  True
 
 
 # Who to email when server errors occur
-ADMINS = (
-    ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
-)
+ADMINS = (("Admin Name", "YOUR_EMAIL_ADDRESS_GOES_HERE"),)
 MANAGERS = ADMINS
 
 # Local time zone for this installation. Choices can be found here:
@@ -48,7 +46,7 @@ MANAGERS = ADMINS
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Toronto'
+TIME_ZONE = "America/Toronto"
 
 
 # Precision to use when displaying constant values
@@ -68,24 +66,24 @@ REVIEW_DIFF_COL = False
 
 # default display settings for test statuses
 TEST_STATUS_DISPLAY = {
-    'fail': "Fail",
-    'not_done': "Not Done",
-    'done': "Done",
-    'ok': "OK",
-    'tolerance': "Tolerance",
-    'action': "Action",
-    'no_tol': "No Tol Set",
+    "fail": "Fail",
+    "not_done": "Not Done",
+    "done": "Done",
+    "ok": "OK",
+    "tolerance": "Tolerance",
+    "action": "Action",
+    "no_tol": "No Tol Set",
 }
 
 # default short display settings for test statuses
 TEST_STATUS_DISPLAY_SHORT = {
-    'fail': "Fail",
-    'not_done': "Not Done",
-    'done': "Done",
-    'ok': "OK",
-    'tolerance': "TOL",
-    'action': "ACT",
-    'no_tol': "NO TOL",
+    "fail": "Fail",
+    "not_done": "Not Done",
+    "done": "Done",
+    "ok": "OK",
+    "tolerance": "TOL",
+    "action": "ACT",
+    "no_tol": "NO TOL",
 }
 
 
@@ -100,7 +98,7 @@ EMAIL_NOTIFICATION_SUBJECT_TEMPLATE = "notification_email_subject.txt"
 
 EMAIL_FAIL_SILENTLY = True
 EMAIL_HOST = ""  # e.g. 'smtp.gmail.com'
-EMAIL_HOST_USER = ''  # e.g. "randle.taylor@gmail.com"
-EMAIL_HOST_PASSWORD = 'your_password_here'
+EMAIL_HOST_USER = ""  # e.g. "randle.taylor@gmail.com"
+EMAIL_HOST_PASSWORD = "your_password_here"
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587

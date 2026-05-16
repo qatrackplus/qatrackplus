@@ -7,70 +7,124 @@ import django.utils.timezone
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0002_029_to_030_2nd'),
+        ("qa", "0002_029_to_030_2nd"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='autoreviewrule',
-            name='pass_fail',
-            field=models.CharField(choices=[('not_done', 'Not Done'), ('ok', 'OK'), ('tolerance', 'Tolerance'), ('action', 'Action'), ('no_tol', 'No Tol Set')], max_length=15, unique=True),
+            model_name="autoreviewrule",
+            name="pass_fail",
+            field=models.CharField(
+                choices=[
+                    ("not_done", "Not Done"),
+                    ("ok", "OK"),
+                    ("tolerance", "Tolerance"),
+                    ("action", "Action"),
+                    ("no_tol", "No Tol Set"),
+                ],
+                max_length=15,
+                unique=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='reference',
-            name='type',
-            field=models.CharField(choices=[('numerical', 'Numerical'), ('boolean', 'Yes / No')], default='numerical', max_length=15),
+            model_name="reference",
+            name="type",
+            field=models.CharField(
+                choices=[("numerical", "Numerical"), ("boolean", "Yes / No")], default="numerical", max_length=15
+            ),
         ),
         migrations.AlterField(
-            model_name='test',
-            name='chart_visibility',
-            field=models.BooleanField(default=True, verbose_name='Test item visible in charts?'),
+            model_name="test",
+            name="chart_visibility",
+            field=models.BooleanField(default=True, verbose_name="Test item visible in charts?"),
         ),
         migrations.AlterField(
-            model_name='test',
-            name='display_image',
-            field=models.BooleanField(default=False, help_text='Image uploads only: Show uploaded images under the testlist', verbose_name='Display image'),
+            model_name="test",
+            name="display_image",
+            field=models.BooleanField(
+                default=False,
+                help_text="Image uploads only: Show uploaded images under the testlist",
+                verbose_name="Display image",
+            ),
         ),
         migrations.AlterField(
-            model_name='test',
-            name='slug',
-            field=models.SlugField(help_text='A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). ', max_length=128, verbose_name='Macro name'),
+            model_name="test",
+            name="slug",
+            field=models.SlugField(
+                help_text="A short variable name consisting of alphanumeric characters and underscores for this test (to be used in composite calculations). ",
+                max_length=128,
+                verbose_name="Macro name",
+            ),
         ),
         migrations.AlterField(
-            model_name='test',
-            name='type',
-            field=models.CharField(choices=[('boolean', 'Boolean'), ('simple', 'Simple Numerical'), ('multchoice', 'Multiple Choice'), ('constant', 'Constant'), ('composite', 'Composite'), ('string', 'String'), ('scomposite', 'String Composite'), ('upload', 'File Upload')], default='simple', help_text='Indicate if this test is a Boolean,Simple Numerical,Multiple Choice,Constant,Composite,String,String Composite,File Upload', max_length=10),
+            model_name="test",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("boolean", "Boolean"),
+                    ("simple", "Simple Numerical"),
+                    ("multchoice", "Multiple Choice"),
+                    ("constant", "Constant"),
+                    ("composite", "Composite"),
+                    ("string", "String"),
+                    ("scomposite", "String Composite"),
+                    ("upload", "File Upload"),
+                ],
+                default="simple",
+                help_text="Indicate if this test is a Boolean,Simple Numerical,Multiple Choice,Constant,Composite,String,String Composite,File Upload",
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
-            model_name='testinstance',
-            name='pass_fail',
-            field=models.CharField(choices=[('not_done', 'Not Done'), ('ok', 'OK'), ('tolerance', 'Tolerance'), ('action', 'Action'), ('no_tol', 'No Tol Set')], db_index=True, editable=False, max_length=20),
+            model_name="testinstance",
+            name="pass_fail",
+            field=models.CharField(
+                choices=[
+                    ("not_done", "Not Done"),
+                    ("ok", "OK"),
+                    ("tolerance", "Tolerance"),
+                    ("action", "Action"),
+                    ("no_tol", "No Tol Set"),
+                ],
+                db_index=True,
+                editable=False,
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
-            model_name='testinstance',
-            name='work_completed',
-            field=models.DateTimeField(db_index=True, default=django.utils.timezone.now, help_text='Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)'),
+            model_name="testinstance",
+            name="work_completed",
+            field=models.DateTimeField(
+                db_index=True,
+                default=django.utils.timezone.now,
+                help_text="Format DD-MM-YY hh:mm (hh:mm is 24h time e.g. 31-05-12 14:30)",
+            ),
         ),
         migrations.AlterField(
-            model_name='testlist',
-            name='warning_message',
-            field=models.CharField(default='Do not treat', help_text='Message given when a test value is out of tolerance', max_length=255),
+            model_name="testlist",
+            name="warning_message",
+            field=models.CharField(
+                default="Do not treat", help_text="Message given when a test value is out of tolerance", max_length=255
+            ),
         ),
         migrations.AlterField(
-            model_name='testlistcycle',
-            name='day_option_text',
-            field=models.CharField(choices=[('day', 'Day'), ('tlname', 'Test List Name')], default='day', max_length=8),
+            model_name="testlistcycle",
+            name="day_option_text",
+            field=models.CharField(choices=[("day", "Day"), ("tlname", "Test List Name")], default="day", max_length=8),
         ),
         migrations.AlterField(
-            model_name='testlistcycle',
-            name='drop_down_label',
-            field=models.CharField(default='Choose Day', max_length=128),
+            model_name="testlistcycle",
+            name="drop_down_label",
+            field=models.CharField(default="Choose Day", max_length=128),
         ),
         migrations.AlterField(
-            model_name='tolerance',
-            name='type',
-            field=models.CharField(choices=[('absolute', 'Absolute'), ('percent', 'Percentage'), ('multchoice', 'Multiple Choice')], help_text='Select whether this will be an absolute or relative tolerance criteria', max_length=20),
+            model_name="tolerance",
+            name="type",
+            field=models.CharField(
+                choices=[("absolute", "Absolute"), ("percent", "Percentage"), ("multchoice", "Multiple Choice")],
+                help_text="Select whether this will be an absolute or relative tolerance criteria",
+                max_length=20,
+            ),
         ),
     ]

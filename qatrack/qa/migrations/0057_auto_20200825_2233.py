@@ -5,20 +5,27 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0056_autosave'),
+        ("qa", "0056_autosave"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='autosave',
-            name='test_list_instance',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, to='qa.TestListInstance', verbose_name='Test List Instance'),
+            model_name="autosave",
+            name="test_list_instance",
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="qa.TestListInstance",
+                verbose_name="Test List Instance",
+            ),
         ),
         migrations.AlterField(
-            model_name='autosave',
-            name='test_list',
-            field=models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='qa.TestList', verbose_name='Test List'),
+            model_name="autosave",
+            name="test_list",
+            field=models.ForeignKey(
+                editable=False, on_delete=django.db.models.deletion.CASCADE, to="qa.TestList", verbose_name="Test List"
+            ),
         ),
     ]

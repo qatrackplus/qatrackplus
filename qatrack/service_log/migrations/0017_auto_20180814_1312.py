@@ -6,25 +6,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0016_auto_20180725_1651'),
+        ("service_log", "0016_auto_20180725_1651"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='serviceevent',
-            name='is_active',
+            model_name="serviceevent",
+            name="is_active",
             field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
-            model_name='serviceevent',
-            name='datetime_service',
-            field=models.DateTimeField(help_text='Date and time service performed', verbose_name='Date and time'),
+            model_name="serviceevent",
+            name="datetime_service",
+            field=models.DateTimeField(help_text="Date and time service performed", verbose_name="Date and time"),
         ),
         migrations.AlterField(
-            model_name='servicelog',
-            name='log_type',
-            field=models.CharField(choices=[('new_se', 'New Service Event'), ('mod_se', 'Modified Servicew Event'), ('stat_se', 'Service Event Status Changed'), ('rtsqa', 'Changed Return To Service'), ('perf_rts', 'Performed Return To Service'), ('app_rts', 'Approved Return To Service'), ('del_se', 'Deleted Service Event')], max_length=10),
+            model_name="servicelog",
+            name="log_type",
+            field=models.CharField(
+                choices=[
+                    ("new_se", "New Service Event"),
+                    ("mod_se", "Modified Servicew Event"),
+                    ("stat_se", "Service Event Status Changed"),
+                    ("rtsqa", "Changed Return To Service"),
+                    ("perf_rts", "Performed Return To Service"),
+                    ("app_rts", "Approved Return To Service"),
+                    ("del_se", "Deleted Service Event"),
+                ],
+                max_length=10,
+            ),
         ),
     ]

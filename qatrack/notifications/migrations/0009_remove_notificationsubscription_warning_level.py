@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0008_copy_notification_type'),
+        ("notifications", "0008_copy_notification_type"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='notificationsubscription',
-            name='warning_level',
+            model_name="notificationsubscription",
+            name="warning_level",
         ),
     ]

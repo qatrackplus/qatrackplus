@@ -8,29 +8,30 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0008_auto_20170505_1549'),
+        ("issue_tracker", "0008_auto_20170505_1549"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='issuetag',
-            options={'ordering': ['name']},
+            name="issuetag",
+            options={"ordering": ["name"]},
         ),
         migrations.AlterField(
-            model_name='issue',
-            name='issue_priority',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to='issue_tracker.IssuePriority'),
+            model_name="issue",
+            name="issue_priority",
+            field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.PROTECT, to="issue_tracker.IssuePriority"
+            ),
         ),
         migrations.AlterField(
-            model_name='issue',
-            name='issue_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='issue_tracker.IssueType'),
+            model_name="issue",
+            name="issue_type",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to="issue_tracker.IssueType"),
         ),
         migrations.AlterField(
-            model_name='issue',
-            name='user_submitted_by',
+            model_name="issue",
+            name="user_submitted_by",
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL),
         ),
     ]

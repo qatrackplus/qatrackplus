@@ -6,6 +6,7 @@ parts of this code taken from http://www.djangosnippets.org/snippets/934/
  - thanks baumer1122
 
 """
+
 from __future__ import unicode_literals
 
 import posixpath
@@ -20,9 +21,9 @@ try:
     from sorl.thumbnail import get_thumbnail
 
     def thumbnail(image_path, width, height):
-        geometry_string = 'x'.join([str(width), str(height)])
+        geometry_string = "x".join([str(width), str(height)])
         t = get_thumbnail(image_path, geometry_string)
-        return u'<img src="%s" alt="%s" />' % (t.url, image_path)
+        return '<img src="%s" alt="%s" />' % (t.url, image_path)
 except ImportError:
     try:
         from easy_thumbnails.files import get_thumbnailer
@@ -30,16 +31,16 @@ except ImportError:
         def thumbnail(image_path, width, height):
             thumbnail_options = dict(size=(width, height), crop=True)
             thumbnail = get_thumbnailer(image_path).get_thumbnail(thumbnail_options)
-            return u'<img src="%s" alt="%s" />' % (thumbnail.url, image_path)
+            return '<img src="%s" alt="%s" />' % (thumbnail.url, image_path)
     except ImportError:
 
         def thumbnail(image_path, width, height):
             absolute_url = posixpath.join(settings.MEDIA_URL, image_path)
-            return u'<img src="%s" alt="%s" />' % (absolute_url, image_path)
+            return '<img src="%s" alt="%s" />' % (absolute_url, image_path)
 
 
 class ImageWidget(forms.FileInput):
-    template = '%(input)s<br />%(image)s'
+    template = "%(input)s<br />%(image)s"
 
     def __init__(self, attrs=None, template=None, width=200, height=200):
         if template is not None:
@@ -50,9 +51,9 @@ class ImageWidget(forms.FileInput):
 
     def render(self, name, value, attrs=None):
         input_html = super(ImageWidget, self).render(name, value, attrs)
-        if hasattr(value, 'width') and hasattr(value, 'height'):
+        if hasattr(value, "width") and hasattr(value, "height"):
             image_html = thumbnail(value.name, self.width, self.height)
-            output = self.template % {'input': input_html, 'image': image_html}
+            output = self.template % {"input": input_html, "image": image_html}
         else:
             output = input_html
         return mark_safe(output)
@@ -60,7 +61,7 @@ class ImageWidget(forms.FileInput):
 
 class ClearableFileInput(forms.MultiWidget):
     default_file_widget_class = forms.FileInput
-    template = '%(input)s Clear: %(checkbox)s'
+    template = "%(input)s Clear: %(checkbox)s"
 
     def __init__(self, file_widget=None, attrs=None, template=None):
         if template is not None:
@@ -81,7 +82,7 @@ class ClearableFileInput(forms.MultiWidget):
 
     def format_output(self, rendered_widgets):
         if self.value:
-            return self.template % {'input': rendered_widgets[0], 'checkbox': rendered_widgets[1]}
+            return self.template % {"input": rendered_widgets[0], "checkbox": rendered_widgets[1]}
         return rendered_widgets[0]
 
 
@@ -95,27 +96,26 @@ class AutoResizeTextarea(forms.Textarea):
     """
 
     class Media:
-        js = (JQUERY_URL, root('form_utils/js/jquery.autogrow.js'), root('form_utils/js/autoresize.js'))
+        js = (JQUERY_URL, root("form_utils/js/jquery.autogrow.js"), root("form_utils/js/autoresize.js"))
 
     def __init__(self, *args, **kwargs):
-        attrs = kwargs.setdefault('attrs', {})
+        attrs = kwargs.setdefault("attrs", {})
         try:
-            attrs['class'] = "%s autoresize" % (attrs['class'],)
+            attrs["class"] = "%s autoresize" % (attrs["class"],)
         except KeyError:
-            attrs['class'] = 'autoresize'
-        attrs.setdefault('cols', 80)
-        attrs.setdefault('rows', 5)
+            attrs["class"] = "autoresize"
+        attrs.setdefault("cols", 80)
+        attrs.setdefault("rows", 5)
         super(AutoResizeTextarea, self).__init__(*args, **kwargs)
 
 
 class InlineAutoResizeTextarea(AutoResizeTextarea):
-
     def __init__(self, *args, **kwargs):
-        attrs = kwargs.setdefault('attrs', {})
+        attrs = kwargs.setdefault("attrs", {})
         try:
-            attrs['class'] = "%s inline" % (attrs['class'],)
+            attrs["class"] = "%s inline" % (attrs["class"],)
         except KeyError:
-            attrs['class'] = 'inline'
-        attrs.setdefault('cols', 40)
-        attrs.setdefault('rows', 2)
+            attrs["class"] = "inline"
+        attrs.setdefault("cols", 40)
+        attrs.setdefault("rows", 2)
         super(InlineAutoResizeTextarea, self).__init__(*args, **kwargs)

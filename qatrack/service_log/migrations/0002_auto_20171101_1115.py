@@ -8,40 +8,39 @@ from django.db.models import ObjectDoesNotExist
 
 
 def fix_permissions(apps, schema):
-
     try:
-        Permission = apps.get_model('auth', 'Permission')
+        Permission = apps.get_model("auth", "Permission")
 
-        view_qaf = Permission.objects.get(codename='view_qafollowup')
-        perform_qaf = Permission.objects.get(codename='perform_qafollowup')
+        view_qaf = Permission.objects.get(codename="view_qafollowup")
+        perform_qaf = Permission.objects.get(codename="perform_qafollowup")
 
-        view_qaf.codename = 'view_returntoserviceqa'
-        perform_qaf.codename = 'perform_returntoserviceqa'
+        view_qaf.codename = "view_returntoserviceqa"
+        perform_qaf.codename = "perform_returntoserviceqa"
 
         view_qaf.save()
         perform_qaf.save()
 
-        old_perms = Permission.objects.filter(codename__in=['add_qafollowup', 'change_qafollowup', 'delete_qafollowup'])
+        old_perms = Permission.objects.filter(codename__in=["add_qafollowup", "change_qafollowup", "delete_qafollowup"])
         old_perms.delete()
     except ObjectDoesNotExist:
         pass
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('qa', '0002_auto_20161218_1851'),
-        ('service_log', '0001_initial'),
+        ("qa", "0002_auto_20161218_1851"),
+        ("service_log", "0001_initial"),
     ]
 
     operations = [
-
         migrations.AlterField(
-            model_name='serviceevent',
-            name='qafollowup_notes',
-            field=models.TextField(blank=True, help_text='Provide any extra information regarding return to services', null=True),
+            model_name="serviceevent",
+            name="qafollowup_notes",
+            field=models.TextField(
+                blank=True, help_text="Provide any extra information regarding return to services", null=True
+            ),
         ),
-        migrations.RenameModel('QAFollowup', 'ReturnToServiceQA'),
-        migrations.RunPython(fix_permissions)
+        migrations.RenameModel("QAFollowup", "ReturnToServiceQA"),
+        migrations.RunPython(fix_permissions),
     ]

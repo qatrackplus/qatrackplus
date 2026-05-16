@@ -41,9 +41,8 @@ def check_back(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0013_auto_20180511_2341'),
+        ("qa", "0013_auto_20180511_2341"),
     ]
 
     operations = [

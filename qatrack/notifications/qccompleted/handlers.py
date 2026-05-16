@@ -1,5 +1,5 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 
 from django.conf import settings
 from django.db.models import Q
@@ -13,7 +13,7 @@ from qatrack.qa.models import TestListInstance
 from qatrack.qa.signals import testlist_complete
 from qatrack.qatrack_core.email import send_email_to_users
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger("qatrack")
 
 
 @receiver(testlist_complete)
@@ -22,18 +22,26 @@ def email_on_testlist_save(*args, **kwargs):
 
     test_list_instance = kwargs["instance"]
 
-    failing = test_list_instance.failing_tests().select_related(
-        "tolerance",
-        "reference",
-        "unit_test_info",
-        "unit_test_info__test",
-    ).order_by("order", "created")
-    tolerance = test_list_instance.tolerance_tests().select_related(
-        "tolerance",
-        "reference",
-        "unit_test_info",
-        "unit_test_info__test",
-    ).order_by("order", "created")
+    failing = (
+        test_list_instance.failing_tests()
+        .select_related(
+            "tolerance",
+            "reference",
+            "unit_test_info",
+            "unit_test_info__test",
+        )
+        .order_by("order", "created")
+    )
+    tolerance = (
+        test_list_instance.tolerance_tests()
+        .select_related(
+            "tolerance",
+            "reference",
+            "unit_test_info",
+            "unit_test_info__test",
+        )
+        .order_by("order", "created")
+    )
 
     recipients = get_notification_recipients(test_list_instance)
     comp_recipients, tol_recipients, act_recipients = recipients
@@ -51,7 +59,7 @@ def email_on_testlist_save(*args, **kwargs):
         "failing_tests": failing,
         "tolerance_tests": tolerance,
         "test_list_instance": test_list_instance,
-        "notice_type": "completed"
+        "notice_type": "completed",
     }
 
     template = getattr(settings, "EMAIL_NOTIFICATION_TEMPLATE", "notification_email.html")
@@ -61,7 +69,6 @@ def email_on_testlist_save(*args, **kwargs):
 
 
 def get_notification_recipients(test_list_instance):
-
     from qatrack.notifications import models
 
     unit = test_list_instance.unit_test_collection.unit
@@ -121,4 +128,4 @@ def follow_up_emails(signal, sender, instance, created, **kwargs):
 @receiver(post_delete, sender=TestListInstance)
 def clean_up_follow_up_emails(*args, **kwargs):
     """Test list instance was deleted.  Remove any scheduled follow up emails for it"""
-    Schedule.objects.filter(name__contains="follow-up-for-tli-%d-" % kwargs['instance'].pk).delete()
+    Schedule.objects.filter(name__contains="follow-up-for-tli-%d-" % kwargs["instance"].pk).delete()

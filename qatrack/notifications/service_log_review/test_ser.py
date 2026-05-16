@@ -3,8 +3,9 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
+import qatrack.qa.tests.utils as qa_utils
+import qatrack.service_log.tests.utils as utils
 from qatrack.notifications.models import (
     RecipientGroup,
     ServiceEventReviewNotice,
@@ -12,12 +13,9 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.service_log_review import admin, tasks
 from qatrack.qa import models
-import qatrack.qa.tests.utils as qa_utils
-import qatrack.service_log.tests.utils as utils
 
 
 class TestServiceEventReviewAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.ServiceEventReviewAdmin(model=ServiceEventReviewNotice, admin_site=AdminSite())
 
@@ -54,9 +52,7 @@ class TestServiceEventReviewAdmin(TestCase):
 
 
 class TestServiceEventReviewModel(TestCase):
-
     def setUp(self):
-
         self.unit1 = qa_utils.create_unit(name="unit1", number=1)
         self.unit2 = qa_utils.create_unit(name="unit2", number=2)
         self.usa1 = utils.create_unit_service_area(unit=self.unit1)
@@ -69,7 +65,7 @@ class TestServiceEventReviewModel(TestCase):
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = qa_utils.create_group()
-        user = models.User.objects.latest('pk')
+        user = models.User.objects.latest("pk")
         user.is_active = True
         user.groups.add(self.group)
         user.email = "example@example.com"
@@ -78,7 +74,7 @@ class TestServiceEventReviewModel(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -99,16 +95,16 @@ class TestServiceEventReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_service_area__unit__name': self.usa1.unit.name,
-                'unit_service_area__service_area__name': self.usa1.service_area.name,
-                'unit_service_area__unit__name__count': 1,
-                'unit_service_area__service_area__name__count': 1,
+                "unit_service_area__unit__name": self.usa1.unit.name,
+                "unit_service_area__service_area__name": self.usa1.service_area.name,
+                "unit_service_area__unit__name__count": 1,
+                "unit_service_area__service_area__name__count": 1,
             },
             {
-                'unit_service_area__unit__name': self.usa2.unit.name,
-                'unit_service_area__service_area__name': self.usa2.service_area.name,
-                'unit_service_area__unit__name__count': 1,
-                'unit_service_area__service_area__name__count': 1,
+                "unit_service_area__unit__name": self.usa2.unit.name,
+                "unit_service_area__service_area__name": self.usa2.service_area.name,
+                "unit_service_area__unit__name__count": 1,
+                "unit_service_area__service_area__name__count": 1,
             },
         ]
         assert list(notice.ses_by_unit_usa()) == expected
@@ -127,10 +123,10 @@ class TestServiceEventReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_service_area__unit__name': self.usa1.unit.name,
-                'unit_service_area__service_area__name': self.usa1.service_area.name,
-                'unit_service_area__unit__name__count': 1,
-                'unit_service_area__service_area__name__count': 1,
+                "unit_service_area__unit__name": self.usa1.unit.name,
+                "unit_service_area__service_area__name": self.usa1.service_area.name,
+                "unit_service_area__unit__name__count": 1,
+                "unit_service_area__service_area__name__count": 1,
             },
         ]
         assert list(notice.ses_by_unit_usa()) == expected
@@ -140,9 +136,7 @@ class TestServiceEventReviewModel(TestCase):
 
 
 class TestServiceEventReviewEmails(TestCase):
-
     def setUp(self):
-
         self.unit1 = qa_utils.create_unit(name="unit1", number=1)
         self.unit2 = qa_utils.create_unit(name="unit2", number=2)
         self.usa1 = utils.create_unit_service_area(unit=self.unit1)
@@ -152,7 +146,7 @@ class TestServiceEventReviewEmails(TestCase):
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = qa_utils.create_group()
-        user = models.User.objects.latest('pk')
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.is_active = True
         user.email = "example@example.com"
@@ -161,7 +155,7 @@ class TestServiceEventReviewEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()

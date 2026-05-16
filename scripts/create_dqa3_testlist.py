@@ -7,9 +7,9 @@ from django.db.utils import IntegrityError
 from django.utils.text import slugify  # noqa: #402
 
 from qatrack.qa import models
-
 from qatrack.qa.testpack import create_testpack
 from qatrack.qa.utils import get_internal_user  # noqa: #402
+
 user = get_internal_user()
 
 
@@ -19,9 +19,13 @@ def run(*args):
         mode, tl_name, beam = args
 
     if nargs_wrong or mode not in ["db", "testpack"]:
-        print("Usage 'python manage.py runscript create_dqa3_testlist --script-args {testpack,db} \"{test_list_name}\" {beam}")
+        print(
+            'Usage \'python manage.py runscript create_dqa3_testlist --script-args {testpack,db} "{test_list_name}" {beam}'
+        )
         print("To create a test list:")
-        print("    'python manage.py runscript create_dqa3_testlist --script-args testpack \"Daily QA Results: 6X\" 6X'")
+        print(
+            "    'python manage.py runscript create_dqa3_testlist --script-args testpack \"Daily QA Results: 6X\" 6X'"
+        )
         print("To create a test pack:")
         print("    'python manage.py runscript create_dqa3_testlist --script-args db \"Daily QA Results: 12E\" 12E'")
     else:
@@ -33,7 +37,6 @@ class Rollback(Exception):
 
 
 def create_dqa3(mode, tl_name, beam):
-
     params = [
         "Signature",
         "Temperature",
@@ -71,7 +74,6 @@ def create_dqa3(mode, tl_name, beam):
 
     try:
         with transaction.atomic():
-
             cat = "Daily QA3"
             cat, _ = models.Category.objects.get_or_create(
                 name=cat,
@@ -93,14 +95,13 @@ def create_dqa3(mode, tl_name, beam):
             )
 
             for param_idx, param in enumerate(params):
-
                 unit = ""
                 if param == "Pressure":
                     unit = "kPa"
                 elif param == "Temperature":
                     unit = "°C"
                 elif param not in string_tests:
-                    unit = "%" if 'shift' not in param.lower() and 'size' not in param.lower() else "cm"
+                    unit = "%" if "shift" not in param.lower() and "size" not in param.lower() else "cm"
                 name = f"{beam}: {param} ({unit})" if unit else f"{beam}: {param}"
                 test_name = f"{test_list_name}: {name}"
                 slug = slugify(param).lower().replace("-", "_")
@@ -132,13 +133,12 @@ def create_dqa3(mode, tl_name, beam):
                 raise Rollback("Rollback so we don't actually save the tests")
             else:
                 domain = Site.objects.get_current().domain
-                url = '%s://%s%s' % (settings.HTTP_OR_HTTPS, domain, test_list.get_absolute_url())
+                url = "%s://%s%s" % (settings.HTTP_OR_HTTPS, domain, test_list.get_absolute_url())
                 print("Created '%s' Test List (%s)" % (test_list.name, url))
 
     except IntegrityError:
         print(
-            "\tThere was a conflict with an existing Test List slug or "
-            "Test name when trying to create this test list."
+            "\tThere was a conflict with an existing Test List slug or Test name when trying to create this test list."
         )
     except Rollback:
         pass

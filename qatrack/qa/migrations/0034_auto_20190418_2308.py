@@ -4,20 +4,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0033_test_formatting'),
+        ("qa", "0033_test_formatting"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='test',
-            name='flag_when',
-            field=models.BooleanField(blank=True, choices=[(None, 'Never Flag'), (True, 'When test is Yes/True'), (False, 'When test is No/False')], default=None, help_text='If the test value matches this flag value, the parent test list instance will have a flag set.  Leave blank to never set a flag.', null=True, verbose_name='Flag Parent When'),
+            model_name="test",
+            name="flag_when",
+            field=models.BooleanField(
+                blank=True,
+                choices=[(None, "Never Flag"), (True, "When test is Yes/True"), (False, "When test is No/False")],
+                default=None,
+                help_text="If the test value matches this flag value, the parent test list instance will have a flag set.  Leave blank to never set a flag.",
+                null=True,
+                verbose_name="Flag Parent When",
+            ),
         ),
         migrations.AddField(
-            model_name='testlistinstance',
-            name='flagged',
-            field=models.BooleanField(default=False, editable=False, help_text='Used in cooperation with Boolean Tests to highligh this TestListInstance'),
+            model_name="testlistinstance",
+            name="flagged",
+            field=models.BooleanField(
+                default=False,
+                editable=False,
+                help_text="Used in cooperation with Boolean Tests to highligh this TestListInstance",
+            ),
         ),
     ]

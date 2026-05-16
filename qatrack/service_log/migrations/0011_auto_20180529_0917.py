@@ -6,18 +6,30 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0010_hours_unique_constraint'),
+        ("service_log", "0010_hours_unique_constraint"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='returntoserviceqa',
-            options={'ordering': ['-datetime_assigned'], 'permissions': (('view_returntoserviceqa', 'Can view return to service qa'), ('perform_returntoserviceqa', 'Can perform return to service qa'))},
+            name="returntoserviceqa",
+            options={
+                "ordering": ["-datetime_assigned"],
+                "permissions": (
+                    ("view_returntoserviceqa", "Can view return to service qa"),
+                    ("perform_returntoserviceqa", "Can perform return to service qa"),
+                ),
+            },
         ),
         migrations.AlterModelOptions(
-            name='serviceevent',
-            options={'get_latest_by': 'datetime_service', 'ordering': ['-datetime_service'], 'permissions': (('review_serviceevent', 'Can review service event'), ('view_serviceevent', 'Can view service event'))},
+            name="serviceevent",
+            options={
+                "get_latest_by": "datetime_service",
+                "ordering": ["-datetime_service"],
+                "permissions": (
+                    ("review_serviceevent", "Can review service event"),
+                    ("view_serviceevent", "Can view service event"),
+                ),
+            },
         ),
     ]

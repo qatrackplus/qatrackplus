@@ -4,14 +4,12 @@ from django.db import migrations
 
 
 def move_to_fault_types(apps, schema):
-
     Fault = apps.get_model("faults", "Fault")
     for fault in Fault.objects.all():
         fault.fault_types.add(fault.fault_type)
 
 
 def move_to_fault_type(apps, schema):
-
     Fault = apps.get_model("faults", "Fault")
     for fault in Fault.objects.all():
         fault.fault_type = fault.fault_types.all()[:1]
@@ -20,9 +18,8 @@ def move_to_fault_type(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('faults', '0007_fault_fault_types'),
+        ("faults", "0007_fault_fault_types"),
     ]
 
     operations = [

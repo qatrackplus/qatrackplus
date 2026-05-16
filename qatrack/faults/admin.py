@@ -9,7 +9,6 @@ from qatrack.units.models import Modality
 
 
 class FaultTypeAdmin(BaseQATrackAdmin):
-
     list_display = ("code", "description")
     search_fields = (
         "code",
@@ -19,17 +18,15 @@ class FaultTypeAdmin(BaseQATrackAdmin):
 
 
 class ModalityFilter(admin.SimpleListFilter):
-
-    title = _l('Modality')
+    title = _l("Modality")
 
     # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'modality'
+    parameter_name = "modality"
 
     def lookups(self, request, model_admin):
         return Modality.objects.values_list("pk", "name")
 
     def queryset(self, request, qs):
-
         val = self.value()
         if val:
             return qs.filter(modality_id=val)
@@ -38,7 +35,6 @@ class ModalityFilter(admin.SimpleListFilter):
 
 
 class FaultAdmin(SaveUserQATrackAdmin):
-
     list_display = (
         "name",
         site_name,
@@ -69,8 +65,12 @@ class FaultAdmin(SaveUserQATrackAdmin):
     ]
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related(
-            Prefetch("fault_types", queryset=models.FaultType.objects.order_by("code")),
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                Prefetch("fault_types", queryset=models.FaultType.objects.order_by("code")),
+            )
         )
 
     @admin.display(ordering="pk")
@@ -85,7 +85,6 @@ class FaultAdmin(SaveUserQATrackAdmin):
 
 
 class FaultReviewGroupAdmin(BaseQATrackAdmin):
-
     list_display = ("group", "required")
     search_fields = ("group__name",)
 

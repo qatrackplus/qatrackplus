@@ -6,29 +6,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0005_auto_20180327_1157'),
+        ("service_log", "0005_auto_20180327_1157"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='serviceevent',
-            name='qafollowup_notes',
+            model_name="serviceevent",
+            name="qafollowup_notes",
         ),
         migrations.AlterField(
-            model_name='serviceevent',
-            name='datetime_service',
-            field=models.DateTimeField(help_text='Date and time this event started', verbose_name='Date and time'),
+            model_name="serviceevent",
+            name="datetime_service",
+            field=models.DateTimeField(help_text="Date and time this event started", verbose_name="Date and time"),
         ),
         migrations.AlterField(
-            model_name='serviceevent',
-            name='is_review_required',
+            model_name="serviceevent",
+            name="is_review_required",
             field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
-            model_name='serviceevent',
-            name='safety_precautions',
-            field=models.TextField(blank=True, help_text='Describe any safety precautions taken', null=True),
+            model_name="serviceevent",
+            name="safety_precautions",
+            field=models.TextField(blank=True, help_text="Describe any safety precautions taken", null=True),
         ),
     ]

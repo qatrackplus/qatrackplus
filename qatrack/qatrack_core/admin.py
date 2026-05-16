@@ -28,7 +28,7 @@ class DisableInlineEditMixin:
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if formfield and formfield.widget and hasattr(formfield.widget, 'can_delete_related'):
+        if formfield and formfield.widget and hasattr(formfield.widget, "can_delete_related"):
             formfield.widget.can_delete_related = False
             formfield.widget.can_change_related = False
         return formfield

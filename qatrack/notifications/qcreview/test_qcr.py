@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
+import qatrack.qa.tests.utils as utils
 from qatrack.notifications.models import (
     QCReviewNotice,
     RecipientGroup,
@@ -12,11 +13,9 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.qcreview import admin, tasks
 from qatrack.qa import models
-import qatrack.qa.tests.utils as utils
 
 
 class TestQCReviewAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.QCReviewAdmin(model=QCReviewNotice, admin_site=AdminSite())
 
@@ -66,9 +65,7 @@ class TestQCReviewAdmin(TestCase):
 
 
 class TestQCReviewModel(TestCase):
-
     def setUp(self):
-
         self.unit1 = utils.create_unit(name="unit1", number=1)
         self.unit2 = utils.create_unit(name="unit2", number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
@@ -87,8 +84,8 @@ class TestQCReviewModel(TestCase):
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.utc1.unit)
 
-        self.group = models.Group.objects.latest('pk')
-        user = models.User.objects.latest('pk')
+        self.group = models.Group.objects.latest("pk")
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
@@ -96,7 +93,7 @@ class TestQCReviewModel(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -117,16 +114,16 @@ class TestQCReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_test_collection__unit__name': self.utc1.unit.name,
-                'unit_test_collection__name': self.utc1.name,
-                'unit_test_collection__unit__name__count': 1,
-                'unit_test_collection__name__count': 1,
+                "unit_test_collection__unit__name": self.utc1.unit.name,
+                "unit_test_collection__name": self.utc1.name,
+                "unit_test_collection__unit__name__count": 1,
+                "unit_test_collection__name__count": 1,
             },
             {
-                'unit_test_collection__unit__name': self.utc2.unit.name,
-                'unit_test_collection__name': self.utc2.name,
-                'unit_test_collection__unit__name__count': 1,
-                'unit_test_collection__name__count': 1,
+                "unit_test_collection__unit__name": self.utc2.unit.name,
+                "unit_test_collection__name": self.utc2.name,
+                "unit_test_collection__unit__name__count": 1,
+                "unit_test_collection__name__count": 1,
             },
         ]
         assert list(notice.tlis_by_unit_utc()) == expected
@@ -145,10 +142,10 @@ class TestQCReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_test_collection__unit__name': self.utc1.unit.name,
-                'unit_test_collection__name': self.utc1.name,
-                'unit_test_collection__unit__name__count': 1,
-                'unit_test_collection__name__count': 1,
+                "unit_test_collection__unit__name": self.utc1.unit.name,
+                "unit_test_collection__name": self.utc1.name,
+                "unit_test_collection__unit__name__count": 1,
+                "unit_test_collection__name__count": 1,
             },
         ]
         assert list(notice.tlis_by_unit_utc()) == expected
@@ -167,10 +164,10 @@ class TestQCReviewModel(TestCase):
         )
         expected = [
             {
-                'unit_test_collection__unit__name': self.utc1.unit.name,
-                'unit_test_collection__name': self.utc1.name,
-                'unit_test_collection__unit__name__count': 1,
-                'unit_test_collection__name__count': 1,
+                "unit_test_collection__unit__name": self.utc1.unit.name,
+                "unit_test_collection__name": self.utc1.name,
+                "unit_test_collection__unit__name__count": 1,
+                "unit_test_collection__name__count": 1,
             },
         ]
         assert list(notice.tlis_by_unit_utc()) == expected
@@ -180,9 +177,7 @@ class TestQCReviewModel(TestCase):
 
 
 class TestQCReviewEmails(TestCase):
-
     def setUp(self):
-
         self.unit1 = utils.create_unit(name="unit1", number=1)
         self.unit2 = utils.create_unit(name="unit2", number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
@@ -194,8 +189,8 @@ class TestQCReviewEmails(TestCase):
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.utc1.unit)
 
-        self.group = models.Group.objects.latest('pk')
-        user = models.User.objects.latest('pk')
+        self.group = models.Group.objects.latest("pk")
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
@@ -203,7 +198,7 @@ class TestQCReviewEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()

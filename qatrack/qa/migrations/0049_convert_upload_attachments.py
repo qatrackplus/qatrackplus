@@ -9,7 +9,6 @@ logger = logging.getLogger("qatrack.migrations")
 
 
 def convert_instances(apps, schema):
-
     TestInstance = apps.get_model("qa", "TestInstance")
 
     # get test instances which have json results rather than attachment ids
@@ -18,14 +17,12 @@ def convert_instances(apps, schema):
     ).filter(Q(string_value__startswith="{") | Q(string_value__startswith="["))
 
     for ti in tis:
-
         attachment = ti.attachment_set.order_by("pk").first()
 
         if attachment:
             logger.info(
-                "Updating test instance %s (attachment_id=%s) from string_value=%s to string_value=%s json_value=%s" % (
-                    ti.id, attachment.id, ti.string_value, attachment.id, ti.string_value
-                )
+                "Updating test instance %s (attachment_id=%s) from string_value=%s to string_value=%s json_value=%s"
+                % (ti.id, attachment.id, ti.string_value, attachment.id, ti.string_value)
             )
 
             # set json
@@ -38,9 +35,8 @@ def convert_instances(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0048_auto_20200102_1356'),
+        ("qa", "0048_auto_20200102_1356"),
     ]
 
     operations = [

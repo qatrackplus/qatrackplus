@@ -5,59 +5,41 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _l
 from recurrence.fields import RecurrenceField
 
-from qatrack.qatrack_core.fields import JSONField
 from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 
 # ensure Django-Q2 can pick up all report types on Windows
 from qatrack.reports import (  # noqa: F401
-    faults, qc, service_log,
+    faults,
+    qc,
+    service_log,
 )
-
 from qatrack.reports.reports import report_class
 
 
 class SavedReport(models.Model):
     id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
-    FORMATS = [('pdf', _l('PDF')), ('xlsx', 'Excel'), ("csv", _l("CSV"))]
-    PAPER_SIZES = [('letter', _l('Letter (8.5" × 11")')), ('a4', _l('A4 (210mm × 297mm)'))]
+    FORMATS = [("pdf", _l("PDF")), ("xlsx", "Excel"), ("csv", _l("CSV"))]
+    PAPER_SIZES = [("letter", _l('Letter (8.5" × 11")')), ("a4", _l("A4 (210mm × 297mm)"))]
 
     title = models.CharField(
-        max_length=255, 
-        verbose_name=_l("Title"),
-        help_text=_l("Give your report a descriptive title")
+        max_length=255, verbose_name=_l("Title"), help_text=_l("Give your report a descriptive title")
     )
-    report_type = models.CharField(
-        max_length=255,
-        verbose_name=_l("Report type")
-    )
+    report_type = models.CharField(max_length=255, verbose_name=_l("Report type"))
     report_format = models.CharField(
-        max_length=4, 
-        choices=FORMATS, 
-        default=FORMATS[0][0],
-        verbose_name=_l("Report format")
+        max_length=4, choices=FORMATS, default=FORMATS[0][0], verbose_name=_l("Report format")
     )
     filters = models.JSONField(default=dict)
-    include_signature = models.BooleanField(
-        default=False,
-        verbose_name=_l("Include signature")
-    )
-    include_logo = models.BooleanField(
-        default=True,
-        verbose_name=_l("Include logo")
-    )
+    include_signature = models.BooleanField(default=False, verbose_name=_l("Include signature"))
+    include_logo = models.BooleanField(default=True, verbose_name=_l("Include logo"))
     paper_size = models.CharField(
-        max_length=10, 
-        choices=PAPER_SIZES, 
-        default='letter', 
+        max_length=10,
+        choices=PAPER_SIZES,
+        default="letter",
         verbose_name=_l("Paper size"),
-        help_text=_l("Select paper size for PDF reports")
+        help_text=_l("Select paper size for PDF reports"),
     )
-    visible_to = models.ManyToManyField(
-        Group, 
-        blank=True,
-        verbose_name=_l("Visible to")
-    )
+    visible_to = models.ManyToManyField(Group, blank=True, verbose_name=_l("Visible to"))
 
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -90,11 +72,11 @@ class SavedReport(models.Model):
     @property
     def base_opts(self):
         return {
-            'title': self.title,
-            'include_signature': self.include_signature,
-            'include_logo': self.include_logo,
-            'paper_size': self.paper_size,
-            'report_id': self.id,
+            "title": self.title,
+            "include_signature": self.include_signature,
+            "include_logo": self.include_logo,
+            "paper_size": self.paper_size,
+            "report_id": self.id,
         }
 
     def get_report(self, user=None):
@@ -120,7 +102,6 @@ class SavedReport(models.Model):
 
 
 class ReportNote(models.Model):
-
     report = models.ForeignKey(SavedReport, on_delete=models.CASCADE)
 
     heading = models.TextField(
@@ -145,7 +126,6 @@ class ReportNote(models.Model):
 
 
 class ReportSchedule(RecurrenceFieldMixin, models.Model):
-
     recurrence_field_name = "schedule"
 
     TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
@@ -165,7 +145,7 @@ class ReportSchedule(RecurrenceFieldMixin, models.Model):
     time = models.TimeField(
         verbose_name=_l("Time of day"),
         help_text=_l("Set the time of day this report should be sent (00:00-23:59)"),
-        choices=TIME_CHOICES
+        choices=TIME_CHOICES,
     )
 
     groups = models.ManyToManyField(
@@ -185,7 +165,7 @@ class ReportSchedule(RecurrenceFieldMixin, models.Model):
     emails = models.TextField(
         verbose_name=_l("Extra recipient emails"),
         help_text=_l("Enter a comma separated list of extra emails this report should be sent to"),
-        blank=True
+        blank=True,
     )
 
     last_sent = models.DateTimeField(null=True, editable=False)
@@ -214,7 +194,6 @@ class ReportSchedule(RecurrenceFieldMixin, models.Model):
 
         recipients = []
         for fn, ln, e in users:
-
             e = e.strip()
 
             if fn and ln and e:

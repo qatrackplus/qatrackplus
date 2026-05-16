@@ -3,10 +3,9 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-from qatrack.qatrack_core.forms import BetterModelForm
 
 from qatrack.faults import models
-from qatrack.qatrack_core.forms import MultipleCharField, UserChoiceField
+from qatrack.qatrack_core.forms import BetterModelForm, MultipleCharField, UserChoiceField
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.units import models as u_models
@@ -16,7 +15,6 @@ NEW_FAULT_TYPE_MARKER = "newft:"
 
 
 class FaultForm(BetterModelForm):
-
     prefix = "fault"
 
     comment = forms.CharField(
@@ -41,82 +39,82 @@ class FaultForm(BetterModelForm):
     related_service_events = ServiceEventMultipleField(
         required=False,
         queryset=sl_models.ServiceEvent.objects.none(),
-        label=_l('Related Service Events'),
-        help_text=models.Fault._meta.get_field('related_service_events').help_text,
+        label=_l("Related Service Events"),
+        help_text=models.Fault._meta.get_field("related_service_events").help_text,
     )
 
     attachments = forms.FileField(
         label="Attachments",
         max_length=150,
         required=False,
-        widget=forms.FileInput(attrs={
-            'multiple': '',
-            'class': 'file-upload',
-            'style': 'display:none',
-        })
+        widget=forms.FileInput(
+            attrs={
+                "multiple": "",
+                "class": "file-upload",
+                "style": "display:none",
+            }
+        ),
     )
     attachments_delete_ids = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = models.Fault
         fields = [
-            'occurred',
-            'unit',
-            'modality',
-            'comment',
-            'fault_types_field',
-            'related_service_events',
+            "occurred",
+            "unit",
+            "modality",
+            "comment",
+            "fault_types_field",
+            "related_service_events",
         ]
 
     def __init__(self, *args, **kwargs):
-
         include_related_ses = kwargs.pop("include_related_ses", True)
         user = kwargs.pop("user", None)
 
         super().__init__(*args, **kwargs)
 
         if not include_related_ses:
-            self.fields.pop('related_service_events')
+            self.fields.pop("related_service_events")
 
-        instance = kwargs.get('instance')
+        instance = kwargs.get("instance")
         if instance and instance.id:
             # if we are editing an existing fault, we need to set up the initial
             # choices otherwise the fault_types_field will be blank
-            self.initial['fault_types_field'] = [ft.code for ft in instance.fault_types.all()]
-            self.fields['fault_types_field'].widget.choices = [(ft.code, ft.code) for ft in instance.fault_types.all()]
+            self.initial["fault_types_field"] = [ft.code for ft in instance.fault_types.all()]
+            self.fields["fault_types_field"].widget.choices = [(ft.code, ft.code) for ft in instance.fault_types.all()]
 
-            self.fields.pop('comment')
+            self.fields.pop("comment")
 
             if include_related_ses:
                 # set initial related service events to whatever is set on the model
-                self.initial['related_service_events'] = self.instance.related_service_events.all()
-                self.fields['related_service_events'].queryset = self.initial['related_service_events']
+                self.initial["related_service_events"] = self.instance.related_service_events.all()
+                self.fields["related_service_events"].queryset = self.initial["related_service_events"]
         elif include_related_ses:
             # on invalid create form submit, we need to reset the related service events to whatever the user posted
-            if '%s-related_service_events' % self.prefix in self.data:
-                self.fields['related_service_events'].queryset = sl_models.ServiceEvent.objects.filter(
-                    pk__in=self.data.getlist('%s-related_service_events' % self.prefix),
+            if "%s-related_service_events" % self.prefix in self.data:
+                self.fields["related_service_events"].queryset = sl_models.ServiceEvent.objects.filter(
+                    pk__in=self.data.getlist("%s-related_service_events" % self.prefix),
                 )
 
             # disable related service event fields if unit not set
-            if '%s-unit' % self.prefix not in self.data and 'unit' not in self.initial:
-                self.fields['related_service_events'].widget.attrs.update({'disabled': True})
-            if '%s-unit' % self.prefix in self.data:
-                if not self.data['%s-unit' % self.prefix]:
-                    self.fields['related_service_events'].widget.attrs.update({'disabled': True})
+            if "%s-unit" % self.prefix not in self.data and "unit" not in self.initial:
+                self.fields["related_service_events"].widget.attrs.update({"disabled": True})
+            if "%s-unit" % self.prefix in self.data:
+                if not self.data["%s-unit" % self.prefix]:
+                    self.fields["related_service_events"].widget.attrs.update({"disabled": True})
 
-        self.fields['unit'].choices = unit_site_unit_type_choices(
+        self.fields["unit"].choices = unit_site_unit_type_choices(
             include_empty=True, serviceable_only=True, visible_for_user=user
         )
 
         for f in self.fields:
-            self.fields[f].widget.attrs['class'] = 'form-control'
+            self.fields[f].widget.attrs["class"] = "form-control"
 
             # since we are dynamically grabbing fault type, we need to set the initial
             # choices to whatever user had it set to
-            data_key = '%s-fault_types_field' % self.prefix
-            if f == 'fault_types_field':
-
+            data_key = "%s-fault_types_field" % self.prefix
+            if f == "fault_types_field":
                 if self.data and self.data.getlist(data_key):
                     choices = []
                     for val in self.data.getlist(data_key):
@@ -127,13 +125,13 @@ class FaultForm(BetterModelForm):
                         choices.append((val, label))
                     self.fields[f].widget.choices = choices
 
-        if 'comment' in self.fields:
-            self.fields['comment'].widget.attrs['class'] += 'autosize'
-            self.fields['comment'].widget.attrs['cols'] = 8
-            self.fields['comment'].widget.attrs['rows'] = 3
+        if "comment" in self.fields:
+            self.fields["comment"].widget.attrs["class"] += "autosize"
+            self.fields["comment"].widget.attrs["cols"] = 8
+            self.fields["comment"].widget.attrs["rows"] = 3
 
     def clean_fault_types_field(self):
-        fault_types = self.cleaned_data.get('fault_types_field')
+        fault_types = self.cleaned_data.get("fault_types_field")
         cleaned_fault_types = []
         for fault_type in fault_types:
             if fault_type and NEW_FAULT_TYPE_MARKER in fault_type:
@@ -144,19 +142,18 @@ class FaultForm(BetterModelForm):
         return cleaned_fault_types
 
     def clean_unit(self):
-        unit = self.cleaned_data.get('unit')
+        unit = self.cleaned_data.get("unit")
         if unit:
             try:
                 unit = u_models.Unit.objects.get(pk=unit)
             except u_models.Unit.DoesNotExist:
-                raise ValidationError(_('Unit with id %s does not exist') % unit)
+                raise ValidationError(_("Unit with id %s does not exist") % unit)
         return unit
 
 
 class InlineReviewForm(forms.Form):
-
     group = forms.CharField(
-        widget=forms.TextInput(attrs={'readonly': 'readonly'}),
+        widget=forms.TextInput(attrs={"readonly": "readonly"}),
     )
 
     reviewed_by = UserChoiceField(
@@ -172,20 +169,19 @@ class InlineReviewForm(forms.Form):
         fault_review_group = kwargs.pop("fault_review_group")
         self.instance = kwargs.pop("instance", None)
         if self.instance:
-            kwargs['initial'] = {
-                'group': self.instance.fault_review_group.group.name,
-                'reviewed_by': self.instance.reviewed_by,
+            kwargs["initial"] = {
+                "group": self.instance.fault_review_group.group.name,
+                "reviewed_by": self.instance.reviewed_by,
             }
         super().__init__(*args, **kwargs)
-        self.fields['group'].initial = fault_review_group.group.name
-        self.fields['reviewed_by'].required = fault_review_group.required
-        self.fields['reviewed_by'].queryset = fault_review_group.group.user_set.filter(is_active=True).all()
+        self.fields["group"].initial = fault_review_group.group.name
+        self.fields["reviewed_by"].required = fault_review_group.required
+        self.fields["reviewed_by"].queryset = fault_review_group.group.user_set.filter(is_active=True).all()
 
 
 class ReviewFaultForm(BetterModelForm):
-
     prefix = "fault"
 
     class Meta:
         model = models.Fault
-        fields = ['id']
+        fields = ["id"]

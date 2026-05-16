@@ -9,12 +9,11 @@ from django.utils import timezone
 from qatrack.faults import models
 from qatrack.qatrack_core.email import send_email_to_users
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger("qatrack")
 
 
 @receiver(m2m_changed, sender=models.Fault.fault_types.through)
 def on_fault_created(sender, instance, action, **kwargs):
-
     is_edit = instance.fault_types.count() > 0
     if action != "pre_add" or is_edit:
         # don't send when edited
@@ -28,10 +27,10 @@ def on_fault_created(sender, instance, action, **kwargs):
 
     # don't use fault fault.fault_types because we are using 'pre_add' and they
     # haven't actually been added to the model yet
-    fts = ', '.join(
-        models.FaultType.objects.filter(pk__in=kwargs['pk_set']).order_by("code").values_list("code", flat=True)
+    fts = ", ".join(
+        models.FaultType.objects.filter(pk__in=kwargs["pk_set"]).order_by("code").values_list("code", flat=True)
     )
-    context = {'fault': fault, 'fault_types': fts}
+    context = {"fault": fault, "fault_types": fts}
 
     try:
         send_email_to_users(
@@ -51,7 +50,6 @@ def on_fault_created(sender, instance, action, **kwargs):
 
 
 def get_notification_recipients(fault):
-
     from qatrack.notifications.faults import models
 
     unit = fault.unit

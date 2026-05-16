@@ -7,14 +7,12 @@ from django.db import migrations
 
 
 def copy_to_reports(apps, schema):
-
     if any("test" in a for a in sys.argv):
         return
 
     from django.apps import apps
-    from django.contrib.auth.management import create_permissions
 
-    for app in ['reports']:
+    for app in ["reports"]:
         app_config = apps.get_app_config(app)
         app_config.models_module = True
         create_permissions(app_config, verbosity=0)
@@ -22,7 +20,7 @@ def copy_to_reports(apps, schema):
 
     Permission = apps.get_model("auth", "Permission")
 
-    perms = ['can_run_sql_reports', 'can_create_sql_reports']
+    perms = ["can_run_sql_reports", "can_create_sql_reports"]
     for perm in perms:
         try:
             pfrom = Permission.objects.get(codename=perm, content_type__model="testinstance")
@@ -38,10 +36,9 @@ def copy_to_reports(apps, schema):
 
 
 def copy_to_testinstance(apps, schema):
-
     Permission = apps.get_model("auth", "Permission")
 
-    perms = ['can_run_sql_reports', 'can_create_sql_reports']
+    perms = ["can_run_sql_reports", "can_create_sql_reports"]
     for perm in perms:
         pfrom = Permission.objects.get(codename=perm, content_type__model="savedreport")
         pto = Permission.objects.get(codename=perm, content_type__model="testinstance")
@@ -53,10 +50,9 @@ def copy_to_testinstance(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0029_auto_20181217_0945'),
-        ('reports', '0002_auto_20190502_1418'),
+        ("qa", "0029_auto_20181217_0945"),
+        ("reports", "0002_auto_20190502_1418"),
     ]
 
     operations = [

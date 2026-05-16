@@ -10,35 +10,35 @@ from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
 
-PHOTON = 'photon'
-ELECTRON = 'electron'
+PHOTON = "photon"
+ELECTRON = "electron"
 
 
 class NameNaturalKeyManager(models.Manager):
-
     def get_by_natural_key(self, name):
         return self.get(name=name)
 
 
 class Vendor(models.Model):
-    """ Vendor of Unit
+    """Vendor of Unit
 
     Stores information (just name for now) of unit vendor.
     """
+
     id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         verbose_name=_l("name"),
         max_length=64,
         unique=True,
-        help_text=_l('Name of this vendor'),
+        help_text=_l("Name of this vendor"),
     )
     notes = models.TextField(
         verbose_name=_l("notes"),
         max_length=255,
         blank=True,
         null=True,
-        help_text=_l('Additional notes about this vendor')
+        help_text=_l("Additional notes about this vendor"),
     )
 
     objects = NameNaturalKeyManager()
@@ -57,17 +57,18 @@ class Vendor(models.Model):
 
 
 class UnitClass(models.Model):
-    """ Class of unit
+    """Class of unit
 
     Unit class, ie. linac, CT, MR, etc.
     """
+
     id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         verbose_name=_l("name"),
         max_length=64,
         unique=True,
-        help_text=_l('Name of this unit class'),
+        help_text=_l("Name of this unit class"),
     )
 
     objects = NameNaturalKeyManager()
@@ -86,17 +87,18 @@ class UnitClass(models.Model):
 
 
 class Site(models.Model):
-    """ Site unit resides
+    """Site unit resides
 
     Allows for multiple site filtering (different campuses, buildings, hospitals, etc)
     """
+
     id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         verbose_name=_l("name"),
         max_length=64,
         unique=True,
-        help_text=_l('Name of this site'),
+        help_text=_l("Name of this site"),
     )
     slug = models.SlugField(
         verbose_name=_l("slug"),
@@ -115,7 +117,6 @@ class Site(models.Model):
 
 
 class UnitTypeManager(models.Manager):
-
     def get_by_natural_key(self, name, model, vendor_name=None, unitclass_name=None):
         return self.get(name=name, model=model, vendor__name=vendor_name, unit_class__name=unitclass_name)
 
@@ -128,6 +129,7 @@ class UnitType(models.Model):
     another.
 
     """
+
     id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     vendor = models.ForeignKey(
@@ -149,14 +151,14 @@ class UnitType(models.Model):
     name = models.CharField(
         verbose_name=_l("name"),
         max_length=50,
-        help_text=_l('Name for this unit type'),
+        help_text=_l("Name for this unit type"),
     )
     model = models.CharField(
         verbose_name=_l("model"),
         max_length=50,
         null=True,
         blank=True,
-        help_text=_l('Optional model name for this group'),
+        help_text=_l("Optional model name for this group"),
     )
 
     collapse = models.BooleanField(
@@ -168,12 +170,14 @@ class UnitType(models.Model):
     objects = UnitTypeManager()
 
     class Meta:
-        unique_together = [(
-            'name',
-            'model',
-            'vendor',
-            'unit_class',
-        )]
+        unique_together = [
+            (
+                "name",
+                "model",
+                "vendor",
+                "unit_class",
+            )
+        ]
         ordering = (
             "vendor__name",
             "name",
@@ -190,7 +194,7 @@ class UnitType(models.Model):
 
     def __str__(self):
         """Display more descriptive name"""
-        return '%s%s' % (self.name, ' - %s' % self.model if self.model else '')
+        return "%s%s" % (self.name, " - %s" % self.model if self.model else "")
 
 
 class Modality(models.Model):
@@ -199,20 +203,21 @@ class Modality(models.Model):
     defines available treatment & imaging modalities and techniques  for a given :model:`unit1`
 
     """
+
     id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
-        _l('Name'),
+        _l("Name"),
         max_length=255,
-        help_text=_l('Descriptive name for this treatment or imaging modality.'),
-        unique=True
+        help_text=_l("Descriptive name for this treatment or imaging modality."),
+        unique=True,
     )
 
     objects = NameNaturalKeyManager()
 
     class Meta:
         verbose_name = _l("Treatment and Imaging Modality")
-        verbose_name_plural = _l('Treatment and Imaging Modalities')
+        verbose_name_plural = _l("Treatment and Imaging Modalities")
 
     def natural_key(self):
         return (self.name,)
@@ -235,6 +240,7 @@ class Unit(models.Model):
     """Radiation devices
     Stores a single radiation device (e.g. Linac, Tomo unit, Cyberkinfe etc.)
     """
+
     id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     type = models.ForeignKey(UnitType, verbose_name=_l("Unit Type"), on_delete=models.PROTECT)
@@ -244,20 +250,20 @@ class Unit(models.Model):
         null=False,
         blank=True,
         unique=True,
-        help_text=_l('A unique number for this unit. Leave blank to have it assigned automatically'),
+        help_text=_l("A unique number for this unit. Leave blank to have it assigned automatically"),
     )
-    name = models.CharField(max_length=256, help_text=_l('The display name for this unit'))
-    serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_l('Optional serial number'))
-    location = models.CharField(max_length=256, null=True, blank=True, help_text=_l('Optional location information'))
-    install_date = models.DateField(null=True, blank=True, help_text=_l('Optional install date'))
+    name = models.CharField(max_length=256, help_text=_l("The display name for this unit"))
+    serial_number = models.CharField(max_length=256, null=True, blank=True, help_text=_l("Optional serial number"))
+    location = models.CharField(max_length=256, null=True, blank=True, help_text=_l("Optional location information"))
+    install_date = models.DateField(null=True, blank=True, help_text=_l("Optional install date"))
     date_acceptance = models.DateField(
         verbose_name=_l("Acceptance date"),
-        help_text=_l('Changing acceptance date will delete unit available times that occur before it'),
+        help_text=_l("Changing acceptance date will delete unit available times that occur before it"),
     )
-    active = models.BooleanField(default=True, help_text=_l('Set to false if unit is no longer in use'))
+    active = models.BooleanField(default=True, help_text=_l("Set to false if unit is no longer in use"))
     # restricted = models.BooleanField(default=False, help_text=_l('Set to false to restrict unit from operation'))
     is_serviceable = models.BooleanField(
-        default=True, help_text=_l('Set to true to enable this unit to be selectable in service events')
+        default=True, help_text=_l("Set to true to enable this unit to be selectable in service events")
     )
 
     modalities = models.ManyToManyField(Modality)
@@ -265,7 +271,7 @@ class Unit(models.Model):
     class Meta:
         ordering = [settings.ORDER_UNITS_BY]
         verbose_name = _l("Unit")
-        verbose_name_plural = _l('Units')
+        verbose_name_plural = _l("Units")
 
     def __str__(self):
         return self.name
@@ -274,7 +280,6 @@ class Unit(models.Model):
         return "%s :: %s" % (_("Other") if not self.site else self.site.name, self.name)
 
     def get_potential_time(self, date_from, date_to):
-
         if date_from is None:
             date_from = self.date_acceptance
 
@@ -283,9 +288,10 @@ class Unit(models.Model):
                 return 0
             date_from = self.date_acceptance
 
-        self_uat_set = self.unitavailabletime_set.filter(date_changed__range=[date_from, date_to]
-                                                         ).order_by('date_changed')
-        self_uate_set = self.unitavailabletimeedit_set.filter(date__range=[date_from, date_to]).order_by('date')
+        self_uat_set = self.unitavailabletime_set.filter(date_changed__range=[date_from, date_to]).order_by(
+            "date_changed"
+        )
+        self_uate_set = self.unitavailabletimeedit_set.filter(date__range=[date_from, date_to]).order_by("date")
 
         # add latest uat where available
         latest_uat = self.unitavailabletime_set.filter(date_changed__lte=date_from).order_by("-date_changed")[:1]
@@ -296,25 +302,25 @@ class Unit(models.Model):
         uate_list = {str(uate.date): uate.hours for uate in self_uate_set}
 
         val_list = self_uat_set.values(
-            'date_changed',
-            'hours_sunday',
-            'hours_monday',
-            'hours_tuesday',
-            'hours_wednesday',
-            'hours_thursday',
-            'hours_friday',
-            'hours_saturday',
+            "date_changed",
+            "hours_sunday",
+            "hours_monday",
+            "hours_tuesday",
+            "hours_wednesday",
+            "hours_thursday",
+            "hours_friday",
+            "hours_saturday",
         )
 
         val_list_len = len(val_list)
         for i in range(val_list_len):
-            next_date = val_list[i + 1]['date_changed'] - timedelta(days=1) if i < val_list_len - 1 else date_to
-            this_date = date_from if val_list[i]['date_changed'] < date_from else val_list[i]['date_changed']
+            next_date = val_list[i + 1]["date_changed"] - timedelta(days=1) if i < val_list_len - 1 else date_to
+            this_date = date_from if val_list[i]["date_changed"] < date_from else val_list[i]["date_changed"]
 
             days_nums = weekday_count(this_date, next_date, uate_list)
 
             for day in days_nums:
-                potential_time += days_nums[day] * val_list[i]['hours_' + day].total_seconds()
+                potential_time += days_nums[day] * val_list[i]["hours_" + day].total_seconds()
 
         for uate in uate_list:
             potential_time += uate_list[uate].total_seconds()
@@ -323,7 +329,7 @@ class Unit(models.Model):
 
     def save(self, *args, **kwargs):
         if self.number in ("", None):
-            next_available = Unit.objects.all().aggregate(max_num=Max("number") + 1)['max_num'] or 1
+            next_available = Unit.objects.all().aggregate(max_num=Max("number") + 1)["max_num"] or 1
             self.number = next_available
         super().save(*args, **kwargs)
 
@@ -335,66 +341,60 @@ class UnitAvailableTimeEdit(models.Model):
     """
     A one off change to unit available time (holiday's, extended hours for a single day, etc)
     """
+
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
-    name = models.CharField(max_length=64, help_text=_l('A quick name or reason for the change'), blank=True, null=True)
-    date = models.DateField(help_text=_l('Date of available time change'))
-    hours = models.DurationField(help_text=_l('New duration of availability'))
+    name = models.CharField(max_length=64, help_text=_l("A quick name or reason for the change"), blank=True, null=True)
+    date = models.DateField(help_text=_l("Date of available time change"))
+    hours = models.DurationField(help_text=_l("New duration of availability"))
 
     class Meta:
-        ordering = ['-date']
-        get_latest_by = 'date'
-        unique_together = [('unit', 'date')]
+        ordering = ["-date"]
+        get_latest_by = "date"
+        unique_together = [("unit", "date")]
         default_permissions = ()
         verbose_name = _l("Unit Available Time Edit")
-        verbose_name_plural = _l('Unit Available Time Edits')
+        verbose_name_plural = _l("Unit Available Time Edits")
 
     def __str__(self):
-        return '%s (%s)' % (self.name, fmt_date(self.date))
+        return "%s (%s)" % (self.name, fmt_date(self.date))
 
 
 class UnitAvailableTime(models.Model):
-
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
-    date_changed = models.DateField(blank=True, help_text=_l('Date the units available time changed or will change'))
-    hours_sunday = models.DurationField(help_text=_l('Duration of available time on Sundays'))
-    hours_monday = models.DurationField(help_text=_l('Duration of available time on Mondays'))
-    hours_tuesday = models.DurationField(help_text=_l('Duration of available time on Tuesdays'))
-    hours_wednesday = models.DurationField(help_text=_l('Duration of available time on Wednesdays'))
-    hours_thursday = models.DurationField(help_text=_l('Duration of available time on Thursdays'))
-    hours_friday = models.DurationField(help_text=_l('Duration of available time on Fridays'))
-    hours_saturday = models.DurationField(help_text=_l('Duration of available time on Saturdays'))
+    date_changed = models.DateField(blank=True, help_text=_l("Date the units available time changed or will change"))
+    hours_sunday = models.DurationField(help_text=_l("Duration of available time on Sundays"))
+    hours_monday = models.DurationField(help_text=_l("Duration of available time on Mondays"))
+    hours_tuesday = models.DurationField(help_text=_l("Duration of available time on Tuesdays"))
+    hours_wednesday = models.DurationField(help_text=_l("Duration of available time on Wednesdays"))
+    hours_thursday = models.DurationField(help_text=_l("Duration of available time on Thursdays"))
+    hours_friday = models.DurationField(help_text=_l("Duration of available time on Fridays"))
+    hours_saturday = models.DurationField(help_text=_l("Duration of available time on Saturdays"))
 
     class Meta:
-        ordering = ['-date_changed']
-        default_permissions = ('change',)
-        get_latest_by = 'date_changed'
-        unique_together = [('unit', 'date_changed')]
+        ordering = ["-date_changed"]
+        default_permissions = ("change",)
+        get_latest_by = "date_changed"
+        unique_together = [("unit", "date_changed")]
         verbose_name = _l("Unit Available Time")
-        verbose_name_plural = _l('Unit Available Times')
+        verbose_name_plural = _l("Unit Available Times")
 
     def __str__(self):
-        return 'Available time schedule change'
+        return "Available time schedule change"
 
     def to_dict(self):
         return {
-            'date_changed':
-                '{:02d}-{:02d}-{}'.format(self.date_changed.day, self.date_changed.month, self.date_changed.year),
-            'hours_sunday':
-                self.hours_sunday,
-            'hours_monday':
-                self.hours_monday,
-            'hours_tuesday':
-                self.hours_tuesday,
-            'hours_wednesday':
-                self.hours_wednesday,
-            'hours_thursday':
-                self.hours_thursday,
-            'hours_friday':
-                self.hours_friday,
-            'hours_saturday':
-                self.hours_saturday,
+            "date_changed": "{:02d}-{:02d}-{}".format(
+                self.date_changed.day, self.date_changed.month, self.date_changed.year
+            ),
+            "hours_sunday": self.hours_sunday,
+            "hours_monday": self.hours_monday,
+            "hours_tuesday": self.hours_tuesday,
+            "hours_wednesday": self.hours_wednesday,
+            "hours_thursday": self.hours_thursday,
+            "hours_friday": self.hours_friday,
+            "hours_saturday": self.hours_saturday,
         }
 
     @staticmethod
@@ -403,7 +403,7 @@ class UnitAvailableTime(models.Model):
         try:
             uat = UnitAvailableTime.objects.get(unit=unit, date_changed=unit.date_acceptance)
         except models.ObjectDoesNotExist:
-            kwargs = {'unit': unit, 'date_changed': unit.date_acceptance}
+            kwargs = {"unit": unit, "date_changed": unit.date_acceptance}
             for d in settings.DEFAULT_AVAILABLE_TIMES:
                 kwargs[d] = settings.DEFAULT_AVAILABLE_TIMES[d]
             uat = UnitAvailableTime(**kwargs)
@@ -420,20 +420,24 @@ def get_unit_info(unit_ids=None, active_only=True, serviceable_only=False):
     if unit_ids:
         units = units.filter(pk__in=unit_ids)
 
-    units = units.prefetch_related(
-        "modalities",
-    ).order_by(
-        "id",
-        "modalities",
-    ).values_list(
-        "id",
-        "modalities",
+    units = (
+        units.prefetch_related(
+            "modalities",
+        )
+        .order_by(
+            "id",
+            "modalities",
+        )
+        .values_list(
+            "id",
+            "modalities",
+        )
     )
 
-    unit_info = defaultdict(lambda: {'modalities': set()})
+    unit_info = defaultdict(lambda: {"modalities": set()})
 
     for unit, modality in units:
         if modality is not None:
-            unit_info[unit]['modalities'].add(modality)
+            unit_info[unit]["modalities"].add(modality)
 
     return unit_info

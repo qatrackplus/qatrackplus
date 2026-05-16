@@ -4,8 +4,9 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
-from qatrack.faults.models import Fault
 import qatrack.faults.tests.utils as utils
+import qatrack.qa.tests.utils as qa_utils
+from qatrack.faults.models import Fault
 from qatrack.notifications.faults_review import admin, tasks
 from qatrack.notifications.models import (
     FaultsReviewNotice,
@@ -13,11 +14,9 @@ from qatrack.notifications.models import (
     UnitGroup,
 )
 from qatrack.qa import models
-import qatrack.qa.tests.utils as qa_utils
 
 
 class TestFaultsReviewAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.FaultsReviewAdmin(model=FaultsReviewNotice, admin_site=AdminSite())
 
@@ -54,9 +53,7 @@ class TestFaultsReviewAdmin(TestCase):
 
 
 class TestFaultsReviewModel(TestCase):
-
     def setUp(self):
-
         self.unit1 = qa_utils.create_unit(name="unit1", number=1)
         self.unit2 = qa_utils.create_unit(name="unit2", number=2)
 
@@ -67,7 +64,7 @@ class TestFaultsReviewModel(TestCase):
         self.unit_group.units.add(self.unit1)
 
         self.group = qa_utils.create_group()
-        self.user = models.User.objects.latest('pk')
+        self.user = models.User.objects.latest("pk")
         self.user.is_active = True
         self.user.groups.add(self.group)
         self.user.email = "example@example.com"
@@ -76,7 +73,7 @@ class TestFaultsReviewModel(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -85,7 +82,6 @@ class TestFaultsReviewModel(TestCase):
         Schedule.objects.all().delete()
 
     def test_unreviewed_both_unreviewed_no_groups(self):
-
         notice = FaultsReviewNotice.objects.create(
             recipients=self.recipients,
             notification_type=FaultsReviewNotice.UNREVIEWED,
@@ -93,16 +89,16 @@ class TestFaultsReviewModel(TestCase):
         )
         expected = [
             {
-                'unit__name': self.unit1.name,
-                'fault_types__code': self.fault1.fault_types.first().code,
-                'unit__name__count': 1,
-                'fault_types__code__count': 1,
+                "unit__name": self.unit1.name,
+                "fault_types__code": self.fault1.fault_types.first().code,
+                "unit__name__count": 1,
+                "fault_types__code__count": 1,
             },
             {
-                'unit__name': self.unit2.name,
-                'fault_types__code': self.fault2.fault_types.first().code,
-                'unit__name__count': 1,
-                'fault_types__code__count': 1,
+                "unit__name": self.unit2.name,
+                "fault_types__code": self.fault2.fault_types.first().code,
+                "unit__name__count": 1,
+                "fault_types__code__count": 1,
             },
         ]
         assert list(notice.faults_by_unit_fault_type()) == expected
@@ -118,10 +114,10 @@ class TestFaultsReviewModel(TestCase):
         )
         expected = [
             {
-                'unit__name': self.unit1.name,
-                'fault_types__code': self.fault1.fault_types.first().code,
-                'unit__name__count': 1,
-                'fault_types__code__count': 1,
+                "unit__name": self.unit1.name,
+                "fault_types__code": self.fault1.fault_types.first().code,
+                "unit__name__count": 1,
+                "fault_types__code__count": 1,
             },
         ]
         assert list(notice.faults_by_unit_fault_type()) == expected
@@ -131,9 +127,7 @@ class TestFaultsReviewModel(TestCase):
 
 
 class TestFaultsReviewEmails(TestCase):
-
     def setUp(self):
-
         self.unit1 = qa_utils.create_unit(name="unit1", number=1)
         self.unit2 = qa_utils.create_unit(name="unit2", number=2)
         self.faults1 = utils.create_fault(unit=self.unit1)
@@ -143,7 +137,7 @@ class TestFaultsReviewEmails(TestCase):
         self.unit_group.units.add(self.unit1)
 
         self.group = qa_utils.create_group()
-        self.user = models.User.objects.latest('pk')
+        self.user = models.User.objects.latest("pk")
         self.user.groups.add(self.group)
         self.user.is_active = True
         self.user.email = "example@example.com"
@@ -152,7 +146,7 @@ class TestFaultsReviewEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()

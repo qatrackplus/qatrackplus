@@ -1,14 +1,14 @@
 import datetime
 import re
+from zoneinfo import ZoneInfo
 
+import numpy as np
+import pandas as pd
 from django.contrib.sites.models import Site
 from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-import numpy as np
-import pandas as pd
-from zoneinfo import ZoneInfo
 
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
@@ -16,27 +16,27 @@ from qatrack.qatrack_core.utils import end_of_day, relative_dates, start_of_day
 
 
 class TestLoginViews(TestCase):
-
     def test_password_reset(self):
         """Test full cycle of password reset process"""
         Site.objects.all().update(domain="")
         u = utils.create_user()
-        self.client.post(reverse("password_reset"), {'email': u.email})
+        self.client.post(reverse("password_reset"), {"email": u.email})
         assert "Password reset" in mail.outbox[0].subject
 
         url = re.search(r"(?P<url>https?://[^\s]+)", mail.outbox[0].body).group("url")
         resp = self.client.get(url)
         resp = self.client.post(
-            resp.url, {
-                'new_password1': '8P0Cut!v6XUr',
-                'new_password2': '8P0Cut!v6XUr',
-            }, follow=True
+            resp.url,
+            {
+                "new_password1": "8P0Cut!v6XUr",
+                "new_password2": "8P0Cut!v6XUr",
+            },
+            follow=True,
         )
         assert "/accounts/reset/done/" in resp.redirect_chain[0]
 
 
 class TestJSONEncoder:
-
     def test_np_int(self):
         enc = QATrackJSONEncoder()
         assert enc.default(np.int8(1)) == 1
@@ -59,9 +59,9 @@ class TestJSONEncoder:
 
     def test_pd_df(self):
         enc = QATrackJSONEncoder()
-        d = {'col1': [1, 2], 'col2': [3, 4]}
+        d = {"col1": [1, 2], "col2": [3, 4]}
         df = pd.DataFrame(data=d)
-        expected = {'col1': {0: 1, 1: 2}, 'col2': {0: 3, 1: 4}}
+        expected = {"col1": {0: 1, 1: 2}, "col2": {0: 3, 1: 4}}
         assert enc.default(df) == expected
 
     def test_datetime(self):
@@ -77,7 +77,6 @@ class TestJSONEncoder:
 
 
 class TestRelativeDates:
-
     def setup_class(self):
         self.tz = ZoneInfo("America/Toronto")
         self.now = timezone.datetime(2020, 1, 2, 11, 38, tzinfo=self.tz)
@@ -298,7 +297,6 @@ class TestRelativeDates:
         assert r.end() == end
 
     def test_today(self):
-
         start = self.day_start
         end = end_of_day(start)
         r = relative_dates("today", self.now)

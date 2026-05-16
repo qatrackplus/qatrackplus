@@ -4,7 +4,6 @@ from django.utils.text import gettext_lazy as _l
 
 
 class ActiveDirectoryGroupMap(models.Model):
-
     ad_group = models.CharField(
         _l("Active Directory Group"),
         max_length=255,
@@ -46,7 +45,6 @@ class ActiveDirectoryGroupMap(models.Model):
 
 
 class DefaultGroup(models.Model):
-
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     class Meta:

@@ -12,7 +12,6 @@ from qatrack.service_log.models import ServiceEvent
 
 
 class ServiceEventReviewNotice(RecurrenceFieldMixin, models.Model):
-
     UNREVIEWED = 0
 
     NOTIFICATION_TYPES = ((UNREVIEWED, _l("Notify about Service Events awaiting review")),)
@@ -85,17 +84,20 @@ class ServiceEventReviewNotice(RecurrenceFieldMixin, models.Model):
         )
 
     def ses_by_unit_usa(self):
-
         ses = self.ses()
-        return ses.values(
-            "unit_service_area__unit__name",
-            "unit_service_area__service_area__name",
-        ).order_by(
-            "unit_service_area__unit__name",
-            "unit_service_area__service_area__name",
-        ).annotate(
-            Count("unit_service_area__unit__name"),
-            Count("unit_service_area__service_area__name"),
+        return (
+            ses.values(
+                "unit_service_area__unit__name",
+                "unit_service_area__service_area__name",
+            )
+            .order_by(
+                "unit_service_area__unit__name",
+                "unit_service_area__service_area__name",
+            )
+            .annotate(
+                Count("unit_service_area__unit__name"),
+                Count("unit_service_area__service_area__name"),
+            )
         )
 
     def send_required(self):

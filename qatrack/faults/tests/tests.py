@@ -1,7 +1,7 @@
 from unittest import mock
 
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -10,7 +10,7 @@ from django_comments.models import Comment
 
 from qatrack.attachments.models import Attachment
 from qatrack.faults import admin, forms, views
-from qatrack.faults.models import Fault, FaultType, FaultReviewGroup, can_review_faults
+from qatrack.faults.models import Fault, FaultReviewGroup, FaultType, can_review_faults
 from qatrack.faults.tests import utils
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.dates import format_datetime
@@ -19,13 +19,11 @@ from qatrack.units import models as u_models
 
 
 class TestFaultType:
-
     def test_str(self):
         assert str(FaultType(code="code")) == "code"
 
 
 class TestFault(TestCase):
-
     def test_str(self):
         assert str(Fault(pk=1)) == "Fault ID: 1"
 
@@ -58,13 +56,11 @@ class TestFault(TestCase):
         ft2 = utils.create_fault_type()
         f = utils.create_fault(fault_type=[ft1, ft2])
         qs = FaultType.objects.order_by("code").values_list("code", flat=True)
-        assert f.fault_types_display() == ', '.join(qs)
+        assert f.fault_types_display() == ", ".join(qs)
 
 
 class TestCanReviewFaults(TestCase):
-
     def test_no_review_groups(self):
-
         user = qa_utils.create_user()
         p = Permission.objects.get(name="Can review faults")
         user.user_permissions.add(p)
@@ -85,7 +81,6 @@ class TestCanReviewFaults(TestCase):
 
 
 class TestFaultAdmin(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
@@ -118,11 +113,10 @@ class TestFaultAdmin(TestCase):
         site = AdminSite()
         adm = admin.FaultAdmin(Fault, site)
         qs = fault.fault_types.order_by("code").values_list("code", flat=True)
-        assert adm.get_fault_types(fault) == ', '.join(qs)
+        assert adm.get_fault_types(fault) == ", ".join(qs)
 
 
 class TestModalityFilter(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -159,7 +153,6 @@ class TestModalityFilter(TestCase):
 
 
 class TestFaultManager(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -176,7 +169,6 @@ class TestFaultManager(TestCase):
 
 
 class TestFaultList(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -195,9 +187,9 @@ class TestFaultList(TestCase):
         """Calling via ajax should return a single object in the queryset"""
         utils.create_fault()
         resp = self.client.get(
-            self.url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'}
+            self.url, {}, content_type="application/json", headers={"x-requested-with": "XMLHttpRequest"}
         )
-        assert len(resp.json()['aaData']) == 1
+        assert len(resp.json()["aaData"]) == 1
 
     def test_get_fields_one_site(self):
         """Only a single site, so unit__site__name should not be in fields"""
@@ -216,12 +208,11 @@ class TestFaultList(TestCase):
         site = qa_utils.create_site()
         qa_utils.create_unit(name="second unit", site=site)
         utils.create_fault()
-        filters = views.FaultList().get_filters('unit__site__name')
-        assert filters == [('noneornull', 'Other')]
+        filters = views.FaultList().get_filters("unit__site__name")
+        assert filters == [("noneornull", "Other")]
 
 
 class TestUnreviewedFaultList(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -237,7 +228,7 @@ class TestUnreviewedFaultList(TestCase):
 
     @override_settings(BULK_REVIEW=True)
     def test_get_fields_with_bulk(self):
-        assert 'selected' in views.UnreviewedFaultList().get_fields()
+        assert "selected" in views.UnreviewedFaultList().get_fields()
 
     def test_selected(self):
         fault = utils.create_fault()
@@ -245,11 +236,10 @@ class TestUnreviewedFaultList(TestCase):
 
     def test_page_title(self):
         resp = self.client.get(self.url)
-        assert resp.context['page_title'] == "Unreviewed Faults"
+        assert resp.context["page_title"] == "Unreviewed Faults"
 
 
 class TestCRUDFault(TestCase):
-
     def setUp(self):
         self.unit = qa_utils.create_unit()
         self.fault_type = FaultType.objects.create(code="ABC", slug="abc")
@@ -291,7 +281,7 @@ class TestCRUDFault(TestCase):
         assert resp.status_code == 302
         assert resp.url == self.list_url
         assert Comment.objects.count() == 1
-        assert list(Fault.objects.latest('pk').related_service_events.values_list("id", flat=True)) == [se.id]
+        assert list(Fault.objects.latest("pk").related_service_events.values_list("id", flat=True)) == [se.id]
 
     def test_valid_create_attach(self):
         """Test that creating a fault with all options set works"""
@@ -344,7 +334,7 @@ class TestCRUDFault(TestCase):
         assert resp.status_code == 302
         assert resp.url == self.list_url
         assert Comment.objects.count() == 1
-        f = Fault.objects.latest('pk')
+        f = Fault.objects.latest("pk")
         assert f.faultreviewinstance_set.count() == 1
         assert list(f.related_service_events.values_list("id", flat=True)) == [se.id]
 
@@ -372,7 +362,7 @@ class TestCRUDFault(TestCase):
 
         resp = self.client.post(self.create_url, data)
         assert resp.status_code == 200
-        assert resp.context['review_forms'][0].errors
+        assert resp.context["review_forms"][0].errors
 
     def test_valid_create_with_no_reviewers(self):
         """Test that creating a fault with all options and an no reviewers works if review group is not required"""
@@ -400,7 +390,7 @@ class TestCRUDFault(TestCase):
         assert resp.status_code == 302
 
     def test_dont_include_related(self):
-        assert 'related_service_events' not in forms.FaultForm(include_related_ses=False).fields
+        assert "related_service_events" not in forms.FaultForm(include_related_ses=False).fields
 
     def test_invalid_create(self):
         """Test that trying to create a fault with no unit doesn't work"""
@@ -409,7 +399,7 @@ class TestCRUDFault(TestCase):
 
         data = {
             "fault-occurred": "20 Jan 2021 17:59",
-            "fault-unit": '',
+            "fault-unit": "",
             "fault-modality": self.unit.modalities.all().first().pk,
             "fault-fault_types_field": [ft.code],
             "fault-comment": "test comment",
@@ -417,7 +407,7 @@ class TestCRUDFault(TestCase):
 
         resp = self.client.post(self.create_url, data)
         assert resp.status_code == 200
-        assert 'unit' in resp.context['form'].errors
+        assert "unit" in resp.context["form"].errors
 
     def test_valid_create_new_fault_type(self):
         """Test that creating a fault with all options set works"""
@@ -465,7 +455,7 @@ class TestCRUDFault(TestCase):
 
         fault = utils.create_fault(unit=self.unit)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -484,7 +474,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -519,7 +509,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -530,7 +520,7 @@ class TestCRUDFault(TestCase):
             "fault-fault_types_field": [fault.fault_types.first().code, ft2.code],
             "fault-comment": "",
             "fault-related_service_events": [se.pk],
-            "fault-attachments_delete_ids": [attach.id, ''],
+            "fault-attachments_delete_ids": [attach.id, ""],
         }
 
         resp = self.client.post(edit_url, data)
@@ -551,7 +541,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -582,13 +572,13 @@ class TestCRUDFault(TestCase):
         fault = utils.create_fault(unit=self.unit)
         assert fault.modality is None
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
         data = {
             "fault-occurred": format_datetime(fault.occurred),
-            "fault-unit": '',
+            "fault-unit": "",
             "fault-modality": modality.pk,
             "fault-fault_types_field": [fault.fault_types.first().code],
             "fault-comment": "",
@@ -611,7 +601,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -647,7 +637,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -665,7 +655,7 @@ class TestCRUDFault(TestCase):
         assert fault.faultreviewinstance_set.count() == 0
         resp = self.client.post(edit_url, data)
         assert resp.status_code == 200
-        assert resp.context['review_forms'][0].errors['reviewed_by']
+        assert resp.context["review_forms"][0].errors["reviewed_by"]
 
     def test_edit_with_existing_reviews(self):
         """Test that editing a fault with existing reviewer works"""
@@ -681,7 +671,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -719,7 +709,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -754,7 +744,7 @@ class TestCRUDFault(TestCase):
         modality = u_models.Modality.objects.create(name="modality")
         fault.unit.modalities.add(modality)
 
-        edit_url = reverse("fault_edit", kwargs={'pk': fault.pk})
+        edit_url = reverse("fault_edit", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
 
@@ -794,7 +784,7 @@ class TestCRUDFault(TestCase):
 
         resp = self.client.post(self.ajax_url, data=data)
         assert resp.status_code == 200
-        assert not resp.json()['error']
+        assert not resp.json()["error"]
         assert Comment.objects.count() == 1
 
     def test_create_ajax_invalid(self):
@@ -812,30 +802,30 @@ class TestCRUDFault(TestCase):
 
         resp = self.client.post(self.ajax_url, data=data)
         assert resp.status_code == 200
-        assert 'occurred' in resp.json()['errors']
+        assert "occurred" in resp.json()["errors"]
 
     def test_valid_delete(self):
         """Test that deleting a fault works"""
 
         fault = utils.create_fault(unit=self.unit)
-        delete_url = reverse("fault_delete", kwargs={'pk': fault.pk})
+        delete_url = reverse("fault_delete", kwargs={"pk": fault.pk})
         se = sl_utils.create_service_event()
         fault.related_service_events.add(se)
         resp = self.client.post(delete_url)
         assert resp.status_code == 302
-        assert resp.url == '/faults/'
+        assert resp.url == "/faults/"
         assert Fault.objects.count() == 0
 
     def test_review_fault(self):
         fault = utils.create_fault(unit=self.unit)
-        review_url = reverse("fault_review", kwargs={'pk': fault.pk})
+        review_url = reverse("fault_review", kwargs={"pk": fault.pk})
         resp = self.client.post(review_url)
         assert resp.status_code == 302
         assert fault.faultreviewinstance_set.first() is not None
 
     def test_unreview_fault(self):
         fault = utils.create_fault_review().fault
-        review_url = reverse("fault_review", kwargs={'pk': fault.pk})
+        review_url = reverse("fault_review", kwargs={"pk": fault.pk})
         resp = self.client.post(review_url)
         assert resp.status_code == 302
         fault.refresh_from_db()
@@ -849,10 +839,10 @@ class TestCRUDFault(TestCase):
         f1 = utils.create_fault(unit=self.unit)
         f2 = utils.create_fault(unit=self.unit)
         review_url = reverse("fault_bulk_review")
-        data = {'faults': [f1.pk, f2.pk]}
+        data = {"faults": [f1.pk, f2.pk]}
         resp = self.client.post(review_url, data=data)
         assert resp.status_code == 200
-        assert resp.json()['ok']
+        assert resp.json()["ok"]
         f1.refresh_from_db()
         f2.refresh_from_db()
         assert f1.faultreviewinstance_set.count() > 0
@@ -861,7 +851,6 @@ class TestCRUDFault(TestCase):
 
 
 class TestFaultTypeAutocomplete(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -873,16 +862,16 @@ class TestFaultTypeAutocomplete(TestCase):
         """If no query provided, all fault types should be returned (and not a 'new' fault type)"""
         for i in range(3):
             FaultType.objects.create(code="ft %d" % i)
-        assert len(self.client.get(self.url).json()['results']) == 3
+        assert len(self.client.get(self.url).json()["results"]) == 3
 
     def test_query_doesnt_exist(self):
         """If query doesn't match any fault types, then only a new fault type should be returned"""
         for i in range(3):
             FaultType.objects.create(code="ft %d" % i)
 
-        results = self.client.get(self.url, {'q': 'new'}).json()['results']
+        results = self.client.get(self.url, {"q": "new"}).json()["results"]
         assert len(results) == 1
-        expected = {'id': '%snew' % forms.NEW_FAULT_TYPE_MARKER, 'text': "*new*", 'code': 'new', 'description': ''}
+        expected = {"id": "%snew" % forms.NEW_FAULT_TYPE_MARKER, "text": "*new*", "code": "new", "description": ""}
         assert results[0] == expected
 
     def test_query_doesnt_exist_no_add_permission(self):
@@ -894,7 +883,7 @@ class TestFaultTypeAutocomplete(TestCase):
 
         user = User.objects.create_user("faultuser_non_super", email="a@b.com", password="password")
         self.client.force_login(user)
-        results = self.client.get(self.url, {'q': 'new'}).json()['results']
+        results = self.client.get(self.url, {"q": "new"}).json()["results"]
         assert len(results) == 0
 
     def test_query_doesnt_exist_with_add_permission(self):
@@ -908,9 +897,9 @@ class TestFaultTypeAutocomplete(TestCase):
         permission = Permission.objects.get(codename="add_faulttype")
         user.user_permissions.add(permission)
         self.client.force_login(user)
-        results = self.client.get(self.url, {'q': 'new'}).json()['results']
+        results = self.client.get(self.url, {"q": "new"}).json()["results"]
         assert len(results) == 1
-        expected = {'id': '%snew' % forms.NEW_FAULT_TYPE_MARKER, 'text': "*new*", 'code': 'new', 'description': ''}
+        expected = {"id": "%snew" % forms.NEW_FAULT_TYPE_MARKER, "text": "*new*", "code": "new", "description": ""}
         assert results[0] == expected
 
     def test_query_exact_match_only(self):
@@ -918,8 +907,8 @@ class TestFaultTypeAutocomplete(TestCase):
         others, then only the exact match should be returned"""
 
         fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
-        results = self.client.get(self.url, {'q': 'ft 2'}).json()['results']
-        expected = [{'id': fts[2].code, 'text': "ft 2", 'code': fts[2].code, 'description': ''}]
+        results = self.client.get(self.url, {"q": "ft 2"}).json()["results"]
+        expected = [{"id": fts[2].code, "text": "ft 2", "code": fts[2].code, "description": ""}]
         assert results == expected
 
     def test_query_exact_case_insensitive_match(self):
@@ -927,38 +916,23 @@ class TestFaultTypeAutocomplete(TestCase):
         others, then only the match should be returned"""
 
         fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
-        results = self.client.get(self.url, {'q': 'FT 2'}).json()['results']
-        expected = [{'id': fts[2].code, 'text': "ft 2", 'code': fts[2].code, 'description': ''}]
+        results = self.client.get(self.url, {"q": "FT 2"}).json()["results"]
+        expected = [{"id": fts[2].code, "text": "ft 2", "code": fts[2].code, "description": ""}]
         assert results == expected
 
     def test_query_exact_match_plus_others(self):
         """If query matches a fault types exactly, plus matches others, all
         should be returned, but the exact match should be first"""
 
-        FaultType.objects.create(code="ft 212", description="description"),
-        FaultType.objects.create(code="ft 21"),
-        FaultType.objects.create(code="ft 213"),
+        (FaultType.objects.create(code="ft 212", description="description"),)
+        (FaultType.objects.create(code="ft 21"),)
+        (FaultType.objects.create(code="ft 213"),)
 
-        results = self.client.get(self.url, {'q': 'ft 21'}).json()['results']
+        results = self.client.get(self.url, {"q": "ft 21"}).json()["results"]
         assert results == [
-            {
-                'id': "ft 21",
-                'text': "ft 21",
-                'code': "ft 21",
-                'description': ''
-            },
-            {
-                'id': "ft 212",
-                'text': "ft 212: description",
-                'code': "ft 212",
-                'description': 'description'
-            },
-            {
-                'id': "ft 213",
-                'text': "ft 213",
-                'code': "ft 213",
-                'description': ''
-            },
+            {"id": "ft 21", "text": "ft 21", "code": "ft 21", "description": ""},
+            {"id": "ft 212", "text": "ft 212: description", "code": "ft 212", "description": "description"},
+            {"id": "ft 213", "text": "ft 213", "code": "ft 213", "description": ""},
         ]
 
     def test_query_exact_match_with_whitespace_plus_others(self):
@@ -966,35 +940,19 @@ class TestFaultTypeAutocomplete(TestCase):
         matches others, all should be returned, but the exact match should be
         first"""
 
-        FaultType.objects.create(code="ft 212", description="description"),
-        FaultType.objects.create(code="ft 21"),
-        FaultType.objects.create(code="ft 213"),
+        (FaultType.objects.create(code="ft 212", description="description"),)
+        (FaultType.objects.create(code="ft 21"),)
+        (FaultType.objects.create(code="ft 213"),)
 
-        results = self.client.get(self.url, {'q': ' ft 21 '}).json()['results']
+        results = self.client.get(self.url, {"q": " ft 21 "}).json()["results"]
         assert results == [
-            {
-                'id': "ft 21",
-                'text': "ft 21",
-                'code': "ft 21",
-                'description': ''
-            },
-            {
-                'id': "ft 212",
-                'text': "ft 212: description",
-                'code': "ft 212",
-                'description': 'description'
-            },
-            {
-                'id': "ft 213",
-                'text': "ft 213",
-                'code': "ft 213",
-                'description': ''
-            },
+            {"id": "ft 21", "text": "ft 21", "code": "ft 21", "description": ""},
+            {"id": "ft 212", "text": "ft 212: description", "code": "ft 212", "description": "description"},
+            {"id": "ft 213", "text": "ft 213", "code": "ft 213", "description": ""},
         ]
 
 
 class TestFaultDetails(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -1005,10 +963,10 @@ class TestFaultDetails(TestCase):
         """Initial page load should work ok"""
         fault_type = FaultType.objects.create(code="ABC", slug="abc")
         fault = utils.create_fault(unit=self.unit, fault_type=fault_type)
-        url = reverse("fault_details", kwargs={'pk': fault.pk})
+        url = reverse("fault_details", kwargs={"pk": fault.pk})
         resp = self.client.get(url)
         assert resp.status_code == 200
-        assert resp.context['fault'].id == fault.id
+        assert resp.context["fault"].id == fault.id
 
     def test_queryset_fault_superset(self):
         """get_queryset should return all faults which have one or more faults
@@ -1023,17 +981,16 @@ class TestFaultDetails(TestCase):
 
         from django.test import RequestFactory
 
-        url = reverse("fault_details", kwargs={'pk': f1.pk})
+        url = reverse("fault_details", kwargs={"pk": f1.pk})
         req = RequestFactory().get(url, pk=f1.pk)
         req.user = self.user
         view = views.FaultDetails()
-        view.kwargs = {'pk': f1.pk}
+        view.kwargs = {"pk": f1.pk}
         qs = list(view.get_queryset())
         assert all(f in qs for f in [f1, f2, f3])
 
 
 class TestFaultsByUnit(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -1044,20 +1001,20 @@ class TestFaultsByUnit(TestCase):
     def test_load_page(self):
         """Initial page load should work ok"""
         fault = utils.create_fault(unit=self.unit)
-        url = reverse("fault_list_by_unit", kwargs={'unit_number': fault.unit.number})
+        url = reverse("fault_list_by_unit", kwargs={"unit_number": fault.unit.number})
         resp = self.client.get(url, {})
         assert resp.status_code == 200
-        assert resp.context['unit'].pk == fault.unit.pk
-        assert resp.context['page_title'] == "Faults for: %s" % fault.unit.site_unit_name()
+        assert resp.context["unit"].pk == fault.unit.pk
+        assert resp.context["page_title"] == "Faults for: %s" % fault.unit.site_unit_name()
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
         fault1 = utils.create_fault(unit=self.unit)
         u2 = qa_utils.create_unit()
         utils.create_fault(unit=u2)
-        url = reverse("fault_list_by_unit", kwargs={'unit_number': fault1.unit.number})
-        resp = self.client.get(url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'})
-        assert len(resp.json()['aaData']) == 1
+        url = reverse("fault_list_by_unit", kwargs={"unit_number": fault1.unit.number})
+        resp = self.client.get(url, {}, content_type="application/json", headers={"x-requested-with": "XMLHttpRequest"})
+        assert len(resp.json()["aaData"]) == 1
 
     def test_get_fields(self):
         """Only a single site, so unit__site__name should not be in fields"""
@@ -1067,7 +1024,6 @@ class TestFaultsByUnit(TestCase):
 
 
 class TestFaultsByUnitFaultType(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -1078,22 +1034,22 @@ class TestFaultsByUnitFaultType(TestCase):
     def test_load_page(self):
         """Initial page load should work ok"""
         fault = utils.create_fault()
-        kwargs = {'unit_number': fault.unit.number, 'slug': fault.fault_types.first().slug}
+        kwargs = {"unit_number": fault.unit.number, "slug": fault.fault_types.first().slug}
         url = reverse("fault_list_by_unit_type", kwargs=kwargs)
         resp = self.client.get(url, {})
         assert resp.status_code == 200
-        assert resp.context['unit'].pk == fault.unit.pk
-        assert resp.context['fault_type'].pk == fault.fault_types.first().pk
+        assert resp.context["unit"].pk == fault.unit.pk
+        assert resp.context["fault_type"].pk == fault.fault_types.first().pk
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
         fault1 = utils.create_fault()
         ft = FaultType.objects.create(code="new ft")
         utils.create_fault(fault_type=ft)
-        kwargs = {'unit_number': fault1.unit.number, 'slug': fault1.fault_types.first().slug}
+        kwargs = {"unit_number": fault1.unit.number, "slug": fault1.fault_types.first().slug}
         url = reverse("fault_list_by_unit_type", kwargs=kwargs)
-        resp = self.client.get(url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'})
-        assert len(resp.json()['aaData']) == 1
+        resp = self.client.get(url, {}, content_type="application/json", headers={"x-requested-with": "XMLHttpRequest"})
+        assert len(resp.json()["aaData"]) == 1
 
     def test_get_fields(self):
         """Only a single site, so unit__site__name should not be in fields"""
@@ -1104,7 +1060,6 @@ class TestFaultsByUnitFaultType(TestCase):
 
 
 class TestFaultTypeList(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -1123,13 +1078,12 @@ class TestFaultTypeList(TestCase):
         """Calling via ajax should return a single object in the queryset"""
         utils.create_fault(fault_type=self.fault_type)
         resp = self.client.get(
-            self.url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'}
+            self.url, {}, content_type="application/json", headers={"x-requested-with": "XMLHttpRequest"}
         )
-        assert len(resp.json()['aaData']) == 1
+        assert len(resp.json()["aaData"]) == 1
 
 
 class TestFaultTypeDetails(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()
@@ -1140,20 +1094,19 @@ class TestFaultTypeDetails(TestCase):
     def test_load_page(self):
         """Initial page load should work ok"""
         fault = utils.create_fault(fault_type=self.fault_type)
-        url = reverse("fault_type_details", kwargs={'slug': fault.fault_types.first().slug})
+        url = reverse("fault_type_details", kwargs={"slug": fault.fault_types.first().slug})
         resp = self.client.get(url, {})
         assert resp.status_code == 200
 
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
         fault = utils.create_fault(fault_type=self.fault_type)
-        url = reverse("fault_type_details", kwargs={'slug': fault.fault_types.first().slug})
-        resp = self.client.get(url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'})
-        assert len(resp.json()['aaData']) == 1
+        url = reverse("fault_type_details", kwargs={"slug": fault.fault_types.first().slug})
+        resp = self.client.get(url, {}, content_type="application/json", headers={"x-requested-with": "XMLHttpRequest"})
+        assert len(resp.json()["aaData"]) == 1
 
 
 class TestChooseUnitForViewFaults(TestCase):
-
     def setUp(self):
         self.user = qa_utils.create_user()
         self.unit = qa_utils.create_unit()

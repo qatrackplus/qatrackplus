@@ -3,9 +3,7 @@ from django.db import connections
 
 
 class Command(BaseCommand):
-
     def handle(self, database="default", *args, **options):
-
         cursor = connections[database].cursor()
 
         cursor.execute("SHOW TABLE STATUS")

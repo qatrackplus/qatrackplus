@@ -8,7 +8,6 @@ from qatrack.qa.models import get_tolerance_name, Tolerance as Tolerance_
 
 
 def set_name(apps, schema_migrations):
-
     Tolerance = apps.get_model("qa", "Tolerance")
     Tolerance.pass_choices = Tolerance_.pass_choices
     Tolerance.tol_choices = Tolerance_.tol_choices
@@ -18,11 +17,8 @@ def set_name(apps, schema_migrations):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0016_tolerance_name'),
+        ("qa", "0016_tolerance_name"),
     ]
 
-    operations = [
-        migrations.RunPython(set_name, lambda apps, schema_migrations: None)
-    ]
+    operations = [migrations.RunPython(set_name, lambda apps, schema_migrations: None)]

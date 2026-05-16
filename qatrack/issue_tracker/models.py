@@ -6,9 +6,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _l
 
 re_255 = r"([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])"
-color_re = re.compile(
-    r"^rgba\(" + re_255 + "," + re_255 + "," + re_255 + r",(0(\.[0-9][0-9]?)?|1)\)$"
-)
+color_re = re.compile(r"^rgba\(" + re_255 + "," + re_255 + "," + re_255 + r",(0(\.[0-9][0-9]?)?|1)\)$")
 validate_color = RegexValidator(color_re, "Enter a valid color.", "invalid")
 
 
@@ -28,9 +26,7 @@ class IssueType(models.Model):
 class IssuePriority(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="ID")
     name = models.CharField(max_length=32)
-    colour = models.CharField(
-        max_length=22, validators=[validate_color], blank=True, null=True
-    )
+    colour = models.CharField(max_length=22, validators=[validate_color], blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -60,9 +56,7 @@ class IssueStatus(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="ID")
     name = models.CharField(max_length=32)
     description = models.CharField(max_length=255, null=True, blank=True)
-    colour = models.CharField(
-        max_length=22, validators=[validate_color], blank=True, null=True
-    )
+    colour = models.CharField(max_length=22, validators=[validate_color], blank=True, null=True)
     order = models.PositiveIntegerField(default=0, unique=True)
 
     class Meta:
@@ -77,12 +71,8 @@ class IssueStatus(models.Model):
 class Issue(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="ID")
     issue_type = models.ForeignKey(IssueType, on_delete=models.PROTECT)
-    issue_priority = models.ForeignKey(
-        IssuePriority, null=True, on_delete=models.PROTECT
-    )
-    issue_tags = models.ManyToManyField(
-        IssueTag, blank=True, help_text="If desired, add multiple tags to this issue"
-    )
+    issue_priority = models.ForeignKey(IssuePriority, null=True, on_delete=models.PROTECT)
+    issue_tags = models.ManyToManyField(IssueTag, blank=True, help_text="If desired, add multiple tags to this issue")
     issue_status = models.ForeignKey(
         IssueStatus,
         on_delete=models.PROTECT,

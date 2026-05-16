@@ -9,11 +9,10 @@ from qatrack.notifications.models import ServiceEventReviewNotice
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
-logger = logging.getLogger('django-q2')
+logger = logging.getLogger("django-q2")
 
 
 def run_service_event_review_notices():
-
     run_periodic_scheduler(
         ServiceEventReviewNotice,
         "run_service_event_review_notices",
@@ -24,7 +23,6 @@ def run_service_event_review_notices():
 
 
 def schedule_serviceeventreview_notice(notice, send_time):
-
     logger.info("Scheduling notification %s for %s" % (notice.pk, send_time))
     name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
 
@@ -41,11 +39,9 @@ def schedule_serviceeventreview_notice(notice, send_time):
 
 
 def send_serviceeventreview_notice(notice_id, task_name=""):
-
     notice = ServiceEventReviewNotice.objects.filter(id=notice_id).first()
 
     if notice:
-
         if not notice.send_required():
             logger.info(
                 "Send of ServiceEventReviewNotice %s requested, but no ServiceEvent to notify about" % notice_id
@@ -66,7 +62,7 @@ def send_serviceeventreview_notice(notice_id, task_name=""):
         send_email_to_users(
             recipients,
             "service_log_review/email.html",
-            context={'notice': notice},
+            context={"notice": notice},
             subject_template="service_log_review/subject.txt",
             text_template="service_log_review/email.txt",
         )

@@ -9,12 +9,11 @@ from django.utils import timezone
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.service_log import models
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger("qatrack")
 
 
 @receiver(post_save, sender=models.ServiceLog)
 def on_serviceevent_saved(sender, instance, created, **kwargs):
-
     service_log = instance
     recipients = get_notification_recipients(service_log.service_event, service_log.log_type)
 
@@ -22,8 +21,8 @@ def on_serviceevent_saved(sender, instance, created, **kwargs):
         return
 
     context = {
-        'service_event': service_log.service_event,
-        'service_log': service_log,
+        "service_event": service_log.service_event,
+        "service_log": service_log,
     }
 
     try:
@@ -39,8 +38,8 @@ def on_serviceevent_saved(sender, instance, created, **kwargs):
         )
     except:  # noqa: E722  # pragma: nocover
         logger.exception(
-            "Error sending Service Event Notice for service event %d at %s." %
-            (service_log.service_event_id, timezone.now())
+            "Error sending Service Event Notice for service event %d at %s."
+            % (service_log.service_event_id, timezone.now())
         )
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
@@ -49,7 +48,6 @@ def on_serviceevent_saved(sender, instance, created, **kwargs):
 
 
 def get_notification_recipients(service_event, log_type):
-
     from qatrack.notifications.service_log import models
 
     unit = service_event.unit_service_area.unit

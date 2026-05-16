@@ -12,44 +12,32 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="grouplinker",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="grouplinkerinstance",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="hours",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="returntoserviceqa",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="servicearea",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="serviceevent",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="serviceevent",
@@ -64,50 +52,36 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="serviceeventschedule",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="serviceeventstatus",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="serviceeventtemplate",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="servicelog",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="servicetype",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="thirdparty",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="unitservicearea",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
     ]

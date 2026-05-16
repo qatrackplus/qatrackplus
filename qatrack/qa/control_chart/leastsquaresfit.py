@@ -2,8 +2,8 @@
 # routines for fitting histograms
 
 import numpy as np
-from scipy.optimize import curve_fit
 import scipy.stats
+from scipy.optimize import curve_fit
 
 np.seterr("ignore")
 

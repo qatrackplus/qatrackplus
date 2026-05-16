@@ -31,7 +31,6 @@ class AccountDetails(TemplateView):
     template_name = "accounts/account.html"
 
     def get_context_data(self, **kwargs):
-
         context = super(AccountDetails, self).get_context_data(**kwargs)
         all_perms = self.request.user.get_all_permissions()
         permissions = []
@@ -48,24 +47,23 @@ class AccountDetails(TemplateView):
 
 
 class RegisterView(RegistrationView):
-
     form_class = RegisterForm
 
     def register(self, form):
         super().register(form)
         domain = Site.objects.get_current().domain
         context = {
-            'user': form.cleaned_data['username'],
-            'login_link': "%s%s" % (domain, settings.LOGIN_URL),
+            "user": form.cleaned_data["username"],
+            "login_link": "%s%s" % (domain, settings.LOGIN_URL),
         }
 
         text_content = get_template("registration/welcome_email.txt").render(context)
         html_content = get_template("registration/welcome_email.html").render(context)
         email = EmailMultiAlternatives(
-            subject='Welcome to QATrack+',
+            subject="Welcome to QATrack+",
             body=text_content,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[form.cleaned_data['email']],
+            to=[form.cleaned_data["email"]],
             bcc=[settings.DEFAULT_FROM_EMAIL],
             reply_to=[settings.DEFAULT_FROM_EMAIL],
         )
@@ -74,17 +72,14 @@ class RegisterView(RegistrationView):
 
 
 class ChangePasswordView(PasswordChangeView):
-
     form_class = ChangePasswordForm
 
 
 class ResetPasswordConfirmView(PasswordResetConfirmView):
-
     form_class = SetPasswordForm
 
 
 class GroupsApp(PermissionRequiredMixin, TemplateView):
-
     template_name = "accounts/groups.html"
     permission_required = "auth.change_group"
 
@@ -96,7 +91,6 @@ class GroupsApp(PermissionRequiredMixin, TemplateView):
 
 
 class QATrackOAuth2CallbackView(OAuth2CallbackView):
-
     def get(self, request):
         result = super().get(request)
         if result.status_code >= 400:
@@ -116,6 +110,8 @@ class QATrackOAuth2CallbackView(OAuth2CallbackView):
 
 
 def ping(request):
-    return JsonResponse({
-        'logged_in': request.user.is_authenticated,
-    })
+    return JsonResponse(
+        {
+            "logged_in": request.user.is_authenticated,
+        }
+    )

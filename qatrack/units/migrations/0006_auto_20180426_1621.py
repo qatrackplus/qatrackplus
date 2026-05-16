@@ -6,15 +6,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0005_auto_20180110_1257'),
+        ("units", "0005_auto_20180110_1257"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='unit',
-            name='is_serviceable',
-            field=models.BooleanField(default=False, help_text='Set to true to enable this unit to be selectable in service events'),
+            model_name="unit",
+            name="is_serviceable",
+            field=models.BooleanField(
+                default=False, help_text="Set to true to enable this unit to be selectable in service events"
+            ),
         ),
     ]

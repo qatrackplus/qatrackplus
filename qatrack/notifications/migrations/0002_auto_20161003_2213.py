@@ -7,15 +7,14 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0001_initial'),
+        ("notifications", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='notificationsubscription',
-            name='group',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='auth.Group'),
+            model_name="notificationsubscription",
+            name="group",
+            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="auth.Group"),
         ),
     ]

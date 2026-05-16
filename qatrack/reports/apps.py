@@ -13,8 +13,7 @@ def do_scheduling(sender, **kwargs):
 
 
 class ReportsConfig(AppConfig):
-
-    name = 'qatrack.reports'
+    name = "qatrack.reports"
     verbose_name = _l("Reports")
 
     def ready(self):

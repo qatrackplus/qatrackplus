@@ -7,27 +7,63 @@ import qatrack.qatrack_core.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('qa', '0055_test_require_comment'),
+        ("qa", "0055_test_require_comment"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AutoSave',
+            name="AutoSave",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('work_started', models.DateTimeField(null=True, verbose_name='Work Started')),
-                ('work_completed', models.DateTimeField(null=True, verbose_name='Work completed')),
-                ('day', models.IntegerField(default=0, verbose_name='Day')),
-                ('created', models.DateTimeField(auto_now_add=True, verbose_name='Created')),
-                ('modified', models.DateTimeField(auto_now=True, verbose_name='Modified')),
-                ('data', qatrack.qatrack_core.fields.JSONField(blank=True, help_text='Autosaved data', verbose_name='Data')),
-                ('created_by', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.PROTECT, related_name='autosave_creator', to=settings.AUTH_USER_MODEL, verbose_name='Created By')),
-                ('modified_by', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.PROTECT, related_name='autosave_modifier', to=settings.AUTH_USER_MODEL, verbose_name='Modified By')),
-                ('test_list', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.PROTECT, to='qa.TestList', verbose_name='Test List')),
-                ('unit_test_collection', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.PROTECT, to='qa.UnitTestCollection', verbose_name='Unit Test Collection')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("work_started", models.DateTimeField(null=True, verbose_name="Work Started")),
+                ("work_completed", models.DateTimeField(null=True, verbose_name="Work completed")),
+                ("day", models.IntegerField(default=0, verbose_name="Day")),
+                ("created", models.DateTimeField(auto_now_add=True, verbose_name="Created")),
+                ("modified", models.DateTimeField(auto_now=True, verbose_name="Modified")),
+                (
+                    "data",
+                    qatrack.qatrack_core.fields.JSONField(blank=True, help_text="Autosaved data", verbose_name="Data"),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="autosave_creator",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Created By",
+                    ),
+                ),
+                (
+                    "modified_by",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="autosave_modifier",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Modified By",
+                    ),
+                ),
+                (
+                    "test_list",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="qa.TestList",
+                        verbose_name="Test List",
+                    ),
+                ),
+                (
+                    "unit_test_collection",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="qa.UnitTestCollection",
+                        verbose_name="Unit Test Collection",
+                    ),
+                ),
             ],
         ),
     ]

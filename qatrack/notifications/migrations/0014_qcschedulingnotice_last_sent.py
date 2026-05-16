@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0013_auto_20190803_0022'),
+        ("notifications", "0013_auto_20190803_0022"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='qcschedulingnotice',
-            name='last_sent',
+            model_name="qcschedulingnotice",
+            name="last_sent",
             field=models.DateTimeField(editable=False, null=True),
         ),
     ]

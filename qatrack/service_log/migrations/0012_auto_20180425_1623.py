@@ -6,15 +6,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0011_auto_20180529_0917'),
+        ("service_log", "0011_auto_20180529_0917"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='serviceeventstatus',
-            name='description',
-            field=models.TextField(blank=True, help_text='Give a brief description of this service event status', max_length=512, null=True),
+            model_name="serviceeventstatus",
+            name="description",
+            field=models.TextField(
+                blank=True, help_text="Give a brief description of this service event status", max_length=512, null=True
+            ),
         ),
     ]

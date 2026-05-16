@@ -10,7 +10,6 @@ from qatrack.units.models import Modality, Unit
 
 
 class FaultTypeFilter(filters.FilterSet):
-
     class Meta:
         model = models.FaultType
         fields = {
@@ -19,17 +18,16 @@ class FaultTypeFilter(filters.FilterSet):
 
 
 class FaultFilter(filters.FilterSet):
-
     fault_types = filters.RelatedFilter(
         FaultTypeFilter,
         field_name="fault_types",
         queryset=models.FaultType.objects.all(),
     )
-    unit = filters.RelatedFilter(UnitFilter, field_name='unit', queryset=Unit.objects.all())
+    unit = filters.RelatedFilter(UnitFilter, field_name="unit", queryset=Unit.objects.all())
 
     modality = filters.RelatedFilter(
         ModalityFilter,
-        field_name='modality',
+        field_name="modality",
         queryset=Modality.objects.all(),
     )
 
@@ -39,7 +37,7 @@ class FaultFilter(filters.FilterSet):
     class Meta:
         model = models.Fault
         fields = {
-            "occurred": ['exact', "in"],
-            "created": ['exact', "in"],
-            "modified": ['exact', "in"],
+            "occurred": ["exact", "in"],
+            "created": ["exact", "in"],
+            "modified": ["exact", "in"],
         }

@@ -15,7 +15,6 @@ from qatrack.units import models as u_models
 
 
 class TestInstanceDetailsReport(BaseReport):
-
     report_type = "testinstance_details"
     name = _l("Test Instance Details")
     filter_class = filters.TestDataFilter
@@ -31,17 +30,13 @@ class TestInstanceDetailsReport(BaseReport):
     __test__ = False  # supress pytest warning
 
     def filter_form_valid(self, filter_form):
-
         ntis = self.filter_set.qs.count()
         if ntis > self.MAX_TIS:
             msg = _(
                 "This report can only be generated with %(max_num_test_instances)d or fewer Test "
                 "Instances.  Your filters are including %(num_test_instances)d. Please reduce the "
                 "number of Tests, Sites, Units, or Work Completed time period."
-            ) % {
-                'max_num_test_instances': self.MAX_TIS,
-                'num_test_instances': ntis
-            }
+            ) % {"max_num_test_instances": self.MAX_TIS, "num_test_instances": ntis}
             filter_form.add_error("__all__", msg)
 
         return filter_form.is_valid()
@@ -55,39 +50,39 @@ class TestInstanceDetailsReport(BaseReport):
     def get_unit_test_info__test_details(self, val):
         return (
             _("Test"),
-            ', '.join(models.Test.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
+            ", ".join(models.Test.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
         )
 
     def get_unit_test_info__unit_details(self, val):
         return (
             _("Unit"),
-            ', '.join(u_models.Unit.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
+            ", ".join(u_models.Unit.objects.filter(pk__in=val).order_by("name").values_list("name", flat=True)),
         )
 
     def get_organization_details(self, val):
-        field = self.filter_class().form.fields['organization']
+        field = self.filter_class().form.fields["organization"]
         return (field.label, str(dict(field.choices).get(val, "")))
 
     def get_context(self):
-
         context = super().get_context()
-        context['qs'] = self.filter_set.qs
-        org = self.filter_set.form.cleaned_data['organization']
+        context["qs"] = self.filter_set.qs
+        org = self.filter_set.form.cleaned_data["organization"]
         if org == "group_by_unit_test_date":
             org = self.get_organization_details(org)[1]
-            context['test_data'] = [[
-                _(
-                    "Sorry, '{organization}' is not supported for Preview or PDF reports. "
-                    "Switch to Excel or CSV format, or use 'One Test Instance Per Row'"
-                ).format(organization=org)
-            ]]
+            context["test_data"] = [
+                [
+                    _(
+                        "Sorry, '{organization}' is not supported for Preview or PDF reports. "
+                        "Switch to Excel or CSV format, or use 'One Test Instance Per Row'"
+                    ).format(organization=org)
+                ]
+            ]
         else:
-            context['test_data'] = self.data_rows()
+            context["test_data"] = self.data_rows()
 
         return context
 
     def to_table(self, context):
-
         rows = super().to_table(context)
 
         rows.append([])
@@ -97,7 +92,7 @@ class TestInstanceDetailsReport(BaseReport):
         return rows
 
     def data_rows(self):
-        org = self.filter_set.form.cleaned_data['organization']
+        org = self.filter_set.form.cleaned_data["organization"]
         if org == "one_per_row":
             test_data = self.organize_one_per_row()
         elif org == "group_by_unit_test_date":
@@ -106,7 +101,6 @@ class TestInstanceDetailsReport(BaseReport):
         return test_data
 
     def organize_one_per_row(self):
-
         qs = self.filter_set.qs.select_related(
             "test_list_instance",
             "unit_test_info__test",
@@ -117,50 +111,54 @@ class TestInstanceDetailsReport(BaseReport):
             "created_by",
         )
 
-        headers = [[
-            _("Work Completed"),
-            _("Test"),
-            _("Unit"),
-            _("Site"),
-            _("Value"),
-            _("Reference"),
-            _("Tolerance"),
-            _("Skipped"),
-            _("Performed By"),
-            _("Comment"),
-        ]]
+        headers = [
+            [
+                _("Work Completed"),
+                _("Test"),
+                _("Unit"),
+                _("Site"),
+                _("Value"),
+                _("Reference"),
+                _("Tolerance"),
+                _("Skipped"),
+                _("Performed By"),
+                _("Comment"),
+            ]
+        ]
 
         table = headers
         for ti in qs:
-
             uti = ti.unit_test_info
 
-            table.append([
-                ti.test_list_instance.work_completed,
-                uti.test.name,
-                uti.unit.name,
-                uti.unit.site.name if uti.unit.site else "",
-                ti.value_display(),
-                ti.reference.value_display() if ti.reference else "",
-                ti.tolerance.name if ti.tolerance else "",
-                ti.skipped,
-                format_user(ti.created_by),
-                ti.comment,
-            ])
+            table.append(
+                [
+                    ti.test_list_instance.work_completed,
+                    uti.test.name,
+                    uti.unit.name,
+                    uti.unit.site.name if uti.unit.site else "",
+                    ti.value_display(),
+                    ti.reference.value_display() if ti.reference else "",
+                    ti.tolerance.name if ti.tolerance else "",
+                    ti.skipped,
+                    format_user(ti.created_by),
+                    ti.comment,
+                ]
+            )
 
         return table
 
     def organize_by_unit_test_date(self):
-
         qs = self.filter_set.qs
         unit_test_combos = list(
             qs.values_list(
                 "unit_test_info__unit",
                 "unit_test_info__test",
-            ).order_by(
+            )
+            .order_by(
                 "unit_test_info__unit__%s" % settings.ORDER_UNITS_BY,
                 "unit_test_info__test__display_name",
-            ).distinct()
+            )
+            .distinct()
         )
 
         unique_dates = list(
@@ -201,7 +199,6 @@ class TestInstanceDetailsReport(BaseReport):
 
         wc_cache = dict(qs.values_list("pk", "test_list_instance__work_completed"))
         for unit_id, test_id in unit_test_combos:
-
             tis = qs.filter(
                 unit_test_info__unit_id=unit_id,
                 unit_test_info__test_id=test_id,
@@ -213,8 +210,8 @@ class TestInstanceDetailsReport(BaseReport):
             )
             for ti in tis:
                 val = ti.value_display(coerce_numerical=False)
-                ref = ti.reference.value_display() if ti.reference else ''
-                tol = ti.tolerance.name if ti.tolerance else ''
+                ref = ti.reference.value_display() if ti.reference else ""
+                tol = ti.tolerance.name if ti.tolerance else ""
                 table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 1] = val
                 table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 2] = ref
                 table[date_rows[wc_cache[ti.pk]] + 1][ut_cols[(unit_id, test_id)] + 3] = tol

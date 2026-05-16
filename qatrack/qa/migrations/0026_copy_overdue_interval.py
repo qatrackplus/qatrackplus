@@ -7,21 +7,18 @@ from django.db.models import F
 
 
 def copy_overdue_interval(apps, schema):
-
     Frequency = apps.get_model("qa", "Frequency")
     Frequency.objects.update(window_end=F("overdue_interval"))
 
 
 def copy_window_end(apps, schema):
-
     Frequency = apps.get_model("qa", "Frequency")
     Frequency.objects.update(overdue_interval=F("window_end"))
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0025_auto_20181129_1449'),
+        ("qa", "0025_auto_20181129_1449"),
     ]
 
     operations = [migrations.RunPython(copy_overdue_interval, copy_window_end)]

@@ -6,14 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0008_sublist_to_children'),
+        ("qa", "0008_sublist_to_children"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='testlist',
-            name='sublists',
+            model_name="testlist",
+            name="sublists",
         ),
     ]

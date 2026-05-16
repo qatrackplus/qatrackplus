@@ -22,10 +22,7 @@ def uploads_to_attachments(apps, schema_editor):
     TestInstance = apps.get_model("qa", "TestInstance")
     Attachment = apps.get_model("attachments", "Attachment")
 
-    tis = TestInstance.objects.filter(
-        unit_test_info__test__type=UPLOAD,
-        string_value__isnull=False
-    ).exclude(
+    tis = TestInstance.objects.filter(unit_test_info__test__type=UPLOAD, string_value__isnull=False).exclude(
         string_value=""
     )
 
@@ -37,12 +34,10 @@ def uploads_to_attachments(apps, schema_editor):
             orig_path = os.path.join(settings.UPLOAD_ROOT, str(tli_pk), ti.string_value)
             fname = os.path.basename(orig_path)
 
-            f = File(open(orig_path, 'rb'))
+            f = File(open(orig_path, "rb"))
 
             attachment = Attachment(
-                comment="Composite created file (migrated)",
-                created_by=ti.created_by,
-                testinstance=ti
+                comment="Composite created file (migrated)", created_by=ti.created_by, testinstance=ti
             )
 
             # add attributes required to move temp file
@@ -55,27 +50,24 @@ def uploads_to_attachments(apps, schema_editor):
             # use old file name to avoid duplicate dates/unique ids in filename
             move_tmp_file(attachment, save=True, force=True, new_name=fname)
 
-            TestInstance.objects.filter(pk=ti.pk).update(
-                string_value=attachment.pk
-            )
+            TestInstance.objects.filter(pk=ti.pk).update(string_value=attachment.pk)
         except IOError as e:
             print(e)
             errors.append(ti)
 
     for error in errors:
         msg = "Failed to move '%s' for test instance id=%d from test list instance %d" % (
-            error.string_value, error.pk, error.test_list_instance.pk
+            error.string_value,
+            error.pk,
+            error.test_list_instance.pk,
         )
         logger.error(msg)
         print(msg)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('attachments', '0001_initial'),
+        ("attachments", "0001_initial"),
     ]
 
-    operations = [
-        migrations.RunPython(uploads_to_attachments)
-    ]
+    operations = [migrations.RunPython(uploads_to_attachments)]

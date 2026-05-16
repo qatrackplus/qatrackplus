@@ -6,14 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0023_set_recurrences'),
+        ("qa", "0023_set_recurrences"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='frequency',
-            name='due_interval',
+            model_name="frequency",
+            name="due_interval",
         ),
     ]

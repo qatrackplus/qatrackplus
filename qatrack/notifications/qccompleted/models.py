@@ -13,7 +13,6 @@ act = settings.TEST_STATUS_DISPLAY.get("action", _l("Action"))
 
 
 class QCCompletedNotice(models.Model):
-
     COMPLETED = 0
     TOLERANCE = 10
     ACTION = 20

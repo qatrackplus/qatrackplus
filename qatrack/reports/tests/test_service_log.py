@@ -14,7 +14,6 @@ from qatrack.units.tests import utils as u_utils
 
 
 class TestServiceEventSummaryReport(TestCase):
-
     def test_filter_form_valid(self):
         """If queryset.count() > MAX_TLIS then filter_form should get an error added"""
         rep = sl.ServiceEventSummaryReport()
@@ -22,13 +21,13 @@ class TestServiceEventSummaryReport(TestCase):
         ff = rep.get_filter_form()
         resp = rep.filter_form_valid(ff)
         assert resp is False
-        assert '__all__' in ff.errors and "Please reduce" in ff.errors['__all__'][0]
+        assert "__all__" in ff.errors and "Please reduce" in ff.errors["__all__"][0]
 
     def test_get_queryset(self):
         assert sl.ServiceEventSummaryReport().get_queryset().model._meta.model_name == "serviceevent"
 
     def test_get_filename(self):
-        assert sl.ServiceEventSummaryReport().get_filename('pdf') == 'service-event-summary.pdf'
+        assert sl.ServiceEventSummaryReport().get_filename("pdf") == "service-event-summary.pdf"
 
     def test_get_include_description_details(self):
         details = sl.ServiceEventSummaryReport().get_include_description_details(False)
@@ -38,12 +37,12 @@ class TestServiceEventSummaryReport(TestCase):
         site = USite.objects.create(name="site")
         unit = utils.create_unit(site=site)
         units = sl.ServiceEventSummaryReport().get_unit_service_area__unit_details([unit.pk])
-        assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
+        assert units == ("Unit(s)", "%s - %s" % (unit.site.name, unit.name))
 
     def test_get_unit_service_area__unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = sl.ServiceEventSummaryReport().get_unit_service_area__unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = sl.ServiceEventSummaryReport().get_unit_service_area__unit__site_details([site, "null"])
+        assert sites == ("Site(s)", "site, Other")
 
     def test_get_ses_for_site(self):
         site = USite.objects.create(name="site")
@@ -74,7 +73,6 @@ class TestServiceEventSummaryReport(TestCase):
         assert [x.pk for x in ses] == [se2.pk]
 
     def test_generate_html(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -89,7 +87,6 @@ class TestServiceEventSummaryReport(TestCase):
         rep.to_html()
 
     def test_to_table(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -99,36 +96,36 @@ class TestServiceEventSummaryReport(TestCase):
         usa2 = sl_utils.create_unit_service_area(unit=unit2)
         sl_utils.create_service_event(unit_service_area=usa2)
 
-        rep = sl.ServiceEventSummaryReport(report_opts={'include_description': True})
+        rep = sl.ServiceEventSummaryReport(report_opts={"include_description": True})
         rep.report_format = "csv"
         context = rep.get_context()
         table = rep.to_table(context)
 
-        header_row = table.index([
-            _("Service Event ID"),
-            _("Service Date"),
-            _("Site"),
-            _("Unit"),
-            _("Service Area"),
-            _("Service Type"),
-            _("Status"),
-            _("Service Time"),
-            _("Lost Time"),
-            _("Problem Description"),
-            _("Work Description"),
-            _("Link"),
-        ])
+        header_row = table.index(
+            [
+                _("Service Event ID"),
+                _("Service Date"),
+                _("Site"),
+                _("Unit"),
+                _("Service Area"),
+                _("Service Type"),
+                _("Status"),
+                _("Service Time"),
+                _("Lost Time"),
+                _("Problem Description"),
+                _("Work Description"),
+                _("Link"),
+            ]
+        )
         # should be two ses after header
-        assert len(table[header_row + 1:]) == 2
+        assert len(table[header_row + 1 :]) == 2
 
 
 class TestServiceEventDetailsReport(TestCase):
-
     def test_get_filename(self):
-        assert sl.ServiceEventDetailsReport().get_filename('pdf') == 'service-event-details.pdf'
+        assert sl.ServiceEventDetailsReport().get_filename("pdf") == "service-event-details.pdf"
 
     def test_generate_html(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -143,7 +140,6 @@ class TestServiceEventDetailsReport(TestCase):
         rep.to_html()
 
     def test_to_table(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -169,49 +165,49 @@ class TestServiceEventDetailsReport(TestCase):
         )
         attachment.save()
 
-        rep = sl.ServiceEventDetailsReport(report_opts={'include_description': True})
+        rep = sl.ServiceEventDetailsReport(report_opts={"include_description": True})
         rep.report_format = "csv"
         context = rep.get_context()
         table = rep.to_table(context)
 
-        header_row = table.index([
-            _("Service Event ID"),
-            _("Service Date"),
-            _("Site"),
-            _("Unit"),
-            _("Service Area"),
-            _("Service Type"),
-            _("Service Time"),
-            _("Lost Time"),
-            _("Status"),
-            _("Created By"),
-            _("Created Date"),
-            _("Modified By"),
-            _("Modified Date"),
-            _("Problem Description"),
-            _("Work Description"),
-            _("Safety Precautions"),
-            _("Initiated By"),
-            _("Related Service Events"),
-            _("Group Members Involved"),
-            _("Work Durations"),
-            _("Return To Service QC"),
-            _("Return To Service Comments"),
-            _("Parts Used"),
-            _("Attachments"),
-            _("Link"),
-        ])
+        header_row = table.index(
+            [
+                _("Service Event ID"),
+                _("Service Date"),
+                _("Site"),
+                _("Unit"),
+                _("Service Area"),
+                _("Service Type"),
+                _("Service Time"),
+                _("Lost Time"),
+                _("Status"),
+                _("Created By"),
+                _("Created Date"),
+                _("Modified By"),
+                _("Modified Date"),
+                _("Problem Description"),
+                _("Work Description"),
+                _("Safety Precautions"),
+                _("Initiated By"),
+                _("Related Service Events"),
+                _("Group Members Involved"),
+                _("Work Durations"),
+                _("Return To Service QC"),
+                _("Return To Service Comments"),
+                _("Parts Used"),
+                _("Attachments"),
+                _("Link"),
+            ]
+        )
         # should be three ses after header
-        assert len(table[header_row + 1:]) == 3
+        assert len(table[header_row + 1 :]) == 3
 
 
 class TestServiceEventPersonnelSummaryReport(TestCase):
-
     def test_get_filename(self):
-        assert sl.ServiceEventPersonnelSummaryReport().get_filename('pdf') == 'service-event-personnel-summary.pdf'
+        assert sl.ServiceEventPersonnelSummaryReport().get_filename("pdf") == "service-event-personnel-summary.pdf"
 
     def test_generate_html(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -226,7 +222,6 @@ class TestServiceEventPersonnelSummaryReport(TestCase):
         rep.to_html()
 
     def test_to_table(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -266,12 +261,10 @@ class TestServiceEventPersonnelSummaryReport(TestCase):
 
 
 class TestServiceTimesReport(TestCase):
-
     def test_get_filename(self):
-        assert sl.ServiceTimesReport().get_filename('pdf') == 'service-times.pdf'
+        assert sl.ServiceTimesReport().get_filename("pdf") == "service-times.pdf"
 
     def test_generate_html(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -290,7 +283,6 @@ class TestServiceTimesReport(TestCase):
         rep.to_html()
 
     def test_to_table(self):
-
         site = USite.objects.create(name="site")
         unit1 = utils.create_unit(site=site)
         usa1 = sl_utils.create_unit_service_area(unit=unit1)
@@ -311,35 +303,34 @@ class TestServiceTimesReport(TestCase):
 
 
 class TestDueDateReport(TestCase):
-
     def test_get_queryset(self):
         assert (
-            sl.NextScheduledServiceEventsDueDatesReport().get_queryset().model._meta.model_name ==
-            "serviceeventschedule"
+            sl.NextScheduledServiceEventsDueDatesReport().get_queryset().model._meta.model_name
+            == "serviceeventschedule"
         )
 
     def test_next_due_dates_get_filename(self):
         assert (
-            sl.NextScheduledServiceEventsDueDatesReport().get_filename('pdf') ==
-            'next-due-dates-for-scheduled-service-events.pdf'
+            sl.NextScheduledServiceEventsDueDatesReport().get_filename("pdf")
+            == "next-due-dates-for-scheduled-service-events.pdf"
         )
 
     def test_next_due_and_overdue_filename(self):
         assert (
-            sl.DueAndOverdueServiceEventScheduleReport().get_filename('pdf') ==
-            'due-and-overdue-scheduled-service-events.pdf'
+            sl.DueAndOverdueServiceEventScheduleReport().get_filename("pdf")
+            == "due-and-overdue-scheduled-service-events.pdf"
         )
 
     def test_get_unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = sl.NextScheduledServiceEventsDueDatesReport().get_unit_service_area__unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = sl.NextScheduledServiceEventsDueDatesReport().get_unit_service_area__unit__site_details([site, "null"])
+        assert sites == ("Site(s)", "site, Other")
 
     def test_get_unit_details(self):
         site = USite.objects.create(name="site")
         unit = utils.create_unit(site=site)
         units = sl.NextScheduledServiceEventsDueDatesReport().get_unit_service_area__unit_details([unit.pk])
-        assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
+        assert units == ("Unit(s)", "%s - %s" % (unit.site.name, unit.name))
 
     def test_generate_next_due_dates_html(self):
         site = USite.objects.create(name="site")
@@ -365,7 +356,6 @@ class TestDueDateReport(TestCase):
         rep.to_html()
 
     def test_to_table(self):
-
         site = USite.objects.create(name="site")
         unit = utils.create_unit(site=site)
         usa = sl_utils.create_unit_service_area(unit=unit)
@@ -382,16 +372,18 @@ class TestDueDateReport(TestCase):
         context = rep.get_context()
         table = rep.to_table(context)
 
-        header_count = table.count([
-            _("Unit"),
-            _("Service Area"),
-            _("Template Name"),
-            _("Frequency"),
-            _("Due Date"),
-            _("Window"),
-            _("Assigned To"),
-            _("Perform")
-        ])
+        header_count = table.count(
+            [
+                _("Unit"),
+                _("Service Area"),
+                _("Template Name"),
+                _("Frequency"),
+                _("Due Date"),
+                _("Window"),
+                _("Assigned To"),
+                _("Perform"),
+            ]
+        )
         assert header_count == 2
 
     def test_generate_next_due_dates_active_filter_true(self):
@@ -405,7 +397,7 @@ class TestDueDateReport(TestCase):
         sch.due_date = timezone.now() + timezone.timedelta(days=1)
         sch.save()
         for ReportType in [sl.NextScheduledServiceEventsDueDatesReport, sl.DueAndOverdueServiceEventScheduleReport]:
-            rep = ReportType(report_opts={'active': True})
+            rep = ReportType(report_opts={"active": True})
             assert rep.filter_set.qs.count() == 0
 
     def test_generate_next_due_dates_active_filter_false(self):
@@ -417,28 +409,27 @@ class TestDueDateReport(TestCase):
         sch.due_date = timezone.now() + timezone.timedelta(days=1)
         sch.save()
         for ReportType in [sl.NextScheduledServiceEventsDueDatesReport, sl.DueAndOverdueServiceEventScheduleReport]:
-            rep = sl.NextScheduledServiceEventsDueDatesReport(report_opts={'active': False})
+            rep = sl.NextScheduledServiceEventsDueDatesReport(report_opts={"active": False})
             assert rep.filter_set.qs.count() == 0
 
 
 class TestAssignedTemplatesReport(TestCase):
-
     def test_get_queryset(self):
         assert sl.ScheduledTemplatesReport().get_queryset().model._meta.model_name == "serviceeventschedule"
 
     def test_get_filename(self):
-        assert sl.ScheduledTemplatesReport().get_filename('pdf') == 'scheduled-service-event-assignment-summary.pdf'
+        assert sl.ScheduledTemplatesReport().get_filename("pdf") == "scheduled-service-event-assignment-summary.pdf"
 
     def test_get_unit_service_area__unit__site_details(self):
         site = USite.objects.create(name="site")
-        sites = sl.ScheduledTemplatesReport().get_unit_service_area__unit__site_details([site, 'null'])
-        assert sites == ('Site(s)', 'site, Other')
+        sites = sl.ScheduledTemplatesReport().get_unit_service_area__unit__site_details([site, "null"])
+        assert sites == ("Site(s)", "site, Other")
 
     def test_get_unit_service_area__unit_details(self):
         site = USite.objects.create(name="site")
         unit = utils.create_unit(site=site)
         units = sl.ScheduledTemplatesReport().get_unit_service_area__unit_details([unit.pk])
-        assert units == ('Unit(s)', '%s - %s' % (unit.site.name, unit.name))
+        assert units == ("Unit(s)", "%s - %s" % (unit.site.name, unit.name))
 
     def test_generate_summary_html(self):
         site = USite.objects.create(name="site")
@@ -450,7 +441,6 @@ class TestAssignedTemplatesReport(TestCase):
         rep.to_html()
 
     def test_to_table(self):
-
         site = USite.objects.create(name="site")
         unit = utils.create_unit(site=site)
         usa = sl_utils.create_unit_service_area(unit=unit)
@@ -459,18 +449,20 @@ class TestAssignedTemplatesReport(TestCase):
         usa2 = sl_utils.create_unit_service_area()
         sl_utils.create_service_event_schedule(unit_service_area=usa2)
 
-        rep = sl.ScheduledTemplatesReport(report_opts={'active': True})
+        rep = sl.ScheduledTemplatesReport(report_opts={"active": True})
         rep.report_format = "csv"
         context = rep.get_context()
         table = rep.to_table(context)
 
-        header_row = table.index([
-            _("Site"),
-            _("Unit"),
-            _("Service Area"),
-            _("Template Name"),
-            _("Frequency"),
-            _("Assigned To"),
-            _("Link"),
-        ])
-        assert len(table[header_row + 1:]) == 2
+        header_row = table.index(
+            [
+                _("Site"),
+                _("Unit"),
+                _("Service Area"),
+                _("Template Name"),
+                _("Frequency"),
+                _("Assigned To"),
+                _("Link"),
+            ]
+        )
+        assert len(table[header_row + 1 :]) == 2

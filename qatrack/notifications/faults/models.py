@@ -5,7 +5,6 @@ from qatrack.notifications.common.models import RecipientGroup, UnitGroup
 
 
 class FaultNotice(models.Model):
-
     LOGGED = 0
 
     NOTIFICATION_TYPES = ((LOGGED, _l("Notify when fault logged")),)

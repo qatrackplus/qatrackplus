@@ -6,18 +6,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0014_convert_file_uploads'),
+        ("qa", "0014_convert_file_uploads"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='reference',
-            options={'default_permissions': ()},
+            name="reference",
+            options={"default_permissions": ()},
         ),
         migrations.AlterModelOptions(
-            name='testlistmembership',
-            options={'default_permissions': (), 'ordering': ('order',)},
+            name="testlistmembership",
+            options={"default_permissions": (), "ordering": ("order",)},
         ),
     ]

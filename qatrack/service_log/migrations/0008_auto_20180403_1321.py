@@ -7,15 +7,14 @@ import qatrack.service_log.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0007_servicelog'),
+        ("service_log", "0007_servicelog"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='servicelog',
-            name='extra_info',
+            model_name="servicelog",
+            name="extra_info",
             field=qatrack.service_log.models.JSONField(blank=True, null=True),
         ),
     ]

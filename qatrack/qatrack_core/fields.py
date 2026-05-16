@@ -5,7 +5,6 @@ from django.db import models
 
 
 class JSONField(models.TextField):
-
     def to_python(self, value):
         if value == "":
             return None

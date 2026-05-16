@@ -1,13 +1,14 @@
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import gettext as _
-from qatrack.units.models import Unit
-from qatrack.units.forms import unit_site_unit_type_choices
+
 from qatrack.qa import models
+from qatrack.units.forms import unit_site_unit_type_choices
+from qatrack.units.models import Unit
 
 
 class CopyReferencesAndTolerancesForm(forms.Form):
-    """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y' """
+    """Form for copying references and tolerances from TestList Unit 'x' to TestList Unit 'y'"""
 
     stage = forms.IntegerField(widget=forms.HiddenInput(), required=False)
     confirm = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -21,14 +22,14 @@ class CopyReferencesAndTolerancesForm(forms.Form):
     content_type = forms.ChoiceField(
         label=_("Copy from TestList or TestListCycle"),
         choices=(
-            ('', '---------'),
-            ('testlist', _('TestList')),
-            ('testlistcycle', _('TestListCycle')),
+            ("", "---------"),
+            ("testlist", _("TestList")),
+            ("testlistcycle", _("TestListCycle")),
         ),
         required=True,
     )
 
-    source_testlist = forms.ChoiceField(choices=[], label=_('Source testlist(cycle)'))
+    source_testlist = forms.ChoiceField(choices=[], label=_("Source testlist(cycle)"))
     dest_unit = forms.TypedChoiceField(
         label=_("Destination Unit"),
         help_text=_("Choose the unit to copy references and tolerances to"),
@@ -38,12 +39,12 @@ class CopyReferencesAndTolerancesForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['source_unit'].choices = unit_site_unit_type_choices(include_empty=True)
-        self.fields['dest_unit'].choices = unit_site_unit_type_choices(include_empty=True)
-        testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", 'name')
-        testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", 'name')
-        choices = [('', '---------')] + list(testlistchoices) + list(testlistcyclechoices)
-        self.fields['source_testlist'].choices = choices
+        self.fields["source_unit"].choices = unit_site_unit_type_choices(include_empty=True)
+        self.fields["dest_unit"].choices = unit_site_unit_type_choices(include_empty=True)
+        testlistchoices = models.TestList.objects.all().order_by("name").values_list("pk", "name")
+        testlistcyclechoices = models.TestListCycle.objects.all().order_by("name").values_list("pk", "name")
+        choices = [("", "---------")] + list(testlistchoices) + list(testlistcyclechoices)
+        self.fields["source_testlist"].choices = choices
 
     def save(self):
         source_unit = self.cleaned_data.get("source_unit")
@@ -59,18 +60,18 @@ class CopyReferencesAndTolerancesForm(forms.Form):
         source_utc.copy_references(dest_unit)
 
     def clean_content_type(self):
-        ct = self.cleaned_data.get('content_type')
+        ct = self.cleaned_data.get("content_type")
         if not ct:
             self.add_error("content_type", _("This field is required"))
         return ct
 
     def clean_source_unit(self):
-        unit = self.cleaned_data.get('source_unit')
+        unit = self.cleaned_data.get("source_unit")
         if unit:
             return Unit.objects.get(pk=unit)
 
     def clean_dest_unit(self):
-        unit = self.cleaned_data.get('dest_unit')
+        unit = self.cleaned_data.get("dest_unit")
         if unit:
             return Unit.objects.get(pk=unit)
 

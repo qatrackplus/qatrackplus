@@ -9,11 +9,10 @@ from qatrack.notifications.models import FaultsReviewNotice
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
-logger = logging.getLogger('django-q2')
+logger = logging.getLogger("django-q2")
 
 
 def run_faults_review_notices():
-
     run_periodic_scheduler(
         FaultsReviewNotice,
         "run_faults_review_notices",
@@ -24,7 +23,6 @@ def run_faults_review_notices():
 
 
 def schedule_faultsreview_notice(notice, send_time):
-
     logger.info("Scheduling notification %s for %s" % (notice.pk, send_time))
     name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
 
@@ -41,11 +39,9 @@ def schedule_faultsreview_notice(notice, send_time):
 
 
 def send_faultsreview_notice(notice_id, task_name=""):
-
     notice = FaultsReviewNotice.objects.filter(id=notice_id).first()
 
     if notice:
-
         if not notice.send_required():
             logger.info("Send of FaultsReviewNotice %s requested, but no Faults to notify about" % notice_id)
             return
@@ -62,7 +58,7 @@ def send_faultsreview_notice(notice_id, task_name=""):
         send_email_to_users(
             recipients,
             "faults_review/email.html",
-            context={'notice': notice},
+            context={"notice": notice},
             subject_template="faults_review/subject.txt",
             text_template="faults_review/email.txt",
         )

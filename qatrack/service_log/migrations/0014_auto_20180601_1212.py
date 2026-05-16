@@ -6,22 +6,25 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0013_auto_20180425_1625'),
+        ("service_log", "0013_auto_20180425_1625"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='grouplinkerinstance',
-            options={'default_permissions': ()},
+            name="grouplinkerinstance",
+            options={"default_permissions": ()},
         ),
         migrations.AlterModelOptions(
-            name='hours',
-            options={'default_permissions': (), 'permissions': (('can_have_hours', 'Can have hours'),), 'verbose_name_plural': 'Hours'},
+            name="hours",
+            options={
+                "default_permissions": (),
+                "permissions": (("can_have_hours", "Can have hours"),),
+                "verbose_name_plural": "Hours",
+            },
         ),
         migrations.AlterModelOptions(
-            name='servicelog',
-            options={'default_permissions': (), 'ordering': ('-datetime',)},
+            name="servicelog",
+            options={"default_permissions": (), "ordering": ("-datetime",)},
         ),
     ]

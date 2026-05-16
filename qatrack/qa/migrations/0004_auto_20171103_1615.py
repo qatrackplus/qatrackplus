@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0003_auto_20171103_1256'),
+        ("qa", "0003_auto_20171103_1256"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='test',
-            name='name',
-            field=models.CharField(db_index=True, help_text='Name for this test', max_length=255),
+            model_name="test",
+            name="name",
+            field=models.CharField(db_index=True, help_text="Name for this test", max_length=255),
         ),
     ]

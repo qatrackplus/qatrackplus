@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('reports', '0005_auto_20190704_1603'),
+        ("reports", "0005_auto_20190704_1603"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='reportschedule',
-            name='last_sent',
+            model_name="reportschedule",
+            name="last_sent",
             field=models.DateTimeField(editable=False, null=True),
         ),
     ]

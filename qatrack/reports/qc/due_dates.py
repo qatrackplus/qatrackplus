@@ -13,7 +13,6 @@ from qatrack.units import models as umodels
 
 
 class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
-
     category = _l("QC")
 
     def get_queryset(self):
@@ -25,7 +24,6 @@ class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
         return qs
 
     def get_context(self):
-
         context = super().get_context()
         qs = self.filter_set.qs
 
@@ -34,7 +32,6 @@ class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
         sites_data = []
 
         for site in sites:
-
             if site:  # site can be None here since not all units may have a site
                 site = umodels.Site.objects.get(pk=site)
 
@@ -46,61 +43,58 @@ class DueDatesReportMixin(filters.UnitTestCollectionFilterDetailsMixin):
             ).order_by("due_date", "unit__%s" % settings.ORDER_UNITS_BY)
 
             for utc in utcs:
-
                 window = utc.window()
                 if window:
                     window = "%s - %s" % (format_as_date(window[0]), format_as_date(window[1]))
 
-                sites_data[-1][-1].append({
-                    'utc': utc,
-                    'unit_name': utc.unit.name,
-                    'name': utc.name,
-                    'window': window,
-                    'frequency': utc.frequency.name if utc.frequency else _("Ad Hoc"),
-                    'due_date': format_as_date(utc.due_date),
-                    'assigned_to': utc.assigned_to.name,
-                    'link': self.make_url(utc.get_absolute_url(), plain=True),
-                })
+                sites_data[-1][-1].append(
+                    {
+                        "utc": utc,
+                        "unit_name": utc.unit.name,
+                        "name": utc.name,
+                        "window": window,
+                        "frequency": utc.frequency.name if utc.frequency else _("Ad Hoc"),
+                        "due_date": format_as_date(utc.due_date),
+                        "assigned_to": utc.assigned_to.name,
+                        "link": self.make_url(utc.get_absolute_url(), plain=True),
+                    }
+                )
 
-        context['sites_data'] = sites_data
+        context["sites_data"] = sites_data
 
         return context
 
     def to_table(self, context):
-
         rows = super().to_table(context)
 
         rows.append([])
 
-        for site, site_rows in context['sites_data']:
-            rows.extend([
-                [],
-                [],
-                [site if site else _("Other")],
-                [_("Unit"),
-                 _("Name"),
-                 _("Frequency"),
-                 _("Due Date"),
-                 _("Window"),
-                 _("Assigned To"),
-                 _("Perform")],
-            ])
+        for site, site_rows in context["sites_data"]:
+            rows.extend(
+                [
+                    [],
+                    [],
+                    [site if site else _("Other")],
+                    [_("Unit"), _("Name"), _("Frequency"), _("Due Date"), _("Window"), _("Assigned To"), _("Perform")],
+                ]
+            )
 
             for row in site_rows:
-                rows.append([
-                    row['unit_name'],
-                    row['name'],
-                    row['frequency'],
-                    format_as_date(row['utc'].due_date),
-                    row['window'],
-                    row['assigned_to'],
-                ])
+                rows.append(
+                    [
+                        row["unit_name"],
+                        row["name"],
+                        row["frequency"],
+                        format_as_date(row["utc"].due_date),
+                        row["window"],
+                        row["assigned_to"],
+                    ]
+                )
 
         return rows
 
 
 class NextDueDatesReport(DueDatesReportMixin, BaseReport):
-
     report_type = "next_due"
     name = _l("Next Due Dates for QC")
     filter_class = filters.UnitTestCollectionSchedulingFilter
@@ -114,7 +108,6 @@ class NextDueDatesReport(DueDatesReportMixin, BaseReport):
 
 
 class DueAndOverdueQCReport(DueDatesReportMixin, BaseReport):
-
     report_type = "due_and_overdue"
     name = _l("Due and Overdue QC")
     filter_class = filters.UnitTestCollectionFilter

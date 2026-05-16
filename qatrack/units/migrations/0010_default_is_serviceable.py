@@ -7,7 +7,6 @@ import django.db.models.deletion
 
 
 def make_all_serviceable(apps, schema):
-
     Unit = apps.get_model("units", "Unit")
     active = Unit.objects.filter(active=True)
     all_not_serviceable = not any(active.values_list("is_serviceable", flat=True))
@@ -19,21 +18,24 @@ def make_all_serviceable(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0009_remove_unit_restricted'),
+        ("units", "0009_remove_unit_restricted"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='unit',
-            name='is_serviceable',
-            field=models.BooleanField(default=True, help_text='Set to true to enable this unit to be selectable in service events'),
+            model_name="unit",
+            name="is_serviceable",
+            field=models.BooleanField(
+                default=True, help_text="Set to true to enable this unit to be selectable in service events"
+            ),
         ),
         migrations.AlterField(
-            model_name='unit',
-            name='type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='units.UnitType', verbose_name='Unit Type'),
+            model_name="unit",
+            name="type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="units.UnitType", verbose_name="Unit Type"
+            ),
         ),
-        migrations.RunPython(make_all_serviceable, lambda a, s: None)
+        migrations.RunPython(make_all_serviceable, lambda a, s: None),
     ]

@@ -6,18 +6,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0004_auto_20180529_0917'),
+        ("parts", "0004_auto_20180529_0917"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='partstoragecollection',
-            options={'default_permissions': ()},
+            name="partstoragecollection",
+            options={"default_permissions": ()},
         ),
         migrations.AlterModelOptions(
-            name='partsuppliercollection',
-            options={'default_permissions': ()},
+            name="partsuppliercollection",
+            options={"default_permissions": ()},
         ),
     ]

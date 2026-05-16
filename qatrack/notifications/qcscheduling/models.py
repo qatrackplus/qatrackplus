@@ -18,7 +18,6 @@ from qatrack.qatrack_core.utils import today_start_end
 
 
 class QCSchedulingNotice(RecurrenceFieldMixin, models.Model):
-
     ALL = 0
     DUE = 10
     UPCOMING_AND_DUE = 20

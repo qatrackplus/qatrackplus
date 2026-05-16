@@ -23,12 +23,11 @@ class PartCategoryGroup(models.Model):
 
 
 class PartNotice(models.Model):
+    LOW_INVENTORY = "low_inventory"
 
-    LOW_INVENTORY = 'low_inventory'
-
-    NOTIFICATION_TYPES = ((
-        LOW_INVENTORY, _l("Notify when inventory for a part falls below it's Low Inventory threshold")
-    ),)
+    NOTIFICATION_TYPES = (
+        (LOW_INVENTORY, _l("Notify when inventory for a part falls below it's Low Inventory threshold")),
+    )
 
     notification_type = models.CharField(
         verbose_name=_l("Notification Type"),

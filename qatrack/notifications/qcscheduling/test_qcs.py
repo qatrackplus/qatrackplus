@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
+import qatrack.qa.tests.utils as utils
 from qatrack.notifications.models import (
     QCSchedulingNotice,
     RecipientGroup,
@@ -12,36 +13,34 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.qcscheduling import admin, tasks
 from qatrack.qa import models
-import qatrack.qa.tests.utils as utils
 from qatrack.qatrack_core.utils import today_start_end
 
 
 class TestQCSchedulingAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.QCSchedulingAdmin(model=QCSchedulingNotice, admin_site=AdminSite())
 
     def test_clean_missing_future_days_upcoming(self):
         f = admin.QCSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': QCSchedulingNotice.UPCOMING}
+        f.cleaned_data = {"notification_type": QCSchedulingNotice.UPCOMING}
         f.clean()
-        assert 'future_days' in f.errors
+        assert "future_days" in f.errors
 
     def test_clean_missing_future_days_upcoming_and_due(self):
         f = admin.QCSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': QCSchedulingNotice.UPCOMING_AND_DUE}
+        f.cleaned_data = {"notification_type": QCSchedulingNotice.UPCOMING_AND_DUE}
         f.clean()
-        assert 'future_days' in f.errors
+        assert "future_days" in f.errors
 
     def test_clean_future_days_not_required(self):
         f = admin.QCSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': QCSchedulingNotice.DUE, 'future_days': 10}
+        f.cleaned_data = {"notification_type": QCSchedulingNotice.DUE, "future_days": 10}
         f.clean()
-        assert 'future_days' in f.errors
+        assert "future_days" in f.errors
 
     def test_clean_ok(self):
         f = admin.QCSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': QCSchedulingNotice.UPCOMING_AND_DUE, 'future_days': 10}
+        f.cleaned_data = {"notification_type": QCSchedulingNotice.UPCOMING_AND_DUE, "future_days": 10}
         f.clean()
         assert not f.errors
 
@@ -111,9 +110,7 @@ class TestQCSchedulingAdmin(TestCase):
 
 
 class TestQCSchedulingModel(TestCase):
-
     def setUp(self):
-
         self.unit1 = utils.create_unit(name="unit1", number=1)
         self.unit2 = utils.create_unit(name="unit2", number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
@@ -125,8 +122,8 @@ class TestQCSchedulingModel(TestCase):
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.utc1.unit)
 
-        self.group = models.Group.objects.latest('pk')
-        user = models.User.objects.latest('pk')
+        self.group = models.Group.objects.latest("pk")
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
@@ -134,7 +131,7 @@ class TestQCSchedulingModel(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -329,9 +326,7 @@ class TestQCSchedulingModel(TestCase):
 
 
 class TestQCSchedulingEmails(TestCase):
-
     def setUp(self):
-
         self.unit1 = utils.create_unit(name="unit1", number=1)
         self.unit2 = utils.create_unit(name="unit2", number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
@@ -343,8 +338,8 @@ class TestQCSchedulingEmails(TestCase):
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.utc1.unit)
 
-        self.group = models.Group.objects.latest('pk')
-        user = models.User.objects.latest('pk')
+        self.group = models.Group.objects.latest("pk")
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
@@ -352,7 +347,7 @@ class TestQCSchedulingEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()

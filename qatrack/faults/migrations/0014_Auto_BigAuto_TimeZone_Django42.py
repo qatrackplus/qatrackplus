@@ -12,29 +12,21 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="fault",
             name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="faultreviewgroup",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="faultreviewinstance",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.AlterField(
             model_name="faulttype",
             name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
     ]

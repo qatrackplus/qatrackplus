@@ -7,33 +7,58 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0027_remove_frequency_overdue_interval'),
+        ("qa", "0027_remove_frequency_overdue_interval"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='frequency',
-            options={'ordering': ('nominal_interval',), 'permissions': (('can_choose_frequency', 'Choose QC by Frequency'),), 'verbose_name_plural': 'frequencies'},
+            name="frequency",
+            options={
+                "ordering": ("nominal_interval",),
+                "permissions": (("can_choose_frequency", "Choose QC by Frequency"),),
+                "verbose_name_plural": "frequencies",
+            },
         ),
         migrations.AlterModelOptions(
-            name='testinstance',
-            options={'get_latest_by': 'work_completed', 'permissions': (('can_view_history', 'Can see test history when performing QC'), ('can_view_charts', 'Can view charts of test history'), ('can_review', 'Can review & approve tests'), ('can_skip_without_comment', 'Can skip tests without comment'), ('can_review_own_tests', 'Can review & approve  self-performed tests'))},
+            name="testinstance",
+            options={
+                "get_latest_by": "work_completed",
+                "permissions": (
+                    ("can_view_history", "Can see test history when performing QC"),
+                    ("can_view_charts", "Can view charts of test history"),
+                    ("can_review", "Can review & approve tests"),
+                    ("can_skip_without_comment", "Can skip tests without comment"),
+                    ("can_review_own_tests", "Can review & approve  self-performed tests"),
+                ),
+            },
         ),
         migrations.AlterField(
-            model_name='test',
-            name='hidden',
-            field=models.BooleanField(default=False, help_text="Don't display this test when performing QC", verbose_name='Hidden'),
+            model_name="test",
+            name="hidden",
+            field=models.BooleanField(
+                default=False, help_text="Don't display this test when performing QC", verbose_name="Hidden"
+            ),
         ),
         migrations.AlterField(
-            model_name='unittestcollection',
-            name='assigned_to',
-            field=models.ForeignKey(help_text='QC group that this test list should nominally be performed by', null=True, on_delete=django.db.models.deletion.CASCADE, to='auth.Group'),
+            model_name="unittestcollection",
+            name="assigned_to",
+            field=models.ForeignKey(
+                help_text="QC group that this test list should nominally be performed by",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="auth.Group",
+            ),
         ),
         migrations.AlterField(
-            model_name='unittestinfo',
-            name='assigned_to',
-            field=models.ForeignKey(blank=True, help_text='QC group that this test list should nominally be performed by', null=True, on_delete=django.db.models.deletion.SET_NULL, to='auth.Group'),
+            model_name="unittestinfo",
+            name="assigned_to",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="QC group that this test list should nominally be performed by",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="auth.Group",
+            ),
         ),
     ]

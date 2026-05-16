@@ -14,13 +14,11 @@ from qatrack.units import models as umodels
 
 
 class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
-
     report_type = "service_event_details"
     name = _l("Service Event Details")
     filter_class = filters.ServiceEventDetailsFilter
     description = mark_safe(
-        _l("This report includes details of all Service Events from a given"
-           "time period for selected units")
+        _l("This report includes details of all Service Events from a giventime period for selected units")
     )
 
     template = "reports/service_log/details.html"
@@ -31,21 +29,23 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
         return "%s.%s" % (slugify(self.name or "service-event-details"), report_format)
 
     def get_context(self):
-
         context = super().get_context()
 
         # since we're grouping by site, we need to handle sites separately
-        sites = self.filter_set.qs.order_by(
-            "unit_service_area__unit__site__name",
-        ).values_list(
-            "unit_service_area__unit__site",
-            flat=True,
-        ).distinct()
+        sites = (
+            self.filter_set.qs.order_by(
+                "unit_service_area__unit__site__name",
+            )
+            .values_list(
+                "unit_service_area__unit__site",
+                flat=True,
+            )
+            .distinct()
+        )
 
         sites_data = []
 
         for site in sites:
-
             if site:  # site can be None here since not all units may have a site
                 site = umodels.Site.objects.get(pk=site)
 
@@ -54,7 +54,8 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
             for se in self.get_ses_for_site(self.filter_set.qs, site):
                 initiated_by_link = (
                     self.make_url(se.test_list_instance_initiated_by.get_absolute_url(), plain=True)
-                    if se.test_list_instance_initiated_by else None
+                    if se.test_list_instance_initiated_by
+                    else None
                 )
 
                 related_ses = []
@@ -96,41 +97,42 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                 for a in se.attachment_set.all():
                     attachments.append((a.label, self.make_url(a.attachment.url, plain=True)))
 
-                sites_data[-1][-1].append({
-                    'id': se.id,
-                    'service_date': format_as_date(se.datetime_service),
-                    'site': site.name if site else "",
-                    'unit_name': se.unit_service_area.unit.name,
-                    'service_area': se.unit_service_area.service_area.name,
-                    'service_type': se.service_type.name,
-                    'service_time': se.duration_service_time,
-                    'lost_time': se.duration_lost_time,
-                    'status': se.service_status.name,
-                    'created_by': format_user(se.user_created_by),
-                    'created_date': format_datetime(se.datetime_created),
-                    'modified_by': format_user(se.user_modified_by),
-                    'modified_date': format_datetime(se.datetime_modified),
-                    'problem': se.problem_description,
-                    'work': se.work_description,
-                    'safety': se.safety_precautions,
-                    'initiated_by': se.test_list_instance_initiated_by,
-                    'initiated_by_link': initiated_by_link,
-                    'related_ses': related_ses,
-                    'group_linkers': sorted(group_linkers.items()),
-                    'hours': hours,
-                    'rts_qc': rts_qc,
-                    'rts_comments': rts_comments,
-                    'parts': parts,
-                    'attachments': attachments,
-                    'link': self.make_url(se.get_absolute_url(), plain=True),
-                })
+                sites_data[-1][-1].append(
+                    {
+                        "id": se.id,
+                        "service_date": format_as_date(se.datetime_service),
+                        "site": site.name if site else "",
+                        "unit_name": se.unit_service_area.unit.name,
+                        "service_area": se.unit_service_area.service_area.name,
+                        "service_type": se.service_type.name,
+                        "service_time": se.duration_service_time,
+                        "lost_time": se.duration_lost_time,
+                        "status": se.service_status.name,
+                        "created_by": format_user(se.user_created_by),
+                        "created_date": format_datetime(se.datetime_created),
+                        "modified_by": format_user(se.user_modified_by),
+                        "modified_date": format_datetime(se.datetime_modified),
+                        "problem": se.problem_description,
+                        "work": se.work_description,
+                        "safety": se.safety_precautions,
+                        "initiated_by": se.test_list_instance_initiated_by,
+                        "initiated_by_link": initiated_by_link,
+                        "related_ses": related_ses,
+                        "group_linkers": sorted(group_linkers.items()),
+                        "hours": hours,
+                        "rts_qc": rts_qc,
+                        "rts_comments": rts_comments,
+                        "parts": parts,
+                        "attachments": attachments,
+                        "link": self.make_url(se.get_absolute_url(), plain=True),
+                    }
+                )
 
-        context['sites_data'] = sites_data
+        context["sites_data"] = sites_data
 
         return context
 
     def to_table(self, context):
-
         rows = super().to_table(context)
 
         rows.append([])
@@ -165,51 +167,50 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
 
         rows.append(header)
 
-        for site, ses in context['sites_data']:
+        for site, ses in context["sites_data"]:
             for se in ses:
+                related = ",".join(link for __, __, link in se["related_ses"])
 
-                related = ','.join(link for __, __, link in se['related_ses'])
-
-                initiated_by = se['initiated_by_link']
+                initiated_by = se["initiated_by_link"]
 
                 group_members = []
-                for group, members in se['group_linkers']:
-                    group_members.append("%s=%s" % (group, ','.join(m.split("(")[0] for m in members)))
+                for group, members in se["group_linkers"]:
+                    group_members.append("%s=%s" % (group, ",".join(m.split("(")[0] for m in members)))
                 group_members = "\n".join(group_members)
 
-                hours = ','.join("%s=%s" % ut for ut in se['hours'])
+                hours = ",".join("%s=%s" % ut for ut in se["hours"])
 
                 rts_qc = []
-                for utc, wc, link in se['rts_qc']:
+                for utc, wc, link in se["rts_qc"]:
                     rts_qc.append("%s,%s,%s" % (utc, wc or _("Not completed"), link or _("Not completed")))
-                rts_qc = '\n'.join(rts_qc)
+                rts_qc = "\n".join(rts_qc)
 
                 rts_comments = []
-                for comments in se['rts_comments']:
+                for comments in se["rts_comments"]:
                     rts_comments.append("%s,%s,%s" % comments)
-                rts_comments = '\n'.join(rts_comments)
+                rts_comments = "\n".join(rts_comments)
 
-                parts = ','.join("%s=%s=%s" % p for p in se['parts'])
+                parts = ",".join("%s=%s=%s" % p for p in se["parts"])
 
-                attachments = ','.join(link for __, link in se['attachments'])
+                attachments = ",".join(link for __, link in se["attachments"])
 
                 row = [
-                    se['id'],
-                    se['service_date'],
+                    se["id"],
+                    se["service_date"],
                     site,
-                    se['unit_name'],
-                    se['service_area'],
-                    se['service_type'],
-                    se['service_time'],
-                    se['lost_time'],
-                    se['status'],
-                    se['created_by'].split("(")[0],
-                    se['created_date'],
-                    se['modified_by'].split("(")[0],
-                    se['modified_date'],
-                    se['problem'],
-                    se['work'],
-                    se['safety'],
+                    se["unit_name"],
+                    se["service_area"],
+                    se["service_type"],
+                    se["service_time"],
+                    se["lost_time"],
+                    se["status"],
+                    se["created_by"].split("(")[0],
+                    se["created_date"],
+                    se["modified_by"].split("(")[0],
+                    se["modified_date"],
+                    se["problem"],
+                    se["work"],
+                    se["safety"],
                     initiated_by,
                     related,
                     group_members,
@@ -218,7 +219,7 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
                     rts_comments,
                     parts,
                     attachments,
-                    se['link'],
+                    se["link"],
                 ]
 
                 rows.append(row)
