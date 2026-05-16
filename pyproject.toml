@@ -135,12 +135,10 @@ norecursedirs = [
     "venv"
 ]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-ra -q"
+addopts = "-ra -q -m 'not selenium'"
 django_find_project = true
 DJANGO_SETTINGS_MODULE = "qatrack.settings"
-markers = [
-    "selenium: marks tests that use django live test case and web browser",
-]
+markers = ["selenium: browser-based integration tests (excluded by default)"]
 filterwarnings = [
     "error:.*RemovedInDjango31.*",
     "ignore:numpy.ufunc size changed:RuntimeWarning",
