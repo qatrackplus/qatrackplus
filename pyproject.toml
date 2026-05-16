@@ -81,6 +81,9 @@ dependencies = [
     "XlsxWriter>=1.3.7,<4.0",
     "django-recurrence>=1.11.0",
     "django-sql-explorer>=5.3",
+    "django-extensions>=3.2.3",
+    "pytest>=7.0",
+    "pytest-django>=4.5.0",
 ]
 
 [project.optional-dependencies]
@@ -95,7 +98,7 @@ mssql = [
 ]
 
 postgres = [
-    "psycopg[binary]",
+    "psycopg2-binary",
 ]
 win = [
     "CherryPy==18.0.1",
@@ -104,7 +107,7 @@ win = [
 ]
 
 docker = [
-    "gunicorn==19.9.0",
+    "gunicorn>=20.1.0",
 ]
 
 translations = [
@@ -135,31 +138,32 @@ python_files = ["test_*.py", "*_test.py"]
 addopts = "-ra -q"
 django_find_project = true
 DJANGO_SETTINGS_MODULE = "qatrack.settings"
+markers = [
+    "selenium: marks tests that use django live test case and web browser",
+]
+filterwarnings = [
+    "error:.*RemovedInDjango31.*",
+    "ignore:numpy.ufunc size changed:RuntimeWarning",
+    "ignore:.*Importing from numpy.matlib.*",
+    "ignore:.*Plural value must be an integer, got float.*",
+    "ignore:.*Using or importing the ABCs.*",
+]
 
 [tool.uv.sources]
 python-ldap = { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl", marker = "sys_platform == 'win32' and python_version== '3.12'" }
 
 [dependency-groups]
 dev = [
-    "black==23.1.0",
-    "pep8>=1.7.1,<2.0",
-    "isort",
-    "flake8",
+    "ruff",
     "pylint>=2.12,<3.0",
-    "yapf",
     
     # Testing framework and utilities
-    "pytest>=7.0,<8.0",
-    "pytest-django>=4.5.0,<5.0",
     "pytest-cov>=4.0,<5.0",
     "pytest-sugar>=0.9.6,<1.0",
     "coverage>=6.0,<8.0",
     "django-coverage>=1.2.4,<2.0",
     "freezegun>=1.0.0,<3.0",
-    "selenium>=4.0.0,<5.0",
-    "PyVirtualDisplay==2.0",
     "django-debug-toolbar>=4.0,<5.0",
-    "django-extensions>=3.1.0,<4.0",
     "django-upgrade>=1.25.0",
     "pre-commit>=4.2.0",
     "fabric>=2.6.0",
@@ -180,3 +184,32 @@ dev = [
     "sphinxcontrib-serializinghtml==2.0.0",
     "sphinxcontrib-websupport==1.2.4",
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), Pycodestyle (E, W), Isort (I), and Django (DJ)
+select = ["F", "E", "W", "I", "DJ"]
+ignore = [
+    "E501",  # line too long (already handled by line-length)
+    "E203",  # whitespace before ':' (black compatibility)
+    "C901",  # complexity
+    "E741",  # ambiguous variable names
+    "DJ",    # Django specific rules (too many legacy violations)
+    "E402",  # module level import not at top of file
+    "E722",  # bare except
+]
+
+[tool.ruff.lint.isort]
+known-third-party = ["recurrence"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*.py" = ["I"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

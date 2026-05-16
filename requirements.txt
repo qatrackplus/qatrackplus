@@ -1,2 +1,1 @@
-# docker
--r requirements/docker.txt
+# dependencies now managed in pyproject.toml; use uv sync
