@@ -8,7 +8,6 @@ from django.db import migrations
 
 
 def add_in_progress_perm(apps, schema_editor):
-
     return
     try:
         permission = Permission.objects.get(codename="can_save_in_progress")
@@ -25,20 +24,26 @@ def add_in_progress_perm(apps, schema_editor):
 
 
 def rem_in_progress_perm(apps, schema_editor):
-
     Permission.objects.get(codename="can_save_in_progress").delete()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0002_auto_20161218_1851'),
+        ("qa", "0002_auto_20161218_1851"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='testlistinstance',
-            options={'get_latest_by': 'work_completed', 'permissions': (('can_override_date', 'Can override date'), ('can_perform_subset', 'Can perform subset of tests'), ('can_view_completed', 'Can view previously completed instances'), ('can_save_in_progress', "Can save test lists as 'In Progress'"))},
+            name="testlistinstance",
+            options={
+                "get_latest_by": "work_completed",
+                "permissions": (
+                    ("can_override_date", "Can override date"),
+                    ("can_perform_subset", "Can perform subset of tests"),
+                    ("can_view_completed", "Can view previously completed instances"),
+                    ("can_save_in_progress", "Can save test lists as 'In Progress'"),
+                ),
+            },
         ),
-        migrations.RunPython(add_in_progress_perm, rem_in_progress_perm)
+        migrations.RunPython(add_in_progress_perm, rem_in_progress_perm),
     ]

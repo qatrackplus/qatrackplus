@@ -1,0 +1,13 @@
+repos:
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0  # Use the latest version
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+
+-   repo: https://github.com/adamchainz/django-upgrade
+    rev: "1.25.0"  # Use the latest tag from GitHub
+    hooks:
+    -   id: django-upgrade
+        args: [--target-version, "4.2"]   # Target Django 4.2 

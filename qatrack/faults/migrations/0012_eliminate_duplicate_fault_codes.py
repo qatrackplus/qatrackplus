@@ -22,7 +22,6 @@ def eliminate_duplicate_fault_types(apps, schema):
     name_change_needed = {code: fts for (code, fts) in duplicates.items() if len(fts) > 0}
 
     for code, fault_types in name_change_needed.items():
-
         for fault_type in fault_types:
             next_digit = 1
             fault_type.code = fault_type.code + " (1)"
@@ -32,15 +31,12 @@ def eliminate_duplicate_fault_types(apps, schema):
                 fault_type.code = fault_type.code.replace(f"({last_digit})", f"({next_digit})")
 
             fault_type.save()
-            logger.info(
-                f"The Fault Type with ID {fault_type.id} had its code renamed from {code} to {fault_type.code}"
-            )
+            logger.info(f"The Fault Type with ID {fault_type.id} had its code renamed from {code} to {fault_type.code}")
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('faults', '0011_auto_20210406_1026'),
+        ("faults", "0011_auto_20210406_1026"),
     ]
 
     operations = [

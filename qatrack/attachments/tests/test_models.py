@@ -9,7 +9,6 @@ from qatrack.qa import models as qam
 
 
 class TestAttachment(TestCase):
-
     def test_owner_testlist(self):
         tl = qam.TestList(name="test")
         a = Attachment(testlist=tl)

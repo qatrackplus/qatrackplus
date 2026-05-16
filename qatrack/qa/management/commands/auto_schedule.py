@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+
 from qatrack.qa.models import UnitTestCollection
 
 
@@ -7,7 +8,7 @@ class Command(BaseCommand):
     for all UnitTestCollections that have auto_schedule = True.
     """
 
-    help = 'commands to enable/disable auto scheduling and set due dates'
+    help = "commands to enable/disable auto scheduling and set due dates"
 
     def handle(self, *args, **kwargs):
         handlers = {
@@ -18,7 +19,7 @@ class Command(BaseCommand):
         }
 
         if not args or args[0] not in list(handlers.keys()):
-            valid = ', '.join(["'%s'" % x for x in list(handlers.keys())])
+            valid = ", ".join(["'%s'" % x for x in list(handlers.keys())])
             raise CommandError("Valid arguments are %s" % (valid))
 
         handlers[args[0]]()

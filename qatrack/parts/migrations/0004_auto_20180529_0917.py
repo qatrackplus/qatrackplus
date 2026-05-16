@@ -6,14 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0003_auto_20180327_1157'),
+        ("parts", "0003_auto_20180327_1157"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='part',
-            options={'ordering': ['part_number'], 'permissions': (('view_part', 'Can View Part'),)},
+            name="part",
+            options={"ordering": ["part_number"], "permissions": (("view_part", "Can View Part"),)},
         ),
     ]

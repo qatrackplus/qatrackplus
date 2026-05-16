@@ -17,6 +17,25 @@
 {% endblock extra_css %}
 
 {% block extra_js %}
+    <script type="text/javascript">
+        // DataTables language configuration
+        window.datatablesLanguage = {
+            processing: "{% trans 'Processing...' %}",
+            lengthMenu: "{% trans '_MENU_ entries per page' %}",
+            zeroRecords: "{% trans 'No data available in table' %}",
+            emptyTable: "{% trans 'No data available in table' %}",
+            info: "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+            infoEmpty: "{% trans 'Showing 0 to 0 of 0 entries' %}",
+            infoFiltered: "{% trans '(filtered from _MAX_ total entries)' %}",
+            search: "{% trans 'Search:' %}",
+            loadingRecords: "{% trans 'Loading...' %}",
+            first: "{% trans 'First' %}",
+            previous: "{% trans 'Previous' %}",
+            next: "{% trans 'Next' %}",
+            last: "{% trans 'Last' %}"
+        };
+    </script>
+    
     {% autoescape off %}
         {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
     {% endautoescape %}

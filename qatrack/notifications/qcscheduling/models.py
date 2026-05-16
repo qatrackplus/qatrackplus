@@ -18,7 +18,6 @@ from qatrack.qatrack_core.utils import today_start_end
 
 
 class QCSchedulingNotice(RecurrenceFieldMixin, models.Model):
-
     ALL = 0
     DUE = 10
     UPCOMING_AND_DUE = 20
@@ -52,9 +51,7 @@ class QCSchedulingNotice(RecurrenceFieldMixin, models.Model):
 
     time = models.TimeField(
         verbose_name=_l("Time of day"),
-        help_text=_l(
-            "Set the time of day this notice should be sent (00:00-23:59)."
-        ),
+        help_text=_l("Set the time of day this notice should be sent (00:00-23:59)."),
         choices=TIME_CHOICES,
     )
 
@@ -102,6 +99,7 @@ class QCSchedulingNotice(RecurrenceFieldMixin, models.Model):
 
     class Meta:
         verbose_name = _l("QC Scheduling Notice")
+        verbose_name_plural = _l("QC Scheduling Notices")
 
     @property
     def is_all(self):
@@ -129,10 +127,7 @@ class QCSchedulingNotice(RecurrenceFieldMixin, models.Model):
 
         if self.test_lists_id:
             all_tls = self.test_lists.test_lists.all()
-            utcs = utcs.filter(
-                Q(test_list__in=all_tls) |
-                Q(test_list_cycle__test_lists__in=all_tls)
-            )
+            utcs = utcs.filter(Q(test_list__in=all_tls) | Q(test_list_cycle__test_lists__in=all_tls))
 
         return utcs.order_by("unit__%s" % settings.ORDER_UNITS_BY, "due_date")
 

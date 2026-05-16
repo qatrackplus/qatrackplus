@@ -7,7 +7,6 @@ from django.db import migrations
 
 
 def add_attach_perms(apps, schema):
-
     return
 
     Permission = apps.get_model("auth", "Permission")
@@ -29,7 +28,6 @@ def add_attach_perms(apps, schema):
 
 
 def rem_attach_perms(apps, schema):
-
     Permission = apps.get_model("auth", "Permission")
     Group = apps.get_model("auth", "Group")
     perm = Permission.objects.get(name="Can add attachment")
@@ -39,11 +37,8 @@ def rem_attach_perms(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('attachments', '0004_auto_20180906_0946'),
+        ("attachments", "0004_auto_20180906_0946"),
     ]
 
-    operations = [
-        migrations.RunPython(add_attach_perms, rem_attach_perms)
-    ]
+    operations = [migrations.RunPython(add_attach_perms, rem_attach_perms)]

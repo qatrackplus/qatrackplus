@@ -20,8 +20,8 @@ def listable_attachment_tags(obj, joiner=" "):
         if a.is_image:
             img = attachment_img(a, klass="listable-image")
             items.append(
-                '<div class="hover-img"><a href="%s" target="_blank">%s<span>%s</span></a></div>' %
-                (a.attachment.url, img_label, img)
+                '<div class="hover-img"><a href="%s" target="_blank">%s<span>%s</span></a></div>'
+                % (a.attachment.url, img_label, img)
             )
         else:
             items.append(attachment_link(a, label=label))

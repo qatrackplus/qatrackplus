@@ -1,10 +1,15 @@
-class SchedulingMixin:
+from django.utils import timezone
 
+from qatrack.qa import models as q_models
+from qatrack.qatrack_core import utils
+
+
+class SchedulingMixin:
     """A mixin class to be used when assigning 'tasks' to a unit with a
     frequency object"""
 
     def calc_due_date(self):
-        """return the next due date of this Unit/TestList pair """
+        """return the next due date of this Unit/TestList pair"""
 
         if self.auto_schedule and self.frequency:
             if not self.last_instance:

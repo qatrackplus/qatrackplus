@@ -12,9 +12,8 @@ def update_string_values(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0046_datestrings_to_dates'),
+        ("qa", "0046_datestrings_to_dates"),
     ]
 
     operations = [

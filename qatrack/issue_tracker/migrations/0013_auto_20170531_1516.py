@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0012_auto_20170531_1453'),
+        ("issue_tracker", "0012_auto_20170531_1453"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='issuestatus',
-            name='order',
+            model_name="issuestatus",
+            name="order",
             field=models.PositiveIntegerField(default=0, unique=True),
         ),
     ]

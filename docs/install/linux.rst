@@ -419,7 +419,7 @@ and then set up the Django Q configuration:
     make supervisor.conf
 
 
-Lastly, confirm django-q is now running:
+Lastly, confirm django-q2 is now running:
 
 .. code-block:: bash
 
@@ -429,11 +429,11 @@ which should result in output like:
 
 .. code-block:: bash
 
-    django-q                         RUNNING   pid 15860, uptime 0:00:05
+    django-q2                        RUNNING   pid 15860, uptime 0:00:05
 
 
 If supervisor does not show `RUNNING` you can check the error log which 
-is located at /var/log/supervisor-django-q.err.log
+is located at /var/log/supervisor-django-q2.err.log
 
 You can also check on the status of your task cluster at any time like this:
 
@@ -462,7 +462,7 @@ Next, lets make sure Apache can write to our logs and media directories:
     sudo usermod -a -G www-data $USER
     exec sg www-data newgrp `id -gn` # this refreshes users group memberships without needing to log off/on
     mkdir -p logs
-    touch logs/{migrate,debug,django-q,auth}.log
+    touch logs/{migrate,debug,django-q2,auth}.log
     sudo chown -R www-data:www-data logs
     sudo chown -R www-data:www-data qatrack/media
     sudo chmod ug+rwxs logs

@@ -10,7 +10,6 @@ from qatrack.qatrack_core.scheduling import calc_nominal_interval
 
 
 def create_freq_schedule(apps, schema):
-
     Frequency = apps.get_model("qa", "Frequency")
     from_ = timezone.datetime(2012, 1, 1, tzinfo=timezone.get_current_timezone())
 
@@ -24,9 +23,8 @@ def create_freq_schedule(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0022_auto_20181120_1607'),
+        ("qa", "0022_auto_20181120_1607"),
     ]
 
     operations = [migrations.RunPython(create_freq_schedule, reverse_code=lambda a, s: None)]

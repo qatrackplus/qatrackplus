@@ -4,7 +4,6 @@ from qatrack.faults import models
 
 
 class FaultSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Fault
         fields = [
@@ -16,7 +15,6 @@ class FaultSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class FaultTypeSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.FaultType
         fields = "__all__"

@@ -1,14 +1,14 @@
 import logging
 from io import BytesIO
 
+import pynliner
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-import pynliner
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger("qatrack")
 
 
 def email_context(context):
@@ -17,17 +17,18 @@ def email_context(context):
     domain = site.domain
     if not domain.startswith("http"):
         domain = "%s://%s" % (settings.HTTP_OR_HTTPS, domain)
-    context.update({
-        "domain": domain,
-        "site_obj": site,
-    })
+    context.update(
+        {
+            "domain": domain,
+            "site_obj": site,
+        }
+    )
     return context
 
 
 def send_email_to_users(
     recipients, template, context=None, subject_template=None, text_template=None, attachments=None
 ):
-
     if len(recipients) == 0:
         return
 

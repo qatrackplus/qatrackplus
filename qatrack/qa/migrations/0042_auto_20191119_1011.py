@@ -4,20 +4,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0041_auto_20191017_1604'),
+        ("qa", "0041_auto_20191017_1604"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='test',
-            name='display_name',
-            field=models.CharField(blank=True, db_index=True, default='', help_text='How should this test be displayed when performing or reviewing? Leave blank to use the tests name.', max_length=255, verbose_name='Display Name'),
+            model_name="test",
+            name="display_name",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                default="",
+                help_text="How should this test be displayed when performing or reviewing? Leave blank to use the tests name.",
+                max_length=255,
+                verbose_name="Display Name",
+            ),
         ),
         migrations.AlterField(
-            model_name='test',
-            name='name',
-            field=models.CharField(db_index=True, help_text='A unique identifying name for this test', max_length=255, unique=True, verbose_name='Name'),
+            model_name="test",
+            name="name",
+            field=models.CharField(
+                db_index=True,
+                help_text="A unique identifying name for this test",
+                max_length=255,
+                unique=True,
+                verbose_name="Name",
+            ),
         ),
     ]

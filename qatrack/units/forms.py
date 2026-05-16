@@ -15,123 +15,118 @@ from qatrack.units import models as u_models
 
 def max_24hr(value):
     if value > timedelta(hours=24):
-
-        raise ValidationError(_('Duration can not be greater than 24 hours'))
+        raise ValidationError(_("Duration can not be greater than 24 hours"))
 
 
 year_select = forms.ChoiceField(
     required=False,
     choices=[(y, y) for y in range(timezone.now().year - 20, timezone.now().year + 10)],
-    initial=timezone.now().year
-).widget.render('year_select', timezone.now().year, attrs={'id': 'id_year_select'})
+    initial=timezone.now().year,
+).widget.render("year_select", timezone.now().year, attrs={"id": "id_year_select"})
 
 month_select = forms.ChoiceField(
     required=False,
     choices=[
-        (0, 'January'),
-        (1, 'February'),
-        (2, 'March'),
-        (3, 'April'),
-        (4, 'May'),
-        (5, 'June'),
-        (6, 'July'),
-        (7, 'August'),
-        (8, 'September'),
-        (9, 'October'),
-        (10, 'November'),
-        (11, 'December'),
+        (0, "January"),
+        (1, "February"),
+        (2, "March"),
+        (3, "April"),
+        (4, "May"),
+        (5, "June"),
+        (6, "July"),
+        (7, "August"),
+        (8, "September"),
+        (9, "October"),
+        (10, "November"),
+        (11, "December"),
     ],
-    initial=timezone.now().month - 1
-).widget.render(
-    'month_select', timezone.now().month - 1, attrs={'id': 'id_month_select'}
-)
+    initial=timezone.now().month - 1,
+).widget.render("month_select", timezone.now().month - 1, attrs={"id": "id_month_select"})
 
 
 class UnitAvailableTimeForm(forms.ModelForm):
-
     hours_sunday = HoursMinDurationField(
-        help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr]
+        help_text="Hours available on sundays (hh:mm)", label="Sunday", validators=[max_24hr]
     )
     hours_monday = HoursMinDurationField(
-        help_text='Hours available on mondays (hh:mm)', label='Monday', validators=[max_24hr]
+        help_text="Hours available on mondays (hh:mm)", label="Monday", validators=[max_24hr]
     )
     hours_tuesday = HoursMinDurationField(
-        help_text='Hours available on tuesdays (hh:mm)', label='Tuesday', validators=[max_24hr]
+        help_text="Hours available on tuesdays (hh:mm)", label="Tuesday", validators=[max_24hr]
     )
     hours_wednesday = HoursMinDurationField(
-        help_text='Hours available on wednesdays (hh:mm)', label='Wednesday', validators=[max_24hr]
+        help_text="Hours available on wednesdays (hh:mm)", label="Wednesday", validators=[max_24hr]
     )
     hours_thursday = HoursMinDurationField(
-        help_text='Hours available on thursdays (hh:mm)', label='Thursday', validators=[max_24hr]
+        help_text="Hours available on thursdays (hh:mm)", label="Thursday", validators=[max_24hr]
     )
     hours_friday = HoursMinDurationField(
-        help_text='Hours available on fridays (hh:mm)', label='Friday', validators=[max_24hr]
+        help_text="Hours available on fridays (hh:mm)", label="Friday", validators=[max_24hr]
     )
     hours_saturday = HoursMinDurationField(
-        help_text='Hours available on saturdays (hh:mm)', label='Saturday', validators=[max_24hr]
+        help_text="Hours available on saturdays (hh:mm)", label="Saturday", validators=[max_24hr]
     )
 
     unit = forms.ModelChoiceField(widget=forms.HiddenInput(), queryset=u_models.Unit.objects.all())
 
     class Meta:
         model = u_models.UnitAvailableTime
-        fields = '__all__'
+        fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         super(UnitAvailableTimeForm, self).__init__(*args, **kwargs)
 
         for f in self.fields:
-            if f == 'date_changed':
-                self.fields[f].widget.attrs['class'] = 'form-control vDateField'
+            if f == "date_changed":
+                self.fields[f].widget.attrs["class"] = "form-control vDateField"
                 self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
-            elif f in ['year_select', 'month_select']:
-                self.fields[f].widget.attrs['class'] = 'form-control'
+            elif f in ["year_select", "month_select"]:
+                self.fields[f].widget.attrs["class"] = "form-control"
             else:
-                self.fields[f].widget.attrs['class'] = 'form-control duration weekday-duration'
+                self.fields[f].widget.attrs["class"] = "form-control duration weekday-duration"
 
-        for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
-            self.fields['hours_' + day].widget.attrs['placeholder'] = day
+        for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
+            self.fields["hours_" + day].widget.attrs["placeholder"] = day
 
             if not self.instance.pk:
-                self.fields['hours_' + day].initial = settings.DEFAULT_AVAILABLE_TIMES['hours_' + day]
+                self.fields["hours_" + day].initial = settings.DEFAULT_AVAILABLE_TIMES["hours_" + day]
 
     def clean_date_changed(self):
-        date_changed = self.cleaned_data['date_changed']
-        unit = self.cleaned_data.get('unit')
+        date_changed = self.cleaned_data["date_changed"]
+        unit = self.cleaned_data.get("unit")
         if not date_changed:
-            self.add_error('date_changed', 'Date Changed is a required field')
+            self.add_error("date_changed", "Date Changed is a required field")
         elif unit and date_changed < unit.date_acceptance:
-            self.add_error('date_changed', 'Date changed cannot be before units acceptance date')
+            self.add_error("date_changed", "Date changed cannot be before units acceptance date")
         return date_changed
 
 
 class UnitAvailableTimeEditForm(forms.ModelForm):
-
     units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all())
-    hours = HoursMinDurationField(help_text='Hours available (hh:mm)', label='Hours', validators=[max_24hr])
+    hours = HoursMinDurationField(help_text="Hours available (hh:mm)", label="Hours", validators=[max_24hr])
 
     class Meta:
         model = u_models.UnitAvailableTimeEdit
-        fields = ('date', 'hours', 'name', 'units')
+        fields = ("date", "hours", "name", "units")
 
     def __init__(self, *args, **kwargs):
         super(UnitAvailableTimeEditForm, self).__init__(*args, **kwargs)
 
         for f in self.fields:
-            if f == 'date':
-                self.fields[f].widget.attrs['class'] = 'form-control vDateField'
+            if f == "date":
+                self.fields[f].widget.attrs["class"] = "form-control vDateField"
                 self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
-            elif f == 'hours':
-                self.fields[f].widget.attrs['class'] = 'form-control duration'
-            elif f == 'units':
-                self.fields[f].widget.attrs['id'] = 'id_edit_units'
+            elif f == "hours":
+                self.fields[f].widget.attrs["class"] = "form-control duration"
+            elif f == "units":
+                self.fields[f].widget.attrs["id"] = "id_edit_units"
             else:
-                self.fields[f].widget.attrs['class'] = 'form-control'
+                self.fields[f].widget.attrs["class"] = "form-control"
 
     def clean_date(self):
-        cleaned = self.cleaned_data['date']
+        cleaned = self.cleaned_data["date"]
         if cleaned < self.instance.unit.date_acceptance:
-            raise ValidationError('Unit cannot have available time edit before it\'s date of acceptance.')
+            raise ValidationError(_("Unit cannot have available time edit before it's date of acceptance."))
         return cleaned
 
 
@@ -167,9 +162,7 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False, vis
 def units_visible_to_user(user: User):
     """Return a queryset containing the units which the user can view QC on"""
     units = u_models.Unit.objects.filter(
-        active=True,
-        unittestcollection__active=True,
-        unittestcollection__visible_to__in=user.groups.all()
+        active=True, unittestcollection__active=True, unittestcollection__visible_to__in=user.groups.all()
     ).distinct()
     return units
 
@@ -217,9 +210,13 @@ def utc_choices(include_empty=False):
     def unit_utc_name(u):
         return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
 
-    units = u_models.Unit.objects.select_related("site", "type").prefetch_related(
-        "unittestcollection_set",
-    ).order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
+    units = (
+        u_models.Unit.objects.select_related("site", "type")
+        .prefetch_related(
+            "unittestcollection_set",
+        )
+        .order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
+    )
 
     choices = []
     for ut, units in groupby(units, key=site_unit_type):

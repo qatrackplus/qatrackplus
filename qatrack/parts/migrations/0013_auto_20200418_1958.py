@@ -4,15 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0012_auto_20200119_2149'),
+        ("parts", "0012_auto_20200119_2149"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='part',
-            name='new_or_used',
-            field=models.CharField(choices=[('both', 'New & Used'), ('new', 'New'), ('used', 'Used')], default='both', help_text='Is this for tracking inventory of new, used, or both', max_length=12, verbose_name='New or Used'),
+            model_name="part",
+            name="new_or_used",
+            field=models.CharField(
+                choices=[("both", "New & Used"), ("new", "New"), ("used", "Used")],
+                default="both",
+                help_text="Is this for tracking inventory of new, used, or both",
+                max_length=12,
+                verbose_name="New or Used",
+            ),
         ),
     ]

@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0044_category_tree_rebuild'),
+        ("qa", "0044_category_tree_rebuild"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='testinstance',
-            name='date_value',
+            model_name="testinstance",
+            name="date_value",
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='testinstance',
-            name='datetime_value',
+            model_name="testinstance",
+            name="datetime_value",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

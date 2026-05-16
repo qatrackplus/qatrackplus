@@ -19,9 +19,8 @@ def add_site_slugs(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0012_site_slug'),
+        ("units", "0012_site_slug"),
     ]
 
     operations = [migrations.RunPython(add_site_slugs, lambda apps, sch: None)]

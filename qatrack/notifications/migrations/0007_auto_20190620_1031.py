@@ -4,26 +4,47 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0006_auto_20190501_1526'),
+        ("notifications", "0006_auto_20190501_1526"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='notificationsubscription',
-            name='follow_up_days',
-            field=models.PositiveIntegerField(blank=True, help_text='Number of days after TestList completion to send follow up email. Used for follow up notifications only', null=True, verbose_name='Follow up days'),
+            model_name="notificationsubscription",
+            name="follow_up_days",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="Number of days after TestList completion to send follow up email. Used for follow up notifications only",
+                null=True,
+                verbose_name="Follow up days",
+            ),
         ),
         migrations.AddField(
-            model_name='notificationsubscription',
-            name='notification_type',
-            field=models.IntegerField(choices=[(0, 'Notify when Test List completed'), (10, 'Notify on Tolerance or Action'), (20, 'Notify on Test at Action level only'), (30, 'Follow up notification')], default=0, verbose_name='Notification Type'),
+            model_name="notificationsubscription",
+            name="notification_type",
+            field=models.IntegerField(
+                choices=[
+                    (0, "Notify when Test List completed"),
+                    (10, "Notify on Tolerance or Action"),
+                    (20, "Notify on Test at Action level only"),
+                    (30, "Follow up notification"),
+                ],
+                default=0,
+                verbose_name="Notification Type",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='notificationsubscription',
-            name='warning_level',
-            field=models.IntegerField(choices=[(0, 'Notify when Test List completed'), (10, 'Notify on Tolerance or Action'), (20, 'Notify on Test at Action level only'), (30, 'Follow up notification')], verbose_name='Warning Level'),
+            model_name="notificationsubscription",
+            name="warning_level",
+            field=models.IntegerField(
+                choices=[
+                    (0, "Notify when Test List completed"),
+                    (10, "Notify on Tolerance or Action"),
+                    (20, "Notify on Test at Action level only"),
+                    (30, "Follow up notification"),
+                ],
+                verbose_name="Warning Level",
+            ),
         ),
     ]

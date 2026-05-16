@@ -26,13 +26,9 @@ def check_calcs(apps, schema):
             logger.info(msg)
 
 
-
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0020_auto_20180924_2313'),
+        ("qa", "0020_auto_20180924_2313"),
     ]
 
-    operations = [
-        migrations.RunPython(check_calcs, lambda apps, schema: None)
-    ]
+    operations = [migrations.RunPython(check_calcs, lambda apps, schema: None)]

@@ -3,6 +3,7 @@ import logging
 import os
 import os.path
 import shutil
+import sys
 import time
 from uuid import uuid4
 
@@ -20,7 +21,7 @@ import qatrack.parts.models as partsm
 import qatrack.qa.models as qam
 import qatrack.service_log.models as slm
 
-logger = logging.getLogger('qatrack')
+logger = logging.getLogger("qatrack")
 
 
 def get_upload_path(instance, name):
@@ -68,13 +69,20 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
             os.remove(start_path)
             break
         except PermissionError:
+            # After much hair pulling, it was discovered
+            # that running gc.collect() before os.remove allows Python to delete the file (grrr)
+            if "win" in sys.platform.lower():
+                import gc
+
+                gc.collect()
+
             if count == 2:
                 logger.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
                 break
             count += 1
             time.sleep(0.2)
 
-    new_name = "uploads/" + '/'.join(name_parts)
+    new_name = "uploads/" + "/".join(name_parts)
     attach.attachment.name = new_name
 
     if save:
@@ -82,7 +90,6 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
 
 
 class Attachment(models.Model):
-
     attachment = models.FileField(verbose_name=_l("Attachment"), upload_to=get_upload_path, max_length=255)
     label = models.CharField(verbose_name=_l("Label"), max_length=255, blank=True)
     comment = models.TextField(verbose_name=_l("Comment"), blank=True)
@@ -162,13 +169,15 @@ class Attachment(models.Model):
             self.move_tmp_file()
 
     def clean(self):
-        nowners = sum(1 for o in self._possible_owners if o)
-        if nowners > 1:
-            raise ValidationError(_l("An attachment should only have one owner"))
+        if not self.has_owner:
+            raise ValidationError(_("Attachment must have exactly one owner"))
+
+    class Meta:
+        verbose_name = _l("Attachment")
+        verbose_name_plural = _l("Attachments")
 
     @property
     def is_image(self):
-
         try:
             img = imghdr.what(self.attachment) is not None
         except FileNotFoundError:

@@ -10,14 +10,14 @@ def binwidth(x, maxBins=None):
     N.B. This algorithm assume all events in a sample are independent.
     """
 
-    minBins = 1         # must be not be zero!
+    minBins = 1  # must be not be zero!
     if maxBins is None:
-        maxBins = 50   # must be larger than minBins
+        maxBins = 50  # must be larger than minBins
 
     span = np.max(x) - np.min(x)
 
     if span == 0:
-        return 1.
+        return 1.0
 
     numOfBins = np.linspace(minBins, maxBins, maxBins - minBins + 1, dtype=int)
     C = np.zeros(len(numOfBins))
@@ -30,18 +30,18 @@ def binwidth(x, maxBins=None):
     optBinWidth = span / numOfBins[minCindex]
 
     if optBinWidth == 0:
-        optBinWidth = 1.
+        optBinWidth = 1.0
 
     return optBinWidth
 
 
 def get_cost_func(k, span, numOfBins):
-    """ Calculates the cost function for a given bin width. """
+    """Calculates the cost function for a given bin width."""
 
     binwidth = span / numOfBins
     kmean = np.sum(k) / numOfBins
     var = np.sum(np.power(k - kmean, 2)) / numOfBins
 
-    cost_func = (2. * kmean - var) / np.power(binwidth, 2)
+    cost_func = (2.0 * kmean - var) / np.power(binwidth, 2)
 
     return cost_func

@@ -12,12 +12,9 @@ from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 
 
 class FaultsReviewNotice(RecurrenceFieldMixin, models.Model):
-
     UNREVIEWED = 0
 
-    NOTIFICATION_TYPES = (
-        (UNREVIEWED, _l("Notify about Faults awaiting review")),
-    )
+    NOTIFICATION_TYPES = ((UNREVIEWED, _l("Notify about Faults awaiting review")),)
 
     TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
 
@@ -41,9 +38,7 @@ class FaultsReviewNotice(RecurrenceFieldMixin, models.Model):
 
     time = models.TimeField(
         verbose_name=_l("Time of day"),
-        help_text=_l(
-            "Set the time of day this notice should be sent (00:00-23:59)."
-        ),
+        help_text=_l("Set the time of day this notice should be sent (00:00-23:59)."),
         choices=TIME_CHOICES,
     )
 
@@ -69,6 +64,7 @@ class FaultsReviewNotice(RecurrenceFieldMixin, models.Model):
 
     class Meta:
         verbose_name = _l("Fault Review Notice")
+        verbose_name_plural = _l("Fault Review Notices")
 
     @property
     def is_unreviewed(self):
@@ -88,17 +84,20 @@ class FaultsReviewNotice(RecurrenceFieldMixin, models.Model):
         )
 
     def faults_by_unit_fault_type(self):
-
         faults = self.faults()
-        return faults.values(
-            "unit__name",
-            "fault_types__code",
-        ).order_by(
-            "unit__name",
-            "fault_types__code",
-        ).annotate(
-            Count("unit__name"),
-            Count("fault_types__code"),
+        return (
+            faults.values(
+                "unit__name",
+                "fault_types__code",
+            )
+            .order_by(
+                "unit__name",
+                "fault_types__code",
+            )
+            .annotate(
+                Count("unit__name"),
+                Count("fault_types__code"),
+            )
         )
 
     def send_required(self):

@@ -4,19 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0021_auto_20190729_2228'),
+        ("service_log", "0021_auto_20190729_2228"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='serviceeventstatus',
-            options={'ordering': ('order', 'pk'), 'verbose_name_plural': 'Service event statuses'},
+            name="serviceeventstatus",
+            options={"ordering": ("order", "pk"), "verbose_name_plural": "Service event statuses"},
         ),
         migrations.AddField(
-            model_name='serviceeventstatus',
-            name='order',
-            field=models.PositiveIntegerField(default=0, help_text='Choose what ordering this status will be listed as in drop down controls', verbose_name='Order'),
+            model_name="serviceeventstatus",
+            name="order",
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text="Choose what ordering this status will be listed as in drop down controls",
+                verbose_name="Order",
+            ),
         ),
     ]

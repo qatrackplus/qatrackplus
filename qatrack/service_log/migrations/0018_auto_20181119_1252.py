@@ -6,15 +6,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0017_auto_20180814_1312'),
+        ("service_log", "0017_auto_20180814_1312"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='serviceeventstatus',
-            name='rts_qa_must_be_reviewed',
-            field=models.BooleanField(default=True, help_text='Service events with Return To Service (RTS) QA that has not been reviewed can not have this status selected if set to true.', verbose_name='Return To Service (RTS) QA Must be Reviewed'),
+            model_name="serviceeventstatus",
+            name="rts_qa_must_be_reviewed",
+            field=models.BooleanField(
+                default=True,
+                help_text="Service events with Return To Service (RTS) QA that has not been reviewed can not have this status selected if set to true.",
+                verbose_name="Return To Service (RTS) QA Must be Reviewed",
+            ),
         ),
     ]

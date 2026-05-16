@@ -5,7 +5,6 @@ from django.db.models import Count
 
 
 def get_or_create_recipient_groups(ns, RecipientGroup):
-
     # first check if existing RecipientGroup matches
     rgs = RecipientGroup.objects.annotate(
         user_count=Count("users"),
@@ -37,7 +36,6 @@ def get_or_create_recipient_groups(ns, RecipientGroup):
 
 
 def get_or_create_testlistgroup(ns, TestListGroup):
-
     if ns.test_lists.count() == 0:
         return
 
@@ -64,7 +62,6 @@ def get_or_create_testlistgroup(ns, TestListGroup):
 
 
 def get_or_create_unitgroup(ns, UnitGroup):
-
     if ns.units.count() == 0:
         return
 
@@ -91,7 +88,6 @@ def get_or_create_unitgroup(ns, UnitGroup):
 
 
 def copy_to_qccompletednotices(apps, schema):
-
     NotificationSubscription = apps.get_model("notifications", "NotificationSubscription")
     QCCompletedNotice = apps.get_model("notifications", "QCCompletedNotice")
     RecipientGroup = apps.get_model("notifications", "RecipientGroup")
@@ -99,7 +95,6 @@ def copy_to_qccompletednotices(apps, schema):
     UnitGroup = apps.get_model("notifications", "UnitGroup")
 
     for ns in NotificationSubscription.objects.all():
-
         QCCompletedNotice.objects.create(
             notification_type=ns.notification_type,
             follow_up_days=ns.follow_up_days,
@@ -110,9 +105,8 @@ def copy_to_qccompletednotices(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0010_auto_20190801_2148'),
+        ("notifications", "0010_auto_20190801_2148"),
     ]
 
     operations = [

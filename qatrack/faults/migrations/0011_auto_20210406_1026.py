@@ -6,20 +6,29 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('faults', '0010_auto_20210323_1324'),
+        ("faults", "0010_auto_20210323_1324"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fault',
-            name='created_by',
-            field=models.ForeignKey(editable=False, on_delete=django.db.models.deletion.PROTECT, related_name='faults_created', to=settings.AUTH_USER_MODEL),
+            model_name="fault",
+            name="created_by",
+            field=models.ForeignKey(
+                editable=False,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="faults_created",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='fault',
-            name='modified_by',
-            field=models.ForeignKey(editable=False, on_delete=django.db.models.deletion.PROTECT, related_name='faults_modified', to=settings.AUTH_USER_MODEL),
+            model_name="fault",
+            name="modified_by",
+            field=models.ForeignKey(
+                editable=False,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="faults_modified",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

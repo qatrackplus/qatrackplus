@@ -10,7 +10,6 @@ from qatrack.notifications.common.models import (
 
 
 class TestRecipientGroupModel:
-
     def test_sort_emails(self):
         rg = RecipientGroup(name="out of order", emails="b@a.com, a@b.com")
         rg._sort_emails()
@@ -22,28 +21,25 @@ class TestRecipientGroupModel:
 
 
 class TestTestListGroupModel:
-
     def test_str(self):
         tlg = TestListGroup(name="name")
         assert str(tlg) == "name"
 
 
 class TestUnitGroupModel:
-
     def test_str(self):
         ug = UnitGroup(name="name")
         assert str(ug) == "name"
 
 
 class TestRecipientGroupAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.RecipientGroupAdmin(model=RecipientGroup, admin_site=AdminSite())
         self.rg = RecipientGroup.objects.create(name="RG")
 
     def test_clean_emails_valid(self):
         f = admin.RecipientGroupForm()
-        f.cleaned_data = {'emails': 'b@a.com, a@b.com'}
+        f.cleaned_data = {"emails": "b@a.com, a@b.com"}
         f.clean_emails()
         assert not f.errors
 
@@ -55,9 +51,9 @@ class TestRecipientGroupAdmin(TestCase):
 
     def test_clean_emails_invalid(self):
         f = admin.RecipientGroupForm()
-        f.cleaned_data = {'emails': 'b@a.com blah, a@b.com'}
+        f.cleaned_data = {"emails": "b@a.com blah, a@b.com"}
         f.clean_emails()
-        assert "b@a.com blah" in f.errors['emails'][0]
+        assert "b@a.com blah" in f.errors["emails"][0]
 
     def test_get_groups(self):
         assert self.admin.get_groups(self.rg) == ""
@@ -72,11 +68,10 @@ class TestRecipientGroupAdmin(TestCase):
         f = admin.RecipientGroupForm()
         f.cleaned_data = {}
         f.clean()
-        assert '__all__' in f.errors
+        assert "__all__" in f.errors
 
 
 class TestTestListGroupAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.TestListGroupAdmin(model=TestListGroup, admin_site=AdminSite())
         self.tlg = TestListGroup.objects.create(name="TLG")
@@ -86,11 +81,10 @@ class TestTestListGroupAdmin(TestCase):
 
     def test_form_queryset(self):
         f = admin.TestListGroupForm()
-        assert f.fields['test_lists'].queryset.ordered
+        assert f.fields["test_lists"].queryset.ordered
 
 
 class TestUnitGroupAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.UnitGroupAdmin(model=UnitGroup, admin_site=AdminSite())
         self.ug = UnitGroup.objects.create(name="UG")

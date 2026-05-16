@@ -1,18 +1,17 @@
 # Important Notice
 
-QATrack+ no longer has a maintainer. Please see the announcement on
-the [QATrack+ Mailing List](https://groups.google.com/g/qatrack/c/79EoHF4U54Y)
-
-If you are interested in taking over the project, please contact Randy Taylor
-(randy@randlet.com).
-
+We are looking for contributors, especially those interested in helping with localization and translation. 
+Community discussion is available both on GitHub via [Discussions](https://github.com/qatrackplus/qatrackplus/discussions) 
+and on [Google Groups](https://groups.google.com/g/qatrack). The project also needs users open to 
+testing upgrade instructions on a copy of their production data. 
 
 # QATrack+
+
 ###### Copyright 2012 The Ottawa Hospital Cancer Center
+
 ---
 
-
-QATrack+ is a fully configurable, free, and open source (MIT License) web
+QATrack+ is a fully configurable, free, and open source (Apache License 2.0) web
 application for managing QA data for radiation therapy and medical imaging
 equipment. QATrack+ is now used in many hospitals and clinics [around the
 world](http://qatrackplus.com/#whos-using)! Visit the QATrack+ homepage at
@@ -25,36 +24,35 @@ using a web browser.
 
 The main features include:
 
-* Ability to define QC tests via an user-friendly interface. Configuration
+- Ability to define QC tests via an user-friendly interface. Configuration
   settings are available for data type (Boolean, float, computational result,
   or multiple choice selection), test frequency (due/past due dates), reference
   values, and tolerance and action levels. Test configurations can be grouped
   and assigned to multiple units/devices to reduce configuration workload, and
   to simplify the configuration maintenance.
-* Several options for trending numerical data via control charts and other
+- Several options for trending numerical data via control charts and other
   tools. Data can be filtered by unit, date, or frequency, and can also be
   exported for external analysis.
-* Support for multiple, unique user groups (e.g. administrators, physicists,
+- Support for multiple, unique user groups (e.g. administrators, physicists,
   assistants, therapists, etc) with user & group-specific privileges and test
   lists, as well as a configurable user authentication system.
-* Easily integrate test procedures into data entry forms via embedded html
+- Easily integrate test procedures into data entry forms via embedded html
   or links to external documentation.
-* Save incomplete work and complete it a later date.
-* Configure a review/approval process with additional options for
+- Save incomplete work and complete it a later date.
+- Configure a review/approval process with additional options for
   classifying data. The software also allows reviewers to easily differentiate
   between measurements performed as part of investigative work, or as part of
   routine QC testing.
-* Integrated Service Log for tracking service events and machine downtime
-* Parts tracker for tracking spare parts on hand, part costs and vendors
-* Optional and configurable email notifications.
-* The flexibility to host on an intranet or www, requiring minimal resources
+- Integrated Service Log for tracking service events and machine downtime
+- Parts tracker for tracking spare parts on hand, part costs and vendors
+- Optional and configurable email notifications.
+- The flexibility to host on an intranet or www, requiring minimal resources
   from IT departments. Can optionally be managed within a physics department if
   permitted by local institution policies.
 
-
 ## Documentation & Release Notes
 
-The latest version is 3.1.1 Please review the
+The latest version is 4.0.0 Please review the
 [release_notes](https://docs.qatrackplus.com/en/stable/release_notes.html)
 before installing or upgrading.
 
@@ -73,3 +71,8 @@ QATrack+ relies on a number of open source projects, many of which are
 distributed along with QATrack+; licenses covering their usage and modification
 are either included along with the source code files or embeded directly in the
 source (or a url where you can find it).
+
+## Tasks
+
+TODO: Deprecation Check `python -Wd manage.py check`
+TODO: Detail branches 

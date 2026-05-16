@@ -5,19 +5,26 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('faults', '0004_nullify_techniques'),
+        ("faults", "0004_nullify_techniques"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='fault',
-            name='treatment_technique',
+            model_name="fault",
+            name="treatment_technique",
         ),
         migrations.AlterField(
-            model_name='fault',
-            name='modality',
-            field=models.ForeignKey(blank=True, help_text='Select the treatment/imaging modality being used when this fault occurred (optional)', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='faults', to='units.Modality', verbose_name='treatment/imaging technique or modality'),
+            model_name="fault",
+            name="modality",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Select the treatment/imaging modality being used when this fault occurred (optional)",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="faults",
+                to="units.Modality",
+                verbose_name="treatment/imaging technique or modality",
+            ),
         ),
     ]

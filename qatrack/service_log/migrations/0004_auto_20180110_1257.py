@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0003_auto_20171204_1232'),
+        ("service_log", "0003_auto_20171204_1232"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='serviceevent',
-            name='is_review_required',
-            field=models.BooleanField(default=True, help_text='Does this service event require review?'),
+            model_name="serviceevent",
+            name="is_review_required",
+            field=models.BooleanField(default=True, help_text="Does this service event require review?"),
         ),
     ]

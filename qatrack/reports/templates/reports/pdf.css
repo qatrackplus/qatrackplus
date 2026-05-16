@@ -4,7 +4,7 @@
 
   @page {
     margin: 20px 20px 20px 30px;
-    size: auto;
+    /* size removed */
   }
 
   body {
@@ -33,10 +33,10 @@
     border: 1px solid #efefef;
   }
   .dl-horizontal dt {
-    width: 120px;
+    width: 140px;
   }
   .dl-horizontal dd {
-    margin-left: 130px;
+    margin-left: 150px;
   }
 
   hr {

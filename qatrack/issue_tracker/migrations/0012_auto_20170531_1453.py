@@ -7,20 +7,29 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0011_auto_20170531_1255'),
+        ("issue_tracker", "0011_auto_20170531_1255"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='issue',
-            name='issue_status',
-            field=models.ForeignKey(help_text='Current status of this issue', null=True, on_delete=django.db.models.deletion.CASCADE, to='issue_tracker.IssueStatus'),
+            model_name="issue",
+            name="issue_status",
+            field=models.ForeignKey(
+                help_text="Current status of this issue",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="issue_tracker.IssueStatus",
+            ),
         ),
         migrations.AlterField(
-            model_name='issue',
-            name='issue_tags',
-            field=models.ManyToManyField(blank=True, help_text='If desired, add multiple tags to this issue', null=True, to='issue_tracker.IssueTag'),
+            model_name="issue",
+            name="issue_tags",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="If desired, add multiple tags to this issue",
+                null=True,
+                to="issue_tracker.IssueTag",
+            ),
         ),
     ]

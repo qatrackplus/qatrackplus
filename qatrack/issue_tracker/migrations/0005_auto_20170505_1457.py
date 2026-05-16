@@ -6,22 +6,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0004_auto_20170505_1453'),
+        ("issue_tracker", "0004_auto_20170505_1453"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='IssueTag',
+            name="IssueTag",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=32)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=32)),
             ],
         ),
         migrations.AddField(
-            model_name='issue',
-            name='issue_tags',
-            field=models.ManyToManyField(to='issue_tracker.IssueTag'),
+            model_name="issue",
+            name="issue_tags",
+            field=models.ManyToManyField(to="issue_tracker.IssueTag"),
         ),
     ]

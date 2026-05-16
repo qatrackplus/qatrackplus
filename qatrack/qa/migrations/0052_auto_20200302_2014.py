@@ -5,30 +5,41 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0051_wraparound_test'),
+        ("qa", "0051_wraparound_test"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='testinstance',
-            name='reference',
-            field=models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, to='qa.Reference'),
+            model_name="testinstance",
+            name="reference",
+            field=models.ForeignKey(
+                blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, to="qa.Reference"
+            ),
         ),
         migrations.AlterField(
-            model_name='testinstance',
-            name='tolerance',
-            field=models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, to='qa.Tolerance'),
+            model_name="testinstance",
+            name="tolerance",
+            field=models.ForeignKey(
+                blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, to="qa.Tolerance"
+            ),
         ),
         migrations.AlterField(
-            model_name='unittestinfo',
-            name='reference',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='qa.Reference', verbose_name='Current Reference'),
+            model_name="unittestinfo",
+            name="reference",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="qa.Reference",
+                verbose_name="Current Reference",
+            ),
         ),
         migrations.AlterField(
-            model_name='unittestinfo',
-            name='tolerance',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='qa.Tolerance'),
+            model_name="unittestinfo",
+            name="tolerance",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to="qa.Tolerance"
+            ),
         ),
     ]

@@ -6,15 +6,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0014_auto_20180601_1212'),
+        ("service_log", "0014_auto_20180601_1212"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='serviceevent',
-            name='service_event_related',
-            field=models.ManyToManyField(blank=True, help_text='Enter the service event IDs of any related service events.', related_name='_serviceevent_service_event_related_+', to='service_log.ServiceEvent', verbose_name='Related service events'),
+            model_name="serviceevent",
+            name="service_event_related",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="Enter the service event IDs of any related service events.",
+                related_name="_serviceevent_service_event_related_+",
+                to="service_log.ServiceEvent",
+                verbose_name="Related service events",
+            ),
         ),
     ]

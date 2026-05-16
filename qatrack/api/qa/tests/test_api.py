@@ -3,13 +3,13 @@ import datetime
 import json
 import os
 import time
+from zoneinfo import ZoneInfo
 
+import pytest
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.utils import timezone
-import pytest
-import pytz
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -20,9 +20,7 @@ from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestTestListInstanceAPI(APITestCase):
-
     def setUp(self):
-
         self.unit = utils.create_unit()
         self.test_list = utils.create_test_list("test list")
         self.t1 = utils.create_test(name="test1")
@@ -53,29 +51,19 @@ class TestTestListInstanceAPI(APITestCase):
             test_collection=self.test_list, unit=self.unit, frequency=frequency
         )
 
-        self.create_url = reverse('testlistinstance-list')
-        self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
+        self.create_url = reverse("testlistinstance-list")
+        self.utc_url = reverse("unittestcollection-detail", kwargs={"pk": self.utc.pk})
 
         self.data = {
-            'unit_test_collection': self.utc_url,
-            'work_completed': '2019-07-25 10:49:47',
-            'work_started': '2019-07-25 10:49:00',
-            'tests': {
-                'test1': {
-                    'value': 1
-                },
-                'test2': {
-                    'value': 2
-                },
-                'test3': {
-                    'value': "test three"
-                },
-                'test4': {
-                    'value': True
-                },
-                'test5': {
-                    'value': "choice2"
-                },
+            "unit_test_collection": self.utc_url,
+            "work_completed": "2019-07-25 10:49:47",
+            "work_started": "2019-07-25 10:49:00",
+            "tests": {
+                "test1": {"value": 1},
+                "test2": {"value": 2},
+                "test3": {"value": "test three"},
+                "test4": {"value": True},
+                "test5": {"value": "choice2"},
             },
         }
 
@@ -92,7 +80,6 @@ class TestTestListInstanceAPI(APITestCase):
                         os.remove(a.attachment.path)
                         break
                     except PermissionError:
-
                         if count == 2:
                             break
 
@@ -107,30 +94,30 @@ class TestTestListInstanceAPI(APITestCase):
         for t in self.default_tests:
             ti = models.TestInstance.objects.get(unit_test_info__test=t)
             v = ti.value if t.type not in models.STRING_TYPES else ti.string_value
-            assert v == self.data['tests'][t.slug]['value']
+            assert v == self.data["tests"][t.slug]["value"]
 
     def test_create_with_blank_comment(self):
         """A blank comment should not result in a 400"""
-        self.data['comment'] = ""
+        self.data["comment"] = ""
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
-        tli = models.TestListInstance.objects.latest('pk')
+        tli = models.TestListInstance.objects.latest("pk")
         assert tli.comments.count() == 0
 
     def test_create_with_null_comment(self):
         """A blank comment should not result in a 400"""
-        self.data['comment'] = None
+        self.data["comment"] = None
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
-        tli = models.TestListInstance.objects.latest('pk')
+        tli = models.TestListInstance.objects.latest("pk")
         assert tli.comments.count() == 0
 
     def test_create_with_valid_comment(self):
         """A blank comment should not result in a 400"""
-        self.data['comment'] = "test list comment"
+        self.data["comment"] = "test list comment"
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
-        tli = models.TestListInstance.objects.latest('pk')
+        tli = models.TestListInstance.objects.latest("pk")
         assert tli.comments.first().comment == "test list comment"
 
     def test_create_order(self):
@@ -143,12 +130,12 @@ class TestTestListInstanceAPI(APITestCase):
     def test_create_no_status(self):
         models.TestInstanceStatus.objects.all().delete()
         response = self.client.post(self.create_url, self.data)
-        assert response.data == ['No test instance status available']
+        assert response.data == ["No test instance status available"]
 
     def test_create_user_status(self):
         s2 = utils.create_status(name="user status", slug="user_status", is_default=False, requires_review=False)
-        s2_url = reverse("testinstancestatus-detail", kwargs={'pk': s2.pk})
-        self.data['status'] = s2_url
+        s2_url = reverse("testinstancestatus-detail", kwargs={"pk": s2.pk})
+        self.data["status"] = s2_url
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
         assert models.TestInstance.objects.filter(status=s2).count() == self.ntests
@@ -160,7 +147,7 @@ class TestTestListInstanceAPI(APITestCase):
         subtest = utils.create_test(name="subtest")
         utils.create_test_list_membership(test_list=sublist, test=subtest)
         models.Sublist.objects.create(parent=self.test_list, child=sublist, order=1)
-        self.data['tests']['subtest'] = {'value': 123}
+        self.data["tests"]["subtest"] = {"value": 123}
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
         assert models.TestListInstance.objects.unreviewed().count() == 1
@@ -168,7 +155,7 @@ class TestTestListInstanceAPI(APITestCase):
         assert models.TestInstance.objects.get(unit_test_info__test__slug="subtest").value == 123
 
     def test_create_no_work_completed(self):
-        self.data['work_started'] = '2018-01-01 10:49:00'
+        self.data["work_started"] = "2018-01-01 10:49:00"
         self.data.pop("work_completed")
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -179,32 +166,28 @@ class TestTestListInstanceAPI(APITestCase):
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_with_rtsqa(self):
-
         sl_utils.create_service_event_status(is_default=True)
         rtsqa = sl_utils.create_return_to_service_qa(unit_test_collection=self.utc)
-        rtsqa_url = reverse("returntoserviceqa-detail", kwargs={'pk': rtsqa.pk})
-        self.data['return_to_service_qa'] = rtsqa_url
+        rtsqa_url = reverse("returntoserviceqa-detail", kwargs={"pk": rtsqa.pk})
+        self.data["return_to_service_qa"] = rtsqa_url
         assert rtsqa.test_list_instance is None
         self.client.post(self.create_url, self.data)
         rtsqa.refresh_from_db()
         assert rtsqa.test_list_instance is not None
 
     def test_create_missing_test(self):
-        self.data['tests'].pop("test1")
+        self.data["tests"].pop("test1")
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_invalid_constant_value(self):
-        models.Test.objects.filter(pk=self.t2.pk).update(
-            type=models.CONSTANT,
-            constant_value=99
-        )
-        self.data['tests']['test2']['value'] = 100
+        models.Test.objects.filter(pk=self.t2.pk).update(type=models.CONSTANT, constant_value=99)
+        self.data["tests"]["test2"]["value"] = 100
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_with_txt_attachments(self):
-        self.data['attachments'] = [{'filename': 'test.txt', 'value': 'hello text', 'encoding': 'text'}]
+        self.data["attachments"] = [{"filename": "test.txt", "value": "hello text", "encoding": "text"}]
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
         tli = models.TestListInstance.objects.first()
@@ -214,9 +197,9 @@ class TestTestListInstanceAPI(APITestCase):
         assert "uploads/testlistinstance" in a.attachment.path or "uploads\\testlistinstance" in a.attachment.path
 
     def test_create_with_b64_attachments(self):
-        f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), 'rb')
+        f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), "rb")
         b64 = base64.b64encode(f.read()).decode()
-        self.data['attachments'] = [{'filename': 'test.txt', 'value': b64, 'encoding': 'base64'}]
+        self.data["attachments"] = [{"filename": "test.txt", "value": b64, "encoding": "base64"}]
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
         tli = models.TestListInstance.objects.first()
@@ -226,14 +209,14 @@ class TestTestListInstanceAPI(APITestCase):
         assert "uploads/testlistinstance" in a.attachment.path or "uploads\\testlistinstance" in a.attachment.path
 
     def test_create_with_b64_attachments_invalid(self):
-        f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), 'rb')
+        f = open(os.path.join(settings.PROJECT_ROOT, "qa", "static", "qa", "img", "tux.png"), "rb")
         b64 = str(base64.b64encode(f.read()))
-        self.data['attachments'] = [{'filename': 'test.txt', 'value': b64, 'encoding': 'base64'}]
+        self.data["attachments"] = [{"filename": "test.txt", "value": b64, "encoding": "base64"}]
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_with_missing_attach_value(self):
-        self.data['attachments'] = [{'filename': 'test.txt', 'encoding': 'base64'}]
+        self.data["attachments"] = [{"filename": "test.txt", "encoding": "base64"}]
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -249,7 +232,7 @@ class TestTestListInstanceAPI(APITestCase):
         assert models.TestListInstance.objects.count() == 1
         assert models.TestInstance.objects.count() == self.ntests + 1
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
-        assert tic.value == self.data['tests']['test1']['value'] + self.data['tests']['test2']['value']
+        assert tic.value == self.data["tests"]["test1"]["value"] + self.data["tests"]["test2"]["value"]
 
     def test_create_composite_skipped_all_dependencies_comp_not_skipped(self):
         """
@@ -259,11 +242,11 @@ class TestTestListInstanceAPI(APITestCase):
         """
 
         utils.create_test_list_membership(self.test_list, self.tc)
-        self.data['tests']['test1'] = {'value': None, 'skipped': True}
-        self.data['tests']['test2'] = {'value': None, 'skipped': True}
+        self.data["tests"]["test1"] = {"value": None, "skipped": True}
+        self.data["tests"]["test2"] = {"value": None, "skipped": True}
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "missing dependencies" in response.json()['non_field_errors'][0]
+        assert "missing dependencies" in response.json()["non_field_errors"][0]
 
     def test_create_composite_skipped_one_dependency_comp_not_skipped(self):
         """
@@ -273,10 +256,10 @@ class TestTestListInstanceAPI(APITestCase):
         """
 
         utils.create_test_list_membership(self.test_list, self.tc)
-        self.data['tests']['test1'] = {'value': None, 'skipped': True}
+        self.data["tests"]["test1"] = {"value": None, "skipped": True}
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "missing dependencies" in response.json()['non_field_errors'][0]
+        assert "missing dependencies" in response.json()["non_field_errors"][0]
 
     def test_create_composite_skipped_all_dependencies_comp_skipped(self):
         """
@@ -286,9 +269,9 @@ class TestTestListInstanceAPI(APITestCase):
         """
 
         utils.create_test_list_membership(self.test_list, self.tc)
-        self.data['tests']['test1'] = {'value': None, 'skipped': True}
-        self.data['tests']['test2'] = {'value': None, 'skipped': True}
-        self.data['tests']['testc'] = {'skipped': True}
+        self.data["tests"]["test1"] = {"value": None, "skipped": True}
+        self.data["tests"]["test2"] = {"value": None, "skipped": True}
+        self.data["tests"]["testc"] = {"skipped": True}
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
         assert models.TestListInstance.objects.count() == 1
@@ -310,8 +293,8 @@ class TestTestListInstanceAPI(APITestCase):
         for t in [td1, td2, tcd]:
             utils.create_test_list_membership(self.test_list, t)
 
-        self.data['tests']['test_date_1'] = {'value': "2019-08-01"}
-        self.data['tests']['test_date_2'] = {'value': "2019-08-02 23:45:00"}
+        self.data["tests"]["test_date_1"] = {"value": "2019-08-01"}
+        self.data["tests"]["test_date_2"] = {"value": "2019-08-02 23:45:00"}
 
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -360,7 +343,7 @@ class TestTestListInstanceAPI(APITestCase):
 
         utils.create_test_list_membership(self.test_list, self.tc)
         data = self.data.copy()
-        data['tests']['testc'] = {'value': 3}
+        data["tests"]["testc"] = {"value": 3}
         response = self.client.post(self.create_url, data)
         assert response.status_code == status.HTTP_201_CREATED
         assert models.TestListInstance.objects.count() == 1
@@ -375,10 +358,10 @@ class TestTestListInstanceAPI(APITestCase):
 
         utils.create_test_list_membership(self.test_list, self.tc)
         data = self.data.copy()
-        data['tests']['testc'] = {'value': ""}
+        data["tests"]["testc"] = {"value": ""}
         response = self.client.post(self.create_url, data)
         assert response.status_code == status.HTTP_201_CREATED
-        data['tests']['testc'] = {'value': None}
+        data["tests"]["testc"] = {"value": None}
         response = self.client.post(self.create_url, data)
         assert response.status_code == status.HTTP_201_CREATED
 
@@ -390,11 +373,11 @@ class TestTestListInstanceAPI(APITestCase):
 
         utils.create_test_list_membership(self.test_list, self.tc)
         data = self.data.copy()
-        data['tests']['testc'] = {'comment': "hello testc"}
+        data["tests"]["testc"] = {"comment": "hello testc"}
         response = self.client.post(self.create_url, data)
         assert response.status_code == status.HTTP_201_CREATED
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
-        assert tic.value == self.data['tests']['test1']['value'] + self.data['tests']['test2']['value']
+        assert tic.value == self.data["tests"]["test1"]["value"] + self.data["tests"]["test2"]["value"]
         assert tic.comment == "hello testc"
 
     def test_create_composite_with_invalid_data(self):
@@ -405,7 +388,7 @@ class TestTestListInstanceAPI(APITestCase):
 
         utils.create_test_list_membership(self.test_list, self.tc)
         data = self.data.copy()
-        data['tests']['testc'] = {'value': 999}
+        data["tests"]["testc"] = {"value": 999}
         response = self.client.post(self.create_url, data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert models.TestListInstance.objects.count() == 0
@@ -418,7 +401,7 @@ class TestTestListInstanceAPI(APITestCase):
         """
         utils.create_test_list_membership(self.test_list, self.tc)
         data = self.data.copy()
-        data['tests'].pop('test1')
+        data["tests"].pop("test1")
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert models.TestListInstance.objects.count() == 0
@@ -428,13 +411,10 @@ class TestTestListInstanceAPI(APITestCase):
         Add a composite test which depends on a constant value to our test list.
         Test list instance should be created if constant value not provided.
         """
-        models.Test.objects.filter(pk=self.t2.pk).update(
-            type=models.CONSTANT,
-            constant_value=99
-        )
+        models.Test.objects.filter(pk=self.t2.pk).update(type=models.CONSTANT, constant_value=99)
 
         utils.create_test_list_membership(self.test_list, self.tc)
-        self.data['tests'].pop("test2")
+        self.data["tests"].pop("test2")
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tc)
@@ -445,13 +425,10 @@ class TestTestListInstanceAPI(APITestCase):
         Add a composite test which depends on a constant value to our test list.
         Test list instance should not be created if constant value provided doesn't match expected value.
         """
-        models.Test.objects.filter(pk=self.t2.pk).update(
-            type=models.CONSTANT,
-            constant_value=99
-        )
+        models.Test.objects.filter(pk=self.t2.pk).update(type=models.CONSTANT, constant_value=99)
 
         utils.create_test_list_membership(self.test_list, self.tc)
-        self.data['tests']['test2'] = 100
+        self.data["tests"]["test2"] = 100
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -462,7 +439,7 @@ class TestTestListInstanceAPI(APITestCase):
         utils.create_test_list_membership(self.test_list, self.tdate)
         today = datetime.date(2019, 11, 11)
 
-        self.data['tests']['testdate'] = {'value': today.strftime("%Y-%m-%d")}
+        self.data["tests"]["testdate"] = {"value": today.strftime("%Y-%m-%d")}
 
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -475,8 +452,8 @@ class TestTestListInstanceAPI(APITestCase):
         """
         utils.create_test_list_membership(self.test_list, self.tdatetime)
         now = timezone.now()
-        self.data['tests']['testdatetime'] = {
-            'value': now.astimezone(pytz.timezone("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S.%f")
+        self.data["tests"]["testdatetime"] = {
+            "value": now.astimezone(ZoneInfo("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S.%f")
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -549,17 +526,11 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
-        self.data['tests']['file_upload'] = {
-            'value': base64.b64encode(upload_data),
-            'filename': "tmp.json",
-            'comment': "test comment",
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
+        self.data["tests"]["file_upload"] = {
+            "value": base64.b64encode(upload_data),
+            "filename": "tmp.json",
+            "comment": "test comment",
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -585,18 +556,12 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
-        self.data['tests']['file_upload'] = {
-            'value': upload_data,
-            'filename': "tmp.json",
-            'encoding': "text",
-            'comment': "test comment",
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
+        self.data["tests"]["file_upload"] = {
+            "value": upload_data,
+            "filename": "tmp.json",
+            "encoding": "text",
+            "comment": "test comment",
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -623,11 +588,11 @@ class TestTestListInstanceAPI(APITestCase):
         utils.create_test_list_membership(self.test_list, upload)
 
         upload_data = json.dumps({"a": 1}).encode()
-        self.data['tests']['file_upload'] = {
-            'value': upload_data,
-            'filename': "tmp.json",
-            'encoding': "text",
-            'comment': "test comment",
+        self.data["tests"]["file_upload"] = {
+            "value": upload_data,
+            "filename": "tmp.json",
+            "encoding": "text",
+            "comment": "test comment",
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -642,16 +607,10 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
-        self.data['tests']['file_upload'] = {
-            'value': base64.b64encode(upload_data),
-            'comment': "test comment",
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
+        self.data["tests"]["file_upload"] = {
+            "value": base64.b64encode(upload_data),
+            "comment": "test comment",
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -665,9 +624,9 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        self.data['tests']['file_upload'] = {
-            'filename': "tmp.txt",
-            'value': 'not b64 encoded',
+        self.data["tests"]["file_upload"] = {
+            "filename": "tmp.txt",
+            "value": "not b64 encoded",
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -681,10 +640,10 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        self.data['tests']['file_upload'] = {
-            'filename': "tmp.txt",
-            'encoding': 'text',
-            'value': 'text',
+        self.data["tests"]["file_upload"] = {
+            "filename": "tmp.txt",
+            "encoding": "text",
+            "value": "text",
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -710,16 +669,10 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
-        self.data['tests']['file_upload'] = {
-            'value': base64.b64encode(upload_data),
-            'filename': "tmp.json",
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
+        self.data["tests"]["file_upload"] = {
+            "value": base64.b64encode(upload_data),
+            "filename": "tmp.json",
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -733,8 +686,8 @@ class TestTestListInstanceAPI(APITestCase):
 
     def test_basic_edit(self):
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").value == 99
 
@@ -742,23 +695,23 @@ class TestTestListInstanceAPI(APITestCase):
         utils.create_test_list_membership(self.test_list, self.tc)
         resp = self.client.post(self.create_url, self.data)
         assert models.TestInstance.objects.get(unit_test_info__test__slug="testc").value == 3
-        new_data = {'tests': {'test1': {'value': 99}, 'test2': {'value': 101}}}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}, "test2": {"value": 101}}}
+        self.client.patch(resp.data["url"], new_data)
         assert models.TestInstance.objects.get(unit_test_info__test__slug="testc").value == 200
 
     def test_edit_work_completed(self):
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'work_completed': '2020-07-25 10:49:47'}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"work_completed": "2020-07-25 10:49:47"}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         assert models.TestListInstance.objects.first().work_completed.year == 2020
 
     def test_edit_user_status(self):
         s2 = utils.create_status(name="user status", slug="user_status", is_default=False, requires_review=False)
-        s2_url = reverse("testinstancestatus-detail", kwargs={'pk': s2.pk})
+        s2_url = reverse("testinstancestatus-detail", kwargs={"pk": s2.pk})
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'status': s2_url}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"status": s2_url}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.filter(status=s2).count() == self.ntests
         assert models.TestListInstance.objects.all().count() == 1
@@ -767,10 +720,10 @@ class TestTestListInstanceAPI(APITestCase):
     def test_edit_wc_ws_error(self):
         resp = self.client.post(self.create_url, self.data)
         new_data = {
-            'work_completed': '2020-07-25 10:49:47',
-            'work_started': '2021-07-25 10:49:47',
+            "work_completed": "2020-07-25 10:49:47",
+            "work_started": "2021-07-25 10:49:47",
         }
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 400
 
     def test_different_editor(self):
@@ -780,11 +733,11 @@ class TestTestListInstanceAPI(APITestCase):
         """
 
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'value': 99}}}
+        new_data = {"tests": {"test1": {"value": 99}}}
         self.client.logout()
         user = utils.create_user(uname="user2")
         self.client.force_authenticate(user=user)
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         tli = models.TestListInstance.objects.first()
         assert tli.created_by.username == "user"
@@ -801,8 +754,8 @@ class TestTestListInstanceAPI(APITestCase):
         user = utils.create_user(uname="user2", is_staff=False, is_superuser=False)
         user.user_permissions.add(Permission.objects.get(codename="change_testlistinstance"))
         self.client.force_authenticate(user=user)
-        new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
 
     def test_no_edit_perms(self):
@@ -814,12 +767,12 @@ class TestTestListInstanceAPI(APITestCase):
         self.client.logout()
         user = utils.create_user(uname="user2", is_staff=False, is_superuser=False)
         self.client.force_authenticate(user=user)
-        new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 403
 
     def test_tl_comments(self):
-        self.data['comment'] = "test list comment"
+        self.data["comment"] = "test list comment"
 
         # origial comment
         resp = self.client.post(self.create_url, self.data)
@@ -827,73 +780,73 @@ class TestTestListInstanceAPI(APITestCase):
         assert tli.comments.first().comment == "test list comment"
 
         # add a comment with the edit and preserve  original
-        new_data = {'comment': 'edit comment'}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"comment": "edit comment"}
+        self.client.patch(resp.data["url"], new_data)
         assert tli.comments.count() == 2
-        assert 'edit comment' in tli.comments.values_list("comment", flat=True)
+        assert "edit comment" in tli.comments.values_list("comment", flat=True)
 
     def test_comment_preserved(self):
-        self.data['tests']['test1']['comment'] = 'original comment'
+        self.data["tests"]["test1"]["comment"] = "original comment"
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").comment == "original comment"
 
     def test_comment_updated(self):
-        self.data['tests']['test1']['comment'] = 'original comment'
+        self.data["tests"]["test1"]["comment"] = "original comment"
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'value': 99, 'comment': 'new comment'}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99, "comment": "new comment"}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").comment == "new comment"
 
     def test_user_key_updated(self):
-        self.data['user_key'] = "1234"
+        self.data["user_key"] = "1234"
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'user_key': "5678"}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"user_key": "5678"}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         assert models.TestListInstance.objects.latest("pk").user_key == "5678"
 
     def test_skip_preserved(self):
-        self.data['tests']['test1'] = {'skipped': True}
+        self.data["tests"]["test1"] = {"skipped": True}
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test2': {'value': 99}}}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test2": {"value": 99}}}
+        self.client.patch(resp.data["url"], new_data)
         assert models.TestInstance.objects.get(unit_test_info__test__slug="test1").skipped
 
     def test_unskip(self):
-        self.data['tests']['test1'] = {'skipped': True}
+        self.data["tests"]["test1"] = {"skipped": True}
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'value': 99}}}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        self.client.patch(resp.data["url"], new_data)
         ti = models.TestInstance.objects.get(unit_test_info__test__slug="test1")
         assert not ti.skipped
         assert ti.value == 99
 
     def test_new_skip(self):
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'skipped': True}}}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"skipped": True}}}
+        self.client.patch(resp.data["url"], new_data)
         ti = models.TestInstance.objects.get(unit_test_info__test__slug="test1")
         assert ti.skipped
         assert ti.value is None
 
     def test_complete_in_progress(self):
-        self.data['in_progress'] = True
+        self.data["in_progress"] = True
         resp = self.client.post(self.create_url, self.data)
         assert models.TestListInstance.objects.all().first().in_progress
-        new_data = {'in_progress': False}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"in_progress": False}
+        self.client.patch(resp.data["url"], new_data)
         assert not models.TestListInstance.objects.all().first().in_progress
 
     def test_complete_unscheduled(self):
-        self.data['include_for_scheduling'] = True
+        self.data["include_for_scheduling"] = True
         resp = self.client.post(self.create_url, self.data)
         assert models.TestListInstance.objects.all().first().include_for_scheduling
-        new_data = {'include_for_scheduling': False}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"include_for_scheduling": False}
+        self.client.patch(resp.data["url"], new_data)
         assert not models.TestListInstance.objects.all().first().include_for_scheduling
 
     def test_complete_unscheduled_due_dates(self):
@@ -903,9 +856,9 @@ class TestTestListInstanceAPI(APITestCase):
         self.utc.refresh_from_db()
         expected_due_date = self.utc.due_date
 
-        self.data['include_for_scheduling'] = False
-        self.data['work_completed'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
-        self.data['work_started'] = self.data['work_completed']
+        self.data["include_for_scheduling"] = False
+        self.data["work_completed"] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        self.data["work_started"] = self.data["work_completed"]
         self.client.post(self.create_url, self.data)
 
         # unscheduled so should be same due date
@@ -915,8 +868,8 @@ class TestTestListInstanceAPI(APITestCase):
     def test_no_put(self):
         """All updates should be via patch"""
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'value': 1}}}
-        edit_resp = self.client.put(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 1}}}
+        edit_resp = self.client.put(resp.data["url"], new_data)
         assert edit_resp.status_code == 405
 
     def test_utc_due_date_updated_on_create(self):
@@ -926,11 +879,11 @@ class TestTestListInstanceAPI(APITestCase):
         assert self.utc.due_date is not None
 
     def test_utc_due_date_updated_on_edit(self):
-        self.data['work_completed'] = '2019-07-25 10:49:47'
+        self.data["work_completed"] = "2019-07-25 10:49:47"
         resp = self.client.post(self.create_url, self.data)
         self.utc.refresh_from_db()
-        new_data = {'work_completed': '2020-07-25 10:49:47'}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"work_completed": "2020-07-25 10:49:47"}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         self.utc.refresh_from_db()
         assert self.utc.due_date.year == 2020
@@ -954,21 +907,15 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
-        self.data['tests']['file_upload'] = {
-            'value': base64.b64encode(upload_data),
-            'filename': "tmp.json",
-            'comment': "test comment",
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
+        self.data["tests"]["file_upload"] = {
+            "value": base64.b64encode(upload_data),
+            "filename": "tmp.json",
+            "comment": "test comment",
         }
         resp = self.client.post(self.create_url, self.data)
-        new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
         assert tic.string_value == "test"
@@ -992,25 +939,19 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = {
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }
-        upload_data['baz']['baz1'] = "edited content"
-        self.data['tests']['file_upload'] = {
-            'value': json.dumps(upload_data),
-            'encoding': 'text',
-            'filename': "tmp.json",
-            'comment': "test comment",
+        upload_data = {"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}
+        upload_data["baz"]["baz1"] = "edited content"
+        self.data["tests"]["file_upload"] = {
+            "value": json.dumps(upload_data),
+            "encoding": "text",
+            "filename": "tmp.json",
+            "comment": "test comment",
         }
         resp = self.client.post(self.create_url, self.data)
         tiu = models.TestInstance.objects.get(unit_test_info__test=upload)
         assert tiu.attachment_set.count() == 1
-        new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
         assert tic.string_value == "edited content"
@@ -1037,23 +978,17 @@ class TestTestListInstanceAPI(APITestCase):
         upload.save()
         utils.create_test_list_membership(self.test_list, upload)
 
-        upload_data = json.dumps({
-            "foo": 1.2,
-            "bar": [1, 2, 3, 4],
-            "baz": {
-                "baz1": "test"
-            }
-        }).encode()
-        self.data['tests']['file_upload'] = {
-            'value': base64.b64encode(upload_data),
-            'filename': "tmp.json",
-            'comment': "test comment",
+        upload_data = json.dumps({"foo": 1.2, "bar": [1, 2, 3, 4], "baz": {"baz1": "test"}}).encode()
+        self.data["tests"]["file_upload"] = {
+            "value": base64.b64encode(upload_data),
+            "filename": "tmp.json",
+            "comment": "test comment",
         }
         resp = self.client.post(self.create_url, self.data)
         tiu = models.TestInstance.objects.get(unit_test_info__test=upload)
         assert tiu.attachment_set.count() == 2
-        new_data = {'tests': {'test1': {'value': 99}}}
-        edit_resp = self.client.patch(resp.data['url'], new_data)
+        new_data = {"tests": {"test1": {"value": 99}}}
+        edit_resp = self.client.patch(resp.data["url"], new_data)
         assert edit_resp.status_code == 200
         tic = models.TestInstance.objects.get(unit_test_info__test=self.tsc)
         assert tic.string_value == "test"
@@ -1061,43 +996,39 @@ class TestTestListInstanceAPI(APITestCase):
         assert tiu.attachment_set.count() == 2
 
     def test_edit_with_rtsqa(self):
-
         resp = self.client.post(self.create_url, self.data)
         sl_utils.create_service_event_status(is_default=True)
         rtsqa = sl_utils.create_return_to_service_qa(unit_test_collection=self.utc)
-        rtsqa_url = reverse("returntoserviceqa-detail", kwargs={'pk': rtsqa.pk})
-        new_data = {'return_to_service_qa': rtsqa_url}
+        rtsqa_url = reverse("returntoserviceqa-detail", kwargs={"pk": rtsqa.pk})
+        new_data = {"return_to_service_qa": rtsqa_url}
         assert rtsqa.test_list_instance is None
-        self.client.patch(resp.data['url'], new_data)
+        self.client.patch(resp.data["url"], new_data)
         rtsqa.refresh_from_db()
         assert rtsqa.test_list_instance is not None
 
     def test_edit_with_new_attachments(self):
-
-        self.data['attachments'] = [{'filename': 'test.txt', 'value': 'hello text', 'encoding': 'text'}]
+        self.data["attachments"] = [{"filename": "test.txt", "value": "hello text", "encoding": "text"}]
         resp = self.client.post(self.create_url, self.data)
         tli = models.TestListInstance.objects.first()
         assert tli.attachment_set.count() == 1
-        new_data = {'attachments': [{'filename': 'test.txt', 'value': 'hello text', 'encoding': 'text'}]}
-        self.client.patch(resp.data['url'], new_data)
+        new_data = {"attachments": [{"filename": "test.txt", "value": "hello text", "encoding": "text"}]}
+        self.client.patch(resp.data["url"], new_data)
         tli.refresh_from_db()
         assert tli.attachment_set.count() == 2
 
     def test_create_unique(self):
-        self.data['user_key'] = "1234"
+        self.data["user_key"] = "1234"
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED
         assert models.TestListInstance.objects.latest("pk").user_key == "1234"
 
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "test list instance with this user key already exists." in response.json()['user_key']
+        assert "test list instance with this user key already exists." in response.json()["user_key"]
 
 
 class TestPerformTestListCycleAPI(APITestCase):
-
     def setUp(self):
-
         self.unit = utils.create_unit()
         self.test_list1 = utils.create_test_list("test list 1")
         self.test_list2 = utils.create_test_list("test list 2")
@@ -1111,19 +1042,19 @@ class TestPerformTestListCycleAPI(APITestCase):
 
         self.utc = utils.create_unit_test_collection(test_collection=self.test_list_cycle, unit=self.unit)
 
-        self.create_url = reverse('testlistinstance-list')
-        self.utc_url = reverse("unittestcollection-detail", kwargs={'pk': self.utc.pk})
+        self.create_url = reverse("testlistinstance-list")
+        self.utc_url = reverse("unittestcollection-detail", kwargs={"pk": self.utc.pk})
 
         self.day1_data = {
-            'unit_test_collection': self.utc_url,
-            'work_completed': '2019-07-25 10:49:47',
-            'work_started': '2019-07-25 10:49:00',
-            'tests': {'test1': {'value': 1}},
-            'day': 0,
+            "unit_test_collection": self.utc_url,
+            "work_completed": "2019-07-25 10:49:47",
+            "work_started": "2019-07-25 10:49:00",
+            "tests": {"test1": {"value": 1}},
+            "day": 0,
         }
         self.day2_data = self.day1_data.copy()
-        self.day2_data['day'] = 1
-        self.day2_data['tests'] = {'test2': {'value': 2}}
+        self.day2_data["day"] = 1
+        self.day2_data["tests"] = {"test2": {"value": 2}}
 
         self.client.login(username="user", password="password")
         self.status = utils.create_status()
@@ -1133,39 +1064,39 @@ class TestPerformTestListCycleAPI(APITestCase):
         assert response.status_code == status.HTTP_201_CREATED
         assert models.TestListInstance.objects.unreviewed().count() == 1
         tli = models.TestListInstance.objects.first()
-        assert tli.testinstance_set.values_list('value', flat=True)[0] == 2
+        assert tli.testinstance_set.values_list("value", flat=True)[0] == 2
         assert tli.test_list_id == self.test_list2.id
-        assert tli.day == self.day2_data['day']
+        assert tli.day == self.day2_data["day"]
 
     def test_create_day_1(self):
         response = self.client.post(self.create_url, self.day1_data)
         assert response.status_code == status.HTTP_201_CREATED
         assert models.TestListInstance.objects.unreviewed().count() == 1
         tli = models.TestListInstance.objects.first()
-        assert tli.testinstance_set.values_list('value', flat=True)[0] == 1
+        assert tli.testinstance_set.values_list("value", flat=True)[0] == 1
         assert tli.test_list_id == self.test_list1.id
         assert tli.day == 0
 
     def test_create_no_day(self):
         """If no day is supplied, an error should be returned"""
-        del self.day1_data['day']
+        del self.day1_data["day"]
         response = self.client.post(self.create_url, self.day1_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_invalid_day(self):
         """If incorrect day is supplied, an error should be returned"""
-        self.day1_data['day'] = 'foo'
+        self.day1_data["day"] = "foo"
         response = self.client.post(self.create_url, self.day1_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_over_range_day(self):
         """If day is supplied but out of range, an error should be returned"""
-        self.day1_data['day'] = 2
+        self.day1_data["day"] = 2
         response = self.client.post(self.create_url, self.day1_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_under_range_day(self):
         """If day is supplied but out of range, an error should be returned"""
-        self.day1_data['day'] = -1
+        self.day1_data["day"] = -1
         response = self.client.post(self.create_url, self.day1_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST

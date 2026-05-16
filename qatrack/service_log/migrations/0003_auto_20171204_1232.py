@@ -7,28 +7,50 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0002_auto_20171101_1115'),
+        ("service_log", "0002_auto_20171101_1115"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='returntoserviceqa',
-            options={'permissions': (('view_returntoserviceqa', 'Can view return vo service qa'), ('perform_returntoserviceqa', 'Can perform return to service qa'))},
+            name="returntoserviceqa",
+            options={
+                "permissions": (
+                    ("view_returntoserviceqa", "Can view return vo service qa"),
+                    ("perform_returntoserviceqa", "Can perform return to service qa"),
+                )
+            },
         ),
         migrations.AlterModelOptions(
-            name='serviceevent',
-            options={'get_latest_by': 'datetime_service', 'permissions': (('review_serviceevent', 'Can review service event'), ('view_serviceevent', 'Can view service event'))},
+            name="serviceevent",
+            options={
+                "get_latest_by": "datetime_service",
+                "permissions": (
+                    ("review_serviceevent", "Can review service event"),
+                    ("view_serviceevent", "Can view service event"),
+                ),
+            },
         ),
         migrations.AlterField(
-            model_name='returntoserviceqa',
-            name='test_list_instance',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='rtsqa_for_tli', to='qa.TestListInstance'),
+            model_name="returntoserviceqa",
+            name="test_list_instance",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="rtsqa_for_tli",
+                to="qa.TestListInstance",
+            ),
         ),
         migrations.AlterField(
-            model_name='serviceevent',
-            name='test_list_instance_initiated_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='serviceevents_initiated', to='qa.TestListInstance'),
+            model_name="serviceevent",
+            name="test_list_instance_initiated_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="serviceevents_initiated",
+                to="qa.TestListInstance",
+            ),
         ),
     ]

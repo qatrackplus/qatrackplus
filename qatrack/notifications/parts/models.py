@@ -6,23 +6,24 @@ from qatrack.parts.models import PartCategory
 
 
 class PartCategoryGroup(models.Model):
-
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
     name = models.CharField(max_length=255, help_text=_l("Enter a name for this group of part categories"))
 
     part_categories = models.ManyToManyField(
         PartCategory,
-        help_text=_l(
-            "Select which Part Categories should be included in this notification group."
-        ),
+        help_text=_l("Select which Part Categories should be included in this notification group."),
     )
+
+    class Meta:
+        verbose_name = _l("Part Category Group")
+        verbose_name_plural = _l("Part Category Groups")
 
     def __str__(self):
         return self.name
 
 
 class PartNotice(models.Model):
-
-    LOW_INVENTORY = 'low_inventory'
+    LOW_INVENTORY = "low_inventory"
 
     NOTIFICATION_TYPES = (
         (LOW_INVENTORY, _l("Notify when inventory for a part falls below it's Low Inventory threshold")),
@@ -56,3 +57,4 @@ class PartNotice(models.Model):
 
     class Meta:
         verbose_name = _l("Part Notice")
+        verbose_name_plural = _l("Part Notices")

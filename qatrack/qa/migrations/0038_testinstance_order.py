@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0037_auto_20191009_1919'),
+        ("qa", "0037_auto_20191009_1919"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='testinstance',
-            name='order',
+            model_name="testinstance",
+            name="order",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

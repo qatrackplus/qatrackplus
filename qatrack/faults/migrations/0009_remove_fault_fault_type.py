@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('faults', '0008_move_fault_type_to_fault_types'),
+        ("faults", "0008_move_fault_type_to_fault_types"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='fault',
-            name='fault_type',
+            model_name="fault",
+            name="fault_type",
         ),
     ]

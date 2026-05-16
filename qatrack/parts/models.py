@@ -12,6 +12,7 @@ from qatrack.units import models as u_models
 
 
 class Supplier(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         verbose_name=_l("supplier"),
@@ -39,11 +40,13 @@ class Supplier(models.Model):
         max_length=255,
         blank=True,
         null=True,
-        help_text=_l('Additional comments about this supplier'),
+        help_text=_l("Additional comments about this supplier"),
     )
 
     class Meta:
-        ordering = ('name',)
+        ordering = ("name",)
+        verbose_name = _l("Supplier")
+        verbose_name_plural = _l("Suppliers")
 
     def get_absolute_url(self):
         return reverse("supplier_details", kwargs={"pk": self.pk})
@@ -51,18 +54,21 @@ class Supplier(models.Model):
     def get_website_tag(self):
         if self.website:
             return format_html(
-                '<a href="%s" title="%s">%s</a>' % (
+                '<a href="%s" title="%s">%s</a>'
+                % (
                     self.website,
                     _("Click to visit this suppliers website"),
                     self.website,
                 )
             )
         return ""
+
     def __str__(self):
         return self.name
 
 
 class Contact(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     supplier = models.ForeignKey(
         Supplier,
@@ -94,24 +100,24 @@ class Contact(models.Model):
     )
 
     class Meta:
-        verbose_name = _l('Contact')
-        verbose_name_plural = _l('Contacts')
-        unique_together = ('first_name', 'last_name', 'supplier')
+        verbose_name = _l("Contact")
+        verbose_name_plural = _l("Contacts")
+        unique_together = ("first_name", "last_name", "supplier")
 
     def __str__(self):
-        return self.last_name + ', ' + self.first_name + ' (' + self.supplier.name + ')'
+        return self.last_name + ", " + self.first_name + " (" + self.supplier.name + ")"
 
     def get_full_name(self):
         return str(self)
 
 
 class RoomManager(models.Manager):
-
     def get_queryset(self):
-        return super(RoomManager, self).get_queryset().select_related('site')
+        return super(RoomManager, self).get_queryset().select_related("site")
 
 
 class Room(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     site = models.ForeignKey(
         u_models.Site,
@@ -119,22 +125,24 @@ class Room(models.Model):
         on_delete=models.CASCADE,
         blank=True,
         null=True,
-        help_text=_l('Site this storage room is located')
+        help_text=_l("Site this storage room is located"),
     )
     name = models.CharField(
         verbose_name=_l("name"),
         max_length=32,
-        help_text=_l('Name of room or room number'),
+        help_text=_l("Name of room or room number"),
     )
 
     objects = RoomManager()
 
     class Meta:
-        ordering = ['site', 'name']
-        unique_together = ['site', 'name']
+        ordering = ["site", "name"]
+        unique_together = ["site", "name"]
+        verbose_name = _l("Room")
+        verbose_name_plural = _l("Rooms")
 
     def __str__(self):
-        return '%s%s' % (self.name, ' (%s)' % self.site.name if self.site else '')
+        return "%s%s" % (self.name, " (%s)" % self.site.name if self.site else "")
 
     def save(self, *args, **kwargs):
         new = self.pk is None
@@ -145,41 +153,46 @@ class Room(models.Model):
 
 
 class StorageManager(models.Manager):
-
     def get_queryset(self):
-        return super(StorageManager, self).get_queryset().select_related('room', 'room__site').order_by('location')
+        return super(StorageManager, self).get_queryset().select_related("room", "room__site").order_by("location")
 
     def get_queryset_for_room(self, room):
-        return super().get_queryset().filter(room=room).order_by('location')
+        return super().get_queryset().filter(room=room).order_by("location")
 
 
 class Storage(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     room = models.ForeignKey(
         Room,
         verbose_name=_l("room"),
         blank=True,
         null=True,
-        help_text=_l('Room for part storage'),
+        help_text=_l("Room for part storage"),
         on_delete=models.CASCADE,
     )
 
     location = models.CharField(
         verbose_name=_l("location"),
-        max_length=32, blank=True, null=True,
-        help_text=_l('Where is this storage located?'),
+        max_length=32,
+        blank=True,
+        null=True,
+        help_text=_l("Where is this storage located?"),
     )
     description = models.TextField(
         verbose_name=_l("description"),
-        max_length=255, null=True, blank=True,
+        max_length=255,
+        null=True,
+        blank=True,
         help_text=_l("Optional description of this storage"),
     )
 
     objects = StorageManager()
 
     class Meta:
+        verbose_name = _l("Storage")
         verbose_name_plural = _l("Storage")
-        unique_together = ['room', 'location']
+        unique_together = ["room", "location"]
 
     def __str__(self):
         items = []
@@ -190,12 +203,13 @@ class Storage(models.Model):
         if self.location:
             items.append(self.location)
         else:
-            items.append('<%s>' % _("no location"))
+            items.append("<%s>" % _("no location"))
 
-        return ' - '.join(items)
+        return " - ".join(items)
 
 
 class PartCategory(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         verbose_name=_l("part category"),
@@ -204,17 +218,19 @@ class PartCategory(models.Model):
     )
 
     class Meta:
-        verbose_name_plural = _l("Categories")
+        verbose_name = _l("Part Category")
+        verbose_name_plural = _l("Part Categories")
 
     def __str__(self):
         return self.name
 
 
 class Part(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         verbose_name=_l("name"),
-        help_text=_l('Brief name describing this part'),
+        help_text=_l("Brief name describing this part"),
         max_length=255,
     )
     part_category = models.ForeignKey(
@@ -229,16 +245,16 @@ class Part(models.Model):
         Supplier,
         verbose_name=_l("suppliers"),
         blank=True,
-        help_text=_l('Suppliers of this part'),
-        related_name='parts',
-        through='PartSupplierCollection',
+        help_text=_l("Suppliers of this part"),
+        related_name="parts",
+        through="PartSupplierCollection",
     )
     storage = models.ManyToManyField(
         Storage,
         verbose_name=_l("storage"),
-        through='PartStorageCollection',
-        related_name='parts',
-        help_text=_l('Storage locations for this part'),
+        through="PartStorageCollection",
+        related_name="parts",
+        help_text=_l("Storage locations for this part"),
     )
 
     part_number = models.CharField(
@@ -257,20 +273,20 @@ class Part(models.Model):
     )
 
     alt_part_number = models.CharField(
-        verbose_name=_l('Alternate part number'),
+        verbose_name=_l("Alternate part number"),
         max_length=32,
         blank=True,
         null=True,
-        help_text=_l('Is this part also identified by a different number?'),
+        help_text=_l("Is this part also identified by a different number?"),
     )
     quantity_min = models.PositiveIntegerField(
         verbose_name=_l("Notification level"),
         default=0,
-        help_text=_l('Notify when the quantity of this part in storage falls below this number'),
+        help_text=_l("Notify when the quantity of this part in storage falls below this number"),
     )
     quantity_current = models.PositiveIntegerField(
         verbose_name=_l("current quantity"),
-        help_text=_l('The number of parts in storage currently'),
+        help_text=_l("The number of parts in storage currently"),
         default=0,
         editable=False,
     )
@@ -279,46 +295,47 @@ class Part(models.Model):
         default=0,
         decimal_places=2,
         max_digits=10,
-        help_text=_l('Cost of this part'),
+        help_text=_l("Cost of this part"),
         null=True,
         blank=True,
-        validators=[MinValueValidator(Decimal('0.00'))]
+        validators=[MinValueValidator(Decimal("0.00"))],
     )
     notes = models.TextField(
         verbose_name=_l("notes"),
         max_length=255,
         blank=True,
         null=True,
-        help_text=_l('Additional comments about this part'),
+        help_text=_l("Additional comments about this part"),
     )
-    is_obsolete = models.BooleanField(default=False, help_text=_l('Is this part now obsolete?'))
+    is_obsolete = models.BooleanField(default=False, help_text=_l("Is this part now obsolete?"))
 
     class Meta:
-        ordering = ['part_number']
+        ordering = ["part_number"]
         unique_together = [
-            ('part_number', 'new_or_used'),
+            ("part_number", "new_or_used"),
         ]
+        verbose_name = _l("Part")
+        verbose_name_plural = _l("Parts")
 
     def __str__(self):
-
         pn = self.part_number or "N/A"
 
         if self.alt_part_number:
-            pn += ' (%s)' % self.alt_part_number
+            pn += " (%s)" % self.alt_part_number
 
-        return '%s - %s' % (pn, self.name)
+        return "%s - %s" % (pn, self.name)
 
     def set_quantity_current(self):
         qs = PartStorageCollection.objects.filter(part=self, storage__isnull=False)
         initial_quantity = self.quantity_current
         if qs.exists():
-            self.quantity_current = qs.aggregate(models.Sum('quantity'))['quantity__sum']
+            self.quantity_current = qs.aggregate(models.Sum("quantity"))["quantity__sum"]
         else:
             self.quantity_current = 0
         self.quantity_current = self.quantity_current if self.quantity_current >= 0 else 0
 
         quantity_changed = initial_quantity != self.quantity_current
-        update_fields = ['quantity_current'] if quantity_changed else None
+        update_fields = ["quantity_current"] if quantity_changed else None
 
         self.save(update_fields=update_fields)
         return self.quantity_current < self.quantity_min
@@ -328,17 +345,22 @@ class Part(models.Model):
 
 
 class PartStorageCollectionManager(models.Manager):
-
     def get_queryset(self):
-        return super(PartStorageCollectionManager, self).get_queryset().select_related(
-            'storage',
-            'part',
-            'storage__room',
-            'storage__room__site',
-        ).order_by('-quantity', 'part__part_number')
+        return (
+            super(PartStorageCollectionManager, self)
+            .get_queryset()
+            .select_related(
+                "storage",
+                "part",
+                "storage__room",
+                "storage__room__site",
+            )
+            .order_by("-quantity", "part__part_number")
+        )
 
 
 class PartStorageCollection(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     part = models.ForeignKey(
         Part,
@@ -361,8 +383,10 @@ class PartStorageCollection(models.Model):
     objects = PartStorageCollectionManager()
 
     class Meta:
-        unique_together = ('part', 'storage')
+        unique_together = ("part", "storage")
         default_permissions = ()
+        verbose_name = _l("Part Storage Collection")
+        verbose_name_plural = _l("Part Storage Collections")
 
     def save(self, *args, **kwargs):
         self.quantity = self.quantity if self.quantity >= 0 else 0
@@ -376,12 +400,11 @@ class PartStorageCollection(models.Model):
         locs.append(self.storage.room.name)
         if self.storage.location:
             locs.append(self.storage.location)
-        locs.append('(%s)' % self.quantity)
-        return ' - '.join(locs)
+        locs.append("(%s)" % self.quantity)
+        return " - ".join(locs)
 
 
 class PartSupplierCollection(models.Model):
-
     part = models.ForeignKey(
         Part,
         verbose_name=_l("part"),
@@ -399,15 +422,18 @@ class PartSupplierCollection(models.Model):
         max_length=32,
         null=True,
         blank=True,
-        help_text=_l('Does this supplier have a different part number for this part'),
+        help_text=_l("Does this supplier have a different part number for this part"),
     )
 
     class Meta:
-        unique_together = ('part', 'supplier', 'part_number')
+        unique_together = ("part", "supplier", "part_number")
         default_permissions = ()
+        verbose_name = _l("Part Supplier Collection")
+        verbose_name_plural = _l("Part Supplier Collections")
 
 
 class PartUsed(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     service_event = models.ForeignKey(
         sl_models.ServiceEvent,
@@ -418,13 +444,13 @@ class PartUsed(models.Model):
     part = models.ForeignKey(
         Part,
         verbose_name=_l("part"),
-        help_text=_l('Select the part used'),
+        help_text=_l("Select the part used"),
         on_delete=models.CASCADE,
     )
     from_storage = models.ForeignKey(
         Storage,
         verbose_name=_l("from storage"),
-        help_text=_l('Select which Storage the parts were taken from'),
+        help_text=_l("Select which Storage the parts were taken from"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -432,11 +458,14 @@ class PartUsed(models.Model):
 
     quantity = models.IntegerField(
         verbose_name=_l("quantity"),
-        help_text=_l('Select how many parts were used from this Storage'),
+        help_text=_l("Select how many parts were used from this Storage"),
     )
 
-    def add_back_to_storage(self):
+    class Meta:
+        verbose_name = _l("Part Used")
+        verbose_name_plural = _l("Parts Used")
 
+    def add_back_to_storage(self):
         if self.from_storage:
             try:
                 psc = PartStorageCollection.objects.get(part=self.part, storage=self.from_storage)
@@ -446,7 +475,6 @@ class PartUsed(models.Model):
                 PartStorageCollection.objects.create(part=self.part, storage=self.from_storage, quantity=self.quantity)
 
     def remove_from_storage(self):
-
         if self.from_storage:
             try:
                 psc = PartStorageCollection.objects.get(part=self.part, storage=self.from_storage)

@@ -9,16 +9,17 @@ Requires Mark Hammond's pywin32 package.
 
 """
 
-import distutils.sysconfig
 import glob
 import os
 import shutil
 import sys
 
 import cherrypy
-from qatrack import wsgi
+import distutils.sysconfig
 import win32service
 import win32serviceutil
+
+from qatrack import wsgi
 
 VENV_DIRECTORY = "C:/deploy/venvs/qatrack31/"
 DEPLOY_DIRECTORY = "C:/deploy/qatrackplus/"
@@ -28,17 +29,17 @@ PORT = 8080
 ERROR_LOG = os.path.join(DEPLOY_DIRECTORY, "logs", "cherry_py_err.log")
 STD_ERR = os.path.join(DEPLOY_DIRECTORY, "logs", "std_err.log")
 STD_OUT = os.path.join(DEPLOY_DIRECTORY, "logs", "std_out.log")
-sys.stdout = open(STD_OUT, 'a')
-sys.stderr = open(STD_ERR, 'a')
+sys.stdout = open(STD_OUT, "a")
+sys.stderr = open(STD_ERR, "a")
 os.environ["VIRTUAL_ENV"] = VENV_DIRECTORY
 sys.path.append(VENV_DIRECTORY)
 sys.path.append(os.path.join(VENV_DIRECTORY, "Scripts"))
 
 
 def setup():
-
     if not glob.glob(os.path.join("C:/Windows/System32/pywintypes*dll")):
         import pywin32_postinstall
+
         lib_dir = distutils.sysconfig.get_python_lib(plat_specific=1)
         pywin32_postinstall.install(lib_dir)
 
@@ -52,40 +53,39 @@ def setup():
 
 
 class QATrack030Service(win32serviceutil.ServiceFramework):
-
     """NT Service."""
 
     _svc_name_ = "QATrack31CherryPyService"
 
     _svc_display_name_ = "QATrack 31 CherryPy Service"
 
-    _exe_name_ = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'pythonservice.exe')
+    _exe_name_ = os.path.join(os.environ["VIRTUAL_ENV"], "Scripts", "pythonservice.exe")
 
     def SvcDoRun(self):
-
         sys.path.append(DEPLOY_DIRECTORY)
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'qatrack.settings'
+        os.environ["DJANGO_SETTINGS_MODULE"] = "qatrack.settings"
         os.chdir(DEPLOY_DIRECTORY)
 
         cherrypy.tree.graft(wsgi.application)
 
-        cherrypy.config.update({
-            'global': {
-                'log.error_file': ERROR_LOG,
-                'log.screen': False,
-                'tools.log_tracebacks.on': True,
-                'engine.autoreload.on': False,
-                'engine.SIGHUP': None,
-                'engine.SIGTERM': None,
-                'server.socket_port': PORT,
+        cherrypy.config.update(
+            {
+                "global": {
+                    "log.error_file": ERROR_LOG,
+                    "log.screen": False,
+                    "tools.log_tracebacks.on": True,
+                    "engine.autoreload.on": False,
+                    "engine.SIGHUP": None,
+                    "engine.SIGTERM": None,
+                    "server.socket_port": PORT,
+                }
             }
-        })
+        )
 
         cherrypy.engine.start()
         cherrypy.engine.block()
 
     def SvcStop(self):
-
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
         cherrypy.engine.exit()
@@ -95,7 +95,6 @@ class QATrack030Service(win32serviceutil.ServiceFramework):
         # otherwise the Service Controller never knows that it is stopped !
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     setup()
     win32serviceutil.HandleCommandLine(QATrack030Service)

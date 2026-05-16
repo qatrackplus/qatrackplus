@@ -20,7 +20,6 @@ def time():
 
 
 class TestUtils(TestCase):
-
     def test_unique(self):
         items = ["foo", "foo", "bar"]
         self.assertListEqual(items[1:], qautils.unique(items))
@@ -32,7 +31,7 @@ class TestUtils(TestCase):
         self.assertTrue(qautils.almost_equal(1, 1))
 
     def test_almost_equal_small(self):
-        self.assertTrue(qautils.almost_equal(1, 1 + 1E-10))
+        self.assertTrue(qautils.almost_equal(1, 1 + 1e-10))
 
     def test_almost_equal_zero(self):
         self.assertTrue(qautils.almost_equal(0, 0))
@@ -62,9 +61,7 @@ class TestUtils(TestCase):
 
 
 class TestImportExport(TestCase):
-
     def setUp(self):
-
         self.user = utils.create_user()
         self.tl1 = utils.create_test_list("tl1 é")
         self.tl2 = utils.create_test_list("tl2")
@@ -84,11 +81,13 @@ class TestImportExport(TestCase):
         self.extra = models.Test.objects.filter(pk=self.t4.pk)
 
     def test_round_trip(self):
-        pack = json.dumps(testpack.create_testpack(
-            test_lists=self.tlqs,
-            cycles=self.tlcqs,
-            extra_tests=self.extra,
-        ))
+        pack = json.dumps(
+            testpack.create_testpack(
+                test_lists=self.tlqs,
+                cycles=self.tlcqs,
+                extra_tests=self.extra,
+            )
+        )
         models.TestListCycle.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
@@ -102,22 +101,21 @@ class TestImportExport(TestCase):
         assert models.TestListCycleMembership.objects.count() == 2
 
     def test_create_pack(self):
-
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
-        assert 'meta' in pack
-        assert 'objects' in pack
+        assert "meta" in pack
+        assert "objects" in pack
 
         test_found = False
         list_found = False
-        for tl_dat in pack['objects']['testlists']:
+        for tl_dat in pack["objects"]["testlists"]:
             tl = json.loads(tl_dat)
-            if tl['object']['fields']['name'] == self.tl3.name:
+            if tl["object"]["fields"]["name"] == self.tl3.name:
                 list_found = True
 
-            for o in tl['dependencies']:
+            for o in tl["dependencies"]:
                 try:
-                    if o['fields']['name'] == self.t3.name:
+                    if o["fields"]["name"] == self.t3.name:
                         test_found = True
                 except KeyError:
                     pass
@@ -125,9 +123,8 @@ class TestImportExport(TestCase):
         assert list_found and test_found
 
     def test_timeout(self):
-
         with self.assertRaises(RuntimeError):
-            with mock.patch('time.time', mock.Mock(side_effect=time)):
+            with mock.patch("time.time", mock.Mock(side_effect=time)):
                 testpack.create_testpack(self.tlqs, self.tlcqs, timeout=1)
 
     def test_save_pack(self):
@@ -253,7 +250,6 @@ class TestImportExport(TestCase):
 
 
 class TestFormatQCValue:
-
     @override_settings(CONSTANT_PRECISION=2)
     def test_null_format(self):
         assert qautils.format_qc_value(1, None) == "1.0"

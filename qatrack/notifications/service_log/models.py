@@ -5,15 +5,14 @@ from qatrack.notifications.common.models import RecipientGroup, UnitGroup
 
 
 class ServiceEventNotice(models.Model):
-
-    UPDATED_OR_CREATED = 'new_se_mod_se'
-    NEW_SERVICE_EVENT = 'new_se'
-    MODIFIED_SERVICE_EVENT = 'mod_se'
-    STATUS_SERVICE_EVENT = 'stat_se'
-    CHANGED_RTSQA = 'rtsqa'
-    PERFORMED_RTS = 'perf_rts'
-    APPROVED_RTS = 'app_rts'
-    DELETED_SERVICE_EVENT = 'del_se'
+    UPDATED_OR_CREATED = "new_se_mod_se"
+    NEW_SERVICE_EVENT = "new_se"
+    MODIFIED_SERVICE_EVENT = "mod_se"
+    STATUS_SERVICE_EVENT = "stat_se"
+    CHANGED_RTSQA = "rtsqa"
+    PERFORMED_RTS = "perf_rts"
+    APPROVED_RTS = "app_rts"
+    DELETED_SERVICE_EVENT = "del_se"
 
     NOTIFICATION_TYPES = (
         (UPDATED_OR_CREATED, _l("Notify when a Service Event is created or modified in any way")),
@@ -53,3 +52,4 @@ class ServiceEventNotice(models.Model):
 
     class Meta:
         verbose_name = _l("Service Event Notice")
+        verbose_name_plural = _l("Service Event Notices")

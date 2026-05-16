@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Run Ruff Check
+        run: ruff check .
+
+      - name: Run Ruff Format
+        run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: qatrack_db
+          POSTGRES_USER: qatrack_user
+          POSTGRES_PASSWORD: qatrack_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install Dependencies
+        run: |
+          uv sync --all-groups --extra postgres
+
+      - name: Create local_settings.py
+        run: |
+          cat <<EOF > qatrack/local_settings.py
+          SECRET_KEY = 'ci-secret-key-not-for-production'
+          DATABASES = {
+              'default': {
+                  'ENGINE': 'django.db.backends.postgresql',
+                  'NAME': 'qatrack_db',
+                  'USER': 'qatrack_user',
+                  'PASSWORD': 'qatrack_password',
+                  'HOST': 'localhost',
+                  'PORT': 5432,
+              }
+          }
+          EOF
+
+      - name: Run Tests
+        env:
+          DJANGO_SETTINGS_MODULE: qatrack.settings
+        run: |
+          uv run pytest --cov=qatrack --cov-report=xml -m "not selenium"
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false

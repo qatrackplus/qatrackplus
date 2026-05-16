@@ -5,7 +5,6 @@ from django.db.models import F
 
 
 def rebuild(apps, schema):
-
     Category = apps.get_model("qa", "Category")
     Category.objects.update(tree_id=F("id"))
     for cat in Category.objects.all():
@@ -13,9 +12,8 @@ def rebuild(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0043_category_tree'),
+        ("qa", "0043_category_tree"),
     ]
 
     operations = [

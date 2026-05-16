@@ -6,34 +6,33 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0006_auto_20180426_1621'),
+        ("units", "0006_auto_20180426_1621"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='site',
-            options={'ordering': ('name',)},
+            name="site",
+            options={"ordering": ("name",)},
         ),
         migrations.AlterModelOptions(
-            name='unitavailabletimeedit',
-            options={'default_permissions': (), 'get_latest_by': 'date', 'ordering': ['-date']},
+            name="unitavailabletimeedit",
+            options={"default_permissions": (), "get_latest_by": "date", "ordering": ["-date"]},
         ),
         migrations.AlterModelOptions(
-            name='unitclass',
-            options={'ordering': ('name',), 'verbose_name_plural': 'Unit classes'},
+            name="unitclass",
+            options={"ordering": ("name",), "verbose_name_plural": "Unit classes"},
         ),
         migrations.AlterModelOptions(
-            name='unittype',
-            options={'ordering': ('vendor__name', 'name')},
+            name="unittype",
+            options={"ordering": ("vendor__name", "name")},
         ),
         migrations.AlterModelOptions(
-            name='vendor',
-            options={'ordering': ('name',)},
+            name="vendor",
+            options={"ordering": ("name",)},
         ),
         migrations.AlterUniqueTogether(
-            name='unittype',
-            unique_together=set([('name', 'model', 'vendor', 'unit_class')]),
+            name="unittype",
+            unique_together=set([("name", "model", "vendor", "unit_class")]),
         ),
     ]

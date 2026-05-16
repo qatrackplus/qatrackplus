@@ -3,46 +3,44 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
+import qatrack.qa.tests.utils as qa_utils
+import qatrack.service_log.tests.utils as utils
 from qatrack.notifications.models import (
     RecipientGroup,
     ServiceEventSchedulingNotice,
     UnitGroup,
 )
 from qatrack.notifications.service_log_scheduling import admin, tasks
-import qatrack.qa.tests.utils as qa_utils
 from qatrack.qatrack_core.utils import today_start_end
 from qatrack.service_log import models
-import qatrack.service_log.tests.utils as utils
 
 
 class TestServiceEventSchedulingAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.ServiceEventSchedulingAdmin(model=ServiceEventSchedulingNotice, admin_site=AdminSite())
 
     def test_clean_missing_future_days_upcoming(self):
         f = admin.ServiceEventSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': ServiceEventSchedulingNotice.UPCOMING}
+        f.cleaned_data = {"notification_type": ServiceEventSchedulingNotice.UPCOMING}
         f.clean()
-        assert 'future_days' in f.errors
+        assert "future_days" in f.errors
 
     def test_clean_missing_future_days_upcoming_and_due(self):
         f = admin.ServiceEventSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': ServiceEventSchedulingNotice.UPCOMING_AND_DUE}
+        f.cleaned_data = {"notification_type": ServiceEventSchedulingNotice.UPCOMING_AND_DUE}
         f.clean()
-        assert 'future_days' in f.errors
+        assert "future_days" in f.errors
 
     def test_clean_future_days_not_required(self):
         f = admin.ServiceEventSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': ServiceEventSchedulingNotice.DUE, 'future_days': 10}
+        f.cleaned_data = {"notification_type": ServiceEventSchedulingNotice.DUE, "future_days": 10}
         f.clean()
-        assert 'future_days' in f.errors
+        assert "future_days" in f.errors
 
     def test_clean_ok(self):
         f = admin.ServiceEventSchedulingNoticeAdminForm()
-        f.cleaned_data = {'notification_type': ServiceEventSchedulingNotice.UPCOMING_AND_DUE, 'future_days': 10}
+        f.cleaned_data = {"notification_type": ServiceEventSchedulingNotice.UPCOMING_AND_DUE, "future_days": 10}
         f.clean()
         assert not f.errors
 
@@ -102,9 +100,7 @@ class TestServiceEventSchedulingAdmin(TestCase):
 
 
 class TestServiceEventSchedulingModel(TestCase):
-
     def setUp(self):
-
         self.usa1 = utils.create_unit_service_area()
         self.usa2 = utils.create_unit_service_area()
         self.sch1 = utils.create_service_event_schedule(unit_service_area=self.usa1)
@@ -113,8 +109,8 @@ class TestServiceEventSchedulingModel(TestCase):
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.usa1.unit)
 
-        self.group = models.Group.objects.latest('pk')
-        user = models.User.objects.latest('pk')
+        self.group = models.Group.objects.latest("pk")
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
@@ -122,7 +118,7 @@ class TestServiceEventSchedulingModel(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -270,9 +266,7 @@ class TestServiceEventSchedulingModel(TestCase):
 
 
 class TestServiceEventSchedulingEmails(TestCase):
-
     def setUp(self):
-
         self.usa1 = utils.create_unit_service_area()
         self.usa2 = utils.create_unit_service_area()
         self.sch1 = utils.create_service_event_schedule(unit_service_area=self.usa1)
@@ -281,8 +275,8 @@ class TestServiceEventSchedulingEmails(TestCase):
         self.unit_group = UnitGroup.objects.create(name="test group")
         self.unit_group.units.add(self.usa1.unit)
 
-        self.group = models.Group.objects.latest('pk')
-        user = models.User.objects.latest('pk')
+        self.group = models.Group.objects.latest("pk")
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
@@ -290,7 +284,7 @@ class TestServiceEventSchedulingEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()

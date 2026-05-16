@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0025_auto_20210114_0951'),
+        ("service_log", "0025_auto_20210114_0951"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='thirdparty',
-            name='first_name',
-            field=models.CharField(help_text='Enter this persons first name', max_length=32, verbose_name='first name'),
+            model_name="thirdparty",
+            name="first_name",
+            field=models.CharField(help_text="Enter this persons first name", max_length=32, verbose_name="first name"),
         ),
         migrations.AlterField(
-            model_name='thirdparty',
-            name='last_name',
-            field=models.CharField(help_text='Enter this persons last name', max_length=32, verbose_name='last name'),
+            model_name="thirdparty",
+            name="last_name",
+            field=models.CharField(help_text="Enter this persons last name", max_length=32, verbose_name="last name"),
         ),
     ]

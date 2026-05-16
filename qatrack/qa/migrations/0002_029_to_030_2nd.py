@@ -6,16 +6,14 @@ from django.db import migrations
 
 
 def set_utc_name(apps, schema_editor):
-
-    UnitTestCollection = apps.get_model('qa', 'UnitTestCollection')
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    TestList = apps.get_model('qa', 'TestList')
-    TestListCycle = apps.get_model('qa', 'TestListCycle')
+    UnitTestCollection = apps.get_model("qa", "UnitTestCollection")
+    ContentType = apps.get_model("contenttypes", "ContentType")
+    TestList = apps.get_model("qa", "TestList")
+    TestListCycle = apps.get_model("qa", "TestListCycle")
 
     test_list_type = ContentType.objects.get_for_model(TestList)
 
     for utc in UnitTestCollection.objects.all():
-
         utc_ct = utc.content_type
 
         if utc_ct.id == test_list_type.id:
@@ -27,9 +25,8 @@ def set_utc_name(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0002_029_to_030_first'),
+        ("qa", "0002_029_to_030_first"),
     ]
 
     operations = [

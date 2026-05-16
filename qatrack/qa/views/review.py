@@ -1,5 +1,6 @@
 import calendar
 import collections
+from zoneinfo import ZoneInfo
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
@@ -22,7 +23,6 @@ from django.views.generic import (
     TemplateView,
     View,
 )
-import pytz
 
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
@@ -34,8 +34,8 @@ from qatrack.service_log.models import (
 )
 from qatrack.units.models import Unit
 
-from . import forms
 from .. import models
+from . import forms
 from .base import (
     BaseEditTestListInstance,
     TestListInstanceMixin,
@@ -46,7 +46,6 @@ from .perform import ChooseUnit
 
 
 class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, DetailView):
-
     permission_required = "qa.can_view_completed"
 
     def get_context_data(self, **kwargs):
@@ -58,39 +57,38 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
             if f.service_event not in se_rtsqa:
                 se_rtsqa.append(f.service_event)
 
-        context['service_events_rtsqa'] = se_rtsqa
+        context["service_events_rtsqa"] = se_rtsqa
 
         se_ib = ServiceEvent.objects.filter(test_list_instance_initiated_by=self.object)
-        context['service_events_ib'] = se_ib
+        context["service_events_ib"] = se_ib
         self.all_tests = self.object.test_list.ordered_tests()
-        context['borders'] = self.object.sublist_borders()
+        context["borders"] = self.object.sublist_borders()
 
-        if self.object.unit_test_collection.tests_object.__class__.__name__ == 'TestListCycle':
-            context['cycle_name'] = self.object.unit_test_collection.name
+        if self.object.unit_test_collection.tests_object.__class__.__name__ == "TestListCycle":
+            context["cycle_name"] = self.object.unit_test_collection.name
         return context
 
 
 def test_list_instance_report(request, pk):
-
     tli = get_object_or_404(models.TestListInstance, id=pk)
     utc = tli.unit_test_collection
     wc = format_datetime(tli.work_completed)
 
     base_opts = {
-        'report_type': TestListInstanceDetailsReport.report_type,
-        'report_format': request.GET.get("type", "pdf"),
-        'title': "%s - %s - %s" % (utc.unit.name, tli.test_list.name, wc),
-        'include_signature': False,
-        'visible_to': [],
+        "report_type": TestListInstanceDetailsReport.report_type,
+        "report_format": request.GET.get("type", "pdf"),
+        "title": "%s - %s - %s" % (utc.unit.name, tli.test_list.name, wc),
+        "include_signature": False,
+        "visible_to": [],
     }
 
     report_opts = {
-        'work_completed': "%s - %s" % (wc, wc),
-        'unit_test_collection': [utc.id],
+        "work_completed": "%s - %s" % (wc, wc),
+        "unit_test_collection": [utc.id],
     }
     report = TestListInstanceDetailsReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
 
-    return report.render_to_response(base_opts['report_format'])
+    return report.render_to_response(base_opts["report_format"])
 
 
 class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
@@ -111,7 +109,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
 
     def get_form_kwargs(self):
         kwargs = super(ReviewTestListInstance, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
+        kwargs["user"] = self.request.user
         return kwargs
 
     def form_valid(self, form):
@@ -143,19 +141,17 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         changed_se = review_test_list_instance(test_list_instance, test_instances, statuses, self.request.user)
 
         if len(changed_se) > 0 and self.from_se:
-            msg = _(
-                'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-            ) % {
-                'service_event_ids': ', '.join(str(x) for x in changed_se),
-                'serviceeventstatus_name': ServiceEventStatus.get_default().name,
+            msg = _('Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".') % {
+                "service_event_ids": ", ".join(str(x) for x in changed_se),
+                "serviceeventstatus_name": ServiceEventStatus.get_default().name,
             }
             messages.add_message(request=self.request, level=messages.INFO, message=msg)
 
         if self.from_se:
-            return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
+            return JsonResponse({"rtsqa_form": self.rtsqa_form, "tli_id": test_list_instance.id})
 
         # let user know request succeeded and return to unit list
-        msg = _("Successfully updated %(test_list_name)s") % {'test_list_name': self.object.test_list.name}
+        msg = _("Successfully updated %(test_list_name)s") % {"test_list_name": self.object.test_list.name}
         messages.add_message(request=self.request, message=msg, level=messages.SUCCESS)
         return HttpResponseRedirect(self.get_success_url())
 
@@ -168,14 +164,14 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             if f.service_event not in se:
                 se.append(f.service_event)
 
-        context['service_events'] = se
-        context['borders'] = self.object.sublist_borders()
-        context['cycle_ct'] = ContentType.objects.get_for_model(models.TestListCycle).id
+        context["service_events"] = se
+        context["borders"] = self.object.sublist_borders()
+        context["cycle_ct"] = ContentType.objects.get_for_model(models.TestListCycle).id
 
-        self.rtsqa_form = self.kwargs.get('rtsqa_form')
+        self.rtsqa_form = self.kwargs.get("rtsqa_form")
         self.from_se = self.rtsqa_form is not None
-        context['rtsqa_form'] = self.rtsqa_form
-        context['from_se'] = self.from_se
+        context["rtsqa_form"] = self.rtsqa_form
+        context["from_se"] = self.from_se
 
         return context
 
@@ -251,7 +247,7 @@ class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
         return self.request.GET.get("next", reverse("home"))
 
     def delete(self, request, *args, **kwargs):
-        service_events = ServiceEvent.objects.filter(returntoserviceqa__test_list_instance_id=kwargs['pk'])
+        service_events = ServiceEvent.objects.filter(returntoserviceqa__test_list_instance_id=kwargs["pk"])
         delete = super().delete(request, *args, **kwargs)
         for se in service_events:
             ServiceLog.objects.log_rtsqa_changes(request.user, se)
@@ -269,7 +265,7 @@ class UTCReview(PermissionRequiredMixin, UTCList):
     visible_only = False
 
     def get_icon(self):
-        return 'fa-users'
+        return "fa-users"
 
     def get_page_title(self):
         return _("Review Test List Data")
@@ -285,7 +281,7 @@ class UTCYourReview(PermissionRequiredMixin, UTCList):
     action_display = _l("Review")
 
     def get_icon(self):
-        return 'fa-users'
+        return "fa-users"
 
     def get_page_title(self):
         return _("Review Your Test List Data")
@@ -309,11 +305,11 @@ class UTCFrequencyReview(UTCYourReview):
         return qs.filter(q).distinct()
 
     def get_icon(self):
-        return 'fa-clock-o'
+        return "fa-clock-o"
 
     def get_page_title(self):
         return _(" Review %(frequency_names)s Test Lists") % {
-            'frequency_names': ", ".join([x.name for x in self.frequencies])
+            "frequency_names": ", ".join([x.name for x in self.frequencies])
         }
 
 
@@ -327,17 +323,17 @@ class UTCUnitReview(UTCYourReview):
         return qs.filter(unit__in=self.units).order_by("unit__number")
 
     def get_icon(self):
-        return 'fa-cube'
+        return "fa-cube"
 
     def get_page_title(self):
-        return _(" Review %(unit_names)s Test Lists") % {'unit_names': ", ".join([x.name for x in self.units])}
+        return _(" Review %(unit_names)s Test Lists") % {"unit_names": ", ".join([x.name for x in self.units])}
 
 
 class ChooseUnitForReview(ChooseUnit):
     """Allow user to choose a :model:`units.Unit` to review :model:`qa.TestListInstance`s for"""
 
     active_only = True
-    template_name = 'units/unittype_choose_for_review.html'
+    template_name = "units/unittype_choose_for_review.html"
     # template_name = 'units/unittype_list.html'
 
 
@@ -350,7 +346,6 @@ class ChooseFrequencyForReview(ListView):
 
 
 class InactiveReview(UTCReview):
-
     active_only = False
     inactive_only = True
 
@@ -358,11 +353,10 @@ class InactiveReview(UTCReview):
         return _("Review All Inactive Test Lists")
 
     def get_icon(self):
-        return 'fa-file'
+        return "fa-file"
 
 
 class YourInactiveReview(UTCYourReview):
-
     visible_only = True
     active_only = False
     inactive_only = True
@@ -371,7 +365,7 @@ class YourInactiveReview(UTCYourReview):
         return _("Review Your Inactive Test Lists")
 
     def get_icon(self):
-        return 'fa-file'
+        return "fa-file"
 
 
 class Unreviewed(PermissionRequiredMixin, TestListInstances):
@@ -404,7 +398,6 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "bulk_review_status": False,
         "selected": False,
         "attachments": "attachment_count",
-        "selected": False,
     }
 
     permission_required = "qa.can_review"
@@ -430,13 +423,15 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         else:
             title = _("Select the review status to apply to this row")
 
-        return get_template("qa/_testinstancestatus_select.html").render({
-            'name': 'bulk-status' if header else '',
-            'id': 'bulk-status' if header else '',
-            'statuses': models.TestInstanceStatus.objects.all(),
-            'class': 'input-medium' + (' bulk-status' if header else ''),
-            'title': title,
-        })
+        return get_template("qa/_testinstancestatus_select.html").render(
+            {
+                "name": "bulk-status" if header else "",
+                "id": "bulk-status" if header else "",
+                "statuses": models.TestInstanceStatus.objects.all(),
+                "class": "input-medium" + (" bulk-status" if header else ""),
+                "title": title,
+            }
+        )
 
     def selected(self, obj):
         return '<input type="checkbox" class="test-selected" title="%s"/>' % _(
@@ -456,7 +451,7 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['bulk_review'] = settings.REVIEW_BULK
+        context["bulk_review"] = settings.REVIEW_BULK
         return context
 
     def get_page_title(self):
@@ -464,9 +459,8 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
 
 
 def bulk_review(request):
-
     count = 0
-    for pairs in request.POST.getlist('tlis'):
+    for pairs in request.POST.getlist("tlis"):
         status, tli = pairs.split(",")
         tli = models.TestListInstance.objects.get(pk=tli)
         test_instances = tli.testinstance_set.all()
@@ -474,14 +468,14 @@ def bulk_review(request):
         review_test_list_instance(tli, test_instances, statuses, request.user)
         count += 1
 
-    msg = _("Successfully reviewed %(count)s test list instances") % {'count': count}
+    msg = _("Successfully reviewed %(count)s test list instances") % {"count": count}
     messages.add_message(request=request, message=msg, level=messages.SUCCESS)
     return JsonResponse({"ok": True})
 
 
 class UnreviewedVisibleTo(Unreviewed):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
-        the user"""
+    the user"""
 
     def get_queryset(self):
         return models.TestListInstance.objects.your_unreviewed(self.request.user).annotate(
@@ -493,7 +487,6 @@ class UnreviewedVisibleTo(Unreviewed):
 
 
 class ChooseGroupVisibleTo(ListView):
-
     active_only = False
     template_name = "qa/group_choose_visible_to.html"
     model = models.Group
@@ -502,19 +495,19 @@ class ChooseGroupVisibleTo(ListView):
 
 class UnreviewedByVisibleToGroup(Unreviewed):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
-        a select :model:`auth.Group`
+    a select :model:`auth.Group`
     """
 
     def get_queryset(self):
         qs = super(UnreviewedByVisibleToGroup, self).get_queryset()
-        return qs.filter(unit_test_collection__visible_to=self.kwargs['group'])
+        return qs.filter(unit_test_collection__visible_to=self.kwargs["group"])
 
     def get_icon(self):
-        return 'fa-users'
+        return "fa-users"
 
     def get_page_title(self):
         return _("Unreviewed Test List Instances Visible To %(group_name)s") % {
-            'group_name': models.Group.objects.get(pk=self.kwargs['group']).name
+            "group_name": models.Group.objects.get(pk=self.kwargs["group"]).name
         }
 
 
@@ -522,7 +515,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
 
     template_name = "qa/overview_by_due_date.html"
-    permission_required = ["qa.can_review", "qa.can_view_overview", 'qa.can_review_non_visible_tli']
+    permission_required = ["qa.can_review", "qa.can_view_overview", "qa.can_review_non_visible_tli"]
     raise_exception = True
 
     DUE_DISPLAY_ORDER = (
@@ -540,24 +533,26 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         return False
 
     def get_queryset(self):
-
-        qs = models.UnitTestCollection.objects.filter(
-            active=True,
-            unit__active=True
-        ).select_related(
-            "last_instance",
-            "frequency",
-            "unit",
-            "assigned_to",
-        ).prefetch_related(
-            "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
-            "last_instance__modified_by",
-            "tests_object",
-        ).exclude(due_date=None).order_by(
-            "frequency__nominal_interval",
-            "unit__number",
-            "name",
+        qs = (
+            models.UnitTestCollection.objects.filter(active=True, unit__active=True)
+            .select_related(
+                "last_instance",
+                "frequency",
+                "unit",
+                "assigned_to",
+            )
+            .prefetch_related(
+                "last_instance__testinstance_set",
+                "last_instance__testinstance_set__status",
+                "last_instance__modified_by",
+                "tests_object",
+            )
+            .exclude(due_date=None)
+            .order_by(
+                "frequency__nominal_interval",
+                "unit__number",
+                "name",
+            )
         )
 
         return qs.distinct()
@@ -569,18 +564,20 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         qs = self.get_queryset()
 
-        tz = pytz.timezone(settings.TIME_ZONE)
+        tz = ZoneInfo(settings.TIME_ZONE)
         now = timezone.now().astimezone(tz)
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
-        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).replace(tzinfo=tz).date()
         if calendar.isleap(now.year) and now.month == 2:
             month_end += timezone.timedelta(days=1)
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = tz.localize(
+        next_month_end = (
             timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
-        ).date()
+            .replace(tzinfo=tz)
+            .date()
+        )
 
         due = collections.defaultdict(list)
 
@@ -613,13 +610,12 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         context["units"] = sorted(units)
         context["freqs"] = sorted(freqs)
         context["groups"] = sorted(groups)
-        context['user_groups'] = '-user' in self.request.path
+        context["user_groups"] = "-user" in self.request.path
 
         return context
 
 
 class DueDateOverviewUser(DueDateOverview):
-
     permission_required = ["qa.can_review", "qa.can_view_overview"]
 
     def get_queryset(self):
@@ -641,79 +637,84 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Overview, self).get_context_data()
-        context['title'] = _('QC Program Overview')
-        context['msg'] = _('Overview of current QC status on all units')
-        if '-user' in self.request.path:
-            context['title'] = _('QC Program Overview For Your Groups')
-            context['msg'] = _('Overview of current QC status (visible to your groups) on all units')
-            context['user_groups'] = True
+        context["title"] = _("QC Program Overview")
+        context["msg"] = _("Overview of current QC status on all units")
+        if "-user" in self.request.path:
+            context["title"] = _("QC Program Overview For Your Groups")
+            context["msg"] = _("Overview of current QC status (visible to your groups) on all units")
+            context["user_groups"] = True
         return context
 
 
 class OverviewObjects(JSONResponseMixin, View):
-
     def get_queryset(self, request):
+        qs = (
+            models.UnitTestCollection.objects.filter(
+                active=True,
+                unit__active=True,
+            )
+            .select_related(
+                "last_instance",
+                "frequency",
+                "unit",
+                "assigned_to",
+            )
+            .prefetch_related(
+                "last_instance__testinstance_set",
+                "last_instance__testinstance_set__status",
+                "last_instance__modified_by",
+            )
+            .order_by(
+                "frequency__nominal_interval",
+                "unit__number",
+                "name",
+            )
+        )
 
-        qs = models.UnitTestCollection.objects.filter(
-            active=True,
-            unit__active=True,
-        ).select_related(
-            "last_instance",
-            "frequency",
-            "unit",
-            "assigned_to",
-        ).prefetch_related(
-            "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
-            "last_instance__modified_by",
-        ).order_by("frequency__nominal_interval", "unit__number", "name", )
-
-        if request.GET.get('user') == 'true':
+        if request.GET.get("user") == "true":
             qs = qs.filter(visible_to__in=request.user.groups.all())
 
         return qs.distinct()
 
     def get(self, request):
-
         qs = self.get_queryset(request)
 
         units = Unit.objects.order_by("number")
         frequencies = list(models.Frequency.objects.order_by("nominal_interval")) + [None]
 
         unit_lists = collections.OrderedDict()
-        due_counts = {'ok': 0, 'tolerance': 0, 'action': 0, 'no_tol': 0}
+        due_counts = {"ok": 0, "tolerance": 0, "action": 0, "no_tol": 0}
 
         for unit in units:
             unit_freqs = collections.OrderedDict()
             for freq in frequencies:
-                freq_name = freq.name if freq else _('Ad Hoc')
+                freq_name = freq.name if freq else _("Ad Hoc")
                 if freq_name not in unit_freqs:
                     unit_freqs[freq_name] = collections.OrderedDict()
                 for utc in qs:
                     if utc.frequency == freq and utc.unit == unit:
-
                         if utc.last_instance:
                             last_instance_pfs = {}
                             for lipfs in utc.last_instance.pass_fail_status():
                                 last_instance_pfs[lipfs[0]] = len(lipfs[2])
                         else:
-                            last_instance_pfs = _('New List')
+                            last_instance_pfs = _("New List")
 
                         ds = utc.due_status()
                         last_completed = utc.last_instance.work_completed if utc.last_instance else None
                         unit_freqs[freq_name][utc.name] = {
-                            'id': utc.pk,
-                            'url': reverse('review_utc', args=(utc.pk,)),
-                            'last_instance_status': last_instance_pfs,
-                            'last_instance_work_completed': last_completed,
-                            'due_date': utc.due_date,
-                            'due_status': ds
+                            "id": utc.pk,
+                            "url": reverse("review_utc", args=(utc.pk,)),
+                            "last_instance_status": last_instance_pfs,
+                            "last_instance_work_completed": last_completed,
+                            "due_date": utc.due_date,
+                            "due_status": ds,
                         }
                         due_counts[ds] += 1
 
-            unit_lists[unit.number] = {'unit_freqs': unit_freqs, 'unit_name': unit.name, 'unit_id': unit.id}
+            unit_lists[unit.number] = {"unit_freqs": unit_freqs, "unit_name": unit.name, "unit_id": unit.id}
 
-        return self.render_json_response({'unit_lists': unit_lists, 'due_counts': due_counts, 'success': True})
+        return self.render_json_response({"unit_lists": unit_lists, "due_counts": due_counts, "success": True})
 
 
 class UTCInstances(PermissionRequiredMixin, TestListInstances):
@@ -725,8 +726,8 @@ class UTCInstances(PermissionRequiredMixin, TestListInstances):
         try:
             utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
             return _("History for %(unit_name)s :: %(unit_test_collection_name)s") % {
-                'unit_name': utc.unit.name,
-                'unit_test_collection_name': utc.name
+                "unit_name": utc.unit.name,
+                "unit_test_collection_name": utc.name,
             }
         except models.UnitTestCollection.DoesNotExist:
             raise Http404

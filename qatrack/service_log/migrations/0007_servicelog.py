@@ -10,25 +10,40 @@ import qatrack.service_log.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('service_log', '0006_auto_20180329_1410'),
+        ("service_log", "0006_auto_20180329_1410"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ServiceLog',
+            name="ServiceLog",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('log_type', models.CharField(choices=[('new_se', 'New Service Event'), ('mod_se', 'Modified Servicew Event'), ('stat_se', 'Service Event Status Changed'), ('new_rts', 'New Return To Service'), ('perf_rts', 'Performed Return To Service'), ('app_rts', 'Approved Return To Service')], max_length=10)),
-                ('extra_info', qatrack.service_log.models.JSONField()),
-                ('datetime', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
-                ('service_event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='service_log.ServiceEvent')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "log_type",
+                    models.CharField(
+                        choices=[
+                            ("new_se", "New Service Event"),
+                            ("mod_se", "Modified Servicew Event"),
+                            ("stat_se", "Service Event Status Changed"),
+                            ("new_rts", "New Return To Service"),
+                            ("perf_rts", "Performed Return To Service"),
+                            ("app_rts", "Approved Return To Service"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                ("extra_info", qatrack.service_log.models.JSONField()),
+                ("datetime", models.DateTimeField(default=django.utils.timezone.now, editable=False)),
+                (
+                    "service_event",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="service_log.ServiceEvent"),
+                ),
+                ("user", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'ordering': ('-datetime',),
+                "ordering": ("-datetime",),
             },
         ),
     ]

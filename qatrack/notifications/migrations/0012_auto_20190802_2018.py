@@ -4,38 +4,37 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0011_copy_qccompleted_notice'),
+        ("notifications", "0011_copy_qccompleted_notice"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='notificationsubscription',
-            name='groups',
+            model_name="notificationsubscription",
+            name="groups",
         ),
         migrations.RemoveField(
-            model_name='notificationsubscription',
-            name='test_lists',
+            model_name="notificationsubscription",
+            name="test_lists",
         ),
         migrations.RemoveField(
-            model_name='notificationsubscription',
-            name='units',
+            model_name="notificationsubscription",
+            name="units",
         ),
         migrations.RemoveField(
-            model_name='notificationsubscription',
-            name='users',
+            model_name="notificationsubscription",
+            name="users",
         ),
         migrations.AlterModelOptions(
-            name='qccompletednotice',
-            options={'verbose_name': 'QC Completed Notice'},
+            name="qccompletednotice",
+            options={"verbose_name": "QC Completed Notice"},
         ),
         migrations.AlterField(
-            model_name='unitgroup',
-            name='name',
-            field=models.CharField(help_text='Enter a name for this group of Units', max_length=255),
+            model_name="unitgroup",
+            name="name",
+            field=models.CharField(help_text="Enter a name for this group of Units", max_length=255),
         ),
         migrations.DeleteModel(
-            name='NotificationSubscription',
+            name="NotificationSubscription",
         ),
     ]

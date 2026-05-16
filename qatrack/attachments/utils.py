@@ -1,31 +1,30 @@
 import io
 import os
 
-from PIL import Image
 import imageio
-from matplotlib.figure import Figure
 import pydicom
+from matplotlib.figure import Figure
+from PIL import Image
 
 
 def imsave(obj, fname):
-
     def reseek(obj, data):
         try:
             obj.seek(0)
-        except:
+        except (AttributeError, OSError):
             pass
         try:
             data.seek(0)
-        except:
+        except (AttributeError, OSError):
             pass
 
-    fmt = os.path.splitext(fname)[-1].strip('.')
+    fmt = os.path.splitext(fname)[-1].strip(".")
     data = io.BytesIO()
     try:
         imageio.imwrite(data, obj, format=fmt)
         reseek(obj, data)
         return data.read()
-    except:
+    except Exception:
         reseek(obj, data)
 
     try:
@@ -33,7 +32,7 @@ def imsave(obj, fname):
         im.save(data, format=fmt)
         reseek(obj, data)
         return data.read()
-    except:
+    except Exception:
         reseek(obj, data)
 
     try:
@@ -44,12 +43,12 @@ def imsave(obj, fname):
         imageio.imwrite(data, pixels, format=fmt)
         reseek(obj, data)
         return data.read()
-    except:
+    except Exception:
         reseek(obj, data)
 
 
 def figure_to_bytes(obj, fname):
-    fmt = os.path.splitext(fname)[-1].strip('.')
+    fmt = os.path.splitext(fname)[-1].strip(".")
     if fmt not in ["png", "pdf", "ps", "eps", "svg"]:
         fmt = "png"
 
@@ -60,7 +59,6 @@ def figure_to_bytes(obj, fname):
 
 
 def get_mpl_figure(obj):
-
     if isinstance(obj, Figure):
         return obj
 
@@ -92,7 +90,6 @@ def get_mpl_figure(obj):
 
 
 def to_bytes(obj, fname=None):
-
     if hasattr(obj, "read"):
         # read from file like objects for handling bytes/string below
         if hasattr(obj, "seek"):

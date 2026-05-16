@@ -12,11 +12,8 @@ def update_internal_pass(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0030_auto_20190129_2156'),
+        ("qa", "0030_auto_20190129_2156"),
     ]
 
-    operations = [
-        migrations.RunPython(update_internal_pass, lambda a, s: None)
-    ]
+    operations = [migrations.RunPython(update_internal_pass, lambda a, s: None)]

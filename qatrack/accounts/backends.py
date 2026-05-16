@@ -15,10 +15,9 @@ from qatrack.accounts.models import ActiveDirectoryGroupMap, DefaultGroup
 
 
 class QATrackAccountBackend(ModelBackend):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.logger = logging.getLogger('auth.QATrackAccountBackend')
+        self.logger = logging.getLogger("auth.QATrackAccountBackend")
 
     def authenticate(self, request, username=None, password=None):
         self.logger.info("Attempting to authenticate %s" % username)
@@ -56,10 +55,9 @@ class QATrackAccountBackend(ModelBackend):
 
 # stripped down version of http://djangosnippets.org/snippets/901/
 class ActiveDirectoryGroupMembershipSSLBackend:
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.logger = logging.getLogger('auth.ActiveDirectoryGroupMembershipSSLBackend')
+        self.logger = logging.getLogger("auth.ActiveDirectoryGroupMembershipSSLBackend")
 
         ldap.set_option(ldap.OPT_REFERRALS, 0)  # DO NOT TURN THIS OFF OR SEARCH WON'T WORK!
         if settings.AD_CERT_FILE:
@@ -67,7 +65,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, settings.AD_CERT_FILE)
 
     def authenticate(self, request, username=None, password=None):
-
         self.logger.info("Attempting to authenticate %s" % username)
         username = self.clean_username(username)
         self.logger.info("Cleaned username: %s" % username)
@@ -88,13 +85,13 @@ class ActiveDirectoryGroupMembershipSSLBackend:
             user_attrs = self.get_user_attrs(l, username)
             qualified_groups = ActiveDirectoryGroupMap.qualified_ad_group_names()
             if qualified_groups:
-                if len(set(qualified_groups) & set(user_attrs['member_of'])) == 0:
+                if len(set(qualified_groups) & set(user_attrs["member_of"])) == 0:
                     self.logger.info(
                         (
                             "successfully authenticated: %s but they don't belong to a qualified group. "
                             "Qualified Groups: %s AD member_of: %s"
-                        ) %
-                        (username, ', '.join(qualified_groups), ', '.join(user_attrs['member_of']))
+                        )
+                        % (username, ", ".join(qualified_groups), ", ".join(user_attrs["member_of"]))
                     )
                     return None
 
@@ -117,7 +114,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 pass
 
     def get_user_attrs(self, con, username):
-
         self.logger.debug("Searching active directory for user attributes with search DN: %s" % settings.AD_SEARCH_DN)
 
         result = con.search_ext_s(
@@ -130,13 +126,13 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         email = result.get(settings.AD_LU_MAIL, [""])[0]
         last_name = result.get(settings.AD_LU_SURNAME, [""])[0]
         first_name = result.get(settings.AD_LU_GIVEN_NAME, [""])[0]
-        email = email.decode('utf-8') if isinstance(email, bytes) else email
-        last_name = last_name.decode('utf-8') if isinstance(last_name, bytes) else last_name
-        first_name = first_name.decode('utf-8') if isinstance(first_name, bytes) else first_name
+        email = email.decode("utf-8") if isinstance(email, bytes) else email
+        last_name = last_name.decode("utf-8") if isinstance(last_name, bytes) else last_name
+        first_name = first_name.decode("utf-8") if isinstance(first_name, bytes) else first_name
         attrs = {
-            'email': email,
-            'last_name': last_name,
-            'first_name': first_name,
+            "email": email,
+            "last_name": last_name,
+            "first_name": first_name,
         }
 
         memberships = set()
@@ -150,12 +146,11 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                     continue
                 memberships.add(m.split("=")[1])
 
-        attrs['member_of'] = memberships
+        attrs["member_of"] = memberships
 
         return attrs
 
     def get_or_create_user(self, username, user_attrs):
-
         try:
             self.logger.debug("Looking for existing user with username: %s" % username)
             user = User.objects.get(username=username)
@@ -176,15 +171,14 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         return user
 
     def update_user_attributes(self, user, user_attrs):
-
         self.logger.info("Updating user info for %s" % user.username)
 
         # get personal info
-        user.email = user_attrs['email'] or user.email
-        user.last_name = user_attrs['last_name'] or user.last_name
-        user.first_name = user_attrs['first_name'] or user.first_name
+        user.email = user_attrs["email"] or user.email
+        user.last_name = user_attrs["last_name"] or user.last_name
+        user.first_name = user_attrs["first_name"] or user.first_name
 
-        ad_groups = user_attrs['member_of']
+        ad_groups = user_attrs["member_of"]
 
         existing_user_groups = list(user.groups.all())
 
@@ -196,7 +190,6 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
         ad_group_map = ActiveDirectoryGroupMap.group_map()
         for ad_group_name in ad_groups:
-
             qatrack_groups = ad_group_map.get(ad_group_name, [])
 
             try:
@@ -232,15 +225,10 @@ class ActiveDirectoryGroupMembershipSSLBackend:
         """
         if settings.AD_CLEAN_USERNAME and callable(settings.AD_CLEAN_USERNAME):
             return settings.AD_CLEAN_USERNAME(username)
-        return username.replace(
-            settings.CLEAN_USERNAME_STRING, ""
-        ).replace(
-            settings.AD_CLEAN_USERNAME_STRING, ""
-        )
+        return username.replace(settings.CLEAN_USERNAME_STRING, "").replace(settings.AD_CLEAN_USERNAME_STRING, "")
 
 
 class WindowsIntegratedAuthenticationBackend(ModelBackend):
-
     # Create a User object if not already in the database?
     create_unknown_user = True
 
@@ -334,9 +322,8 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
             return None
 
     def create_user(self, claims):
-
-        from django_auth_adfs.config import settings as adfs_settings
         from django_auth_adfs.backend import logger
+        from django_auth_adfs.config import settings as adfs_settings
 
         username = claims[adfs_settings.USERNAME_CLAIM]
 
@@ -344,8 +331,8 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
         if qualified_groups and adfs_settings.GROUPS_CLAIM:
             if len(set(qualified_groups) & set(claims[adfs_settings.GROUPS_CLAIM])) == 0:
                 logger.info(
-                    "successfully authenticated: %s but they don't belong to a qualifying group (%s)" %
-                    (username, ', '.join(qualified_groups))
+                    "successfully authenticated: %s but they don't belong to a qualifying group (%s)"
+                    % (username, ", ".join(qualified_groups))
                 )
                 raise PermissionDenied
 
@@ -384,11 +371,12 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
         from django_auth_adfs.config import settings as adfs_settings
 
         if adfs_settings.GROUPS_CLAIM:
-
             if adfs_settings.GROUPS_CLAIM in claims:
                 claim_groups = claims[adfs_settings.GROUPS_CLAIM]
                 if not isinstance(claim_groups, list):
-                    claim_groups = [claim_groups, ]
+                    claim_groups = [
+                        claim_groups,
+                    ]
             else:
                 logger.debug(
                     "The configured groups claim '{}' was not found in the access token".format(
@@ -409,7 +397,6 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
 
             ad_group_map = ActiveDirectoryGroupMap.group_map()
             for ad_group_name in claim_groups:
-
                 qatrack_groups = ad_group_map.get(ad_group_name, [])
 
                 try:

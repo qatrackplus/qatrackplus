@@ -7,10 +7,7 @@ import django.core.validators
 from django.db import migrations, models
 import re
 
-preset_colours = {
-    'not_requires_review': 'rgba(0,166,90,1)',
-    'not_valid': 'rgba(221,75,57,1)'
-}
+preset_colours = {"not_requires_review": "rgba(0,166,90,1)", "not_valid": "rgba(221,75,57,1)"}
 
 
 def set_default_status_colours(apps, schema):
@@ -18,23 +15,35 @@ def set_default_status_colours(apps, schema):
 
     for s in TestInstanceStatus.objects.all():
         if not s.valid:
-            s.colour = preset_colours['not_valid']
+            s.colour = preset_colours["not_valid"]
         elif not s.requires_review:
-            s.colour = preset_colours['not_requires_review']
+            s.colour = preset_colours["not_requires_review"]
         s.save()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0011_unittestinfochange'),
+        ("qa", "0011_unittestinfochange"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='testinstancestatus',
-            name='colour',
-            field=models.CharField(default=settings.DEFAULT_TEST_STATUS_COLOUR, max_length=22, validators=[django.core.validators.RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')]),
+            model_name="testinstancestatus",
+            name="colour",
+            field=models.CharField(
+                default=settings.DEFAULT_TEST_STATUS_COLOUR,
+                max_length=22,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        re.compile(
+                            "^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$",
+                            32,
+                        ),
+                        "Enter a valid color.",
+                        "invalid",
+                    )
+                ],
+            ),
         ),
-        migrations.RunPython(set_default_status_colours)
+        migrations.RunPython(set_default_status_colours),
     ]

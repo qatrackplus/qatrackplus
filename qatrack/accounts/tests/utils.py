@@ -22,7 +22,7 @@ def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", 
 
 def create_group(name=None):
     if name is None:
-        name = 'group_%04d' % get_next_id(Group.objects.order_by('id').last())
+        name = "group_%04d" % get_next_id(Group.objects.order_by("id").last())
     g = Group(name=name)
     g.save()
     g.permissions.add(Permission.objects.get(codename="add_testlistinstance"))

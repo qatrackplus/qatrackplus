@@ -6,20 +6,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0004_auto_20171222_1045'),
+        ("units", "0004_auto_20171222_1045"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='unit',
-            name='date_acceptance',
-            field=models.DateField(help_text='Changing acceptance date will delete unit available times that occur before it'),
+            model_name="unit",
+            name="date_acceptance",
+            field=models.DateField(
+                help_text="Changing acceptance date will delete unit available times that occur before it"
+            ),
         ),
         migrations.AlterField(
-            model_name='unitavailabletime',
-            name='date_changed',
-            field=models.DateField(blank=True, help_text='Date the units available time changed or will change'),
+            model_name="unitavailabletime",
+            name="date_changed",
+            field=models.DateField(blank=True, help_text="Date the units available time changed or will change"),
         ),
     ]

@@ -17,57 +17,59 @@ from qatrack.qatrack_core.fields import JSONField
 from qatrack.qatrack_core.scheduling import SchedulingMixin
 from qatrack.units.models import NameNaturalKeyManager, Unit, Vendor
 
-re_255 = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
-color_re = re.compile(r'^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + r',(0(\.[0-9][0-9]?)?|1)\)$')
-validate_color = RegexValidator(color_re, _l('Enter a valid color.'), 'invalid')
+re_255 = "([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])"
+color_re = re.compile(r"^rgba\(" + re_255 + "," + re_255 + "," + re_255 + r",(0(\.[0-9][0-9]?)?|1)\)$")
+validate_color = RegexValidator(color_re, _l("Enter a valid color."), "invalid")
 
-NEW_SERVICE_EVENT = 'new_se'
-MODIFIED_SERVICE_EVENT = 'mod_se'
-STATUS_SERVICE_EVENT = 'stat_se'
-CHANGED_RTSQA = 'rtsqa'
-PERFORMED_RTS = 'perf_rts'
-APPROVED_RTS = 'app_rts'
-DELETED_SERVICE_EVENT = 'del_se'
+NEW_SERVICE_EVENT = "new_se"
+MODIFIED_SERVICE_EVENT = "mod_se"
+STATUS_SERVICE_EVENT = "stat_se"
+CHANGED_RTSQA = "rtsqa"
+PERFORMED_RTS = "perf_rts"
+APPROVED_RTS = "app_rts"
+DELETED_SERVICE_EVENT = "del_se"
 
 LOG_TYPES = (
-    (NEW_SERVICE_EVENT, 'New Service Event'),
-    (MODIFIED_SERVICE_EVENT, 'Modified Service Event'),
-    (STATUS_SERVICE_EVENT, 'Service Event Status Changed'),
-    (CHANGED_RTSQA, 'Changed Return To Service'),
-    (PERFORMED_RTS, 'Performed Return To Service'),
-    (APPROVED_RTS, 'Approved Return To Service'),
-    (DELETED_SERVICE_EVENT, 'Deleted Service Event')
+    (NEW_SERVICE_EVENT, "New Service Event"),
+    (MODIFIED_SERVICE_EVENT, "Modified Service Event"),
+    (STATUS_SERVICE_EVENT, "Service Event Status Changed"),
+    (CHANGED_RTSQA, "Changed Return To Service"),
+    (PERFORMED_RTS, "Performed Return To Service"),
+    (APPROVED_RTS, "Approved Return To Service"),
+    (DELETED_SERVICE_EVENT, "Deleted Service Event"),
 )
 
 
 class ServiceArea(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         _l("name"),
         max_length=32,
         unique=True,
-        help_text=_l('Enter a short name for this service area'),
+        help_text=_l("Enter a short name for this service area"),
     )
     units = models.ManyToManyField(
         Unit,
-        through='UnitServiceArea',
-        related_name='service_areas',
+        through="UnitServiceArea",
+        related_name="service_areas",
         verbose_name=_l("units"),
     )
 
     class Meta:
         ordering = ("name",)
-        verbose_name = _l('service area')
-        verbose_name_plural = _l('service area')
+        verbose_name = _l("service area")
+        verbose_name_plural = _l("service areas")
 
     def natural_key(self):
         return (self.name,)
 
     def __str__(self):
-        return self.name
+        return str(_l("service area"))
 
 
 class UnitServiceArea(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     unit = models.ForeignKey(
         Unit,
@@ -87,22 +89,26 @@ class UnitServiceArea(models.Model):
     )
 
     class Meta:
-        verbose_name = _l('unit service area')
-        verbose_name_plural = _l('unit service area memberships')
-        unique_together = ('unit', 'service_area',)
-        ordering = ('unit', 'service_area')
+        verbose_name = _l("Unit Service Area")
+        verbose_name_plural = _l("Unit Service Area Assignments")
+        unique_together = (
+            "unit",
+            "service_area",
+        )
+        ordering = ("unit", "service_area")
 
     def __str__(self):
-        return '%s :: %s' % (self.unit.name, self.service_area.name)
+        return "%s :: %s" % (self.unit.name, self.service_area.name)
 
 
 class ServiceType(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         _l("name"),
         max_length=32,
         unique=True,
-        help_text=_l('Enter a short name for this service type'),
+        help_text=_l("Enter a short name for this service type"),
     )
     is_review_required = models.BooleanField(
         _l("is review required"),
@@ -112,19 +118,19 @@ class ServiceType(models.Model):
     is_active = models.BooleanField(
         _l("is active"),
         default=True,
-        help_text=_l('Set to false if service type is no longer used'),
+        help_text=_l("Set to false if service type is no longer used"),
     )
     description = models.TextField(
         _l("description"),
         max_length=512,
-        help_text=_l('Give a brief description of this service type'),
+        help_text=_l("Give a brief description of this service type"),
         null=True,
         blank=True,
     )
 
     class Meta:
-        verbose_name = _l('service type')
-        verbose_name_plural = _l('service types')
+        verbose_name = _l("Service Type")
+        verbose_name_plural = _l("Service Types")
 
     def natural_key(self):
         return (self.name,)
@@ -134,38 +140,39 @@ class ServiceType(models.Model):
 
 
 class ServiceEventStatus(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     name = models.CharField(
         _l("name"),
         max_length=32,
         unique=True,
-        help_text=_l('Enter a short name for this service status'),
+        help_text=_l("Enter a short name for this service status"),
     )
     is_default = models.BooleanField(
         _l("is default"),
         default=False,
         help_text=_l(
-            'Is this the default status for all service events? If set to true every other service event '
-            'status will be set to false'
-        )
+            "Is this the default status for all service events? If set to true every other service event "
+            "status will be set to false"
+        ),
     )
     is_review_required = models.BooleanField(
         _l("is review required"),
         default=True,
-        help_text=_l('Do service events with this status require review?'),
+        help_text=_l("Do service events with this status require review?"),
     )
     rts_qa_must_be_reviewed = models.BooleanField(
         _l("Return To Service (RTS) QC Must be Reviewed"),
         default=True,
         help_text=_l(
-            'Service events with Return To Service (RTS) QC that has not been reviewed '
-            'can not have this status selected if set to true.'
+            "Service events with Return To Service (RTS) QC that has not been reviewed "
+            "can not have this status selected if set to true."
         ),
     )
     description = models.TextField(
         _l("description"),
         max_length=512,
-        help_text=_l('Give a brief description of this service event status'),
+        help_text=_l("Give a brief description of this service event status"),
         null=True,
         blank=True,
     )
@@ -185,8 +192,8 @@ class ServiceEventStatus(models.Model):
     objects = NameNaturalKeyManager()
 
     class Meta:
-        verbose_name = _l('service event status')
-        verbose_name_plural = _l('service event statuses')
+        verbose_name = _l("Service Event Status")
+        verbose_name_plural = _l("Service Event Statuses")
         ordering = ("order", "pk")
 
     def save(self, *args, **kwargs):
@@ -220,7 +227,6 @@ class ServiceEventStatus(models.Model):
 
 
 class ServiceEventManager(models.Manager):
-
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).filter(is_active=True)
 
@@ -238,6 +244,7 @@ class ServiceEventManager(models.Manager):
 
 
 class ServiceEvent(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     unit_service_area = models.ForeignKey(
         UnitServiceArea,
@@ -250,15 +257,15 @@ class ServiceEvent(models.Model):
         verbose_name=_l("service type"),
     )
     service_event_related = models.ManyToManyField(
-        'self',
+        "self",
         symmetrical=True,
         blank=True,
-        verbose_name=_l('related service events'),
-        help_text=_l('Enter the service event IDs of any related service events.')
+        verbose_name=_l("related service events"),
+        help_text=_l("Enter the service event IDs of any related service events."),
     )
     service_status = models.ForeignKey(
         ServiceEventStatus,
-        verbose_name=_l('status'),
+        verbose_name=_l("status"),
         on_delete=models.PROTECT,
         help_text=_l("The current status of this service event"),
     )
@@ -267,13 +274,13 @@ class ServiceEvent(models.Model):
         User,
         null=True,
         blank=True,
-        related_name='+',
+        related_name="+",
         on_delete=models.PROTECT,
-        verbose_name=_l("status last changed by")
+        verbose_name=_l("status last changed by"),
     )
     user_created_by = models.ForeignKey(
         User,
-        related_name='+',
+        related_name="+",
         on_delete=models.PROTECT,
         verbose_name=_l("created by"),
     )
@@ -281,7 +288,7 @@ class ServiceEvent(models.Model):
         User,
         null=True,
         blank=True,
-        related_name='+',
+        related_name="+",
         on_delete=models.PROTECT,
         verbose_name=_l("modified by"),
     )
@@ -290,18 +297,18 @@ class ServiceEvent(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='serviceevents_initiated',
+        related_name="serviceevents_initiated",
         verbose_name=_l("initiating test list instance"),
     )
     service_event_template = models.ForeignKey(
-        'ServiceEventTemplate',
+        "ServiceEventTemplate",
         blank=True,
         null=True,
         on_delete=models.PROTECT,
         verbose_name=_l("service event template"),
     )
     service_event_schedule = models.ForeignKey(
-        'ServiceEventSchedule',
+        "ServiceEventSchedule",
         blank=True,
         null=True,
         on_delete=models.PROTECT,
@@ -310,7 +317,7 @@ class ServiceEvent(models.Model):
     due_date = models.DateTimeField(
         null=True,
         blank=True,
-        help_text=_l('When was this service event due when it was performed'),
+        help_text=_l("When was this service event due when it was performed"),
     )
 
     include_for_scheduling = models.BooleanField(
@@ -327,7 +334,7 @@ class ServiceEvent(models.Model):
         _l("created"),
     )
     datetime_service = models.DateTimeField(
-        verbose_name=_l('Date and time'), help_text=_l('Date and time service performed')
+        verbose_name=_l("Date and time"), help_text=_l("Date and time service performed")
     )
     datetime_modified = models.DateTimeField(
         _l("modified"),
@@ -339,29 +346,29 @@ class ServiceEvent(models.Model):
         _l("safety precautions"),
         null=True,
         blank=True,
-        help_text=_l('Describe any safety precautions taken'),
+        help_text=_l("Describe any safety precautions taken"),
     )
     problem_description = models.TextField(
         _l("problem description"),
-        help_text=_l('Describe the problem leading to this service event'),
+        help_text=_l("Describe the problem leading to this service event"),
     )
     work_description = models.TextField(
         _l("work description"),
         null=True,
         blank=True,
-        help_text=_l('Describe the work done during this service event'),
+        help_text=_l("Describe the work done during this service event"),
     )
     duration_service_time = models.DurationField(
-        verbose_name=_l('Service time'),
+        verbose_name=_l("Service time"),
         null=True,
         blank=True,
-        help_text=_l('Enter the total time duration of this service event (Hours : minutes)'),
+        help_text=_l("Enter the total time duration of this service event (Hours : minutes)"),
     )
     duration_lost_time = models.DurationField(
-        verbose_name=_l('Lost time'),
+        verbose_name=_l("Lost time"),
         null=True,
         blank=True,
-        help_text=_l('Enter the total clinical time lost for this service event (Hours : minutes)'),
+        help_text=_l("Enter the total clinical time lost for this service event (Hours : minutes)"),
     )
     is_review_required = models.BooleanField(
         _l("review required"),
@@ -378,15 +385,19 @@ class ServiceEvent(models.Model):
     all_objects = models.Manager()
 
     class Meta:
-        verbose_name = _l('service event')
-        verbose_name_plural = _l('service events')
+        verbose_name = _l("Service Event")
+        verbose_name_plural = _l("Service Events")
         get_latest_by = "datetime_service"
 
         permissions = (
-            ('review_serviceevent', _l('Can review service event')),
-            ('view_serviceevent', _l('Can review service event')),
+            ("review_serviceevent", _l("Can review service event")),
+            ("view_serviceevent", _l("Can review service event")),
         )
-        default_permissions = ('add', 'change', 'delete',)
+        default_permissions = (
+            "add",
+            "change",
+            "delete",
+        )
 
         ordering = ["-datetime_service"]
 
@@ -400,19 +411,18 @@ class ServiceEvent(models.Model):
     def create_rts_log_details(self):
         rts_states = []
         for r in self.returntoserviceqa_set.all():
-
             utc = r.unit_test_collection
             if not r.test_list_instance:
-                state = 'tli_incomplete'
+                state = "tli_incomplete"
                 details = utc.name
             elif not r.test_list_instance.all_reviewed:
-                state = 'tli_req_review'
+                state = "tli_req_review"
                 details = r.test_list_instance.test_list.name
             else:
-                state = 'tli_reviewed'
+                state = "tli_reviewed"
                 details = r.test_list_instance.test_list.name
 
-            rts_states.append({'state': state, 'details': details})
+            rts_states.append({"state": state, "details": details})
         return rts_states
 
     def set_inactive(self):
@@ -436,12 +446,12 @@ class ServiceEvent(models.Model):
 
 
 class ThirdPartyManager(models.Manager):
-
     def get_queryset(self):
-        return super(ThirdPartyManager, self).get_queryset().select_related('vendor')
+        return super(ThirdPartyManager, self).get_queryset().select_related("vendor")
 
 
 class ThirdParty(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     vendor = models.ForeignKey(
         Vendor,
@@ -452,29 +462,30 @@ class ThirdParty(models.Model):
     first_name = models.CharField(
         _l("first name"),
         max_length=32,
-        help_text=_l('Enter this persons first name'),
+        help_text=_l("Enter this persons first name"),
     )
     last_name = models.CharField(
         _l("last name"),
         max_length=32,
-        help_text=_l('Enter this persons last name'),
+        help_text=_l("Enter this persons last name"),
     )
 
     objects = ThirdPartyManager()
 
     class Meta:
-        verbose_name = _l('third party')
-        verbose_name_plural = _l('third parties')
-        unique_together = ('first_name', 'last_name', 'vendor')
+        verbose_name = _l("Third Party")
+        verbose_name_plural = _l("Third Parties")
+        unique_together = ("first_name", "last_name", "vendor")
 
     def __str__(self):
-        return self.last_name + ', ' + self.first_name + ' (' + self.vendor.name + ')'
+        return self.last_name + ", " + self.first_name + " (" + self.vendor.name + ")"
 
     def get_full_name(self):
         return str(self)
 
 
 class Hours(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     service_event = models.ForeignKey(
         ServiceEvent,
@@ -498,25 +509,26 @@ class Hours(models.Model):
 
     time = models.DurationField(
         _l("time"),
-        help_text=_l('The time this person spent on this service event'),
+        help_text=_l("The time this person spent on this service event"),
     )
 
     class Meta:
-        verbose_name = _l("hours")
-        verbose_name_plural = _l("hours")
-        unique_together = ('service_event', 'third_party', 'user',)
+        verbose_name = _l("Hours")
+        verbose_name_plural = _l("Hours")
+        unique_together = (
+            "service_event",
+            "third_party",
+            "user",
+        )
 
         default_permissions = ()
-        permissions = (
-            ("can_have_hours", _l("Can have hours")),
-        )
+        permissions = (("can_have_hours", _l("Can have hours")),)
 
     def user_or_thirdparty(self):
         return self.user or self.third_party
 
 
 class ReturnToServiceQAManager(models.Manager):
-
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).filter(service_event__is_active=True)
 
@@ -537,14 +549,15 @@ class ReturnToServiceQAManager(models.Manager):
 
 
 class ReturnToServiceQA(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     unit_test_collection = models.ForeignKey(
-        q_models.UnitTestCollection, help_text=_l('Select a TestList to perform'), on_delete=models.CASCADE
+        q_models.UnitTestCollection, help_text=_l("Select a TestList to perform"), on_delete=models.CASCADE
     )
     test_list_instance = models.ForeignKey(
-        q_models.TestListInstance, null=True, blank=True, on_delete=models.SET_NULL, related_name='rtsqa_for_tli'
+        q_models.TestListInstance, null=True, blank=True, on_delete=models.SET_NULL, related_name="rtsqa_for_tli"
     )
-    user_assigned_by = models.ForeignKey(User, related_name='+', on_delete=models.PROTECT)
+    user_assigned_by = models.ForeignKey(User, related_name="+", on_delete=models.PROTECT)
     service_event = models.ForeignKey(ServiceEvent, on_delete=models.CASCADE)
 
     datetime_assigned = models.DateTimeField()
@@ -552,21 +565,26 @@ class ReturnToServiceQA(models.Model):
     objects = ReturnToServiceQAManager()
 
     class Meta:
-        verbose_name = _l("return to service qc")
-        verbose_name_plural = _l("return to service qc")
+        verbose_name = _l("Return To Service QA")
+        verbose_name_plural = _l("Return To Service QA")
         permissions = (
-            ('view_returntoserviceqa', _l('Can view Return To Service QC')),
-            ('perform_returntoserviceqa', _l('Can perform Return To Service QC')),
+            ("view_returntoserviceqa", _l("Can view Return To Service QC")),
+            ("perform_returntoserviceqa", _l("Can perform Return To Service QC")),
         )
-        ordering = ['-datetime_assigned']
-        default_permissions = ('add', 'change', 'delete',)
+        ordering = ["-datetime_assigned"]
+        default_permissions = (
+            "add",
+            "change",
+            "delete",
+        )
 
 
 class GroupLinker(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     group = models.ForeignKey(
         Group,
-        help_text=_l('Select the group. Leave blank to allow choosing any user.'),
+        help_text=_l("Select the group. Leave blank to allow choosing any user."),
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -595,7 +613,7 @@ class GroupLinker(models.Model):
         _l("description"),
         null=True,
         blank=True,
-        help_text=_l('Describe the relationship between this group and service events.'),
+        help_text=_l("Describe the relationship between this group and service events."),
     )
 
     help_text = models.CharField(
@@ -603,19 +621,20 @@ class GroupLinker(models.Model):
         max_length=64,
         null=True,
         blank=True,
-        help_text=_l('Message to display when selecting user in service event form.')
+        help_text=_l("Message to display when selecting user in service event form."),
     )
 
     class Meta:
-        unique_together = ('name', 'group')
-        verbose_name = _l("group linker")
-        verbose_name_plural = _l("group linkers")
+        unique_together = ("name", "group")
+        verbose_name = _l("Group Linker")
+        verbose_name_plural = _l("Group Linkers")
 
     def __str__(self):
         return self.name
 
 
 class GroupLinkerInstance(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     group_linker = models.ForeignKey(
         GroupLinker,
@@ -639,58 +658,49 @@ class GroupLinkerInstance(models.Model):
 
     class Meta:
         default_permissions = ()
-        verbose_name = _l("group linker instance")
-        verbose_name_plural = _l("group linker instances")
+        verbose_name = _l("Group Linker Instance")
+        verbose_name_plural = _l("Group Linker Instances")
 
 
 class ServiceLogManager(models.Manager):
-
     def log_new_service_event(self, user, instance):
         self.create(
             user=user,
             service_event=instance,
             log_type=NEW_SERVICE_EVENT,
             # Cheat to always show create logs before rtsqa logs created at same time
-            datetime=timezone.now() - timezone.timedelta(seconds=1)
+            datetime=timezone.now() - timezone.timedelta(seconds=1),
         )
 
     def log_changed_service_event(self, user, instance, extra_info):
         self.create(
-            user=user,
-            service_event=instance,
-            log_type=MODIFIED_SERVICE_EVENT,
-            extra_info=json.dumps(extra_info)
+            user=user, service_event=instance, log_type=MODIFIED_SERVICE_EVENT, extra_info=json.dumps(extra_info)
         )
 
     def log_service_event_status(self, user, instance, extra_info, status_change):
-
         self.create(
             user=user,
             service_event=instance,
             log_type=STATUS_SERVICE_EVENT,
-            extra_info=json.dumps({'status_change': status_change, 'other_changes': extra_info})
+            extra_info=json.dumps({"status_change": status_change, "other_changes": extra_info}),
         )
 
     def log_rtsqa_changes(self, user, instance):
-
         self.create(
             user=user,
             service_event=instance,
             log_type=CHANGED_RTSQA,
-            extra_info=json.dumps(instance.create_rts_log_details())
+            extra_info=json.dumps(instance.create_rts_log_details()),
         )
 
     def log_service_event_delete(self, user, instance, extra_info):
-
         self.create(
-            user=user,
-            service_event=instance,
-            log_type=DELETED_SERVICE_EVENT,
-            extra_info=json.dumps(extra_info)
+            user=user, service_event=instance, log_type=DELETED_SERVICE_EVENT, extra_info=json.dumps(extra_info)
         )
 
 
 class ServiceLog(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     user = models.ForeignKey(
         User,
@@ -723,10 +733,10 @@ class ServiceLog(models.Model):
     objects = ServiceLogManager()
 
     class Meta:
-        ordering = ('-datetime',)
+        ordering = ("-datetime",)
         default_permissions = ()
-        verbose_name = _l("service event log")
-        verbose_name_plural = _l("service event logs")
+        verbose_name = _l("Service Event Log")
+        verbose_name_plural = _l("Service Event Logs")
 
     def info(self):
         if self.extra_info and isinstance(self.extra_info, str):
@@ -763,6 +773,7 @@ class ServiceLog(models.Model):
 
 
 class ServiceEventTemplate(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     service_type = models.ForeignKey(
         ServiceType,
@@ -771,8 +782,7 @@ class ServiceEventTemplate(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_l("service type"),
         help_text=_l(
-            'Select the Service Type this Service Event Template applies to. '
-            'Leave blank to create a generic template.'
+            "Select the Service Type this Service Event Template applies to. Leave blank to create a generic template."
         ),
     )
     service_area = models.ForeignKey(
@@ -782,13 +792,12 @@ class ServiceEventTemplate(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_l("service area"),
         help_text=_l(
-            'Select the Service Area this Service Event Template applies to. '
-            'Leave blank to create a generic template.'
+            "Select the Service Area this Service Event Template applies to. Leave blank to create a generic template."
         ),
     )
     problem_description = models.TextField(
         _l("problem description"),
-        help_text=_l('Describe the problem leading to this service event'),
+        help_text=_l("Describe the problem leading to this service event"),
         null=True,
         blank=True,
     )
@@ -796,7 +805,7 @@ class ServiceEventTemplate(models.Model):
         _l("work description"),
         null=True,
         blank=True,
-        help_text=_l('Describe the work done during this service event'),
+        help_text=_l("Describe the work done during this service event"),
     )
     is_review_required = models.BooleanField(
         _l("is review required"),
@@ -806,7 +815,7 @@ class ServiceEventTemplate(models.Model):
     )
     return_to_service_test_lists = models.ManyToManyField(
         q_models.TestList,
-        related_name='service_event_templates',
+        related_name="service_event_templates",
         verbose_name=_l("return to service test lists"),
         help_text=_l("Select the Return to Service QC that must be performed for this Service Event Type"),
         blank=True,
@@ -814,7 +823,7 @@ class ServiceEventTemplate(models.Model):
 
     return_to_service_cycles = models.ManyToManyField(
         q_models.TestListCycle,
-        related_name='service_event_templates',
+        related_name="service_event_templates",
         verbose_name=_l("return to service test list cycles"),
         help_text=_l("Select the Return to Service QC that must be performed for this Service Event Type"),
         blank=True,
@@ -836,7 +845,7 @@ class ServiceEventTemplate(models.Model):
         on_delete=models.PROTECT,
         editable=False,
         verbose_name=_l("created by"),
-        related_name='service_event_templates_created',
+        related_name="service_event_templates_created",
     )
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(
@@ -844,12 +853,12 @@ class ServiceEventTemplate(models.Model):
         on_delete=models.PROTECT,
         editable=False,
         verbose_name=_l("modified by"),
-        related_name='service_event_templates_modified',
+        related_name="service_event_templates_modified",
     )
 
     class Meta:
-        verbose_name = _l("service event template")
-        verbose_name_plural = _l("service event templates")
+        verbose_name = _l("Service Event Template")
+        verbose_name_plural = _l("Service Event Templates")
         ordering = ("name",)
 
     def __str__(self):
@@ -876,6 +885,7 @@ def ensure_hours_unique(sender, instance, raw, using, update_fields, **kwargs):
 
 
 class ServiceEventSchedule(SchedulingMixin, models.Model):
+    id = models.AutoField(primary_key=True, verbose_name=("ID"))
 
     unit_service_area = models.ForeignKey(
         UnitServiceArea,
@@ -889,7 +899,7 @@ class ServiceEventSchedule(SchedulingMixin, models.Model):
         verbose_name=_l("frequency"),
         null=True,
         blank=True,
-        related_name='serviceeventschedules',
+        related_name="serviceeventschedules",
     )
 
     due_date = models.DateTimeField(
@@ -938,27 +948,31 @@ class ServiceEventSchedule(SchedulingMixin, models.Model):
     )
 
     class Meta:
-        unique_together = ('unit_service_area', 'service_event_template', 'frequency')
-        verbose_name = _l("service event schedule")
+        unique_together = ("unit_service_area", "service_event_template", "frequency")
+        verbose_name = _l("Service Event Schedule")
         verbose_name_plural = _l("Assign Service Event Templates to Units")
 
     def get_last_instance(self):
-        """ return last service_event """
+        """return last service_event"""
 
         try:
             return ServiceEvent.objects.filter(
                 service_event_template=self.service_event_template, is_active=True
-            ).latest('datetime_service')
+            ).latest("datetime_service")
         except ServiceEvent.DoesNotExist:
             pass
 
     def last_instance_for_scheduling(self):
-        """ return last test_list_instance with all valid tests """
+        """return last test_list_instance with all valid tests"""
 
         try:
-            return self.serviceevent_set.filter(
-                include_for_scheduling=True,
-            ).exclude(is_active=False).latest("datetime_service")
+            return (
+                self.serviceevent_set.filter(
+                    include_for_scheduling=True,
+                )
+                .exclude(is_active=False)
+                .latest("datetime_service")
+            )
         except ServiceEvent.DoesNotExist:
             pass
 
@@ -966,4 +980,4 @@ class ServiceEventSchedule(SchedulingMixin, models.Model):
         return "%s?se_schedule=%s" % (reverse("sl_new"), self.pk)
 
     def __str__(self):
-        return 'Service Schedule for {}'.format(self.service_event_template)
+        return "Service Schedule for {}".format(self.service_event_template)

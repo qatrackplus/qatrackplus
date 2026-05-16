@@ -8,21 +8,18 @@ from qatrack.qa.models import TestListInstance
 class Command(BaseCommand):
     """A management command to delete all in progress test lists"""
 
-    help = 'command to delete all in progress test lists'
+    help = "command to delete all in progress test lists"
 
     def handle(self, *args, **kwargs):
-
         objs = TestListInstance.objects.in_progress()
         counts = objs.count()
 
         if counts <= 0:
             print("Nothing to delete")
             return
-        prompt = (
-            "Are you sure you want to delete %d in progress test lists (they can not be restored) (y/N): " % counts
-        )
+        prompt = "Are you sure you want to delete %d in progress test lists (they can not be restored) (y/N): " % counts
         confirm = input(prompt)
-        if confirm.lower() != 'y':
+        if confirm.lower() != "y":
             print("Action cancelled")
             return
 

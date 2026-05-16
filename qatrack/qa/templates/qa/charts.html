@@ -1,5 +1,29 @@
 {% extends "site_base.html" %}
 {% load static %}
+{% load i18n %}
+
+{% block extra_head %}
+<script type="text/javascript">
+  window.pgettext = function(context, string){ return string;};
+</script>
+<script type="text/javascript" src="{% static "recurrence/js/recurrence.js" %}"></script>
+<script type="text/javascript" src="{% static "recurrence/js/recurrence-widget.js" %}"></script>
+
+<script type="text/javascript">
+  // Filter translations for JavaScript
+  window.filterTranslations = {
+    sites: "{% trans 'Sites' %}",
+    units: "{% trans 'Units' %}",
+    frequencies: "{% trans 'Frequencies' %}",
+    testLists: "{% trans 'Test Lists' %}",
+    tests: "{% trans 'Tests' %}",
+    showInactiveUnits: "{% trans 'Show Inactive Units' %}",
+    showInactiveTestLists: "{% trans 'Show Inactive Test Lists' %}",
+    all: "{% trans 'All' %}",
+    none: "{% trans 'None' %}",
+  };
+</script>
+{% endblock extra_head %}
 
 {% block head_title %}QC Data Charts{% endblock %}
 
@@ -31,7 +55,7 @@
 
 <div class="row">
     <div class="col-sm-12">
-        <h3>Trending</h3>
+        <h3>{% trans "Trending" %}</h3>
     </div>
 </div>
 <div id="test-filters" class="row">
@@ -79,7 +103,7 @@
                         <div class="row padding-right-30">
                             <div class="col-sm-12 link-buttons">
                                 <div class="form-group margin-top-10">
-                                    <label class="col-sm-1" for="chart-url">Link</label>
+                                    <label class="col-sm-1" for="chart-url">{% trans "Link" %}</label>
                                     <div class="col-sm-6">
                                         <input type="text" class="form-control" id="chart-url"/>
                                     </div>
@@ -87,8 +111,8 @@
     {##}
     {#                            <div class="form-group">#}
                                     <div class="col-sm-5">
-                                        <button type="button" class="btn btn-default btn-flat pull-right" data-loading-text="Generating Chart..." id="gen-chart">Generate Chart</button>
-                                        <button type="button" class="btn btn-default btn-flat pull-right margin-right-5" id="save-image"><i class="fa fa-image"></i> Save Chart</button>
+                                        <button type="button" class="btn btn-default btn-flat pull-right" data-loading-text="{% trans 'Generating Chart...' %}" id="gen-chart">{% trans "Generate Chart" %}</button>
+                                        <button type="button" class="btn btn-default btn-flat pull-right margin-right-5" id="save-image"><i class="fa fa-image"></i> {% trans "Save Chart" %}</button>
                                     </div>
                                 </div>
                             </div>
@@ -101,7 +125,7 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="title">
-                                        Chart Options
+                                        {% trans "Chart Options" %}
                                     </div>
                                 </div>
                             </div>
@@ -111,18 +135,18 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        <label class="col-sm-4" for="chart-type">Type</label>
+                                        <label class="col-sm-4" for="chart-type">{% trans "Type" %}</label>
                                         <div class="col-sm-8">
                                             <select id="chart-type" class="form-control">
-                                                <option value="basic">Basic</option>
-                                                <option value="control">Control Chart</option>
+                                                <option value="basic">{% trans "Basic" %}</option>
+                                                <option value="control">{% trans "Control Chart" %}</option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div class="form-group">
                                         <div class="col-sm-4">
-                                            <label for="date-range" id="from-date-label" class="control-label">Date Range</label>
+                                            <label for="date-range" id="from-date-label" class="control-label">{% trans "Date Range" %}</label>
                                         </div>
                                         <div class="col-sm-8">
                                             <input type="text" id="date-range" class="form-control"/>
@@ -138,21 +162,21 @@
                                     <div class="form-group">
 
                                         <div class="col-sm-5 padding-right-0">
-                                            <label title="Set the subgroup size (Control Chart Only)" class="col-sm-6 padding-0" for="subgroup-size">SG Size</label>
+                                            <label title="{% trans 'Set the subgroup size (Control Chart Only)' %}" class="col-sm-6 padding-0" for="subgroup-size">{% trans "SG Size" %}</label>
                                             <div class="col-sm-6 padding-0">
                                                 <input type="number" min="1" step="1" value ="1" id="subgroup-size"  class="form-control"/>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-5 padding-right-0">
-                                            <label title="Set the number of subgroups for the baseline (Control Chart Only)" class="col-sm-6 padding-0" for="n-baseline-subgroups"># SG's</label>
+                                            <label title="{% trans 'Set the number of subgroups for the baseline (Control Chart Only)' %}" class="col-sm-6 padding-0" for="n-baseline-subgroups">{% trans "# SG's" %}</label>
                                             <div class="col-sm-6 padding-0">
                                                 <input type="number" min="2" step="1" value ="2" id="n-baseline-subgroups" class="form-control"/>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-2 padding-right-0">
-                                            <label title="Include a gaussian fit to histogrammed data (slow) (Control Chart Only)" class="col-sm-6 padding-0" for="include-fit">Fit</label>
+                                            <label title="{% trans 'Include a gaussian fit to histogrammed data (slow) (Control Chart Only)' %}" class="col-sm-6 padding-0" for="include-fit">{% trans "Fit" %}</label>
                                             <div class="col-sm-6 padding-0">
                                                 <input type="checkbox" id="include-fit"/>
                                             </div>
@@ -167,15 +191,15 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="title">
-                                        Test Data
+                                        {% trans "Test Data" %}
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label class="col-sm-10" for="combine-data" title="Combine Test data from multiple TestLists on a given Unit (e.g. from a TestListCycle)">
-                                            Combine test data for unit
+                                        <label class="col-sm-10" for="combine-data" title="{% trans 'Combine Test data from multiple TestLists on a given Unit (e.g. from a TestListCycle)' %}">
+                                            {% trans "Combine test data for unit" %}
                                         </label>
                                         <div class="col-sm-2">
                                             <input type="checkbox" id="combine-data" />
@@ -185,7 +209,7 @@
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label class="col-sm-10" for="relative-diff" >
-                                            <abbr title="The absolute difference is plotted for tests with absolute tolerances set or with reference values of zero, otherwise the percent difference is plotted">Relative to reference</abbr>
+                                            <abbr title="{% trans 'The absolute difference is plotted for tests with absolute tolerances set or with reference values of zero, otherwise the percent difference is plotted' %}">{% trans "Relative to reference" %}</abbr>
                                         </label>
                                         <div class="col-sm-2">
                                             <input type="checkbox" id="relative-diff" />
@@ -196,8 +220,8 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label class="col-sm-10" for="highlight-comments" title="Show test instances with comments using a larger point & different color">
-                                            Highlight comments
+                                        <label class="col-sm-10" for="highlight-comments" title="{% trans 'Show test instances with comments using a larger point & different color' %}">
+                                            {% trans "Highlight comments" %}
                                         </label>
                                         <div class="col-sm-2">
                                             <input type="checkbox" id="highlight-comments" />
@@ -206,8 +230,8 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label class="col-sm-10" for="highlight-flags" title="Show test instances with flags using a larger point & different color" >
-                                            Highlight flags
+                                        <label class="col-sm-10" for="highlight-flags" title="{% trans 'Show test instances with flags using a larger point & different color' %}" >
+                                            {% trans "Highlight flags" %}
                                         </label>
                                         <div class="col-sm-2">
                                             <input type="checkbox" id="highlight-flags" checked/>
@@ -218,7 +242,7 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div id="status-container" class="form-group">
-                                        <label for="status-selector" class="col-sm-4">Review Statuses</label>
+                                        <label for="status-selector" class="col-sm-4">{% trans "Review Statuses" %}</label>
                                         <div class="col-sm-8">
                                             <select id="status-selector" multiple>
                                                 {% for status in statuses %}
@@ -238,7 +262,7 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="title">
-                                        Service Log Data
+                                        {% trans "Service Log Data" %}
                                     </div>
                                 </div>
                             </div>
@@ -246,14 +270,14 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        <label for="show_events" class="col-sm-10" title="Display service event data with test results.">Show service events?</label>
+                                        <label for="show_events" class="col-sm-10" title="{% trans 'Display service event data with test results.' %}">{% trans "Show service events?" %}</label>
                                         <div class="col-sm-2">
                                             <input id="show_events" type="checkbox" checked>
                                         </div>
                                     </div>
 
                                     <div id="status-container" class="form-group">
-                                        <label for="status-selector" class="col-sm-4">Service Types</label>
+                                        <label for="status-selector" class="col-sm-4">{% trans "Service Types" %}</label>
                                         <div class="col-sm-8">
                                             <select id="service-type-selector" multiple>
                                                 {% for st in service_types %}
@@ -305,7 +329,7 @@
                 </div>
                 <div class="row">
                     <div id="control-chart-container" class="col-sm-12">
-                        <div class="col-sm-12 please-wait">Control Not Generated Yet</div>
+                        <div class="col-sm-12 please-wait">{% trans "Control Not Generated Yet" %}</div>
                     </div>
                 </div>
 
@@ -335,10 +359,10 @@
 
         <div class="row">
             <div class="col-sm-10 font-weight-bold cursor-default border-none">
-                Service Event __se-id__
+                {% trans "Service Event" %} __se-id__
             </div>
             <div class="col-sm-2">
-                <a class="se-tooltip-description-toggle pull-right" title="Work description: __se-wd__"><i class="fa fa-question-circle fa-lg"></i></a>
+                <a class="se-tooltip-description-toggle pull-right" title="{% trans 'Work description' %}: __se-wd__"><i class="fa fa-question-circle fa-lg"></i></a>
             </div>
         </div>
 
@@ -358,7 +382,7 @@
             <div class="col-sm-12">
                 <div class="pull-left se-type" title="__se-type__">__se-type__</div>
                 <div class="btn-group pull-right">
-                    <a class="tooltip-se-btn btn btn-flat btn-xs btn-default" href="{% url 'sl_details' %}__se-id__">View</a>
+                    <a class="tooltip-se-btn btn btn-flat btn-xs btn-default" href="{% url 'sl_details' %}__se-id__">{% trans "View" %}</a>
                     <a class="tooltip-se-btn btn btn-flat btn-xs btn-default new-tab-link" href="{% url 'sl_details' %}__se-id__" target="_blank">
                         <i class="fa fa-chevron-right" aria-hidden="true"></i>
                     </a>
@@ -383,21 +407,21 @@
     </div>
     <div class="row">
       <div class="col-sm-12">
-        <strong>Value</strong>: __tli-ti-value-display__
+        <strong>{% trans "Value" %}</strong>: __tli-ti-value-display__
       </div>
     </div>
     <div class="row">
         <div class="col-sm-12">
             <div>__tli-date__</div>
             <div class="btn-group pull-right">
-                <a class="btn btn-flat btn-xs btn-default" href="{% url 'view_test_list_instance' %}__tli-id__">View</a>
+                <a class="btn btn-flat btn-xs btn-default" href="{% url 'view_test_list_instance' %}__tli-id__">{% trans "View" %}</a>
                 <a class="tooltip-se-btn btn btn-flat btn-xs btn-default new-tab-link" href="{% url 'view_test_list_instance' %}__tli-id__" target="_blank">
                     <i class="fa fa-chevron-right" aria-hidden="true"></i>
                 </a>
             </div>
             {% if perms.service_log.add_serviceevent %}
                 <div class="btn-group pull-right margin-right-5" __show-in__>
-                    <a class="btn btn-flat btn-xs btn-default" href="{% url 'sl_new' %}?ib=__tli-id__">Initiate SE</a>
+                    <a class="btn btn-flat btn-xs btn-default" href="{% url 'sl_new' %}?ib=__tli-id__">{% trans "Initiate SE" %}</a>
                     <a class="tooltip-se-btn btn btn-flat btn-xs btn-default new-tab-link" href="{% url 'sl_new' %}?ib=__tli-id__" target="_blank">
                         <i class="fa fa-chevron-right" aria-hidden="true"></i>
                     </a>

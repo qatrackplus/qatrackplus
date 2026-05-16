@@ -14,10 +14,10 @@ from qatrack.units import models as u_models
 
 def can_review_faults(user):
     """
-     users can review faults if one of the the following applies:
-        a) No fault review groups exist and they have can_review permissions
-        b) Fault review groups exist, they are a member of one, and they have
-           review permissions
+    users can review faults if one of the the following applies:
+       a) No fault review groups exist and they have can_review permissions
+       b) Fault review groups exist, they are a member of one, and they have
+          review permissions
     """
 
     can_review = user.has_perm("faults.can_review")
@@ -28,11 +28,10 @@ def can_review_faults(user):
 
 
 class FaultType(models.Model):
-
     code = models.CharField(
         _l("code"),
         max_length=255,
-        help_text=_l('Enter the fault code or number'),
+        help_text=_l("Enter the fault code or number"),
         db_index=True,
         unique=True,
     )
@@ -40,7 +39,7 @@ class FaultType(models.Model):
         max_length=255,
         editable=False,
         unique=True,
-        help_text=_l("Unique URL friendly identifier made of lowercase characters, dashes, and underscores.")
+        help_text=_l("Unique URL friendly identifier made of lowercase characters, dashes, and underscores."),
     )
 
     description = models.TextField(
@@ -51,6 +50,8 @@ class FaultType(models.Model):
 
     class Meta:
         ordering = ("code",)
+        verbose_name = _l("Fault Type")
+        verbose_name_plural = _l("Fault Types")
 
     def save(self, *args, **kwargs):
         self.slug = unique_slug_generator(self, self.code)
@@ -61,7 +62,6 @@ class FaultType(models.Model):
 
 
 class FaultManager(models.Manager):
-
     def unreviewed(self):
         return self.filter(faultreviewinstance=None).order_by("-occurred")
 
@@ -70,7 +70,7 @@ class FaultManager(models.Manager):
 
 
 class Fault(models.Model):
-
+    id = models.AutoField(primary_key=True, verbose_name=_l("ID"))
     unit = models.ForeignKey(
         u_models.Unit,
         verbose_name=_l("unit"),
@@ -100,14 +100,14 @@ class Fault(models.Model):
         verbose_name=_l("Date & Time fault occurred"),
         default=timezone.now,
         help_text="When did this fault occur. " + settings.DATETIME_HELP,
-        db_index=True
+        db_index=True,
     )
 
     related_service_events = models.ManyToManyField(
         sl_models.ServiceEvent,
         blank=True,
-        verbose_name=_l('related service events'),
-        help_text=_l('Enter the service event IDs of any related service events.')
+        verbose_name=_l("related service events"),
+        help_text=_l("Enter the service event IDs of any related service events."),
     )
 
     comments = GenericRelation(
@@ -134,6 +134,8 @@ class Fault(models.Model):
 
     class Meta:
         ordering = ("-occurred",)
+        verbose_name = _l("Fault")
+        verbose_name_plural = _l("Faults")
         permissions = (("can_review", _l("Can review faults")),)
 
     def get_absolute_url(self):
@@ -159,7 +161,6 @@ class Fault(models.Model):
             "fault_review_group__group",
         )
         if review_groups:
-
             review_group_instances_by_group = {}
 
             for frgi in review_group_instances:
@@ -179,14 +180,13 @@ class Fault(models.Model):
         return review_details
 
     def fault_types_display(self):
-        return ', '.join(ft.code for ft in self.fault_types.order_by("code"))
+        return ", ".join(ft.code for ft in self.fault_types.order_by("code"))
 
     def __str__(self):
         return "Fault ID: %d" % self.pk
 
 
 class FaultReviewGroup(models.Model):
-
     group = models.OneToOneField(
         Group,
         verbose_name=_l("group"),
@@ -201,9 +201,12 @@ class FaultReviewGroup(models.Model):
         default=True,
     )
 
+    class Meta:
+        verbose_name = _l("Fault Review Group")
+        verbose_name_plural = _l("Fault Review Groups")
+
 
 class FaultReviewInstance(models.Model):
-
     reviewed = models.DateTimeField(
         verbose_name=_l("review date & time"),
         auto_now_add=True,

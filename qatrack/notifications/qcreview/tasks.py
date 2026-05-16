@@ -9,11 +9,10 @@ from qatrack.notifications.models import QCReviewNotice
 from qatrack.qatrack_core.email import send_email_to_users
 from qatrack.qatrack_core.tasks import run_periodic_scheduler
 
-logger = logging.getLogger('django-q')
+logger = logging.getLogger("django-q2")
 
 
 def run_review_notices():
-
     run_periodic_scheduler(
         QCReviewNotice,
         "run_review_notices",
@@ -24,7 +23,6 @@ def run_review_notices():
 
 
 def schedule_qcreview_notice(notice, send_time):
-
     logger.info("Scheduling notification %s for %s" % (notice.pk, send_time))
     name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
 
@@ -41,11 +39,9 @@ def schedule_qcreview_notice(notice, send_time):
 
 
 def send_qcreview_notice(notice_id, task_name=""):
-
     notice = QCReviewNotice.objects.filter(id=notice_id).first()
 
     if notice:
-
         if not notice.send_required():
             logger.info("Send of QCReviewNotice %s requested, but no QC to notify about" % notice_id)
             return
@@ -62,7 +58,7 @@ def send_qcreview_notice(notice_id, task_name=""):
         send_email_to_users(
             recipients,
             "qcreview/email.html",
-            context={'notice': notice},
+            context={"notice": notice},
             subject_template="qcreview/subject.txt",
             text_template="qcreview/email.txt",
         )
@@ -72,9 +68,7 @@ def send_qcreview_notice(notice_id, task_name=""):
         except:  # noqa: E722  # pragma: nocover
             logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
     except:  # noqa: E722  # pragma: nocover
-        logger.exception(
-            "Error sending email for QCReviewNotice %s at %s." % (notice_id, timezone.now())
-        )
+        logger.exception("Error sending email for QCReviewNotice %s at %s." % (notice_id, timezone.now()))
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
         if not fail_silently:

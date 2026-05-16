@@ -11,9 +11,7 @@ from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestPartEmails(TestCase):
-
     def setUp(self):
-
         self.cat1 = sl_utils.create_part_category(name="cat 1")
         self.cat2 = sl_utils.create_part_category(name="cat 2")
         self.part1 = sl_utils.create_part(name="part 1", part_number="111", part_category=self.cat1, quantity_current=1)
@@ -31,7 +29,7 @@ class TestPartEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -81,7 +79,6 @@ class TestPartEmails(TestCase):
 
 
 class TestPartNoticeAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.PartNoticeAdmin(model=PartNotice, admin_site=AdminSite())
 
@@ -115,13 +112,11 @@ class TestPartNoticeAdmin(TestCase):
 
 
 class TestPartCategoryGroup:
-
     def test_str(self):
         assert str(PartCategoryGroup(name="foo")) == "foo"
 
 
 class TestPartCategoryGroupAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.PartCategoryGroupAdmin(model=PartCategoryGroup, admin_site=AdminSite())
 

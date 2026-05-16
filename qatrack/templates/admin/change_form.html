@@ -51,7 +51,7 @@
       {{ app_label|capfirst|escape }}
     {% endif %}
   </a> &rsaquo;
-  {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{% if app_label == 'sites' and opts.verbose_name_plural == 'sites' %}Websites{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+  {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{% if app_label == 'sites' and opts.verbose_name_plural == 'sites' %}{% trans "Websites" %}{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
 &rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}
 </div>
 {% endblock %}

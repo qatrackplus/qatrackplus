@@ -13,7 +13,6 @@ act = settings.TEST_STATUS_DISPLAY.get("action", _l("Action"))
 
 
 class QCCompletedNotice(models.Model):
-
     COMPLETED = 0
     TOLERANCE = 10
     ACTION = 20
@@ -72,6 +71,7 @@ class QCCompletedNotice(models.Model):
 
     class Meta:
         verbose_name = _l("QC Completed Notice")
+        verbose_name_plural = _l("QC Completed Notices")
 
     def __str__(self):
         return "<QCCompletedNotice(%d, %s)>" % (self.pk, self.get_notification_type_display())

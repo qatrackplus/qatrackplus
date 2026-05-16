@@ -2,12 +2,12 @@ import random
 import string
 
 from django.utils import timezone
+
 from qatrack.faults import models
 from qatrack.qa.tests import utils as qa_utils
 
 
 def create_fault(unit=None, occurred=None, fault_type=None, user=None, modality=None):
-
     user = user or qa_utils.create_user()
     unit = unit or qa_utils.create_unit()
     fault_type = fault_type or create_fault_type()
@@ -30,7 +30,7 @@ def create_fault(unit=None, occurred=None, fault_type=None, user=None, modality=
 
 
 def create_fault_type(code="", slug="", description=""):
-    code = code or ''.join(random.choices(string.ascii_letters, k=10))
+    code = code or "".join(random.choices(string.ascii_letters, k=10))
     return models.FaultType.objects.create(
         code=code,
         slug=slug,
@@ -39,7 +39,6 @@ def create_fault_type(code="", slug="", description=""):
 
 
 def create_fault_review_group(group=None, required=True):
-
     group = group or qa_utils.create_group()
     return models.FaultReviewGroup.objects.create(
         group=group,
@@ -48,7 +47,6 @@ def create_fault_review_group(group=None, required=True):
 
 
 def create_fault_review(fault=None, review_group=None, reviewed_by=None, reviewed=None):
-
     reviewed = reviewed or timezone.now()
     if review_group is False:
         review_group = None

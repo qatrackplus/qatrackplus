@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('units', '0010_default_is_serviceable'),
+        ("units", "0010_default_is_serviceable"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='unit',
-            name='number',
-            field=models.PositiveIntegerField(blank=True, help_text='A unique number for this unit. Leave blank to have it assigned automatically', unique=True),
+            model_name="unit",
+            name="number",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="A unique number for this unit. Leave blank to have it assigned automatically",
+                unique=True,
+            ),
         ),
     ]

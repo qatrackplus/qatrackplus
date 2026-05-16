@@ -6,14 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0010_auto_20170531_1149'),
+        ("issue_tracker", "0010_auto_20170531_1149"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='issuestatus',
-            options={'ordering': ['order'], 'verbose_name_plural': 'Statuses'},
+            name="issuestatus",
+            options={"ordering": ["order"], "verbose_name_plural": "Statuses"},
         ),
     ]

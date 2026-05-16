@@ -1,31 +1,32 @@
 {% load i18n %}
 <div class="module">
-
   <table id="change-history">
     <thead>
       <tr>
         <th scope="col">{% trans "Date/time" %}</th>
         <th scope="col">{% trans "User" %}</th>
-        <th scope="col">{% trans "Old Reference" %}</th>
-        <th scope="col">{% trans "New Reference" %}</th>
-        <th scope="col">{% trans "Old Tolerance" %}</th>
-        <th scope="col">{% trans "New Tolerance" %}</th>
-        <th style="max-width: 300px" scope="col">{% trans "Comment" %}</th>
+        <th scope="col">{% trans "Reference" %}</th>
+        <th scope="col">{% trans "Tolerance" %}</th>
+        <th scope="col">{% trans "Comment" %}</th>
       </tr>
     </thead>
     <tbody>
-      {% for new, old in history %}
-        {% if new.reference or new.tolerance or old.reference or old.tolerance %}
+      {% for current, change in history %}
         <tr>
-          <th scope="row">{{ old.changed }}</th>
-          <td>{{ old.changed_by.username }}</td>
-          <td>{{ old.reference }}</td>
-          <td>{% if forloop.first %}<strong>{% endif %}{{ new.reference }}{% if forloop.first %}</strong>{% endif %}</td>
-          <td>{{ old.tolerance }}</td>
-          <td>{% if forloop.first %}<strong>{% endif %}{{ new.tolerance }}{% if forloop.first %}</strong>{% endif %}</td>
-          <td style="max-width: 300px" >{{ old.comment}}</td>
+          <th scope="row">{{ change.changed }}</th>
+          <td>{{ change.changed_by }}</td>
+          <td>
+              {{ current.reference }}
+          </td>
+          <td>
+            {% if change.tolerance_changed %}
+              {{ current.tolerance }} → {{ change.tolerance }}
+            {% else %}
+              {{ current.tolerance }}
+            {% endif %}
+          </td>
+          <td>{{ change.comment }}</td>
         </tr>
-        {% endif %}
       {% endfor %}
     </tbody>
   </table>

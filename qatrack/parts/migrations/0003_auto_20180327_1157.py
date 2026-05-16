@@ -7,35 +7,38 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0002_auto_20171027_1151'),
+        ("parts", "0002_auto_20171027_1151"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='part',
-            name='alt_part_number',
+            model_name="part",
+            name="alt_part_number",
             field=models.CharField(blank=True, max_length=32, null=True),
         ),
         migrations.AlterField(
-            model_name='part',
-            name='is_obsolete',
-            field=models.BooleanField(default=False, help_text='Is this part now obsolete?'),
+            model_name="part",
+            name="is_obsolete",
+            field=models.BooleanField(default=False, help_text="Is this part now obsolete?"),
         ),
         migrations.AlterField(
-            model_name='part',
-            name='part_category',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='parts.PartCategory'),
+            model_name="part",
+            name="part_category",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to="parts.PartCategory"
+            ),
         ),
         migrations.AlterField(
-            model_name='part',
-            name='part_number',
+            model_name="part",
+            name="part_number",
             field=models.CharField(max_length=32, unique=True),
         ),
         migrations.AlterField(
-            model_name='part',
-            name='quantity_min',
-            field=models.PositiveIntegerField(default=0, help_text='Notify when the quantity of this part in storage falls below this number'),
+            model_name="part",
+            name="quantity_min",
+            field=models.PositiveIntegerField(
+                default=0, help_text="Notify when the quantity of this part in storage falls below this number"
+            ),
         ),
     ]

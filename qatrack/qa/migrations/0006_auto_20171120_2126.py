@@ -6,20 +6,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0005_auto_20171103_2158'),
+        ("qa", "0005_auto_20171103_2158"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='test',
-            name='name',
-            field=models.CharField(db_index=True, help_text='Name for this test', max_length=255, unique=True),
+            model_name="test",
+            name="name",
+            field=models.CharField(db_index=True, help_text="Name for this test", max_length=255, unique=True),
         ),
         migrations.AlterField(
-            model_name='tolerance',
-            name='bool_warning_only',
-            field=models.BooleanField(default=False, help_text='Boolean tests not matching references should be considered at tolerance rather than action', verbose_name='Boolean Warning Only'),
+            model_name="tolerance",
+            name="bool_warning_only",
+            field=models.BooleanField(
+                default=False,
+                help_text="Boolean tests not matching references should be considered at tolerance rather than action",
+                verbose_name="Boolean Warning Only",
+            ),
         ),
     ]

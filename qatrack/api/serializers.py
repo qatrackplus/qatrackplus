@@ -1,5 +1,4 @@
 class MultiSerializerMixin:
-
     action_serializers = {}
 
     def get_serializer_class(self):

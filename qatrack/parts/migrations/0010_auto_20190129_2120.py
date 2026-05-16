@@ -5,19 +5,20 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parts', '0009_remove_part_description'),
+        ("parts", "0009_remove_part_description"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='part',
-            options={'ordering': ['part_number']},
+            name="part",
+            options={"ordering": ["part_number"]},
         ),
         migrations.AlterField(
-            model_name='part',
-            name='part_category',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='parts.PartCategory'),
+            model_name="part",
+            name="part_category",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="parts.PartCategory"
+            ),
         ),
     ]

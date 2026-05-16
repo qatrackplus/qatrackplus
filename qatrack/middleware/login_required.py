@@ -5,8 +5,8 @@ from urllib.parse import quote
 from django.conf import settings
 from django.http import HttpResponseRedirect
 
-EXEMPT_URLS = [compile(settings.LOGIN_URL.lstrip('/'))]
-if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
+EXEMPT_URLS = [compile(settings.LOGIN_URL.lstrip("/"))]
+if hasattr(settings, "LOGIN_EXEMPT_URLS"):
     EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
 
 
@@ -25,9 +25,8 @@ class LoginRequiredMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-
         if not request.user.is_authenticated:
-            path = request.path_info.lstrip('/')
+            path = request.path_info.lstrip("/")
             if not any(m.match(path) for m in EXEMPT_URLS):
                 login_url = "%s?next=%s" % (settings.LOGIN_URL, quote(request.get_full_path()))
                 return HttpResponseRedirect(login_url)

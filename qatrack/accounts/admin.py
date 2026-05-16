@@ -14,9 +14,9 @@ from qatrack.qatrack_core.admin import BaseQATrackAdmin
 class AdminFilter(admin.SimpleListFilter):
     # Replace Staff with Admin
 
-    title = _l('Admin Status')
+    title = _l("Admin Status")
 
-    parameter_name = 'is_admin'
+    parameter_name = "is_admin"
 
     def lookups(self, request, model_admin):
         """
@@ -27,28 +27,25 @@ class AdminFilter(admin.SimpleListFilter):
         in the right sidebar.
         """
         return (
-            ('yes', _('Yes')),
-            ('no', _('No')),
+            ("yes", _("Yes")),
+            ("no", _("No")),
         )
 
     def queryset(self, request, queryset):
-
-        if self.value() == 'yes':
+        if self.value() == "yes":
             return queryset.filter(is_staff=True)
 
-        elif self.value() == 'no':
+        elif self.value() == "no":
             return queryset.filter(is_staff=False)
 
         return queryset
 
 
 class QATrackUserAdmin(UserAdmin):
-
-    list_filter = (AdminFilter, 'is_superuser', 'is_active', 'groups')
-    list_display = ('username', 'email', 'first_name', 'last_name', "is_admin")
+    list_filter = (AdminFilter, "is_superuser", "is_active", "groups")
+    list_display = ("username", "email", "first_name", "last_name", "is_admin")
 
     def has_change_permission(self, request, obj=None):
-
         if obj and obj.username == "QATrack+ Internal":
             return False
 
@@ -56,18 +53,17 @@ class QATrackUserAdmin(UserAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=obj, **kwargs)
-        if obj and 'is_staff' in form.base_fields:
-            form.base_fields['is_staff'].label = _("Admin Status")
+        if obj and "is_staff" in form.base_fields:
+            form.base_fields["is_staff"].label = _("Admin Status")
 
         return form
 
+    @admin.display(boolean=True)
     def is_admin(self, obj):
         return obj.is_staff
-    is_admin.boolean = True
 
 
 class GroupForm(forms.ModelForm):
-
     default_group = forms.BooleanField(
         label=_l("Default Group"),
         required=False,
@@ -86,11 +82,10 @@ class QATrackGroupAdmin(GroupAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj=obj, change=change, **kwargs)
         if obj and models.DefaultGroup.objects.filter(group=obj).exists():
-            form.base_fields['default_group'].initial = True
+            form.base_fields["default_group"].initial = True
         return form
 
     def save_model(self, request, obj, form, change):
-
         super().save_model(request, obj, form, change)
 
         if form.cleaned_data.get("default_group"):
@@ -101,28 +96,29 @@ class QATrackGroupAdmin(GroupAdmin):
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).prefetch_related("defaultgroup_set")
 
+    @admin.display(boolean=True)
     def is_default(self, obj):
         return bool(obj.defaultgroup_set.all())
-    is_default.boolean = True
 
 
 class ActiveDirectoryGroupMapAdmin(BaseQATrackAdmin):
-
     list_display = ("get_ad_group", "get_groups", "account_qualifier")
-    list_filter = ("groups", "account_qualifier",)
+    list_filter = (
+        "groups",
+        "account_qualifier",
+    )
     search_fields = ("ad_group", "groups__name")
 
+    @admin.display(description=_l("QATrack+ Groups"))
     def get_groups(self, obj):
-        return ', '.join(sorted(obj.groups.values_list("name", flat=True)))
+        return ", ".join(sorted(obj.groups.values_list("name", flat=True)))
 
-    get_groups.short_description = _l("QATrack+ Groups")
-
+    @admin.display(description=_l("Active Directory Group Name"))
     @mark_safe
     def get_ad_group(self, obj):
         if not obj.ad_group:
-            return '<em>' + _("Default Groups") + "</em>"
+            return "<em>" + _("Default Groups") + "</em>"
         return escape(obj.ad_group)
-    get_ad_group.short_description = _l("Active Directory Group Name")
 
 
 admin.site.unregister(User)

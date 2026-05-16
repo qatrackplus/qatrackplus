@@ -1,7 +1,7 @@
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import User
 from django.core import mail
 from django.test import TestCase
-from django.contrib.auth.models import User
 from django.urls import reverse
 from django_q.models import Schedule
 
@@ -14,17 +14,14 @@ from qatrack.qa.tests import utils as qa_utils
 
 
 class TestFaultNoticeAdmin(TestCase):
-
     def setUp(self):
+        self.user = create_user(is_superuser=True, uname="user", pwd="pwd")
+        self.client.login(username="user", password="pwd")
 
-        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
-        self.client.login(username='user', password='pwd')
-
-        self.url_add = reverse(
-            'admin:%s_%s_add' % (models.Fault._meta.app_label, models.Fault._meta.model_name)
-        )
+        self.url_add = reverse("admin:%s_%s_add" % (models.Fault._meta.app_label, models.Fault._meta.model_name))
         self.url_list = reverse(
-            'admin:%s_%s_changelist' % (
+            "admin:%s_%s_changelist"
+            % (
                 FaultNotice._meta.app_label,
                 FaultNotice._meta.model_name,
             )
@@ -61,9 +58,7 @@ class TestFaultNoticeAdmin(TestCase):
 
 
 class TestFaultNoticeEmails(TestCase):
-
     def setUp(self):
-
         self.tests = []
 
         self.unit = qa_utils.create_unit()
@@ -81,7 +76,7 @@ class TestFaultNoticeEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -165,7 +160,7 @@ class TestFaultNoticeEmails(TestCase):
         should be sent to the new user"""
 
         group2 = qa_utils.create_group(name="group2")
-        rg = RecipientGroup.objects.create(name='group2')
+        rg = RecipientGroup.objects.create(name="group2")
         rg.groups.add(group2)
         FaultNotice.objects.create(
             notification_type=FaultNotice.LOGGED,
@@ -178,7 +173,7 @@ class TestFaultNoticeEmails(TestCase):
         user2.groups.add(group2)
         utils.create_fault(unit=self.unit)
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].recipients() == ['user2@example.com']
+        assert mail.outbox[0].recipients() == ["user2@example.com"]
 
     def test_email_sent_to_group_and_single_user(self):
         """Main group is not included in notification, only new user, so only one email
@@ -194,11 +189,10 @@ class TestFaultNoticeEmails(TestCase):
         self.recipients.users.add(user2)
         utils.create_fault(unit=self.unit)
         assert len(mail.outbox) == 1
-        assert list(sorted(mail.outbox[0].recipients())) == ['example@example.com', 'user2@example.com']
+        assert list(sorted(mail.outbox[0].recipients())) == ["example@example.com", "user2@example.com"]
 
 
 class TestFaultNoticeModel:
-
     def test_str(self):
         n = FaultNotice(pk=1, notification_type=FaultNotice.LOGGED)
         assert str(n) == "<FaultNotice(1, Notify when fault logged)>"

@@ -6,18 +6,22 @@ from django.db import migrations, models
 
 
 def remove_duplicate_tolerances(apps, schema):
+    Tolerance = apps.get_model("qa", "Tolerance")
+    TestInstance = apps.get_model("qa", "TestInstance")
+    UnitTestInfoChange = apps.get_model("qa", "UnitTestInfoChange")
+    UnitTestInfo = apps.get_model("qa", "UnitTestInfo")
 
-    Tolerance = apps.get_model('qa', 'Tolerance')
-    TestInstance = apps.get_model('qa', 'TestInstance')
-    UnitTestInfoChange = apps.get_model('qa', 'UnitTestInfoChange')
-    UnitTestInfo = apps.get_model('qa', 'UnitTestInfo')
-
-    duplicates = Tolerance.objects.order_by(
-        *Tolerance._meta.ordering,
-    ).values('name').annotate(name_count=models.Count('name')).filter(name_count__gt=1)
+    duplicates = (
+        Tolerance.objects.order_by(
+            *Tolerance._meta.ordering,
+        )
+        .values("name")
+        .annotate(name_count=models.Count("name"))
+        .filter(name_count__gt=1)
+    )
 
     for d in duplicates:
-        tolerances = Tolerance.objects.filter(name=d['name'])
+        tolerances = Tolerance.objects.filter(name=d["name"])
 
         tol_keep = tolerances.first()
         tolerances = tolerances.exclude(id=tol_keep.id)
@@ -38,9 +42,8 @@ def remove_duplicate_tolerances(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0017_set_tolerance_names'),
+        ("qa", "0017_set_tolerance_names"),
     ]
 
     operations = [

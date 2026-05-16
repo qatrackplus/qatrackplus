@@ -5,25 +5,42 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0031_convert_null_mc_tols'),
+        ("qa", "0031_convert_null_mc_tols"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tolerance',
-            name='mc_pass_choices',
-            field=models.CharField(blank=True, default='', help_text='Comma seperated list of choices that are considered passing', max_length=2048, verbose_name='Multiple Choice OK Values'),
+            model_name="tolerance",
+            name="mc_pass_choices",
+            field=models.CharField(
+                blank=True,
+                default="",
+                help_text="Comma seperated list of choices that are considered passing",
+                max_length=2048,
+                verbose_name="Multiple Choice OK Values",
+            ),
         ),
         migrations.AlterField(
-            model_name='tolerance',
-            name='mc_tol_choices',
-            field=models.CharField(blank=True, default='', help_text='Comma seperated list of choices that are considered at tolerance', max_length=2048, verbose_name='Multiple Choice Tolerance Values'),
+            model_name="tolerance",
+            name="mc_tol_choices",
+            field=models.CharField(
+                blank=True,
+                default="",
+                help_text="Comma seperated list of choices that are considered at tolerance",
+                max_length=2048,
+                verbose_name="Multiple Choice Tolerance Values",
+            ),
         ),
         migrations.AlterField(
-            model_name='unittestcollection',
-            name='content_type',
-            field=models.ForeignKey(help_text='Choose whether to use a Test List or Test List Cycle', limit_choices_to={'app_label': 'qa', 'model__in': ['testlist', 'testlistcycle']}, on_delete=django.db.models.deletion.PROTECT, to='contenttypes.ContentType', verbose_name='Test List or Test List Cycle'),
+            model_name="unittestcollection",
+            name="content_type",
+            field=models.ForeignKey(
+                help_text="Choose whether to use a Test List or Test List Cycle",
+                limit_choices_to={"app_label": "qa", "model__in": ["testlist", "testlistcycle"]},
+                on_delete=django.db.models.deletion.PROTECT,
+                to="contenttypes.ContentType",
+                verbose_name="Test List or Test List Cycle",
+            ),
         ),
     ]

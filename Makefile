@@ -11,6 +11,9 @@ cover-module:
 cover-mo:
 	py.test --reuse-db --cov-report term-missing:skip-covered --cov ./ ${args}
 
+cover-qatrack:
+	py.test --reuse-db --cov-report term-missing --cov qatrack ${args}
+
 test:
 	py.test ${args}
 
@@ -42,7 +45,7 @@ docs:
 	cd docs && make html
 
 docs-autobuild:
-	sphinx-autobuild docs docs/_build/html -p 8009
+	sphinx-autobuild docs docs/_build/html --port 8009
 
 qatrack_daemon.conf:
 	sudo a2enmod headers
@@ -54,8 +57,8 @@ qatrack_daemon.conf:
 	sudo service apache2 restart
 
 supervisor.conf:
-	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/django-q.conf > django-q.conf
-	sudo mv django-q.conf /etc/supervisor/conf.d/
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/django-q.conf > django-q2.conf
+	sudo mv django-q2.conf /etc/supervisor/conf.d/
 	sudo supervisorctl reread
 	sudo supervisorctl update
 

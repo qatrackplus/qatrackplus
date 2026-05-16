@@ -14,6 +14,38 @@
     border-style: solid;
     padding: 2px;
 }
+/* Remove the skip to main content button */
+.skip-to-content-link {
+    display: none !important;
+}
+/* Remove the search bar */
+#nav-filter {
+    display: none !important;
+}
+
+/* Fix the Django admin navigation sidebar height */
+#nav-sidebar {
+    max-height: calc(100vh - 100px) !important; /* Constrain to viewport height */
+    overflow-y: auto !important; /* Enable internal scrolling */
+    position: sticky !important;
+    top: 20px !important;
+}
+
+/* Ensure the navigation sidebar modules are scrollable */
+#nav-sidebar .module {
+    margin-bottom: 10px;
+}
+
+/* Fix oversized delete button in submit-row */
+.submit-row .deletelink {
+    display: inline-block !important;
+    width: auto !important;
+    max-width: 150px !important;
+    padding: 10px 15px !important;
+    margin-left: 10px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
 </style>
 {% endblock %}
 {% block extrahead %}
@@ -70,7 +102,7 @@
         });
     }
 
-    window.DYNAMIC_RAW_ID_MOUNT_URL = "{% url "admin:index" %}";
+    window.DYNAMIC_RAW_ID_MOUNT_URL = "{% url 'admin:index' %}";
 
     function initCalendar(){
         window.CalendarNamespace.monthsOfYearShort = [
@@ -131,3 +163,23 @@
 
 </script>
 {% endblock footer %}
+
+{#
+Override userlinks to remove logout but keep Django 4.2's theme toggle
+#}
+{% block userlinks %}
+    {% load admin_urls static admin_list %}
+    {% if site_url %}
+        <a href="{{ site_url }}">{% translate 'View site' %}</a> /
+    {% endif %}
+    {% if user.is_active and user.is_staff %}
+        {% url 'django-admindocs-docroot' as docsroot %}
+        {% if docsroot %}
+            <a href="{{ docsroot }}">{% translate 'Documentation' %}</a> /
+        {% endif %}
+    {% endif %}
+    {% if user.has_usable_password %}
+        <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a> /
+    {% endif %}
+    {% include "admin/color_theme_toggle.html" %}
+{% endblock %}

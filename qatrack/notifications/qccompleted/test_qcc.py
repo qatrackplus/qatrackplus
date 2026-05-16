@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_q.models import Schedule
 
+import qatrack.qa.tests.utils as utils
 from qatrack.accounts.tests.utils import create_user
 from qatrack.notifications.models import (
     QCCompletedNotice,
@@ -14,21 +15,19 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.qccompleted import admin, tasks
 from qatrack.qa import models, signals
-import qatrack.qa.tests.utils as utils
 
 
 class TestQCCompletedNoticeAdmin(TestCase):
-
     def setUp(self):
-
-        self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
-        self.client.login(username='user', password='pwd')
+        self.user = create_user(is_superuser=True, uname="user", pwd="pwd")
+        self.client.login(username="user", password="pwd")
 
         self.url_add = reverse(
-            'admin:%s_%s_add' % (QCCompletedNotice._meta.app_label, QCCompletedNotice._meta.model_name)
+            "admin:%s_%s_add" % (QCCompletedNotice._meta.app_label, QCCompletedNotice._meta.model_name)
         )
         self.url_list = reverse(
-            'admin:%s_%s_changelist' % (
+            "admin:%s_%s_changelist"
+            % (
                 QCCompletedNotice._meta.app_label,
                 QCCompletedNotice._meta.model_name,
             )
@@ -40,13 +39,13 @@ class TestQCCompletedNoticeAdmin(TestCase):
         assert admin.trim("foobarbaz", 5) == "foob…"
 
     def has_error(self, resp, err):
-        return any(err in e for err_list in resp.context_data['errors'] for e in err_list)
+        return any(err in e for err_list in resp.context_data["errors"] for e in err_list)
 
     def test_add_completed_with_follow_up_days(self):
         """If the notification type is not follow up, then follow_up_days should not be set"""
         data = {
-            'notification_type': QCCompletedNotice.TOLERANCE,
-            'follow_up_days': 2,
+            "notification_type": QCCompletedNotice.TOLERANCE,
+            "follow_up_days": 2,
         }
 
         resp = self.client.post(self.url_add, data=data)
@@ -54,8 +53,8 @@ class TestQCCompletedNoticeAdmin(TestCase):
 
     def test_add_follow_up_blank_days(self):
         data = {
-            'notification_type': QCCompletedNotice.FOLLOW_UP,
-            'follow_up_days': "",
+            "notification_type": QCCompletedNotice.FOLLOW_UP,
+            "follow_up_days": "",
         }
         resp = self.client.post(self.url_add, data=data)
 
@@ -103,12 +102,10 @@ class TestQCCompletedNoticeAdmin(TestCase):
 
 
 class TestQCCompletedEmails(TestCase):
-
     def setUp(self):
-
         self.tests = []
 
-        self.ref = models.Reference(type=models.NUMERICAL, value=100.)
+        self.ref = models.Reference(type=models.NUMERICAL, value=100.0)
         self.tol = models.Tolerance(type=models.PERCENT, act_low=-3, tol_low=-2, tol_high=2, act_high=3)
         self.ref.created_by = utils.create_user()
         self.tol.created_by = utils.create_user()
@@ -134,8 +131,8 @@ class TestQCCompletedEmails(TestCase):
 
         self.test_list_instance = self.create_test_list_instance()
 
-        self.group = models.Group.objects.latest('pk')
-        user = models.User.objects.latest('pk')
+        self.group = models.Group.objects.latest("pk")
+        user = models.User.objects.latest("pk")
         user.groups.add(self.group)
         user.email = "example@example.com"
         user.save()
@@ -143,7 +140,7 @@ class TestQCCompletedEmails(TestCase):
         self.recipients = RecipientGroup.objects.create(name="test group")
         self.recipients.groups.add(self.group)
 
-        self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
+        self.inactive_user = models.User.objects.create_user("inactive", "inactive@user.com", "password")
         self.inactive_user.groups.add(self.group)
         self.inactive_user.is_active = False
         self.inactive_user.save()
@@ -176,7 +173,6 @@ class TestQCCompletedEmails(TestCase):
         return tli
 
     def test_email_sent(self):
-
         notification = QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.TOLERANCE,
             recipients=self.recipients,
@@ -199,7 +195,6 @@ class TestQCCompletedEmails(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_inactive_not_included(self):
-
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.TOLERANCE,
             recipients=self.recipients,
@@ -219,7 +214,6 @@ class TestQCCompletedEmails(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_email_sent_to_group_for_unit(self):
-
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.TOLERANCE,
             recipients=self.recipients,
@@ -249,7 +243,7 @@ class TestQCCompletedEmails(TestCase):
         should be sent to the new user"""
 
         group2 = utils.create_group(name="group2")
-        rg = RecipientGroup.objects.create(name='group2')
+        rg = RecipientGroup.objects.create(name="group2")
         rg.groups.add(group2)
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.TOLERANCE,
@@ -262,7 +256,7 @@ class TestQCCompletedEmails(TestCase):
         user2.groups.add(group2)
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].recipients() == ['user2@example.com']
+        assert mail.outbox[0].recipients() == ["user2@example.com"]
 
     def test_email_sent_to_group_and_single_user(self):
         """Main group is not included in notification, only new user, so only one email
@@ -278,10 +272,9 @@ class TestQCCompletedEmails(TestCase):
         self.recipients.users.add(user2)
         signals.testlist_complete.send(sender=self, instance=self.test_list_instance, created=True)
         assert len(mail.outbox) == 1
-        assert list(sorted(mail.outbox[0].recipients())) == ['example@example.com', 'user2@example.com']
+        assert list(sorted(mail.outbox[0].recipients())) == ["example@example.com", "user2@example.com"]
 
     def test_email_sent_for_completion(self):
-
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.COMPLETED,
             recipients=self.recipients,
@@ -293,7 +286,6 @@ class TestQCCompletedEmails(TestCase):
         assert "list was just completed" in mail.outbox[0].alternatives[0][0]
 
     def test_email_not_sent_for_completion_with_notification_type_tol(self):
-
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.TOLERANCE,
             recipients=self.recipients,
@@ -304,7 +296,6 @@ class TestQCCompletedEmails(TestCase):
         assert len(mail.outbox) == 0
 
     def test_email_not_sent_for_diff_testlist(self):
-
         new_test_list = utils.create_test_list()
         test = utils.create_test(name="new tl name")
         utils.create_test_list_membership(new_test_list, test)
@@ -321,7 +312,6 @@ class TestQCCompletedEmails(TestCase):
         assert len(mail.outbox) == 0
 
     def test_email_sent_for_specific_testlist(self):
-
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.COMPLETED,
             test_lists=self.testlist_group,
@@ -331,7 +321,6 @@ class TestQCCompletedEmails(TestCase):
         assert len(mail.outbox) == 1
 
     def test_email_not_sent_for_same_testlist_different_unit(self):
-
         unit = utils.create_unit()
         utc = utils.create_unit_test_collection(unit=unit, test_collection=self.test_list)
         QCCompletedNotice.objects.create(
@@ -347,7 +336,6 @@ class TestQCCompletedEmails(TestCase):
         assert len(mail.outbox) == 0
 
     def test_follow_up_email_scheduled(self):
-
         QCCompletedNotice.objects.create(
             notification_type=QCCompletedNotice.FOLLOW_UP,
             follow_up_days=1,
@@ -391,7 +379,6 @@ class TestQCCompletedEmails(TestCase):
         assert Schedule.objects.first().next_run == scheduled + timezone.timedelta(days=1)
 
     def test_follow_up_not_sent_for_same_testlist_different_unit(self):
-
         unit = utils.create_unit()
         utc = utils.create_unit_test_collection(unit=unit, test_collection=self.test_list)
 
@@ -434,7 +421,6 @@ class TestQCCompletedEmails(TestCase):
 
 
 class TestQCCompletedNoticeModel:
-
     def test_str(self):
         n = QCCompletedNotice(pk=1, notification_type=QCCompletedNotice.FOLLOW_UP)
         assert str(n) == "<QCCompletedNotice(1, Follow up notification)>"

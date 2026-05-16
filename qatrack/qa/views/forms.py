@@ -56,12 +56,7 @@ class TestInstanceWidgetsMixin(object):
         date_value = cleaned_data.get("date_value", None)
         datetime_value = cleaned_data.get("datetime_value", None)
 
-        empty = (
-            value is None and
-            string_value in ["", None] and
-            date_value is None and
-            datetime_value is None
-        )
+        empty = value is None and string_value in ["", None] and date_value is None and datetime_value is None
 
         if self.unit_test_info.test.skip_required():
             # force user to enter value unless skipping test
@@ -71,8 +66,7 @@ class TestInstanceWidgetsMixin(object):
                 self._errors["value"] = self.error_class([_("Clear value if skipping")])
 
             no_comment_required = (
-                self.user.has_perm("qa.can_skip_without_comment") or
-                self.unit_test_info.test.skip_without_comment
+                self.user.has_perm("qa.can_skip_without_comment") or self.unit_test_info.test.skip_without_comment
             )
             if not no_comment_required and skipped and not comment:
                 self._errors["skipped"] = self.error_class([_("Please add comment when skipping")])
@@ -81,11 +75,11 @@ class TestInstanceWidgetsMixin(object):
             if empty and skipped and "value" in self.errors:
                 del self.errors["value"]
         else:
-            cleaned_data['skipped'] = empty
+            cleaned_data["skipped"] = empty
 
             # check if composite test calculated value that is not in (numerical, None)
             is_comp = self.unit_test_info.test.type == models.COMPOSITE
-            invalid_composite = is_comp and self.errors.get('value') and self['value'].value() is not None
+            invalid_composite = is_comp and self.errors.get("value") and self["value"].value() is not None
             if "value" in self.errors and not invalid_composite:
                 del self.errors["value"]
 
@@ -108,10 +102,10 @@ class TestInstanceWidgetsMixin(object):
         elif test_type == models.CONSTANT:
             test = self.unit_test_info.test
             formatted = format_qc_value(test.constant_value, test.formatting)
-            self.fields["value"].widget.attrs['title'] = _('Actual value = %(constant_value)s') % {
-                'constant_value': test.constant_value
+            self.fields["value"].widget.attrs["title"] = _("Actual value = %(constant_value)s") % {
+                "constant_value": test.constant_value
             }
-            self.fields["value"].widget.attrs['data-formatted'] = formatted
+            self.fields["value"].widget.attrs["data-formatted"] = formatted
         elif test_type == models.MULTIPLE_CHOICE:
             self.fields["string_value"].widget = Select(choices=[("", "")] + self.unit_test_info.test.get_choices())
         elif test_type == models.UPLOAD:
@@ -122,14 +116,14 @@ class TestInstanceWidgetsMixin(object):
             if getattr(self, "instance", None):
                 test = self.unit_test_info.test
                 formatted = format_qc_value(self.instance.value, test.formatting)
-                self.fields["value"].widget.attrs['data-formatted'] = formatted
+                self.fields["value"].widget.attrs["data-formatted"] = formatted
         elif test_type in models.STRING_TYPES:
-            self.fields['string_value'].widget = Input({'maxlength': 20000})
+            self.fields["string_value"].widget = Input({"maxlength": 20000})
         else:
             attrs = {"step": "any"}
             if test_type == models.WRAPAROUND:
-                attrs['max'] = self.unit_test_info.test.wrap_high
-                attrs['min'] = self.unit_test_info.test.wrap_low
+                attrs["max"] = self.unit_test_info.test.wrap_high
+                attrs["min"] = self.unit_test_info.test.wrap_low
             self.fields["value"].widget = NumberInput(attrs=attrs)
 
         if test_type in (models.BOOLEAN, models.MULTIPLE_CHOICE):
@@ -141,7 +135,10 @@ class TestInstanceWidgetsMixin(object):
 
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
-        if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE, ):
+        if self.unit_test_info.test.type in (
+            models.CONSTANT,
+            models.COMPOSITE,
+        ):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
         elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
             self.fields["string_value"].widget.attrs["readonly"] = "readonly"
@@ -149,6 +146,7 @@ class TestInstanceWidgetsMixin(object):
     @property
     def attachments_to_process(self):
         from qatrack.attachments.models import Attachment
+
         to_process = []
 
         uti_pk = self.unit_test_info.pk
@@ -160,18 +158,17 @@ class TestInstanceWidgetsMixin(object):
         return to_process
 
     def clean_value(self):
-        value = self.cleaned_data.get('value')
+        value = self.cleaned_data.get("value")
         t = self.unit_test_info.test
         if value is not None and t.type == models.WRAPAROUND:
             if not (t.wrap_low <= value <= t.wrap_high):
                 msg = _("Value for this test must be in range {low} to {high}").format(high=t.wrap_high, low=t.wrap_low)
-                self.add_error('value', msg)
+                self.add_error("value", msg)
 
         return value
 
 
 class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
-
     value = forms.FloatField(required=False, widget=forms.widgets.TextInput(attrs={"class": "qa-input"}))
     string_value = forms.CharField(required=False)
     json_value = forms.CharField(widget=forms.HiddenInput, required=False)
@@ -229,7 +226,6 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
         initial = []
         for uti in unit_test_infos:
-
             init = {"value": None}
 
             if uti.test.type == models.CONSTANT:
@@ -250,7 +246,6 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
 
 class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
-
     user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
 
     class Meta:
@@ -267,7 +262,6 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
         )
 
     def __init__(self, *args, **kwargs):
-
         super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
         self.in_progress = self.instance.test_list_instance.in_progress
         self.fields["value"].required = False
@@ -296,9 +290,7 @@ BaseUpdateTestInstanceFormSet = inlineformset_factory(
 
 
 class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet):
-
     def __init__(self, *args, **kwargs):
-
         super(UpdateTestInstanceFormSet, self).__init__(*args, **kwargs)
 
         prev_cat = None
@@ -309,10 +301,9 @@ class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet)
 
 
 class ReviewTestInstanceForm(forms.ModelForm):
-
     class Meta:
         model = models.TestInstance
-        fields = ("status", )
+        fields = ("status",)
 
 
 BaseReviewTestInstanceFormSet = inlineformset_factory(
@@ -331,10 +322,7 @@ class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet)
 class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
 
-    status = forms.ModelChoiceField(
-        queryset=models.TestInstanceStatus.objects,
-        required=False
-    )
+    status = forms.ModelChoiceField(queryset=models.TestInstanceStatus.objects, required=False)
 
     work_completed = forms.DateTimeField(required=False)
 
@@ -348,11 +336,13 @@ class BaseTestListInstanceForm(forms.ModelForm):
         label=_l("Attachments"),
         max_length=150,
         required=False,
-        widget=forms.FileInput(attrs={
-            'multiple': '',
-            'class': 'file-upload',
-            'style': 'display:none',
-        })
+        widget=forms.FileInput(
+            attrs={
+                "multiple": "",
+                "class": "file-upload",
+                "style": "display:none",
+            }
+        ),
     )
 
     autosave_id = forms.IntegerField(required=False, widget=HiddenInput())
@@ -362,24 +352,23 @@ class BaseTestListInstanceForm(forms.ModelForm):
         exclude = ("day",)
 
     def __init__(self, *args, **kwargs):
-
-        self.unit = kwargs.pop('unit', None)
-        self.rtsqa_id = kwargs.pop('rtsqa', None)
+        self.unit = kwargs.pop("unit", None)
+        self.rtsqa_id = kwargs.pop("rtsqa", None)
 
         super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
 
-        for field in ('work_completed', 'work_started'):
+        for field in ("work_completed", "work_started"):
             self.fields[field].widget = forms.widgets.DateTimeInput()
 
             self.fields[field].widget.format = settings.DATETIME_INPUT_FORMATS[0]
             self.fields[field].input_formats = settings.DATETIME_INPUT_FORMATS
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
-            self.fields[field].widget.attrs['class'] = 'form-control'
+            self.fields[field].widget.attrs["class"] = "form-control"
             self.fields[field].help_text = settings.DATETIME_HELP
 
         self.fields["status"].widget.attrs["class"] = "form-control select2"
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
-        self.fields['service_events'].widget.attrs.update({'class': 'select2'})
+        self.fields["service_events"].widget.attrs.update({"class": "select2"})
 
         if self.instance.pk:
             se_ids = []
@@ -387,23 +376,26 @@ class BaseTestListInstanceForm(forms.ModelForm):
             for rtsqa in self.instance.rtsqa_for_tli.all():
                 se_ids.append(rtsqa.service_event_id)
                 rtsqa_ids.append(rtsqa.id)
-            self.initial['rtsqa_id'] = ','.join(str(x) for x in rtsqa_ids)
+            self.initial["rtsqa_id"] = ",".join(str(x) for x in rtsqa_ids)
             se_qs = sl_models.ServiceEvent.objects.filter(pk__in=se_ids)
-            self.fields['service_events'].queryset = se_qs
-            self.initial['service_events'] = se_qs
+            self.fields["service_events"].queryset = se_qs
+            self.initial["service_events"] = se_qs
 
         elif self.rtsqa_id:
             rtsqa = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id)
-            self.fields['service_events'].queryset = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
-            self.initial['service_events'] = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
-            self.initial['rtsqa_id'] = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id).id
+            self.fields["service_events"].queryset = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial["service_events"] = sl_models.ServiceEvent.objects.filter(pk=rtsqa.service_event.id)
+            self.initial["rtsqa_id"] = sl_models.ReturnToServiceQA.objects.get(pk=self.rtsqa_id).id
 
     def clean(self):
         """validate the work_completed & work_started values"""
 
         cleaned_data = super(BaseTestListInstanceForm, self).clean()
 
-        for field in ("work_completed", "work_started",):
+        for field in (
+            "work_completed",
+            "work_started",
+        ):
             if field in self.errors:
                 self.errors[field][0] += " %s" % settings.DATETIME_HELP
 
@@ -440,21 +432,19 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     """form for doing qa test list"""
 
     comment = forms.CharField(widget=forms.Textarea, required=False)
-    initiate_service = forms.BooleanField(help_text=_l('Initiate service event'), required=False)
+    initiate_service = forms.BooleanField(help_text=_l("Initiate service event"), required=False)
 
     def __init__(self, *args, **kwargs):
         super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
         now = timezone.localtime(timezone.now())
-        self.fields['work_started'].initial = format_datetime(now)
-        self.fields['comment'].widget.attrs['rows'] = '3'
-        self.fields['comment'].widget.attrs['placeholder'] = _('Add comment about this set of tests')
-        self.fields['comment'].widget.attrs['class'] = 'autosize form-control'
+        self.fields["work_started"].initial = format_datetime(now)
+        self.fields["comment"].widget.attrs["rows"] = "3"
+        self.fields["comment"].widget.attrs["placeholder"] = _("Add comment about this set of tests")
+        self.fields["comment"].widget.attrs["class"] = "autosize form-control"
 
 
 class UpdateTestListInstanceForm(BaseTestListInstanceForm):
-
     def __init__(self, *args, **kwargs):
-
         instance = kwargs["instance"]
 
         # only blank out work_completed if we are continuing an in progress list
@@ -480,9 +470,8 @@ class ReviewTestListInstanceForm(forms.ModelForm):
         super(ReviewTestListInstanceForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-
         cleaned_data = super(ReviewTestListInstanceForm, self).clean()
 
-        if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
+        if self.instance.created_by == self.user and not self.user.has_perm("qa.can_review_own_tests"):
             raise ValidationError(_("You do not have the required permission to review your own tests."))
         return cleaned_data

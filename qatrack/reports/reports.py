@@ -1,9 +1,10 @@
 import csv
 import datetime
-from io import BytesIO, StringIO
 import json
+from io import BytesIO, StringIO
 from urllib.parse import quote_plus
 
+import xlsxwriter
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.http import Http404, HttpResponse
@@ -14,10 +15,9 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-import xlsxwriter
 
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
-from qatrack.qatrack_core.utils import chrometopdf, relative_dates
+from qatrack.qatrack_core.utils import chrometopdf, relative_dates, weasyprint_to_pdf
 
 CSV = "csv"
 XLS = "xlsx"
@@ -35,7 +35,8 @@ ORDERED_CONTENT_TYPES = [CSV, PDF, XLS]
 def register_class(target_class):
     if target_class.__name__ in REPORT_REGISTRY:  # pragma: nocover
         msg = "Trying to register %s but a class with the name %s already exists in the report registry" % (
-            target_class, target_class.__name__
+            target_class,
+            target_class.__name__,
         )
         raise ValueError(msg)
     REPORT_REGISTRY[target_class.__name__] = target_class
@@ -45,13 +46,14 @@ def format_user(user):
     if not user:
         return ""
 
-    return user.username if not user.email else mark_safe(
-        '%s (<a href="mailto:%s">%s</a>)' % (user.username, user.email, user.email)
+    return (
+        user.username
+        if not user.email
+        else mark_safe('%s (<a href="mailto:%s">%s</a>)' % (user.username, user.email, user.email))
     )
 
 
 class ReportMeta(type):
-
     required = ["to_table"]
 
     def __new__(meta, name, bases, class_dict):
@@ -65,12 +67,11 @@ class ReportMeta(type):
                     missing.append(req)
 
             if missing:
-                raise TypeError("%s is missing the following required methods: %s" % (name, ', '.join(missing)))
+                raise TypeError("%s is missing the following required methods: %s" % (name, ", ".join(missing)))
         return cls
 
 
 class BaseReport(object, metaclass=ReportMeta):
-
     filter_class = None
     category = _l("General")
     description = _l("Generic QATrack+ Report")
@@ -81,7 +82,7 @@ class BaseReport(object, metaclass=ReportMeta):
 
     def __init__(self, base_opts=None, report_opts=None, notes=None, user=None):
         """base_opts is dict of form:
-            {'report_id': <rid|None>, 'include_signature': <bool>, 'title': str} """
+        {'report_id': <rid|None>, 'include_signature': <bool>, 'title': str}"""
 
         self.user = user
         self.base_opts = base_opts or {}
@@ -130,13 +131,13 @@ class BaseReport(object, metaclass=ReportMeta):
     def render_to_response(self, report_format):
         fname, content = self.render(report_format)
         response = HttpResponse(content, content_type=CONTENT_TYPES[report_format])
-        response['Content-Disposition'] = 'attachment; filename="%s"' % fname
+        response["Content-Disposition"] = 'attachment; filename="%s"' % fname
         return response
 
     @property
     def html(self):
         """return whether or not this is a plain text report (csv/txt)"""
-        return self.report_format in ['pdf', 'html']
+        return self.report_format in ["pdf", "html"]
 
     @property
     def plain(self):
@@ -146,26 +147,32 @@ class BaseReport(object, metaclass=ReportMeta):
     def get_context(self):
         name = self.get_report_type_name()
         return {
-            'STATIC_ROOT': settings.STATIC_ROOT,
-            'site': Site.objects.get_current(),
-            'content': "",
-            'protocol': settings.HTTP_OR_HTTPS,
-            'report_name': name,
-            'report_description': self.description,
-            'report_type': self.get_report_type(),
-            'report_format': getattr(self, "report_format", "html"),
-            'report_title': self.base_opts.get("title", name),
-            'report_url': self.get_report_url(),
-            'report_details': self.get_report_details(),
-            'notes': self.notes,
-            'queryset': self.filter_set.qs if self.filter_set else None,
-            'include_signature': self.base_opts.get("include_signature", False),
+            "STATIC_ROOT": settings.STATIC_ROOT,
+            "site": Site.objects.get_current(),
+            "content": "",
+            "protocol": settings.HTTP_OR_HTTPS,
+            "report_name": name,
+            "report_description": self.description,
+            "report_type": self.get_report_type(),
+            "report_format": getattr(self, "report_format", "html"),
+            "report_title": self.base_opts.get("title", name),
+            "report_url": self.get_report_url(),
+            "report_details": self.get_report_details(),
+            "notes": self.notes,
+            "queryset": self.filter_set.qs if self.filter_set else None,
+            "include_signature": self.base_opts.get("include_signature", False),
+            "include_logo": self.base_opts.get("include_logo", True),
+            "paper_size": self.base_opts.get("paper_size", "letter"),
         }
 
-    def make_url(self, url, text='', title='', plain=False):
-
+    def make_url(self, url, text="", title="", plain=False):
         slash = "/" if not (self.domain.endswith("/") or url.startswith("/")) else ""
-        full_url = '%s://%s%s%s' % (settings.HTTP_OR_HTTPS, self.domain, slash, url)
+        full_url = "%s://%s%s%s" % (
+            settings.HTTP_OR_HTTPS,
+            self.domain,
+            slash,
+            url[1:] if (self.domain.endswith("/") and url.startswith("/")) else url,
+        )
         if plain or self.plain:
             return full_url
 
@@ -173,11 +180,12 @@ class BaseReport(object, metaclass=ReportMeta):
 
     def get_report_url(self):
         from qatrack.reports.forms import serialize_report
-        domain = Site.objects.get_current().domain
-        base_url = '%s://%s%s' % (settings.HTTP_OR_HTTPS, domain, reverse("reports"))
 
-        if self.base_opts.get('report_id'):
-            return "%s?report_id=%s" % (base_url, self.base_opts['report_id'])
+        domain = Site.objects.get_current().domain
+        base_url = "%s://%s%s" % (settings.HTTP_OR_HTTPS, domain, reverse("reports"))
+
+        if self.base_opts.get("report_id"):
+            return "%s?report_id=%s" % (base_url, self.base_opts["report_id"])
 
         opts = serialize_report(self)
         return "%s?opts=%s" % (base_url, quote_plus(json.dumps(opts)))
@@ -195,7 +203,6 @@ class BaseReport(object, metaclass=ReportMeta):
         return self.report_type
 
     def get_report_details(self):
-
         if self.filter_set is None:
             return []
 
@@ -241,7 +248,7 @@ class BaseReport(object, metaclass=ReportMeta):
             pass
 
         try:
-            return ', '.join(str(x) for x in val)
+            return ", ".join(str(x) for x in val)
         except:  # noqa: E722  # pragma: no cover
             pass
 
@@ -250,17 +257,35 @@ class BaseReport(object, metaclass=ReportMeta):
     def to_html(self):
         self.report_format = "html"
         context = self.get_context()
-        context['base_template'] = "reports/html_report.html"
+        context["base_template"] = "reports/html_report.html"
         template = self.get_template(using=None)
         return template.render(context)
 
     def to_pdf(self):
         fname = self.get_filename("pdf")
         context = self.get_context()
-        context['base_template'] = "reports/pdf_report.html"
+        context["base_template"] = "reports/pdf_report.html"
         template = self.get_template(using=None)
         content = template.render(context)
-        return chrometopdf(content, name=fname)
+        paper_size = context.get("paper_size", "letter")
+
+        # Use WeasyPrint for paper size support
+        try:
+            return weasyprint_to_pdf(content, name=fname, paper_size=paper_size)
+        except ImportError:
+            # WeasyPrint not available, fall back to Chrome
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning("WeasyPrint not available, falling back to Chrome")
+            return chrometopdf(content, name=fname, paper_size=paper_size)
+        except Exception as e:
+            # WeasyPrint failed for some other reason, fall back to Chrome
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(f"WeasyPrint failed, falling back to Chrome: {e}")
+            return chrometopdf(content, name=fname, paper_size=paper_size)
 
     def to_csv(self):
         context = self.get_context()
@@ -274,13 +299,12 @@ class BaseReport(object, metaclass=ReportMeta):
     def to_xlsx(self):
         context = self.get_context()
         f = BytesIO()
-        wb = xlsxwriter.Workbook(f, {'in_memory': True})
+        wb = xlsxwriter.Workbook(f, {"in_memory": True})
         ws = wb.add_worksheet(name="Report")
         row = 0
         col = 0
         for data_row in self.to_table(context):
             for data in data_row:
-
                 # excel doesn't like urls longer than 255 chars, so write as string instead
                 if isinstance(data, str) and "http" in data and len(data) > 255:
                     ws.write_string(row, col, data)
@@ -305,36 +329,36 @@ class BaseReport(object, metaclass=ReportMeta):
     def to_table(self, context):
         """This function should be overridden in subclasses and then used like
 
-            class FooReport(BaseReport):
-                ...
-                def to_table(self, context):
+        class FooReport(BaseReport):
+            ...
+            def to_table(self, context):
 
-                    # get default rows including description/filters etc
-                    rows = super().to_table()
+                # get default rows including description/filters etc
+                rows = super().to_table()
 
-                    # report specific data
-                    rows += [
-                        [...],
-                    ]
+                # report specific data
+                rows += [
+                    [...],
+                ]
         """
 
         rows = [
-            [_("Report Title:"), context['report_title']],
+            [_("Report Title:"), context["report_title"]],
             [_("View On Site:"), self.get_report_url()],
-            [_("Report Type:"), context['report_name']],
-            [_("Report Description:"), context['report_description']],
+            [_("Report Type:"), context["report_name"]],
+            [_("Report Description:"), context["report_description"]],
             [_("Generated:"), format_datetime(timezone.now())],
             [],
             ["Filters:"],
         ]
 
-        for label, criteria in context['report_details']:
+        for label, criteria in context["report_details"]:
             rows.append([label + ":", criteria])
 
         if context.get("notes"):
             rows.append(["Notes:"])
-            for note in context['notes']:
-                rows.append([note['heading'], note['content']])
+            for note in context["notes"]:
+                rows.append([note["heading"], note["content"]])
 
         return rows
 

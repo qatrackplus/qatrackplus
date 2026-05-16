@@ -6,14 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0026_copy_overdue_interval'),
+        ("qa", "0026_copy_overdue_interval"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='frequency',
-            name='overdue_interval',
+            model_name="frequency",
+            name="overdue_interval",
         ),
     ]

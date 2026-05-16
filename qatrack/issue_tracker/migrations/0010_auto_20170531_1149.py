@@ -9,25 +9,47 @@ import re
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0009_auto_20170505_1623'),
+        ("issue_tracker", "0009_auto_20170505_1623"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='IssueStatus',
+            name="IssueStatus",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=32)),
-                ('description', models.CharField(blank=True, max_length=255, null=True)),
-                ('colour', models.CharField(blank=True, max_length=22, null=True, validators=[django.core.validators.RegexValidator(re.compile('^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$', 32), 'Enter a valid color.', 'invalid')])),
-                ('order', models.PositiveIntegerField(default=0)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=32)),
+                ("description", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "colour",
+                    models.CharField(
+                        blank=True,
+                        max_length=22,
+                        null=True,
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                re.compile(
+                                    "^rgba\\(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]),(0(\\.[0-9][0-9]?)?|1)\\)$",
+                                    32,
+                                ),
+                                "Enter a valid color.",
+                                "invalid",
+                            )
+                        ],
+                    ),
+                ),
+                ("order", models.PositiveIntegerField(default=0)),
             ],
         ),
         migrations.AddField(
-            model_name='issue',
-            name='issue_status',
-            field=models.ForeignKey(blank=True, help_text='Current status of this issue', null=True, on_delete=django.db.models.deletion.CASCADE, to='issue_tracker.IssueStatus'),
+            model_name="issue",
+            name="issue_status",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Current status of this issue",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="issue_tracker.IssueStatus",
+            ),
         ),
     ]

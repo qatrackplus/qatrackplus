@@ -13,7 +13,6 @@ from qatrack.units import models as umodels
 
 
 class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
-
     category = _l("Service Log")
 
     def get_queryset(self):
@@ -27,18 +26,18 @@ class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
         )
 
     def get_context(self):
-
         context = super().get_context()
         qs = self.filter_set.qs
 
-        sites = self.filter_set.qs.order_by(
-            "unit_service_area__unit__site__name"
-        ).values_list("unit_service_area__unit__site", flat=True).distinct()
+        sites = (
+            self.filter_set.qs.order_by("unit_service_area__unit__site__name")
+            .values_list("unit_service_area__unit__site", flat=True)
+            .distinct()
+        )
 
         sites_data = []
 
         for site in sites:
-
             if site:  # site can be None here since not all units may have a site
                 site = umodels.Site.objects.get(pk=site)
 
@@ -50,64 +49,69 @@ class DueDatesReportMixin(filters.ServiceEventScheduleFilterDetailsMixin):
             ).order_by("due_date", "unit_service_area__unit__%s" % settings.ORDER_UNITS_BY)
 
             for schedule in schedules:
-
                 window = schedule.window()
                 if window:
                     window = "%s - %s" % (format_as_date(window[0]), format_as_date(window[1]))
 
-                sites_data[-1][-1].append({
-                    'schedule': schedule,
-                    'unit_name': schedule.unit_service_area.unit.name,
-                    'service_area_name': schedule.unit_service_area.service_area.name,
-                    'service_event_template_name': schedule.service_event_template.name,
-                    'window': window,
-                    'frequency': schedule.frequency.name if schedule.frequency else _("Ad Hoc"),
-                    'due_date': format_as_date(schedule.due_date),
-                    'assigned_to': schedule.assigned_to.name,
-                    'link': self.make_url(schedule.get_absolute_url(), plain=True),
-                })
+                sites_data[-1][-1].append(
+                    {
+                        "schedule": schedule,
+                        "unit_name": schedule.unit_service_area.unit.name,
+                        "service_area_name": schedule.unit_service_area.service_area.name,
+                        "service_event_template_name": schedule.service_event_template.name,
+                        "window": window,
+                        "frequency": schedule.frequency.name if schedule.frequency else _("Ad Hoc"),
+                        "due_date": format_as_date(schedule.due_date),
+                        "assigned_to": schedule.assigned_to.name,
+                        "link": self.make_url(schedule.get_absolute_url(), plain=True),
+                    }
+                )
 
-        context['sites_data'] = sites_data
+        context["sites_data"] = sites_data
 
         return context
 
     def to_table(self, context):
-
         rows = super().to_table(context)
 
         rows.append([])
 
-        for site, site_rows in context['sites_data']:
-            rows.extend([
-                [],
-                [],
-                [site if site else _("Other")],
-                [_("Unit"),
-                 _("Service Area"),
-                 _("Template Name"),
-                 _("Frequency"),
-                 _("Due Date"),
-                 _("Window"),
-                 _("Assigned To"),
-                 _("Perform")],
-            ])
+        for site, site_rows in context["sites_data"]:
+            rows.extend(
+                [
+                    [],
+                    [],
+                    [site if site else _("Other")],
+                    [
+                        _("Unit"),
+                        _("Service Area"),
+                        _("Template Name"),
+                        _("Frequency"),
+                        _("Due Date"),
+                        _("Window"),
+                        _("Assigned To"),
+                        _("Perform"),
+                    ],
+                ]
+            )
 
             for row in site_rows:
-                rows.append([
-                    row['unit_name'],
-                    row['service_area_name'],
-                    row['service_event_template_name'],
-                    row['frequency'],
-                    format_as_date(row['schedule'].due_date),
-                    row['window'],
-                    row['assigned_to'],
-                ])
+                rows.append(
+                    [
+                        row["unit_name"],
+                        row["service_area_name"],
+                        row["service_event_template_name"],
+                        row["frequency"],
+                        format_as_date(row["schedule"].due_date),
+                        row["window"],
+                        row["assigned_to"],
+                    ]
+                )
 
         return rows
 
 
 class NextScheduledServiceEventsDueDatesReport(DueDatesReportMixin, BaseReport):
-
     report_type = "service_event_next_due"
     name = _l("Next Due Dates for Scheduled Service Events")
     filter_class = filters.ServiceEventSchedulingFilter
@@ -123,7 +127,6 @@ class NextScheduledServiceEventsDueDatesReport(DueDatesReportMixin, BaseReport):
 
 
 class DueAndOverdueServiceEventScheduleReport(DueDatesReportMixin, BaseReport):
-
     report_type = "service_event_due_and_overdue"
     name = _l("Due and Overdue Scheduled Service Events")
     filter_class = filters.ScheduledServiceEventFilter
@@ -133,9 +136,7 @@ class DueAndOverdueServiceEventScheduleReport(DueDatesReportMixin, BaseReport):
     template = "reports/service_log/next_due.html"
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            due_date__lte=end_of_day(timezone.now())
-        ).exclude(due_date=None)
+        return super().get_queryset().filter(due_date__lte=end_of_day(timezone.now())).exclude(due_date=None)
 
     def get_filename(self, report_format):
         return "%s.%s" % (slugify(self.name or _("due-and-overdue-sl-report")), report_format)

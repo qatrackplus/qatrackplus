@@ -6,7 +6,6 @@ from django.db import migrations
 
 
 def sublists_to_children(apps, schema):
-
     TestList = apps.get_model("qa", "TestList")
     Sublist = apps.get_model("qa", "Sublist")
 
@@ -18,7 +17,6 @@ def sublists_to_children(apps, schema):
 
 
 def children_to_sublists(apps, schema):
-
     TestList = apps.get_model("qa", "TestList")
 
     for tl in TestList.objects.filter(children__isnull=False):
@@ -27,11 +25,8 @@ def children_to_sublists(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0007_auto_20171124_1102'),
+        ("qa", "0007_auto_20171124_1102"),
     ]
 
-    operations = [
-        migrations.RunPython(sublists_to_children, children_to_sublists)
-    ]
+    operations = [migrations.RunPython(sublists_to_children, children_to_sublists)]

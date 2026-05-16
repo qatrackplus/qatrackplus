@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
+from django.utils.translation import gettext_lazy as _l
 
 
 def do_scheduling(sender, **kwargs):
@@ -12,8 +13,8 @@ def do_scheduling(sender, **kwargs):
 
 
 class ReportsConfig(AppConfig):
-
-    name = 'qatrack.reports'
+    name = "qatrack.reports"
+    verbose_name = _l("Reports")
 
     def ready(self):
         post_migrate.connect(do_scheduling, sender=self)

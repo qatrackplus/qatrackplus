@@ -30,7 +30,7 @@ def process_form_post(post_data, user, instance):
     form.is_valid()
     notes_formset = ReportNoteFormSet(post_data, instance=instance)
     notes_formset.is_valid()
-    base_opts = {'report_id': post_data.get("report_id")}
+    base_opts = {"report_id": post_data.get("report_id")}
     base_opts.update(form.cleaned_data)
     filter_form = None
     all_valid = False
@@ -39,12 +39,12 @@ def process_form_post(post_data, user, instance):
         # something wrong with base form, but we know what report_type we're trying to produce
         # so validate that form too
         notes = notes_formset.cleaned_data if notes_formset.is_valid() else []
-        ReportClass = reports.report_class(form.cleaned_data['report_type'])
+        ReportClass = reports.report_class(form.cleaned_data["report_type"])
         report = ReportClass(base_opts=base_opts, report_opts=post_data, notes=notes, user=user)
         filter_form = report.get_filter_form()
         filter_form.is_valid()
     elif form.is_valid():
-        ReportClass = reports.report_class(form.cleaned_data['report_type'])
+        ReportClass = reports.report_class(form.cleaned_data["report_type"])
         notes = notes_formset.cleaned_data if notes_formset.is_valid() else []
         report = ReportClass(base_opts=base_opts, report_opts=post_data, notes=notes, user=user)
         filter_form = report.get_filter_form()
@@ -66,13 +66,11 @@ def select_report(request):
         form = ReportForm()
         notes_formset = ReportNoteFormSet()
     else:
-
         # need to filter out any report note meta data so the formset
         # can be treated like a new report rather than a saved report
         def dont_include(k):
-            return (
-                (k.startswith("reportnote_set-") and k.endswith("-report")) or
-                (k.startswith("reportnote_set-") and k.endswith("-id"))
+            return (k.startswith("reportnote_set-") and k.endswith("-report")) or (
+                k.startswith("reportnote_set-") and k.endswith("-id")
             )
 
         delete = [k for k in request.POST if dont_include(k)]
@@ -80,11 +78,11 @@ def select_report(request):
         data = request.POST.copy()
         for k in delete:
             del data[k]
-        data['reportnote_set-INITIAL_FORMS'] = '0'
+        data["reportnote_set-INITIAL_FORMS"] = "0"
 
         all_valid, report, form, filter_form, notes_formset = process_form_post(data, request.user, None)
         if all_valid:
-            return report.render_to_response(form.cleaned_data['report_format'])
+            return report.render_to_response(form.cleaned_data["report_format"])
 
     context = {
         "report_form": form,
@@ -104,9 +102,9 @@ def get_filter(request):
         raise Http404("Unknown report type")
 
     template = get_template("_form_horizontal.html")
-    content = template.render({'form': report.filter_class().form})
+    content = template.render({"form": report.filter_class().form})
     formats = [f for f in models.SavedReport.FORMATS if f[0] in report.formats]
-    return JsonResponse({'errors': [], 'filter': content, 'formats': formats})
+    return JsonResponse({"errors": [], "filter": content, "formats": formats})
 
 
 @require_POST
@@ -118,33 +116,32 @@ def report_preview(request):
         return HttpResponseForbidden()
 
     resp = {
-        'errors': False,
-        'base_errors': {},
-        'report_errors': {},
-        'notes_formset_errors': [],
-        'preview': '',
+        "errors": False,
+        "base_errors": {},
+        "report_errors": {},
+        "notes_formset_errors": [],
+        "preview": "",
     }
 
     all_valid, report, form, filter_form, notes_formset = process_form_post(request.POST, request.user, None)
     if all_valid:
-        resp['preview'] = report.to_html()
+        resp["preview"] = report.to_html()
         return JsonResponse(resp)
 
-    resp['errors'] = True
-    resp['base_errors'] = form.errors
-    resp['report_errors'] = filter_form.errors if filter_form else {}
-    resp['notes_formset_errors'] = notes_formset.errors
+    resp["errors"] = True
+    resp["base_errors"] = form.errors
+    resp["report_errors"] = filter_form.errors if filter_form else {}
+    resp["notes_formset_errors"] = notes_formset.errors
 
     return JsonResponse(resp)
 
 
 @require_POST
 def save_report(request):
-
     if not request.user.has_perm("reports.can_create_reports"):
         return HttpResponseForbidden()
 
-    resp = {'errors': False, 'base_errors': {}, 'report_errors': {}, 'report_id': None}
+    resp = {"errors": False, "base_errors": {}, "report_errors": {}, "report_id": None}
 
     report_id = request.POST.get("report_id")
     if report_id:
@@ -165,29 +162,28 @@ def save_report(request):
         notes_formset = ReportNoteFormSet(request.POST, instance=saved_report)
         if notes_formset.is_valid():
             notes_formset.save()
-            resp['report_id'] = saved_report.pk
-            resp['notes'] = serialize_savedreport_notes(saved_report)
-            resp['success_message'] = _("Your report was saved")
+            resp["report_id"] = saved_report.pk
+            resp["notes"] = serialize_savedreport_notes(saved_report)
+            resp["success_message"] = _("Your report was saved")
             return JsonResponse(resp)
 
-    resp['errors'] = True
-    resp['base_errors'] = form.errors
-    resp['report_errors'] = filter_form.errors if filter_form else {}
-    resp['notes_formset_errors'] = notes_formset.errors
+    resp["errors"] = True
+    resp["base_errors"] = form.errors
+    resp["report_errors"] = filter_form.errors if filter_form else {}
+    resp["notes_formset_errors"] = notes_formset.errors
     return JsonResponse(resp)
 
 
 def visible_user_reports(user):
-
-    return models.SavedReport.objects.filter(
-        Q(created_by=user) | Q(visible_to__in=user.groups.all())
-    ).select_related(
-        "created_by"
-    ).order_by("title", "created").distinct()
+    return (
+        models.SavedReport.objects.filter(Q(created_by=user) | Q(visible_to__in=user.groups.all()))
+        .select_related("created_by")
+        .order_by("title", "created")
+        .distinct()
+    )
 
 
 def saved_reports_datatable(request):
-
     reports = visible_user_reports(request.user)
 
     vals = []
@@ -195,69 +191,64 @@ def saved_reports_datatable(request):
     sch_template = get_template("reports/_saved_reports_table_schedule.html")
     for r in reports:
         user = '<abbr title="Created on %s">%s</abbr>' % (format_as_date(r.created), r.created_by.username)
-        context = {'report': r, 'editable': r.created_by == request.user}
+        context = {"report": r, "editable": r.created_by == request.user}
         try:
             schedule = r.schedule
-            recipients = ' '.join(schedule.recipients())
+            recipients = " ".join(schedule.recipients())
         except models.ReportSchedule.DoesNotExist:
             recipients = ""
         vals.append([template.render(context), user, sch_template.render(context), recipients])
-    return JsonResponse({'data': vals})
+    return JsonResponse({"data": vals})
 
 
 def load_report(request):
-
     if not request.user.has_perm("reports.can_run_reports"):
         return HttpResponseForbidden()
 
     report_id = request.GET.get("report_id")
-    resp = {'errors': []}
+    resp = {"errors": []}
     try:
-
         rep = visible_user_reports(request.user).get(pk=report_id)
-        resp['id'] = report_id
-        resp['fields'] = serialize_savedreport(rep)
-        resp['notes'] = serialize_savedreport_notes(rep)
-        resp['editable'] = rep.created_by_id == request.user.id
+        resp["id"] = report_id
+        resp["fields"] = serialize_savedreport(rep)
+        resp["notes"] = serialize_savedreport_notes(rep)
+        resp["editable"] = rep.created_by_id == request.user.id
     except models.SavedReport.DoesNotExist:
-        resp['errors'].append(_('Report does not exist'))
+        resp["errors"].append(_("Report does not exist"))
 
     return JsonResponse(resp)
 
 
 @require_POST
 def delete_report(request):
-
     if not request.user.has_perm("reports.can_create_reports"):
         return HttpResponseForbidden()
 
     report_id = request.POST.get("report_id")
-    resp = {'errors': False, 'deleted': False, 'save_errors': []}
+    resp = {"errors": False, "deleted": False, "save_errors": []}
     try:
-
         rep = models.SavedReport.objects.filter(created_by=request.user).distinct().get(pk=report_id)
         rep.delete()
-        resp['deleted'] = True
-        resp['success_message'] = _("Your report was deleted")
+        resp["deleted"] = True
+        resp["success_message"] = _("Your report was deleted")
 
     except models.SavedReport.DoesNotExist:
-        resp['errors'] = True
-        resp['save_errors'].append(_('Report does not exist'))
+        resp["errors"] = True
+        resp["save_errors"].append(_("Report does not exist"))
 
     return JsonResponse(resp)
 
 
 def report_schedule_form(request, report_id):
-
     report = models.SavedReport.objects.get(pk=report_id)
     try:
         schedule = report.schedule
     except models.ReportSchedule.DoesNotExist:
         schedule = None
 
-    form = ReportScheduleForm(initial={'report': report}, instance=schedule)
+    form = ReportScheduleForm(initial={"report": report}, instance=schedule)
     template = get_template("_form_horizontal.html")
-    resp = {'form': template.render({'form': form})}
+    resp = {"form": template.render({"form": form})}
     return JsonResponse(resp)
 
 
@@ -278,10 +269,10 @@ def schedule_report(request):
         schedule = None
 
     form = ReportScheduleForm(request.POST, instance=schedule)
-    resp = {'error': True, 'message': ""}
+    resp = {"error": True, "message": ""}
     if form.is_valid():
-        resp['error'] = False
-        resp['message'] = _("Schedule updated successfully!")
+        resp["error"] = False
+        resp["message"] = _("Schedule updated successfully!")
         new_schedule = form.save(commit=False)
         if schedule is None:
             new_schedule.created_by = request.user
@@ -290,13 +281,12 @@ def schedule_report(request):
         form.save_m2m()
 
     template = get_template("_form_horizontal.html")
-    resp['form'] = template.render({'form': form})
+    resp["form"] = template.render({"form": form})
     return JsonResponse(resp)
 
 
 @require_POST
 def delete_schedule(request):
-
     try:
         report = models.SavedReport.objects.get(pk=request.POST.get("schedule-report"))
 
@@ -308,8 +298,8 @@ def delete_schedule(request):
     except (ValueError, models.ReportSchedule.DoesNotExist):
         pass
 
-    resp = {'error': False, 'message': _("Schedule cleared")}
+    resp = {"error": False, "message": _("Schedule cleared")}
     form = ReportScheduleForm()
     template = get_template("_form_horizontal.html")
-    resp['form'] = template.render({'form': form})
+    resp["form"] = template.render({"form": form})
     return JsonResponse(resp)

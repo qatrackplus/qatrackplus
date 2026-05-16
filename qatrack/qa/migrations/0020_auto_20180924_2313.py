@@ -7,30 +7,40 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0019_unique_tolerance_names_schema'),
+        ("qa", "0019_unique_tolerance_names_schema"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='testlist',
-            name='slug',
-            field=models.SlugField(help_text='A short unique name for use in the URL of this list', max_length=255, unique=True),
+            model_name="testlist",
+            name="slug",
+            field=models.SlugField(
+                help_text="A short unique name for use in the URL of this list", max_length=255, unique=True
+            ),
         ),
         migrations.AlterField(
-            model_name='testlistcycle',
-            name='slug',
-            field=models.SlugField(help_text='A short unique name for use in the URL of this list', max_length=255, unique=True),
+            model_name="testlistcycle",
+            name="slug",
+            field=models.SlugField(
+                help_text="A short unique name for use in the URL of this list", max_length=255, unique=True
+            ),
         ),
         migrations.AlterField(
-            model_name='unittestcollection',
-            name='content_type',
-            field=models.ForeignKey(help_text='Choose whether to use a Test List or Test List Cycle', on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType', verbose_name='Test List or Test List Cycle'),
+            model_name="unittestcollection",
+            name="content_type",
+            field=models.ForeignKey(
+                help_text="Choose whether to use a Test List or Test List Cycle",
+                on_delete=django.db.models.deletion.CASCADE,
+                to="contenttypes.ContentType",
+                verbose_name="Test List or Test List Cycle",
+            ),
         ),
         migrations.AlterField(
-            model_name='unittestcollection',
-            name='object_id',
-            field=models.PositiveIntegerField(help_text='Choose the tests collection object to assign to the unit', verbose_name='Tests collection'),
+            model_name="unittestcollection",
+            name="object_id",
+            field=models.PositiveIntegerField(
+                help_text="Choose the tests collection object to assign to the unit", verbose_name="Tests collection"
+            ),
         ),
     ]

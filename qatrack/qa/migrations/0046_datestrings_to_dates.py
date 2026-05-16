@@ -11,7 +11,6 @@ from qatrack.qatrack_core.dates import (
 
 
 def datestrings_to_dates(apps, schema):
-
     TestInstance = apps.get_model("qa", "TestInstance")
 
     for ti in TestInstance.objects.filter(unit_test_info__test__type="date"):
@@ -26,7 +25,6 @@ def datestrings_to_dates(apps, schema):
 
 
 def date_to_datestrings(apps, schema):
-
     TestInstance = apps.get_model("qa", "TestInstance")
 
     for ti in TestInstance.objects.filter(unit_test_info__test__type="date"):
@@ -39,9 +37,8 @@ def date_to_datestrings(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0045_auto_20191203_1409'),
+        ("qa", "0045_auto_20191203_1409"),
     ]
 
     operations = [

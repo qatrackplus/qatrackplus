@@ -41,7 +41,7 @@ def gamma_fit(data, binwidth):
     # In general, k can be approxmated to within 1.5% as
     s = np.log(np.mean(data)) - np.mean(np.log(data))
 
-    kguess = (3. - s + np.sqrt((s - 3)**2 + 24 * s)) / (12 * s)
+    kguess = (3.0 - s + np.sqrt((s - 3) ** 2 + 24 * s)) / (12 * s)
     # k = kguess  # "accurate to within 1.5%" according to wikipedia.org
 
     # We can solve for k numerically using Newton's method.

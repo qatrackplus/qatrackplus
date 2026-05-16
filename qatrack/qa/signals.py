@@ -21,15 +21,15 @@ def loaded_from_fixture(kwargs):
     return kwargs.get("raw", False)
 
 
-testlist_complete = Signal(providing_args=["instance", "created"])
+testlist_complete = Signal()
 
 
 def update_last_instances(test_list_instance):
     utc = test_list_instance.unit_test_collection
     try:
-        last_instance = models.TestListInstance.objects.complete().filter(
-            unit_test_collection=utc
-        ).latest("work_completed")
+        last_instance = (
+            models.TestListInstance.objects.complete().filter(unit_test_collection=utc).latest("work_completed")
+        )
     except models.TestListInstance.DoesNotExist:
         last_instance = None
     except models.UnitTestCollection.DoesNotExist:
@@ -48,7 +48,6 @@ def update_last_instances(test_list_instance):
 
 
 def handle_se_statuses_post_tli_delete(test_list_instance):
-
     se_rtsqa_qs = sl_models.ServiceEvent.objects.filter(
         returntoserviceqa__test_list_instance=test_list_instance, service_status__is_review_required=False
     )
@@ -60,7 +59,6 @@ def handle_se_statuses_post_tli_delete(test_list_instance):
 
 
 def get_or_create_unit_test_info(unit, test, assigned_to=None, active=True):
-
     uti, created = models.UnitTestInfo.objects.get_or_create(
         unit=unit,
         test=test,
@@ -83,8 +81,8 @@ def testlistcycle_utcs(cycle):
 
     parents = models.UnitTestCollection.objects.filter(
         object_id=cycle.pk,
-        content_type__app_label='qa',
-        content_type__model='testlistcycle',
+        content_type__app_label="qa",
+        content_type__model="testlistcycle",
     ).select_related("unit", "assigned_to")
     return list(parents)
 
@@ -108,20 +106,21 @@ def testlist_utcs(test_list):
         test_lists.append(sublist.parent.pk)
 
         # case d
-        cycles += list(sublist.parent.testlistcycle_set.values_list('pk', flat=True))
+        cycles += list(sublist.parent.testlistcycle_set.values_list("pk", flat=True))
 
     # case c)
-    cycles += list(test_list.testlistcycle_set.values_list('pk', flat=True))
+    cycles += list(test_list.testlistcycle_set.values_list("pk", flat=True))
 
     utcs_tl = models.UnitTestCollection.objects.filter(
         Q(
             object_id__in=test_lists,
-            content_type__app_label='qa',
-            content_type__model='testlist',
-        ) | Q(
+            content_type__app_label="qa",
+            content_type__model="testlist",
+        )
+        | Q(
             object_id__in=cycles,
-            content_type__app_label='qa',
-            content_type__model='testlistcycle',
+            content_type__app_label="qa",
+            content_type__model="testlistcycle",
         )
     ).select_related("unit", "assigned_to")
 
@@ -159,19 +158,13 @@ def update_unit_test_infos(collection):
         existing_tests = [x.test for x in existing_uti_units]
         missing_utis = [x for x in all_tests if x not in existing_tests]
         for test in missing_utis:
-            get_or_create_unit_test_info(
-                unit=utc.unit,
-                test=test,
-                assigned_to=utc.assigned_to,
-                active=True
-            )
+            get_or_create_unit_test_info(unit=utc.unit, test=test, assigned_to=utc.assigned_to, active=True)
 
 
 @receiver(pre_save, sender=models.Test)
 def on_test_save(*args, **kwargs):
     """Ensure that model validates on save"""
     if not loaded_from_fixture(kwargs):
-
         test = kwargs["instance"]
         if test.type is not models.BOOLEAN:
             return
@@ -179,10 +172,14 @@ def on_test_save(*args, **kwargs):
         unit_assignments = models.UnitTestInfo.objects.filter(test=test)
 
         for ua in unit_assignments:
-            if ua.reference and ua.reference.value not in (0., 1.,):
+            if ua.reference and ua.reference.value not in (
+                0.0,
+                1.0,
+            ):
                 raise ValidationError(
                     "Can't change test type to %s while this test is still assigned to "
-                    "%s with a non-boolean reference" % (test.type, ua.unit.name))
+                    "%s with a non-boolean reference" % (test.type, ua.unit.name)
+                )
 
 
 @receiver(testlist_complete)
@@ -191,8 +188,7 @@ def check_tli_flag(*args, **kwargs):
     tli = kwargs["instance"]
     models.TestListInstance.objects.filter(pk=tli.pk).update(
         flagged=tli.testinstance_set.filter(
-            Q(value=1, unit_test_info__test__flag_when=True) |
-            Q(value=0, unit_test_info__test__flag_when=False)
+            Q(value=1, unit_test_info__test__flag_when=True) | Q(value=0, unit_test_info__test__flag_when=False)
         ).exists()
     )
 
@@ -232,7 +228,7 @@ def test_added_to_list(*args, **kwargs):
     Test was added to a list (or sublist). Find all units this list
     is performed on and create UnitTestInfo for the Unit, Test pair.
     """
-    if (not loaded_from_fixture(kwargs)):
+    if not loaded_from_fixture(kwargs):
         update_unit_test_infos(kwargs["instance"].test_list)
 
 
@@ -242,7 +238,7 @@ def sublist_added_to_list(*args, **kwargs):
     Sublist was added to a list. Find all units this list
     is performed on and create UnitTestInfo for the Unit, Test pair.
     """
-    if (not loaded_from_fixture(kwargs)):
+    if not loaded_from_fixture(kwargs):
         update_unit_test_infos(kwargs["instance"].parent)
 
 
@@ -259,7 +255,7 @@ def test_list_added_to_cycle(*args, **kwargs):
     Test List was added to a cycle . Find all units this list
     is performed on and create UnitTestInfo for the Unit, Test pair.
     """
-    if (not loaded_from_fixture(kwargs)):
+    if not loaded_from_fixture(kwargs):
         update_unit_test_infos(kwargs["instance"].test_list)
 
 
@@ -278,9 +274,8 @@ def on_autoreviewrule_save(*args, **kwargs):
 
 @receiver(comment_was_posted, sender=Comment)
 def check_approved_statuses(*args, **kwargs):
-
-    if 'edit_tli' in kwargs and kwargs['edit_tli']:
-        tli_id = kwargs['comment'].object_pk
+    if "edit_tli" in kwargs and kwargs["edit_tli"]:
+        tli_id = kwargs["comment"].object_pk
         tli = models.TestListInstance.objects.get(pk=tli_id)
 
         default_status = sl_models.ServiceEventStatus.get_default()

@@ -7,16 +7,17 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0017_auto_20180814_1312'),
-        ('attachments', '0002_auto_20161218_1859'),
+        ("service_log", "0017_auto_20180814_1312"),
+        ("attachments", "0002_auto_20161218_1859"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='attachment',
-            name='serviceevent',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='service_log.ServiceEvent'),
+            model_name="attachment",
+            name="serviceevent",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to="service_log.ServiceEvent"
+            ),
         ),
     ]

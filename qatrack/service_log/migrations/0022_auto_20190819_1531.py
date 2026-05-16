@@ -4,15 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('service_log', '0021_auto_20190729_2228'),
+        ("service_log", "0021_auto_20190729_2228"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='servicelog',
-            name='log_type',
-            field=models.CharField(choices=[('new_se', 'New Service Event'), ('mod_se', 'Modified Service Event'), ('stat_se', 'Service Event Status Changed'), ('rtsqa', 'Changed Return To Service'), ('perf_rts', 'Performed Return To Service'), ('app_rts', 'Approved Return To Service'), ('del_se', 'Deleted Service Event')], max_length=10),
+            model_name="servicelog",
+            name="log_type",
+            field=models.CharField(
+                choices=[
+                    ("new_se", "New Service Event"),
+                    ("mod_se", "Modified Service Event"),
+                    ("stat_se", "Service Event Status Changed"),
+                    ("rtsqa", "Changed Return To Service"),
+                    ("perf_rts", "Performed Return To Service"),
+                    ("app_rts", "Approved Return To Service"),
+                    ("del_se", "Deleted Service Event"),
+                ],
+                max_length=10,
+            ),
         ),
     ]

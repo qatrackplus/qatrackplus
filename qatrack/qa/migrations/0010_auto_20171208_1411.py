@@ -6,20 +6,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('qa', '0009_remove_testlist_sublists'),
+        ("qa", "0009_remove_testlist_sublists"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='sublist',
-            name='outline',
-            field=models.BooleanField(default=False, help_text='Check to indicate whether sublist tests should be distinguished visually from parent tests'),
+            model_name="sublist",
+            name="outline",
+            field=models.BooleanField(
+                default=False,
+                help_text="Check to indicate whether sublist tests should be distinguished visually from parent tests",
+            ),
         ),
         migrations.AlterField(
-            model_name='sublist',
-            name='order',
+            model_name="sublist",
+            name="order",
             field=models.IntegerField(db_index=True),
         ),
     ]

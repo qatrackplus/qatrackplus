@@ -1,0 +1,31 @@
+{% extends "site_base.html" %}
+{% load i18n %}
+
+{% block head_title %}{{ title }}{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h1>{{ title }}</h1>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  
+  {% if dest_source_utis %}
+    <input type="hidden" name="stage" value="2">
+    <input type="hidden" name="confirm" value="Confirm">
+  {% else %}
+    <input type="hidden" name="stage" value="1">
+  {% endif %}
+  
+  <div class="submit-row">
+    {% if dest_source_utis %}
+      <input type="submit" value="{% trans 'Confirm' %}" class="default" />
+      <input type="submit" name="cancel" value="{% trans 'Cancel' %}" />
+    {% else %}
+      <input type="submit" value="{% trans 'Preview' %}" class="default" />
+    {% endif %}
+  </div>
+</form>
+{% endblock %} 

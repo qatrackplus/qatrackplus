@@ -6,14 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('issue_tracker', '0003_auto_20170505_1341'),
+        ("issue_tracker", "0003_auto_20170505_1341"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='issuepriority',
-            options={'ordering': ['order'], 'verbose_name_plural': 'Priorities'},
+            name="issuepriority",
+            options={"ordering": ["order"], "verbose_name_plural": "Priorities"},
         ),
     ]
