@@ -20,11 +20,27 @@ echo "init.sh"
 
 # If using an image from docker-hub don't reinstall the pip requirements
 if [ ! -f /root/.is_hub_image ]; then
-    mkdir -p deploy/docker/user-data/python-virtualenv
-    virtualenv deploy/docker/user-data/python-virtualenv
-    source deploy/docker/user-data/python-virtualenv/bin/activate
+    # Ensure local_settings.py exists and uses docker_settings
+    if [ ! -f qatrack/local_settings.py ]; then
+        echo "from .docker_settings import *" > qatrack/local_settings.py
+    fi
 
-    pip install -r requirements/docker.txt
+    VENV_PATH="deploy/docker/user-data/python-virtualenv"
+    mkdir -p deploy/docker/user-data
+    
+    if [ -d "$VENV_PATH" ]; then
+        VENV_PYTHON_VERSION=$("$VENV_PATH/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)
+        CURRENT_PYTHON_VERSION=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+        if [ "$VENV_PYTHON_VERSION" != "$CURRENT_PYTHON_VERSION" ]; then
+            echo "Python version mismatch (Venv: $VENV_PYTHON_VERSION, Current: $CURRENT_PYTHON_VERSION). Recreating virtualenv..."
+            rm -rf "$VENV_PATH"
+        fi
+    fi
+
+    virtualenv "$VENV_PATH"
+    source "$VENV_PATH/bin/activate"
+
+    pip install ".[docker,postgres]"
 else
     source /root/virtualenv/bin/activate
 fi
