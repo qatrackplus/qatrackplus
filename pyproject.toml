@@ -156,6 +156,7 @@ python-ldap = { url = "https://github.com/cgohlke/python-ldap-build/releases/dow
 dev = [
     "ruff",
     "pylint>=2.12,<3.0",
+    "black>=24.0.0",
     "selenium>=3.141.0,<4.0",
     "PyVirtualDisplay>=2.0,<3.0",
     
