@@ -14,8 +14,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
-DEBUG = False
-DEBUG_TOOLBAR = False
+DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
+DEBUG_TOOLBAR = os.environ.get("DJANGO_DEBUG_TOOLBAR", "false").lower() == "true"
 
 # Who to email when server errors occur
 ADMINS = (("Admin Name", "YOUR_EMAIL_ADDRESS_GOES_HERE"),)
@@ -38,7 +38,7 @@ FEATURE_REQUEST_URL = BUG_REPORT_URL
 WSGI_APPLICATION = "qatrack.wsgi.application"
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = "78kj_s=rqh46bsv10eb-)uyy02kr35jy19pp*7u$4-te=x0^86"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "78kj_s=rqh46bsv10eb-)uyy02kr35jy19pp*7u$4-te=x0^86")
 ROOT_URLCONF = "qatrack.urls"
 
 SITE_ID = 1
@@ -49,7 +49,16 @@ SITE_NAME = "QATrack+"
 
 # if you wish to override the database settings below (e.g. for deployment),
 # please do so in local_settings.py
-DATABASES = {}
+DATABASES = {
+    "default": {
+        "ENGINE": os.environ.get("DATABASE_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("DATABASE_NAME", os.path.join(PROJECT_ROOT, "..", "db", "default.db")),
+        "USER": os.environ.get("DATABASE_USER", ""),
+        "PASSWORD": os.environ.get("DATABASE_PASSWORD", ""),
+        "HOST": os.environ.get("DATABASE_HOST", ""),
+        "PORT": os.environ.get("DATABASE_PORT", ""),
+    }
+}
 
 # ----------------------------------------------------------------------------
 # Default local settings

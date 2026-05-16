@@ -12,30 +12,40 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import os
+
 print("Running docker settings")
 
 ALLOWED_HOSTS = ["*"]
 
+DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
+
 SECRET_FILEPATH = "deploy/docker/user-data/secret_key.txt"
 
-try:
-    with open(SECRET_FILEPATH, "r") as f:
-        SECRET_KEY = f.read()
-except IOError:
-    import secrets
+# Prefer environment variable for SECRET_KEY, fallback to file-based key for backward compatibility
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
-    SECRET_KEY = secrets.token_urlsafe(64)
+if not SECRET_KEY:
+    try:
+        with open(SECRET_FILEPATH, "r") as f:
+            SECRET_KEY = f.read().strip()
+    except IOError:
+        import secrets
 
-    with open(SECRET_FILEPATH, "w") as f:
-        f.write(SECRET_KEY)
+        SECRET_KEY = secrets.token_urlsafe(64)
+
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(SECRET_FILEPATH), exist_ok=True)
+        with open(SECRET_FILEPATH, "w") as f:
+            f.write(SECRET_KEY)
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres",
-        "PASSWORD": "postgres",
-        "HOST": "qatrack-postgres",
-        "PORT": 5432,
+        "NAME": os.environ.get("POSTGRES_DB", "postgres"),
+        "USER": os.environ.get("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "postgres"),
+        "HOST": os.environ.get("POSTGRES_HOST", "qatrack-postgres"),
+        "PORT": int(os.environ.get("POSTGRES_PORT", 5432)),
     }
 }

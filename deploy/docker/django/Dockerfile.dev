@@ -1,0 +1,34 @@
+FROM python:3.12-bookworm
+
+# Install OS dependencies
+RUN apt-get update && apt-get install -y \
+    cron \
+    postgresql-client \
+    cifs-utils \
+    dos2unix \
+    chromium \
+    chromium-driver \
+    build-essential \
+    libpq-dev \
+    python3-dev \
+    gcc \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Sentinel for settings.py auto-import (legacy support)
+RUN touch /root/.is_inside_docker
+
+WORKDIR /usr/src/qatrackplus
+
+# Copy requirements and pyproject.toml first for caching
+COPY pyproject.toml README.md ./
+COPY qatrack/__init__.py ./qatrack/__init__.py
+
+# Install dependencies in editable mode
+RUN pip install --no-cache-dir -e ".[docker,postgres]" coverage pytest-django freezegun django-debug-toolbar
+
+# We don't COPY the rest of the code as it's mounted via volumes
+# But we ensure the logs and media directories exist
+RUN mkdir -p logs qatrack/media qatrack/static
+
+EXPOSE 8000

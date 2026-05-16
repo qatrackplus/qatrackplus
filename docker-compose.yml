@@ -1,0 +1,49 @@
+services:
+  qatrack-nginx:
+    restart: always
+    image: nginx:1.15
+    volumes:
+      - ./deploy/docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./qatrack/static:/usr/src/qatrackplus/qatrack/static:ro
+      - ./qatrack/media:/usr/src/qatrackplus/qatrack/media:rw
+      - ./deploy/docker/user-data/ssl:/root/ssl:ro
+    depends_on:
+      qatrack-django:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+
+  qatrack-django:
+    restart: always
+    build: ./deploy/docker/django
+    depends_on:
+      qatrack-postgres:
+        condition: service_healthy
+    volumes:
+      - .:/usr/src/qatrackplus:rw
+      - ./deploy/docker/user-data/pip-cache:/root/.cache/pip:rw
+    command: /bin/bash -c 'cd /usr/src/qatrackplus; dos2unix deploy/docker/init.sh; deploy/docker/init.sh'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  qatrack-postgres:
+    restart: always
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=qatrackplus
+    volumes:
+      - qatrack-postgres-volume:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d qatrackplus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  qatrack-postgres-volume:
