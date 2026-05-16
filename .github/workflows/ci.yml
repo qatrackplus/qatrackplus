@@ -80,7 +80,7 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: qatrack.settings
         run: |
-          uv run pytest --cov=qatrack --cov-report=xml -m "not selenium"
+          uv run pytest --cov=qatrack --cov-report=term-missing --cov-report=xml --cov-fail-under=40
 
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v4
