@@ -37,8 +37,6 @@ COPY pyproject.toml README.md ./
 COPY qatrack/__init__.py ./qatrack/__init__.py
 RUN uv venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN uv venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
 RUN uv pip install -e ".[docker,postgres]"
 
 RUN mkdir -p logs qatrack/media qatrack/static
