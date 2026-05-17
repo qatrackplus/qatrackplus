@@ -29,11 +29,14 @@ RUN apt-get update && apt-get install -y \
 
 RUN touch /root/.is_inside_docker
 
-RUN pip install virtualenv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /usr/src/qatrackplus
 
-# Ensure logs and media directories exist
+COPY pyproject.toml README.md ./
+COPY qatrack/__init__.py ./qatrack/__init__.py
+RUN uv pip install --system -e ".[docker,postgres]"
+
 RUN mkdir -p logs qatrack/media qatrack/static
 
 EXPOSE 8000
