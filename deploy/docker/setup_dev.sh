@@ -7,6 +7,7 @@ if [ ! -f qatrack/local_settings.py ]; then
 SECRET_KEY = '${SECRET_KEY:-dev-insecure-key-not-for-production}'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8080', 'http://localhost:8000']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
