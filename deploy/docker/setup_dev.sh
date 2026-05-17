@@ -1,6 +1,26 @@
 #!/bin/bash
 # set -e  # Disable exit on error for fixture loading to handle partial existing data
 
+# Generate local_settings.py from environment variables if not present
+if [ ! -f qatrack/local_settings.py ]; then
+    cat > qatrack/local_settings.py << EOF
+SECRET_KEY = '${SECRET_KEY:-dev-insecure-key-not-for-production}'
+DEBUG = True
+ALLOWED_HOSTS = ['*']
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': '${POSTGRES_DB:-qatrackdb}',
+        'USER': '${POSTGRES_USER:-qatrack}',
+        'PASSWORD': '${POSTGRES_PASSWORD:-qatrack}',
+        'HOST': '${POSTGRES_HOST:-qatrack-postgres}',
+        'PORT': 5432,
+    }
+}
+EOF
+    echo "Created qatrack/local_settings.py"
+fi
+
 echo "Starting dev environment setup..."
 
 # Wait for postgres to be ready
