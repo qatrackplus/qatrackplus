@@ -1,6 +1,6 @@
+import ast
 import re
 
-import ast
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group, User
