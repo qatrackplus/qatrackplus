@@ -16,7 +16,9 @@ services:
 
   qatrack-django:
     restart: always
-    build: ./deploy/docker/django
+    build:
+      context: .
+      dockerfile: deploy/docker/django/Dockerfile
     depends_on:
       qatrack-postgres:
         condition: service_healthy
