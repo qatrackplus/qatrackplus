@@ -22,7 +22,7 @@ services:
     volumes:
       - .:/usr/src/qatrackplus:rw
     environment:
-      - DJANGO_SETTINGS_MODULE=qatrack.dev_settings
+      - DJANGO_SETTINGS_MODULE=qatrack.settings
       - PYTHONUNBUFFERED=1
       - POSTGRES_DB=qatrackdb
       - POSTGRES_USER=qatrack
@@ -47,7 +47,7 @@ services:
     volumes:
       - .:/usr/src/qatrackplus:rw
     environment:
-      - DJANGO_SETTINGS_MODULE=qatrack.dev_settings
+      - DJANGO_SETTINGS_MODULE=qatrack.settings
       - POSTGRES_DB=qatrackdb
       - POSTGRES_USER=qatrack
       - POSTGRES_PASSWORD=qatrack
@@ -58,7 +58,7 @@ services:
     command: python manage.py qcluster
 
   nginx:
-    image: nginx:1.15
+    image: nginx:1.27-alpine
     volumes:
       - ./deploy/docker/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./qatrack/static:/usr/src/qatrackplus/qatrack/static:ro
