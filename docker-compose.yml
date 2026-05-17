@@ -22,7 +22,6 @@ services:
         condition: service_healthy
     volumes:
       - .:/usr/src/qatrackplus:rw
-      - ./deploy/docker/user-data/pip-cache:/root/.cache/pip:rw
     command: /bin/bash -c 'cd /usr/src/qatrackplus; dos2unix deploy/docker/init.sh; deploy/docker/init.sh'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
