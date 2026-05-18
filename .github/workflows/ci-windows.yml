@@ -1,0 +1,99 @@
+name: CI (Windows / SQL Server)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install SQL Server
+        uses: potatoqualitee/mssqlsuite@v1.7
+        with:
+          install: sqlengine, sqlclient
+          sa-password: ${{ secrets.CI_SA_PASSWORD || 'QATrack_CI_2024!' }}
+          show-log: true
+
+      - name: Install ODBC Driver 17
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2187214" -OutFile msodbcsql17.msi
+          Start-Process msiexec.exe -ArgumentList '/i msodbcsql17.msi /qn IACCEPTMSODBCSQLLICENSETERMS=YES' -Wait
+
+      - name: Set up database and user
+        shell: powershell
+        run: |
+          $sa = 'QATrack_CI_2024!'
+          sqlcmd -S localhost -U sa -P $sa -Q "CREATE DATABASE qatrackplus40;"
+          sqlcmd -S localhost -U sa -P $sa -Q "CREATE LOGIN qatrack WITH PASSWORD = 'qatrackpass', CHECK_POLICY = OFF;"
+          sqlcmd -S localhost -U sa -P $sa -Q "ALTER SERVER ROLE dbcreator ADD MEMBER qatrack;"
+          sqlcmd -S localhost -U sa -P $sa -d qatrackplus40 -Q "CREATE USER qatrack FOR LOGIN qatrack; ALTER ROLE db_owner ADD MEMBER qatrack;"
+          sqlcmd -S localhost -U sa -P $sa -Q "CREATE LOGIN qatrack_reports WITH PASSWORD = 'qatrackpass', CHECK_POLICY = OFF;"
+          sqlcmd -S localhost -U sa -P $sa -d qatrackplus40 -Q "CREATE USER qatrack_reports FOR LOGIN qatrack_reports; ALTER ROLE db_datareader ADD MEMBER qatrack_reports;"
+
+      - name: Install dependencies
+        run: uv sync --extra mssql
+
+      - name: Create local_settings.py
+        shell: powershell
+        run: |
+          @"
+          SECRET_KEY = 'ci-secret-key-not-for-production'
+          DATABASES = {
+              'default': {
+                  'ENGINE': 'mssql',
+                  'NAME': 'qatrackplus40',
+                  'USER': 'qatrack',
+                  'PASSWORD': 'qatrackpass',
+                  'HOST': 'localhost',
+                  'PORT': '',
+                  'OPTIONS': {
+                      'driver': 'ODBC Driver 17 for SQL Server',
+                  },
+              },
+              'readonly': {
+                  'ENGINE': 'mssql',
+                  'NAME': 'qatrackplus40',
+                  'USER': 'qatrack_reports',
+                  'PASSWORD': 'qatrackpass',
+                  'HOST': 'localhost',
+                  'PORT': '',
+                  'OPTIONS': {
+                      'driver': 'ODBC Driver 17 for SQL Server',
+                  },
+              },
+          }
+          "@ | Out-File -FilePath qatrack\local_settings.py -Encoding utf8
+
+      - name: Test database connection
+        shell: powershell
+        run: |
+          sqlcmd -S localhost -U qatrack -P qatrackpass -d qatrackplus40 -Q "SELECT 1"
+
+      - name: Run Tests
+        env:
+          DJANGO_SETTINGS_MODULE: qatrack.settings
+        run: uv run pytest --cov=qatrack --cov-report=term-missing --cov-report=xml --cov-fail-under=40
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+          flags: windows

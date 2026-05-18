@@ -14,19 +14,15 @@ New Installation
 ----------------
 
 This guide is going to walk you through installing QATrack+ on a Windows Server
-2016-2019 server with IIS serving static assets (images, javascript and
+2016-2022 server with IIS serving static assets (images, javascript and
 stylesheets) and acting as a reverse proxy for a CherryPy web server which
 serves our Django application (QATrack+).  The instructions have been tested
-with SQL Server 2016 & 2019 database
+with SQL Server 2016, 2019 & 2022.
 
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
-* :ref:`Upgrading an existing v3.x.y installation to v3.1.1.4
-  <win_upgrading_31>`. 
-* :ref:`Upgrading an existing v0.3.0 installation to v3.1.1
-  <win_upgrading_030_to_31>`. 
-*  :ref:`Upgrading an existing v0.2.X installation to v3.1.1 <win_upgrading_02X_to_31>`. 
+* :ref:`Upgrading an existing v3.x.y installation to v4.0.0 <win_upgrading_3_to_4>`.
 
 
 .. note::
@@ -54,11 +50,11 @@ Google Chrome installed.  Download and install Chrome here: https://www.google.c
 Installing Python 3
 -------------------
 
-Go to http://www.python.org/downloads/ and download the latest Python 3.9.X
-(3.9.1 at the time of writing) 64 bit version (e.g. the "Windows installer
-(64-bit)" link).  Run the installer and on the first page, make sure both
-"Install launcher for all users" and "Add Python 3.9 to PATH" are checked and
-then click the "Customize Installation" button.
+Go to http://www.python.org/downloads/ and download the latest Python 3.12.X
+64 bit version (e.g. the "Windows installer (64-bit)" link).  Run the installer
+and on the first page, make sure both "Install launcher for all users" and
+"Add Python 3.12 to PATH" are checked and then click the "Customize
+Installation" button.
 
 On the second page of the installer, leave the defaults and click "Next".
 
@@ -66,12 +62,28 @@ On the third page, make sure you have "Install for all users" selected (this
 is important!) before clicking "Install".
 
 
+Installing uv
+-------------
+
+QATrack+ uses `uv <https://docs.astral.sh/uv/>`__ for dependency management.
+Install it by running the following in a PowerShell terminal:
+
+.. code-block:: console
+
+    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+Restart your terminal after installation and confirm it is available:
+
+.. code-block:: console
+
+    uv --version
+
+
 Installing git and checking out the QATrack+ Source Code
 --------------------------------------------------------
 
-Go to http://git-scm.com and download the latest version of git (msysgit) for
-Windows (Git-2.30.0 at the time of writing).  Run the installer.  I just leave
-all the settings on the defaults but you are free to modify them if you like.
+Go to http://git-scm.com and download the latest version of git for Windows.
+Run the installer.  The defaults are fine.
 
 
 Checkout the latest release of QATrack+ source code from GitHub
@@ -96,42 +108,30 @@ Ensure you have python3 installed correctly and on your PATH by running:
 .. code-block:: console
 
     python --version
-    # should print e.g. Python 3.9.1 or similar
+    # should print e.g. Python 3.12.X or similar
 
 We're now ready to install all the libraries QATrack+ depends on.
 
 .. code-block:: console
 
-    mkdir venvs
-    python -m pip install --upgrade pip
-    python -m venv venvs\qatrack31
-    .\venvs\qatrack31\Scripts\Activate.ps1
-    python -m pip install --upgrade pip
-    cd qatrackplus
-    git checkout v3.1.1.4
-    pip install -r requirements\win.txt
+    cd C:\deploy\qatrackplus
+    git checkout v4.0.0
+    uv sync --extra win --extra mssql
 
 
 .. warning::
 
     If you are going to be using :ref:`Active Directory <active_directory>` for
-    authenticating your users, you need to install pyldap.  There are binaries
-    available on this page:
-    https://www.lfd.uci.edu/~gohlke/pythonlibs/#python-ldap.  Download the
-    binary relavant to your distribution (e.g.
-    python_ldap‑3.3.1‑cp39‑cp39‑win_amd64.whl) and then pip install it:
-
-    .. code-block:: console
-
-        pip install C:\path\to\python_ldap‑3.3.1‑cp39‑cp39‑win_amd64.whl
+    authenticating your users, add the ``--extra mssql`` flag (already included
+    above) which includes ``python-ldap`` and ``django-auth-ldap``.
 
 
 
 Creating a database with SQL Server
 -----------------------------------
 
-Ensure ODBC Driver 17 (or 13.1) is installed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ensure ODBC Driver 17 (or later) is installed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order for QATrack+ to connect to your database, you need to have the `ODBC
 Driver 17` installed.  Visit
@@ -157,7 +157,7 @@ Create a new database
 In the Object Explorer frame, right click the Databases folder and select "New
 Database...".
 
-Enter 'qatrackplus31' as the database name and click OK.
+Enter 'qatrackplus40' as the database name and click OK.
 
 Back in the Object Explorer frame, right click on the main Server Security
 folder and click New Login...  Set the login name to 'qatrack', select SQL
@@ -166,10 +166,10 @@ password fields and uncheck Enforce Password Policy. Click OK.
 
 Again in the Object Explorer frame, right click on the main Security folder and
 click New Login...  Set the login name to 'qatrack_reports', select SQL Server
-Authentication. Enter 'qatrackpass' (or whatever you like) for the password
-fields and uncheck Enforce Password Policy. Click OK.
+Authentication. Enter 'qatrackpass' (or whatever you like) for the
+password fields and uncheck Enforce Password Policy. Click OK.
 
-Back in the Object Explorer frame, expand the qatrackplus31 database, right
+Back in the Object Explorer frame, expand the qatrackplus40 database, right
 click on Security and select New->User.
 
 Enter 'qatrack' as the User name and Login name and then in the Database Role
@@ -177,7 +177,7 @@ Membership region select 'db_ddladmin', 'db_datawriter',
 'db_datareader' and 'db_owner'.  Click OK.
 
 Now add the readonly database user for the query tool. In the Object Explorer
-frame, expand the qatrackplus31 database, right click on Security and select
+frame, expand the qatrackplus40 database, right click on Security and select
 New->User.
 
 Enter 'qatrack_reports' as the User name and Login name and then in the
@@ -204,8 +204,8 @@ way you set up your database above.
 
     DATABASES = {
         'default': {
-            'ENGINE': 'sql_server.pyodbc',
-            'NAME': 'qatrackplus31',
+            'ENGINE': 'mssql',
+            'NAME': 'qatrackplus40',
             'USER': 'qatrack',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
             'PASSWORD': 'qatrackpass',
             'HOST': '', # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
@@ -215,8 +215,8 @@ way you set up your database above.
             },
         },
         'readonly': {
-            'ENGINE': 'sql_server.pyodbc',
-            'NAME': 'qatrackplus31',
+            'ENGINE': 'mssql',
+            'NAME': 'qatrackplus40',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '',
@@ -234,7 +234,7 @@ Confirm you can connect to your database by running the `showmigrations` command
 
 .. code-block:: console
 
-    python manage.py showmigrations accounts
+    uv run python manage.py showmigrations accounts
 
 which should show output like:
 
@@ -246,17 +246,16 @@ which should show output like:
         [ ] 0003_auto_20210207_1027
 
 
-
 We will now create the database tables and load some configuration data into
 our new database from the command prompt:
 
 .. code-block:: console
 
-    python manage.py migrate
-    python manage.py createsuperuser
-    python manage.py createcachetable
-    python manage.py collectstatic
-    Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
+    uv run python manage.py migrate
+    uv run python manage.py createsuperuser
+    uv run python manage.py createcachetable
+    uv run python manage.py collectstatic
+    Get-ChildItem .\fixtures\defaults\*\*json | foreach {uv run python manage.py loaddata $_.FullName}
 
 
 Configuring CherryPy to Serve QATrack+
@@ -272,16 +271,14 @@ PowerShell and click "Run as Administrator") and run the following commands:
 
 .. code-block:: console
 
-    cd C:\deploy
-    .\venvs\qatrack31\Scripts\Activate.ps1
-    cd qatrackplus
-    cp deploy\win\QATrack31CherryPyService.py .
-    python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
-    python QATrack31CherryPyService.py --startup=auto install
-    python QATrack31CherryPyService.py start
+    cd C:\deploy\qatrackplus
+    cp deploy\win\QATrackCherryPyService.py .
+    uv run python C:\deploy\qatrackplus\.venv\Scripts\pywin32_postinstall.py -install
+    uv run python QATrackCherryPyService.py --startup=auto install
+    uv run python QATrackCherryPyService.py start
 
 
-Open the Windows Services dialog and confirm the `QATrack 31 CherryPy Service`
+Open the Windows Services dialog and confirm the `QATrack CherryPy Service`
 is installed and has a status of `Running`.   Next open a browser on the server
 and navigate to http://localhost:8080/ and ensure you see a plain login form
 there (it won't look like this once we're finished!). If not, check the
@@ -295,7 +292,7 @@ QATrackCherryPyService configuration dialogue).
 .. note::
 
     If you need to run QATrack+ on a different port, edit
-    C:\\deploy\\qatrackplus\\QATrack3CherryPyService.py and set the PORT
+    C:\\deploy\\qatrackplus\\QATrackCherryPyService.py and set the PORT
     variable to a different port (e.g. 8008)
 
 
@@ -315,7 +312,7 @@ Request Routing 3.0
 <http://www.iis.net/downloads/microsoft/application-request-routing>`__ IIS
 modules installed.  These can be installed by clicking on the "Get New Web
 Platform Components" link in the right hand side bar of IIS (you may need to
-install the Web Platform Installer first). 
+install the Web Platform Installer first).
 
 After installing these modules, you will need to close & re-open IIS.
 
@@ -365,7 +362,7 @@ address http://localhost/static/qa/img/tux.png You should see a picture of the
 Linux penguin.
 
 Next, select the top level server in the Connections pane and then double click
-URL Rewrite: 
+URL Rewrite:
 
 .. figure:: images/url_rewrite.png
     :alt: URL Rewrite
@@ -424,10 +421,10 @@ service was installed correctly and is running.
 Setting up Django Q
 -------------------
 
-As of version 3.1.0, some features in QATrack+ rely on a separate long running
-process which looks after periodic and background tasks like sending out
-scheduled notices and reports.  We are going to use Windows Task Scheduler
-to run the Django Q task processing cluster. 
+Some features in QATrack+ rely on a separate long running process which looks
+after periodic and background tasks like sending out scheduled notices and
+reports.  We are going to use Windows Task Scheduler to run the Django Q task
+processing cluster.
 
 Open the Windows Task Scheduler application and click `Create Task`. Give the
 task a name of "QATrack+ Django Q Cluster".  Click the `Change User or
@@ -450,7 +447,7 @@ click `OK`.
     QCluster Trigger
 
 Now go to the `Actions` tab and click `New...`.  In the `Program/script:` box
-enter `C:\\deploy\\venvs\\qatrack31\\Scripts\\python.exe`. In the `Add arguments
+enter `C:\\deploy\\qatrackplus\\.venv\\Scripts\\python.exe`. In the `Add arguments
 (optional)`: field enter `manage.py qcluster`, and in the `Start in
 (optional):` field put `C:\\deploy\\qatrackplus`  (no trailing slash!).
 
@@ -462,7 +459,7 @@ enter `C:\\deploy\\venvs\\qatrack31\\Scripts\\python.exe`. In the `Add arguments
 
 Click OK, then right click on the task and select `Run`.  Go back to your
 PowerShell window (or open a new one) and confirm your task cluster is running
-with `python manage.py qmonitor` which should show something like:
+with `uv run python manage.py qmonitor` which should show something like:
 
 .. code-block:: console
 
@@ -501,4 +498,3 @@ Windows.  It is very similar to what is used at The Ottawa Hospital Cancer
 Centre and it has proven to be a very solid setup.  If you're stuck with a
 Windows stack it will likely work for you too.  Please post on the
 :mailinglist:`QATrack+ Google Group <>` if you get stuck!
-

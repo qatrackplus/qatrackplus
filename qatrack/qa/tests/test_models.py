@@ -10,6 +10,7 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 from django_comments.models import Comment
+from freezegun import freeze_time
 
 from qatrack.qa import models
 from qatrack.qatrack_core import scheduling
@@ -836,6 +837,7 @@ class TestUTCDueDates(TestCase):
         self.utc_hist.refresh_from_db()
         assert self.utc_hist.due_date.date() == now.date()
 
+    @freeze_time("2026-01-15 12:00:00")
     def test_modified_to_invalid(self):
         # test case where utc with history was created with valid status and
         # later changed to have invalid status
@@ -867,6 +869,7 @@ class TestUTCDueDates(TestCase):
         self.utc_hist.set_due_date()
         assert self.utc_hist.due_date.date() == orig_due_date.date()
 
+    @freeze_time("2026-01-15 12:00:00")
     def test_modified_to_valid(self):
         # test case where test list was saved with invalid status and later
         # updated to have valid status
@@ -1061,6 +1064,7 @@ class TestUnitTestCollection(TestCase):
         utc.set_due_date(due_date)
         self.assertEqual(utc.due_date, due_date)
 
+    @freeze_time("2026-01-15 12:00:00")
     def test_set_due_date_none(self):
         now = timezone.now()
         utc = utils.create_unit_test_collection()

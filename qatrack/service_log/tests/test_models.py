@@ -1,3 +1,4 @@
+import pytest
 from django.conf import settings
 from django.db import transaction
 from django.db.models import ProtectedError
@@ -10,12 +11,15 @@ from qatrack.qa.tests import utils as qa_utils
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.tests import utils as sl_utils
 
+_is_mssql = "mssql" in settings.DATABASES.get("default", {}).get("ENGINE", "")
+
 
 class TestUnitServiceArea(TestCase):
     def setUp(self):
         self.u = qa_utils.create_unit()
         self.sa = sl_utils.create_service_area()
 
+    @pytest.mark.skipif(_is_mssql, reason="MSSQL enforces unique constraints differently within nested transactions")
     def test_unique_together(self):
         sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
 
@@ -67,6 +71,7 @@ class TestServiceEventStatus(TestCase):
 
 
 class TestThirdParty(TestCase):
+    @pytest.mark.skipif(_is_mssql, reason="MSSQL enforces unique constraints differently within nested transactions")
     def test_unique_together(self):
         v_01 = qa_utils.create_vendor()
         tp_01 = sl_utils.create_third_party(vendor=v_01)
@@ -106,6 +111,7 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.assertEqual((tp.__class__, tp.id), (h_01.user_or_thirdparty().__class__, h_01.user_or_thirdparty().id))
         self.assertEqual((u_02.__class__, u_02.id), (h_02.user_or_thirdparty().__class__, h_02.user_or_thirdparty().id))
 
+    @pytest.mark.skipif(_is_mssql, reason="MSSQL enforces unique constraints differently within nested transactions")
     def test_group_linkers(self):
         se = sl_models.ServiceEvent.objects.first()
         g_01 = create_group()

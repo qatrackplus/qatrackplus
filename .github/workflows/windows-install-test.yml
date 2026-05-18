@@ -1,0 +1,152 @@
+# Place at: .github/workflows/windows-install-test.yml
+#
+# Purpose: prove that the *documented* Windows install steps, run verbatim on
+# a clean machine, produce a working QATrack+ server. This is distinct from the
+# unit-test suite: it catches drift between docs/config and reality (stale ODBC
+# driver, fixture load order, collectstatic, the non-root-url path, the Windows
+# service), none of which pytest exercises.
+
+name: Windows install test
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - "install.ps1"
+      - "pyproject.toml"
+      - "qatrack/settings.py"
+      - "deploy/win/**"
+      - ".github/workflows/windows-install-test.yml"
+  pull_request:
+    paths:
+      - "install.ps1"
+      - "pyproject.toml"
+      - "qatrack/settings.py"
+      - "deploy/win/**"
+  # Weekly run catches upstream drift (new SQL Server CU, ODBC driver, pip deps)
+  # even when our code hasn't changed.
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Primary job: full documented install + HTTP smoke, on a real SQL Server
+  # instance with the TCP/1433 networking config applied. Matrixed over the
+  # root and non-root URL deployment paths because the non-root path
+  # (FORCE_SCRIPT_NAME) is where most real install bug reports originate.
+  app-smoke:
+    runs-on: windows-2025
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        root_url: [ "root", "subpath" ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install SQL Server 2022 + ODBC Driver 18
+        shell: pwsh
+        run: |
+          # Pin 'sql-server-2022' for CI stability
+          choco install sql-server-2022 -y --no-progress `
+            --params "'/SECURITYMODE=SQL /SAPWD=Str0ng_CI_Pass! /INSTANCENAME=MSSQLSERVER'"
+          choco install sqlserver-odbcdriver -y --no-progress   # ODBC Driver 18
+          choco install sqlcmd -y --no-progress
+
+      - name: Run the documented install (this IS the test)
+        shell: pwsh
+        run: |
+          $rootUrl = ('${{ matrix.root_url }}' -eq 'subpath')
+          ./install.ps1 `
+            -RepoDir $PWD `
+            -SqlInstance "MSSQLSERVER" `
+            -SqlHost "localhost" `
+            -Smoke `
+            -RootUrl:$rootUrl
+
+      - name: Collect logs on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          Copy-Item logs\*.log artifacts\ -ErrorAction SilentlyContinue
+          Copy-Item qatrack\local_settings.py artifacts\ -ErrorAction SilentlyContinue
+          Get-Content logs\debug.log -Tail 200 -ErrorAction SilentlyContinue
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-logs-${{ matrix.root_url }}
+          path: artifacts/
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Isolated job: the pywin32 CherryPy Windows-service path
+  # (deploy/win/QATrackCherryPyService.py). Kept separate because service
+  # registration is the single flakiest step; a failure here should be
+  # distinguishable from an application failure, not mixed into app-smoke.
+  windows-service:
+    runs-on: windows-2025
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install SQL Server 2022 + ODBC Driver 18
+        shell: pwsh
+        run: |
+          choco install sql-server-2022 -y --no-progress `
+            --params "'/SECURITYMODE=SQL /SAPWD=Str0ng_CI_Pass! /INSTANCENAME=MSSQLSERVER'"
+          choco install sqlserver-odbcdriver -y --no-progress
+          choco install sqlcmd -y --no-progress
+
+      - name: Install (no smoke - service handles serving)
+        shell: pwsh
+        run: ./install.ps1 -RepoDir $PWD -SqlInstance "MSSQLSERVER" -SqlHost "localhost"
+
+      - name: Register and start the CherryPy service
+        shell: pwsh
+        run: |
+          $venvPy = "C:\deploy\qatrackplus\.venv\Scripts\python.exe"
+          # The service script expects to run from a deploy dir; emulate the
+          # documented layout so paths inside QATrackCherryPyService.py resolve.
+          & $venvPy deploy\win\QATrackCherryPyService.py install
+          & $venvPy deploy\win\QATrackCherryPyService.py start
+          Start-Sleep 25
+          $svc = Get-Service "QATrackCherryPyService"
+          if ($svc.Status -ne "Running") { throw "Service not Running: $($svc.Status)" }
+
+      - name: Smoke the service port
+        shell: pwsh
+        run: |
+          $r = Invoke-WebRequest "http://127.0.0.1:8080/accounts/login/" -UseBasicParsing
+          if ($r.StatusCode -ne 200) { throw "Service login page: $($r.StatusCode)" }
+          Write-Host "Service smoke OK" -ForegroundColor Green
+
+      - name: Tear down service
+        if: always()
+        shell: pwsh
+        run: |
+          $venvPy = "C:\deploy\qatrackplus\.venv\Scripts\python.exe"
+          & $venvPy deploy\win\QATrackCherryPyService.py stop   2>$null
+          & $venvPy deploy\win\QATrackCherryPyService.py remove 2>$null
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-logs
+          path: logs/
+          if-no-files-found: ignore

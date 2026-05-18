@@ -101,8 +101,8 @@ postgres = [
     "psycopg2-binary",
 ]
 win = [
-    "CherryPy==18.0.1",
-    "pyreadline",
+    "CherryPy>=18.9.0",
+    "pyreadline3",
     "pywin32>=300",
 ]
 
