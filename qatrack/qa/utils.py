@@ -6,6 +6,7 @@ import tokenize
 
 from django.conf import settings
 from django.db.transaction import atomic
+from django.utils.crypto import get_random_string
 
 
 class SetEncoder(json.JSONEncoder):
@@ -193,7 +194,8 @@ def get_internal_user(user_klass=None):
     try:
         u = user_klass.objects.get(username="QATrack+ Internal")
     except user_klass.DoesNotExist:
-        pwd = make_password(user_klass.objects.make_random_password())
+        random_password = get_random_string(length=12)
+        pwd = random_password
         u = user_klass.objects.create(username="QATrack+ Internal", password=pwd)
         u.is_active = False
         u.save()
