@@ -1,4 +1,5 @@
-from django.conf.urls import include, url
+from django.conf.urls import include
+from django.urls import re_path
 from rest_framework import routers
 
 from qatrack.api.parts import views
@@ -13,5 +14,5 @@ router.register(r'partsuppliercollections', views.PartSupplierCollectionViewSet)
 router.register(r'partuseds', views.PartUsedViewSet)
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
+    re_path(r'^', include(router.urls)),
 ]

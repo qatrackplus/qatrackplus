@@ -15,7 +15,6 @@ django-debug-toolbar==6.3.0
 django-dynamic-raw-id==4.4
 django-extensions==4.1  
 django-filter==25.2
-django-form-utils==1.0.3 # might need amending and putting on github
 django-formtools==2.6.1 # might need amending and putting on github
 django-genericdropdown @ git+https://github.com/maan8005/Django-genericdropdown.git@7518bc8d01484f2044f0bcfbbca0ce1402828276
 django-listable==0.9.4  # might need amending and putting on github

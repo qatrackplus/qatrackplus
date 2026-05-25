@@ -1,4 +1,5 @@
-from django.conf.urls import include, url
+from django.conf.urls import include
+from django.urls import re_path
 from rest_framework.authtoken import views as auth_views
 from rest_framework.schemas import get_schema_view
 
@@ -8,18 +9,18 @@ schema_view = get_schema_view(title='QATrack+ API')
 
 
 urlpatterns = [
-    url(r'^$', views.all_api_roots, name="api-root"),
-    url(r'^get-token/', auth_views.obtain_auth_token, name="get-token"),
-    #    url(r'^authorize/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^attachments/', include('qatrack.api.attachments.urls')),
-    url(r'^auth/', include('qatrack.api.auth.urls')),
-    url(r'^comments/', include('qatrack.api.comments.urls')),
-    url(r'^contenttypes/', include('qatrack.api.contenttypes.urls')),
-    url(r'^faults/', include('qatrack.api.faults.urls')),
-    url(r'^parts/', include('qatrack.api.parts.urls')),
-    url(r'^qa/', include('qatrack.api.qa.urls')),
-    url(r'^qc/', include('qatrack.api.qa.urls')),
-    url(r'^servicelog/', include('qatrack.api.service_log.urls')),
-    url(r'^units/', include('qatrack.api.units.urls')),
-    url(r'^schema/$', schema_view),
+    re_path(r'^$', views.all_api_roots, name="api-root"),
+    re_path(r'^get-token/', auth_views.obtain_auth_token, name="get-token"),
+    #    re_path(r'^authorize/', include('rest_framework.urls', namespace='rest_framework')),
+    re_path(r'^attachments/', include('qatrack.api.attachments.urls')),
+    re_path(r'^auth/', include('qatrack.api.auth.urls')),
+    re_path(r'^comments/', include('qatrack.api.comments.urls')),
+    re_path(r'^contenttypes/', include('qatrack.api.contenttypes.urls')),
+    re_path(r'^faults/', include('qatrack.api.faults.urls')),
+    re_path(r'^parts/', include('qatrack.api.parts.urls')),
+    re_path(r'^qa/', include('qatrack.api.qa.urls')),
+    re_path(r'^qc/', include('qatrack.api.qa.urls')),
+    re_path(r'^servicelog/', include('qatrack.api.service_log.urls')),
+    re_path(r'^units/', include('qatrack.api.units.urls')),
+    re_path(r'^schema/$', schema_view),
 ]
