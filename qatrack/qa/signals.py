@@ -21,7 +21,7 @@ def loaded_from_fixture(kwargs):
     return kwargs.get("raw", False)
 
 
-testlist_complete = Signal(providing_args=["instance", "created"])
+testlist_complete = Signal()
 
 
 def update_last_instances(test_list_instance):
