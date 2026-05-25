@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
 DEBUG = False
-DEBUG_TOOLBAR = False
+DEBUG_TOOLBAR = True
 
 # Who to email when server errors occur
 ADMINS = (
