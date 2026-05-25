@@ -19,7 +19,6 @@ NP_INT_TYPES = (
 )
 
 NP_FLOAT_TYPES = (
-    np.float_,
     np.float16,
     np.float32,
     np.float64,
