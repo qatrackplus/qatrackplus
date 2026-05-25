@@ -808,7 +808,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
     search_fields = ("name", "description", "slug", "sublist__parent__name", "sublist__child__name")
     readonly_fields = ("id",)
 
-    filter_horizontal = ("tests",)
+    #filter_horizontal = ("tests",)
 
     actions = ['export_test_lists']
     list_display = (

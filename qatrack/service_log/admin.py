@@ -148,7 +148,7 @@ class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):
 
 class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name']
-    filter_horizontal = ("units",)
+    #filter_horizontal = ("units",)
 
 
 class UnitServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
