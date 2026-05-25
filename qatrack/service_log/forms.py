@@ -6,7 +6,7 @@ from django.db.models import ObjectDoesNotExist, Q, QuerySet
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
@@ -75,7 +75,7 @@ class HoursMinDurationField(forms.DurationField):
         if isinstance(value, timezone.timedelta):
             return value
         value = '{:04d}'.format(int(value))
-        value = parse_duration(force_text(':'.join([value[:2], value[2:], '00'])))
+        value = parse_duration(force_str(':'.join([value[:2], value[2:], '00'])))
         if value is None:
             raise ValidationError(self.error_messages['invalid'], code='invalid')
 
@@ -257,9 +257,9 @@ class ServiceEventMultipleField(forms.ModelMultipleChoiceField):
                     params={'pk': pk},
                 )
         qs = models.ServiceEvent.objects.filter(**{'%s__in' % key: value})
-        pks = set(force_text(getattr(o, key)) for o in qs)
+        pks = set(force_str(getattr(o, key)) for o in qs)
         for val in value:
-            if force_text(val) not in pks:
+            if force_str(val) not in pks:
                 raise ValidationError(
                     self.error_messages['invalid_choice'],
                     code='invalid_choice',

@@ -2,7 +2,6 @@
 from django import forms
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db.models import ObjectDoesNotExist, Q
-from django.utils.encoding import force_text
 from form_utils.forms import BetterModelForm
 
 from qatrack.issue_tracker import models as i_models
