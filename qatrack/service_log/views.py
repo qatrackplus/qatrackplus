@@ -424,7 +424,9 @@ class ServiceEventUpdateCreate(
                 self.request,
                 messages.WARNING,
                 _(
-                    'Due to changes detected, service event {} status has been reset to {}'.format(form.instance.id, default.name.lower())
+                    'Due to changes detected, service event {} status has been reset to {}'.format(
+                        form.instance.id, default.name.lower()
+                    )
                 ),
             )
             form.changed_data.append('service_status')
@@ -1037,7 +1039,9 @@ class ServiceEventsInitiatedByList(ServiceEventsBaseList):
 
     def get_page_title(self, *args):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
-        title = f'{tli.unit_test_collection.unit} {tli.unit_test_collection.name} - {format_datetime(tli.work_completed)} '
+        title = (
+            f'{tli.unit_test_collection.unit} {tli.unit_test_collection.name} - {format_datetime(tli.work_completed)} '
+        )
         return f'Service Events Initiated By {title}'
 
     def get_queryset(self):
@@ -1054,7 +1058,9 @@ class ServiceEventsReturnToServiceForList(ServiceEventsBaseList):
 
     def get_page_title(self, *args):
         tli = get_object_or_404(qa_models.TestListInstance, pk=self.kwargs['tli_pk'])
-        title = f'{tli.unit_test_collection.unit} {tli.unit_test_collection.name} - {format_datetime(tli.work_completed)} '
+        title = (
+            f'{tli.unit_test_collection.unit} {tli.unit_test_collection.name} - {format_datetime(tli.work_completed)} '
+        )
         return f'Service Events with {title} as Return To Service'
 
     def get_queryset(self):

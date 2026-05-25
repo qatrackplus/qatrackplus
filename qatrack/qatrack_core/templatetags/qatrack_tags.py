@@ -113,14 +113,18 @@ def render_log(service_log, user, link=True, show_rtsqa=False):
         context['extra_info'] = extra_info
         status_old_colour = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS).get(extra_info['status_change']['old'])
         context['old_status_tag'] = (
-            '<span class="label smooth-border" style="border-color: {};">{}</span>'.format(status_old_colour, extra_info['status_change']['old'])
+            '<span class="label smooth-border" style="border-color: {};">{}</span>'.format(
+                status_old_colour, extra_info['status_change']['old']
+            )
             if status_old_colour is not None
             else extra_info['status_change']['old']
         )
 
         status_new_colour = cache.get(settings.CACHE_SERVICE_STATUS_COLOURS).get(extra_info['status_change']['new'])
         context['new_status_tag'] = (
-            '<span class="label smooth-border" style="border-color: {};">{}</span>'.format(status_new_colour, extra_info['status_change']['new'])
+            '<span class="label smooth-border" style="border-color: {};">{}</span>'.format(
+                status_new_colour, extra_info['status_change']['new']
+            )
             if status_new_colour is not None
             else extra_info['status_change']['new']
         )

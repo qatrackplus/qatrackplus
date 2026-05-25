@@ -40,7 +40,9 @@ class Command(BaseCommand):
         status = all_status.filter(slug=kwargs['status'][0]).first()
         if not status:
             print(
-                "'{}' is not a valid status slug. Options are: {}".format(kwargs['status'][0], ', '.join(all_status.values_list('slug', flat=True)))
+                "'{}' is not a valid status slug. Options are: {}".format(
+                    kwargs['status'][0], ', '.join(all_status.values_list('slug', flat=True))
+                )
             )
             return
 

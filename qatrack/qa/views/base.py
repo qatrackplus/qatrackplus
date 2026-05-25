@@ -255,9 +255,7 @@ class UTCList(BaseListableView):
         super().__init__(*args, **kwargs)
 
         if self.active_only and self.inactive_only:
-            raise ValueError(
-                f"Misconfigured View: {self.__class__}. active_only and  inactive_only can't both be True"
-            )
+            raise ValueError(f"Misconfigured View: {self.__class__}. active_only and  inactive_only can't both be True")
 
         # Store templates on view initialization so we don't have to reload them for every row!
         self.templates = {

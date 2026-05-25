@@ -7,9 +7,7 @@ class ToolTipSelect(forms.Select):
         super().__init__(*args, **kwargs)
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-        options = super().create_option(
-            name, value, label, selected, index, subindex=None, attrs=None
-        )
+        options = super().create_option(name, value, label, selected, index, subindex=None, attrs=None)
         for k, v in self.titles.items():
             options['attrs']['title'] = self.titles.get(value, '')
 

@@ -22,9 +22,7 @@ class TestQCCompletedNoticeAdmin(TestCase):
         self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
-        self.url_add = reverse(
-            f'admin:{QCCompletedNotice._meta.app_label}_{QCCompletedNotice._meta.model_name}_add'
-        )
+        self.url_add = reverse(f'admin:{QCCompletedNotice._meta.app_label}_{QCCompletedNotice._meta.model_name}_add')
         self.url_list = reverse(
             f'admin:{QCCompletedNotice._meta.app_label}_{QCCompletedNotice._meta.model_name}_changelist'
         )

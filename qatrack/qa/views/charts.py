@@ -348,9 +348,7 @@ class BaseChartView(View):
                 )
             for c in sorted(tli_comments, key=lambda c: c.submit_date):
                 user = c.user or ti.created_by
-                comments.append(
-                    f'<strong>{format_as_date(c.submit_date)} - {user.username}:</strong> {c.comment}'
-                )
+                comments.append(f'<strong>{format_as_date(c.submit_date)} - {user.username}:</strong> {c.comment}')
             comment = '<br/>'.join(comments)
 
         point = {

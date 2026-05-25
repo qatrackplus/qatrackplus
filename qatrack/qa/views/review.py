@@ -377,7 +377,9 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         'unit_test_collection__frequency__name': _('Frequency'),
         'created_by__username': _('Created By'),
         'attachments': mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
-        'selected': mark_safe('<input type="checkbox" class="test-selected-toggle" title="{}"/>'.format(_('Select All'))),
+        'selected': mark_safe(
+            '<input type="checkbox" class="test-selected-toggle" title="{}"/>'.format(_('Select All'))
+        ),
     }
 
     search_fields = {
@@ -434,9 +436,9 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         )
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" title="{}"/>'.format(_(
-            'Check to include this test list instance when bulk setting approval statuses'
-        ))
+        return '<input type="checkbox" class="test-selected" title="{}"/>'.format(
+            _('Check to include this test list instance when bulk setting approval statuses')
+        )
 
     def bulk_review_status(self, obj):
         if not hasattr(self, '_bulk_review'):

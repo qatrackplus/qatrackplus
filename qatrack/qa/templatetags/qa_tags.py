@@ -92,7 +92,9 @@ def tolerance_for_reference(tol, ref):
     if ref and ref.type == models.BOOLEAN:
         expected = ref.value_display()
         return mark_safe(
-            '<span>{}: {}; {}: {}</span>'.format(tsd['ok'], expected, tsd['action'], 'Yes' if expected == 'No' else 'No')
+            '<span>{}: {}; {}: {}</span>'.format(
+                tsd['ok'], expected, tsd['action'], 'Yes' if expected == 'No' else 'No'
+            )
         )
 
     if not tol:

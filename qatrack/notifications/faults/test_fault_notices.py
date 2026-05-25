@@ -19,9 +19,7 @@ class TestFaultNoticeAdmin(TestCase):
         self.client.login(username='user', password='pwd')
 
         self.url_add = reverse(f'admin:{models.Fault._meta.app_label}_{models.Fault._meta.model_name}_add')
-        self.url_list = reverse(
-            f'admin:{FaultNotice._meta.app_label}_{FaultNotice._meta.model_name}_changelist'
-        )
+        self.url_list = reverse(f'admin:{FaultNotice._meta.app_label}_{FaultNotice._meta.model_name}_changelist')
 
         self.admin = admin.FaultNoticeAdmin(model=FaultNotice, admin_site=AdminSite())
 

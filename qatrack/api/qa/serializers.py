@@ -356,8 +356,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         if invalid_autos:
             msgs.append(
-                'The following tests are calculated automatically and should not have values '
-                'provided: {}'.format(', '.join(invalid_autos))
+                'The following tests are calculated automatically and should not have values ' 'provided: {}'.format(
+                    ', '.join(invalid_autos)
+                )
             )
 
         if validated_data['work_completed'] < validated_data['work_started']:
@@ -462,7 +463,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 f = ContentFile(content, fname)
                 test_data = UploadHandler(user, comp_calc_data, f).process()
                 if test_data['errors']:
-                    raise serializers.ValidationError('Error with {} test: {}'.format(slug, '\n'.join(test_data['errors'])))
+                    raise serializers.ValidationError(
+                        'Error with {} test: {}'.format(slug, '\n'.join(test_data['errors']))
+                    )
 
                 self.ti_attachments[slug].append(test_data['attachment_id'])
                 self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])

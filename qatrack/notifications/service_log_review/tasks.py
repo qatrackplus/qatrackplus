@@ -43,9 +43,7 @@ def send_serviceeventreview_notice(notice_id, task_name=''):
 
     if notice:
         if not notice.send_required():
-            logger.info(
-                f'Send of ServiceEventReviewNotice {notice_id} requested, but no ServiceEvent to notify about'
-            )
+            logger.info(f'Send of ServiceEventReviewNotice {notice_id} requested, but no ServiceEvent to notify about')
             return
 
         recipients = notice.recipients.recipient_emails()

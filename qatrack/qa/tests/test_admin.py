@@ -366,9 +366,7 @@ class TestTestAdmin(TestCase):
         )
 
         self.url_add = reverse(f'admin:{qa_models.Test._meta.app_label}_{qa_models.Test._meta.model_name}_add')
-        self.url_list = reverse(
-            f'admin:{qa_models.Test._meta.app_label}_{qa_models.Test._meta.model_name}_changelist'
-        )
+        self.url_list = reverse(f'admin:{qa_models.Test._meta.app_label}_{qa_models.Test._meta.model_name}_changelist')
         self.url_change = reverse(
             f'admin:{qa_models.Test._meta.app_label}_{qa_models.Test._meta.model_name}_change', args=[self.t_1.id]
         )
@@ -459,9 +457,7 @@ class TestTestListAdmin(TestCase):
 
         self.sublist = qa_utils.create_sublist(parent_test_list=self.tl_1)
 
-        self.url_add = reverse(
-            f'admin:{qa_models.TestList._meta.app_label}_{qa_models.TestList._meta.model_name}_add'
-        )
+        self.url_add = reverse(f'admin:{qa_models.TestList._meta.app_label}_{qa_models.TestList._meta.model_name}_add')
         self.url_list = reverse(
             f'admin:{qa_models.TestList._meta.app_label}_{qa_models.TestList._meta.model_name}_changelist'
         )

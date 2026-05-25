@@ -330,7 +330,9 @@ class QATrackAdfsAuthCodeBackend(AdfsAuthCodeBackend):
         if qualified_groups and adfs_settings.GROUPS_CLAIM:
             if len(set(qualified_groups) & set(claims[adfs_settings.GROUPS_CLAIM])) == 0:
                 logger.info(
-                    "successfully authenticated: {} but they don't belong to a qualifying group ({})".format(username, ', '.join(qualified_groups))
+                    "successfully authenticated: {} but they don't belong to a qualifying group ({})".format(
+                        username, ', '.join(qualified_groups)
+                    )
                 )
                 raise PermissionDenied
 

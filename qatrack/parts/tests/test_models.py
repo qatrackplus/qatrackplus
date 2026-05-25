@@ -33,6 +33,4 @@ class TestPartStorageCollection(TestCase):
         self.psc_1 = sl_utils.create_part_storage_collection(part=self.p_1, storage=self.st_1, quantity=1000)
 
     def test_str(self):
-        self.assertEqual(
-            str(self.psc_1), f'{self.si_1.name} - {self.r_1.name} - {self.st_1.location} - ({1000})'
-        )
+        self.assertEqual(str(self.psc_1), f'{self.si_1.name} - {self.r_1.name} - {self.st_1.location} - ({1000})')

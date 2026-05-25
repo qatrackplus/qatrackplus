@@ -467,9 +467,7 @@ class TestChartData(TestCase):
         expected = [1.0] * self.NPOINTS
         unit_name = self.utc1.unit.name
         tli_name = self.tl1.name
-        actual = [
-            x['value'] for x in data['plot_data']['series'][f'{unit_name} - {tli_name} :: test1']['series_data']
-        ]
+        actual = [x['value'] for x in data['plot_data']['series'][f'{unit_name} - {tli_name} :: test1']['series_data']]
         self.assertListEqual(actual, expected)
 
     def test_basic_data_relative(self):
@@ -487,9 +485,7 @@ class TestChartData(TestCase):
         tl2_name = self.tl2.name
         actual = [
             x['value']
-            for x in data['plot_data']['series'][f'{unit_name} - {tl2_name} :: test2 (relative to ref)'][
-                'series_data'
-            ]
+            for x in data['plot_data']['series'][f'{unit_name} - {tl2_name} :: test2 (relative to ref)']['series_data']
         ]
         self.assertListEqual(actual, expected)
 
