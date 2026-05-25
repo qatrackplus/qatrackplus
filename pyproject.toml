@@ -181,11 +181,12 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "DJ"]
-ignore = ["E741", "E501", "DJ001", "DJ008", "DJ007"]
+ignore = ["E741", "E501", "DJ001", "DJ008", "DJ007", "UP031"]
 
 [tool.ruff.lint.per-file-ignores]
 "manage.py" = ["E402"]
 "qatrack/wsgi.py" = ["E402"]
+"__init__.py" = ["F401"]
 
 [tool.ruff.format]
 quote-style = "single"

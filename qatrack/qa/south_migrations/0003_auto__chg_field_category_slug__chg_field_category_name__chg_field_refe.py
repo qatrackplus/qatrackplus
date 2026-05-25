@@ -28,7 +28,7 @@ class Migration(SchemaMigration):
             for table_name, column_name in sql_server_idxs:
                 try:
                     db.drop_index(table_name, column_name)
-                except:
+                except Exception:
                     pass
                 # sqlserver_utils.drop_index(db,table_name,column_name)
 

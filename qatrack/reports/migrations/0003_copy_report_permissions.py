@@ -24,7 +24,7 @@ def copy_to_reports(apps, schema):
     for perm in perms:
         try:
             pfrom = Permission.objects.get(codename=perm, content_type__model='testinstance')
-        except:
+        except Exception:
             # if running during tests, this perm won't exist so we don't need to copy perms
             continue
         pto = Permission.objects.get(codename=perm, content_type__model='savedreport')

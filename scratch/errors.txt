@@ -1,0 +1,34 @@
+E402:66:C:\Users\nsmel\source\repos\qatrackplusplus\deploy\dev\local_test_settings.dev.py Module level import not at top of file
+E402:21:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\accel_migration_tool\accel_migration_settings.py Module level import not at top of file
+F403:21:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\accel_migration_tool\accel_migration_settings.py `from .local_accel_settings import *` used; unable to detect undefined names
+DJ006:192:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\attachments\admin.py Do not use `exclude` with `ModelForm`, use `fields` instead
+E722:15:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\attachments\migrations\0005_add_attach_perm.py Do not use bare `except`
+E722:264:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\context_processors.py Do not use bare `except`
+E722:296:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\context_processors.py Do not use bare `except`
+F401:9:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\notifications\admin\__init__.py `qatrack.notifications.service_log_review.admin` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+E722:19:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\qa\migrations\0021_check_py3_calcs.py Do not use bare `except`
+E722:31:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\qa\south_migrations\0003_auto__chg_field_category_slug__chg_field_category_name__chg_field_refe.py Do not use bare `except`
+F811:27:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\qa\views\admin.py Redefinition of unused `CopyReferencesAndTolerancesForm` from line 19: `CopyReferencesAndTolerancesForm` redefined here
+DJ006:352:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\qa\views\forms.py Do not use `exclude` with `ModelForm`, use `fields` instead
+E721:658:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\qa\views\perform.py Use `is` and `is not` for type comparisons, or `isinstance()` for isinstance checks
+F811:375:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\qatrack_core\tests\test_scheduling.py Redefinition of unused `test_first_of_month_performed_long_after_past_next_window_2` from line 364: `test_first_of_month_performed_long_after_past_next_window_2` redefined here
+F401:1:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\faults\__init__.py `django.conf.settings` imported but unused
+F401:3:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\faults\__init__.py `qatrack.reports.faults.details.FaultDetailsReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:4:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\faults\__init__.py `qatrack.reports.faults.summary.FaultSummaryReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+E722:27:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\migrations\0003_copy_report_permissions.py Do not use bare `except`
+F401:2:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.assigned_qc.AssignedQCDetailsReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:3:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.assigned_qc.AssignedQCReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:4:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.assigned_qc.PaperBackupForms` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:7:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.due_dates.DueAndOverdueQCReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:8:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.due_dates.NextDueDatesReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:10:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.testinstance.TestInstanceDetailsReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:12:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.testlistinstance.TestListInstanceDetailsReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:13:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\qc\__init__.py `qatrack.reports.qc.testlistinstance.TestListInstanceSummaryReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:2:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\service_log\__init__.py `qatrack.reports.service_log.assigned_templates.ScheduledTemplatesReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:4:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\service_log\__init__.py `qatrack.reports.service_log.details.ServiceEventDetailsReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:6:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\service_log\__init__.py `qatrack.reports.service_log.due_dates.DueAndOverdueServiceEventScheduleReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:7:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\service_log\__init__.py `qatrack.reports.service_log.due_dates.NextScheduledServiceEventsDueDatesReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:10:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\service_log\__init__.py `qatrack.reports.service_log.personnel.ServiceEventPersonnelSummaryReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:12:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\service_log\__init__.py `qatrack.reports.service_log.service_times.ServiceTimesReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+F401:13:C:\Users\nsmel\source\repos\qatrackplusplus\qatrack\reports\service_log\__init__.py `qatrack.reports.service_log.summary.ServiceEventSummaryReport` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+I001:1:C:\Users\nsmel\source\repos\qatrackplusplus\scratch\count_errors.py Import block is un-sorted or un-formatted

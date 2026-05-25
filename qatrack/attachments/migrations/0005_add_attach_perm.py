@@ -12,7 +12,7 @@ def add_attach_perms(apps, schema):
 
     try:
         perm = Permission.objects.get(name='Can add attachment')
-    except:
+    except Exception:
         # during initial database creation the permission might not exist
         app_config = apps.get_app_config('attachments')
         app_config.models_module = True

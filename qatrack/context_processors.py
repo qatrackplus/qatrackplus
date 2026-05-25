@@ -261,7 +261,7 @@ def available_languages(request):
                         'bidi': lang_info['bidi'],  # Right-to-left support
                     }
                 )
-            except:
+            except Exception:
                 # Fallback if language info not available
                 languages.append(
                     {
@@ -293,7 +293,7 @@ def available_languages(request):
                                             'bidi': lang_info['bidi'],
                                         }
                                     )
-                                except:
+                                except Exception:
                                     # Fallback for unknown languages
                                     languages.append(
                                         {
