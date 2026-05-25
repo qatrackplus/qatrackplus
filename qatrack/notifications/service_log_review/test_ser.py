@@ -3,8 +3,9 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
+import qatrack.qa.tests.utils as qa_utils
+import qatrack.service_log.tests.utils as utils
 from qatrack.notifications.models import (
     RecipientGroup,
     ServiceEventReviewNotice,
@@ -12,70 +13,65 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.service_log_review import admin, tasks
 from qatrack.qa import models
-import qatrack.qa.tests.utils as qa_utils
-import qatrack.service_log.tests.utils as utils
 
 
 class TestServiceEventReviewAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.ServiceEventReviewAdmin(model=ServiceEventReviewNotice, admin_site=AdminSite())
 
     def test_get_notification_type_unreviewed(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventReviewNotice.objects.create(
             notification_type=ServiceEventReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
-        assert "Notify about Service Events awaiting review" in self.admin.get_notification_type(n)
+        assert 'Notify about Service Events awaiting review' in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = qa_utils.create_unit(name="Test Unit")
-        ug = UnitGroup.objects.create(name="UG")
+        u = qa_utils.create_unit(name='Test Unit')
+        ug = UnitGroup.objects.create(name='UG')
         ug.units.add(u)
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventReviewNotice.objects.create(
             notification_type=ServiceEventReviewNotice.UNREVIEWED,
             units=ug,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert ug.name in self.admin.get_units(n)
 
     def test_get_recipients(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventReviewNotice.objects.create(
             notification_type=ServiceEventReviewNotice.UNREVIEWED,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert rg.name in self.admin.get_recipients(n)
 
 
 class TestServiceEventReviewModel(TestCase):
-
     def setUp(self):
-
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = qa_utils.create_unit(name='unit1', number=1)
+        self.unit2 = qa_utils.create_unit(name='unit2', number=2)
         self.usa1 = utils.create_unit_service_area(unit=self.unit1)
         self.usa2 = utils.create_unit_service_area(unit=self.unit2)
 
         self.se1 = utils.create_service_event(unit_service_area=self.usa1, is_review_required=True)
         self.se2 = utils.create_service_event(unit_service_area=self.usa2, is_review_required=False)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = qa_utils.create_group()
         user = models.User.objects.latest('pk')
         user.is_active = True
         user.groups.add(self.group)
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -95,7 +91,7 @@ class TestServiceEventReviewModel(TestCase):
         notice = ServiceEventReviewNotice.objects.create(
             recipients=self.recipients,
             notification_type=ServiceEventReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         expected = [
             {
@@ -123,7 +119,7 @@ class TestServiceEventReviewModel(TestCase):
             recipients=self.recipients,
             units=self.unit_group,
             notification_type=ServiceEventReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         expected = [
             {
@@ -140,25 +136,23 @@ class TestServiceEventReviewModel(TestCase):
 
 
 class TestServiceEventReviewEmails(TestCase):
-
     def setUp(self):
-
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = qa_utils.create_unit(name='unit1', number=1)
+        self.unit2 = qa_utils.create_unit(name='unit2', number=2)
         self.usa1 = utils.create_unit_service_area(unit=self.unit1)
         self.usa2 = utils.create_unit_service_area(unit=self.unit2)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = qa_utils.create_group()
         user = models.User.objects.latest('pk')
         user.groups.add(self.group)
         user.is_active = True
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -168,9 +162,9 @@ class TestServiceEventReviewEmails(TestCase):
 
         self.notice = ServiceEventReviewNotice.objects.create(
             recipients=self.recipients,
-            recurrences="RRULE:FREQ=DAILY",
+            recurrences='RRULE:FREQ=DAILY',
             notification_type=ServiceEventReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
@@ -183,7 +177,7 @@ class TestServiceEventReviewEmails(TestCase):
         tasks.send_serviceeventreview_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Unreviewed Service Event Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Unreviewed Service Event Notice:' in mail.outbox[0].subject
 
     def test_send_notice_empty(self):
         self.notice.send_empty = True
@@ -192,7 +186,7 @@ class TestServiceEventReviewEmails(TestCase):
         tasks.send_serviceeventreview_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Unreviewed Service Event Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Unreviewed Service Event Notice:' in mail.outbox[0].subject
 
     def test_send_notice_not_empty(self):
         tasks.send_serviceeventreview_notice(self.notice.pk)

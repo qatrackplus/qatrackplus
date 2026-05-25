@@ -14,18 +14,18 @@ register = template.Library()
 def attachment_link(attachment, label=None, absolute=False):
     href = attachment.attachment.url
     if absolute:
-        href = "%s://%s%s" % (settings.HTTP_OR_HTTPS, Site.objects.get_current().domain, href)
+        href = f'{settings.HTTP_OR_HTTPS}://{Site.objects.get_current().domain}{href}'
 
     kwargs = {
         'href': href,
         'title': attachment.comment or attachment.attachment.url,
-        'label': label or attachment.label or attachment.attachment.name.split("/")[-1],
+        'label': label or attachment.label or attachment.attachment.name.split('/')[-1],
     }
     return format_html('<a target="_blank" href="{href}" title="{title}">{label}</a>', **kwargs)
 
 
 @register.filter
-def attachment_img(attachment, klass="qa-image"):
+def attachment_img(attachment, klass='qa-image'):
     kwargs = {
         'src': attachment.attachment.url,
         'alt': attachment.comment or attachment.label or attachment.attachment.url,
@@ -41,4 +41,4 @@ def ti_attachment_img(attachment):
         'name': os.path.basename(attachment.attachment.name),
         'size': filesizeformat(attachment.attachment.size),
     }
-    return get_template("attachments/ti_img.html").render(context)
+    return get_template('attachments/ti_img.html').render(context)

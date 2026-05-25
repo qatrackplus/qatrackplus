@@ -1,12 +1,11 @@
-import calendar
 import datetime
+from zoneinfo import ZoneInfo
 
+import recurrence
 from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
-from zoneinfo import ZoneInfo
-import recurrence
 
 from qatrack.qa import models
 from qatrack.qa.tests import utils as qautils
@@ -14,9 +13,8 @@ from qatrack.qatrack_core import dates, scheduling
 
 
 class TestDateFunctions:
-
     def test_last_month_dates_jan(self):
-        dt = timezone.datetime(2019, 1, 15, tzinfo=timezone.utc)
+        dt = timezone.datetime(2019, 1, 15, tzinfo=datetime.UTC)
         start, end = dates.last_month_dates(dt)
         tz = ZoneInfo(settings.TIME_ZONE)
         expected_start = timezone.datetime(2018, 12, 1).replace(tzinfo=tz)
@@ -25,7 +23,7 @@ class TestDateFunctions:
         assert end == expected_end
 
     def test_last_month_dates_dec(self):
-        dt = timezone.datetime(2019, 12, 15, tzinfo=timezone.utc)
+        dt = timezone.datetime(2019, 12, 15, tzinfo=datetime.UTC)
         start, end = dates.last_month_dates(dt)
         tz = ZoneInfo(settings.TIME_ZONE)
         expected_start = timezone.datetime(2019, 11, 1).replace(tzinfo=tz)
@@ -35,12 +33,11 @@ class TestDateFunctions:
 
 
 class TestCalcDueDate(TestCase):
-
     def setUp(self):
-        self.tz = ZoneInfo("America/Toronto")
+        self.tz = ZoneInfo('America/Toronto')
         self.rule = qautils.create_frequency()
 
-    def make_dt(self, dt, tz=ZoneInfo("America/Toronto")):
+    def make_dt(self, dt, tz=ZoneInfo('America/Toronto')):
         """return a tz localized datetime from dt"""
         return dt.replace(tzinfo=tz)
 
@@ -52,11 +49,11 @@ class TestCalcDueDate(TestCase):
             byday=[recurrence.MO, recurrence.WE, recurrence.FR],
         )
         return models.Frequency(
-            name="MWF",
-            slug="mwf",
+            name='MWF',
+            slug='mwf',
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=datetime.UTC),
             ),
             window_start=0,
             window_end=1,
@@ -72,11 +69,11 @@ class TestCalcDueDate(TestCase):
             byday=[recurrence.WE],
         )
         return models.Frequency(
-            name="Wed",
-            slug="wed",
+            name='Wed',
+            slug='wed',
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=datetime.UTC),
             ),
             window_end=1,
             window_start=1,
@@ -88,11 +85,11 @@ class TestCalcDueDate(TestCase):
 
         rule = recurrence.Rule(freq=recurrence.MONTHLY, bymonthday=day)
         return models.Frequency(
-            name="Day of Month",
-            slug="day-of-month",
+            name='Day of Month',
+            slug='day-of-month',
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=datetime.UTC),
             ),
             window_end=7,
             window_start=7,
@@ -104,11 +101,11 @@ class TestCalcDueDate(TestCase):
 
         rule = recurrence.Rule(freq=recurrence.WEEKLY, interval=weeks)
         return models.Frequency(
-            name="%s weekly" % weeks,
-            slug="%s-weekly" % weeks,
+            name=f'{weeks} weekly',
+            slug=f'{weeks}-weekly',
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=datetime.UTC),
             ),
             window_end=7,
             window_start=7,
@@ -118,13 +115,12 @@ class TestCalcDueDate(TestCase):
         """Null frequency should result in a null due date"""
         assert scheduling.calc_due_date(timezone.now(), timezone.now(), None) is None
 
-    @override_settings(TIME_ZONE="America/Toronto")
+    @override_settings(TIME_ZONE='America/Toronto')
     def test_due_date_daily(self):
-
-        self.rule.recurrences = "FREQ=DAILY;INTERVAL=1"
+        self.rule.recurrences = 'FREQ=DAILY;INTERVAL=1'
         self.rule.save()
 
-        tz = ZoneInfo("America/Toronto")
+        tz = ZoneInfo('America/Toronto')
         completed = timezone.datetime(2012, 1, 1, 8, 0).replace(tzinfo=tz)
         due = timezone.datetime(2012, 1, 1, 23, 59, 59).replace(tzinfo=tz)
 
@@ -132,13 +128,12 @@ class TestCalcDueDate(TestCase):
         expected = timezone.datetime(2012, 1, 2, 23, 59, 59).replace(tzinfo=tz)
         self.assertEqual(next_due.astimezone(tz), expected.astimezone(tz))
 
-    @override_settings(TIME_ZONE="America/Toronto")
+    @override_settings(TIME_ZONE='America/Toronto')
     def test_due_date_weekly(self):
-
-        self.rule.recurrences = "FREQ=WEEKLY;INTERVAL=1"
+        self.rule.recurrences = 'FREQ=WEEKLY;INTERVAL=1'
         self.rule.save()
 
-        tz = ZoneInfo("America/Toronto")
+        tz = ZoneInfo('America/Toronto')
         completed = timezone.datetime(2012, 1, 1, 8, 0).replace(tzinfo=tz)
         due = timezone.datetime(2012, 1, 1, 23, 59, 59).replace(tzinfo=tz)
 
@@ -148,7 +143,7 @@ class TestCalcDueDate(TestCase):
 
     def test_daily_offset_due_today_before_due_time(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = qautils.create_frequency(name="d", slug="d", interval=1, save=False)
+        daily = qautils.create_frequency(name='d', slug='d', interval=1, save=False)
         six_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 6, 0))
         due = six_am_today + timezone.timedelta(hours=1)
         six_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 6, 0))
@@ -156,7 +151,7 @@ class TestCalcDueDate(TestCase):
 
     def test_daily_offset_due_today_after_due_time(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = qautils.create_frequency(name="d", slug="d", interval=1, save=False)
+        daily = qautils.create_frequency(name='d', slug='d', interval=1, save=False)
         eight_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 8, 0))
         due = eight_am_today - timezone.timedelta(hours=1)
         eight_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 8, 0))
@@ -164,7 +159,7 @@ class TestCalcDueDate(TestCase):
 
     def test_daily_offset_due_today_equal_due_time(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = qautils.create_frequency(name="d", slug="d", interval=1, save=False)
+        daily = qautils.create_frequency(name='d', slug='d', interval=1, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due = seven_am_today
         seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
@@ -172,21 +167,21 @@ class TestCalcDueDate(TestCase):
 
     def test_daily_offset_due_yesterday(self):
         """Daily frequency when performed today should result in due date one day in future"""
-        daily = qautils.create_frequency(name="d", slug="d", interval=1, save=False)
+        daily = qautils.create_frequency(name='d', slug='d', interval=1, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due = self.make_dt(timezone.datetime(2018, 11, 19, 7, 0))
         seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
         assert scheduling.calc_due_date(seven_am_today, due, daily).date() == seven_am_tmrw.date()
 
     def test_daily_offset_due_tomorrow(self):
-        daily = qautils.create_frequency(name="d", slug="d", interval=1, save=False)
+        daily = qautils.create_frequency(name='d', slug='d', interval=1, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         seven_am_tmrw = self.make_dt(timezone.datetime(2018, 11, 21, 7, 0))
         assert scheduling.calc_due_date(seven_am_today, seven_am_tmrw, daily).date() == seven_am_tmrw.date()
 
     def test_monthly_offset(self):
         """Monthly frequency when performed today should result in due date 28 days in future"""
-        monthly = qautils.create_frequency(name="d", slug="d", interval=28, save=False)
+        monthly = qautils.create_frequency(name='d', slug='d', interval=28, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due_date = timezone.now()  # arbitrary
         seven_am_4wks = self.make_dt(timezone.datetime(2018, 12, 18, 7, 0))
@@ -194,7 +189,7 @@ class TestCalcDueDate(TestCase):
 
     def test_annual_offset(self):
         """Annual frequency when performed today should result in due date 300 days in future"""
-        annual = qautils.create_frequency(name="d", slug="d", interval=300, save=False)
+        annual = qautils.create_frequency(name='d', slug='d', interval=300, save=False)
         seven_am_today = self.make_dt(timezone.datetime(2018, 11, 20, 7, 0))
         due_date = self.make_dt(timezone.datetime(2018, 12, 20, 7, 0))  # arbitrary
         seven_am_300_days = self.make_dt(timezone.datetime(2019, 9, 16, 7, 0))
@@ -386,13 +381,13 @@ class TestCalcDueDate(TestCase):
         # due date in Nov is 8 4 week periods after April 15 which is Nov 25
         # due date in Dec is 9 4 week periods after April 15 which is Dec 23
         expected_due_date = self.make_dt(timezone.datetime(2018, 12, 23, 7, 0))
-        assert (scheduling.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date())
+        assert scheduling.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
 
     def test_first_of_month_us_classical_offset(self):
         """Ensure due date is calculated correctly when the UTC date is ahead
         of the local date.  See RAM-2297."""
-        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=timezone.utc)
-        previous_due_date = timezone.datetime(2023, 1, 1, 22, 15, 30, tzinfo=timezone.utc)
+        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=datetime.UTC)
+        previous_due_date = timezone.datetime(2023, 1, 1, 22, 15, 30, tzinfo=datetime.UTC)
         first_of_month = self.day_of_month(day=1)
         first_of_month.window_start = None
         first_of_month.save()
@@ -403,10 +398,10 @@ class TestCalcDueDate(TestCase):
     def test_first_of_month_australia_classical_offset(self):
         """Ensure due date is calculated correctly when the UTC date is prior
         to the local date.  See RAM-2297."""
-        with override_settings(TIME_ZONE="Australia/Melbourne"):
-            tz = ZoneInfo("Australia/Melbourne")
-            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=timezone.utc)
-            previous_due_date = timezone.datetime(2023, 1, 1, 22, 15, 30, tzinfo=timezone.utc)
+        with override_settings(TIME_ZONE='Australia/Melbourne'):
+            tz = ZoneInfo('Australia/Melbourne')
+            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=datetime.UTC)
+            previous_due_date = timezone.datetime(2023, 1, 1, 22, 15, 30, tzinfo=datetime.UTC)
             first_of_month = self.day_of_month(day=1)
             first_of_month.window_start = None
             first_of_month.save()
@@ -417,8 +412,8 @@ class TestCalcDueDate(TestCase):
     def test_first_of_month_us(self):
         """Ensure due date is calculated correctly when the UTC date is ahead
         of the local date.  See RAM-2297."""
-        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=timezone.utc)
-        previous_due_date = timezone.datetime(2023, 1, 1, 2, 15, 30, tzinfo=timezone.utc)
+        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=datetime.UTC)
+        previous_due_date = timezone.datetime(2023, 1, 1, 2, 15, 30, tzinfo=datetime.UTC)
         first_of_month = self.day_of_month(day=1)
         due_date = scheduling.calc_due_date(work_completed, previous_due_date, first_of_month)
         expected_due_date = timezone.datetime(2023, 2, 1).date()
@@ -427,10 +422,10 @@ class TestCalcDueDate(TestCase):
     def test_first_of_month_australia(self):
         """Ensure due date is calculated correctly when the UTC date is prior
         to the local date.  See RAM-2297."""
-        with override_settings(TIME_ZONE="Australia/Melbourne"):
-            tz = ZoneInfo("Australia/Melbourne")
-            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=timezone.utc)
-            previous_due_date = timezone.datetime(2023, 1, 1, 22, 15, 30, tzinfo=timezone.utc)
+        with override_settings(TIME_ZONE='Australia/Melbourne'):
+            tz = ZoneInfo('Australia/Melbourne')
+            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=datetime.UTC)
+            previous_due_date = timezone.datetime(2023, 1, 1, 22, 15, 30, tzinfo=datetime.UTC)
             first_of_month = self.day_of_month(day=1)
             due_date = scheduling.calc_due_date(work_completed, previous_due_date, first_of_month)
             expected_due_date = timezone.datetime(2023, 2, 1).date()
@@ -438,7 +433,6 @@ class TestCalcDueDate(TestCase):
 
 
 class TestRelocalizeRecurrences(TestCase):
-
     def test_find_models_with_recurrence(self):
         models = scheduling.RecurrenceFieldMixin.recurrence_models()
         assert len(models) == 7  # ReportSchedule, Frequency, 5 notice types
@@ -446,7 +440,7 @@ class TestRelocalizeRecurrences(TestCase):
     def test_relocalize(self):
         f = qautils.create_frequency()
         assert 'DTSTART:20120101T05' in str(f.recurrences)  # starts in America/New_York
-        with override_settings(TIME_ZONE="America/Los_Angeles"):
+        with override_settings(TIME_ZONE='America/Los_Angeles'):
             scheduling.RecurrenceFieldMixin.relocalize_recurrences()
             f.refresh_from_db()
             assert 'DTSTART:20120101T08' in str(f.recurrences)  # should now be in America/Los_Angeles

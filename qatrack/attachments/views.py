@@ -6,7 +6,7 @@ from qatrack.attachments.templatetags.attach_tags import (
 )
 
 
-def listable_attachment_tags(obj, joiner=" "):
+def listable_attachment_tags(obj, joiner=' '):
     """
     Return an html string containing links for each of the attachments for
     input object.  Images will be shown as hover images and other attachments will be
@@ -18,10 +18,9 @@ def listable_attachment_tags(obj, joiner=" "):
     img_label = mark_safe('<i class="fa fa-photo fa-fw" aria-hidden="true"></i>')
     for a in attachments:
         if a.is_image:
-            img = attachment_img(a, klass="listable-image")
+            img = attachment_img(a, klass='listable-image')
             items.append(
-                '<div class="hover-img"><a href="%s" target="_blank">%s<span>%s</span></a></div>' %
-                (a.attachment.url, img_label, img)
+                f'<div class="hover-img"><a href="{a.attachment.url}" target="_blank">{img_label}<span>{img}</span></a></div>'
             )
         else:
             items.append(attachment_link(a, label=label))

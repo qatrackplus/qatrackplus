@@ -1,7 +1,7 @@
+from django_comments.models import Comment
 from rest_framework import viewsets
 
 from qatrack.api.comments import serializers
-from django_comments.models import Comment
 
 
 class CommentViewSet(viewsets.ReadOnlyModelViewSet):

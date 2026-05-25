@@ -15,24 +15,29 @@ class ReportForm(forms.ModelForm):
     """Main form for controlling global report settings (as opposed to report type specific
     controls/filters"""
 
-    prefix = "root"
+    prefix = 'root'
 
     class Meta:
         model = models.SavedReport
         fields = (
-            "title", "report_type", "report_format", "visible_to", "include_signature", "include_logo", "paper_size"
+            'title',
+            'report_type',
+            'report_format',
+            'visible_to',
+            'include_signature',
+            'include_logo',
+            'paper_size',
         )
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         f = self.fields['report_type']
         choices = [('', '------------')] + reports.report_type_choices()
         f.widget = ToolTipSelect(titles=reports.report_descriptions(), choices=choices)
-        self.fields['include_logo'].label = _("Include Logo")
-        self.fields['include_logo'].help_text = _("Include the organization logo in reports?")
-        self.fields['paper_size'].label = _("Paper Size")
+        self.fields['include_logo'].label = _('Include Logo')
+        self.fields['include_logo'].help_text = _('Include the organization logo in reports?')
+        self.fields['paper_size'].label = _('Paper Size')
         self.fields['paper_size'].required = False  # Make not required since model has default
 
         # Set default if no initial value provided
@@ -52,9 +57,9 @@ ReportNoteFormSet = forms.inlineformset_factory(
     models.ReportNote,
     extra=0,
     fields=(
-        "id",
-        "heading",
-        "content",
+        'id',
+        'heading',
+        'content',
     ),
     widgets={
         'heading': forms.TextInput(),
@@ -65,13 +70,13 @@ ReportNoteFormSet = forms.inlineformset_factory(
 
 def value_to_serializable(val, val_type=None):
     """Convert input report form value to something serializable TODO:: handle
-    other input types (single date or datetime) """
+    other input types (single date or datetime)"""
 
     if 'daterange' in val_type.lower() and not isinstance(val, str):
         d1 = format_as_date(parser.parse(val[0]))
         d2 = format_as_date(parser.parse(val[1]))
-        val = "%s - %s" % (d1, d2)
-    elif val_type == "recurrencefield":
+        val = f'{d1} - {d2}'
+    elif val_type == 'recurrencefield':
         val = str(val)
 
     if isinstance(val, Model):  # pragma: no cover
@@ -85,24 +90,21 @@ def value_to_serializable(val, val_type=None):
     return val
 
 
-def serialize_forms(forms, data_attr="initial"):
-
+def serialize_forms(forms, data_attr='initial'):
     form_data = {}
 
     for form in forms:
-
-        prefix = form.prefix + "-" if form.prefix else ''
+        prefix = form.prefix + '-' if form.prefix else ''
 
         for k, v in getattr(form, data_attr).items():
-
             if k not in form.fields:  # pragma: no cover
                 continue
 
             field = form.fields[k]
-            if type(field.widget).__name__ == "RecurrenceWidget":
-                inp_type = "recurrence"
-            if type(field.widget).__name__ == "Textarea":
-                inp_type = "textarea"
+            if type(field.widget).__name__ == 'RecurrenceWidget':
+                inp_type = 'recurrence'
+            if type(field.widget).__name__ == 'Textarea':
+                inp_type = 'textarea'
             else:
                 inp_type = form.fields[k].widget.input_type
 
@@ -130,7 +132,6 @@ def serialize_savedreport(instance):
 
 
 def serialize_savedreport_notes(instance):
-
     notes_formset = ReportNoteFormSet(instance=instance)
     return {
         'notes': serialize_forms(notes_formset.forms),
@@ -158,7 +159,6 @@ def serialize_form_data(form_data):
 
     data = {}
     for k, v in form_data.items():
-
         if isinstance(v, Model):
             v = v.pk
         else:
@@ -175,27 +175,25 @@ def serialize_form_data(form_data):
 class ReportScheduleForm(forms.ModelForm):
     """Form for udpate report schedule"""
 
-    prefix = "schedule"
+    prefix = 'schedule'
 
     class Meta:
         model = models.ReportSchedule
-        fields = ("report", "schedule", "time", "groups", "users", "emails")
+        fields = ('report', 'schedule', 'time', 'groups', 'users', 'emails')
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         self.fields['report'].widget = forms.HiddenInput()
         self.fields['emails'].widget.attrs['rows'] = 1
 
     def clean(self):
-
         cleaned_data = super().clean()
         no_groups = len(cleaned_data.get('groups', [])) == 0
         no_users = len(cleaned_data.get('users', [])) == 0
-        no_emails = len([x for x in cleaned_data.get("emails", "").split(",") if x]) == 0
+        no_emails = len([x for x in cleaned_data.get('emails', '').split(',') if x]) == 0
         if no_groups and no_users and no_emails:
-            msg = _("You must select at least one group, user, or email address!")
+            msg = _('You must select at least one group, user, or email address!')
             self.add_error(None, forms.ValidationError(msg))
 
         return cleaned_data

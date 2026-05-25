@@ -71,7 +71,7 @@ class SiteViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UnitAvailableTimeViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.UnitAvailableTime.objects.all().order_by('unit__number', "-date_changed")
+    queryset = models.UnitAvailableTime.objects.all().order_by('unit__number', '-date_changed')
     serializer_class = serializers.UnitAvailableTimeSerializer
     filterset_class = filters.UnitAvailableTimeFilter
     filter_backends = (
@@ -81,7 +81,7 @@ class UnitAvailableTimeViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UnitAvailableTimeEditViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.UnitAvailableTimeEdit.objects.all().order_by('unit__number', "-date")
+    queryset = models.UnitAvailableTimeEdit.objects.all().order_by('unit__number', '-date')
     serializer_class = serializers.UnitAvailableTimeEditSerializer
     filterset_class = filters.UnitAvailableTimeEditFilter
     filter_backends = (

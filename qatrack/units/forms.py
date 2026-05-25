@@ -15,18 +15,14 @@ from qatrack.units import models as u_models
 
 def max_24hr(value):
     if value > timedelta(hours=24):
-
         raise ValidationError(_('Duration can not be greater than 24 hours'))
 
 
 year_select = forms.ChoiceField(
     required=False,
-    choices=[(y, y) for y in range(timezone.now().year - 20,
-                                   timezone.now().year + 10)],
-    initial=timezone.now().year
-).widget.render(
-    'year_select', timezone.now().year, attrs={'id': 'id_year_select'}
-)
+    choices=[(y, y) for y in range(timezone.now().year - 20, timezone.now().year + 10)],
+    initial=timezone.now().year,
+).widget.render('year_select', timezone.now().year, attrs={'id': 'id_year_select'})
 
 month_select = forms.ChoiceField(
     required=False,
@@ -44,14 +40,11 @@ month_select = forms.ChoiceField(
         (10, 'November'),
         (11, 'December'),
     ],
-    initial=timezone.now().month - 1
-).widget.render(
-    'month_select', timezone.now().month - 1, attrs={'id': 'id_month_select'}
-)
+    initial=timezone.now().month - 1,
+).widget.render('month_select', timezone.now().month - 1, attrs={'id': 'id_month_select'})
 
 
 class UnitAvailableTimeForm(forms.ModelForm):
-
     hours_sunday = HoursMinDurationField(
         help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr]
     )
@@ -81,7 +74,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        super(UnitAvailableTimeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for f in self.fields:
             if f == 'date_changed':
@@ -109,7 +102,6 @@ class UnitAvailableTimeForm(forms.ModelForm):
 
 
 class UnitAvailableTimeEditForm(forms.ModelForm):
-
     units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all())
     hours = HoursMinDurationField(help_text='Hours available (hh:mm)', label='Hours', validators=[max_24hr])
 
@@ -118,7 +110,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         fields = ('date', 'hours', 'name', 'units')
 
     def __init__(self, *args, **kwargs):
-        super(UnitAvailableTimeEditForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for f in self.fields:
             if f == 'date':
@@ -134,7 +126,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
     def clean_date(self):
         cleaned = self.cleaned_data['date']
         if cleaned < self.instance.unit.date_acceptance:
-            raise ValidationError(_('Unit cannot have available time edit before it\'s date of acceptance.'))
+            raise ValidationError(_("Unit cannot have available time edit before it's date of acceptance."))
         return cleaned
 
 
@@ -142,27 +134,27 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False, vis
     """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
 
     def site_unit_type(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
+        return '{} :: {}'.format(u.site.name if u.site else 'Other', u.type.name)
 
     def site_unit_name(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
+        return '{} :: {}'.format(u.site.name if u.site else 'Other', u.name)
 
     units = u_models.Unit.objects.select_related(
-        "site",
-        "type",
-    ).order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
+        'site',
+        'type',
+    ).order_by('site__name', 'type__name', settings.ORDER_UNITS_BY)
 
     if serviceable_only:
         units = units.filter(is_serviceable=True)
 
     if visible_for_user:
-        visible_unit_ids = units_visible_to_user(visible_for_user).values_list("pk", flat=True)
+        visible_unit_ids = units_visible_to_user(visible_for_user).values_list('pk', flat=True)
         units = units.filter(id__in=visible_unit_ids)
 
     choices = [(ut, list(us)) for (ut, us) in groupby(units, key=site_unit_type)]
     choices = [(ut, [(u.id, site_unit_name(u)) for u in us]) for (ut, us) in choices]
     if include_empty:
-        choices = [("", "---------")] + choices
+        choices = [('', '---------')] + choices
 
     return choices
 
@@ -179,32 +171,32 @@ def unit_site_service_area_choices(include_empty=False, include_unspecified=Fals
     """Return unit service areas grouped by site and unit, suitable for using as optgroups for select inputs"""
 
     def unit_service_area(usa):
-        return "%s :: %s" % (usa.unit.name, usa.service_area.name)
+        return f'{usa.unit.name} :: {usa.service_area.name}'
 
     def service_area(usa):
         return usa.service_area.name
 
     def site_unit_name(usa):
-        return "%s :: %s" % (usa.unit.site.name if usa.unit.site else "Other", usa.unit.name)
+        return '{} :: {}'.format(usa.unit.site.name if usa.unit.site else 'Other', usa.unit.name)
 
     usas = sl_models.UnitServiceArea.objects.select_related(
-        "unit__site",
-        "unit",
-        "service_area",
+        'unit__site',
+        'unit',
+        'service_area',
     )
     if not include_unspecified:
         usas = usas.exclude(service_area__name=sl_models.ServiceArea.BLANK_SA_NAME)
 
     usas = usas.order_by(
-        "unit__site__name",
-        "unit__%s" % settings.ORDER_UNITS_BY,
-        "service_area__name",
+        'unit__site__name',
+        f'unit__{settings.ORDER_UNITS_BY}',
+        'service_area__name',
     )
 
     choices = [(site, list(units)) for (site, units) in groupby(usas, key=site_unit_name)]
     choices = [(site, [(usa.id, service_area(usa)) for usa in units]) for (site, units) in choices]
     if include_empty:
-        choices = [("", "---------")] + choices
+        choices = [('', '---------')] + choices
 
     return choices
 
@@ -213,23 +205,27 @@ def utc_choices(include_empty=False):
     """Return units grouped by site and unit type, suitable for using as optgroups for select inputs"""
 
     def site_unit_type(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.type.name)
+        return '{} :: {}'.format(u.site.name if u.site else 'Other', u.type.name)
 
     def unit_utc_name(u):
-        return "%s :: %s" % (u.site.name if u.site else "Other", u.name)
+        return '{} :: {}'.format(u.site.name if u.site else 'Other', u.name)
 
-    units = u_models.Unit.objects.select_related("site", "type").prefetch_related(
-        "unittestcollection_set",
-    ).order_by("site__name", "type__name", settings.ORDER_UNITS_BY)
+    units = (
+        u_models.Unit.objects.select_related('site', 'type')
+        .prefetch_related(
+            'unittestcollection_set',
+        )
+        .order_by('site__name', 'type__name', settings.ORDER_UNITS_BY)
+    )
 
     choices = []
     for ut, units in groupby(units, key=site_unit_type):
         choices.append((ut, []))
         for unit in units:
             for utc in sorted(unit.unittestcollection_set.all(), key=lambda uu: uu.name):
-                choices[-1][-1].append((utc.pk, "%s :: %s" % (unit.name, utc.name)))
+                choices[-1][-1].append((utc.pk, f'{unit.name} :: {utc.name}'))
 
     if include_empty:
-        choices = [("", "---------")] + choices
+        choices = [('', '---------')] + choices
 
     return choices

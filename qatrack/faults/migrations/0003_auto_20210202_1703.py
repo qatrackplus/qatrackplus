@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('faults', '0002_auto_20210202_1653'),
     ]
@@ -13,6 +12,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='faulttype',
             name='code',
-            field=models.CharField(db_index=True, help_text='Enter the fault code or number', max_length=255, verbose_name='code'),
+            field=models.CharField(
+                db_index=True, help_text='Enter the fault code or number', max_length=255, verbose_name='code'
+            ),
         ),
     ]

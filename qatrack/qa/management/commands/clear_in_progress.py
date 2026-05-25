@@ -11,21 +11,18 @@ class Command(BaseCommand):
     help = 'command to delete all in progress test lists'
 
     def handle(self, *args, **kwargs):
-
         objs = TestListInstance.objects.in_progress()
         counts = objs.count()
 
         if counts <= 0:
-            print("Nothing to delete")
+            print('Nothing to delete')
             return
-        prompt = (
-            "Are you sure you want to delete %d in progress test lists (they can not be restored) (y/N): " % counts
-        )
+        prompt = 'Are you sure you want to delete %d in progress test lists (they can not be restored) (y/N): ' % counts
         confirm = input(prompt)
         if confirm.lower() != 'y':
-            print("Action cancelled")
+            print('Action cancelled')
             return
 
         objs.delete()
         cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
-        print("Deleted %d In Progress TestListInstances" % counts)
+        print('Deleted %d In Progress TestListInstances' % counts)

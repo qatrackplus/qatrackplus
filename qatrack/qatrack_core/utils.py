@@ -8,33 +8,33 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
-def weasyprint_to_pdf(html, name="", paper_size="letter"):
+def weasyprint_to_pdf(html, name='', paper_size='letter'):
     """Convert HTML to PDF using WeasyPrint with proper paper size support
-    
+
     Args:
         html: HTML content to convert
         name: Optional name for temporary files
         paper_size: Paper size for PDF ('letter' or 'a4')
     """
     try:
-        from weasyprint import HTML, CSS
+        from weasyprint import CSS, HTML
     except ImportError:
-        raise ImportError("WeasyPrint not installed. Install with: uv pip install weasyprint")
-    
+        raise ImportError('WeasyPrint not installed. Install with: uv pip install weasyprint')
+
     import tempfile
     import uuid
-    
+
     if not name:
         name = uuid.uuid4().hex[:10]
-    
+
     # Define paper size CSS separately from layout CSS
-    paper_css = """
-    @page {
-        size: %s;
+    paper_css = f"""
+    @page {{
+        size: {paper_size.lower()};
         margin: 20px 20px 20px 30px;
-    }
-    """ % paper_size.lower()
-    
+    }}
+    """
+
     # Define layout CSS separately
     layout_css = """
     /* Basic resets */
@@ -155,14 +155,14 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         margin-bottom: 1em;
     }
     """
-    
+
     # Create WeasyPrint documents with both CSS rules
     html_doc = HTML(string=html)
     css_docs = [
         CSS(string=paper_css),
         CSS(string=layout_css),
     ]
-    
+
     # Generate PDF and return as bytes
     with tempfile.NamedTemporaryFile() as pdf_file:
         html_doc.write_pdf(pdf_file.name, stylesheets=css_docs)
@@ -170,7 +170,7 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         return pdf_file.read()
 
 
-def chrometopdf(html, name="", paper_size="letter"):
+def chrometopdf(html, name='', paper_size='letter'):
     """use headles chrome to convert an html document to pdf
 
     Args:
@@ -183,33 +183,32 @@ def chrometopdf(html, name="", paper_size="letter"):
     out_file = None
 
     try:
-
         if not name:
             name = uuid.uuid4().hex[:10]
 
-        fname = "%s_%s.html" % (name, uuid.uuid4().hex[:10])
+        fname = f'{name}_{uuid.uuid4().hex[:10]}.html'
         path = os.path.join(settings.TMP_REPORT_ROOT, fname)
-        out_path = "%s.pdf" % path
+        out_path = f'{path}.pdf'
 
-        tmp_html = open(path, "wb")
-        tmp_html.write(html.encode("UTF-8"))
+        tmp_html = open(path, 'wb')
+        tmp_html.write(html.encode('UTF-8'))
         tmp_html.close()
 
         # Set paper size for Chrome PDF generation
-        paper_format = "Letter" if paper_size == "letter" else "A4"
+        paper_format = 'Letter' if paper_size == 'letter' else 'A4'
 
         command = [
             settings.CHROME_PATH,
             '--headless',
             '--disable-gpu',
             '--no-sandbox',
-            '--print-to-pdf=%s' % out_path,
+            f'--print-to-pdf={out_path}',
             '--print-to-pdf-no-header',
-            '--print-to-pdf-paper-format=%s' % paper_format,
-            "file://%s" % tmp_html.name,
+            f'--print-to-pdf-paper-format={paper_format}',
+            f'file://{tmp_html.name}',
         ]
 
-        if os.name.lower() == "nt":
+        if os.name.lower() == 'nt':
             command = ' '.join(command)
 
         stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
@@ -221,7 +220,7 @@ def chrometopdf(html, name="", paper_size="letter"):
         out_file.close()
 
     except OSError:
-        raise OSError("chrome '%s' executable not found" % (settings.CHROME_PATH))
+        raise OSError(f"chrome '{settings.CHROME_PATH}' executable not found")
     finally:
         if tmp_html and not tmp_html.closed:
             tmp_html.close()
@@ -271,39 +270,38 @@ def today_end():
 
 
 class relative_dates:
-
     FUTURE_RANGES = [
-        "next 7 days",
-        "next 30 days",
-        "next 90 days",
-        "next 180 days",
-        "next 365 days",
-        "this week",
-        "this month",
-        "this year",
-        "next week",
-        "next month",
-        "next 3 months",
-        "next 6 months",
-        "next year",
-        "today",
+        'next 7 days',
+        'next 30 days',
+        'next 90 days',
+        'next 180 days',
+        'next 365 days',
+        'this week',
+        'this month',
+        'this year',
+        'next week',
+        'next month',
+        'next 3 months',
+        'next 6 months',
+        'next year',
+        'today',
     ]
 
     PAST_RANGES = [
-        "today",
-        "last 7 days",
-        "last 30 days",
-        "last 90 days",
-        "last 180 days",
-        "last 365 days",
-        "this week",
-        "this month",
-        "this year",
-        "last week",
-        "last month",
-        "last 3 months",
-        "last 6 months",
-        "last year",
+        'today',
+        'last 7 days',
+        'last 30 days',
+        'last 90 days',
+        'last 180 days',
+        'last 365 days',
+        'this week',
+        'this month',
+        'this year',
+        'last week',
+        'last month',
+        'last 3 months',
+        'last 6 months',
+        'last year',
     ]
 
     ALL_DATE_RANGES = PAST_RANGES + FUTURE_RANGES
@@ -326,22 +324,21 @@ class relative_dates:
             end_dt = rd.end
         """
 
-        if not date_range.lower() in self.ALL_DATE_RANGES:
-            raise ValueError("%s is not a valid date range string")
+        if date_range.lower() not in self.ALL_DATE_RANGES:
+            raise ValueError('%s is not a valid date range string')
 
         self.date_range = date_range.strip().lower()
 
         self.pivot = (pivot or timezone.now()).astimezone(timezone.get_current_timezone())
 
     def range(self):
-
-        if self.date_range.startswith("today"):
+        if self.date_range.startswith('today'):
             return start_of_day(self.pivot), end_of_day(self.pivot)
-        elif self.date_range.startswith("next"):
+        elif self.date_range.startswith('next'):
             return self._next_interval()
-        elif self.date_range.startswith("this"):
+        elif self.date_range.startswith('this'):
             return self._this_interval()
-        elif self.date_range.startswith("last"):
+        elif self.date_range.startswith('last'):
             return self._last_interval()
 
     def start(self):
@@ -351,7 +348,6 @@ class relative_dates:
         return self.range()[1]
 
     def _next_interval(self):
-
         dr = self.date_range
 
         if 'days' in dr:
@@ -397,7 +393,6 @@ class relative_dates:
         return start, end
 
     def _last_interval(self):
-
         dr = self.date_range
 
         if 'days' in dr:
@@ -429,7 +424,7 @@ def unique_slug_generator(instance, text, manager=None):
 
     append = 0
     while True:
-        append_text = "-%d" % append if append > 0 else ""
+        append_text = '-%d' % append if append > 0 else ''
         slug = slugify(text + append_text)
         if manager.exclude(id=instance.id).filter(slug=slug):
             append += 1

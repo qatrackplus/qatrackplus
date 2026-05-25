@@ -11,7 +11,7 @@ def update_last_instances(service_event):
         return
 
     try:
-        last_instance = models.ServiceEvent.objects.filter(service_event_schedule=schedule).latest("datetime_service")
+        last_instance = models.ServiceEvent.objects.filter(service_event_schedule=schedule).latest('datetime_service')
     except models.ServiceEvent.DoesNotExist:
         last_instance = None
     except models.ServiceEventSchedule.DoesNotExist:
@@ -32,12 +32,11 @@ def update_last_instances(service_event):
 
 @receiver(post_save, sender=models.ServiceEvent)
 def on_service_event_saved(*args, **kwargs):
-
     if not loaded_from_fixture(kwargs):
-        update_last_instances(kwargs["instance"])
+        update_last_instances(kwargs['instance'])
 
 
 @receiver(post_delete, sender=models.ServiceEvent)
 def on_service_event_deleted(*args, **kwargs):
     """update last_instance if available"""
-    update_last_instances(kwargs["instance"])
+    update_last_instances(kwargs['instance'])

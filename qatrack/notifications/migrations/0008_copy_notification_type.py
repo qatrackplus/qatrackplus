@@ -5,23 +5,18 @@ from django.db.models import F
 
 
 def copy_wl_to_nt(apps, schema):
-
-    NotificationSubscription = apps.get_model("notifications", "NotificationSubscription")
-    NotificationSubscription.objects.update(notification_type=F("warning_level"))
+    NotificationSubscription = apps.get_model('notifications', 'NotificationSubscription')
+    NotificationSubscription.objects.update(notification_type=F('warning_level'))
 
 
 def copy_nt_to_wl(apps, schema):
-
-    NotificationSubscription = apps.get_model("notifications", "NotificationSubscription")
-    NotificationSubscription.objects.update(warning_level=F("notification_type"))
+    NotificationSubscription = apps.get_model('notifications', 'NotificationSubscription')
+    NotificationSubscription.objects.update(warning_level=F('notification_type'))
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('notifications', '0007_auto_20190620_1031'),
     ]
 
-    operations = [
-        migrations.RunPython(copy_wl_to_nt, copy_nt_to_wl)
-    ]
+    operations = [migrations.RunPython(copy_wl_to_nt, copy_nt_to_wl)]

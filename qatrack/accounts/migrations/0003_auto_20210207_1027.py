@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('accounts', '0002_activedirectorygroupmap_defaultgroup'),
     ]
@@ -13,6 +12,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='activedirectorygroupmap',
             name='ad_group',
-            field=models.CharField(help_text='Enter the name of the group from your Active Directory Server.', max_length=255, unique=True, verbose_name='Active Directory Group'),
+            field=models.CharField(
+                help_text='Enter the name of the group from your Active Directory Server.',
+                max_length=255,
+                unique=True,
+                verbose_name='Active Directory Group',
+            ),
         ),
     ]

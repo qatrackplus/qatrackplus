@@ -12,14 +12,11 @@ from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestUnitServiceArea(TestCase):
-
     def setUp(self):
-
         self.u = qa_utils.create_unit()
         self.sa = sl_utils.create_service_area()
 
     def test_unique_together(self):
-
         sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
 
         with self.assertRaises(IntegrityError):
@@ -32,12 +29,10 @@ class TestUnitServiceArea(TestCase):
 
 
 class TestServiceEventStatus(TestCase):
-
     def setUp(self):
         self.ses = sl_utils.create_service_event_status()
 
     def test_name_unique(self):
-
         ses_01 = sl_models.ServiceEventStatus.objects.first()
         ses_01_name = ses_01.name
 
@@ -46,7 +41,6 @@ class TestServiceEventStatus(TestCase):
                 sl_models.ServiceEventStatus.objects.create(name=ses_01_name)
 
     def test_default(self):
-
         ses_01 = sl_models.ServiceEventStatus.objects.get()
         ses_01.is_default = True
         ses_01.save()
@@ -60,7 +54,6 @@ class TestServiceEventStatus(TestCase):
         self.assertFalse(sl_models.ServiceEventStatus.objects.get(name=ses_01_name).is_default)
 
     def test_colours(self):
-
         ses_01 = sl_utils.create_service_event_status(colour=settings.DEFAULT_COLOURS[1])
         ses_02 = sl_utils.create_service_event_status(colour=settings.DEFAULT_COLOURS[2])
 
@@ -74,9 +67,7 @@ class TestServiceEventStatus(TestCase):
 
 
 class TestThirdParty(TestCase):
-
     def test_unique_together(self):
-
         v_01 = qa_utils.create_vendor()
         tp_01 = sl_utils.create_third_party(vendor=v_01)
         tp_01_first_name = tp_01.first_name
@@ -93,12 +84,10 @@ class TestThirdParty(TestCase):
 
 
 class TestServiceEventAndRelated(TransactionTestCase):
-
     def setUp(self):
         self.se = sl_utils.create_service_event()
 
     def test_third_party_and_hours(self):
-
         se = sl_models.ServiceEvent.objects.first()
         tp = sl_utils.create_third_party()
 
@@ -118,7 +107,6 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.assertEqual((u_02.__class__, u_02.id), (h_02.user_or_thirdparty().__class__, h_02.user_or_thirdparty().id))
 
     def test_group_linkers(self):
-
         se = sl_models.ServiceEvent.objects.first()
         g_01 = create_group()
         g_02 = create_group()
@@ -148,9 +136,7 @@ class TestServiceEventAndRelated(TransactionTestCase):
 
 
 class TestDeletions(TransactionTestCase):
-
     def test_delete_grouplinkerinstance_variables(self):
-
         # group_linker  > Protect
         # user          > Protect
         # service_event > Cascade
@@ -173,7 +159,6 @@ class TestDeletions(TransactionTestCase):
         self.assertFalse(sl_models.GroupLinkerInstance.objects.filter(id=gli_id).exists())
 
     def test_delete_grouplinker_variables(self):
-
         # group > Cascade
 
         gl = sl_utils.create_group_linker()
@@ -184,7 +169,6 @@ class TestDeletions(TransactionTestCase):
         self.assertFalse(sl_models.GroupLinker.objects.filter(id=gl_id).exists())
 
     def test_delete_returntoserviceqa_variables(self):
-
         # unit_test_collection  > Cascade
         # test_list_instance    > Set Null
         # user_assigned_by      > Protect
@@ -216,7 +200,6 @@ class TestDeletions(TransactionTestCase):
         self.assertFalse(sl_models.ReturnToServiceQA.objects.filter(id=rtsqa_id).exists())
 
     def test_delete_hours_variables(self):
-
         # service_event > Cascade
         # third_party   > Protect
         # user          > Protect
@@ -241,7 +224,6 @@ class TestDeletions(TransactionTestCase):
                 u.delete()
 
     def test_delete_thirdparty_variables(self):
-
         # vendor > Protect
 
         tp = sl_utils.create_third_party()
@@ -252,7 +234,6 @@ class TestDeletions(TransactionTestCase):
                 v.delete()
 
     def test_delete_serviceevent_variables(self):
-
         # unit_service_area                 > Protect
         # service_type                      > Protect
         # service_status                    > Protect
@@ -305,7 +286,6 @@ class TestDeletions(TransactionTestCase):
         self.assertEqual(None, se.test_list_instance_initiated_by)
 
     def test_delete_unit_service_area_variables(self):
-
         # unit          > Cascade
         # service_area  > Cascade
 

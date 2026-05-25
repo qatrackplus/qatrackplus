@@ -14,7 +14,6 @@ logger = logging.getLogger('qatrack')
 
 @receiver(post_save, sender=models.ServiceLog)
 def on_serviceevent_saved(sender, instance, created, **kwargs):
-
     service_log = instance
     recipients = get_notification_recipients(service_log.service_event, service_log.log_type)
 
@@ -29,33 +28,32 @@ def on_serviceevent_saved(sender, instance, created, **kwargs):
     try:
         send_email_to_users(
             recipients,
-            "service_log/email.html",
+            'service_log/email.html',
             context=context,
-            subject_template="service_log/subject.txt",
-            text_template="service_log/email.txt",
+            subject_template='service_log/subject.txt',
+            text_template='service_log/email.txt',
         )
         logger.info(
-            "Sent Service Event Notice for service event %d at %s" % (service_log.service_event_id, timezone.now())
+            'Sent Service Event Notice for service event %d at %s' % (service_log.service_event_id, timezone.now())
         )
     except:  # noqa: E722  # pragma: nocover
         logger.exception(
-            "Error sending Service Event Notice for service event %d at %s." %
-            (service_log.service_event_id, timezone.now())
+            'Error sending Service Event Notice for service event %d at %s.'
+            % (service_log.service_event_id, timezone.now())
         )
 
-        fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
+        fail_silently = getattr(settings, 'EMAIL_FAIL_SILENTLY', True)
         if not fail_silently:
             raise
 
 
 def get_notification_recipients(service_event, log_type):
-
     from qatrack.notifications.service_log import models
 
     unit = service_event.unit_service_area.unit
 
     subs = models.ServiceEventNotice.objects.filter(
-        (Q(units=None) | Q(units__units=unit))
+        Q(units=None) | Q(units__units=unit)
     ).select_related("recipients")  # yapf: disable
 
     subs = subs.filter(notification_type__in=[log_type, models.ServiceEventNotice.UPDATED_OR_CREATED])

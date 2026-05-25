@@ -5,15 +5,13 @@ from django.db.models import F
 
 
 def rebuild(apps, schema):
-
-    Category = apps.get_model("qa", "Category")
-    Category.objects.update(tree_id=F("id"))
+    Category = apps.get_model('qa', 'Category')
+    Category.objects.update(tree_id=F('id'))
     for cat in Category.objects.all():
         cat.save()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0043_category_tree'),
     ]

@@ -14,23 +14,22 @@ from qatrack.units import models as u_models
 
 def can_review_faults(user):
     """
-     users can review faults if one of the the following applies:
-        a) No fault review groups exist and they have can_review permissions
-        b) Fault review groups exist, they are a member of one, and they have
-           review permissions
+    users can review faults if one of the the following applies:
+       a) No fault review groups exist and they have can_review permissions
+       b) Fault review groups exist, they are a member of one, and they have
+          review permissions
     """
 
-    can_review = user.has_perm("faults.can_review")
-    review_groups = [frg.group for frg in FaultReviewGroup.objects.select_related("group")]
+    can_review = user.has_perm('faults.can_review')
+    review_groups = [frg.group for frg in FaultReviewGroup.objects.select_related('group')]
     if review_groups:
         can_review = can_review and len(set(review_groups) & set(user.groups.all())) > 0
     return can_review
 
 
 class FaultType(models.Model):
-
     code = models.CharField(
-        _l("code"),
+        _l('code'),
         max_length=255,
         help_text=_l('Enter the fault code or number'),
         db_index=True,
@@ -40,19 +39,19 @@ class FaultType(models.Model):
         max_length=255,
         editable=False,
         unique=True,
-        help_text=_l("Unique URL friendly identifier made of lowercase characters, dashes, and underscores.")
+        help_text=_l('Unique URL friendly identifier made of lowercase characters, dashes, and underscores.'),
     )
 
     description = models.TextField(
-        _l("description"),
-        help_text=_l("Enter a description for this fault type"),
+        _l('description'),
+        help_text=_l('Enter a description for this fault type'),
         blank=True,
     )
 
     class Meta:
-        ordering = ("code",)
-        verbose_name = _l("Fault Type")
-        verbose_name_plural = _l("Fault Types")
+        ordering = ('code',)
+        verbose_name = _l('Fault Type')
+        verbose_name_plural = _l('Fault Types')
 
     def save(self, *args, **kwargs):
         self.slug = unique_slug_generator(self, self.code)
@@ -63,58 +62,57 @@ class FaultType(models.Model):
 
 
 class FaultManager(models.Manager):
-
     def unreviewed(self):
-        return self.filter(faultreviewinstance=None).order_by("-occurred")
+        return self.filter(faultreviewinstance=None).order_by('-occurred')
 
     def unreviewed_count(self):
         return self.unreviewed().count()
 
 
 class Fault(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name=_l("ID"))
+    id = models.AutoField(primary_key=True, verbose_name=_l('ID'))
     unit = models.ForeignKey(
         u_models.Unit,
-        verbose_name=_l("unit"),
+        verbose_name=_l('unit'),
         on_delete=models.CASCADE,
-        related_name="faults",
-        help_text=_l("Select the unit this fault occurred on"),
+        related_name='faults',
+        help_text=_l('Select the unit this fault occurred on'),
     )
 
     modality = models.ForeignKey(
         u_models.Modality,
-        verbose_name=_l("treatment or imaging modality"),
+        verbose_name=_l('treatment or imaging modality'),
         on_delete=models.SET_NULL,
-        related_name="faults",
+        related_name='faults',
         null=True,
         blank=True,
-        help_text=_l("Select the treatment or imaging modality being used when this fault occurred (optional)"),
+        help_text=_l('Select the treatment or imaging modality being used when this fault occurred (optional)'),
     )
 
     fault_types = models.ManyToManyField(
         FaultType,
-        verbose_name=_l("fault types"),
-        help_text=_l("Select the fault types that occurred"),
-        related_name="faults",
+        verbose_name=_l('fault types'),
+        help_text=_l('Select the fault types that occurred'),
+        related_name='faults',
     )
 
     occurred = models.DateTimeField(
-        verbose_name=_l("Date & Time fault occurred"),
+        verbose_name=_l('Date & Time fault occurred'),
         default=timezone.now,
-        help_text="When did this fault occur. " + settings.DATETIME_HELP,
-        db_index=True
+        help_text='When did this fault occur. ' + settings.DATETIME_HELP,
+        db_index=True,
     )
 
     related_service_events = models.ManyToManyField(
         sl_models.ServiceEvent,
         blank=True,
         verbose_name=_l('related service events'),
-        help_text=_l('Enter the service event IDs of any related service events.')
+        help_text=_l('Enter the service event IDs of any related service events.'),
     )
 
     comments = GenericRelation(
         Comment,
-        object_id_field="object_pk",
+        object_id_field='object_pk',
     )
 
     created = models.DateTimeField(auto_now_add=True)
@@ -122,26 +120,26 @@ class Fault(models.Model):
         User,
         on_delete=models.PROTECT,
         editable=False,
-        related_name="faults_created",
+        related_name='faults_created',
     )
     modified = models.DateTimeField(auto_now=True)
     modified_by = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         editable=False,
-        related_name="faults_modified",
+        related_name='faults_modified',
     )
 
     objects = FaultManager()
 
     class Meta:
-        ordering = ("-occurred",)
-        verbose_name = _l("Fault")
-        verbose_name_plural = _l("Faults")
-        permissions = (("can_review", _l("Can review faults")),)
+        ordering = ('-occurred',)
+        verbose_name = _l('Fault')
+        verbose_name_plural = _l('Faults')
+        permissions = (('can_review', _l('Can review faults')),)
 
     def get_absolute_url(self):
-        return reverse("fault_details", kwargs={"pk": self.pk})
+        return reverse('fault_details', kwargs={'pk': self.pk})
 
     def review_complete(self):
         details = self.review_details()
@@ -154,16 +152,15 @@ class Fault(models.Model):
         return at_least_one_done and required_completed
 
     def review_details(self):
-        review_groups = FaultReviewGroup.objects.order_by("-required", "group__name")
+        review_groups = FaultReviewGroup.objects.order_by('-required', 'group__name')
         review_group_instances = self.faultreviewinstance_set.order_by(
-            "-fault_review_group__required",
-            "fault_review_group__group__name",
+            '-fault_review_group__required',
+            'fault_review_group__group__name',
         ).select_related(
-            "fault_review_group",
-            "fault_review_group__group",
+            'fault_review_group',
+            'fault_review_group__group',
         )
         if review_groups:
-
             review_group_instances_by_group = {}
 
             for frgi in review_group_instances:
@@ -183,37 +180,35 @@ class Fault(models.Model):
         return review_details
 
     def fault_types_display(self):
-        return ', '.join(ft.code for ft in self.fault_types.order_by("code"))
+        return ', '.join(ft.code for ft in self.fault_types.order_by('code'))
 
     def __str__(self):
-        return "Fault ID: %d" % self.pk
+        return 'Fault ID: %d' % self.pk
 
 
 class FaultReviewGroup(models.Model):
-
     group = models.OneToOneField(
         Group,
-        verbose_name=_l("group"),
+        verbose_name=_l('group'),
         on_delete=models.PROTECT,
-        help_text=_l("Select the group responsible for reviewing a fault"),
+        help_text=_l('Select the group responsible for reviewing a fault'),
         unique=True,
     )
 
     required = models.BooleanField(
-        _l("required"),
-        help_text=_l("Is review by this group required in order to consider a fault reviewed"),
+        _l('required'),
+        help_text=_l('Is review by this group required in order to consider a fault reviewed'),
         default=True,
     )
 
     class Meta:
-        verbose_name = _l("Fault Review Group")
-        verbose_name_plural = _l("Fault Review Groups")
+        verbose_name = _l('Fault Review Group')
+        verbose_name_plural = _l('Fault Review Groups')
 
 
 class FaultReviewInstance(models.Model):
-
     reviewed = models.DateTimeField(
-        verbose_name=_l("review date & time"),
+        verbose_name=_l('review date & time'),
         auto_now_add=True,
         editable=False,
     )
@@ -221,18 +216,18 @@ class FaultReviewInstance(models.Model):
         User,
         on_delete=models.PROTECT,
         editable=False,
-        related_name="faults_reviewed",
+        related_name='faults_reviewed',
     )
 
     fault = models.ForeignKey(
         Fault,
-        verbose_name=_l("fault"),
+        verbose_name=_l('fault'),
         on_delete=models.CASCADE,
     )
 
     fault_review_group = models.ForeignKey(
         FaultReviewGroup,
-        verbose_name=_l("fault review group instance"),
+        verbose_name=_l('fault review group instance'),
         on_delete=models.SET_NULL,
         null=True,
     )

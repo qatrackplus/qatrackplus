@@ -10,7 +10,6 @@ class MultipleCharField(forms.CharField):
 
 
 class UserChoiceField(forms.ModelChoiceField):
-
     def label_from_instance(self, obj):
         return obj.get_full_name()
 
@@ -53,15 +52,17 @@ class BetterFormMixin:
                     # Make sure we have access to the form's fields
                     form_fields = getattr(self, 'fields', {})
                     filtered_fields = [f for f in fields if f in form_fields]
-                    self._cached_fieldsets.append((
-                        name, {
-                            'fields': filtered_fields,
-                            'legend': options.get('legend',
-                                                  name.replace('_', ' ').title() if name else None),
-                            'classes': options.get('classes', ()),
-                            'description': options.get('description', ''),
-                        }
-                    ))
+                    self._cached_fieldsets.append(
+                        (
+                            name,
+                            {
+                                'fields': filtered_fields,
+                                'legend': options.get('legend', name.replace('_', ' ').title() if name else None),
+                                'classes': options.get('classes', ()),
+                                'description': options.get('description', ''),
+                            },
+                        )
+                    )
             else:
                 # Make sure we have access to the form's fields
                 form_fields = getattr(self, 'fields', {})
@@ -92,17 +93,17 @@ class BetterFormMixin:
             legend = options.get('legend', name)
             classes = ' '.join(options.get('classes', []))
             if classes:
-                fieldset_tpl = '<fieldset class="%s">' % classes
+                fieldset_tpl = f'<fieldset class="{classes}">'
             else:
                 fieldset_tpl = '<fieldset>'
             output = [fieldset_tpl]
             if legend:
-                output.append('<legend>%s</legend>' % legend)
+                output.append(f'<legend>{legend}</legend>')
         else:
             output = []
 
         if options.get('description'):
-            output.append('<p class="description">%s</p>' % options['description'])
+            output.append('<p class="description">{}</p>'.format(options['description']))
 
         for field_name in options['fields']:
             if field_name in getattr(self, 'fields', {}):
@@ -116,4 +117,5 @@ class BetterFormMixin:
 
 class BetterModelForm(BetterFormMixin, forms.ModelForm):
     """A ModelForm subclass that includes fieldset support."""
+
     pass

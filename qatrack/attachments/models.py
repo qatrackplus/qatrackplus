@@ -25,18 +25,18 @@ logger = logging.getLogger('qatrack')
 
 
 def get_upload_path(instance, name):
-    name = name.rsplit(".", 1)
+    name = name.rsplit('.', 1)
     if len(name) == 1:
-        name.append("")
+        name.append('')
     name, ext = name
 
     name_parts = (
         slugify(name),
-        "%s" % (timezone.now().date(),),
+        f'{timezone.now().date()}',
         str(uuid4())[:6],
     )
 
-    filename = "_".join(name_parts) + ("." + ext if ext else "")
+    filename = '_'.join(name_parts) + ('.' + ext if ext else '')
     return os.path.join(settings.TMP_UPLOAD_PATH, filename)
 
 
@@ -72,16 +72,17 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
             # After much hair pulling, it was discovered
             # that running gc.collect() before os.remove allows Python to delete the file (grrr)
             if 'win' in sys.platform.lower():
-                import gc;
+                import gc
+
                 gc.collect()
 
             if count == 2:
-                logger.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
+                logger.error(f'Failed to remove {start_path} when moving {start_path} to {new_path}.')
                 break
             count += 1
             time.sleep(0.2)
 
-    new_name = "uploads/" + '/'.join(name_parts)
+    new_name = 'uploads/' + '/'.join(name_parts)
     attach.attachment.name = new_name
 
     if save:
@@ -89,10 +90,9 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
 
 
 class Attachment(models.Model):
-
-    attachment = models.FileField(verbose_name=_l("Attachment"), upload_to=get_upload_path, max_length=255)
-    label = models.CharField(verbose_name=_l("Label"), max_length=255, blank=True)
-    comment = models.TextField(verbose_name=_l("Comment"), blank=True)
+    attachment = models.FileField(verbose_name=_l('Attachment'), upload_to=get_upload_path, max_length=255)
+    label = models.CharField(verbose_name=_l('Label'), max_length=255, blank=True)
+    comment = models.TextField(verbose_name=_l('Comment'), blank=True)
 
     test = models.ForeignKey(qam.Test, on_delete=models.CASCADE, null=True, blank=True)
     testlist = models.ForeignKey(qam.TestList, on_delete=models.CASCADE, null=True, blank=True)
@@ -107,14 +107,14 @@ class Attachment(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, editable=False)
 
     OWNER_MODELS = [
-        "test",
-        "testlist",
-        "testlistcycle",
-        "testinstance",
-        "testlistinstance",
-        "serviceevent",
-        "part",
-        "fault",
+        'test',
+        'testlist',
+        'testlistcycle',
+        'testinstance',
+        'testlistinstance',
+        'serviceevent',
+        'part',
+        'fault',
     ]
 
     @property
@@ -163,31 +163,30 @@ class Attachment(models.Model):
     def save(self, *args, **kwargs):
         """Save model and move it to final location if possible"""
 
-        super(Attachment, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
         if self.can_finalize:
             self.move_tmp_file()
 
     def clean(self):
         if not self.has_owner:
-            raise ValidationError(_("Attachment must have exactly one owner"))
+            raise ValidationError(_('Attachment must have exactly one owner'))
 
     class Meta:
-        verbose_name = _l("Attachment")
-        verbose_name_plural = _l("Attachments")
+        verbose_name = _l('Attachment')
+        verbose_name_plural = _l('Attachments')
 
     @property
     def is_image(self):
-
         try:
             img = imghdr.what(self.attachment) is not None
         except FileNotFoundError:
             return False
-        ext = os.path.splitext(self.attachment.name)[1].strip(".")
-        displayable = ["jpg", "jpeg", "png", "svg", "bmp", "gif"]
+        ext = os.path.splitext(self.attachment.name)[1].strip('.')
+        displayable = ['jpg', 'jpeg', 'png', 'svg', 'bmp', 'gif']
         force = ext in displayable
         is_img = img in displayable
         return is_img or force
 
     def __str__(self):
-        return "%s(%s, %s)" % (_("Attachment"), self.owner or _("No Owner"), self.attachment.name)
+        return '{}({}, {})'.format(_('Attachment'), self.owner or _('No Owner'), self.attachment.name)

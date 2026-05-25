@@ -1,14 +1,12 @@
 from braces.views import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse, resolve
 from django.forms.utils import timezone
 from django.http import HttpResponseRedirect
 from django.template.loader import get_template
-from django.views.generic import DetailView, CreateView
+from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
-
+from django.views.generic import CreateView, DetailView
 from listable.views import (
-    BaseListableView,
     DATE_RANGE,
     LAST_MONTH,
     LAST_WEEK,
@@ -17,21 +15,20 @@ from listable.views import (
     TEXT,
     TODAY,
     YESTERDAY,
+    BaseListableView,
 )
 
-from qatrack.issue_tracker import models as i_models
 from qatrack.issue_tracker import forms as i_forms
+from qatrack.issue_tracker import models as i_models
 
 
 class IssueCreate(LoginRequiredMixin, CreateView):
-
     model = i_models.Issue
     # form_class = AuthorForm
     template_name = 'issue_tracker/issue_form.html'
     form_class = i_forms.IssueForm
 
     def form_valid(self, form):
-
         self.get_context_data()
 
         issue = form.save(commit=False)
@@ -44,7 +41,7 @@ class IssueCreate(LoginRequiredMixin, CreateView):
         return HttpResponseRedirect(reverse('issue_list'))
 
     def get_context_data(self, **kwargs):
-        context = super(IssueCreate, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         colours = {}
         for c in i_models.IssuePriority.objects.all():
             colours[c.id] = c.colour
@@ -57,13 +54,12 @@ class IssueCreate(LoginRequiredMixin, CreateView):
 
 
 class IssueDetails(LoginRequiredMixin, DetailView):
-
     model = i_models.Issue
     # form_class = AuthorForm
     template_name = 'issue_tracker/issue_details.html'
 
     def get_context_data(self, **kwargs):
-        context = super(IssueDetails, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['now'] = timezone.now()
         ct = ContentType.objects.get(app_label='issue_tracker', model='issue').id
         context['ct'] = ct
@@ -86,8 +82,15 @@ class IssueList(BaseListableView):
     multi_separator = '<span class="padding-0-10">|</span>'
 
     fields = (
-        'actions', 'pk', 'issue_type__name', 'issue_priority__name', 'user_submitted_by__username', 'description',
-        'datetime_submitted', 'issue_tags__name', 'issue_status__name'
+        'actions',
+        'pk',
+        'issue_type__name',
+        'issue_priority__name',
+        'user_submitted_by__username',
+        'description',
+        'datetime_submitted',
+        'issue_tags__name',
+        'issue_status__name',
     )
 
     headers = {
@@ -99,7 +102,7 @@ class IssueList(BaseListableView):
         'description': _('Description'),
         'datetime_submitted': _('Submitted'),
         'issue_tags__name': _('Tags'),
-        'issue_status__name': _('Status')
+        'issue_status__name': _('Status'),
     }
 
     widgets = {
@@ -111,7 +114,7 @@ class IssueList(BaseListableView):
         'description': TEXT,
         'datetime_submitted': DATE_RANGE,
         'issue_tags__name': SELECT_MULTI_FROM_MULTI,
-        'issue_status__name': SELECT_MULTI
+        'issue_status__name': SELECT_MULTI,
     }
 
     search_fields = {
@@ -134,7 +137,7 @@ class IssueList(BaseListableView):
             return 'All Issues'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(IssueList, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()

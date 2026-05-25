@@ -1,10 +1,10 @@
-
 import getpass
 import re
 import warnings
 
+import pyodbc
 from django.conf import settings as qat_settings
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
@@ -12,9 +12,7 @@ from django.db import IntegrityError
 from django.utils import timezone
 from django_comments.models import Comment
 
-import pyodbc
 from qatrack.parts import models as p_models
-from qatrack.qa import models as qa_models
 from qatrack.qa.utils import get_internal_user
 from qatrack.service_log import models as sl_models
 from qatrack.units import models as u_models
@@ -25,11 +23,10 @@ use_ldap = amt_settings.USE_LDAP
 if use_ldap:
     import ldap
 
-warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings('ignore', category=RuntimeWarning)
 
 
 def user_select_from_list_of_numbers(message, num_list):
-
     to_return = -1
     while to_return == -1:
         try:
@@ -47,10 +44,8 @@ def user_select_from_list_of_numbers(message, num_list):
 
 
 def user_select_yes_no(message):
-
     to_return = -1
     while to_return == -1:
-
         to_return = input('\n>>> ' + message + ' (y/n): ')
         to_return = str(to_return)
         if to_return.lower() in ['y', 'yes']:
@@ -74,7 +69,6 @@ employees = {}
 
 
 class Command(BaseCommand):
-
     conn = None
     updating_cursor = None
     iterating_cursor = None
@@ -82,7 +76,6 @@ class Command(BaseCommand):
     # employees_list = {}
 
     def add_edit_user_accel(self, id, qa_user, is_new=False, third_party=None):
-
         if third_party:
             third_party = str(third_party)
 
@@ -96,21 +89,21 @@ class Command(BaseCommand):
                 str(qa_user.username),
                 third_party,
                 str(qa_user.id),
-                str(id)
+                str(id),
             )
         else:
             self.updating_cursor.execute(
                 ' INSERT INTO employees VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 str(id),
                 str(qa_user.first_name + ' ' + qa_user.last_name),
-                str('autopass'),
+                'autopass',
                 False,
                 False,
                 False,
                 str(qa_user.email),
                 str(qa_user.username),
                 third_party,
-                str(qa_user.id)
+                str(qa_user.id),
             )
 
     def handle(self, *args, **kwargs):
@@ -126,32 +119,30 @@ class Command(BaseCommand):
         self.migrate_accel()
 
     def setup_connection(self):
-
-        odbc_conn_str = 'DRIVER={Microsoft Access Driver (*.mdb)};DBQ=%s;UID=%s;PWD=%s' % (
-            amt_settings.ACCEL_DB_LOCATION, amt_settings.DB_USER, amt_settings.DB_PASS
-        )
+        odbc_conn_str = f'DRIVER={{Microsoft Access Driver (*.mdb)}};DBQ={amt_settings.ACCEL_DB_LOCATION};UID={amt_settings.DB_USER};PWD={amt_settings.DB_PASS}'
 
         self.conn = pyodbc.connect(odbc_conn_str)
         self.updating_cursor = self.conn.cursor()
         self.iterating_cursor = self.conn.cursor()
 
-        parts_odbc_conn_str = 'DRIVER={Microsoft Access Driver (*.mdb)};DBQ=%s;UID=%s;PWD=%s' % (
-            amt_settings.ACCEL_PARTS_DB_LOCATION, amt_settings.PARTS_DB_USER, amt_settings.PARTS_DB_PASS
-        )
+        parts_odbc_conn_str = f'DRIVER={{Microsoft Access Driver (*.mdb)}};DBQ={amt_settings.ACCEL_PARTS_DB_LOCATION};UID={amt_settings.PARTS_DB_USER};PWD={amt_settings.PARTS_DB_PASS}'
 
         self.parts_conn = pyodbc.connect(parts_odbc_conn_str)
         self.parts_cursor = self.parts_conn.cursor()
         self.parts_updating_cursor = self.parts_conn.cursor()
 
     def migrate_accel(self):
+        print(
+            '\n /------------------------------------------------------------------\\\n'
+            '<              Accel > QaTrack+ migration tool                       >\n'
+            ' \__________________________________________________________________/'
+        )
 
-        print('\n /------------------------------------------------------------------\\\n'
-              '<              Accel > QaTrack+ migration tool                       >\n'
-              ' \__________________________________________________________________/')
-
-        print('\n---\tWelcome to the Accel > QaTrack+ migration tool. Make sure tables in Accel are properly organized\n'
-              '\tbefore continuing (Employee names and ids in service and workload tables are listed in emplpyee table,\n'
-              '\tand service types listed in service are in service type table and named correctly).')
+        print(
+            '\n---\tWelcome to the Accel > QaTrack+ migration tool. Make sure tables in Accel are properly organized\n'
+            '\tbefore continuing (Employee names and ids in service and workload tables are listed in emplpyee table,\n'
+            '\tand service types listed in service are in service type table and named correctly).'
+        )
 
         self.setup_connection()
 
@@ -174,7 +165,7 @@ class Command(BaseCommand):
                 4: self.migrate_service,
                 5: self.migrate_workload,
                 8: self.commit_to_accel,
-                9: self.done_exit
+                9: self.done_exit,
             }
             choices[6] = self.migrate_parts
 
@@ -186,10 +177,11 @@ class Command(BaseCommand):
         self.parts_conn.close()
 
     def migrate_users(self):
-
-        print('\n---\tMigrating users. This will iterate through users in Accel database "employee" table and\n'
-              '\talter the values to match what is in QaTracks database. These will be used in later migrations.\n'
-              '\tIt will also add new users, third parties, and vendors to the QaTrack database when needed. ')
+        print(
+            '\n---\tMigrating users. This will iterate through users in Accel database "employee" table and\n'
+            '\talter the values to match what is in QaTracks database. These will be used in later migrations.\n'
+            '\tIt will also add new users, third parties, and vendors to the QaTrack database when needed. '
+        )
 
         if use_ldap:
             print('\n---\tEnter your network credentials')
@@ -205,13 +197,21 @@ class Command(BaseCommand):
             # cursor.execute('ALTER TABLE employees ADD COLUMN user_id INT')
 
         # clean up name fields
-        cursor.execute('update service set physicist_reported = ltrim(rtrim(physicist_reported)) where ltrim(rtrim(physicist_reported)) is not null')
-        cursor.execute('update service set physics_approval = ltrim(rtrim(physics_approval)) where ltrim(rtrim(physics_approval)) is not null')
-        cursor.execute('update service set edited_by = ltrim(rtrim(edited_by)) where ltrim(rtrim(edited_by)) is not null')
+        cursor.execute(
+            'update service set physicist_reported = ltrim(rtrim(physicist_reported)) where ltrim(rtrim(physicist_reported)) is not null'
+        )
+        cursor.execute(
+            'update service set physics_approval = ltrim(rtrim(physics_approval)) where ltrim(rtrim(physics_approval)) is not null'
+        )
+        cursor.execute(
+            'update service set edited_by = ltrim(rtrim(edited_by)) where ltrim(rtrim(edited_by)) is not null'
+        )
 
         # TODO: clean up employees in service and Workload tables
 
-        cursor.execute('select employee_id, staff_name, ADMIN, active, physics, email, winlogon, PASSWORD from employees')
+        cursor.execute(
+            'select employee_id, staff_name, ADMIN, active, physics, email, winlogon, PASSWORD from employees'
+        )
 
         while 1:
             row = cursor.fetchone()
@@ -222,7 +222,6 @@ class Command(BaseCommand):
             done_with_user = False
 
             while not done_with_user:
-
                 print('\n---\tAccel user entry: ')
                 print('\t> Winlogon:\t' + str(row.winlogon))
                 print('\t> Name:\t\t' + str(row.staff_name))
@@ -260,7 +259,6 @@ class Command(BaseCommand):
                 select_or_new = user_select_from_list_of_numbers('Select option', [1, 2, 3, 4, 9])
 
                 if select_or_new == 1:
-
                     print('\n---\tChoose the user from the list:')
                     users = User.objects.all().order_by('username')
                     for user in users:
@@ -279,24 +277,40 @@ class Command(BaseCommand):
                     done_with_user = True
 
                 elif select_or_new == 2:
-
                     if user_is_ldap:
                         ldap.set_option(ldap.OPT_REFERRALS, 0)
                         l = ldap.initialize(qat_settings.AD_LDAP_URL)
                         l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-                        binddn = "%s@%s" % (ldap_username, qat_settings.AD_NT4_DOMAIN)
+                        binddn = f'{ldap_username}@{qat_settings.AD_NT4_DOMAIN}'
                         try:
                             l.bind_s(binddn, ldap_pw)
                             try:
                                 first_name = row.staff_name.split(' ')[0]
                                 last_name = row.staff_name.split(' ')[1]
-                                result = l.search_ext_s(qat_settings.AD_SEARCH_DN, ldap.SCOPE_SUBTREE, "(&(%s=%s)(%s=%s))" % (qat_settings.AD_LU_GIVEN_NAME, first_name, qat_settings.AD_LU_SURNAME, last_name), qat_settings.AD_SEARCH_FIELDS)[0][1]
+                                result = l.search_ext_s(
+                                    qat_settings.AD_SEARCH_DN,
+                                    ldap.SCOPE_SUBTREE,
+                                    f'(&({qat_settings.AD_LU_GIVEN_NAME}={first_name})({qat_settings.AD_LU_SURNAME}={last_name}))',
+                                    qat_settings.AD_SEARCH_FIELDS,
+                                )[0][1]
 
                                 if result.get(qat_settings.AD_LU_ACCOUNT_NAME, None):
-
-                                    print('\n---\tUser ' + first_name + ' ' + last_name + ' found in ldap directory (username: ' + result.get(qat_settings.AD_LU_ACCOUNT_NAME)[0].decode('ascii') + ')')
+                                    print(
+                                        '\n---\tUser '
+                                        + first_name
+                                        + ' '
+                                        + last_name
+                                        + ' found in ldap directory (username: '
+                                        + result.get(qat_settings.AD_LU_ACCOUNT_NAME)[0].decode('ascii')
+                                        + ')'
+                                    )
                                     if user_select_yes_no('Correct match?'):
-                                        qa_user = User(username=result.get(qat_settings.AD_LU_ACCOUNT_NAME)[0].decode('ascii'), first_name=first_name, last_name=last_name, email=result.get(qat_settings.AD_LU_MAIL)[0].decode('ascii'))
+                                        qa_user = User(
+                                            username=result.get(qat_settings.AD_LU_ACCOUNT_NAME)[0].decode('ascii'),
+                                            first_name=first_name,
+                                            last_name=last_name,
+                                            email=result.get(qat_settings.AD_LU_MAIL)[0].decode('ascii'),
+                                        )
                                         qa_user.set_password('ldap authenticated')
                                         qa_user.save()
                                         self.add_edit_user_accel(row.employee_id, qa_user)
@@ -304,18 +318,33 @@ class Command(BaseCommand):
                                         done_with_user = True
                                         continue
                                     else:
-                                        user_is_ldap = not user_select_yes_no('Failed creating ldap user. Create user anyways using Accel credentials?')
+                                        user_is_ldap = not user_select_yes_no(
+                                            'Failed creating ldap user. Create user anyways using Accel credentials?'
+                                        )
                                 else:
-                                    user_is_ldap = not user_select_yes_no('User ' + first_name + ' ' + last_name + ' not found in ldap. Create user anyways using Accel credentials?')
+                                    user_is_ldap = not user_select_yes_no(
+                                        'User '
+                                        + first_name
+                                        + ' '
+                                        + last_name
+                                        + ' not found in ldap. Create user anyways using Accel credentials?'
+                                    )
                             except (AttributeError, IndexError):
-                                print('\n---\tCreation of new ldap user failed! User ' + first_name + ' ' + last_name + ' not found in ldap directory')
+                                print(
+                                    '\n---\tCreation of new ldap user failed! User '
+                                    + first_name
+                                    + ' '
+                                    + last_name
+                                    + ' not found in ldap directory'
+                                )
                                 user_is_ldap = not user_select_yes_no('Create user anyways using Accel credentials?')
 
                         except ldap.INVALID_CREDENTIALS:
-                            user_is_ldap = not user_select_yes_no('Could not bind to ldap (check credentials you entered earlier). Create user anyways using Accel credentials?')
+                            user_is_ldap = not user_select_yes_no(
+                                'Could not bind to ldap (check credentials you entered earlier). Create user anyways using Accel credentials?'
+                            )
 
                     if not user_is_ldap:
-
                         # username = ''
                         # while username == '':
                         #     if row.winlogon is not None and row.winlogon.strip() != '':
@@ -347,7 +376,6 @@ class Command(BaseCommand):
                         print('\n---\tOut of options, going back to menu for this user')
 
                 elif select_or_new == 3:
-
                     print('\n---\tCurrent Third Parties in QaTrack: ')
                     for tp in sl_models.ThirdParty.objects.all():
                         print('\t- ' + tp.first_name + ' ' + tp.last_name + ' - ' + tp.vendor.name)
@@ -357,11 +385,13 @@ class Command(BaseCommand):
                         print('\t- ' + v.name)
 
                     v_name = input('\n>>> Enter vendor name (Can be new one not listed above): ')
-                    pf_name = input('>>> Enter third party\'s first name (Can be new person not listed above): ')
-                    pl_name = input('>>> Enter third party\'s last name (Can be new person not listed above): ')
+                    pf_name = input(">>> Enter third party's first name (Can be new person not listed above): ")
+                    pl_name = input(">>> Enter third party's last name (Can be new person not listed above): ")
 
                     vendor, v_is_new = sl_models.Vendor.objects.get_or_create(name=v_name)
-                    third_party, tp_is_new = sl_models.ThirdParty.objects.get_or_create(vendor=vendor, first_name=pf_name, last_name=pl_name)
+                    third_party, tp_is_new = sl_models.ThirdParty.objects.get_or_create(
+                        vendor=vendor, first_name=pf_name, last_name=pl_name
+                    )
 
                     users = User.objects.all().order_by('username')
                     user_list = list(users.values_list('id', flat=True))
@@ -370,7 +400,7 @@ class Command(BaseCommand):
                     while not another_loop:
                         print('\n---\tExisting third parties in Accel need an associated QaTrack logon.')
                         print('\t1: Create new user')
-                        print('\t2: Select existing user\'s logon')
+                        print("\t2: Select existing user's logon")
 
                         choice = user_select_from_list_of_numbers('Select option', [1, 2])
 
@@ -378,20 +408,22 @@ class Command(BaseCommand):
                             qa_user, tpu_is_new = User.objects.get_or_create(
                                 first_name=third_party.first_name,
                                 last_name=third_party.last_name,
-                                username=third_party.first_name.lower().replace(' ', '') + third_party.last_name.lower().replace(' ', ''),
+                                username=third_party.first_name.lower().replace(' ', '')
+                                + third_party.last_name.lower().replace(' ', ''),
                                 email='email',
-                                is_active=False
+                                is_active=False,
                             )
                             qa_user.set_password(row.PASSWORD)
                             qa_user.save()
                             another_loop = True
 
                         elif choice == 2:
-
                             for u in users:
                                 print('\t' + str(u.id) + ':\t' + str(u))
                             print('\n\t0: Return')
-                            tpu_id = user_select_from_list_of_numbers('Select user to use as thirdparty logon', user_list)
+                            tpu_id = user_select_from_list_of_numbers(
+                                'Select user to use as thirdparty logon', user_list
+                            )
                             if tpu_id == 0:
                                 continue
                             another_loop = True
@@ -401,8 +433,10 @@ class Command(BaseCommand):
                     done_with_user = True
 
                 elif select_or_new == 4:
-                    print('\n---\tUsers should only be skipped if they are not linked to any existing service events, or \n'
-                          '\tservice events and workloads related to this user can be deleted or changed to another user later.')
+                    print(
+                        '\n---\tUsers should only be skipped if they are not linked to any existing service events, or \n'
+                        '\tservice events and workloads related to this user can be deleted or changed to another user later.'
+                    )
                     if user_select_yes_no('Skip anyways?'):
                         done_with_user = True
 
@@ -413,9 +447,10 @@ class Command(BaseCommand):
         return False
 
     def migrate_service_types(self):
-
-        print('\n---\tMigrating service types. This will iterate through service types in Accel database and\n'
-              '\tadd new service areas in the QaTrack database if they are not already.\n')
+        print(
+            '\n---\tMigrating service types. This will iterate through service types in Accel database and\n'
+            '\tadd new service areas in the QaTrack database if they are not already.\n'
+        )
 
         try:
             self.updating_cursor.execute('select service_area from service_types')
@@ -432,7 +467,7 @@ class Command(BaseCommand):
             service_area_name = str(row.headings)
 
             if sl_models.ServiceArea.objects.filter(name=service_area_name).exists():
-                print('\n---\tFound service area from QaTrack database: {}. Skipping'.format(service_area_name))
+                print(f'\n---\tFound service area from QaTrack database: {service_area_name}. Skipping')
                 break
             else:
                 sa = sl_models.ServiceArea.objects.create(name=service_area_name)
@@ -444,22 +479,25 @@ class Command(BaseCommand):
                     WHERE headings = ?
                     """,
                     str(sa.id),
-                    row.headings
+                    row.headings,
                 )
 
         return False
 
     def migrate_equipment(self):
-
-        print('\n---\tMigrating equipment. This will iterate through equipment in Accel database and\n'
-              '\tadd new units and models in the QaTrack database as needed.\n')
+        print(
+            '\n---\tMigrating equipment. This will iterate through equipment in Accel database and\n'
+            '\tadd new units and models in the QaTrack database as needed.\n'
+        )
 
         try:
             self.updating_cursor.execute('select unit_id from equipment')
         except pyodbc.Error:
             self.updating_cursor.execute(""" ALTER TABLE equipment ADD COLUMN unit_id INT """)
 
-        self.iterating_cursor.execute('select id_key, type_of_eq, model, serial_no, unit_no, acceptancedate, active from equipment')
+        self.iterating_cursor.execute(
+            'select id_key, type_of_eq, model, serial_no, unit_no, acceptancedate, active from equipment'
+        )
 
         while 1:
             row = self.iterating_cursor.fetchone()
@@ -474,12 +512,12 @@ class Command(BaseCommand):
                     tz_date_acceptance = row.acceptancedate.date()
 
                 print('\n---\tAccel equipment entry: ')
-                print('\t' + pad_string("> Unit:", 20) + str(row.unit_no))
-                print('\t' + pad_string("> Type of eq:", 20) + str(row.type_of_eq))
-                print('\t' + pad_string("> Model:", 20) + str(row.model))
-                print('\t' + pad_string("> Serial #:", 20) + str(row.serial_no))
-                print('\t' + pad_string("> Acceptance Date:", 20) + str(row.acceptancedate))
-                print('\t' + pad_string("> Is active:", 20) + str(row.active))
+                print('\t' + pad_string('> Unit:', 20) + str(row.unit_no))
+                print('\t' + pad_string('> Type of eq:', 20) + str(row.type_of_eq))
+                print('\t' + pad_string('> Model:', 20) + str(row.model))
+                print('\t' + pad_string('> Serial #:', 20) + str(row.serial_no))
+                print('\t' + pad_string('> Acceptance Date:', 20) + str(row.acceptancedate))
+                print('\t' + pad_string('> Is active:', 20) + str(row.active))
 
                 print('\n---\tWould you like to select qatrack unit, or create a new one?')
                 print('\t1: Select existing unit')
@@ -490,16 +528,19 @@ class Command(BaseCommand):
                 select_or_new = user_select_from_list_of_numbers('Select option', [1, 2, 3, 9])
 
                 if select_or_new == 1:
-
                     print('\n---\tChoose the unit from the list:')
                     units = u_models.Unit.objects.all().order_by('name')
                     for u in units:
                         print(
-                            '\t' +
-                            pad_string(str(u.id) + ':', 7) +
-                            pad_string(u.name, 20) + ' | ' +
-                            pad_string("Active(" + str(u.active) + ")", 16) + ' | ' +
-                            pad_string("Type(" + u.type.name + ", " + str(u.type.model) + ", " + u.type.vendor.name + ")", 40)
+                            '\t'
+                            + pad_string(str(u.id) + ':', 7)
+                            + pad_string(u.name, 20)
+                            + ' | '
+                            + pad_string('Active(' + str(u.active) + ')', 16)
+                            + ' | '
+                            + pad_string(
+                                'Type(' + u.type.name + ', ' + str(u.type.model) + ', ' + u.type.vendor.name + ')', 40
+                            )
                         )
                     print('\n\t0: Return')
 
@@ -525,21 +566,25 @@ class Command(BaseCommand):
                         WHERE id_key = ?
                         """,
                         str(u_unit.id),
-                        str(row.id_key)
+                        str(row.id_key),
                     )
                     done_with_unit = True
 
                 if select_or_new == 2:
-
                     print('\n---\tExisting units for reference:')
                     units = u_models.Unit.objects.all().order_by('name')
                     for u in units:
                         print(
-                            '\t' +
-                            pad_string(u.name, 22) + ' | ' +
-                            pad_string("Active(" + str(u.active) + ")", 15) + ' | ' +
-                            pad_string("Number(" + str(u.number) + ")", 18) + ' | ' +
-                            pad_string("Type(" + u.type.name + ", " + u.type.model + ", " + u.type.vendor.name + ")", 40)
+                            '\t'
+                            + pad_string(u.name, 22)
+                            + ' | '
+                            + pad_string('Active(' + str(u.active) + ')', 15)
+                            + ' | '
+                            + pad_string('Number(' + str(u.number) + ')', 18)
+                            + ' | '
+                            + pad_string(
+                                'Type(' + u.type.name + ', ' + u.type.model + ', ' + u.type.vendor.name + ')', 40
+                            )
                         )
 
                     u_name = ''
@@ -554,20 +599,23 @@ class Command(BaseCommand):
                     unit_types = u_models.UnitType.objects.all().order_by('name')
                     for ut in unit_types:
                         print(
-                            '\t' +
-                            pad_string("Name: " + ut.name, 30) + ' | ' +
-                            pad_string("Model: " + ut.model, 30) + ' | ' +
-                            pad_string("Vendor: " + ut.vendor.name)
+                            '\t'
+                            + pad_string('Name: ' + ut.name, 30)
+                            + ' | '
+                            + pad_string('Model: ' + ut.model, 30)
+                            + ' | '
+                            + pad_string('Vendor: ' + ut.vendor.name)
                         )
 
-                    print('\n---\tEnter unit type name and model. Entering the same name-model combination as an entry on the list above will select\n'
-                          '\tan existing unit type, otherwise you will be prompted for a vendor name and a new unit type will be created.')
+                    print(
+                        '\n---\tEnter unit type name and model. Entering the same name-model combination as an entry on the list above will select\n'
+                        '\tan existing unit type, otherwise you will be prompted for a vendor name and a new unit type will be created.'
+                    )
                     unit_type_name = input('>>> Enter unit type name: ')
                     unit_type_model = input('>>> Enter unit type model (can be blank): ')
                     try:
                         u_unit_type = u_models.UnitType.objects.get(name=unit_type_name, model=unit_type_model)
                     except ObjectDoesNotExist:
-
                         print('\n---\tCreating new unit type...')
                         print('\n---\tExisting vendors for reference:')
                         vendors = u_models.Vendor.objects.all().order_by('name')
@@ -600,7 +648,7 @@ class Command(BaseCommand):
                         WHERE id_key = ?
                         """,
                         str(u_unit.id),
-                        str(row.id_key)
+                        str(row.id_key),
                     )
                     done_with_unit = True
 
@@ -618,7 +666,6 @@ class Command(BaseCommand):
         print('\n---\tDone migrating equipment')
 
     def migrate_service(self):
-
         print(
             '\n---\tMigrating service. This will iterate through service table in Accel database and\n'
             '\tadd new service events in the QaTrack database as needed.\n'
@@ -635,9 +682,13 @@ class Command(BaseCommand):
             print('\t' + str(gl.id) + ': ' + gl.name)
 
         gl_ids = list(gl_q.values_list('id', flat=True))
-        gl_for_physicist_id = user_select_from_list_of_numbers('Select group linker for Accel field "Physicist Reported To"', gl_ids)
+        gl_for_physicist_id = user_select_from_list_of_numbers(
+            'Select group linker for Accel field "Physicist Reported To"', gl_ids
+        )
         gl_for_physicist = sl_models.GroupLinker.objects.get(pk=gl_for_physicist_id)
-        gl_for_therapist_id = user_select_from_list_of_numbers('Select group linker for Accel field "Therapist Reported To"', gl_ids)
+        gl_for_therapist_id = user_select_from_list_of_numbers(
+            'Select group linker for Accel field "Therapist Reported To"', gl_ids
+        )
         gl_for_therapist = sl_models.GroupLinker.objects.get(pk=gl_for_therapist_id)
 
         # Set up ServiceEventStatuses
@@ -645,13 +696,19 @@ class Command(BaseCommand):
         for ses in sl_models.ServiceEventStatus.objects.filter(is_review_required=False):
             print('\t' + str(ses.id) + ': ' + ses.name)
 
-        reviewed_status_id = user_select_from_list_of_numbers('Select reviewed status id', list(sl_models.ServiceEventStatus.objects.filter(is_review_required=False).values_list('id', flat=True)))
+        reviewed_status_id = user_select_from_list_of_numbers(
+            'Select reviewed status id',
+            list(sl_models.ServiceEventStatus.objects.filter(is_review_required=False).values_list('id', flat=True)),
+        )
 
         print('\n---\tSelect service event status for all other Accel services')
         for ses in sl_models.ServiceEventStatus.objects.all():
             print('\t' + str(ses.id) + ': ' + ses.name)
 
-        status_id = user_select_from_list_of_numbers('Select status id for other services', list(sl_models.ServiceEventStatus.objects.all().values_list('id', flat=True)))
+        status_id = user_select_from_list_of_numbers(
+            'Select status id for other services',
+            list(sl_models.ServiceEventStatus.objects.all().values_list('id', flat=True)),
+        )
 
         # Set up ServiceTypes
         st_q = sl_models.ServiceType.objects.all()
@@ -660,9 +717,15 @@ class Command(BaseCommand):
         for st in st_q:
             print('\t' + str(st.id) + ': ' + st.name)
 
-        extensive_service_type_id = user_select_from_list_of_numbers('Select type for extensive Accel services', list(st_q.values_list('id', flat=True)))
-        pmi_service_type_id = user_select_from_list_of_numbers('Select type for PMI Accel services', list(st_q.values_list('id', flat=True)))
-        other_service_type_id = user_select_from_list_of_numbers('Select type for the rest of Accel services', list(st_q.values_list('id', flat=True)))
+        extensive_service_type_id = user_select_from_list_of_numbers(
+            'Select type for extensive Accel services', list(st_q.values_list('id', flat=True))
+        )
+        pmi_service_type_id = user_select_from_list_of_numbers(
+            'Select type for PMI Accel services', list(st_q.values_list('id', flat=True))
+        )
+        other_service_type_id = user_select_from_list_of_numbers(
+            'Select type for the rest of Accel services', list(st_q.values_list('id', flat=True))
+        )
 
         print('\n---\tStarting migration... This might take awhile if your Accel DB is large')
 
@@ -713,17 +776,31 @@ class Command(BaseCommand):
                 if sl_models.ServiceEvent.objects.filter(id=row.service_event_id).exists():
                     continue
 
-                user_created_row = self.updating_cursor.execute('select winlogon, third_party, PASSWORD from employees where employee_id = ?', row.employee_id).fetchone()
+                user_created_row = self.updating_cursor.execute(
+                    'select winlogon, third_party, PASSWORD from employees where employee_id = ?', row.employee_id
+                ).fetchone()
                 created_by_winlogon = user_created_row.winlogon
                 created_by = User.objects.get(username=created_by_winlogon)
 
-                unit_id = self.updating_cursor.execute('select unit_id from equipment where unit_no = ?', row.unit_no).fetchone().unit_id
+                unit_id = (
+                    self.updating_cursor.execute('select unit_id from equipment where unit_no = ?', row.unit_no)
+                    .fetchone()
+                    .unit_id
+                )
                 unit = u_models.Unit.objects.get(pk=unit_id)
 
-                service_area_id = self.updating_cursor.execute('select service_area from service_types where headings = ?', row.type_of_service).fetchone().service_area
+                service_area_id = (
+                    self.updating_cursor.execute(
+                        'select service_area from service_types where headings = ?', row.type_of_service
+                    )
+                    .fetchone()
+                    .service_area
+                )
                 service_area = sl_models.ServiceArea.objects.get(pk=service_area_id)
 
-                unit_service_area, usa_is_new = sl_models.UnitServiceArea.objects.get_or_create(unit=unit, service_area=service_area)
+                unit_service_area, usa_is_new = sl_models.UnitServiceArea.objects.get_or_create(
+                    unit=unit, service_area=service_area
+                )
 
                 datetime_service = timezone.datetime.combine(row.date.date(), row.time.time())
                 datetime_created = datetime_service
@@ -734,7 +811,13 @@ class Command(BaseCommand):
 
                 if row.approved:
                     service_status = sl_models.ServiceEventStatus.objects.get(pk=reviewed_status_id)
-                    status_changed_by_winlogon = self.updating_cursor.execute('select winlogon from employees where staff_name = ?', row.physics_approval.strip()).fetchone().winlogon
+                    status_changed_by_winlogon = (
+                        self.updating_cursor.execute(
+                            'select winlogon from employees where staff_name = ?', row.physics_approval.strip()
+                        )
+                        .fetchone()
+                        .winlogon
+                    )
                     status_changed_by = User.objects.get(username=status_changed_by_winlogon)
                     datetime_status_changed = row.approval_date
                 else:
@@ -753,7 +836,10 @@ class Command(BaseCommand):
                 is_review_required = False
 
                 if row.edited_by:
-                    modified_by_row = self.updating_cursor.execute('select winlogon, third_party, PASSWORD from employees where staff_name = ?', row.edited_by.strip()).fetchone()
+                    modified_by_row = self.updating_cursor.execute(
+                        'select winlogon, third_party, PASSWORD from employees where staff_name = ?',
+                        row.edited_by.strip(),
+                    ).fetchone()
                     modified_by_winlogon = modified_by_row.winlogon
                     modified_by = User.objects.get(username=modified_by_winlogon)
                     datetime_modified = datetime_service
@@ -787,7 +873,7 @@ class Command(BaseCommand):
                     user_created_by=created_by,
                     user_modified_by=modified_by,
                     user_status_changed_by=status_changed_by,
-                    is_review_required=is_review_required
+                    is_review_required=is_review_required,
                 )
                 service_event.save()
 
@@ -797,17 +883,26 @@ class Command(BaseCommand):
                         user=user_comments,
                         content_object=service_event,
                         comment=qa_followup,
-                        site=comment_site
+                        site=comment_site,
                     )
                     comment.save()
 
-                self.updating_cursor.execute('update service set service_event_id = ? where srn = ?', str(service_event.id), str(row.srn))
+                self.updating_cursor.execute(
+                    'update service set service_event_id = ? where srn = ?', str(service_event.id), str(row.srn)
+                )
 
                 # Search through problem in service event and create related events from description.
-                if amt_settings.FIND_RELATED_IN_PROBLEM and amt_settings.RELATED_EVENT_REGEX.search(row.problem) is not None:
+                if (
+                    amt_settings.FIND_RELATED_IN_PROBLEM
+                    and amt_settings.RELATED_EVENT_REGEX.search(row.problem) is not None
+                ):
                     srn = amt_settings.RELATED_EVENT_REGEX.search(row.problem).groups(0)[1]
                     try:
-                        rel_id = self.updating_cursor.execute('select service_event_id from service where srn = ?', srn).fetchone().service_event_id
+                        rel_id = (
+                            self.updating_cursor.execute('select service_event_id from service where srn = ?', srn)
+                            .fetchone()
+                            .service_event_id
+                        )
                         related_event = sl_models.ServiceEvent.objects.get(id=rel_id)
                         service_event.service_event_related = [related_event]
 
@@ -816,21 +911,35 @@ class Command(BaseCommand):
 
                         print('---\tFound related service event. Changed srn: ' + str(srn) + ' to id: ' + str(rel_id))
                     except AttributeError:
-                        print('---\tCould not find service event srn: ' + str(srn) + ' in Accel db. Skipping related event creation.')
+                        print(
+                            '---\tCould not find service event srn: '
+                            + str(srn)
+                            + ' in Accel db. Skipping related event creation.'
+                        )
                     except ObjectDoesNotExist:
-                        print('---\tCould not find service event id: ' + str(rel_id) + ' in QaTrack db. Skipping related event creation.')
+                        print(
+                            '---\tCould not find service event id: '
+                            + str(rel_id)
+                            + ' in QaTrack db. Skipping related event creation.'
+                        )
 
                     service_event.save()
 
                 if row.physicist_reported and row.physicist_reported.strip() != '':
-                    physicist_winlogon = self.updating_cursor.execute('select winlogon from employees where staff_name = ?', row.physicist_reported.strip()).fetchone().winlogon
+                    physicist_winlogon = (
+                        self.updating_cursor.execute(
+                            'select winlogon from employees where staff_name = ?', row.physicist_reported.strip()
+                        )
+                        .fetchone()
+                        .winlogon
+                    )
                     physicist_reported_to = User.objects.get(username=physicist_winlogon)
 
                     gli_physicist_reported_to = sl_models.GroupLinkerInstance(
                         group_linker=gl_for_physicist,
                         user=physicist_reported_to,
                         service_event=service_event,
-                        datetime_linked=datetime_service
+                        datetime_linked=datetime_service,
                     )
                     gli_physicist_reported_to.save()
 
@@ -857,7 +966,7 @@ class Command(BaseCommand):
                             group_linker=gl_for_therapist,
                             user=therapist_reported_to,
                             service_event=service_event,
-                            datetime_linked=datetime_service
+                            datetime_linked=datetime_service,
                         )
                         gli_therapist_reported_to.save()
 
@@ -869,7 +978,6 @@ class Command(BaseCommand):
         return False
 
     def migrate_workload(self):
-
         try:
             self.updating_cursor.execute('select hours_id from Workload')
         except pyodbc.Error:
@@ -895,10 +1003,15 @@ class Command(BaseCommand):
                 break
 
             if not row.hours_id:
-
                 try:
                     try:
-                        service_event_id = self.updating_cursor.execute('select service_event_id from service where srn = ?', str(row.srn)).fetchone().service_event_id
+                        service_event_id = (
+                            self.updating_cursor.execute(
+                                'select service_event_id from service where srn = ?', str(row.srn)
+                            )
+                            .fetchone()
+                            .service_event_id
+                        )
                         service_event = sl_models.ServiceEvent.objects.get(id=service_event_id)
                     except ObjectDoesNotExist:
                         print('---\tServce with id ' + str(service_event_id) + ' not found in QaTrack db.')
@@ -907,7 +1020,9 @@ class Command(BaseCommand):
                         print('---\tService with srn ' + str(row.srn) + ' not found in Accel db.')
                         continue
 
-                    employee_row = self.updating_cursor.execute('select winlogon, third_party from employees where employee_id = ?', row.employee).fetchone()
+                    employee_row = self.updating_cursor.execute(
+                        'select winlogon, third_party from employees where employee_id = ?', row.employee
+                    ).fetchone()
 
                     if employee_row.third_party:
                         third_party = sl_models.ThirdParty.objects.get(pk=employee_row.third_party)
@@ -917,13 +1032,25 @@ class Command(BaseCommand):
                         third_party = None
 
                     try:
-                        hours = sl_models.Hours.objects.get(service_event=service_event, user=user, third_party=third_party)
+                        hours = sl_models.Hours.objects.get(
+                            service_event=service_event, user=user, third_party=third_party
+                        )
                         hours.time = timezone.timedelta(minutes=round(row.time * 60))
                         hours.save()
                     except ObjectDoesNotExist:
-                        hours = sl_models.Hours.objects.create(service_event=service_event, user=user, third_party=third_party, time=timezone.timedelta(minutes=round(row.time * 60)))
+                        hours = sl_models.Hours.objects.create(
+                            service_event=service_event,
+                            user=user,
+                            third_party=third_party,
+                            time=timezone.timedelta(minutes=round(row.time * 60)),
+                        )
 
-                    self.updating_cursor.execute('update Workload set hours_id = ? where srn = ? and employee = ?', str(hours.id), str(row.srn), str(row.employee))
+                    self.updating_cursor.execute(
+                        'update Workload set hours_id = ? where srn = ? and employee = ?',
+                        str(hours.id),
+                        str(row.srn),
+                        str(row.employee),
+                    )
 
                 except Exception as e:
                     print('\n---\tError with workload item related to service ' + str(row.srn))
@@ -935,7 +1062,6 @@ class Command(BaseCommand):
         return False
 
     def migrate_parts(self):
-
         try:
             self.parts_updating_cursor.execute('select part_id from parts')
         except pyodbc.Error:
@@ -968,7 +1094,6 @@ class Command(BaseCommand):
 
             if not row.part_id:
                 try:
-
                     category, _ = p_models.PartCategory.objects.get_or_create(name=row.model)
                     sups = []
                     for s in [row.Supplier, row.Alt_Supplier]:
@@ -993,20 +1118,19 @@ class Command(BaseCommand):
                         quantity_min=row.qty_min,
                         cost=row.cost,
                         notes=row.comments,
-                        part_category=category
+                        part_category=category,
                     )
                     part.save()
                     for s in sups:
-                        psc = p_models.PartSupplierCollection(
-                            part=part,
-                            supplier=s
-                        )
+                        psc = p_models.PartSupplierCollection(part=part, supplier=s)
                         psc.save()
 
-                    self.parts_updating_cursor.execute('update parts set part_id = ? where idkey = ?', str(part.id), str(row.idkey))
+                    self.parts_updating_cursor.execute(
+                        'update parts set part_id = ? where idkey = ?', str(part.id), str(row.idkey)
+                    )
 
                 except Exception as e:
-                    print('Error migrating part %s' % row.idkey)
+                    print(f'Error migrating part {row.idkey}')
                     raise e
 
         self.parts_conn.commit()
@@ -1041,9 +1165,15 @@ class Command(BaseCommand):
             if not row.parts_storage_id:
                 try:
                     try:
-                        part_id = self.parts_updating_cursor.execute('select part_id from parts where idkey = ?', str(row.part_id)).fetchone().part_id
+                        part_id = (
+                            self.parts_updating_cursor.execute(
+                                'select part_id from parts where idkey = ?', str(row.part_id)
+                            )
+                            .fetchone()
+                            .part_id
+                        )
                     except AttributeError:
-                        print('---\tCan\'t find part with idkey %s' % row.part_id)
+                        print(f"---\tCan't find part with idkey {row.part_id}")
                         continue
                     room, _ = p_models.Room.objects.get_or_create(name=row.room)
                     shelf = row.shelf.strip()
@@ -1057,20 +1187,20 @@ class Command(BaseCommand):
                     part = p_models.Part.objects.get(pk=part_id)
                     qty = abs(row.qty)
                     try:
-                        parts_storage = p_models.PartStorageCollection(
-                            part=part,
-                            storage=storage,
-                            quantity=qty
-                        )
+                        parts_storage = p_models.PartStorageCollection(part=part, storage=storage, quantity=qty)
                         parts_storage.save()
                     except IntegrityError:
                         parts_storage = p_models.PartStorageCollection.objects.get(part=part, storage=storage)
                         parts_storage.quantity += qty
                         parts_storage.save()
-                    self.parts_updating_cursor.execute('update locations set parts_storage_id = ? where idkey = ?', str(parts_storage.id), str(row.idkey))
+                    self.parts_updating_cursor.execute(
+                        'update locations set parts_storage_id = ? where idkey = ?',
+                        str(parts_storage.id),
+                        str(row.idkey),
+                    )
 
                 except Exception as e:
-                    print('Error migrating location %s' % row.idkey)
+                    print(f'Error migrating location {row.idkey}')
                     raise e
 
         self.parts_conn.commit()
@@ -1103,41 +1233,61 @@ class Command(BaseCommand):
             if not row.parts_used_id:
                 try:
                     try:
-                        part_storage_id = self.parts_updating_cursor.execute('select parts_storage_id from locations where idkey = ?', str(row.location_id)).fetchone().parts_storage_id
+                        part_storage_id = (
+                            self.parts_updating_cursor.execute(
+                                'select parts_storage_id from locations where idkey = ?', str(row.location_id)
+                            )
+                            .fetchone()
+                            .parts_storage_id
+                        )
                         parts_storage = p_models.PartStorageCollection.objects.get(pk=part_storage_id).storage
                     except AttributeError:
-                        print('---\tBad location id for parts used on srn %s' % row.srn)
+                        print(f'---\tBad location id for parts used on srn {row.srn}')
                         parts_storage = None
                     except ObjectDoesNotExist:
-                        print('---\tPartStorageCollection not found for part used on srn %s' % row.srn)
-                        print('---\tCan\'t find part storage collection %s' % part_storage_id)
+                        print(f'---\tPartStorageCollection not found for part used on srn {row.srn}')
+                        print(f"---\tCan't find part storage collection {part_storage_id}")
                         parts_storage = None
 
                     try:
-                        service_event_id = self.updating_cursor.execute('select service_event_id from service where srn = ?', str(row.srn)).fetchone().service_event_id
+                        service_event_id = (
+                            self.updating_cursor.execute(
+                                'select service_event_id from service where srn = ?', str(row.srn)
+                            )
+                            .fetchone()
+                            .service_event_id
+                        )
                     except AttributeError:
-                        print('---\tNo service event found for srn %s' % row.srn)
+                        print(f'---\tNo service event found for srn {row.srn}')
                         continue
                     service_event = sl_models.ServiceEvent.objects.get(pk=service_event_id)
 
                     try:
-                        part_id = self.parts_updating_cursor.execute('select part_id from parts where part_number = ?', str(row.part_number)).fetchone().part_id
+                        part_id = (
+                            self.parts_updating_cursor.execute(
+                                'select part_id from parts where part_number = ?', str(row.part_number)
+                            )
+                            .fetchone()
+                            .part_id
+                        )
                         part = p_models.Part.objects.get(pk=part_id)
                     except (AttributeError, ObjectDoesNotExist):
-                        print('---\tNo part found for part used on srn %s' % row.srn)
+                        print(f'---\tNo part found for part used on srn {row.srn}')
                         continue
 
                     part_used = p_models.PartUsed(
-                        part=part,
-                        service_event=service_event,
-                        quantity=row.qty_used,
-                        from_storage=parts_storage
+                        part=part, service_event=service_event, quantity=row.qty_used, from_storage=parts_storage
                     )
                     part_used.save()
-                    self.parts_updating_cursor.execute('update parts_used set parts_used_id = ? where srn = ? and idkey = ?', str(part_used.id), str(row.srn), str(row.idkey))
+                    self.parts_updating_cursor.execute(
+                        'update parts_used set parts_used_id = ? where srn = ? and idkey = ?',
+                        str(part_used.id),
+                        str(row.srn),
+                        str(row.idkey),
+                    )
 
                 except Exception as e:
-                    print('Error migrating part used for srn %s' % row.srn)
+                    print(f'Error migrating part used for srn {row.srn}')
                     raise e
 
         for p in p_models.Part.objects.all():
@@ -1154,4 +1304,3 @@ class Command(BaseCommand):
         self.conn.commit()
         self.parts_conn.commit()
         return True
-

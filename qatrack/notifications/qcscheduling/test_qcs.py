@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
+import qatrack.qa.tests.utils as utils
 from qatrack.notifications.models import (
     QCSchedulingNotice,
     RecipientGroup,
@@ -12,12 +13,10 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.qcscheduling import admin, tasks
 from qatrack.qa import models
-import qatrack.qa.tests.utils as utils
 from qatrack.qatrack_core.utils import today_start_end
 
 
 class TestQCSchedulingAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.QCSchedulingAdmin(model=QCSchedulingNotice, admin_site=AdminSite())
 
@@ -46,92 +45,90 @@ class TestQCSchedulingAdmin(TestCase):
         assert not f.errors
 
     def test_get_notification_type_upcoming(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCSchedulingNotice.objects.create(
             notification_type=QCSchedulingNotice.UPCOMING,
             future_days=1,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
-        assert "Upcoming Due Dates Only" in self.admin.get_notification_type(n)
+        assert 'Upcoming Due Dates Only' in self.admin.get_notification_type(n)
 
     def test_get_notification_type_upcoming_and_due(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCSchedulingNotice.objects.create(
             notification_type=QCSchedulingNotice.UPCOMING_AND_DUE,
             future_days=1,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
-        assert "Notify About Test Lists Currently Due & Overdue, and Upcoming" in self.admin.get_notification_type(n)
+        assert 'Notify About Test Lists Currently Due & Overdue, and Upcoming' in self.admin.get_notification_type(n)
 
     def test_get_notification_type_due(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCSchedulingNotice.objects.create(
             notification_type=QCSchedulingNotice.DUE,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
         assert n.get_notification_type_display() in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = utils.create_unit(name="Test Unit")
-        ug = UnitGroup.objects.create(name="UG")
+        u = utils.create_unit(name='Test Unit')
+        ug = UnitGroup.objects.create(name='UG')
         ug.units.add(u)
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCSchedulingNotice.objects.create(
             notification_type=QCSchedulingNotice.DUE,
             units=ug,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert ug.name in self.admin.get_units(n)
 
     def test_get_recipients(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCSchedulingNotice.objects.create(
             notification_type=QCSchedulingNotice.DUE,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert rg.name in self.admin.get_recipients(n)
 
     def test_get_testlists(self):
-        tl = utils.create_test_list(name="TL")
-        rg = RecipientGroup.objects.create(name="RG")
-        tlg = TestListGroup.objects.create(name="TLG")
+        tl = utils.create_test_list(name='TL')
+        rg = RecipientGroup.objects.create(name='RG')
+        tlg = TestListGroup.objects.create(name='TLG')
         tlg.test_lists.add(tl)
         n = QCSchedulingNotice.objects.create(
             notification_type=QCSchedulingNotice.DUE,
             recipients=rg,
             test_lists=tlg,
-            time="0:00",
+            time='0:00',
         )
         assert tlg.name in self.admin.get_testlists(n)
 
 
 class TestQCSchedulingModel(TestCase):
-
     def setUp(self):
-
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = utils.create_unit(name='unit1', number=1)
+        self.unit2 = utils.create_unit(name='unit2', number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
-        self.testlist_group = TestListGroup.objects.create(name="test group")
+        self.testlist_group = TestListGroup.objects.create(name='test group')
         self.testlist_group.test_lists.add(self.utc1.tests_object)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.utc1.unit)
 
         self.group = models.Group.objects.latest('pk')
         user = models.User.objects.latest('pk')
         user.groups.add(self.group)
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -152,7 +149,7 @@ class TestQCSchedulingModel(TestCase):
             future_days=7,
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1, self.utc2]
 
@@ -167,7 +164,7 @@ class TestQCSchedulingModel(TestCase):
             future_days=7,
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
@@ -182,7 +179,7 @@ class TestQCSchedulingModel(TestCase):
             future_days=7,
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
@@ -196,7 +193,7 @@ class TestQCSchedulingModel(TestCase):
             future_days=1,
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
@@ -211,7 +208,7 @@ class TestQCSchedulingModel(TestCase):
             recipients=self.recipients,
             units=self.unit_group,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
@@ -226,7 +223,7 @@ class TestQCSchedulingModel(TestCase):
             recipients=self.recipients,
             test_lists=self.testlist_group,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
@@ -242,7 +239,7 @@ class TestQCSchedulingModel(TestCase):
             test_lists=self.testlist_group,
             units=self.unit_group,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
@@ -253,14 +250,14 @@ class TestQCSchedulingModel(TestCase):
         utc.due_date = timezone.now() + timezone.timedelta(hours=24)
         utc.save()
 
-        tlg = TestListGroup.objects.create(name="test group for cycle")
+        tlg = TestListGroup.objects.create(name='test group for cycle')
         tlg.test_lists.add(tl)
         notice = QCSchedulingNotice.objects.create(
             future_days=7,
             recipients=self.recipients,
             test_lists=tlg,
             notification_type=QCSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [utc]
 
@@ -274,7 +271,7 @@ class TestQCSchedulingModel(TestCase):
         notice = QCSchedulingNotice.objects.create(
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.ALL,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1, self.utc2]
 
@@ -288,7 +285,7 @@ class TestQCSchedulingModel(TestCase):
         notice = QCSchedulingNotice.objects.create(
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.DUE,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1]
 
@@ -302,7 +299,7 @@ class TestQCSchedulingModel(TestCase):
         notice = QCSchedulingNotice.objects.create(
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.DUE,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1, self.utc2]
 
@@ -317,7 +314,7 @@ class TestQCSchedulingModel(TestCase):
             recipients=self.recipients,
             notification_type=QCSchedulingNotice.UPCOMING_AND_DUE,
             future_days=7,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.utcs_to_notify()) == [self.utc1, self.utc2]
 
@@ -329,27 +326,25 @@ class TestQCSchedulingModel(TestCase):
 
 
 class TestQCSchedulingEmails(TestCase):
-
     def setUp(self):
-
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = utils.create_unit(name='unit1', number=1)
+        self.unit2 = utils.create_unit(name='unit2', number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
-        self.testlist_group = TestListGroup.objects.create(name="test group")
+        self.testlist_group = TestListGroup.objects.create(name='test group')
         self.testlist_group.test_lists.add(self.utc1.tests_object)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.utc1.unit)
 
         self.group = models.Group.objects.latest('pk')
         user = models.User.objects.latest('pk')
         user.groups.add(self.group)
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -359,10 +354,10 @@ class TestQCSchedulingEmails(TestCase):
 
         self.notice = QCSchedulingNotice.objects.create(
             recipients=self.recipients,
-            recurrences="RRULE:FREQ=DAILY",
+            recurrences='RRULE:FREQ=DAILY',
             notification_type=QCSchedulingNotice.UPCOMING_AND_DUE,
             future_days=7,
-            time="0:00",
+            time='0:00',
         )
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
@@ -374,7 +369,7 @@ class TestQCSchedulingEmails(TestCase):
         tasks.send_scheduling_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ QC Scheduling Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ QC Scheduling Notice:' in mail.outbox[0].subject
 
     def test_send_notice_no_send_empty(self):
         tasks.send_scheduling_notice(self.notice.pk)

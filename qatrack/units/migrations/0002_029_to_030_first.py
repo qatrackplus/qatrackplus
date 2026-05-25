@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from django.db import migrations, models
 import django.db.models.deletion
+from django.db import migrations, models
 from django.utils import timezone
 
 
 def migrate_unitype_vendor_char_to_vendor(apps, schema_editor):
-
     UnitType = apps.get_model('units', 'UnitType')
     Vendor = apps.get_model('units', 'Vendor')
 
     for ut in UnitType.objects.all():
-
         vendor_char = ut.vendor_char
         vendor, is_new = Vendor.objects.get_or_create(name=vendor_char)
         ut.vendor = vendor
@@ -20,12 +15,10 @@ def migrate_unitype_vendor_char_to_vendor(apps, schema_editor):
 
 
 def add_initial_available_times(apps, schema_editor):
-
     Unit = apps.get_model('units', 'Unit')
     UnitAvailableTime = apps.get_model('units', 'UnitAvailableTime')
 
     for u in Unit.objects.all():
-
         if not u.active:
             UnitAvailableTime.objects.create(
                 date_changed=u.install_date or timezone.now(),
@@ -53,7 +46,6 @@ def add_initial_available_times(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('units', '0001_initial'),
     ]
@@ -78,7 +70,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(help_text='Name of this vendor', unique=True, max_length=64)),
-                ('notes', models.TextField(blank=True, help_text='Additional notes about this vendor', max_length=255, null=True)),
+                (
+                    'notes',
+                    models.TextField(
+                        blank=True, help_text='Additional notes about this vendor', max_length=255, null=True
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
@@ -104,7 +101,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unittype',
             name='vendor',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='units.Vendor', null=True),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, blank=True, to='units.Vendor', null=True
+            ),
         ),
         migrations.RunPython(migrate_unitype_vendor_char_to_vendor),
         migrations.RemoveField(
@@ -114,7 +113,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unit',
             name='site',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, null=True, blank=True, to='units.Site'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, null=True, blank=True, to='units.Site'
+            ),
         ),
         migrations.AddField(
             model_name='unit',
@@ -124,7 +125,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unittype',
             name='unit_class',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, blank=True, to='units.UnitClass', null=True),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, blank=True, to='units.UnitClass', null=True
+            ),
         ),
         migrations.CreateModel(
             name='UnitAvailableTime',
@@ -140,7 +143,11 @@ class Migration(migrations.Migration):
                 ('hours_sunday', models.DurationField(help_text='Duration of available time on Sundays')),
                 ('unit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='units.Unit')),
             ],
-            options={'default_permissions': ('change',), 'get_latest_by': 'date_changed', 'ordering': ['-date_changed']},
+            options={
+                'default_permissions': ('change',),
+                'get_latest_by': 'date_changed',
+                'ordering': ['-date_changed'],
+            },
         ),
         migrations.CreateModel(
             name='UnitAvailableTimeEdit',

@@ -7,14 +7,12 @@ from qatrack.service_log import models
 
 
 class TestServiceEventStatusAdmin(TestCase):
-
     def setUp(self):
-
         self.user = qa_utils.create_user(is_superuser=True)
         self.client.login(username='user', password='password')
 
         self.url_add = reverse(
-            'admin:%s_%s_add' % (models.ServiceEventStatus._meta.app_label, models.ServiceEventStatus._meta.model_name)
+            f'admin:{models.ServiceEventStatus._meta.app_label}_{models.ServiceEventStatus._meta.model_name}_add'
         )
         self.data = {
             'name': 'status_name',
@@ -27,22 +25,19 @@ class TestServiceEventStatusAdmin(TestCase):
         }
 
     def test_clean_is_default(self):
-
         response = self.client.get(self.url_add)
 
         self.client.post(self.url_add, data=self.data)
 
         url_change = reverse(
-            'admin:%s_%s_change' %
-            (models.ServiceEventStatus._meta.app_label, models.ServiceEventStatus._meta.model_name),
-            args=[models.ServiceEventStatus.get_default().id]
+            f'admin:{models.ServiceEventStatus._meta.app_label}_{models.ServiceEventStatus._meta.model_name}_change',
+            args=[models.ServiceEventStatus.get_default().id],
         )
         self.data['is_default'] = False
         response = self.client.post(url_change, data=self.data)
         self.assertTrue('is_default' in response.context_data['adminform'].form.errors)
 
     def test_new_not_default(self):
-
         data = self.data
         data['is_default'] = False
 

@@ -5,43 +5,33 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("issue_tracker", "0015_auto_20190129_2156"),
+        ('issue_tracker', '0015_auto_20190129_2156'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="issue",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='issue',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="issuepriority",
-            name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='issuepriority',
+            name='id',
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="issuestatus",
-            name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='issuestatus',
+            name='id',
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="issuetag",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='issuetag',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="issuetype",
-            name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='issuetype',
+            name='id',
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
     ]

@@ -1,26 +1,22 @@
-import unittest
-import unittest.mock as mock
-import tempfile
 import os
-import pytest
+
+from django.contrib.auth.models import User
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
-from qatrack.reports.models import SavedReport
+
 from qatrack.reports.forms import ReportForm
-from qatrack.reports.reports import BaseReport
-from qatrack.qatrack_core.utils import chrometopdf
+from qatrack.reports.models import SavedReport
 
 
 def get_chrome_command(html, name, paper_size, chrome_path, tmp_root, log_root):
     """Helper function to generate Chrome command without executing it."""
     if not name:
-        name = "test"
+        name = 'test'
 
-    fname = f"{name}_test.html"
+    fname = f'{name}_test.html'
     path = os.path.join(tmp_root, fname)
-    out_path = f"{path}.pdf"
+    out_path = f'{path}.pdf'
 
-    paper_format = "Letter" if paper_size == "letter" else "A4"
+    paper_format = 'Letter' if paper_size == 'letter' else 'A4'
 
     command = [
         chrome_path,
@@ -30,7 +26,7 @@ def get_chrome_command(html, name, paper_size, chrome_path, tmp_root, log_root):
         f'--print-to-pdf={out_path}',
         '--print-to-pdf-no-header',
         f'--print-to-pdf-paper-format={paper_format}',
-        f"file://{path}",
+        f'file://{path}',
     ]
 
     return command
@@ -40,25 +36,19 @@ class TestPaperSizeCommandGeneration(TestCase):
     """Test the generation of Chrome commands for different paper sizes."""
 
     def setUp(self):
-        self.html = "<html><body>Test</body></html>"
-        self.chrome_path = "/usr/bin/chrome"
-        self.tmp_root = "/tmp"
-        self.log_root = "/tmp"
+        self.html = '<html><body>Test</body></html>'
+        self.chrome_path = '/usr/bin/chrome'
+        self.tmp_root = '/tmp'
+        self.log_root = '/tmp'
 
     def test_letter_command_generation(self):
         """Test command generation for Letter paper size."""
-        command = get_chrome_command(
-            self.html, "test", "letter",
-            self.chrome_path, self.tmp_root, self.log_root
-        )
+        command = get_chrome_command(self.html, 'test', 'letter', self.chrome_path, self.tmp_root, self.log_root)
         self.assertIn('--print-to-pdf-paper-format=Letter', command)
 
     def test_a4_command_generation(self):
         """Test command generation for A4 paper size."""
-        command = get_chrome_command(
-            self.html, "test", "a4",
-            self.chrome_path, self.tmp_root, self.log_root
-        )
+        command = get_chrome_command(self.html, 'test', 'a4', self.chrome_path, self.tmp_root, self.log_root)
         self.assertIn('--print-to-pdf-paper-format=A4', command)
 
 
@@ -71,11 +61,11 @@ class TestPaperSizeDefaults(TestCase):
     def test_saved_report_default_paper_size(self):
         """Test that SavedReport defaults to letter paper size."""
         report = SavedReport.objects.create(
-            title="Test Report",
-            report_type="testlistinstance_summary",
-            report_format="pdf",
+            title='Test Report',
+            report_type='testlistinstance_summary',
+            report_format='pdf',
             created_by=self.user,
-            modified_by=self.user
+            modified_by=self.user,
         )
         self.assertEqual(report.paper_size, 'letter')
 

@@ -13,23 +13,21 @@ logger = logging.getLogger('django-q2')
 
 
 def run_review_notices():
-
     run_periodic_scheduler(
         QCReviewNotice,
-        "run_review_notices",
+        'run_review_notices',
         schedule_qcreview_notice,
-        time_field="time",
-        recurrence_field="recurrences",
+        time_field='time',
+        recurrence_field='recurrences',
     )
 
 
 def schedule_qcreview_notice(notice, send_time):
-
-    logger.info("Scheduling notification %s for %s" % (notice.pk, send_time))
-    name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
+    logger.info(f'Scheduling notification {notice.pk} for {send_time}')
+    name = 'Send notification %d %s' % (notice.pk, send_time.isoformat())
 
     schedule(
-        "qatrack.notifications.qcreview.tasks.send_qcreview_notice",
+        'qatrack.notifications.qcreview.tasks.send_qcreview_notice',
         notice.id,
         name,
         name=name,
@@ -40,41 +38,39 @@ def schedule_qcreview_notice(notice, send_time):
     )
 
 
-def send_qcreview_notice(notice_id, task_name=""):
-
+def send_qcreview_notice(notice_id, task_name=''):
     notice = QCReviewNotice.objects.filter(id=notice_id).first()
 
     if notice:
-
         if not notice.send_required():
-            logger.info("Send of QCReviewNotice %s requested, but no QC to notify about" % notice_id)
+            logger.info(f'Send of QCReviewNotice {notice_id} requested, but no QC to notify about')
             return
 
         recipients = notice.recipients.recipient_emails()
         if not recipients:
-            logger.info("Send of QCReviewNotice %s requested, but no recipients" % notice_id)
+            logger.info(f'Send of QCReviewNotice {notice_id} requested, but no recipients')
             return
     else:
-        logger.info("Send of QCReviewNotice %s requested, but no such QCReviewNotice exists" % notice_id)
+        logger.info(f'Send of QCReviewNotice {notice_id} requested, but no such QCReviewNotice exists')
         return
 
     try:
         send_email_to_users(
             recipients,
-            "qcreview/email.html",
+            'qcreview/email.html',
             context={'notice': notice},
-            subject_template="qcreview/subject.txt",
-            text_template="qcreview/email.txt",
+            subject_template='qcreview/subject.txt',
+            text_template='qcreview/email.txt',
         )
-        logger.info("Sent QCReviewNotice %s at %s" % (notice_id, timezone.now()))
+        logger.info(f'Sent QCReviewNotice {notice_id} at {timezone.now()}')
         try:
             Schedule.objects.get(name=task_name).delete()
         except:  # noqa: E722  # pragma: nocover
-            logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
+            logger.exception(f'Unable to delete Schedule.name = {task_name} after successful send')
     except:  # noqa: E722  # pragma: nocover
-        logger.exception("Error sending email for QCReviewNotice %s at %s." % (notice_id, timezone.now()))
+        logger.exception(f'Error sending email for QCReviewNotice {notice_id} at {timezone.now()}.')
 
-        fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
+        fail_silently = getattr(settings, 'EMAIL_FAIL_SILENTLY', True)
         if not fail_silently:
             raise
     finally:

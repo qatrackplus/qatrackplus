@@ -11,35 +11,32 @@ from qatrack.qatrack_core.dates import (
 
 
 def datestrings_to_dates(apps, schema):
+    TestInstance = apps.get_model('qa', 'TestInstance')
 
-    TestInstance = apps.get_model("qa", "TestInstance")
-
-    for ti in TestInstance.objects.filter(unit_test_info__test__type="date"):
+    for ti in TestInstance.objects.filter(unit_test_info__test__type='date'):
         ti.date_value = parse_date(ti.string_value)
-        ti.string_value = ""
+        ti.string_value = ''
         ti.save()
 
-    for ti in TestInstance.objects.filter(unit_test_info__test__type="datetime"):
+    for ti in TestInstance.objects.filter(unit_test_info__test__type='datetime'):
         ti.datetime_value = parse_datetime(ti.string_value)
-        ti.string_value = ""
+        ti.string_value = ''
         ti.save()
 
 
 def date_to_datestrings(apps, schema):
+    TestInstance = apps.get_model('qa', 'TestInstance')
 
-    TestInstance = apps.get_model("qa", "TestInstance")
-
-    for ti in TestInstance.objects.filter(unit_test_info__test__type="date"):
+    for ti in TestInstance.objects.filter(unit_test_info__test__type='date'):
         ti.string_value = format_as_date(ti.date_value)
         ti.save()
 
-    for ti in TestInstance.objects.filter(unit_test_info__test__type="datetime"):
+    for ti in TestInstance.objects.filter(unit_test_info__test__type='datetime'):
         ti.string_value = format_datetime(ti.datetime_value)
         ti.save()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0045_auto_20191203_1409'),
     ]

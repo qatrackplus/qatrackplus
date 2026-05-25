@@ -3,7 +3,6 @@ from django.db import migrations, models
 
 
 def migrate_datetimes_to_date(apps, schema_editor):
-
     Unit = apps.get_model('units', 'Unit')
     UnitAvailableTimeEdit = apps.get_model('units', 'UnitAvailableTimeEdit')
     UnitAvailableTime = apps.get_model('units', 'UnitAvailableTime')
@@ -45,7 +44,7 @@ class Migration(migrations.Migration):
     # SQL Server installations which used to have legacy datetimes
     # stored dates as datetimes, so for SQL server only, adjust
     # those columns
-    if "sql_server" in settings.DATABASES['default']['ENGINE']:
+    if 'sql_server' in settings.DATABASES['default']['ENGINE']:
         operations = [
             migrations.RenameField(
                 model_name='unit',
@@ -87,15 +86,13 @@ class Migration(migrations.Migration):
                 name='date_changed',
                 field=models.DateField(null=True),
             ),
-
             migrations.RunPython(migrate_datetimes_to_date),
-
             migrations.AlterField(
                 model_name='unit',
                 name='date_acceptance',
                 field=models.DateField(
-                    verbose_name="Acceptance date",
-                    help_text='Changing acceptance date will delete unit available times that occur before it'
+                    verbose_name='Acceptance date',
+                    help_text='Changing acceptance date will delete unit available times that occur before it',
                 ),
             ),
             migrations.AlterField(
@@ -106,9 +103,11 @@ class Migration(migrations.Migration):
             migrations.AlterField(
                 model_name='unitavailabletime',
                 name='date_changed',
-                field=models.DateField(blank=True, help_text='Date the units available time changed or will change', )
+                field=models.DateField(
+                    blank=True,
+                    help_text='Date the units available time changed or will change',
+                ),
             ),
-
             migrations.RemoveField(
                 model_name='unit',
                 name='install_date_old',
@@ -126,4 +125,3 @@ class Migration(migrations.Migration):
                 name='date_changed_old',
             ),
         ]
-

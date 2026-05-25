@@ -1,5 +1,5 @@
-from unittest import mock
 import json
+from unittest import mock
 
 from django.contrib.auth.models import Permission, User
 from django.core.serializers.json import DjangoJSONEncoder
@@ -18,7 +18,6 @@ from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestURLS(TestCase):
-
     def setUp(self):
         u = create_user(is_superuser=True, uname='user', pwd='pwd')
         g = create_group()
@@ -30,7 +29,6 @@ class TestURLS(TestCase):
         return getattr(self.client, method)(url).status_code == code
 
     def test_qa_urls(self):
-
         sl_utils.create_service_event_status(is_default=True)
         qa_utils.create_status(is_default=True)
         se = sl_utils.create_service_event()
@@ -41,21 +39,12 @@ class TestURLS(TestCase):
         url_names_200 = (
             ('sl_dash', {}, ''),
             ('sl_new', {}, ''),
-            ('sl_edit', {
-                'pk': se.id
-            }, ''),
-            ('sl_details', {
-                'pk': se.id
-            }, ''),
+            ('sl_edit', {'pk': se.id}, ''),
+            ('sl_details', {'pk': se.id}, ''),
             ('sl_list_all', {}, ''),
-            ('rtsqa_list_for_event', {
-                'se_pk': se.id
-            }, ''),
+            ('rtsqa_list_for_event', {'se_pk': se.id}, ''),
             ('se_searcher', {}, '?q=%d&unit_id=%d' % (se.id, u.id)),
-            ('tli_select', {
-                'pk': utc.id,
-                'form': 'a_form'
-            }, ''),
+            ('tli_select', {'pk': utc.id, 'form': 'a_form'}, ''),
             ('tli_statuses', {}, '?tli_id=%d' % tli.id),
             ('unit_sa_utc', {}, '?unit_id=%d' % u.id),
             ('err', {}, ''),
@@ -83,9 +72,7 @@ class TestURLS(TestCase):
 
 
 class TestDashboard(TestCase):
-
     def create_objects(self):
-
         se_requires_review = sl_utils.create_service_event(is_review_required=True)
         ses_default = sl_utils.create_service_event_status(is_default=True)
         se_default_status = sl_utils.create_service_event(service_status=ses_default)
@@ -99,19 +86,16 @@ class TestDashboard(TestCase):
         self.user = create_user(is_superuser=True, uname='person')
 
     def delete_objects(self):
-
         models.ServiceEvent.objects.all().delete()
         models.ReturnToServiceQA.objects.all().delete()
         User.objects.all().delete()
 
     def setUp(self):
-
         self.factory = RequestFactory()
         self.view = views.SLDashboard.as_view()
         self.url = reverse('sl_dash')
 
     def test_get_counts(self):
-
         self.create_objects()
 
         counts = views.SLDashboard().get_counts()
@@ -121,10 +105,9 @@ class TestDashboard(TestCase):
         self.assertEqual(counts['se_needing_review'], 1)
         self.assertEqual(counts['se_default']['count'], 1)
 
-#        self.delete_objects()
+    #        self.delete_objects()
 
     def test_get_timeline(self):
-
         self.create_objects()
 
         request = self.factory.get(self.url)
@@ -141,9 +124,7 @@ class TestDashboard(TestCase):
 
 
 class TestCreateServiceEvent(TestCase):
-
     def setUp(self):
-
         self.factory = RequestFactory()
         self.view = views.CreateServiceEvent.as_view()
 
@@ -160,12 +141,12 @@ class TestCreateServiceEvent(TestCase):
         self.tli_1_1 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_1, test_collection=self.tl_1),
             test_list=self.tl_1,
-            work_completed=now - timezone.timedelta(hours=1)
+            work_completed=now - timezone.timedelta(hours=1),
         )
         self.tli_1_2 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_1, test_collection=self.tl_1),
             test_list=self.tl_1,
-            work_completed=now
+            work_completed=now,
         )
         self.se_1 = sl_utils.create_service_event(unit_service_area=self.usa_1)
 
@@ -176,12 +157,12 @@ class TestCreateServiceEvent(TestCase):
         self.tli_2_1 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_2, test_collection=self.tl_2),
             test_list=self.tl_2,
-            work_completed=now - timezone.timedelta(hours=1)
+            work_completed=now - timezone.timedelta(hours=1),
         )
         self.tli_2_2 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_2, test_collection=self.tl_2),
             test_list=self.tl_2,
-            work_completed=now
+            work_completed=now,
         )
         self.se_2 = sl_utils.create_service_event(unit_service_area=self.usa_2)
 
@@ -212,7 +193,6 @@ class TestCreateServiceEvent(TestCase):
         self.sto = sl_utils.create_storage(quantity=2)
 
     def test_initial_options(self):
-
         response = self.client.get(self.url)
 
         self.assertEqual(self.default_ses, response.context_data['form'].initial['service_status'])
@@ -224,7 +204,7 @@ class TestCreateServiceEvent(TestCase):
 
         self.assertEqual(
             list(units.values_list('id', 'name')),
-            list(response.context_data['form'].fields['unit_field'].queryset.values_list('id', 'name'))
+            list(response.context_data['form'].fields['unit_field'].queryset.values_list('id', 'name')),
         )
 
         models.ServiceType.objects.create(name='st_inactive', is_active=False)
@@ -232,7 +212,7 @@ class TestCreateServiceEvent(TestCase):
 
         self.assertEqual(
             list(service_types.values_list('id', 'name')),
-            list(response.context_data['form'].fields['service_type'].queryset.values_list('id', 'name'))
+            list(response.context_data['form'].fields['service_type'].queryset.values_list('id', 'name')),
         )
 
         perm = Permission.objects.get(codename='can_have_hours')
@@ -246,30 +226,31 @@ class TestCreateServiceEvent(TestCase):
             user_with_hours.append(('tp-' + str(tp.id), tp.get_full_name()))
         self.assertEqual(
             set(user_with_hours),
-            set(response.context_data['hours_formset'].forms[0].fields['user_or_thirdparty'].widget.choices)
+            set(response.context_data['hours_formset'].forms[0].fields['user_or_thirdparty'].widget.choices),
         )
 
         gl = models.GroupLinker.objects.all().first()
         users_in_gl = User.objects.filter(groups=gl.group, is_active=True)
         self.assertEqual(
-            list(users_in_gl), list(response.context_data['form'].fields['group_linker_%s' % gl.pk].queryset)
+            list(users_in_gl), list(response.context_data['form'].fields[f'group_linker_{gl.pk}'].queryset)
         )
 
         # Unit pre selected ----------------------------------------------------
         unit = qa_models.Unit.objects.all().first()
         response = self.client.get(self.url + '?u=%d' % unit.pk)
 
-        service_areas = models.UnitServiceArea.objects.filter(unit_id=unit.pk
-                                                              ).values_list('service_area_id', 'service_area__name')
+        service_areas = models.UnitServiceArea.objects.filter(unit_id=unit.pk).values_list(
+            'service_area_id', 'service_area__name'
+        )
         self.assertEqual(
             list(service_areas),
-            list(response.context_data['form'].fields['service_area_field'].queryset.values_list('id', 'name'))
+            list(response.context_data['form'].fields['service_area_field'].queryset.values_list('id', 'name')),
         )
 
         utc_initialed_by = qa_models.UnitTestCollection.objects.filter(unit_id=unit.pk, active=True)
         utc_ib_list = (('', '---------'),)
         for utc_ib in utc_initialed_by:
-            utc_ib_list += ((utc_ib.id, '(%s) %s' % (utc_ib.frequency, utc_ib.name)),)
+            utc_ib_list += ((utc_ib.id, f'({utc_ib.frequency}) {utc_ib.name}'),)
         self.assertEqual(
             set(utc_ib_list), set(response.context_data['form'].fields['initiated_utc_field'].widget.choices)
         )
@@ -278,15 +259,16 @@ class TestCreateServiceEvent(TestCase):
         self.assertEqual(
             list(utc_initialed_by.values_list('id', 'name')),
             list(
-                response.context_data['rtsqa_formset'].forms[0].fields['unit_test_collection'].queryset.values_list(
-                    'id', 'name'
-                )
-            )
+                response.context_data['rtsqa_formset']
+                .forms[0]
+                .fields['unit_test_collection']
+                .queryset.values_list('id', 'name')
+            ),
         )
 
         # Initiated by pre selected --------------------------------------------------
         tli_ib = qa_models.TestListInstance.objects.filter(unit_test_collection__unit=unit).first()
-        response = self.client.get(self.url + '?ib=%s' % tli_ib.id)
+        response = self.client.get(self.url + f'?ib={tli_ib.id}')
 
         self.assertEqual(response.context_data['form'].initial['initiated_utc_field'], tli_ib.unit_test_collection)
 
@@ -295,7 +277,6 @@ class TestCreateServiceEvent(TestCase):
         self.assertEqual(response.context_data['form'].initial['unit_field'], unit)
 
     def test_submit_valid(self):
-
         st = sl_utils.create_service_type()
 
         user = User.objects.filter(groups=self.gl_1.group).first()
@@ -332,13 +313,13 @@ class TestCreateServiceEvent(TestCase):
             'rtsqa-TOTAL_FORMS': 1,
             'rtsqa-MIN_NUM_FORMS': 0,
             'hours-0-time': '100',
-            'hours-0-user_or_thirdparty': 'user-%s' % user.id,
+            'hours-0-user_or_thirdparty': f'user-{user.id}',
             'rtsqa-0-all_reviewed': self.tli_1_2.all_reviewed,
             'rtsqa-0-unit_test_collection': self.tli_1_2.unit_test_collection.id,
             'rtsqa-0-test_list_instance': self.tli_1_2.id,
             'parts-0-quantity': 1,
             'parts-0-part': self.part.id,
-            'parts-0-from_storage': self.part.storage.all().first().id
+            'parts-0-from_storage': self.part.storage.all().first().id,
         }
 
         se_count = models.ServiceEvent.objects.count()
@@ -354,7 +335,6 @@ class TestCreateServiceEvent(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_required_fields(self):
-
         data = {
             'datetime_service': '',
             'unit_field': '',
@@ -382,13 +362,16 @@ class TestCreateServiceEvent(TestCase):
         self.assertFalse(response.context_data['form'].is_valid())
 
         for e in [
-            'service_type', 'unit_field', 'service_area_field', 'datetime_service', 'problem_description',
-            'service_status'
+            'service_type',
+            'unit_field',
+            'service_area_field',
+            'datetime_service',
+            'problem_description',
+            'service_status',
         ]:
             self.assertTrue(e in response.context_data['form'].errors)
 
     def test_unreviewed_rtsqa(self):
-
         ses_approved = sl_utils.create_service_event_status(
             name='Approved', is_review_required=False, rts_qa_must_be_reviewed=True
         )
@@ -438,7 +421,6 @@ class TestCreateServiceEvent(TestCase):
         self.assertTrue('service_status' in response.context_data['form'].errors)
 
     def test_formset_required_fields(self):
-
         data = {
             'datetime_service': format_datetime(timezone.now()),
             'unit_field': self.u_1.id,
@@ -459,7 +441,7 @@ class TestCreateServiceEvent(TestCase):
             'rtsqa-TOTAL_FORMS': 0,
             'rtsqa-MIN_NUM_FORMS': 0,
             'parts-0-part': self.part.id,
-            'hours-0-user_or_thirdparty': 'user-%s' % self.user.id
+            'hours-0-user_or_thirdparty': f'user-{self.user.id}',
         }
 
         response = self.client.post(self.url, data=data)
@@ -476,7 +458,6 @@ class TestCreateServiceEvent(TestCase):
         self.assertTrue('user_or_thirdparty' in response.context_data['hours_formset'].errors[0])
 
     def test_delete_service_event(self):
-
         psc = p_models.PartStorageCollection.objects.first()
         pu = p_models.PartUsed.objects.create(
             part=psc.part, from_storage=psc.storage, quantity=1, service_event=self.se_1
@@ -564,9 +545,7 @@ class TestCreateServiceEvent(TestCase):
 
 
 class TestEditServiceEvent(TestCase):
-
     def setUp(self):
-
         self.factory = RequestFactory()
         self.view = views.UpdateServiceEvent.as_view()
 
@@ -584,12 +563,12 @@ class TestEditServiceEvent(TestCase):
         self.tli_1_1 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_1, test_collection=self.tl_1),
             test_list=self.tl_1,
-            work_completed=now - timezone.timedelta(hours=1)
+            work_completed=now - timezone.timedelta(hours=1),
         )
         self.tli_1_2 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_1, test_collection=self.tl_1),
             test_list=self.tl_1,
-            work_completed=now
+            work_completed=now,
         )
         self.se_1 = sl_utils.create_service_event(unit_service_area=self.usa_1)
 
@@ -600,12 +579,12 @@ class TestEditServiceEvent(TestCase):
         self.tli_2_1 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_2, test_collection=self.tl_2),
             test_list=self.tl_2,
-            work_completed=now - timezone.timedelta(hours=1)
+            work_completed=now - timezone.timedelta(hours=1),
         )
         self.tli_2_2 = qa_utils.create_test_list_instance(
             unit_test_collection=qa_utils.create_unit_test_collection(unit=self.u_2, test_collection=self.tl_2),
             test_list=self.tl_2,
-            work_completed=now
+            work_completed=now,
         )
         self.se_2 = sl_utils.create_service_event(unit_service_area=self.usa_2)
 
@@ -636,7 +615,7 @@ class TestEditServiceEvent(TestCase):
             unit_service_area=self.usa_1, service_status=self.default_ses, service_type=self.st
         )
 
-        self.url = reverse('sl_edit', kwargs={"pk": self.se.pk})
+        self.url = reverse('sl_edit', kwargs={'pk': self.se.pk})
 
         self.data = {
             'datetime_service': format_datetime(timezone.now()),
@@ -668,15 +647,13 @@ class TestEditServiceEvent(TestCase):
         }
 
     def test_initial_unit(self):
-
         sl_utils.create_return_to_service_qa(
             service_event=self.se_1,
             unit_test_collection=self.tli_1_1.unit_test_collection,
-            add_test_list_instance=self.tli_1_1
+            add_test_list_instance=self.tli_1_1,
         )
 
     def test_edit_service_event_valid(self):
-
         response = self.client.get(self.url)
 
         data = self.data
@@ -686,7 +663,7 @@ class TestEditServiceEvent(TestCase):
         data['rtsqa-TOTAL_FORMS'] = 1
         data['parts-0-part'] = self.part.id
         data['parts-0-quantity'] = 1
-        data['hours-0-user_or_thirdparty'] = 'user-%s' % self.user.id
+        data['hours-0-user_or_thirdparty'] = f'user-{self.user.id}'
         data['hours-0-time'] = '0030'
         data['rtsqa-0-all_reviewed'] = self.tli_1_2.all_reviewed
         data['rtsqa-0-unit_test_collection'] = self.tli_1_2.unit_test_collection.id
@@ -698,7 +675,6 @@ class TestEditServiceEvent(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_edit_status_invalid(self):
-
         data = self.data
         data['service_status'] = self.approved_ses.id
         data['hours-TOTAL_FORMS'] = 0
@@ -706,7 +682,7 @@ class TestEditServiceEvent(TestCase):
         data['rtsqa-TOTAL_FORMS'] = 0
         data['parts-0-part'] = self.part.id
         data['parts-0-quantity'] = 1
-        data['hours-0-user_or_thirdparty'] = 'user-%s' % self.user.id
+        data['hours-0-user_or_thirdparty'] = f'user-{self.user.id}'
         data['hours-0-time'] = '0030'
         data['rtsqa-0-all_reviewed'] = self.tli_1_2.all_reviewed
         data['rtsqa-0-unit_test_collection'] = self.tli_1_2.unit_test_collection.id
@@ -724,7 +700,7 @@ class TestEditServiceEvent(TestCase):
 
     def test_initial_rts_form_existing_service_event(self):
         """RTS formset should only have existing RTS QA set for the forms when
-        editing an existing service event. """
+        editing an existing service event."""
 
         rtsqa = sl_utils.create_return_to_service_qa()
         view = views.ServiceEventUpdateCreate()
@@ -737,9 +713,7 @@ class TestEditServiceEvent(TestCase):
 
 
 class TestServiceLogViews(TestCase):
-
     def setUp(self):
-
         self.factory = RequestFactory()
 
         self.user = create_user(is_superuser=True)
@@ -775,7 +749,7 @@ class TestServiceLogViews(TestCase):
             unit_service_area=self.usa2,
             service_time=timezone.timedelta(minutes=60),
             problem_description='problem on unit 3 or 2',
-            service_type=st
+            service_type=st,
         )
         sl_utils.create_service_event(
             unit_service_area=self.usa3, service_time=timezone.timedelta(minutes=60), service_type=st
@@ -784,17 +758,16 @@ class TestServiceLogViews(TestCase):
             unit_service_area=self.usa3,
             problem_description='problem on unit 3 or 2',
             service_time=timezone.timedelta(minutes=60),
-            service_type=st
+            service_type=st,
         )
         sl_utils.create_service_event(
             unit_service_area=self.usa3,
             problem_description='problem on unit 3 or 2',
             service_time=timezone.timedelta(minutes=60),
-            service_type=st
+            service_type=st,
         )
 
     def test_unit_sa_utc(self):
-
         tl_to_find = qa_models.UnitTestCollection.objects.filter(unit=self.u3)
         sa_to_find = models.ServiceArea.objects.filter(units=self.u3)
 
@@ -805,7 +778,6 @@ class TestServiceLogViews(TestCase):
         self.assertEqual(len(sa_to_find), len(response.json()['service_areas']))
 
     def test_se_searcher(self):
-
         q = models.ServiceEvent.objects.filter(unit_service_area=self.usa3).first().id
         se_to_find = models.ServiceEvent.objects.filter(id__icontains=q, unit_service_area__unit=self.usa3.unit)
 
@@ -815,7 +787,6 @@ class TestServiceLogViews(TestCase):
         self.assertEqual(len(se_to_find), len(response.json()['service_events']))
 
     def test_tli_statuses(self):
-
         tli = qa_utils.create_test_list_instance(unit_test_collection=self.utc)
         qa_utils.create_test_instance(test_list_instance=tli)
         qa_utils.create_test_instance(test_list_instance=tli)
@@ -841,16 +812,12 @@ class TestServiceLogViews(TestCase):
         self.assertDictEqual(expected, response.json())
 
     def test_handle_unit_down_time(self):
-
         data = {
-            'problem_description':
-                'problem on unit 3 or 2',
+            'problem_description': 'problem on unit 3 or 2',
             'service_area': [self.usa3.service_area.name, self.usa2.service_area.name],
             'unit': [self.usa3.unit.name, self.usa2.unit.name],
             'unit__type': [self.u3.type.name, self.u2.type.name],
-            'daterange':
-                '%s - %s' %
-                (format_as_date((timezone.now() - timezone.timedelta(days=30))), format_as_date(timezone.now()))
+            'daterange': f'{format_as_date(timezone.now() - timezone.timedelta(days=30))} - {format_as_date(timezone.now())}',
         }
 
         response = self.client.get(reverse('handle_unit_down_time'), data=data)
@@ -859,13 +826,12 @@ class TestServiceLogViews(TestCase):
         self.assertTrue('problem on unit 3 or 2' in csv)
         self.assertTrue(self.usa3.service_area.name in csv)
         self.assertTrue(self.usa2.service_area.name in csv)
-        self.assertTrue('%s,%s,0,1,1.00,0.00,1.00,0.00,1' % (self.usa2.unit.name, self.usa2.unit.type.name) in csv)
-        self.assertTrue('%s,%s,0,2,2.00,0.00,2.00,0.00,2' % (self.usa3.unit.name, self.usa3.unit.type.name) in csv)
+        self.assertTrue(f'{self.usa2.unit.name},{self.usa2.unit.type.name},0,1,1.00,0.00,1.00,0.00,1' in csv)
+        self.assertTrue(f'{self.usa3.unit.name},{self.usa3.unit.type.name},0,2,2.00,0.00,2.00,0.00,2' in csv)
         self.assertTrue('Totals:,0.0,3,3.00,0.00,3.00,0.00,3' in csv)
 
 
 class TestServiceEventTemplateSearcher(TestCase):
-
     def setUp(self):
         self.user = create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
@@ -884,8 +850,8 @@ class TestServiceEventTemplateSearcher(TestCase):
 
     def test_no_filters(self):
         """No filters, so all templates should be returned"""
-        self.create_template("1")
-        self.create_template("2")
+        self.create_template('1')
+        self.create_template('2')
         resp = self.client.get(self.url, data={'unit': self.unit.id})
         assert len(resp.json()) == models.ServiceEventTemplate.objects.count()
 
@@ -895,14 +861,14 @@ class TestServiceEventTemplateSearcher(TestCase):
 
         # one template with correct service type
         st1 = sl_utils.create_service_type()
-        t1 = self.create_template("1", service_type=st1)
+        t1 = self.create_template('1', service_type=st1)
 
         # one template with incorrect service type
         st2 = sl_utils.create_service_type()
-        self.create_template("2", service_type=st2)
+        self.create_template('2', service_type=st2)
 
         # one template with no service_type
-        self.create_template("3")
+        self.create_template('3')
 
         resp = self.client.get(self.url, data={'unit': self.unit.id, 'service_type': st1.pk})
         data = resp.json()
@@ -915,7 +881,7 @@ class TestServiceEventTemplateSearcher(TestCase):
 
         # one template with correct service type
         sa1 = sl_utils.create_service_area()
-        t1 = self.create_template("1", service_area=sa1)
+        t1 = self.create_template('1', service_area=sa1)
         sl_utils.create_unit_service_area(
             unit=self.unit,
             service_area=sa1,
@@ -923,10 +889,10 @@ class TestServiceEventTemplateSearcher(TestCase):
 
         # one template with incorrect service area
         sa2 = sl_utils.create_service_area()
-        self.create_template("2", service_area=sa2)
+        self.create_template('2', service_area=sa2)
 
         # one template with no service_area
-        self.create_template("3")
+        self.create_template('3')
 
         resp = self.client.get(self.url, data={'unit': self.unit.id, 'service_area': sa1.pk})
         data = resp.json()
@@ -944,15 +910,15 @@ class TestServiceEventTemplateSearcher(TestCase):
         qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
 
         # one template with RTS that is assigned to the unit
-        t1 = self.create_template("1")
+        t1 = self.create_template('1')
         t1.return_to_service_test_lists.add(tl1)
 
         # one template with RTS that is not assigned to the unit
-        t2 = self.create_template("2")
+        t2 = self.create_template('2')
         t2.return_to_service_test_lists.add(tl2)
 
         # one template with not RTS
-        t3 = self.create_template("3")
+        t3 = self.create_template('3')
 
         resp = self.client.get(self.url, data={'unit': u1.pk})
         data = resp.json()
@@ -971,18 +937,18 @@ class TestServiceEventTemplateSearcher(TestCase):
         qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
 
         # one template with RTS that is assigned to the unit
-        t1 = self.create_template("1", service_type=st)
+        t1 = self.create_template('1', service_type=st)
         t1.return_to_service_test_lists.add(tl1)
 
         # one template with RTS that is not assigned to the unit
-        t2 = self.create_template("2", service_type=st)
+        t2 = self.create_template('2', service_type=st)
         t2.return_to_service_test_lists.add(tl2)
 
         # one template with no RTS and correct service_type
-        t3 = self.create_template("3", service_type=st)
+        t3 = self.create_template('3', service_type=st)
 
         # one template with no RTS and no service_type
-        self.create_template("4")
+        self.create_template('4')
 
         resp = self.client.get(self.url, data={'unit': u1.pk, 'service_type': st.pk})
         data = resp.json()

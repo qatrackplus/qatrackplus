@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('faults', '0012_eliminate_duplicate_fault_codes'),
     ]
@@ -13,6 +12,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='faulttype',
             name='code',
-            field=models.CharField(db_index=True, help_text='Enter the fault code or number', max_length=255, unique=True, verbose_name='code'),
+            field=models.CharField(
+                db_index=True,
+                help_text='Enter the fault code or number',
+                max_length=255,
+                unique=True,
+                verbose_name='code',
+            ),
         ),
     ]

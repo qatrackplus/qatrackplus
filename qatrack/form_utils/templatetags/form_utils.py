@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 templatetags for django-form-utils
 
 """
-from __future__ import unicode_literals
 
-from django import forms
-from django import template
-from django.template.loader import render_to_string
 import six
+from django import forms, template
+from django.template.loader import render_to_string
 
 from ..forms import BetterForm, BetterModelForm
 from ..utils import select_template_from_string
@@ -49,7 +46,7 @@ def label(boundfield, contents=None):
     label_text = contents or boundfield.label
     id_ = boundfield.field.widget.attrs.get('id') or boundfield.auto_id
 
-    return render_to_string("forms/_label.html", {"label_text": label_text, "id": id_, "field": boundfield})
+    return render_to_string('forms/_label.html', {'label_text': label_text, 'id': id_, 'field': boundfield})
 
 
 @register.filter
@@ -57,7 +54,7 @@ def value_text(boundfield):
     """Return the value for given boundfield as human-readable text."""
     val = boundfield.value()
     # If choices is set, use the display label
-    return six.text_type(dict(getattr(boundfield.field, "choices", [])).get(val, val))
+    return six.text_type(dict(getattr(boundfield.field, 'choices', [])).get(val, val))
 
 
 @register.filter
@@ -65,7 +62,7 @@ def selected_values(boundfield):
     """Return the values for given multiple-select as human-readable text."""
     val = boundfield.value()
     # If choices is set, use the display label
-    choice_dict = dict(getattr(boundfield.field, "choices", []))
+    choice_dict = dict(getattr(boundfield.field, 'choices', []))
     return [six.text_type(choice_dict.get(v, v)) for v in val]
 
 

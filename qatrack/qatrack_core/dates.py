@@ -1,10 +1,10 @@
 import calendar
 import datetime
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.utils import timezone
 from django.utils.formats import get_format
-from zoneinfo import ZoneInfo
 
 
 def date_to_datetime(date_obj):
@@ -52,7 +52,7 @@ def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
     """Take a date time and return as string formatted date time after converting to localtime"""
 
     if not dt:
-        return ""
+        return ''
 
     if isinstance(dt, timezone.datetime) and timezone.is_aware(dt):
         dt = timezone.localtime(dt)
@@ -70,12 +70,12 @@ def format_as_time(dt, fmt=settings.TIME_INPUT_FORMATS[0]):
 
 
 def format_timedelta(td):
-    return "" if td is None else str(td)
+    return '' if td is None else str(td)
 
 
 def parse_datetime(dt_str):
     """Take string and return datetime object"""
-    for fmt in get_format("DATETIME_INPUT_FORMATS"):
+    for fmt in get_format('DATETIME_INPUT_FORMATS'):
         try:
             return timezone.datetime.strptime(dt_str, fmt)
         except (ValueError, TypeError):
@@ -89,7 +89,7 @@ def round_to_next_minute(dt):
 
 def parse_date(dt_str, as_date=True):
     """Take a string and return date object"""
-    for fmt in get_format("DATE_INPUT_FORMATS"):
+    for fmt in get_format('DATE_INPUT_FORMATS'):
         try:
             dt = timezone.datetime.strptime(dt_str, fmt)
             if as_date:

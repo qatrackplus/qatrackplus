@@ -1,4 +1,3 @@
-
 import re
 
 from django.conf import settings as qat_settings

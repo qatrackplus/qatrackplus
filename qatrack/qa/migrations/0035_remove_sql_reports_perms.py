@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0034_auto_20190418_2308'),
         ('reports', '0003_copy_report_permissions'),
@@ -13,6 +12,15 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='testinstance',
-            options={'get_latest_by': 'work_completed', 'permissions': (('can_view_history', 'Can see test history when performing QC'), ('can_view_charts', 'Can view charts of test history'), ('can_review', 'Can review & approve tests'), ('can_skip_without_comment', 'Can skip tests without comment'), ('can_review_own_tests', 'Can review & approve  self-performed tests'))},
+            options={
+                'get_latest_by': 'work_completed',
+                'permissions': (
+                    ('can_view_history', 'Can see test history when performing QC'),
+                    ('can_view_charts', 'Can view charts of test history'),
+                    ('can_review', 'Can review & approve tests'),
+                    ('can_skip_without_comment', 'Can skip tests without comment'),
+                    ('can_review_own_tests', 'Can review & approve  self-performed tests'),
+                ),
+            },
         ),
     ]

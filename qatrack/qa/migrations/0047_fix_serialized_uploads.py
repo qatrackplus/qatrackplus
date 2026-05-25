@@ -4,7 +4,7 @@ import logging
 
 from django.db import migrations
 
-logger = logging.getLogger("qatrack.migrations")
+logger = logging.getLogger('qatrack.migrations')
 
 
 def update_string_values(apps, schema):
@@ -12,7 +12,6 @@ def update_string_values(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0046_datestrings_to_dates'),
     ]

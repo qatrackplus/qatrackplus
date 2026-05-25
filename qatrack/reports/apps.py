@@ -7,15 +7,14 @@ def do_scheduling(sender, **kwargs):
     from qatrack.qatrack_core.tasks import _schedule_periodic_task
 
     _schedule_periodic_task(
-        "qatrack.reports.tasks.run_reports",
-        "QATrack+ Report Sender",
+        'qatrack.reports.tasks.run_reports',
+        'QATrack+ Report Sender',
     )
 
 
 class ReportsConfig(AppConfig):
-
     name = 'qatrack.reports'
-    verbose_name = _l("Reports")
+    verbose_name = _l('Reports')
 
     def ready(self):
         post_migrate.connect(do_scheduling, sender=self)

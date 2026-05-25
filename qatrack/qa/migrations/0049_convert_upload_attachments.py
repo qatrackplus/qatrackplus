@@ -5,27 +5,23 @@ import logging
 from django.db import migrations
 from django.db.models import Q
 
-logger = logging.getLogger("qatrack.migrations")
+logger = logging.getLogger('qatrack.migrations')
 
 
 def convert_instances(apps, schema):
-
-    TestInstance = apps.get_model("qa", "TestInstance")
+    TestInstance = apps.get_model('qa', 'TestInstance')
 
     # get test instances which have json results rather than attachment ids
     tis = TestInstance.objects.filter(
-        unit_test_info__test__type="upload",
-    ).filter(Q(string_value__startswith="{") | Q(string_value__startswith="["))
+        unit_test_info__test__type='upload',
+    ).filter(Q(string_value__startswith='{') | Q(string_value__startswith='['))
 
     for ti in tis:
-
-        attachment = ti.attachment_set.order_by("pk").first()
+        attachment = ti.attachment_set.order_by('pk').first()
 
         if attachment:
             logger.info(
-                "Updating test instance %s (attachment_id=%s) from string_value=%s to string_value=%s json_value=%s" % (
-                    ti.id, attachment.id, ti.string_value, attachment.id, ti.string_value
-                )
+                f'Updating test instance {ti.id} (attachment_id={attachment.id}) from string_value={ti.string_value} to string_value={attachment.id} json_value={ti.string_value}'
             )
 
             # set json
@@ -34,11 +30,10 @@ def convert_instances(apps, schema):
                 string_value=str(attachment.id),
             )
         else:
-            logger.info("Unable to find attachment for test instance %d" % ti.id)
+            logger.info('Unable to find attachment for test instance %d' % ti.id)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0048_auto_20200102_1356'),
     ]

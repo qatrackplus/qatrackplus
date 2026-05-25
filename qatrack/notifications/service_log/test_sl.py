@@ -16,23 +16,22 @@ from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestServiceLogEmails(TestCase):
-
     def setUp(self):
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = utils.create_unit(name='unit1', number=1)
+        self.unit2 = utils.create_unit(name='unit2', number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.utc1.unit)
 
         self.group = Group.objects.latest('pk')
         self.user = User.objects.latest('pk')
         self.user.groups.add(self.group)
-        self.user.email = "example@example.com"
+        self.user.email = 'example@example.com'
         self.user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -57,7 +56,7 @@ class TestServiceLogEmails(TestCase):
             service_event=se,
         )
         assert len(mail.outbox) == 1
-        assert "Service Event %s" % se in mail.outbox[0].subject
+        assert f'Service Event {se}' in mail.outbox[0].subject
 
     def test_created_no_recipients(self):
         self.recipients.groups.clear()
@@ -72,23 +71,22 @@ class TestServiceLogEmails(TestCase):
 
 
 class TestServiceLogAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.ServiceEventNoticeAdmin(model=ServiceEventNotice, admin_site=AdminSite())
 
     def test_get_notification_type_updated(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventNotice.objects.create(
             notification_type=ServiceEventNotice.UPDATED_OR_CREATED,
             recipients=rg,
         )
-        assert "Notify when a Service Event is created or modified" in self.admin.get_notification_type(n)
+        assert 'Notify when a Service Event is created or modified' in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = utils.create_unit(name="Test Unit")
-        ug = UnitGroup.objects.create(name="UG")
+        u = utils.create_unit(name='Test Unit')
+        ug = UnitGroup.objects.create(name='UG')
         ug.units.add(u)
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventNotice.objects.create(
             notification_type=ServiceEventNotice.UPDATED_OR_CREATED,
             units=ug,
@@ -97,7 +95,7 @@ class TestServiceLogAdmin(TestCase):
         assert ug.name in self.admin.get_units(n)
 
     def test_get_recipients(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventNotice.objects.create(
             notification_type=ServiceEventNotice.UPDATED_OR_CREATED,
             recipients=rg,

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('faults', '0006_auto_20210317_1651'),
     ]
@@ -13,6 +12,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fault',
             name='fault_types',
-            field=models.ManyToManyField(help_text='Select the fault types that occurred', related_name='faults', to='faults.FaultType', verbose_name='fault types'),
+            field=models.ManyToManyField(
+                help_text='Select the fault types that occurred',
+                related_name='faults',
+                to='faults.FaultType',
+                verbose_name='fault types',
+            ),
         ),
     ]

@@ -5,72 +5,56 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("units", "0019_auto_20210323_1324"),
+        ('units', '0019_auto_20210323_1324'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="unit",
+            name='unit',
             options={
-                "ordering": ["number"],
-                "verbose_name": "unit",
-                "verbose_name_plural": "units",
+                'ordering': ['number'],
+                'verbose_name': 'unit',
+                'verbose_name_plural': 'units',
             },
         ),
         migrations.AlterField(
-            model_name="modality",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='modality',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="site",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='site',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="unit",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='unit',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="unitavailabletime",
-            name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='unitavailabletime',
+            name='id',
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="unitavailabletimeedit",
-            name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='unitavailabletimeedit',
+            name='id',
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="unitclass",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='unitclass',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="unittype",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='unittype',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="vendor",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='vendor',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
     ]

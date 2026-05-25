@@ -1,5 +1,4 @@
-from rest_framework import viewsets
-from rest_framework import mixins
+from rest_framework import mixins, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 
 
@@ -21,4 +20,5 @@ class CreateListRetrieveViewSet(
     To use it, override the class and set the `.queryset` and
     `.serializer_class` attributes.
     """
+
     pass

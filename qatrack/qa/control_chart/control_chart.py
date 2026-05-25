@@ -3,10 +3,10 @@
 import datetime
 
 import matplotlib.dates
-from matplotlib.font_manager import FontProperties
 import matplotlib.gridspec as gridspec
-from matplotlib.ticker import NullFormatter
 import numpy as np
+from matplotlib.font_manager import FontProperties
+from matplotlib.ticker import NullFormatter
 
 from . import histogram as htg
 from . import leastsquaresfit as lsqfit
@@ -65,8 +65,8 @@ LBL_DATE_XAXIS = 'subgroup start date'
 # Data labels:
 LBL1 = 'used to calc. limits'  # labels the baseline data used to calculate limits
 LBL2 = 'all data'  # label to indicate that it reprensents all the data
-LBL_GAUSS = "Gaussian dist. fit line"  # in legend
-LBL_GAMMA = "Gamma dist. fit line"  # in legend
+LBL_GAUSS = 'Gaussian dist. fit line'  # in legend
+LBL_GAMMA = 'Gamma dist. fit line'  # in legend
 
 header_string = '# of data points = %r |  subgroup size = %r |  # of baseline points = %r'
 control_chart_string = 'Ac   = %1.2f    Au = %1.2f    Al = %1.2f\nAu,s = %1.2f  Al,s = %1.2f'
@@ -88,8 +88,7 @@ font = FontProperties(size=LEGFS)
 
 
 def generate_fit(x, axes, freq, bins, binwidth):
-    """
-    """
+    """ """
     optParam, cov = lsqfit.gauss_fit(x, freq, bins, binwidth)
     norm, fitmean, fitsigma = optParam
     paramUnc = np.zeros(len(optParam))
@@ -202,16 +201,16 @@ def get_bins(x):
     xMax = np.max(x)
     xMin = np.min(x)
 
-    bins_min = xMin - binwidth / 2.
+    bins_min = xMin - binwidth / 2.0
     bins_max = xMax + binwidth
     bins = np.arange(bins_min, bins_max, binwidth)
 
     if len(bins) < NBIN_THRESH:
-        binwidth = 2. * (xMax - xMin) / NBIN_THRESH
+        binwidth = 2.0 * (xMax - xMin) / NBIN_THRESH
         if binwidth == 0:
             binwidth = 1
 
-        centre = (xMin + xMax) / 2.
+        centre = (xMin + xMax) / 2.0
         bins_min = centre - binwidth * (NBIN_THRESH / 2 + 1)
         bins_max = centre + binwidth * (NBIN_THRESH / 2 + 1)
 
@@ -224,7 +223,6 @@ def get_bins(x):
 
 
 def get_axes():
-
     gs = gridspec.GridSpec(
         2,
         2,
@@ -234,7 +232,7 @@ def get_axes():
         top=TMARGIN,
         wspace=WSPACE,
         hspace=HSPACE,
-        width_ratios=[2, 1]
+        width_ratios=[2, 1],
     )
     return gs
 
@@ -243,7 +241,6 @@ def get_axes():
 
 
 def generate_cc(ax, sgNum, data, baseline, thresh):
-
     color = COLORS
     style = STDSTYLE
     label = DATALABEL
@@ -263,7 +260,6 @@ def generate_cc(ax, sgNum, data, baseline, thresh):
 
 ################################################################################
 def generate_hist(ax, data, baseline):
-
     bins, binwidth = get_bins(data)
 
     orientation = 'horizontal'
@@ -279,7 +275,6 @@ def generate_hist(ax, data, baseline):
 
 
 def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit, fit, use_dates):
-
     [Ac, Au, Al, Aus, Als] = xbar_thresh
     [Rc, Ru, Rl] = range_thresh
 
@@ -292,7 +287,7 @@ def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit
     plots[3].set_xlabel(HISTAXIS, fontsize=ALFS)
 
     # new y-axis limits to make room for string
-    plots[0].autoscale(axis="y", tight=True)
+    plots[0].autoscale(axis='y', tight=True)
     cc_ylim = plots[0].get_ylim()
     cc_ylim = (cc_ylim[0], cc_ylim[1] + (cc_ylim[1] - cc_ylim[0]) * DATA_TSPACE)
     plots[0].set_ylim(cc_ylim)
@@ -314,7 +309,7 @@ def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit
 
     cc_string_xpos = cc_xlim[0] + (cc_xlim[1] - cc_xlim[0]) * STRING_XPOS
 
-    cc_string_ypos = cc_ylim[1] - (cc_ylim[1] - cc_ylim[0]) * (1. - STRING_YPOS)
+    cc_string_ypos = cc_ylim[1] - (cc_ylim[1] - cc_ylim[0]) * (1.0 - STRING_YPOS)
 
     cchist_string_xpos = np.mean(plots[1].get_xlim()) * XPOS_MULT
     cchist_string_ypos = cc_ylim[0] + (cc_ylim[1] - cc_ylim[0]) * YPOS_MULT
@@ -324,13 +319,12 @@ def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit
     # rc_ylim = (rc_ylim[0], rc_ylim[1]*(1. + (rc_ylim[1]-rc_ylim[0])*DATA_TSPACE))
     # plots[2].set_ylim( rc_ylim )
 
-    r_string_ypos = rc_ylim[1] - (rc_ylim[1] - rc_ylim[0]) * (1. - RSTRING_YPOS)
+    r_string_ypos = rc_ylim[1] - (rc_ylim[1] - rc_ylim[0]) * (1.0 - RSTRING_YPOS)
 
     rhist_string_xpos = np.mean(plots[3].get_xlim()) * XPOS_MULT
     rhist_string_ypos = np.mean(plots[3].get_ylim())
 
     for i, plot in enumerate(plots):
-
         for label in plot.get_xticklabels() + plot.get_yticklabels():
             label.set_fontsize(TLFS)
 
@@ -343,7 +337,7 @@ def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit
                 cc_string_xpos,
                 cc_string_ypos,
                 control_chart_string % (Ac[0], Au[0], Al[0], Aus[0], Als[0]),
-                fontsize=CFS
+                fontsize=CFS,
             )
 
             plot.grid(True)
@@ -364,7 +358,7 @@ def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit
                         cchist_string_xpos,
                         cchist_string_ypos,
                         hist_string % (cm, cs, fcm, fcs, fck, fct),
-                        fontsize=HISTFS
+                        fontsize=HISTFS,
                     )
                 else:
                     cm, cs, fcm, fcs = cc_fits
@@ -379,7 +373,7 @@ def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit
                         rhist_string_xpos,
                         rhist_string_ypos,
                         hist_string % (rm, rs, frm, frs, frk, frt),
-                        fontsize=HISTFS
+                        fontsize=HISTFS,
                     )
                 else:
                     rm, rs, frm, frs = rc_fits
@@ -388,7 +382,7 @@ def format_plots(plots, xbar_thresh, range_thresh, cc_fits, rc_fits, xaxis_limit
                     )
     if use_dates:
         # plots[2].xaxis.set_major_locator(matplotlib.dates.MonthLocator())
-        plots[2].xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%d %b %Y"))
+        plots[2].xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d %b %Y'))
         [(tick.set_rotation(25), tick.set_fontsize(TLFS / 1.5)) for tick in plots[2].get_xticklabels()]
 
 
@@ -404,8 +398,7 @@ def unity_sgSize(sgNum, r, baseline):
 
 
 def get_subgroups(x, sgSize, dates):
-
-    sg = [x[i:i + sgSize] for i in np.arange(0, len(x), sgSize)]  # subgroups
+    sg = [x[i : i + sgSize] for i in np.arange(0, len(x), sgSize)]  # subgroups
     dates = [dates[i] for i in np.arange(0, len(x), sgSize)]
     if len(sg[-1]) < sgSize:
         sg = sg[0:-1]
@@ -425,7 +418,6 @@ def get_subgroups(x, sgSize, dates):
 
 
 def get_ranges(sg, n):
-
     r = np.zeros(len(sg))
     if n == 1:
         for i in np.arange(1, len(sg)):
@@ -441,7 +433,6 @@ def get_ranges(sg, n):
 
 
 def get_param(sg, xbar, r, bl, n):
-
     d2, d3 = get_dvalues(n)
 
     Ac = [np.mean(xbar[0:bl]), np.mean(xbar[0:bl])]
@@ -453,14 +444,14 @@ def get_param(sg, xbar, r, bl, n):
     Au = [Ac[0] + Afactor, Ac[0] + Afactor]
     Al = [Ac[0] - Afactor, Ac[0] - Afactor]
 
-    Rfactor = (3.0 * d3 / d2)
+    Rfactor = 3.0 * d3 / d2
     Ru = [(1.0 + Rfactor) * Rc[0], (1.0 + Rfactor) * Rc[0]]
     Rl = [(1.0 - Rfactor) * Rc[0], (1.0 - Rfactor) * Rc[0]]
     if Rl[0] < 0.0:
         Rl = [0.0, 0.0]
 
-    sumSq = np.sum(xbar[0:bl]**2)
-    sqSum = np.sum(xbar[0:bl])**2
+    sumSq = np.sum(xbar[0:bl] ** 2)
+    sqSum = np.sum(xbar[0:bl]) ** 2
     stdStat = np.sqrt((bl * sumSq - sqSum) / (bl * (bl - 1)))
 
     Afactor = 3.0 * stdStat
@@ -474,15 +465,52 @@ def get_param(sg, xbar, r, bl, n):
 
 
 def get_dvalues(n):
-
     dtwo = [
-        1.128, 1.128, 1.693, 2.059, 2.326, 2.534, 2.704, 2.847, 2.970, 3.078, 3.173, 3.258, 3.336, 3.407, 3.472, 3.735,
-        3.931, 4.086, 4.322, 4.498, 5.015
+        1.128,
+        1.128,
+        1.693,
+        2.059,
+        2.326,
+        2.534,
+        2.704,
+        2.847,
+        2.970,
+        3.078,
+        3.173,
+        3.258,
+        3.336,
+        3.407,
+        3.472,
+        3.735,
+        3.931,
+        4.086,
+        4.322,
+        4.498,
+        5.015,
     ]  # noqa: #501
 
     dthree = [
-        0.8525, 0.8525, 0.8884, 0.8798, 0.8641, 0.8480, 0.8332, 0.8198, 0.8078, 0.7971, 0.7873, 0.7785, 0.7704, 0.7630,
-        0.7562, 0.7287, 0.7084, 0.6927, 0.6692, 0.6521, 0.6052
+        0.8525,
+        0.8525,
+        0.8884,
+        0.8798,
+        0.8641,
+        0.8480,
+        0.8332,
+        0.8198,
+        0.8078,
+        0.7971,
+        0.7873,
+        0.7785,
+        0.7704,
+        0.7630,
+        0.7562,
+        0.7287,
+        0.7084,
+        0.6927,
+        0.6692,
+        0.6521,
+        0.6052,
     ]  # noqa: #501
 
     ndata = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 40, 50, 100]

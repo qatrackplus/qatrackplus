@@ -25,10 +25,9 @@ class LoginRequiredMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-
         if not request.user.is_authenticated:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in EXEMPT_URLS):
-                login_url = "%s?next=%s" % (settings.LOGIN_URL, quote(request.get_full_path()))
+                login_url = f'{settings.LOGIN_URL}?next={quote(request.get_full_path())}'
                 return HttpResponseRedirect(login_url)
         return self.get_response(request)

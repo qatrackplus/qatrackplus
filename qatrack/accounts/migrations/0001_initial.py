@@ -5,18 +5,15 @@ from django.db import migrations
 
 
 def update_internal_pass(apps, schema):
-    User = apps.get_model("auth", "User")
-    user = User.objects.get(username="QATrack+ Internal")
+    User = apps.get_model('auth', 'User')
+    user = User.objects.get(username='QATrack+ Internal')
     user.password = make_password(User.objects.make_random_password())
     user.save()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0030_auto_20190129_2156'),
     ]
 
-    operations = [
-        migrations.RunPython(update_internal_pass, lambda a, s: None)
-    ]
+    operations = [migrations.RunPython(update_internal_pass, lambda a, s: None)]

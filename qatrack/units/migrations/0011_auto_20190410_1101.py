@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('units', '0010_default_is_serviceable'),
     ]
@@ -13,6 +12,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='unit',
             name='number',
-            field=models.PositiveIntegerField(blank=True, help_text='A unique number for this unit. Leave blank to have it assigned automatically', unique=True),
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text='A unique number for this unit. Leave blank to have it assigned automatically',
+                unique=True,
+            ),
         ),
     ]

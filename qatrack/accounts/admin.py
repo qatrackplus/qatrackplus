@@ -32,7 +32,6 @@ class AdminFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-
         if self.value() == 'yes':
             return queryset.filter(is_staff=True)
 
@@ -43,21 +42,19 @@ class AdminFilter(admin.SimpleListFilter):
 
 
 class QATrackUserAdmin(UserAdmin):
-
     list_filter = (AdminFilter, 'is_superuser', 'is_active', 'groups')
-    list_display = ('username', 'email', 'first_name', 'last_name', "is_admin")
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_admin')
 
     def has_change_permission(self, request, obj=None):
-
-        if obj and obj.username == "QATrack+ Internal":
+        if obj and obj.username == 'QATrack+ Internal':
             return False
 
-        return super(QATrackUserAdmin, self).has_change_permission(request, obj=obj)
+        return super().has_change_permission(request, obj=obj)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=obj, **kwargs)
         if obj and 'is_staff' in form.base_fields:
-            form.base_fields['is_staff'].label = _("Admin Status")
+            form.base_fields['is_staff'].label = _('Admin Status')
 
         return form
 
@@ -67,21 +64,20 @@ class QATrackUserAdmin(UserAdmin):
 
 
 class GroupForm(forms.ModelForm):
-
     default_group = forms.BooleanField(
-        label=_l("Default Group"),
+        label=_l('Default Group'),
         required=False,
-        help_text=_l("Should users be added to this group by default"),
+        help_text=_l('Should users be added to this group by default'),
     )
 
     class Meta:
         model = Group
-        fields = ("name", "permissions", "default_group")
+        fields = ('name', 'permissions', 'default_group')
 
 
 class QATrackGroupAdmin(GroupAdmin):
     form = GroupForm
-    list_display = ("name", "is_default")
+    list_display = ('name', 'is_default')
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj=obj, change=change, **kwargs)
@@ -90,16 +86,15 @@ class QATrackGroupAdmin(GroupAdmin):
         return form
 
     def save_model(self, request, obj, form, change):
-
         super().save_model(request, obj, form, change)
 
-        if form.cleaned_data.get("default_group"):
+        if form.cleaned_data.get('default_group'):
             models.DefaultGroup.objects.get_or_create(group=obj)
         else:
             models.DefaultGroup.objects.filter(group=obj).delete()
 
     def get_queryset(self, *args, **kwargs):
-        return super().get_queryset(*args, **kwargs).prefetch_related("defaultgroup_set")
+        return super().get_queryset(*args, **kwargs).prefetch_related('defaultgroup_set')
 
     @admin.display(boolean=True)
     def is_default(self, obj):
@@ -107,23 +102,22 @@ class QATrackGroupAdmin(GroupAdmin):
 
 
 class ActiveDirectoryGroupMapAdmin(BaseQATrackAdmin):
-
-    list_display = ("get_ad_group", "get_groups", "account_qualifier")
+    list_display = ('get_ad_group', 'get_groups', 'account_qualifier')
     list_filter = (
-        "groups",
-        "account_qualifier",
+        'groups',
+        'account_qualifier',
     )
-    search_fields = ("ad_group", "groups__name")
+    search_fields = ('ad_group', 'groups__name')
 
-    @admin.display(description=_l("QATrack+ Groups"))
+    @admin.display(description=_l('QATrack+ Groups'))
     def get_groups(self, obj):
-        return ', '.join(sorted(obj.groups.values_list("name", flat=True)))
+        return ', '.join(sorted(obj.groups.values_list('name', flat=True)))
 
-    @admin.display(description=_l("Active Directory Group Name"))
+    @admin.display(description=_l('Active Directory Group Name'))
     @mark_safe
     def get_ad_group(self, obj):
         if not obj.ad_group:
-            return '<em>' + _("Default Groups") + "</em>"
+            return '<em>' + _('Default Groups') + '</em>'
         return escape(obj.ad_group)
 
 

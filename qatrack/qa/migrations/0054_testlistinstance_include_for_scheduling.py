@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0053_testlist_test_lists'),
     ]
@@ -13,6 +12,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='testlistinstance',
             name='include_for_scheduling',
-            field=models.BooleanField(default=True, help_text='Should this instance be considered when calculating due dates?'),
+            field=models.BooleanField(
+                default=True, help_text='Should this instance be considered when calculating due dates?'
+            ),
         ),
     ]

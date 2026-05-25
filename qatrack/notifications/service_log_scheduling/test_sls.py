@@ -3,22 +3,20 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
+import qatrack.qa.tests.utils as qa_utils
+import qatrack.service_log.tests.utils as utils
 from qatrack.notifications.models import (
     RecipientGroup,
     ServiceEventSchedulingNotice,
     UnitGroup,
 )
 from qatrack.notifications.service_log_scheduling import admin, tasks
-import qatrack.qa.tests.utils as qa_utils
 from qatrack.qatrack_core.utils import today_start_end
 from qatrack.service_log import models
-import qatrack.service_log.tests.utils as utils
 
 
 class TestServiceEventSchedulingAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.ServiceEventSchedulingAdmin(model=ServiceEventSchedulingNotice, admin_site=AdminSite())
 
@@ -47,79 +45,77 @@ class TestServiceEventSchedulingAdmin(TestCase):
         assert not f.errors
 
     def test_get_notification_type_upcoming(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventSchedulingNotice.objects.create(
             notification_type=ServiceEventSchedulingNotice.UPCOMING,
             future_days=1,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
-        assert "Upcoming Due Dates Only" in self.admin.get_notification_type(n)
+        assert 'Upcoming Due Dates Only' in self.admin.get_notification_type(n)
 
     def test_get_notification_type_upcoming_and_due(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventSchedulingNotice.objects.create(
             notification_type=ServiceEventSchedulingNotice.UPCOMING_AND_DUE,
             future_days=1,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
         assert (
-            "Notify About Scheduled Service Events Currently Due & Overdue, and Upcoming"
+            'Notify About Scheduled Service Events Currently Due & Overdue, and Upcoming'
             in self.admin.get_notification_type(n)
         )
 
     def test_get_notification_type_due(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventSchedulingNotice.objects.create(
             notification_type=ServiceEventSchedulingNotice.DUE,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
         assert n.get_notification_type_display() in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = qa_utils.create_unit(name="Test Unit")
-        ug = UnitGroup.objects.create(name="UG")
+        u = qa_utils.create_unit(name='Test Unit')
+        ug = UnitGroup.objects.create(name='UG')
         ug.units.add(u)
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventSchedulingNotice.objects.create(
             notification_type=ServiceEventSchedulingNotice.DUE,
             units=ug,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert ug.name in self.admin.get_units(n)
 
     def test_get_recipients(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = ServiceEventSchedulingNotice.objects.create(
             notification_type=ServiceEventSchedulingNotice.DUE,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert rg.name in self.admin.get_recipients(n)
 
 
 class TestServiceEventSchedulingModel(TestCase):
-
     def setUp(self):
-
         self.usa1 = utils.create_unit_service_area()
         self.usa2 = utils.create_unit_service_area()
         self.sch1 = utils.create_service_event_schedule(unit_service_area=self.usa1)
         self.sch2 = utils.create_service_event_schedule(unit_service_area=self.usa2)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = models.Group.objects.latest('pk')
         user = models.User.objects.latest('pk')
         user.groups.add(self.group)
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -140,7 +136,7 @@ class TestServiceEventSchedulingModel(TestCase):
             future_days=7,
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1, self.sch2]
 
@@ -155,7 +151,7 @@ class TestServiceEventSchedulingModel(TestCase):
             future_days=7,
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1]
 
@@ -170,7 +166,7 @@ class TestServiceEventSchedulingModel(TestCase):
             future_days=7,
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1]
 
@@ -184,7 +180,7 @@ class TestServiceEventSchedulingModel(TestCase):
             future_days=1,
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1]
 
@@ -199,7 +195,7 @@ class TestServiceEventSchedulingModel(TestCase):
             recipients=self.recipients,
             units=self.unit_group,
             notification_type=ServiceEventSchedulingNotice.UPCOMING,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1]
 
@@ -213,7 +209,7 @@ class TestServiceEventSchedulingModel(TestCase):
         notice = ServiceEventSchedulingNotice.objects.create(
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.ALL,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1, self.sch2]
 
@@ -227,7 +223,7 @@ class TestServiceEventSchedulingModel(TestCase):
         notice = ServiceEventSchedulingNotice.objects.create(
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.DUE,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1]
 
@@ -241,7 +237,7 @@ class TestServiceEventSchedulingModel(TestCase):
         notice = ServiceEventSchedulingNotice.objects.create(
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.DUE,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1, self.sch2]
 
@@ -256,7 +252,7 @@ class TestServiceEventSchedulingModel(TestCase):
             recipients=self.recipients,
             notification_type=ServiceEventSchedulingNotice.UPCOMING_AND_DUE,
             future_days=7,
-            time="0:00",
+            time='0:00',
         )
         assert list(notice.schedules_to_notify()) == [self.sch1, self.sch2]
 
@@ -270,24 +266,22 @@ class TestServiceEventSchedulingModel(TestCase):
 
 
 class TestServiceEventSchedulingEmails(TestCase):
-
     def setUp(self):
-
         self.usa1 = utils.create_unit_service_area()
         self.usa2 = utils.create_unit_service_area()
         self.sch1 = utils.create_service_event_schedule(unit_service_area=self.usa1)
         self.sch2 = utils.create_service_event_schedule(unit_service_area=self.usa2)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = models.Group.objects.latest('pk')
         user = models.User.objects.latest('pk')
         user.groups.add(self.group)
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -297,10 +291,10 @@ class TestServiceEventSchedulingEmails(TestCase):
 
         self.notice = ServiceEventSchedulingNotice.objects.create(
             recipients=self.recipients,
-            recurrences="RRULE:FREQ=DAILY",
+            recurrences='RRULE:FREQ=DAILY',
             notification_type=ServiceEventSchedulingNotice.UPCOMING_AND_DUE,
             future_days=7,
-            time="0:00",
+            time='0:00',
         )
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
@@ -312,7 +306,7 @@ class TestServiceEventSchedulingEmails(TestCase):
         tasks.send_scheduling_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Service Event Scheduling Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Service Event Scheduling Notice:' in mail.outbox[0].subject
 
     def test_send_notice_send_empty(self):
         now = timezone.now()
@@ -321,7 +315,7 @@ class TestServiceEventSchedulingEmails(TestCase):
         tasks.send_scheduling_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Service Event Scheduling Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Service Event Scheduling Notice:' in mail.outbox[0].subject
 
     def test_send_notice_no_send_empty(self):
         tasks.send_scheduling_notice(self.notice.pk)

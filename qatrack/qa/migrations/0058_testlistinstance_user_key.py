@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0057_auto_20200825_2233'),
     ]
@@ -13,6 +12,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='testlistinstance',
             name='user_key',
-            field=models.CharField(blank=True, default=None, help_text='Optional field that can be used to ensure uniqueness when posting results via the API', max_length=255, null=True, unique=True),
+            field=models.CharField(
+                blank=True,
+                default=None,
+                help_text='Optional field that can be used to ensure uniqueness when posting results via the API',
+                max_length=255,
+                null=True,
+                unique=True,
+            ),
         ),
     ]

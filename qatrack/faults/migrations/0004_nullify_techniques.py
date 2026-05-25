@@ -4,13 +4,11 @@ from django.db import migrations
 
 
 def nullify_treatment_techniques(apps, schema):
-
-    Fault = apps.get_model("faults", "Fault")
+    Fault = apps.get_model('faults', 'Fault')
     Fault.objects.update(treatment_technique=None)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('faults', '0003_auto_20210202_1703'),
     ]

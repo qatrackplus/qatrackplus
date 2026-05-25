@@ -1,14 +1,14 @@
-from collections import Counter, defaultdict
 import json
 import logging
 import time
 import uuid
+from collections import Counter, defaultdict
 
+import pytest
 from django.conf import settings
 from django.core.serializers import get_serializer
 from django.db.transaction import atomic
 from django.utils import timezone
-import pytest
 
 from qatrack.qa.utils import get_internal_user
 
@@ -33,12 +33,11 @@ def get_model_map():
 
 
 class TestPackMixin:
-
     def to_testpack(self):
-        s = get_serializer("json")()
+        s = get_serializer('json')()
         to_serialize = list(self.get_testpack_dependencies())
         dependencies = []
-        kwargs = {"use_natural_foreign_keys": True, "use_natural_primary_keys": True}
+        kwargs = {'use_natural_foreign_keys': True, 'use_natural_primary_keys': True}
         for model, qs in to_serialize:
             dependencies += json.loads(s.serialize(qs, fields=model.get_testpack_fields(), **kwargs))
         fields = json.loads(s.serialize([self], fields=self._meta.model.get_testpack_fields(), **kwargs))[0]
@@ -51,7 +50,7 @@ class TestPackMixin:
         raise NotImplementedError
 
 
-def create_testpack(test_lists=None, cycles=None, extra_tests=None, description="", user=None, name="", timeout=0):
+def create_testpack(test_lists=None, cycles=None, extra_tests=None, description='', user=None, name='', timeout=0):
     """
     Take input test lists queryset and cycles queryset and generate a test pack from them.  The
     test pack will includ all objects they depend on.
@@ -68,7 +67,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         },
         'meta': {
             'version': settings.VERSION,
-            'datetime': "%s" % (timezone.now().astimezone(timezone.utc)),
+            'datetime': f'{timezone.now().astimezone(timezone.utc)}',
             'description': description,
             'contact': testpack_user_string(user),
             'name': name,
@@ -76,8 +75,8 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         },
     }
 
-    tests = (extra_tests or models.Test.objects.none()).select_related("category")
-    test_lists = (test_lists or models.TestList.objects.none())
+    tests = (extra_tests or models.Test.objects.none()).select_related('category')
+    test_lists = test_lists or models.TestList.objects.none()
     cycles = cycles or models.TestListCycle.objects.none()
 
     t0 = time.time()
@@ -86,8 +85,8 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         delta = time.time() - t0
         if timeout and timeout > 0 and delta > timeout:
             raise RuntimeError(
-                "Sorry, exporting your TestPack timed out in %ds. Please reduce the "
-                "number of objects in the TestPack and try again" % (int(delta))
+                'Sorry, exporting your TestPack timed out in %ds. Please reduce the '
+                'number of objects in the TestPack and try again' % (int(delta))
             )
 
     for t in tests:
@@ -110,7 +109,7 @@ def testpack_user_string(user):  # pragma: no cover
 
     fname = user.get_full_name()
     if fname and user.email:
-        user = "%s (%s)" % (fname, user.email)
+        user = f'{fname} ({user.email})'
     elif fname:
         user = fname
     elif user.email:
@@ -128,7 +127,7 @@ def save_testpack(pack, fp):
     """
 
     if isinstance(fp, str):  # pragma: no cover
-        fp = open(fp, 'w', encoding="utf-8")
+        fp = open(fp, 'w', encoding='utf-8')
 
     json.dump(pack, fp, indent=2)
 
@@ -163,9 +162,7 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
     # to_import with those objects which the user has requested be created
     to_import = defaultdict(list)
     for model in ['tests', 'testlists', 'testlistcycles']:
-
         for objects in testpack['objects'][model]:
-
             data = json.loads(objects)  # deserialize the object and its dependencies
 
             keys_to_include = model_key_include_map[model]
@@ -206,7 +203,6 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
     # we cann= now create the actual primary records (m2m relationships done below
     extra_kwargs = {'created': created, 'modified': created, 'created_by': user, 'modified_by': user}
     for model_name in ['qa.test', 'qa.testlist', 'qa.testlistcycle']:
-
         seen = set()
         to_create = []
 
@@ -215,7 +211,6 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         model_fields |= set(f.name for f in model._meta.fields)
 
         for obj in to_import[model_name]:
-
             # some objects might be duplicated (e.g. test belonging to multiple
             # test lists). Skip the object if we've already seen it
             nk_vals = tuple(obj[k] for k in model.NK_FIELDS)
@@ -224,7 +219,7 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
             seen.add(nk_vals)
 
             # test is the only object with an extra fk
-            if model_name == "qa.test":
+            if model_name == 'qa.test':
                 obj['category'] = categories[tuple(obj['category'])]
 
             # add extra kwargs and fix natural key conflicts
@@ -238,11 +233,11 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         model.objects.bulk_create(to_create)
 
     # create mapping of natural keys (including freshly created) to object ids
-    test_lists = models.TestList.objects.values_list("id", *models.TestList.NK_FIELDS)
+    test_lists = models.TestList.objects.values_list('id', *models.TestList.NK_FIELDS)
     test_lists = {tuple(f[1:]): f[0] for f in test_lists}
-    tests = models.Test.objects.values_list("id", *models.Test.NK_FIELDS)
+    tests = models.Test.objects.values_list('id', *models.Test.NK_FIELDS)
     tests = {tuple(f[1:]): f[0] for f in tests}
-    cycles = models.TestListCycle.objects.values_list("id", *models.TestListCycle.NK_FIELDS)
+    cycles = models.TestListCycle.objects.values_list('id', *models.TestListCycle.NK_FIELDS)
     cycles = {tuple(f[1:]): f[0] for f in cycles}
 
     m2ms = [
@@ -252,7 +247,6 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
     ]
 
     for mname, parent_attr, parent_model, parent_objs, child_attr, child_model, child_objs in m2ms:
-
         to_create = []
         seen = set()
         model = model_map[mname]
@@ -260,14 +254,13 @@ def add_testpack(serialized_pack, user=None, test_keys=None, test_list_keys=None
         model_fields |= set(f.name for f in model._meta.fields)
 
         for obj in to_import[mname]:
-
             # keys used to lookup FK object ids
             parent_key = nk_lookups[parent_model][tuple(obj[parent_attr])]
             child_key = nk_lookups[child_model][tuple(obj[child_attr])]
 
             # use the fk__id  attributes rather than the fk attribute itself
-            obj['%s_id' % parent_attr] = parent_objs[parent_key]
-            obj['%s_id' % child_attr] = child_objs[child_key]
+            obj[f'{parent_attr}_id'] = parent_objs[parent_key]
+            obj[f'{child_attr}_id'] = child_objs[child_key]
             del obj[parent_attr]
             del obj[child_attr]
             if tuple(obj.items()) in seen:
@@ -288,7 +281,7 @@ def find_next_available(fields, existing):
     i = 1
     orig = tuple(fields)
     while fields in existing:
-        fields = tuple("%s-%d" % (f, i) for f in orig)
+        fields = tuple('%s-%d' % (f, i) for f in orig)
         i += 1
     return tuple(fields)
 
@@ -297,6 +290,6 @@ def load_testpack(fp, user=None, test_keys=None, test_list_keys=None, cycle_keys
     """Takes a file like object or path and loads the test pack into the database."""
 
     if isinstance(fp, str):  # pragma: no cover
-        fp = open(fp, 'r', encoding="utf-8")
+        fp = open(fp, encoding='utf-8')
 
     add_testpack(fp.read(), user, test_keys, test_list_keys, cycle_keys)

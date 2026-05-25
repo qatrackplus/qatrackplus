@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0054_testlistinstance_include_for_scheduling'),
     ]
@@ -13,6 +12,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='test',
             name='require_comment',
-            field=models.BooleanField(default=False, help_text='Require users to enter a comment when submitting this test.', verbose_name='Require Comment'),
+            field=models.BooleanField(
+                default=False,
+                help_text='Require users to enter a comment when submitting this test.',
+                verbose_name='Require Comment',
+            ),
         ),
     ]

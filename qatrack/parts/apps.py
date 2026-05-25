@@ -4,4 +4,4 @@ from django.utils.translation import gettext_lazy as _l
 
 class PartsConfig(AppConfig):
     name = 'qatrack.parts'
-    verbose_name = _l("Parts") 
+    verbose_name = _l('Parts')

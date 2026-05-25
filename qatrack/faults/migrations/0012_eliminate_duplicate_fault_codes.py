@@ -4,16 +4,16 @@ import logging
 
 from django.db import migrations
 
-logger = logging.getLogger("qatrack.migrations")
+logger = logging.getLogger('qatrack.migrations')
 
 
 def eliminate_duplicate_fault_types(apps, schema):
     """Search for duplicate fault codes and adjust  the code so they're unique"""
 
-    FaultType = apps.get_model("faults", "FaultType")
+    FaultType = apps.get_model('faults', 'FaultType')
     duplicates = {}
 
-    for fault_type in FaultType.objects.order_by("code"):
+    for fault_type in FaultType.objects.order_by('code'):
         if fault_type.code not in duplicates:
             duplicates[fault_type.code] = []
         else:
@@ -22,23 +22,19 @@ def eliminate_duplicate_fault_types(apps, schema):
     name_change_needed = {code: fts for (code, fts) in duplicates.items() if len(fts) > 0}
 
     for code, fault_types in name_change_needed.items():
-
         for fault_type in fault_types:
             next_digit = 1
-            fault_type.code = fault_type.code + " (1)"
+            fault_type.code = fault_type.code + ' (1)'
             while FaultType.objects.filter(code=fault_type.code).exists():
                 last_digit = next_digit
                 next_digit += 1
-                fault_type.code = fault_type.code.replace(f"({last_digit})", f"({next_digit})")
+                fault_type.code = fault_type.code.replace(f'({last_digit})', f'({next_digit})')
 
             fault_type.save()
-            logger.info(
-                f"The Fault Type with ID {fault_type.id} had its code renamed from {code} to {fault_type.code}"
-            )
+            logger.info(f'The Fault Type with ID {fault_type.id} had its code renamed from {code} to {fault_type.code}')
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('faults', '0011_auto_20210406_1026'),
     ]

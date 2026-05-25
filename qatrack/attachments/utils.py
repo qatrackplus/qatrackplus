@@ -1,14 +1,13 @@
 import io
 import os
 
-from PIL import Image
 import imageio
-from matplotlib.figure import Figure
 import pydicom
+from matplotlib.figure import Figure
+from PIL import Image
 
 
 def imsave(obj, fname):
-
     def reseek(obj, data):
         try:
             obj.seek(0)
@@ -50,8 +49,8 @@ def imsave(obj, fname):
 
 def figure_to_bytes(obj, fname):
     fmt = os.path.splitext(fname)[-1].strip('.')
-    if fmt not in ["png", "pdf", "ps", "eps", "svg"]:
-        fmt = "png"
+    if fmt not in ['png', 'pdf', 'ps', 'eps', 'svg']:
+        fmt = 'png'
 
     dat = io.BytesIO()
     obj.savefig(dat, format=fmt)
@@ -60,11 +59,10 @@ def figure_to_bytes(obj, fname):
 
 
 def get_mpl_figure(obj):
-
     if isinstance(obj, Figure):
         return obj
 
-    if hasattr(obj, "figure") and isinstance(obj.figure, Figure):
+    if hasattr(obj, 'figure') and isinstance(obj.figure, Figure):
         # mpl plot, canvas, axes etc
         return obj.figure
     else:
@@ -74,7 +72,7 @@ def get_mpl_figure(obj):
         except (TypeError, IndexError, AttributeError):
             pass
 
-    if hasattr(obj, "gcf"):
+    if hasattr(obj, 'gcf'):
         try:
             cf = obj.gcf()
             if isinstance(cf, Figure):
@@ -82,20 +80,19 @@ def get_mpl_figure(obj):
         except TypeError:
             pass
 
-    if hasattr(obj, "gca"):
+    if hasattr(obj, 'gca'):
         try:
             ca = obj.gca()
-            if hasattr(ca, "figure") and isinstance(ca.figure, Figure):
+            if hasattr(ca, 'figure') and isinstance(ca.figure, Figure):
                 return ca.figure
         except TypeError:
             pass
 
 
 def to_bytes(obj, fname=None):
-
-    if hasattr(obj, "read"):
+    if hasattr(obj, 'read'):
         # read from file like objects for handling bytes/string below
-        if hasattr(obj, "seek"):
+        if hasattr(obj, 'seek'):
             obj.seek(0)
         obj = obj.read()
 
@@ -103,10 +100,10 @@ def to_bytes(obj, fname=None):
         return obj
 
     if isinstance(obj, str):
-        return bytes(obj, "UTF-8")
+        return bytes(obj, 'UTF-8')
 
     # numpy array
-    if hasattr(obj, "tobytes"):
+    if hasattr(obj, 'tobytes'):
         return obj.tobytes()
 
     mpl_fig = get_mpl_figure(obj)
@@ -118,4 +115,4 @@ def to_bytes(obj, fname=None):
     except TypeError:
         pass
 
-    return bytes()
+    return b''

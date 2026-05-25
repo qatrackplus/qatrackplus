@@ -1,9 +1,10 @@
 import csv
 import datetime
-from io import BytesIO, StringIO
 import json
+from io import BytesIO, StringIO
 from urllib.parse import quote_plus
 
+import xlsxwriter
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.http import Http404, HttpResponse
@@ -14,74 +15,71 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-import xlsxwriter
 
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
-from qatrack.qatrack_core.utils import chrometopdf, weasyprint_to_pdf, relative_dates
+from qatrack.qatrack_core.utils import chrometopdf, relative_dates, weasyprint_to_pdf
 
-CSV = "csv"
-XLS = "xlsx"
-PDF = "pdf"
+CSV = 'csv'
+XLS = 'xlsx'
+PDF = 'pdf'
 
 REPORT_REGISTRY = {}
 CONTENT_TYPES = {
-    CSV: "text/csv",
-    PDF: "application/pdf",
-    XLS: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    CSV: 'text/csv',
+    PDF: 'application/pdf',
+    XLS: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 }
 ORDERED_CONTENT_TYPES = [CSV, PDF, XLS]
 
 
 def register_class(target_class):
     if target_class.__name__ in REPORT_REGISTRY:  # pragma: nocover
-        msg = "Trying to register %s but a class with the name %s already exists in the report registry" % (
-            target_class, target_class.__name__
-        )
+        msg = f'Trying to register {target_class} but a class with the name {target_class.__name__} already exists in the report registry'
         raise ValueError(msg)
     REPORT_REGISTRY[target_class.__name__] = target_class
 
 
 def format_user(user):
     if not user:
-        return ""
+        return ''
 
-    return user.username if not user.email else mark_safe(
-        '%s (<a href="mailto:%s">%s</a>)' % (user.username, user.email, user.email)
+    return (
+        user.username
+        if not user.email
+        else mark_safe(f'{user.username} (<a href="mailto:{user.email}">{user.email}</a>)')
     )
 
 
 class ReportMeta(type):
-
-    required = ["to_table"]
+    required = ['to_table']
 
     def __new__(meta, name, bases, class_dict):
         cls = type.__new__(meta, name, bases, class_dict)
         register_class(cls)
 
-        if name != "BaseReport":
+        if name != 'BaseReport':
             missing = []
             for req in meta.required:
                 if req not in cls.__dict__ and not any(req in b.__dict__ for b in bases):
                     missing.append(req)
 
             if missing:
-                raise TypeError("%s is missing the following required methods: %s" % (name, ', '.join(missing)))
+                raise TypeError('{} is missing the following required methods: {}'.format(name, ', '.join(missing)))
         return cls
 
 
-class BaseReport(object, metaclass=ReportMeta):
-
+class BaseReport(metaclass=ReportMeta):
     filter_class = None
-    category = _l("General")
-    description = _l("Generic QATrack+ Report")
-    name = ""
-    report_type = ""
+    category = _l('General')
+    description = _l('Generic QATrack+ Report')
+    name = ''
+    report_type = ''
     extra_form = None
     formats = [PDF, XLS, CSV]
 
     def __init__(self, base_opts=None, report_opts=None, notes=None, user=None):
         """base_opts is dict of form:
-            {'report_id': <rid|None>, 'include_signature': <bool>, 'title': str} """
+        {'report_id': <rid|None>, 'include_signature': <bool>, 'title': str}"""
 
         self.user = user
         self.base_opts = base_opts or {}
@@ -110,19 +108,19 @@ class BaseReport(object, metaclass=ReportMeta):
         return True
 
     def get_template(self, using=None):
-        t = getattr(self, "template", "reports/html_report.html")
+        t = getattr(self, 'template', 'reports/html_report.html')
         return get_template(t, using=using)
 
     def get_filename(self, report_format):
-        return "%s.%s" % (slugify(self.name or "QATrack Report"), report_format)
+        return '{}.{}'.format(slugify(self.name or 'QATrack Report'), report_format)
 
     def render(self, report_format):
         self.report_format = report_format
         try:
-            content = getattr(self, "to_%s" % report_format)()
+            content = getattr(self, f'to_{report_format}')()
         except AttributeError as e:  # pragma: nocover
             if report_format in str(e):
-                raise Http404("Unknown report format %s" % report_format)
+                raise Http404(f'Unknown report format {report_format}')
             else:
                 raise
         return self.get_filename(report_format), content
@@ -130,7 +128,7 @@ class BaseReport(object, metaclass=ReportMeta):
     def render_to_response(self, report_format):
         fname, content = self.render(report_format)
         response = HttpResponse(content, content_type=CONTENT_TYPES[report_format])
-        response['Content-Disposition'] = 'attachment; filename="%s"' % fname
+        response['Content-Disposition'] = f'attachment; filename="{fname}"'
         return response
 
     @property
@@ -148,50 +146,50 @@ class BaseReport(object, metaclass=ReportMeta):
         return {
             'STATIC_ROOT': settings.STATIC_ROOT,
             'site': Site.objects.get_current(),
-            'content': "",
+            'content': '',
             'protocol': settings.HTTP_OR_HTTPS,
             'report_name': name,
             'report_description': self.description,
             'report_type': self.get_report_type(),
-            'report_format': getattr(self, "report_format", "html"),
-            'report_title': self.base_opts.get("title", name),
+            'report_format': getattr(self, 'report_format', 'html'),
+            'report_title': self.base_opts.get('title', name),
             'report_url': self.get_report_url(),
             'report_details': self.get_report_details(),
             'notes': self.notes,
             'queryset': self.filter_set.qs if self.filter_set else None,
-            'include_signature': self.base_opts.get("include_signature", False),
-            'include_logo': self.base_opts.get("include_logo", True),
-            'paper_size': self.base_opts.get("paper_size", "letter"),
+            'include_signature': self.base_opts.get('include_signature', False),
+            'include_logo': self.base_opts.get('include_logo', True),
+            'paper_size': self.base_opts.get('paper_size', 'letter'),
         }
 
     def make_url(self, url, text='', title='', plain=False):
-
-        slash = "/" if not (self.domain.endswith("/") or url.startswith("/")) else ""
-        full_url = "%s://%s%s%s" % (
+        slash = '/' if not (self.domain.endswith('/') or url.startswith('/')) else ''
+        full_url = '{}://{}{}{}'.format(
             settings.HTTP_OR_HTTPS,
             self.domain,
             slash,
-            url[1:] if (self.domain.endswith("/") and url.startswith("/")) else url,
+            url[1:] if (self.domain.endswith('/') and url.startswith('/')) else url,
         )
         if plain or self.plain:
             return full_url
 
-        return mark_safe('<a href="%s" title="%s">%s</a>' % (full_url, title, text))
+        return mark_safe(f'<a href="{full_url}" title="{title}">{text}</a>')
 
     def get_report_url(self):
         from qatrack.reports.forms import serialize_report
+
         domain = Site.objects.get_current().domain
-        base_url = '%s://%s%s' % (settings.HTTP_OR_HTTPS, domain, reverse("reports"))
+        base_url = '{}://{}{}'.format(settings.HTTP_OR_HTTPS, domain, reverse('reports'))
 
         if self.base_opts.get('report_id'):
-            return "%s?report_id=%s" % (base_url, self.base_opts['report_id'])
+            return '{}?report_id={}'.format(base_url, self.base_opts['report_id'])
 
         opts = serialize_report(self)
-        return "%s?opts=%s" % (base_url, quote_plus(json.dumps(opts)))
+        return f'{base_url}?opts={quote_plus(json.dumps(opts))}'
 
     @property
     def domain(self):
-        if not hasattr(self, "_domain"):
+        if not hasattr(self, '_domain'):
             self._domain = Site.objects.get_current().domain
         return self._domain
 
@@ -202,7 +200,6 @@ class BaseReport(object, metaclass=ReportMeta):
         return self.report_type
 
     def get_report_details(self):
-
         if self.filter_set is None:
             return []
 
@@ -211,12 +208,12 @@ class BaseReport(object, metaclass=ReportMeta):
         details = []
         for name, field in form.fields.items():
             val = form.cleaned_data.get(name)
-            getter = getattr(self, "get_%s_details" % name, None)
+            getter = getattr(self, f'get_{name}_details', None)
             if getter:
                 try:
                     label, field_details = getter(val)
                 except ValueError:  # pragma: no cover
-                    raise ValueError("get_%s_details should return a 2-tuple of form (label:str, details:str)" % name)
+                    raise ValueError(f'get_{name}_details should return a 2-tuple of form (label:str, details:str)')
 
                 details.append((label, field_details))
             else:
@@ -228,13 +225,13 @@ class BaseReport(object, metaclass=ReportMeta):
         """Take a value and return as a formatted string based on its type"""
 
         if val is None:
-            msg = "No Filter"
-            return "<em>%s</em>" % msg if self.report_format not in [XLS, CSV] else msg
+            msg = 'No Filter'
+            return f'<em>{msg}</em>' if self.report_format not in [XLS, CSV] else msg
 
         if isinstance(val, str):
             if val.lower() in relative_dates.ALL_DATE_RANGES:
                 start, end = relative_dates(val).range()
-                return "%s (%s - %s)" % (val, format_as_date(start), format_as_date(end))
+                return f'{val} ({format_as_date(start)} - {format_as_date(end)})'
             return val
 
         if isinstance(val, timezone.datetime):
@@ -242,7 +239,7 @@ class BaseReport(object, metaclass=ReportMeta):
 
         try:
             if len(val) > 0 and isinstance(val[0], timezone.datetime):
-                joiner = " - " if len(val) == 2 else ", "
+                joiner = ' - ' if len(val) == 2 else ', '
                 return joiner.join(format_as_date(dt) for dt in val)
         except:  # noqa: E722  # pragma: no cover
             pass
@@ -255,34 +252,36 @@ class BaseReport(object, metaclass=ReportMeta):
         return str(val)
 
     def to_html(self):
-        self.report_format = "html"
+        self.report_format = 'html'
         context = self.get_context()
-        context['base_template'] = "reports/html_report.html"
+        context['base_template'] = 'reports/html_report.html'
         template = self.get_template(using=None)
         return template.render(context)
 
     def to_pdf(self):
-        fname = self.get_filename("pdf")
+        fname = self.get_filename('pdf')
         context = self.get_context()
-        context['base_template'] = "reports/pdf_report.html"
+        context['base_template'] = 'reports/pdf_report.html'
         template = self.get_template(using=None)
         content = template.render(context)
         paper_size = context.get('paper_size', 'letter')
-        
+
         # Use WeasyPrint for paper size support
         try:
             return weasyprint_to_pdf(content, name=fname, paper_size=paper_size)
         except ImportError:
             # WeasyPrint not available, fall back to Chrome
             import logging
+
             logger = logging.getLogger(__name__)
-            logger.warning("WeasyPrint not available, falling back to Chrome")
+            logger.warning('WeasyPrint not available, falling back to Chrome')
             return chrometopdf(content, name=fname, paper_size=paper_size)
         except Exception as e:
             # WeasyPrint failed for some other reason, fall back to Chrome
             import logging
+
             logger = logging.getLogger(__name__)
-            logger.warning(f"WeasyPrint failed, falling back to Chrome: {e}")
+            logger.warning(f'WeasyPrint failed, falling back to Chrome: {e}')
             return chrometopdf(content, name=fname, paper_size=paper_size)
 
     def to_csv(self):
@@ -298,14 +297,13 @@ class BaseReport(object, metaclass=ReportMeta):
         context = self.get_context()
         f = BytesIO()
         wb = xlsxwriter.Workbook(f, {'in_memory': True})
-        ws = wb.add_worksheet(name="Report")
+        ws = wb.add_worksheet(name='Report')
         row = 0
         col = 0
         for data_row in self.to_table(context):
             for data in data_row:
-
                 # excel doesn't like urls longer than 255 chars, so write as string instead
-                if isinstance(data, str) and "http" in data and len(data) > 255:
+                if isinstance(data, str) and 'http' in data and len(data) > 255:
                     ws.write_string(row, col, data)
                 elif isinstance(data, timezone.datetime):
                     ws.write_string(row, col, format_datetime(data))
@@ -328,34 +326,34 @@ class BaseReport(object, metaclass=ReportMeta):
     def to_table(self, context):
         """This function should be overridden in subclasses and then used like
 
-            class FooReport(BaseReport):
-                ...
-                def to_table(self, context):
+        class FooReport(BaseReport):
+            ...
+            def to_table(self, context):
 
-                    # get default rows including description/filters etc
-                    rows = super().to_table()
+                # get default rows including description/filters etc
+                rows = super().to_table()
 
-                    # report specific data
-                    rows += [
-                        [...],
-                    ]
+                # report specific data
+                rows += [
+                    [...],
+                ]
         """
 
         rows = [
-            [_("Report Title:"), context['report_title']],
-            [_("View On Site:"), self.get_report_url()],
-            [_("Report Type:"), context['report_name']],
-            [_("Report Description:"), context['report_description']],
-            [_("Generated:"), format_datetime(timezone.now())],
+            [_('Report Title:'), context['report_title']],
+            [_('View On Site:'), self.get_report_url()],
+            [_('Report Type:'), context['report_name']],
+            [_('Report Description:'), context['report_description']],
+            [_('Generated:'), format_datetime(timezone.now())],
             [],
-            ["Filters:"],
+            ['Filters:'],
         ]
 
         for label, criteria in context['report_details']:
-            rows.append([label + ":", criteria])
+            rows.append([label + ':', criteria])
 
-        if context.get("notes"):
-            rows.append(["Notes:"])
+        if context.get('notes'):
+            rows.append(['Notes:'])
             for note in context['notes']:
                 rows.append([note['heading'], note['content']])
 
@@ -364,7 +362,7 @@ class BaseReport(object, metaclass=ReportMeta):
 
 def report_types():
     """Return all report classes in the report registry"""
-    return [ReportClass for name, ReportClass in REPORT_REGISTRY.items() if name != "BaseReport"]
+    return [ReportClass for name, ReportClass in REPORT_REGISTRY.items() if name != 'BaseReport']
 
 
 def report_descriptions():
@@ -382,7 +380,7 @@ def report_class(report_type):
     for r in report_types():
         if r.report_type == report_type:
             return r
-    raise ValueError("Report class '%s' not found" % report_type)
+    raise ValueError(f"Report class '{report_type}' not found")
 
 
 def report_categories():

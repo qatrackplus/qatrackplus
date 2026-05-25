@@ -40,7 +40,6 @@ from qatrack.units.models import Unit
 
 
 class FaultList(BaseListableView):
-
     model = models.Fault
     template_name = 'faults/fault_list.html'
     paginate_by = 50
@@ -50,12 +49,12 @@ class FaultList(BaseListableView):
     headers = {
         'actions': _l('Actions'),
         'get_id': _l('ID'),
-        'get_fault_types': _l("Fault Types"),
-        'get_fault_types_descriptions': _l("Description"),
-        'unit__site__name': _l("Site"),
-        'unit__name': _l("Unit"),
-        'modality__name': _l("Modality"),
-        'get_occurred': _l("Occurred On"),
+        'get_fault_types': _l('Fault Types'),
+        'get_fault_types_descriptions': _l('Description'),
+        'unit__site__name': _l('Site'),
+        'unit__name': _l('Unit'),
+        'modality__name': _l('Modality'),
+        'get_occurred': _l('Occurred On'),
     }
 
     widgets = {
@@ -87,24 +86,24 @@ class FaultList(BaseListableView):
     }
 
     date_ranges = {
-        "occurred": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
-        "review_status": [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
+        'occurred': [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
+        'review_status': [TODAY, YESTERDAY, THIS_WEEK, LAST_14_DAYS, THIS_MONTH, THIS_YEAR],
     }
 
     select_related = [
-        "unit__site",
-        "unit",
-        "modality",
-        "created_by",
-        "modified_by",
+        'unit__site',
+        'unit',
+        'modality',
+        'created_by',
+        'modified_by',
     ]
 
     prefetch_related = [
-        "fault_types",
-        "faultreviewinstance_set",
-        "faultreviewinstance_set__reviewed_by",
-        "faultreviewinstance_set__fault_review_group__group",
-        "comments",
+        'fault_types',
+        'faultreviewinstance_set',
+        'faultreviewinstance_set__reviewed_by',
+        'faultreviewinstance_set__fault_review_group__group',
+        'comments',
     ]
 
     def __init__(self, *args, **kwargs):
@@ -113,15 +112,19 @@ class FaultList(BaseListableView):
         # Store templates on view initialization so we don't have to reload them for every row!
         self.templates = {
             'actions': get_template('faults/fault_actions.html'),
-            'occurred': get_template("faults/fault_occurred.html"),
-            'review_status': get_template("faults/fault_review_status.html"),
-            'fault_types': get_template("faults/fault_types.html"),
-            'fault_types_descriptions': get_template("faults/fault_types_descriptions.html"),
+            'occurred': get_template('faults/fault_occurred.html'),
+            'review_status': get_template('faults/fault_review_status.html'),
+            'fault_types': get_template('faults/fault_types.html'),
+            'fault_types_descriptions': get_template('faults/fault_types_descriptions.html'),
         }
 
     def get_queryset(self):
-        return super().get_queryset().annotate(
-            review_count=Max("faultreviewinstance"),
+        return (
+            super()
+            .get_queryset()
+            .annotate(
+                review_count=Max('faultreviewinstance'),
+            )
         )
 
     def get_context_data(self, *args, **kwargs):
@@ -129,36 +132,34 @@ class FaultList(BaseListableView):
         current_url = resolve(self.request.path_info).url_name
         context['icon'] = 'fa-exclamation-triangle'
         context['view_name'] = current_url
-        context['page_title'] = _l("All Faults")
+        context['page_title'] = _l('All Faults')
         return context
 
     def get_fields(self, request=None):
-
         fields = (
-            "actions",
-            "id",
-            "get_occurred",
-            "get_fault_types",
-            "get_fault_types_descriptions",
+            'actions',
+            'id',
+            'get_occurred',
+            'get_fault_types',
+            'get_fault_types_descriptions',
         )
 
-        multiple_sites = len(set(Unit.objects.values_list("site_id"))) > 1
+        multiple_sites = len(set(Unit.objects.values_list('site_id'))) > 1
         if multiple_sites:
-            fields += ("unit__site__name",)
+            fields += ('unit__site__name',)
 
         fields += (
-            "unit__name",
-            "modality__name",
-            "review_status",
+            'unit__name',
+            'modality__name',
+            'review_status',
         )
         return fields
 
     def get_filters(self, field, queryset=None):
-
         filters = super().get_filters(field, queryset=queryset)
 
         if field == 'unit__site__name':
-            filters = [(NONEORNULL, _("Other")) if f == (NONEORNULL, 'None') else f for f in filters]
+            filters = [(NONEORNULL, _('Other')) if f == (NONEORNULL, 'None') else f for f in filters]
 
         return filters
 
@@ -191,13 +192,12 @@ class FaultList(BaseListableView):
 
 
 class UnreviewedFaultList(FaultList):
-
     headers = FaultList.headers
-    headers["selected"] = mark_safe(
-        '<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")
+    headers['selected'] = mark_safe(
+        '<input type="checkbox" class="test-selected-toggle" title="{}"/>'.format(_('Select All'))
     )
     search_fields = FaultList.search_fields
-    search_fields["selected"] = False
+    search_fields['selected'] = False
     order_fields = FaultList.order_fields
     order_fields['selected'] = False
 
@@ -207,30 +207,29 @@ class UnreviewedFaultList(FaultList):
     def get_fields(self, request=None):
         fields = super().get_fields(request=request)
         if settings.REVIEW_BULK:
-            fields += ("selected",)
+            fields += ('selected',)
 
         return fields
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" data-fault="%s" title="%s"/>' % (
+        return '<input type="checkbox" class="test-selected" data-fault="{}" title="{}"/>'.format(
             obj.id,
-            _("Check to include this fault bulk setting approval statuses"),
+            _('Check to include this fault bulk setting approval statuses'),
         )
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['page_title'] = _l("Unreviewed Faults")
+        context['page_title'] = _l('Unreviewed Faults')
         context['bulk_review'] = settings.REVIEW_BULK
         return context
 
 
 class CreateFault(PermissionRequiredMixin, CreateView):
-
     model = models.Fault
     template_name = 'faults/fault_form.html'
     form_class = forms.FaultForm
 
-    permission_required = "faults.add_fault"
+    permission_required = 'faults.add_fault'
     raise_exception = True
 
     def get_form_kwargs(self):
@@ -241,7 +240,6 @@ class CreateFault(PermissionRequiredMixin, CreateView):
 
     @atomic
     def form_valid(self, form):
-
         context = self.get_context_data()
         reviews_valid = all(f.is_valid() for f in context['review_forms'])
         if not reviews_valid:
@@ -256,29 +254,28 @@ class CreateFault(PermissionRequiredMixin, CreateView):
         context_data = super().get_context_data(*args, **kwargs)
         context_data['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
         if self.request.method == 'POST':
-            data_key = "%s-related_service_events" % context_data['form'].prefix
+            data_key = '{}-related_service_events'.format(context_data['form'].prefix)
             qs = sl_models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist(data_key))
             context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
         else:
             context_data['se_statuses'] = {}
 
-        frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
+        frgs = models.FaultReviewGroup.objects.order_by('-required', 'group__name')
         context_data['review_forms'] = []
         for idx, frg in enumerate(frgs):
-            prefix = "review-form-%d" % idx
-            data = self.request.POST if self.request.method == "POST" else None
+            prefix = 'review-form-%d' % idx
+            data = self.request.POST if self.request.method == 'POST' else None
             frg_form = forms.InlineReviewForm(data, fault_review_group=frg, prefix=prefix)
             context_data['review_forms'].append(frg_form)
         return context_data
 
 
 class EditFault(PermissionRequiredMixin, UpdateView):
-
     model = models.Fault
     template_name = 'faults/fault_form.html'
     form_class = forms.FaultForm
 
-    permission_required = "faults.change_fault"
+    permission_required = 'faults.change_fault'
     raise_exception = True
 
     def get_form_kwargs(self):
@@ -289,7 +286,6 @@ class EditFault(PermissionRequiredMixin, UpdateView):
 
     @atomic
     def form_valid(self, form):
-
         context = self.get_context_data()
 
         reviews_valid = all(f.is_valid() for f in context['review_forms'])
@@ -300,7 +296,6 @@ class EditFault(PermissionRequiredMixin, UpdateView):
 
         reviewed = timezone.now()
         for review_form in context['review_forms']:
-
             frg = models.FaultReviewGroup.objects.filter(
                 group__name=review_form.cleaned_data['group'],
             ).first()
@@ -331,7 +326,7 @@ class EditFault(PermissionRequiredMixin, UpdateView):
         context_data['status_tag_colours'] = sl_models.ServiceEventStatus.get_colour_dict()
         context_data['se_statuses'] = {}
         if self.request.method == 'POST':
-            data_key = "%s-related_service_events" % context_data['form'].prefix
+            data_key = '{}-related_service_events'.format(context_data['form'].prefix)
             qs = sl_models.ServiceEvent.objects.filter(pk__in=self.request.POST.getlist(data_key))
             context_data['se_statuses'] = {se.id: se.service_status.id for se in qs}
         elif self.object:
@@ -339,7 +334,7 @@ class EditFault(PermissionRequiredMixin, UpdateView):
                 se.id: se.service_status.id for se in self.object.related_service_events.all()
             }
 
-        frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
+        frgs = models.FaultReviewGroup.objects.order_by('-required', 'group__name')
 
         # if there are existing reviews we will use those to populate the initial data
         fris = {}
@@ -348,8 +343,8 @@ class EditFault(PermissionRequiredMixin, UpdateView):
 
         context_data['review_forms'] = []
         for idx, frg in enumerate(frgs):
-            data = self.request.POST if self.request.method == "POST" else None
-            prefix = "review-form-%d" % idx
+            data = self.request.POST if self.request.method == 'POST' else None
+            prefix = 'review-form-%d' % idx
             instance = fris.get(frg.group.name)
             frg_form = forms.InlineReviewForm(data, instance=instance, fault_review_group=frg, prefix=prefix)
             context_data['review_forms'].append(frg_form)
@@ -358,20 +353,19 @@ class EditFault(PermissionRequiredMixin, UpdateView):
 
 
 class DeleteFault(PermissionRequiredMixin, DeleteView):
-
-    permission_required = "faults.delete_fault"
+    permission_required = 'faults.delete_fault'
     raise_exception = True
 
     model = models.Fault
 
     def get_success_url(self):
-        return self.request.GET.get("next", reverse("fault_list"))
+        return self.request.GET.get('next', reverse('fault_list'))
 
     @atomic
     def delete(self, request, *args, **kwargs):
         Comment.objects.for_model(models.Fault).filter(object_pk=kwargs['pk']).delete()
         res = super().delete(self, request, *args, **kwargs)
-        messages.success(request, _("Successfully deleted Fault {fault_id}").format(fault_id=kwargs['pk']))
+        messages.success(request, _('Successfully deleted Fault {fault_id}').format(fault_id=kwargs['pk']))
         return res
 
 
@@ -380,10 +374,10 @@ def fault_create_ajax(request):
 
     form = forms.FaultForm(request.POST)
 
-    frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
+    frgs = models.FaultReviewGroup.objects.order_by('-required', 'group__name')
     review_forms = []
     for idx, frg in enumerate(frgs):
-        prefix = "review-form-%d" % idx
+        prefix = 'review-form-%d' % idx
         frg_form = forms.InlineReviewForm(request.POST, fault_review_group=frg, prefix=prefix)
         review_forms.append(frg_form)
 
@@ -393,10 +387,10 @@ def fault_create_ajax(request):
         fault = save_valid_fault_form(form, request)
         save_valid_review_forms(review_forms, fault)
         fault_id = fault.id
-        msg = _("Fault ID %d was created" % fault_id)
+        msg = _('Fault ID %d was created' % fault_id)
     else:
         fault_id = None
-        msg = _("Please resolve the errors below and submit again")
+        msg = _('Please resolve the errors below and submit again')
 
     results = {
         'error': fault_id is None,
@@ -425,7 +419,7 @@ def save_valid_fault_form(form, request):
             user=request.user,
             content_object=fault,
             comment=comment,
-            site=get_current_site(request)
+            site=get_current_site(request),
         )
         comment.save()
 
@@ -442,10 +436,10 @@ def save_valid_fault_form(form, request):
     for f in request.FILES.getlist('fault-attachments'):
         Attachment.objects.create(
             attachment=f,
-            comment="Uploaded %s by %s" % (timezone.now(), request.user.username),
+            comment=f'Uploaded {timezone.now()} by {request.user.username}',
             label=f.name,
             fault=fault,
-            created_by=request.user
+            created_by=request.user,
         )
 
     a_ids = [a for a in request.POST.getlist('fault-attachments_delete_ids', '') if a]
@@ -478,12 +472,12 @@ def fault_type_autocomplete(request):
     exist, return it as a first option so user can select it and have it
     created when they submit the form."""
 
-    q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, "").lower()
+    q = request.GET.get('q', '').replace(forms.NEW_FAULT_TYPE_MARKER, '').lower()
     qs = models.FaultType.objects.filter(
         Q(code__icontains=q) | Q(code__icontains=q.strip()),
-    ).order_by("code")
+    ).order_by('code')
 
-    qs = qs.values_list("id", "code", "description")
+    qs = qs.values_list('id', 'code', 'description')
 
     results = []
 
@@ -491,16 +485,16 @@ def fault_type_autocomplete(request):
     for ft_id, code, description in qs:
         code = code
         description = description or ''
-        text = "%s: %s" % (code, truncatechars(description, 80)) if description else code
+        text = f'{code}: {truncatechars(description, 80)}' if description else code
         if code.lower() == q.strip():
             exact_match = {'id': code, 'code': code, 'text': text, 'description': description}
         else:
             results.append({'id': code, 'text': text, 'description': description, 'code': code})
 
     new_option = q and exact_match is None
-    if new_option and request.user.has_perm("faults.add_faulttype"):
+    if new_option and request.user.has_perm('faults.add_faulttype'):
         # allow user to create a new match
-        new_result = {'id': "%s%s" % (forms.NEW_FAULT_TYPE_MARKER, q), 'text': "*%s*" % q, 'code': q, 'description': ''}
+        new_result = {'id': f'{forms.NEW_FAULT_TYPE_MARKER}{q}', 'text': f'*{q}*', 'code': q, 'description': ''}
         results = [new_result] + results
     elif q and exact_match:
         ft_id, code, text, description = exact_match
@@ -511,21 +505,20 @@ def fault_type_autocomplete(request):
 
 
 class FaultDetails(FaultList):
-
     template_name = 'faults/fault_details.html'
 
     def get_queryset(self):
-        fault = models.Fault.objects.prefetch_related("fault_types").get(pk=self.kwargs['pk'])
+        fault = models.Fault.objects.prefetch_related('fault_types').get(pk=self.kwargs['pk'])
         return super().get_queryset().filter(fault_types__in=fault.fault_types.all())
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         qs = models.Fault.objects.select_related(
-            "created_by",
-            "modified_by",
+            'created_by',
+            'modified_by',
         ).prefetch_related(
-            "faultreviewinstance_set",
-            "fault_types",
+            'faultreviewinstance_set',
+            'fault_types',
         )
 
         context['fault'] = get_object_or_404(qs, pk=self.kwargs['pk'])
@@ -537,7 +530,6 @@ class FaultDetails(FaultList):
 
 
 def create_reviews_for_fault(fault, user):
-
     frgs = models.FaultReviewGroup.objects.filter(group__in=user.groups.all())
     frgs = frgs or [None]
     reviewed = timezone.now()
@@ -571,11 +563,11 @@ def review_fault(request, pk):
             fault.faultreviewinstance_set.all().delete()
 
         if acknowledge:
-            messages.success(request, _("Successfully acknowledged %(fault)s ") % {'fault': fault})
+            messages.success(request, _('Successfully acknowledged %(fault)s ') % {'fault': fault})
         else:
-            messages.warning(request, _("Successfully unacknowledged %(fault)s ") % {'fault': fault})
+            messages.warning(request, _('Successfully unacknowledged %(fault)s ') % {'fault': fault})
     else:  # pragma: nocover
-        messages.error(_("Sorry, something went wrong trying to review this fault. It has not been updated"))
+        messages.error(_('Sorry, something went wrong trying to review this fault. It has not been updated'))
 
     return HttpResponseRedirect(reverse('fault_details', kwargs={'pk': fault.pk}))
 
@@ -593,13 +585,12 @@ def bulk_review(request):
     models.FaultReviewInstance.objects.bulk_create(to_create)
 
     count = len(to_create)
-    msg = _("Successfully reviewed %(count)s faults") % {'count': count}
+    msg = _('Successfully reviewed %(count)s faults') % {'count': count}
     messages.add_message(request=request, message=msg, level=messages.SUCCESS)
-    return JsonResponse({"ok": True})
+    return JsonResponse({'ok': True})
 
 
 class FaultsByUnit(FaultList):
-
     model = models.Fault
     template_name = 'faults/fault_list.html'
 
@@ -615,12 +606,11 @@ class FaultsByUnit(FaultList):
         context = super().get_context_data(*args, **kwargs)
         unit = get_object_or_404(Unit, number=self.kwargs['unit_number'])
         context['unit'] = unit
-        context['page_title'] = "%s: %s" % (_("Faults for"), unit.site_unit_name())
+        context['page_title'] = '{}: {}'.format(_('Faults for'), unit.site_unit_name())
         return context
 
 
 class FaultsByUnitFaultType(FaultList):
-
     model = models.Fault
     template_name = 'faults/fault_list.html'
 
@@ -630,9 +620,13 @@ class FaultsByUnitFaultType(FaultList):
         return [f for f in fields if f not in exclude]
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            unit__number=self.kwargs['unit_number'],
-            fault_types__slug=self.kwargs['slug'],
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                unit__number=self.kwargs['unit_number'],
+                fault_types__slug=self.kwargs['slug'],
+            )
         )
 
     def get_context_data(self, *args, **kwargs):
@@ -641,7 +635,7 @@ class FaultsByUnitFaultType(FaultList):
         fault_type = get_object_or_404(models.FaultType, slug=self.kwargs['slug'])
         context['unit'] = unit
         context['fault_type'] = fault_type
-        title = _("{fault_type} faults for: {site_and_unit_name}").format(
+        title = _('{fault_type} faults for: {site_and_unit_name}').format(
             fault_type=fault_type,
             site_and_unit_name=unit.site_unit_name(),
         )
@@ -650,7 +644,6 @@ class FaultsByUnitFaultType(FaultList):
 
 
 class FaultTypeList(BaseListableView):
-
     model = models.FaultType
     template_name = 'faults/fault_type_list.html'
     paginate_by = 50
@@ -658,17 +651,17 @@ class FaultTypeList(BaseListableView):
     kwarg_filters = None
 
     fields = (
-        "actions",
-        "code",
+        'actions',
+        'code',
         'count',
-        "description",
+        'description',
     )
 
     headers = {
         'actions': _l('Actions'),
         'code': _l('Fault Type'),
-        'count': _l("# of Occurrences"),
-        'description': _l("Description"),
+        'count': _l('# of Occurrences'),
+        'description': _l('Description'),
     }
 
     widgets = {
@@ -692,19 +685,24 @@ class FaultTypeList(BaseListableView):
 
         self.templates = {
             'actions': get_template('faults/fault_type_actions.html'),
-            'description': get_template("faults/fault_type_description.html"),
+            'description': get_template('faults/fault_type_description.html'),
         }
 
     def get_queryset(self):
-        return super().get_queryset().order_by("code").annotate(
-            count=Count("faults"),
+        return (
+            super()
+            .get_queryset()
+            .order_by('code')
+            .annotate(
+                count=Count('faults'),
+            )
         )
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
-        context['page_title'] = _l("All Fault Types")
+        context['page_title'] = _l('All Fault Types')
         return context
 
     def actions(self, fault_type):
@@ -721,25 +719,33 @@ class FaultTypeList(BaseListableView):
 
 
 class FaultTypeDetails(FaultList):
-
     template_name = 'faults/fault_type_details.html'
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            fault_types__slug=self.kwargs['slug'],
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                fault_types__slug=self.kwargs['slug'],
+            )
         )
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         fault_type = get_object_or_404(models.FaultType, slug=self.kwargs['slug'])
-        unit_faults = models.Fault.objects.filter(
-            fault_types=fault_type,
-        ).values(
-            "unit__name",
-            "unit__number",
-            "unit_id",
-        ).annotate(unit_count=Count("unit__%s" % settings.ORDER_UNITS_BY)).order_by(
-            "-unit_count",
+        unit_faults = (
+            models.Fault.objects.filter(
+                fault_types=fault_type,
+            )
+            .values(
+                'unit__name',
+                'unit__number',
+                'unit_id',
+            )
+            .annotate(unit_count=Count(f'unit__{settings.ORDER_UNITS_BY}'))
+            .order_by(
+                '-unit_count',
+            )
         )
         context['fault_type'] = fault_type
         context['unit_faults'] = unit_faults

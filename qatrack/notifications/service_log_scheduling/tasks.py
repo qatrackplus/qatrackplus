@@ -13,23 +13,21 @@ logger = logging.getLogger('django-q2')
 
 
 def run_scheduling_notices():
-
     run_periodic_scheduler(
         ServiceEventSchedulingNotice,
-        "run_service_log_scheduling_notices",
+        'run_service_log_scheduling_notices',
         schedule_service_event_scheduling_notice,
-        time_field="time",
-        recurrence_field="recurrences",
+        time_field='time',
+        recurrence_field='recurrences',
     )
 
 
 def schedule_service_event_scheduling_notice(notice, send_time):
-
-    logger.info("Service Event Scheduling notification %s for %s" % (notice.pk, send_time))
-    name = "Send notification %d %s" % (notice.pk, send_time.isoformat())
+    logger.info(f'Service Event Scheduling notification {notice.pk} for {send_time}')
+    name = 'Send notification %d %s' % (notice.pk, send_time.isoformat())
 
     schedule(
-        "qatrack.notifications.service_log_scheduling.tasks.send_scheduling_notice",
+        'qatrack.notifications.service_log_scheduling.tasks.send_scheduling_notice',
         notice.id,
         name,
         name=name,
@@ -40,47 +38,43 @@ def schedule_service_event_scheduling_notice(notice, send_time):
     )
 
 
-def send_scheduling_notice(notice_id, task_name=""):
-
+def send_scheduling_notice(notice_id, task_name=''):
     notice = ServiceEventSchedulingNotice.objects.filter(id=notice_id).first()
 
     if notice:
-
         if not notice.send_required():
             logger.info(
-                "Send of ServiceEventSchedulingNotice %s requested, but no Service Event Schedules to notify about" %
-                notice_id
+                f'Send of ServiceEventSchedulingNotice {notice_id} requested, but no Service Event Schedules to notify about'
             )  # noqa: E501
             return
 
         recipients = notice.recipients.recipient_emails()
         if not recipients:
-            logger.info("Send of ServiceEventSchedulingNotice %s requested, but no recipients" % notice_id)
+            logger.info(f'Send of ServiceEventSchedulingNotice {notice_id} requested, but no recipients')
             return
     else:
         logger.info(
-            "Send of ServiceEventSchedulingNotice %s requested, but no such ServiceEventSchedulingNotice exists" %
-            notice_id
+            f'Send of ServiceEventSchedulingNotice {notice_id} requested, but no such ServiceEventSchedulingNotice exists'
         )  # noqa: E501
         return
 
     try:
         send_email_to_users(
             recipients,
-            "service_log_scheduling/email.html",
+            'service_log_scheduling/email.html',
             context={'notice': notice},
-            subject_template="service_log_scheduling/subject.txt",
-            text_template="service_log_scheduling/email.txt",
+            subject_template='service_log_scheduling/subject.txt',
+            text_template='service_log_scheduling/email.txt',
         )
-        logger.info("Sent ServiceEventSchedulingNotice %s at %s" % (notice_id, timezone.now()))
+        logger.info(f'Sent ServiceEventSchedulingNotice {notice_id} at {timezone.now()}')
         try:
             Schedule.objects.get(name=task_name).delete()
         except:  # noqa: E722  # pragma: nocover
-            logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
+            logger.exception(f'Unable to delete Schedule.name = {task_name} after successful send')
     except:  # noqa: E722  # pragma: nocover
-        logger.exception("Error sending email for ServiceEventSchedulingNotice %s at %s." % (notice_id, timezone.now()))
+        logger.exception(f'Error sending email for ServiceEventSchedulingNotice {notice_id} at {timezone.now()}.')
 
-        fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
+        fail_silently = getattr(settings, 'EMAIL_FAIL_SILENTLY', True)
         if not fail_silently:
             raise
     finally:

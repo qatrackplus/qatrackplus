@@ -13,66 +13,65 @@ from qatrack.service_log.models import ServiceEventSchedule
 
 
 class ServiceEventSchedulingNotice(RecurrenceFieldMixin, models.Model):
-
     ALL = 0
     DUE = 10
     UPCOMING_AND_DUE = 20
     UPCOMING = 30
 
     NOTIFICATION_TYPES = (
-        (ALL, _l("Notify About All Service Event Schedule Due Dates")),
-        (DUE, _l("Notify About Scheduled Service Events Currently Due & Overdue")),
-        (UPCOMING_AND_DUE, _l("Notify About Scheduled Service Events Currently Due & Overdue, and Upcoming Due Dates")),
-        (UPCOMING, _l("Notify About Scheduled Service Events Upcoming Due Dates Only")),
+        (ALL, _l('Notify About All Service Event Schedule Due Dates')),
+        (DUE, _l('Notify About Scheduled Service Events Currently Due & Overdue')),
+        (UPCOMING_AND_DUE, _l('Notify About Scheduled Service Events Currently Due & Overdue, and Upcoming Due Dates')),
+        (UPCOMING, _l('Notify About Scheduled Service Events Upcoming Due Dates Only')),
     )
 
-    TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
+    TIME_CHOICES = [(dt_time(x // 60, x % 60), '%02d:%02d' % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
 
     notification_type = models.IntegerField(
-        verbose_name=_l("Notification Type"),
+        verbose_name=_l('Notification Type'),
         choices=NOTIFICATION_TYPES,
     )
 
     send_empty = models.BooleanField(
-        verbose_name=_l("Send Empty Notices"),
+        verbose_name=_l('Send Empty Notices'),
         help_text=_l("Check to send notices even if there's no QC to currently notify about"),
         default=False,
     )
 
     recurrences = RecurrenceField(
-        verbose_name=_l("Recurrences"),
-        help_text=_l("Define the schedule this notification should be sent on."),
-        default="",
+        verbose_name=_l('Recurrences'),
+        help_text=_l('Define the schedule this notification should be sent on.'),
+        default='',
     )
 
     time = models.TimeField(
-        verbose_name=_l("Time of day"),
-        help_text=_l("Set the time of day this notice should be sent (00:00-23:59)."),
+        verbose_name=_l('Time of day'),
+        help_text=_l('Set the time of day this notice should be sent (00:00-23:59).'),
         choices=TIME_CHOICES,
     )
 
     future_days = models.PositiveIntegerField(
-        verbose_name=_l("Future Days"),
+        verbose_name=_l('Future Days'),
         blank=True,
         null=True,
         help_text=_l(
-            "How many days in the future should notices about upcoming QC due dates include. "
-            "A value of zero will only include test lists due today."
+            'How many days in the future should notices about upcoming QC due dates include. '
+            'A value of zero will only include test lists due today.'
         ),
     )
 
     recipients = models.ForeignKey(
         RecipientGroup,
-        verbose_name=_l("Recipients"),
-        help_text=_l("Choose the group of recipients who should receive these notifications"),
+        verbose_name=_l('Recipients'),
+        help_text=_l('Choose the group of recipients who should receive these notifications'),
         on_delete=models.PROTECT,
     )
 
     units = models.ForeignKey(
         UnitGroup,
-        verbose_name=_l("Unit Group filter"),
+        verbose_name=_l('Unit Group filter'),
         help_text=_l(
-            "Select which group of Units this notification should be limited to. Leave blank to include all units"
+            'Select which group of Units this notification should be limited to. Leave blank to include all units'
         ),
         null=True,
         blank=True,
@@ -82,8 +81,8 @@ class ServiceEventSchedulingNotice(RecurrenceFieldMixin, models.Model):
     last_sent = models.DateTimeField(null=True, editable=False)
 
     class Meta:
-        verbose_name = _l("Service Event Scheduling Notice")
-        verbose_name_plural = _l("Service Event Scheduling Notices")
+        verbose_name = _l('Service Event Scheduling Notice')
+        verbose_name_plural = _l('Service Event Scheduling Notices')
 
     @property
     def is_all(self):
@@ -110,9 +109,9 @@ class ServiceEventSchedulingNotice(RecurrenceFieldMixin, models.Model):
             schedules = schedules.filter(unit_service_area__unit__in=self.units.units.all())
 
         return schedules.order_by(
-            "unit_service_area__unit__%s" % settings.ORDER_UNITS_BY,
-            "unit_service_area__service_area__name",
-            "due_date",
+            f'unit_service_area__unit__{settings.ORDER_UNITS_BY}',
+            'unit_service_area__service_area__name',
+            'due_date',
         )
 
     def all(self):

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('service_log', '0021_auto_20190729_2228'),
     ]
@@ -17,6 +16,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='serviceeventstatus',
             name='order',
-            field=models.PositiveIntegerField(default=0, help_text='Choose what ordering this status will be listed as in drop down controls', verbose_name='Order'),
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text='Choose what ordering this status will be listed as in drop down controls',
+                verbose_name='Order',
+            ),
         ),
     ]

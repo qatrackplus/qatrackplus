@@ -5,9 +5,8 @@ from django.db import models
 
 
 class JSONField(models.TextField):
-
     def to_python(self, value):
-        if value == "":
+        if value == '':
             return None
 
         try:
@@ -21,7 +20,7 @@ class JSONField(models.TextField):
         return self.to_python(value)
 
     def get_db_prep_save(self, value, *args, **kwargs):
-        if value == "":
+        if value == '':
             return None
         if isinstance(value, dict):
             value = json.dumps(value, cls=DjangoJSONEncoder)

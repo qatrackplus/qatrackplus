@@ -25,19 +25,18 @@ from .models import (
 
 
 class UnitFormAdmin(ModelForm):
-
-    type = ChoiceField(label=_l("Unit Type"))
+    type = ChoiceField(label=_l('Unit Type'))
 
     service_areas = ModelMultipleChoiceField(
         queryset=ServiceArea.objects.all(),
         required=False,
-        widget=FilteredSelectMultiple(verbose_name=_l('Service areas'), is_stacked=False)
+        widget=FilteredSelectMultiple(verbose_name=_l('Service areas'), is_stacked=False),
     )
     modalities = ModelMultipleChoiceField(
         queryset=Modality.objects.all(),
         required=False,
         label=_l('Treatment and Imaging Modalities'),
-        widget=FilteredSelectMultiple(verbose_name=_l('Treatment and Imaging Modalities'), is_stacked=False)
+        widget=FilteredSelectMultiple(verbose_name=_l('Treatment and Imaging Modalities'), is_stacked=False),
     )
 
     class Meta:
@@ -68,15 +67,15 @@ class UnitFormAdmin(ModelForm):
             self.fields['site'].initial = Site.objects.first()
 
         def vendor_name(ut):
-            return ut.vendor.name if ut.vendor else "Other"
+            return ut.vendor.name if ut.vendor else 'Other'
 
         def vendor_unit_type(ut):
-            return "%s :: %s" % (ut.vendor.name if ut.vendor else "Other", ut.name)
+            return '{} :: {}'.format(ut.vendor.name if ut.vendor else 'Other', ut.name)
 
-        unit_types = UnitType.objects.select_related("vendor").order_by("vendor__name", "name")
+        unit_types = UnitType.objects.select_related('vendor').order_by('vendor__name', 'name')
         choices = [(v, list(uts)) for (v, uts) in groupby(unit_types, key=vendor_name)]
         choices = [(v, [(ut.id, vendor_unit_type(ut)) for ut in uts]) for (v, uts) in choices]
-        choices = [("", "---------")] + choices
+        choices = [('', '---------')] + choices
 
         self.fields['type'].choices = choices
 
@@ -97,20 +96,20 @@ class UnitFormAdmin(ModelForm):
                     data_copy = self.data.copy()
                     data_copy.setlist(
                         'service_areas',
-                        [str(sa.id) for sa in (service_areas | ServiceArea.objects.filter(pk=usa.service_area_id))]
+                        [str(sa.id) for sa in (service_areas | ServiceArea.objects.filter(pk=usa.service_area_id))],
                     )
                     self.data = data_copy
                     self.add_error(
-                        'service_areas', (
-                            'Cannot remove {} from unit {}. '
+                        'service_areas',
+                        (
+                            f'Cannot remove {usa.service_area.name} from unit {unit.name}. '
                             'There exists Service Event(s) with that Unit and Service Area.'
-                        ).format(usa.service_area.name, unit.name)
+                        ),
                     )
 
         return service_areas
 
     def save(self, commit=True):
-
         unit = super().save(commit=commit)
         unit.save()
 
@@ -127,7 +126,6 @@ class UnitFormAdmin(ModelForm):
 
 
 class UnitAvailableTimeInline(admin.TabularInline):
-
     model = UnitAvailableTime
     form = UnitAvailableTimeForm
     extra = 2
@@ -137,12 +135,11 @@ class UnitAvailableTimeInline(admin.TabularInline):
 
 @admin.register(Unit)
 class UnitAdmin(BaseQATrackAdmin):
-
     form = UnitFormAdmin
     list_display = ['name', 'number', 'active', 'type', 'site', 'is_serviceable']
     list_filter = ['active', 'site', 'modalities', 'type__unit_class']
     list_editable = ['site', 'is_serviceable']
-    list_select_related = ["site", "type"]
+    list_select_related = ['site', 'type']
     ordering = ['number']
     search_fields = ['number', 'name']
 
@@ -166,7 +163,7 @@ class UnitAdmin(BaseQATrackAdmin):
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name == "site":
+        if db_field.name == 'site':
             choices = getattr(request, '_site_choices_cache', None)
             if choices is None:
                 request._site_choices_cache = choices = list(formfield.choices)
@@ -177,36 +174,37 @@ class UnitAdmin(BaseQATrackAdmin):
 
 @admin.register(UnitType)
 class UnitTypeAdmin(BaseQATrackAdmin):
-
     list_display = ['model_name', 'vendor', 'unit_class', 'collapse']
     list_filter = ['unit_class', 'vendor']
     list_editable = ['unit_class', 'vendor', 'collapse']
 
     def get_queryset(self, request):
-        return super(UnitTypeAdmin, self).get_queryset(request).select_related(
-            "vendor",
-            "unit_class",
+        return (
+            super()
+            .get_queryset(request)
+            .select_related(
+                'vendor',
+                'unit_class',
+            )
         )
 
     def model_name(self, obj):
-        model = ' - {}'.format(obj.model) if obj.model else ''
-        vendor_name = '{}: '.format(obj.vendor.name) if obj.vendor else ''
-        return "{}{}{}".format(vendor_name, obj.name, model)
+        model = f' - {obj.model}' if obj.model else ''
+        vendor_name = f'{obj.vendor.name}: ' if obj.vendor else ''
+        return f'{vendor_name}{obj.name}{model}'
 
 
 @admin.register(Modality)
 class ModalityAdmin(BaseQATrackAdmin):
-
-    list_display = ["name"]
+    list_display = ['name']
 
 
 @admin.register(Site)
 class SiteAdmin(BaseQATrackAdmin):
     """QC categories admin"""
-    prepopulated_fields = {
-        'slug': ('name',)
-    }
-    list_display = ("name", "slug")
+
+    prepopulated_fields = {'slug': ('name',)}
+    list_display = ('name', 'slug')
 
 
 admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)

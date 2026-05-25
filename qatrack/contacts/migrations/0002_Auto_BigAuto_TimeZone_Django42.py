@@ -5,15 +5,13 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("contacts", "0001_initial"),
+        ('contacts', '0001_initial'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="contact",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='contact',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
     ]

@@ -1,27 +1,32 @@
 from django import forms
 from django.test import TestCase
 
-from qatrack.qatrack_core.forms import BetterFormMixin, BetterModelForm
+from qatrack.qatrack_core.forms import BetterFormMixin
 
 
 class TestForm(BetterFormMixin, forms.Form):
     """A test form with fieldsets."""
+
     name = forms.CharField()
     age = forms.IntegerField()
     email = forms.EmailField()
 
     fieldsets = [
         (
-            'personal', {
+            'personal',
+            {
                 'fields': ['name', 'age'],
                 'legend': 'Personal Information',
                 'classes': ['personal-info'],
                 'description': 'Your personal details',
-            }
+            },
         ),
-        ('contact', {
-            'fields': ['email'],
-        }),
+        (
+            'contact',
+            {
+                'fields': ['email'],
+            },
+        ),
     ]
 
 
@@ -86,9 +91,12 @@ class BetterFormMixinTest(TestCase):
         class MissingFieldForm(BetterFormMixin, forms.Form):
             name = forms.CharField()
             fieldsets = [
-                ('test', {
-                    'fields': ['name', 'nonexistent_field'],
-                }),
+                (
+                    'test',
+                    {
+                        'fields': ['name', 'nonexistent_field'],
+                    },
+                ),
             ]
 
         form = MissingFieldForm()

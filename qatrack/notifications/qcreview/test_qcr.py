@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
+import qatrack.qa.tests.utils as utils
 from qatrack.notifications.models import (
     QCReviewNotice,
     RecipientGroup,
@@ -12,65 +13,61 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.qcreview import admin, tasks
 from qatrack.qa import models
-import qatrack.qa.tests.utils as utils
 
 
 class TestQCReviewAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.QCReviewAdmin(model=QCReviewNotice, admin_site=AdminSite())
 
     def test_get_notification_type_unreviewed(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCReviewNotice.objects.create(
             notification_type=QCReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
-        assert "Notify about test list instances awaiting review" in self.admin.get_notification_type(n)
+        assert 'Notify about test list instances awaiting review' in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = utils.create_unit(name="Test Unit")
-        ug = UnitGroup.objects.create(name="UG")
+        u = utils.create_unit(name='Test Unit')
+        ug = UnitGroup.objects.create(name='UG')
         ug.units.add(u)
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCReviewNotice.objects.create(
             notification_type=QCReviewNotice.UNREVIEWED,
             units=ug,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert ug.name in self.admin.get_units(n)
 
     def test_get_recipients(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = QCReviewNotice.objects.create(
             notification_type=QCReviewNotice.UNREVIEWED,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert rg.name in self.admin.get_recipients(n)
 
     def test_get_testlists(self):
-        tl = utils.create_test_list(name="TL")
-        rg = RecipientGroup.objects.create(name="RG")
-        tlg = TestListGroup.objects.create(name="TLG")
+        tl = utils.create_test_list(name='TL')
+        rg = RecipientGroup.objects.create(name='RG')
+        tlg = TestListGroup.objects.create(name='TLG')
         tlg.test_lists.add(tl)
         n = QCReviewNotice.objects.create(
             notification_type=QCReviewNotice.UNREVIEWED,
             recipients=rg,
             test_lists=tlg,
-            time="0:00",
+            time='0:00',
         )
         assert tlg.name in self.admin.get_testlists(n)
 
 
 class TestQCReviewModel(TestCase):
-
     def setUp(self):
-
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = utils.create_unit(name='unit1', number=1)
+        self.unit2 = utils.create_unit(name='unit2', number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
@@ -81,19 +78,19 @@ class TestQCReviewModel(TestCase):
         self.tli2.all_reviewed = True
         self.tli2.save()
 
-        self.testlist_group = TestListGroup.objects.create(name="test group")
+        self.testlist_group = TestListGroup.objects.create(name='test group')
         self.testlist_group.test_lists.add(self.utc1.tests_object)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.utc1.unit)
 
         self.group = models.Group.objects.latest('pk')
         user = models.User.objects.latest('pk')
         user.groups.add(self.group)
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -113,7 +110,7 @@ class TestQCReviewModel(TestCase):
         notice = QCReviewNotice.objects.create(
             recipients=self.recipients,
             notification_type=QCReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         expected = [
             {
@@ -141,7 +138,7 @@ class TestQCReviewModel(TestCase):
             recipients=self.recipients,
             units=self.unit_group,
             notification_type=QCReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         expected = [
             {
@@ -163,7 +160,7 @@ class TestQCReviewModel(TestCase):
             recipients=self.recipients,
             test_lists=self.testlist_group,
             notification_type=QCReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         expected = [
             {
@@ -180,27 +177,25 @@ class TestQCReviewModel(TestCase):
 
 
 class TestQCReviewEmails(TestCase):
-
     def setUp(self):
-
-        self.unit1 = utils.create_unit(name="unit1", number=1)
-        self.unit2 = utils.create_unit(name="unit2", number=2)
+        self.unit1 = utils.create_unit(name='unit1', number=1)
+        self.unit2 = utils.create_unit(name='unit2', number=2)
         self.utc1 = utils.create_unit_test_collection(unit=self.unit1)
         self.utc2 = utils.create_unit_test_collection(unit=self.unit2)
 
-        self.testlist_group = TestListGroup.objects.create(name="test group")
+        self.testlist_group = TestListGroup.objects.create(name='test group')
         self.testlist_group.test_lists.add(self.utc1.tests_object)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.utc1.unit)
 
         self.group = models.Group.objects.latest('pk')
         user = models.User.objects.latest('pk')
         user.groups.add(self.group)
-        user.email = "example@example.com"
+        user.email = 'example@example.com'
         user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -210,9 +205,9 @@ class TestQCReviewEmails(TestCase):
 
         self.notice = QCReviewNotice.objects.create(
             recipients=self.recipients,
-            recurrences="RRULE:FREQ=DAILY",
+            recurrences='RRULE:FREQ=DAILY',
             notification_type=QCReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
@@ -225,7 +220,7 @@ class TestQCReviewEmails(TestCase):
         tasks.send_qcreview_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Unreviewed QC Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Unreviewed QC Notice:' in mail.outbox[0].subject
 
     def test_send_notice_empty(self):
         self.notice.send_empty = True
@@ -234,7 +229,7 @@ class TestQCReviewEmails(TestCase):
         tasks.send_qcreview_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Unreviewed QC Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Unreviewed QC Notice:' in mail.outbox[0].subject
 
     def test_send_notice_not_empty(self):
         tasks.send_qcreview_notice(self.notice.pk)

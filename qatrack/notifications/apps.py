@@ -8,24 +8,24 @@ def do_scheduling(sender, **kwargs):
 
     periodic_notifications = [
         (
-            "qatrack.notifications.qcscheduling.tasks.run_scheduling_notices",
-            "QATrack+ Scheduling Notices",
+            'qatrack.notifications.qcscheduling.tasks.run_scheduling_notices',
+            'QATrack+ Scheduling Notices',
         ),
         (
-            "qatrack.notifications.qcreview.tasks.run_review_notices",
-            "QATrack+ Review Notices",
+            'qatrack.notifications.qcreview.tasks.run_review_notices',
+            'QATrack+ Review Notices',
         ),
         (
-            "qatrack.notifications.service_log_review.tasks.run_service_event_review_notices",
-            "QATrack+ Service Event Review Notices",
+            'qatrack.notifications.service_log_review.tasks.run_service_event_review_notices',
+            'QATrack+ Service Event Review Notices',
         ),
         (
-            "qatrack.notifications.service_log_scheduling.tasks.run_service_event_scheduling_notices",
-            "QATrack+ Service Event Scheduling Notices",
+            'qatrack.notifications.service_log_scheduling.tasks.run_service_event_scheduling_notices',
+            'QATrack+ Service Event Scheduling Notices',
         ),
         (
-            "qatrack.notifications.faults_review.tasks.run_faults_review_notices",
-            "QATrack+ Fault Review Notices",
+            'qatrack.notifications.faults_review.tasks.run_faults_review_notices',
+            'QATrack+ Fault Review Notices',
         ),
     ]
     for func, name in periodic_notifications:
@@ -34,7 +34,7 @@ def do_scheduling(sender, **kwargs):
 
 class NotificationsConfig(AppConfig):
     name = 'qatrack.notifications'
-    verbose_name = _l("Notifications")
+    verbose_name = _l('Notifications')
 
     def ready(self):
         post_migrate.connect(do_scheduling, sender=self)

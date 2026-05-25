@@ -5,81 +5,63 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("parts", "0016_auto_20210127_1624"),
+        ('parts', '0016_auto_20210127_1624'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="contact",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='contact',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="contact",
-            name="phone_number",
+            model_name='contact',
+            name='phone_number',
             field=models.CharField(
                 blank=True,
-                help_text="Contact phone number",
+                help_text='Contact phone number',
                 max_length=31,
-                verbose_name="phone number",
+                verbose_name='phone number',
             ),
         ),
         migrations.AlterField(
-            model_name="part",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='part',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="partcategory",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='partcategory',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="partstoragecollection",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='partstoragecollection',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="partsuppliercollection",
-            name="id",
-            field=models.BigAutoField(
-                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='partsuppliercollection',
+            name='id',
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="partused",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='partused',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="room",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='room',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="storage",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='storage',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
         migrations.AlterField(
-            model_name="supplier",
-            name="id",
-            field=models.AutoField(
-                primary_key=True, serialize=False, verbose_name="ID"
-            ),
+            model_name='supplier',
+            name='id',
+            field=models.AutoField(primary_key=True, serialize=False, verbose_name='ID'),
         ),
     ]

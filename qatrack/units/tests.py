@@ -7,16 +7,14 @@ from qatrack.units import forms, models
 
 
 class TestUnits(TestCase):
-
     def test_auto_set_number(self):
-        ut = models.UnitType.objects.create(name="UT")
-        models.Unit.objects.create(name="U1", type=ut, number=1, date_acceptance=timezone.now())
-        u2 = models.Unit.objects.create(name="U2", type=ut, date_acceptance=timezone.now())
+        ut = models.UnitType.objects.create(name='UT')
+        models.Unit.objects.create(name='U1', type=ut, number=1, date_acceptance=timezone.now())
+        u2 = models.Unit.objects.create(name='U2', type=ut, date_acceptance=timezone.now())
         assert u2.number == 2
 
 
 class TestVendor(TestCase):
-
     def test_get_by_nk(self):
         v = utils.create_vendor()
         assert models.Vendor.objects.get_by_natural_key(v.name).pk == v.pk
@@ -26,28 +24,24 @@ class TestVendor(TestCase):
         assert v.natural_key() == (v.name,)
 
     def test_str(self):
-        assert str(models.Vendor(name="vendor")) == "vendor"
+        assert str(models.Vendor(name='vendor')) == 'vendor'
 
 
 class TestUnitClass(TestCase):
-
     def test_get_by_nk(self):
-
-        uc = models.UnitClass.objects.create(name="uclass")
+        uc = models.UnitClass.objects.create(name='uclass')
         assert uc.natural_key() == (uc.name,)
 
     def test_str(self):
-        assert str(models.UnitClass(name="uclass")) == "uclass"
+        assert str(models.UnitClass(name='uclass')) == 'uclass'
 
 
 class TestSite:
-
     def test_str(self):
-        assert str(models.Site(name="site")) == "site"
+        assert str(models.Site(name='site')) == 'site'
 
 
 class TestUnitType(TestCase):
-
     def test_get_by_nk(self):
         ut = utils.create_unit_type()
         assert models.UnitType.objects.get_by_natural_key(ut.name, ut.model, vendor_name=ut.vendor.name).pk == ut.pk
@@ -58,16 +52,14 @@ class TestUnitType(TestCase):
 
 
 class TestModality:
-
     def test_nk(self):
-        assert models.Modality(name="modality").natural_key() == ("modality",)
+        assert models.Modality(name='modality').natural_key() == ('modality',)
 
     def test_str(self):
-        assert str(models.Modality(name="modality")) == "modality"
+        assert str(models.Modality(name='modality')) == 'modality'
 
 
 class TestWeekDayCount:
-
     def test_uate_list(self):
         start = timezone.datetime(2019, 12, 9).date()
         end = timezone.datetime(2019, 12, 15).date()
@@ -84,7 +76,6 @@ class TestWeekDayCount:
 
 
 class TestUnitAvailableTime(TestCase):
-
     def setUp(self):
         utils.create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
@@ -96,7 +87,6 @@ class TestUnitAvailableTime(TestCase):
         utils.create_unit()
 
     def test_unit_available_time_change(self):
-
         response = self.client.get(self.get_url)
         dt = timezone.localtime(timezone.now()) + timezone.timedelta(days=7)
         timestamp = int((dt).timestamp() * 1000)
@@ -113,7 +103,7 @@ class TestUnitAvailableTime(TestCase):
             'hours_sunday': '08:00',
             'day': timestamp,
             'days[]': [timestamp],
-            'tz': "utc",
+            'tz': 'utc',
         }
 
         init_hours = timezone.timedelta(hours=1)
@@ -142,7 +132,6 @@ class TestUnitAvailableTime(TestCase):
 
 
 class TestUnitAvailableTimeEdit(TestCase):
-
     def setUp(self):
         utils.create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
@@ -154,7 +143,6 @@ class TestUnitAvailableTimeEdit(TestCase):
         utils.create_unit()
 
     def test_handle_unit_available_time_edit(self):
-
         response = self.client.get(self.get_url)
 
         timestamp = int((timezone.localtime(timezone.now()) + timezone.timedelta(days=7)).timestamp() * 1000)
@@ -165,7 +153,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'hours_mins': '_8:00',
             'days[]': [timestamp],
             'name': 'uate_test',
-            'tz': "utc",
+            'tz': 'utc',
         }
 
         date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
@@ -179,7 +167,6 @@ class TestUnitAvailableTimeEdit(TestCase):
         self.assertEqual(0, len_uate_after)
 
     def test_handle_unit_available_time_edit_prior_to_acceptance(self):
-
         response = self.client.get(self.get_url)
         models.Unit.objects.all().update(date_acceptance=timezone.now() + timezone.timedelta(days=30))
 
@@ -191,7 +178,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'hours_mins': '_8:00',
             'days[]': [timestamp],
             'name': 'uate_test',
-            'tz': "utc",
+            'tz': 'utc',
         }
 
         date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
@@ -200,7 +187,6 @@ class TestUnitAvailableTimeEdit(TestCase):
         assert len_uate_after == 0
 
     def test_handle_unit_available_time_edit_existing(self):
-
         response = self.client.get(self.get_url)
 
         timestamp = int((timezone.localtime(timezone.now()) + timezone.timedelta(days=7)).timestamp() * 1000)
@@ -211,7 +197,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'hours_mins': '_8:00',
             'days[]': [timestamp],
             'name': 'uate_test',
-            'tz': "utc",
+            'tz': 'utc',
         }
 
         date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
@@ -229,7 +215,6 @@ class TestUnitAvailableTimeEdit(TestCase):
 
 
 class TestGetUnitInfo(TestCase):
-
     def setUp(self):
         self.url = reverse('get_unit_info')
         utils.create_user(is_superuser=True, uname='user', pwd='pwd')
@@ -242,10 +227,10 @@ class TestGetUnitInfo(TestCase):
         resp = self.client.get(self.url)
         expected = {
             str(self.u1.pk): {
-                'modalities': list(self.u1.modalities.values_list("pk", flat=True)),
+                'modalities': list(self.u1.modalities.values_list('pk', flat=True)),
             },
             str(self.u2.pk): {
-                'modalities': list(self.u2.modalities.values_list("pk", flat=True)),
+                'modalities': list(self.u2.modalities.values_list('pk', flat=True)),
             },
         }
         assert resp.json() == expected
@@ -256,23 +241,22 @@ class TestGetUnitInfo(TestCase):
         resp = self.client.get(self.url)
         expected = {
             str(self.u1.pk): {
-                'modalities': list(self.u1.modalities.values_list("pk", flat=True)),
+                'modalities': list(self.u1.modalities.values_list('pk', flat=True)),
             },
         }
         assert resp.json() == expected
 
     def test_by_unit(self):
-        resp = self.client.get(self.url, data={"units[]": [self.u2.pk]})
+        resp = self.client.get(self.url, data={'units[]': [self.u2.pk]})
         expected = {
             str(self.u2.pk): {
-                'modalities': list(self.u2.modalities.values_list("pk", flat=True)),
+                'modalities': list(self.u2.modalities.values_list('pk', flat=True)),
             },
         }
         assert resp.json() == expected
 
 
 class TestForms(TestCase):
-
     def test_units_visible_to_user_no_inactive(self):
         """units_visible_to_user should only return active units"""
         u = utils.create_user()

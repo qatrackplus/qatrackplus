@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('units', '0013_site_slugs'),
     ]
@@ -13,6 +12,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='site',
             name='slug',
-            field=models.SlugField(help_text='Unique identifier made of lowercase characters and underscores for this site', unique=True),
+            field=models.SlugField(
+                help_text='Unique identifier made of lowercase characters and underscores for this site', unique=True
+            ),
         ),
     ]

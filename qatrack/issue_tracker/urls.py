@@ -1,4 +1,5 @@
 from django.urls import re_path as url
+
 from qatrack.issue_tracker import views
 
 urlpatterns = [

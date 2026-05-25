@@ -1,5 +1,6 @@
 import os
 import re
+
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -26,7 +27,7 @@ copyright = '2018 QATrack+ Contributors'
 author = 'Randle Taylor, Ryan Bottema & Contributors'
 
 # The short X.Y version
-settingsf = open(os.path.join("..", 'qatrack', 'settings.py'), 'r')
+settingsf = open(os.path.join('..', 'qatrack', 'settings.py'))
 
 version = re.findall(r"""VERSION\s+=\s+['"]+(.*)['"]""", settingsf.read())[0]
 
@@ -123,15 +124,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -141,8 +139,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'QATrack.tex', 'QATrack+ Documentation',
-     'Randle Taylor, Ryan Bottema \\& Contributors', 'manual'),
+    (master_doc, 'QATrack.tex', 'QATrack+ Documentation', 'Randle Taylor, Ryan Bottema \\& Contributors', 'manual'),
 ]
 
 
@@ -150,10 +147,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'qatrack', 'QATrack+ Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, 'qatrack', 'QATrack+ Documentation', [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -162,14 +156,20 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'QATrack', 'QATrack+ Documentation',
-     author, 'QATrack', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        'QATrack',
+        'QATrack+ Documentation',
+        author,
+        'QATrack',
+        'One line description of project.',
+        'Miscellaneous',
+    ),
 ]
 
 extlinks = {
-    'mailinglist': ("https://groups.google.com/forum/#!forum/qatrack/%s", ''),
-    'issues': ("https://github.com/qatrackplus/qatrackplus/issues/%s", ''),
+    'mailinglist': ('https://groups.google.com/forum/#!forum/qatrack/%s', ''),
+    'issues': ('https://github.com/qatrackplus/qatrackplus/issues/%s', ''),
 }
 
 rst_prolog = """

@@ -1,10 +1,12 @@
 import time
 
+import pytest
 from django.contrib.auth.models import Permission
+from django.db import transaction
+from django.test import TransactionTestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
-import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as e_c
@@ -15,8 +17,6 @@ from qatrack.qa.tests import utils
 from qatrack.qatrack_core.dates import format_as_date
 from qatrack.qatrack_core.tests.live import SeleniumTests
 from qatrack.service_log.tests import utils as sl_utils
-from django.db import transaction
-from django.test import TransactionTestCase
 
 objects = {
 
@@ -140,45 +140,41 @@ objects = {
 
 
 class BaseQATests(SeleniumTests, TransactionTestCase):
-
     def setUp(self):
         with transaction.atomic():
             self.password = 'password'
             self.user = create_user(pwd=self.password)
 
     def login(self):
-        self.open("/accounts/login/")
-        self.send_keys("id_username", self.user.username)
-        self.send_keys("id_password", self.password)
+        self.open('/accounts/login/')
+        self.send_keys('id_username', self.user.username)
+        self.send_keys('id_password', self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, 'head > title')))
 
     def load_main(self):
         self.login()
-        self.open("")
+        self.open('')
 
     def load_admin(self):
-        self.open("/admin/")
-        self.send_keys("id_username", self.user.username)
-        self.send_keys("id_password", self.password)
+        self.open('/admin/')
+        self.send_keys('id_username', self.user.username)
+        self.send_keys('id_password', self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, 'head > title')))
 
 
 @pytest.mark.selenium
 class LiveQATests(BaseQATests):
-
     def setUp(self):
-
         super().setUp()
 
     def test_admin_category(self):
-
         self.load_admin()
         self.driver.find_element(By.XPATH, '//a[@href="/admin/qa/category/"]').click()
-        self.click_by_link_text("ADD CATEGORY")
+        self.click_by_link_text('ADD CATEGORY')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Category']['name'])
         self.driver.find_element(By.ID, 'id_slug').send_keys(objects['Category']['slug'])
@@ -187,7 +183,6 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
     def test_admin_tests(self):
-
         self.load_admin()
 
         if not utils.exists('qa', 'Category', 'name', objects['Category']['name']):
@@ -198,7 +193,7 @@ class LiveQATests(BaseQATests):
             )
 
         self.driver.find_element(By.LINK_TEXT, 'Tests').click()
-        self.click_by_link_text("ADD TEST")
+        self.click_by_link_text('ADD TEST')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         # for i in range(len(objects['Tests'])):
 
@@ -239,7 +234,6 @@ class LiveQATests(BaseQATests):
                         time.sleep(1)
 
     def test_admin_testlist(self):
-
         self.load_admin()
 
         for i in range(len(objects['Tests'])):
@@ -253,33 +247,31 @@ class LiveQATests(BaseQATests):
                     constant_value=the_test['constant_value'],
                 )
 
-        self.click_by_link_text("Test Lists")
-        self.click_by_link_text("ADD TEST LIST")
+        self.click_by_link_text('Test Lists')
+        self.click_by_link_text('ADD TEST LIST')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['TestList']['name'])
         self.driver.find_element(By.LINK_TEXT, 'Add another Test List Membership').click()
         self.driver.find_element(By.LINK_TEXT, 'Add another Test List Membership').click()
         self.driver.find_element(By.LINK_TEXT, 'Add another Test List Membership').click()
-        for i, pk in enumerate(models.Test.objects.values_list("pk", flat=True)):
+        for i, pk in enumerate(models.Test.objects.values_list('pk', flat=True)):
             self.driver.find_element(By.ID, 'id_testlistmembership_set-' + str(i) + '-test').send_keys(str(pk))
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
 
     def test_admin_modality(self):
-
         self.load_admin()
-        self.click_by_link_text("Treatment and Imaging Modalities")
-        self.click_by_link_text("ADD TREATMENT AND IMAGING MODALITY")
+        self.click_by_link_text('Treatment and Imaging Modalities')
+        self.click_by_link_text('ADD TREATMENT AND IMAGING MODALITY')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Modality']['name'])
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
 
     def test_admin_unittype(self):
-
         self.load_admin()
-        self.click_by_link_text("Unit Types")
-        self.click_by_link_text("ADD UNIT TYPE")
+        self.click_by_link_text('Unit Types')
+        self.click_by_link_text('ADD UNIT TYPE')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['UnitType']['name'])
         self.driver.find_element(By.ID, 'id_vendor').send_keys(objects['UnitType']['vendor'])
@@ -287,7 +279,6 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
     def test_admin_unit(self):
-
         if not utils.exists('units', 'UnitType', 'name', objects['UnitType']['name']):
             utils.create_unit_type(
                 name=objects['UnitType']['name'], vendor=utils.create_vendor(objects['UnitType']['vendor'])
@@ -299,14 +290,14 @@ class LiveQATests(BaseQATests):
         sl_utils.create_service_area()
 
         self.load_admin()
-        self.click_by_link_text("Units")
-        self.click_by_link_text("ADD UNIT")
+        self.click_by_link_text('Units')
+        self.click_by_link_text('ADD UNIT')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element(By.ID, 'id_number').send_keys(objects['Unit']['number'])
         self.driver.find_element(By.ID, 'id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
         self.driver.find_element(By.CSS_SELECTOR, '#id_service_areas_add_all_link').click()
-        self.select_by_index("id_type", 1)
+        self.select_by_index('id_type', 1)
         # self.driver.find_element(By.ID,'id_modalities_add_all_link').click()
         # self.driver.find_element(By.ID,'id_hours_monday').send_keys('800')
         # self.driver.find_element(By.ID,'id_hours_tuesday').send_keys('800')
@@ -319,23 +310,21 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
     def test_admin_frequency(self):
-
         self.load_admin()
-        self.click_by_link_text("Frequencies")
-        self.click_by_link_text("ADD FREQUENCY")
+        self.click_by_link_text('Frequencies')
+        self.click_by_link_text('ADD FREQUENCY')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Frequency']['name'])
-        self.driver.find_element(By.CLASS_NAME, "recurrence-label").click()
-        self.driver.find_elements(By.CSS_SELECTOR, ".weekly td")[0].click()
-        self.driver.find_elements(By.CSS_SELECTOR, ".weekly td")[2].click()
-        self.driver.find_elements(By.CSS_SELECTOR, ".weekly td")[4].click()
+        self.driver.find_element(By.CLASS_NAME, 'recurrence-label').click()
+        self.driver.find_elements(By.CSS_SELECTOR, '.weekly td')[0].click()
+        self.driver.find_elements(By.CSS_SELECTOR, '.weekly td')[2].click()
+        self.driver.find_elements(By.CSS_SELECTOR, '.weekly td')[4].click()
         self.driver.find_element(By.ID, 'id_window_end').send_keys(objects['Frequency']['window_end'])
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
         assert models.Frequency.objects.get(name=objects['Frequency']['name']).nominal_interval < 3
 
     def test_admin_unittestcollection(self):
-
         if not utils.exists('auth', 'Group', 'name', objects['Group']['name']):
             create_group(name=objects['Group']['name'])
 
@@ -349,15 +338,15 @@ class LiveQATests(BaseQATests):
             utils.create_test_list(name=objects['TestList']['name'])
 
         self.load_admin()
-        self.click_by_link_text("Assign Test Lists to Units")
+        self.click_by_link_text('Assign Test Lists to Units')
         self.click_by_link_text('ADD UNIT TEST COLLECTION')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
 
-        self.select_by_index("id_unit", -1)
+        self.select_by_index('id_unit', -1)
         time.sleep(0.5)
-        self.select_by_index("id_frequency", -1)
-        self.select_by_index("id_assigned_to", 0)
-        self.select_by_index("id_content_type", 1)
+        self.select_by_index('id_frequency', -1)
+        self.select_by_index('id_assigned_to', 0)
+        self.select_by_index('id_content_type', 1)
         self.driver.find_element(By.CSS_SELECTOR, '#id_visible_to_from > option:nth-child(1)').click()
         self.driver.find_element(By.CSS_SELECTOR, '#id_visible_to_add_link').click()
 
@@ -369,13 +358,12 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
     def test_admin_tolerances(self):
-
         # Add absolute tolerance
         self.load_admin()
         self.click_by_link_text('Tolerances')
         self.click_by_link_text('ADD TOLERANCE')
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        self.select_by_index("id_type", 1)
+        self.select_by_index('id_type', 1)
         self.driver.find_element(By.ID, 'id_act_low').send_keys(objects['absoluteTolerance']['act_low'])
         self.driver.find_element(By.ID, 'id_tol_low').send_keys(objects['absoluteTolerance']['tol_low'])
         self.driver.find_element(By.ID, 'id_tol_high').send_keys(objects['absoluteTolerance']['tol_high'])
@@ -385,7 +373,7 @@ class LiveQATests(BaseQATests):
 
         # Add percentage tolerance
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        self.select_by_index("id_type", 1)
+        self.select_by_index('id_type', 1)
         self.driver.find_element(By.ID, 'id_act_low').send_keys(objects['percentTolerance']['act_low'])
         self.driver.find_element(By.ID, 'id_tol_low').send_keys(objects['percentTolerance']['tol_low'])
         self.driver.find_element(By.ID, 'id_tol_high').send_keys(objects['percentTolerance']['tol_high'])
@@ -395,22 +383,22 @@ class LiveQATests(BaseQATests):
 
         # Add multi tolerance
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
-        self.select_by_index("id_type", 3)
-        self.driver.find_element(By.ID,
-                                 'id_mc_pass_choices').send_keys(objects['multiChoiceTolerance']['mc_pass_choices'])
-        self.driver.find_element(By.ID,
-                                 'id_mc_tol_choices').send_keys(objects['multiChoiceTolerance']['mc_tol_choices'])
+        self.select_by_index('id_type', 3)
+        self.driver.find_element(By.ID, 'id_mc_pass_choices').send_keys(
+            objects['multiChoiceTolerance']['mc_pass_choices']
+        )
+        self.driver.find_element(By.ID, 'id_mc_tol_choices').send_keys(
+            objects['multiChoiceTolerance']['mc_tol_choices']
+        )
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
 
     def test_admin_set_ref_tols(self):
-
-        utils.create_tolerance(tol_type=models.MULTIPLE_CHOICE, mc_pass_choices="a,b")
+        utils.create_tolerance(tol_type=models.MULTIPLE_CHOICE, mc_pass_choices='a,b')
 
         utils.create_tolerance()
 
         for the_test in objects['Tests']:
-
             if the_test['test_type'] == models.MULTIPLE_CHOICE:
                 if not utils.exists('qa', 'Test', 'name', the_test['name']):
                     mult_test = utils.create_test(
@@ -435,24 +423,23 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text('Set References & Tolerances')
         self.click_by_link_text(mult_test.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_tolerance')))
-        self.select_by_index("id_tolerance", 1)
+        self.select_by_index('id_tolerance', 1)
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
 
         self.driver.find_element(By.LINK_TEXT, 'simple').click()
-        self.select_by_index("id_tolerance", 1)
+        self.select_by_index('id_tolerance', 1)
         self.driver.find_element(By.ID, 'id_reference_value').send_keys('0')
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
 
         self.driver.find_element(By.LINK_TEXT, 'composite').click()
-        self.select_by_index("id_tolerance", 1)
+        self.select_by_index('id_tolerance', 1)
         self.driver.find_element(By.ID, 'id_reference_value').send_keys('23.23')
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
 
     def test_admin_statuses(self):
-
         self.load_admin()
         self.wait.until(e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'testinstancestatus')]")))
         self.driver.find_element(By.XPATH, "//a[contains(@href,'testinstancestatus')]").click()
@@ -470,7 +457,6 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
     def rest(self):
-
         self.load_main()
 
         # Perform test
@@ -575,7 +561,6 @@ class LiveQATests(BaseQATests):
 
 @pytest.mark.selenium
 class TestPerformQC(BaseQATests):
-
     def setUp(self):
         with transaction.atomic():
             super().setUp()
@@ -587,19 +572,19 @@ class TestPerformQC(BaseQATests):
             self.user.groups.add(self.group)
             self.test_list = utils.create_test_list()
 
-            self.tnum_1 = utils.create_test(name="test1")
-            self.tnum_2 = utils.create_test(name="test2")
-            self.tcomp = utils.create_test(name="testc", test_type=models.COMPOSITE)
-            self.tcomp.calculation_procedure = "result = test1 + test2 + 2"
+            self.tnum_1 = utils.create_test(name='test1')
+            self.tnum_2 = utils.create_test(name='test2')
+            self.tcomp = utils.create_test(name='testc', test_type=models.COMPOSITE)
+            self.tcomp.calculation_procedure = 'result = test1 + test2 + 2'
             self.tcomp.save()
 
-            self.tdate = utils.create_test(name="testdate", test_type=models.DATE)
-            self.tdatetime = utils.create_test(name="testdatetime", test_type=models.DATETIME)
+            self.tdate = utils.create_test(name='testdate', test_type=models.DATE)
+            self.tdatetime = utils.create_test(name='testdatetime', test_type=models.DATETIME)
 
-            self.tmult = utils.create_test(name="testmult", choices="choicea,choiceb", test_type=models.MULTIPLE_CHOICE)
-            self.tstring = utils.create_test(name="teststring", test_type=models.STRING)
-            self.tstringcomp = utils.create_test(name="teststringcomp", test_type=models.STRING_COMPOSITE)
-            self.tstringcomp.calculation_procedure = "teststringcomp = teststring + testmult"
+            self.tmult = utils.create_test(name='testmult', choices='choicea,choiceb', test_type=models.MULTIPLE_CHOICE)
+            self.tstring = utils.create_test(name='teststring', test_type=models.STRING)
+            self.tstringcomp = utils.create_test(name='teststringcomp', test_type=models.STRING_COMPOSITE)
+            self.tstringcomp.calculation_procedure = 'teststringcomp = teststring + testmult'
             self.tstringcomp.save()
 
             all_tests = [
@@ -619,10 +604,10 @@ class TestPerformQC(BaseQATests):
             self.utc = utils.create_unit_test_collection(unit=self.unit, test_collection=self.test_list)
 
             self.utc.visible_to.add(self.group)
-            self.url = reverse("perform_qa", kwargs={'pk': self.utc.pk})
+            self.url = reverse('perform_qa', kwargs={'pk': self.utc.pk})
             self.status = models.TestInstanceStatus.objects.create(
-                name="foo",
-                slug="foo",
+                name='foo',
+                slug='foo',
                 is_default=True,
             )
 
@@ -635,60 +620,59 @@ class TestPerformQC(BaseQATests):
         with transaction.atomic():
             self.login()
             self.open(self.url)
-            assert len(self.driver.find_elements(By.CSS_SELECTOR, ".qa-status.btn-danger")) == 0
+            assert len(self.driver.find_elements(By.CSS_SELECTOR, '.qa-status.btn-danger')) == 0
 
     def fill_testlist(self):
-
         self.login()
         self.open(self.url)
-        inputs = self.driver.find_elements(By.CLASS_NAME, "qa-input")[:3]
+        inputs = self.driver.find_elements(By.CLASS_NAME, 'qa-input')[:3]
         inputs[0].send_keys(1)
         inputs[1].send_keys(2)
         inputs[1].send_keys(Keys.TAB)
         time.sleep(0.2)
 
-        self.click_by_css_selector(".choose-date")
+        self.click_by_css_selector('.choose-date')
         time.sleep(0.2)
-        self.click_by_css_selector(".open .today")
+        self.click_by_css_selector('.open .today')
 
-        self.click_by_css_selector(".choose-datetime")
+        self.click_by_css_selector('.choose-datetime')
         time.sleep(0.2)
-        self.click_by_css_selector(".open .today")
+        self.click_by_css_selector('.open .today')
 
-        self.click_by_css_selector("body")
+        self.click_by_css_selector('body')
 
-        option = self.driver.find_elements(By.CSS_SELECTOR, "select.qa-input option")[-1]
+        option = self.driver.find_elements(By.CSS_SELECTOR, 'select.qa-input option')[-1]
         option.click()
 
-        self.driver.find_element(By.CSS_SELECTOR, ".qa-string .qa-input").send_keys("test")
-        self.click_by_css_selector("body")
+        self.driver.find_element(By.CSS_SELECTOR, '.qa-string .qa-input').send_keys('test')
+        self.click_by_css_selector('body')
         time.sleep(0.2)
 
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
         self.fill_testlist()
-        inputs = self.driver.find_elements(By.CLASS_NAME, "qa-input")[:3]
+        inputs = self.driver.find_elements(By.CLASS_NAME, 'qa-input')[:3]
 
-        assert int(float(inputs[2].get_attribute("value"))) == 5
+        assert int(float(inputs[2].get_attribute('value'))) == 5
         assert models.TestListInstance.objects.count() == 0
-        self.click("submit-qa")
+        self.click('submit-qa')
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
         assert models.TestListInstance.objects.count() == 1
-        assert models.TestListInstance.objects.latest("pk").include_for_scheduling
+        assert models.TestListInstance.objects.latest('pk').include_for_scheduling
 
-        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[0].value == 1
-        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[1].value == 2
-        assert models.TestInstance.objects.get(unit_test_info__test__type="composite").value == 5
+        assert models.TestInstance.objects.filter(unit_test_info__test__type='simple')[0].value == 1
+        assert models.TestInstance.objects.filter(unit_test_info__test__type='simple')[1].value == 2
+        assert models.TestInstance.objects.get(unit_test_info__test__type='composite').value == 5
         now = timezone.now()
         date = timezone.localtime(now).date()
-        assert models.TestInstance.objects.get(unit_test_info__test__type="date").date_value == date
+        assert models.TestInstance.objects.get(unit_test_info__test__type='date').date_value == date
         dt = timezone.localtime(now).replace(hour=12, minute=0, second=0, microsecond=0)
-        assert models.TestInstance.objects.get(unit_test_info__test__type="datetime").datetime_value == dt
-        assert models.TestInstance.objects.get(unit_test_info__test__type="string").string_value == "test"
-        assert models.TestInstance.objects.get(unit_test_info__test__type="scomposite").string_value == "testchoiceb"
-        assert models.TestInstance.objects.get(unit_test_info__test__type="multchoice").string_value == "choiceb"
+        assert models.TestInstance.objects.get(unit_test_info__test__type='datetime').datetime_value == dt
+        assert models.TestInstance.objects.get(unit_test_info__test__type='string').string_value == 'test'
+        assert models.TestInstance.objects.get(unit_test_info__test__type='scomposite').string_value == 'testchoiceb'
+        assert models.TestInstance.objects.get(unit_test_info__test__type='multchoice').string_value == 'choiceb'
 
     def test_perform_ok_therapist(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
@@ -696,71 +680,71 @@ class TestPerformQC(BaseQATests):
         self.group.permissions.clear()
         self.user.is_superuser = False
         self.user.save()
-        self.group.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
+        self.group.permissions.add(Permission.objects.get(codename='add_testlistinstance'))
         self.fill_testlist()
-        inputs = self.driver.find_elements(By.CLASS_NAME, "qa-input")[:3]
+        inputs = self.driver.find_elements(By.CLASS_NAME, 'qa-input')[:3]
 
-        assert int(float(inputs[2].get_attribute("value"))) == 5
+        assert int(float(inputs[2].get_attribute('value'))) == 5
         assert models.TestListInstance.objects.count() == 0
-        self.click("submit-qa")
+        self.click('submit-qa')
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
         assert models.TestListInstance.objects.count() == 1
-        assert models.TestListInstance.objects.latest("pk").include_for_scheduling
+        assert models.TestListInstance.objects.latest('pk').include_for_scheduling
 
-        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[0].value == 1
-        assert models.TestInstance.objects.filter(unit_test_info__test__type="simple")[1].value == 2
-        assert models.TestInstance.objects.get(unit_test_info__test__type="composite").value == 5
+        assert models.TestInstance.objects.filter(unit_test_info__test__type='simple')[0].value == 1
+        assert models.TestInstance.objects.filter(unit_test_info__test__type='simple')[1].value == 2
+        assert models.TestInstance.objects.get(unit_test_info__test__type='composite').value == 5
         now = timezone.now()
         date = timezone.localtime(now).date()
-        assert models.TestInstance.objects.get(unit_test_info__test__type="date").date_value == date
+        assert models.TestInstance.objects.get(unit_test_info__test__type='date').date_value == date
         dt = timezone.localtime(now).replace(hour=12, minute=0, second=0, microsecond=0)
-        assert models.TestInstance.objects.get(unit_test_info__test__type="datetime").datetime_value == dt
-        assert models.TestInstance.objects.get(unit_test_info__test__type="string").string_value == "test"
-        assert models.TestInstance.objects.get(unit_test_info__test__type="scomposite").string_value == "testchoiceb"
-        assert models.TestInstance.objects.get(unit_test_info__test__type="multchoice").string_value == "choiceb"
+        assert models.TestInstance.objects.get(unit_test_info__test__type='datetime').datetime_value == dt
+        assert models.TestInstance.objects.get(unit_test_info__test__type='string').string_value == 'test'
+        assert models.TestInstance.objects.get(unit_test_info__test__type='scomposite').string_value == 'testchoiceb'
+        assert models.TestInstance.objects.get(unit_test_info__test__type='multchoice').string_value == 'choiceb'
 
     def test_comment(self):
-        """ tests present"""
+        """tests present"""
         self.fill_testlist()
-        self.driver.find_elements(By.CSS_SELECTOR, ".revealcomment")[0].click()
-        self.send_keys("id_form-0-comment", "testticomment")
-        self.driver.find_elements(By.CSS_SELECTOR, ".revealcomment")[0].click()
+        self.driver.find_elements(By.CSS_SELECTOR, '.revealcomment')[0].click()
+        self.send_keys('id_form-0-comment', 'testticomment')
+        self.driver.find_elements(By.CSS_SELECTOR, '.revealcomment')[0].click()
 
-        self.click("submit-qa")
+        self.click('submit-qa')
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
-        assert models.TestInstance.objects.filter(comment="testticomment").count() == 1
+        assert models.TestInstance.objects.filter(comment='testticomment').count() == 1
 
     def test_set_in_progress(self):
-        """ tests present"""
+        """tests present"""
         self.fill_testlist()
 
-        self.click("in-progress-container")
-        self.click("submit-qa")
+        self.click('in-progress-container')
+        self.click('submit-qa')
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
         assert models.TestListInstance.objects.in_progress().count() == 1
 
     def test_perform_and_review(self):
         """Ensure that we can go through a full perform->review cycle"""
 
-        utils.create_status(name="reviewed", slug="reviewed", is_default=False, requires_review=False)
+        utils.create_status(name='reviewed', slug='reviewed', is_default=False, requires_review=False)
         self.fill_testlist()
-        self.click("submit-qa")
+        self.click('submit-qa')
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
-        self.open("/qc/session/unreviewed/")
+        self.open('/qc/session/unreviewed/')
         time.sleep(0.2)
 
-        self.click_by_link_text("Review")
-        self.select_by_text("bot-status-select", "reviewed")
+        self.click_by_link_text('Review')
+        self.select_by_text('bot-status-select', 'reviewed')
 
-        self.send_keys("id_comment", "testlistcomment")
-        self.click("post-comment")
+        self.send_keys('id_comment', 'testlistcomment')
+        self.click('post-comment')
         time.sleep(0.2)
         assert models.Comment.objects.count() == 1
 
         assert models.TestListInstance.objects.unreviewed().count() == 1
-        self.click("submit-review")
+        self.click('submit-review')
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
         assert models.TestListInstance.objects.unreviewed().count() == 0
 
@@ -768,21 +752,21 @@ class TestPerformQC(BaseQATests):
         """Ensure that we can go through a full perform->review cycle"""
 
         self.fill_testlist()
-        self.click("init-se-container")
-        self.click("submit-qa")
+        self.click('init-se-container')
+        self.click('submit-qa')
 
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
         time.sleep(0.2)
         self.driver.execute_script("$('#id_datetime_service').focus()")
         time.sleep(0.3)
-        self.click_by_css_selector(".today")
+        self.click_by_css_selector('.today')
         time.sleep(0.2)
-        self.select_by_index("id_service_area_field_fake", 1)
+        self.select_by_index('id_service_area_field_fake', 1)
         time.sleep(0.2)
-        self.select_by_index("id_service_type", 1)
-        self.send_keys("id_problem_description", "Problem!")
-        self.click("save-se")
+        self.select_by_index('id_service_type', 1)
+        self.send_keys('id_problem_description', 'Problem!')
+        self.click('save-se')
         time.sleep(0.2)
         assert models.TestListInstance.objects.first().serviceevents_initiated.count() == 1
 
@@ -792,7 +776,7 @@ class TestPerformQC(BaseQATests):
         self.login()
         self.open(self.url)
         time.sleep(0.2)
-        inputs = self.driver.find_elements(By.CLASS_NAME, "qa-input")[:3]
+        inputs = self.driver.find_elements(By.CLASS_NAME, 'qa-input')[:3]
         inputs[0].send_keys(1)
         assert models.AutoSave.objects.count() == 0
         time.sleep(1)
@@ -803,7 +787,7 @@ class TestPerformQC(BaseQATests):
     def test_load_autosave(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
-        tl2 = utils.create_test_list(name="day 2")
+        tl2 = utils.create_test_list(name='day 2')
         utils.create_test_list_membership(tl2, test=self.tnum_1)
         cycle = utils.create_cycle([self.test_list, tl2])
         utc = utils.create_unit_test_collection(
@@ -829,30 +813,30 @@ class TestPerformQC(BaseQATests):
                 'skips': {
                     'test1': False,
                 },
-                'tli_comment': 'test list instance comment'
-            }
+                'tli_comment': 'test list instance comment',
+            },
         )
 
         self.login()
 
-        url = reverse("perform_qa", kwargs={'pk': utc.pk})
-        self.open(url + "?autosave_id=%d&day=%d" % (auto.pk, auto.day + 1))
+        url = reverse('perform_qa', kwargs={'pk': utc.pk})
+        self.open(url + '?autosave_id=%d&day=%d' % (auto.pk, auto.day + 1))
         time.sleep(0.2)
 
-        inputs = self.driver.find_elements(By.CLASS_NAME, "qa-input")[:3]
-        title = "Perform %s : day 2" % utc.unit.name
-        assert title in [el.text for el in self.driver.find_elements(By.CLASS_NAME, "box-title")]
-        assert float(inputs[0].get_attribute("value")) == 1
-        assert self.driver.find_element(By.ID, "id_work_started").get_attribute("value") == "12 May 1980 12:00"
-        assert self.driver.find_element(By.ID, "id_work_completed").get_attribute("value") == "12 May 1980 12:01"
-        assert self.driver.find_element(By.ID, "id_work_duration").get_attribute("value") == "0hr:01min"
-        assert self.driver.find_element(By.ID, "id_form-0-comment").get_attribute("value") == "test comment"
-        assert self.driver.find_element(By.ID, "id_comment").get_attribute("value") == "test list instance comment"
+        inputs = self.driver.find_elements(By.CLASS_NAME, 'qa-input')[:3]
+        title = f'Perform {utc.unit.name} : day 2'
+        assert title in [el.text for el in self.driver.find_elements(By.CLASS_NAME, 'box-title')]
+        assert float(inputs[0].get_attribute('value')) == 1
+        assert self.driver.find_element(By.ID, 'id_work_started').get_attribute('value') == '12 May 1980 12:00'
+        assert self.driver.find_element(By.ID, 'id_work_completed').get_attribute('value') == '12 May 1980 12:01'
+        assert self.driver.find_element(By.ID, 'id_work_duration').get_attribute('value') == '0hr:01min'
+        assert self.driver.find_element(By.ID, 'id_form-0-comment').get_attribute('value') == 'test comment'
+        assert self.driver.find_element(By.ID, 'id_comment').get_attribute('value') == 'test list instance comment'
 
     def test_submit_autosave(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
-        tl2 = utils.create_test_list(name="day 2")
+        tl2 = utils.create_test_list(name='day 2')
         utils.create_test_list_membership(tl2, test=self.tnum_1)
         cycle = utils.create_cycle([self.test_list, tl2])
         utc = utils.create_unit_test_collection(
@@ -878,33 +862,34 @@ class TestPerformQC(BaseQATests):
                 'skips': {
                     'test1': False,
                 },
-                'tli_comment': 'test list instance comment'
-            }
+                'tli_comment': 'test list instance comment',
+            },
         )
 
         self.login()
 
-        url = reverse("perform_qa", kwargs={'pk': utc.pk})
-        self.open(url + "?autosave_id=%d&day=%d" % (auto.pk, auto.day + 1))
+        url = reverse('perform_qa', kwargs={'pk': utc.pk})
+        self.open(url + '?autosave_id=%d&day=%d' % (auto.pk, auto.day + 1))
         time.sleep(0.2)
 
-        self.click("submit-qa")
+        self.click('submit-qa')
 
         assert models.AutoSave.objects.filter(pk=auto.pk).count() == 0
 
 
 @pytest.mark.selenium
 class TestReviewQC(BaseQATests):
-
     def setUp(self):
         with transaction.atomic():
             super().setUp()
 
-            self.unreviewed = utils.create_status(name="Unreviewed", slug="unreviewed")
-            self.reviewed = utils.create_status(name="Approved", slug="approved", is_default=False, requires_review=False)
+            self.unreviewed = utils.create_status(name='Unreviewed', slug='unreviewed')
+            self.reviewed = utils.create_status(
+                name='Approved', slug='approved', is_default=False, requires_review=False
+            )
             utils.create_test_instance()
 
-            self.url = "/qc/session/unreviewed/"
+            self.url = '/qc/session/unreviewed/'
 
     @override_settings(REVIEW_BULK=True)
     def test_review_ok(self):
@@ -913,11 +898,11 @@ class TestReviewQC(BaseQATests):
             self.login()
             self.open(self.url)
             time.sleep(0.1)
-            self.driver.find_elements(By.CLASS_NAME, "test-selected-toggle")[0].click()
-            self.select_by_text("bulk-status", "Approved")
-            self.click("submit-review")
+            self.driver.find_elements(By.CLASS_NAME, 'test-selected-toggle')[0].click()
+            self.select_by_text('bulk-status', 'Approved')
+            self.click('submit-review')
             assert models.TestListInstance.objects.unreviewed().count() == 1
 
-            self.click("confirm-update")
+            self.click('confirm-update')
             self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
             assert models.TestListInstance.objects.unreviewed().count() == 0

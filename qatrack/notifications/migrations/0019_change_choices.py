@@ -4,8 +4,7 @@ from django.db import migrations
 
 
 def change_0_to_newsemodse(apps, schema):
-
-    apps.get_model("notifications", "ServiceEventNotice").objects.filter(
+    apps.get_model('notifications', 'ServiceEventNotice').objects.filter(
         notification_type='0',
     ).update(
         notification_type='new_se_mod_se',
@@ -13,8 +12,7 @@ def change_0_to_newsemodse(apps, schema):
 
 
 def change_newsemodse_to_0(apps, schema):
-
-    apps.get_model("notifications", "ServiceEventNotice").objects.filter(
+    apps.get_model('notifications', 'ServiceEventNotice').objects.filter(
         notification_type='new_se_mod_se',
     ).update(
         notification_type='0',
@@ -22,11 +20,8 @@ def change_newsemodse_to_0(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('notifications', '0018_auto_20200529_2126'),
     ]
 
-    operations = [
-        migrations.RunPython(change_0_to_newsemodse, change_newsemodse_to_0)
-    ]
+    operations = [migrations.RunPython(change_0_to_newsemodse, change_newsemodse_to_0)]

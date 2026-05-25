@@ -16,49 +16,48 @@ from qatrack.qatrack_core.scheduling import RecurrenceFieldMixin
 
 
 class QCReviewNotice(RecurrenceFieldMixin, models.Model):
-
     UNREVIEWED = 0
 
-    NOTIFICATION_TYPES = ((UNREVIEWED, _l("Notify about test list instances awaiting review")),)
+    NOTIFICATION_TYPES = ((UNREVIEWED, _l('Notify about test list instances awaiting review')),)
 
-    TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
+    TIME_CHOICES = [(dt_time(x // 60, x % 60), '%02d:%02d' % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
 
     notification_type = models.IntegerField(
-        verbose_name=_l("Notification Type"),
+        verbose_name=_l('Notification Type'),
         choices=NOTIFICATION_TYPES,
         default=UNREVIEWED,
     )
 
     send_empty = models.BooleanField(
-        verbose_name=_l("Send Empty Notices"),
+        verbose_name=_l('Send Empty Notices'),
         help_text=_l("Check to send notices even if there's no unreviewed QC to currently notify about"),
         default=False,
     )
 
     recurrences = RecurrenceField(
-        verbose_name=_l("Recurrences"),
-        help_text=_l("Define the schedule this notification should be sent on."),
-        default="",
+        verbose_name=_l('Recurrences'),
+        help_text=_l('Define the schedule this notification should be sent on.'),
+        default='',
     )
 
     time = models.TimeField(
-        verbose_name=_l("Time of day"),
-        help_text=_l("Set the time of day this notice should be sent (00:00-23:59)."),
+        verbose_name=_l('Time of day'),
+        help_text=_l('Set the time of day this notice should be sent (00:00-23:59).'),
         choices=TIME_CHOICES,
     )
 
     recipients = models.ForeignKey(
         RecipientGroup,
-        verbose_name=_l("Recipients"),
-        help_text=_l("Choose the group of recipients who should receive these notifications"),
+        verbose_name=_l('Recipients'),
+        help_text=_l('Choose the group of recipients who should receive these notifications'),
         on_delete=models.PROTECT,
     )
 
     units = models.ForeignKey(
         UnitGroup,
-        verbose_name=_l("Unit Group filter"),
+        verbose_name=_l('Unit Group filter'),
         help_text=_l(
-            "Select which group of Units this notification should be limited to. Leave blank to include all units"
+            'Select which group of Units this notification should be limited to. Leave blank to include all units'
         ),
         null=True,
         blank=True,
@@ -67,10 +66,10 @@ class QCReviewNotice(RecurrenceFieldMixin, models.Model):
 
     test_lists = models.ForeignKey(
         TestListGroup,
-        verbose_name=_l("Test List Group filter"),
+        verbose_name=_l('Test List Group filter'),
         help_text=_l(
-            "Select which group of Test Lists this notification should be limited to. "
-            "Leave blank to include all Test Lists."
+            'Select which group of Test Lists this notification should be limited to. '
+            'Leave blank to include all Test Lists.'
         ),
         null=True,
         blank=True,
@@ -80,8 +79,8 @@ class QCReviewNotice(RecurrenceFieldMixin, models.Model):
     last_sent = models.DateTimeField(null=True, editable=False)
 
     class Meta:
-        verbose_name = _l("QC Review Notice")
-        verbose_name_plural = _l("QC Review Notices")
+        verbose_name = _l('QC Review Notice')
+        verbose_name_plural = _l('QC Review Notices')
 
     @property
     def is_unreviewed(self):
@@ -99,20 +98,23 @@ class QCReviewNotice(RecurrenceFieldMixin, models.Model):
             all_tls = self.test_lists.test_lists.all()
             tlis = tlis.filter(test_list__in=all_tls)
 
-        return tlis.order_by("unit_test_collection__unit__%s" % settings.ORDER_UNITS_BY, "unit_test_collection__name")
+        return tlis.order_by(f'unit_test_collection__unit__{settings.ORDER_UNITS_BY}', 'unit_test_collection__name')
 
     def tlis_by_unit_utc(self):
-
         tlis = self.tlis()
-        return tlis.values(
-            "unit_test_collection__unit__name",
-            "unit_test_collection__name",
-        ).order_by(
-            "unit_test_collection__unit__name",
-            "unit_test_collection__name",
-        ).annotate(
-            Count("unit_test_collection__unit__name"),
-            Count("unit_test_collection__name"),
+        return (
+            tlis.values(
+                'unit_test_collection__unit__name',
+                'unit_test_collection__name',
+            )
+            .order_by(
+                'unit_test_collection__unit__name',
+                'unit_test_collection__name',
+            )
+            .annotate(
+                Count('unit_test_collection__unit__name'),
+                Count('unit_test_collection__name'),
+            )
         )
 
     def send_required(self):

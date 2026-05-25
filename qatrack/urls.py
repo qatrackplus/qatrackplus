@@ -1,9 +1,9 @@
 from django.conf import settings
-from django.urls import include, re_path as url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.templatetags.static import static as static_url
-from django.urls import path
+from django.urls import include, path
+from django.urls import re_path as url
 from django.views.generic.base import RedirectView
 from django.views.i18n import JavaScriptCatalog
 
@@ -11,25 +11,24 @@ from qatrack.qatrack_core import views
 
 admin.autodiscover()
 
-favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico"), permanent=True)
-touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-icon.png"), permanent=True)
+favicon_view = RedirectView.as_view(url=static_url('qatrack_core/img/favicon.ico'), permanent=True)
+touch_view = RedirectView.as_view(url=static_url('qatrack_core/img/apple-touch-icon.png'), permanent=True)
 
 
 class QAToQC(RedirectView):
-
     permanent = True
     query_string = True
 
     def get_redirect_url(self, *args, **kwargs):
-        return "%s/qc/%s" % (settings.FORCE_SCRIPT_NAME or "", kwargs['terms'])
+        return '{}/qc/{}'.format(settings.FORCE_SCRIPT_NAME or '', kwargs['terms'])
 
 
 urlpatterns = [
-    url(r'^$', views.homepage, name="home"),
-    url(r'^400/$', views.handle_400, name="400"),
-    url(r'^403/$', views.handle_403, name="403"),
-    url(r'^404/$', views.handle_404, name="404"),
-    url(r'^500/$', views.handle_500, name="500"),
+    url(r'^$', views.homepage, name='home'),
+    url(r'^400/$', views.handle_400, name='400'),
+    url(r'^403/$', views.handle_403, name='403'),
+    url(r'^404/$', views.handle_404, name='404'),
+    url(r'^500/$', views.handle_500, name='500'),
     url(r'^accounts/', include('qatrack.accounts.urls')),
     url(r'^qa/(?P<terms>.*)$', QAToQC.as_view()),
     url(r'^qc/', include('qatrack.qa.urls')),
@@ -40,13 +39,11 @@ urlpatterns = [
     url(r'^parts/', include('qatrack.parts.urls')),
     url(r'^faults/', include('qatrack.faults.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
-
     # Uncomment the next line to enable the admin:
     path(r'admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     url(r'^favicon\.ico$', favicon_view),
     url(r'^apple-touch-icon\.png$', touch_view),
-
     # third party
     url(r'^', include('qatrack.genericdropdown.urls')),
     url(r'^comments/', include('django_comments.urls')),
@@ -74,6 +71,7 @@ handler500 = 'qatrack.qatrack_core.views.handle_500'
 
 if settings.DEBUG:  # pragma: nocover
     import debug_toolbar
+
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns

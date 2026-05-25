@@ -21,17 +21,16 @@ def run_reports():
     """Should run every 15 minutes at HH:07:30, HH:22:30, HH:37:30, HH:52:30"""
 
     run_periodic_scheduler(
-        ReportSchedule, "run_reports", schedule_report, time_field="time", recurrence_field="schedule"
+        ReportSchedule, 'run_reports', schedule_report, time_field='time', recurrence_field='schedule'
     )
 
 
 @qatrack_task_wrapper
 def schedule_report(s, send_time):
-
-    logger.info("Scheduling report %s for %s" % (s.report_id, send_time))
-    name = "Send report %d %s" % (s.report_id, send_time.isoformat())
+    logger.info(f'Scheduling report {s.report_id} for {send_time}')
+    name = 'Send report %d %s' % (s.report_id, send_time.isoformat())
     schedule(
-        "qatrack.reports.tasks.send_report",
+        'qatrack.reports.tasks.send_report',
         s.id,
         name,
         name=name,
@@ -43,18 +42,17 @@ def schedule_report(s, send_time):
 
 
 @qatrack_task_wrapper
-def send_report(schedule_id, task_name=""):
-
-    logger.info("Attempting Send of ReportSchedule %s" % schedule_id)
+def send_report(schedule_id, task_name=''):
+    logger.info(f'Attempting Send of ReportSchedule {schedule_id}')
 
     s = ReportSchedule.objects.filter(id=schedule_id).first()
     if s:
         recipients = s.recipients()
         if not recipients:
-            logger.info("Send of ReportSchedule %s requested, but no recipients" % schedule_id)
+            logger.info(f'Send of ReportSchedule {schedule_id} requested, but no recipients')
             return
     else:
-        logger.info("Send of ReportSchedule %s requested, but no such ReportSchedule exists" % schedule_id)
+        logger.info(f'Send of ReportSchedule {schedule_id} requested, but no such ReportSchedule exists')
         return
 
     fname, attach = s.report.render(user=s.created_by)
@@ -62,25 +60,22 @@ def send_report(schedule_id, task_name=""):
     try:
         send_email_to_users(
             recipients,
-            "reports/email.html",
-            context={
-                'report': s.report,
-                "report_schedule": s
-            },
-            subject_template="reports/email_subject.txt",
-            text_template="reports/email.txt",
+            'reports/email.html',
+            context={'report': s.report, 'report_schedule': s},
+            subject_template='reports/email_subject.txt',
+            text_template='reports/email.txt',
             attachments=[(fname, attach, CONTENT_TYPES[s.report.report_format])],
         )
-        logger.info("Sent ReportSchedule %s (report %s) at %s" % (schedule_id, s.report_id, timezone.now()))
+        logger.info(f'Sent ReportSchedule {schedule_id} (report {s.report_id}) at {timezone.now()}')
         try:
             Schedule.objects.get(name=task_name).delete()
         except:  # noqa: E722  # pragma: nocover
-            logger.exception("Unable to delete Schedule.name = %s after successful send" % task_name)
+            logger.exception(f'Unable to delete Schedule.name = {task_name} after successful send')
     except:  # noqa: E722  # pragma: nocover
         logger.exception(
-            "Error sending email for ReportSchedule %s (report %s) at %s." % (schedule_id, s.report_id, timezone.now())
+            f'Error sending email for ReportSchedule {schedule_id} (report {s.report_id}) at {timezone.now()}.'
         )
-        fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
+        fail_silently = getattr(settings, 'EMAIL_FAIL_SILENTLY', True)
         if not fail_silently:
             raise
     finally:

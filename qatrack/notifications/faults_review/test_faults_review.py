@@ -4,8 +4,9 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
-from qatrack.faults.models import Fault
 import qatrack.faults.tests.utils as utils
+import qatrack.qa.tests.utils as qa_utils
+from qatrack.faults.models import Fault
 from qatrack.notifications.faults_review import admin, tasks
 from qatrack.notifications.models import (
     FaultsReviewNotice,
@@ -13,67 +14,63 @@ from qatrack.notifications.models import (
     UnitGroup,
 )
 from qatrack.qa import models
-import qatrack.qa.tests.utils as qa_utils
 
 
 class TestFaultsReviewAdmin(TestCase):
-
     def setUp(self):
         self.admin = admin.FaultsReviewAdmin(model=FaultsReviewNotice, admin_site=AdminSite())
 
     def test_get_notification_type_unreviewed(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = FaultsReviewNotice.objects.create(
             notification_type=FaultsReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
             recipients=rg,
         )
-        assert "Notify about Faults awaiting review" in self.admin.get_notification_type(n)
+        assert 'Notify about Faults awaiting review' in self.admin.get_notification_type(n)
 
     def test_get_units(self):
-        u = qa_utils.create_unit(name="Test Unit")
-        ug = UnitGroup.objects.create(name="UG")
+        u = qa_utils.create_unit(name='Test Unit')
+        ug = UnitGroup.objects.create(name='UG')
         ug.units.add(u)
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = FaultsReviewNotice.objects.create(
             notification_type=FaultsReviewNotice.UNREVIEWED,
             units=ug,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert ug.name in self.admin.get_units(n)
 
     def test_get_recipients(self):
-        rg = RecipientGroup.objects.create(name="RG")
+        rg = RecipientGroup.objects.create(name='RG')
         n = FaultsReviewNotice.objects.create(
             notification_type=FaultsReviewNotice.UNREVIEWED,
             recipients=rg,
-            time="0:00",
+            time='0:00',
         )
         assert rg.name in self.admin.get_recipients(n)
 
 
 class TestFaultsReviewModel(TestCase):
-
     def setUp(self):
-
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = qa_utils.create_unit(name='unit1', number=1)
+        self.unit2 = qa_utils.create_unit(name='unit2', number=2)
 
         self.fault1 = utils.create_fault(unit=self.unit1)
         self.fault2 = utils.create_fault(unit=self.unit2)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.unit1)
 
         self.group = qa_utils.create_group()
         self.user = models.User.objects.latest('pk')
         self.user.is_active = True
         self.user.groups.add(self.group)
-        self.user.email = "example@example.com"
+        self.user.email = 'example@example.com'
         self.user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -85,11 +82,10 @@ class TestFaultsReviewModel(TestCase):
         Schedule.objects.all().delete()
 
     def test_unreviewed_both_unreviewed_no_groups(self):
-
         notice = FaultsReviewNotice.objects.create(
             recipients=self.recipients,
             notification_type=FaultsReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         expected = [
             {
@@ -114,7 +110,7 @@ class TestFaultsReviewModel(TestCase):
             recipients=self.recipients,
             units=self.unit_group,
             notification_type=FaultsReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         expected = [
             {
@@ -131,25 +127,23 @@ class TestFaultsReviewModel(TestCase):
 
 
 class TestFaultsReviewEmails(TestCase):
-
     def setUp(self):
-
-        self.unit1 = qa_utils.create_unit(name="unit1", number=1)
-        self.unit2 = qa_utils.create_unit(name="unit2", number=2)
+        self.unit1 = qa_utils.create_unit(name='unit1', number=1)
+        self.unit2 = qa_utils.create_unit(name='unit2', number=2)
         self.faults1 = utils.create_fault(unit=self.unit1)
         self.faults2 = utils.create_fault(unit=self.unit2)
 
-        self.unit_group = UnitGroup.objects.create(name="test group")
+        self.unit_group = UnitGroup.objects.create(name='test group')
         self.unit_group.units.add(self.unit1)
 
         self.group = qa_utils.create_group()
         self.user = models.User.objects.latest('pk')
         self.user.groups.add(self.group)
         self.user.is_active = True
-        self.user.email = "example@example.com"
+        self.user.email = 'example@example.com'
         self.user.save()
 
-        self.recipients = RecipientGroup.objects.create(name="test group")
+        self.recipients = RecipientGroup.objects.create(name='test group')
         self.recipients.groups.add(self.group)
 
         self.inactive_user = models.User.objects.create_user('inactive', 'inactive@user.com', 'password')
@@ -159,9 +153,9 @@ class TestFaultsReviewEmails(TestCase):
 
         self.notice = FaultsReviewNotice.objects.create(
             recipients=self.recipients,
-            recurrences="RRULE:FREQ=DAILY",
+            recurrences='RRULE:FREQ=DAILY',
             notification_type=FaultsReviewNotice.UNREVIEWED,
-            time="0:00",
+            time='0:00',
         )
         # delete defaults schedules to make counting easier
         Schedule.objects.all().delete()
@@ -172,7 +166,7 @@ class TestFaultsReviewEmails(TestCase):
         tasks.send_faultsreview_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Unreviewed Faults Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Unreviewed Faults Notice:' in mail.outbox[0].subject
 
     def test_send_notice_empty(self):
         self.notice.send_empty = True
@@ -181,7 +175,7 @@ class TestFaultsReviewEmails(TestCase):
         tasks.send_faultsreview_notice(self.notice.pk)
         self.notice.refresh_from_db()
         assert self.notice.last_sent >= now
-        assert "QATrack+ Unreviewed Faults Notice:" in mail.outbox[0].subject
+        assert 'QATrack+ Unreviewed Faults Notice:' in mail.outbox[0].subject
 
     def test_send_notice_not_empty(self):
         for fault in Fault.objects.all():

@@ -4,7 +4,6 @@ from qatrack.attachments import models
 
 
 class AttachmentSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Attachment
         fields = (

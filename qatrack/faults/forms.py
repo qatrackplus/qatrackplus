@@ -3,37 +3,35 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-from qatrack.qatrack_core.forms import BetterModelForm
 
 from qatrack.faults import models
-from qatrack.qatrack_core.forms import MultipleCharField, UserChoiceField
+from qatrack.qatrack_core.forms import BetterModelForm, MultipleCharField, UserChoiceField
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.units import models as u_models
 from qatrack.units.forms import unit_site_unit_type_choices
 
-NEW_FAULT_TYPE_MARKER = "newft:"
+NEW_FAULT_TYPE_MARKER = 'newft:'
 
 
 class FaultForm(BetterModelForm):
-
-    prefix = "fault"
+    prefix = 'fault'
 
     comment = forms.CharField(
         widget=forms.Textarea,
         required=False,
-        help_text=_l("Include any relevant comment i.e. describe what you were doing when the fault occurred"),
+        help_text=_l('Include any relevant comment i.e. describe what you were doing when the fault occurred'),
     )
 
     unit = forms.ChoiceField(
-        label=_l("Unit"),
-        help_text=_l("Select the unit this fault occurred on"),
+        label=_l('Unit'),
+        help_text=_l('Select the unit this fault occurred on'),
         required=True,
     )
 
     fault_types_field = MultipleCharField(
-        label=_l("Fault Type"),
-        help_text=_l("Select the fault type that occurred, or enter a new fault type code"),
+        label=_l('Fault Type'),
+        help_text=_l('Select the fault type that occurred, or enter a new fault type code'),
         widget=forms.SelectMultiple(),
         required=True,
     )
@@ -46,14 +44,16 @@ class FaultForm(BetterModelForm):
     )
 
     attachments = forms.FileField(
-        label="Attachments",
+        label='Attachments',
         max_length=150,
         required=False,
-        widget=forms.FileInput(attrs={
-            'multiple': '',
-            'class': 'file-upload',
-            'style': 'display:none',
-        })
+        widget=forms.FileInput(
+            attrs={
+                'multiple': '',
+                'class': 'file-upload',
+                'style': 'display:none',
+            }
+        ),
     )
     attachments_delete_ids = forms.CharField(widget=forms.HiddenInput(), required=False)
 
@@ -69,9 +69,8 @@ class FaultForm(BetterModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-
-        include_related_ses = kwargs.pop("include_related_ses", True)
-        user = kwargs.pop("user", None)
+        include_related_ses = kwargs.pop('include_related_ses', True)
+        user = kwargs.pop('user', None)
 
         super().__init__(*args, **kwargs)
 
@@ -93,16 +92,16 @@ class FaultForm(BetterModelForm):
                 self.fields['related_service_events'].queryset = self.initial['related_service_events']
         elif include_related_ses:
             # on invalid create form submit, we need to reset the related service events to whatever the user posted
-            if '%s-related_service_events' % self.prefix in self.data:
+            if f'{self.prefix}-related_service_events' in self.data:
                 self.fields['related_service_events'].queryset = sl_models.ServiceEvent.objects.filter(
-                    pk__in=self.data.getlist('%s-related_service_events' % self.prefix),
+                    pk__in=self.data.getlist(f'{self.prefix}-related_service_events'),
                 )
 
             # disable related service event fields if unit not set
-            if '%s-unit' % self.prefix not in self.data and 'unit' not in self.initial:
+            if f'{self.prefix}-unit' not in self.data and 'unit' not in self.initial:
                 self.fields['related_service_events'].widget.attrs.update({'disabled': True})
-            if '%s-unit' % self.prefix in self.data:
-                if not self.data['%s-unit' % self.prefix]:
+            if f'{self.prefix}-unit' in self.data:
+                if not self.data[f'{self.prefix}-unit']:
                     self.fields['related_service_events'].widget.attrs.update({'disabled': True})
 
         self.fields['unit'].choices = unit_site_unit_type_choices(
@@ -114,16 +113,15 @@ class FaultForm(BetterModelForm):
 
             # since we are dynamically grabbing fault type, we need to set the initial
             # choices to whatever user had it set to
-            data_key = '%s-fault_types_field' % self.prefix
+            data_key = f'{self.prefix}-fault_types_field'
             if f == 'fault_types_field':
-
                 if self.data and self.data.getlist(data_key):
                     choices = []
                     for val in self.data.getlist(data_key):
                         label = val
                         if NEW_FAULT_TYPE_MARKER in label:
                             # if the user submitted a new fault type, add asteriks to the label
-                            label = "*%s*" % label.replace(NEW_FAULT_TYPE_MARKER, "")
+                            label = '*{}*'.format(label.replace(NEW_FAULT_TYPE_MARKER, ''))
                         choices.append((val, label))
                     self.fields[f].widget.choices = choices
 
@@ -137,7 +135,7 @@ class FaultForm(BetterModelForm):
         cleaned_fault_types = []
         for fault_type in fault_types:
             if fault_type and NEW_FAULT_TYPE_MARKER in fault_type:
-                fault_type = fault_type.replace(NEW_FAULT_TYPE_MARKER, "")
+                fault_type = fault_type.replace(NEW_FAULT_TYPE_MARKER, '')
                 models.FaultType.objects.get_or_create(code=fault_type)
             cleaned_fault_types.append(fault_type)
 
@@ -154,23 +152,22 @@ class FaultForm(BetterModelForm):
 
 
 class InlineReviewForm(forms.Form):
-
     group = forms.CharField(
         widget=forms.TextInput(attrs={'readonly': 'readonly'}),
     )
 
     reviewed_by = UserChoiceField(
         queryset=User.objects.none(),
-        help_text=_l("Select the user from this group who reviewed this fault"),
+        help_text=_l('Select the user from this group who reviewed this fault'),
         required=False,
     )
 
     class Meta:
-        fields = ["group", "reviewed_by", "required"]
+        fields = ['group', 'reviewed_by', 'required']
 
     def __init__(self, *args, **kwargs):
-        fault_review_group = kwargs.pop("fault_review_group")
-        self.instance = kwargs.pop("instance", None)
+        fault_review_group = kwargs.pop('fault_review_group')
+        self.instance = kwargs.pop('instance', None)
         if self.instance:
             kwargs['initial'] = {
                 'group': self.instance.fault_review_group.group.name,
@@ -183,8 +180,7 @@ class InlineReviewForm(forms.Form):
 
 
 class ReviewFaultForm(BetterModelForm):
-
-    prefix = "fault"
+    prefix = 'fault'
 
     class Meta:
         model = models.Fault

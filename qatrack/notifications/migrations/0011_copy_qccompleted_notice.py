@@ -5,11 +5,10 @@ from django.db.models import Count
 
 
 def get_or_create_recipient_groups(ns, RecipientGroup):
-
     # first check if existing RecipientGroup matches
     rgs = RecipientGroup.objects.annotate(
-        user_count=Count("users"),
-        group_count=Count("groups"),
+        user_count=Count('users'),
+        group_count=Count('groups'),
     ).filter(
         user_count=ns.users.count(),
         group_count=ns.groups.count(),
@@ -25,7 +24,7 @@ def get_or_create_recipient_groups(ns, RecipientGroup):
         return rgs.first()
 
     # no match, create a new one
-    rg = RecipientGroup.objects.create(name="Recipient Group %d" % ns.pk)
+    rg = RecipientGroup.objects.create(name='Recipient Group %d' % ns.pk)
 
     for user in ns.users.all():
         rg.users.add(user)
@@ -37,13 +36,12 @@ def get_or_create_recipient_groups(ns, RecipientGroup):
 
 
 def get_or_create_testlistgroup(ns, TestListGroup):
-
     if ns.test_lists.count() == 0:
         return
 
     # first check if existing TestListGroup matches
     tgs = TestListGroup.objects.annotate(
-        testlist_count=Count("test_lists"),
+        testlist_count=Count('test_lists'),
     ).filter(
         testlist_count=ns.test_lists.count(),
     )
@@ -55,7 +53,7 @@ def get_or_create_testlistgroup(ns, TestListGroup):
         return tgs.first()
 
     # no match, create a new one
-    tg = TestListGroup.objects.create(name="TestList Group %d" % ns.pk)
+    tg = TestListGroup.objects.create(name='TestList Group %d' % ns.pk)
 
     for test_list in ns.test_lists.all():
         tg.test_lists.add(test_list)
@@ -64,13 +62,12 @@ def get_or_create_testlistgroup(ns, TestListGroup):
 
 
 def get_or_create_unitgroup(ns, UnitGroup):
-
     if ns.units.count() == 0:
         return
 
     # first check if existing TestListGroup matches
     ugs = UnitGroup.objects.annotate(
-        unit_count=Count("units"),
+        unit_count=Count('units'),
     ).filter(
         unit_count=ns.units.count(),
     )
@@ -82,7 +79,7 @@ def get_or_create_unitgroup(ns, UnitGroup):
         return ugs.first()
 
     # no match, create a new one
-    ug = UnitGroup.objects.create(name="Unit Group %d" % ns.pk)
+    ug = UnitGroup.objects.create(name='Unit Group %d' % ns.pk)
 
     for unit in ns.units.all():
         ug.units.add(unit)
@@ -91,15 +88,13 @@ def get_or_create_unitgroup(ns, UnitGroup):
 
 
 def copy_to_qccompletednotices(apps, schema):
-
-    NotificationSubscription = apps.get_model("notifications", "NotificationSubscription")
-    QCCompletedNotice = apps.get_model("notifications", "QCCompletedNotice")
-    RecipientGroup = apps.get_model("notifications", "RecipientGroup")
-    TestListGroup = apps.get_model("notifications", "TestListGroup")
-    UnitGroup = apps.get_model("notifications", "UnitGroup")
+    NotificationSubscription = apps.get_model('notifications', 'NotificationSubscription')
+    QCCompletedNotice = apps.get_model('notifications', 'QCCompletedNotice')
+    RecipientGroup = apps.get_model('notifications', 'RecipientGroup')
+    TestListGroup = apps.get_model('notifications', 'TestListGroup')
+    UnitGroup = apps.get_model('notifications', 'UnitGroup')
 
     for ns in NotificationSubscription.objects.all():
-
         QCCompletedNotice.objects.create(
             notification_type=ns.notification_type,
             follow_up_days=ns.follow_up_days,
@@ -110,7 +105,6 @@ def copy_to_qccompletednotices(apps, schema):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('notifications', '0010_auto_20190801_2148'),
     ]

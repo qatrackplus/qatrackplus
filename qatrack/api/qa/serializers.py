@@ -1,9 +1,9 @@
 import base64
-from collections import defaultdict
 import copy
 import json
-from numbers import Number
 import re
+from collections import defaultdict
+from numbers import Number
 
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
@@ -24,91 +24,79 @@ from qatrack.qatrack_core.dates import parse_date, parse_datetime
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.service_log import models as sl_models
 
-BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")
+BASE64_RE = re.compile('^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$')
 
 
 class FrequencySerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Frequency
-        fields = "__all__"
+        fields = '__all__'
 
 
 class TestInstanceStatusSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.TestInstanceStatus
-        fields = "__all__"
+        fields = '__all__'
 
 
 class AutoReviewRuleSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.AutoReviewRule
-        fields = "__all__"
+        fields = '__all__'
 
 
 class AutoReviewRuleSetSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.AutoReviewRuleSet
-        fields = "__all__"
+        fields = '__all__'
 
 
 class ReferenceSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Reference
-        fields = "__all__"
+        fields = '__all__'
 
 
 class ToleranceSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Tolerance
-        fields = "__all__"
+        fields = '__all__'
 
 
 class CategorySerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Category
-        fields = "__all__"
+        fields = '__all__'
 
 
 class TestSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Test
-        fields = "__all__"
+        fields = '__all__'
 
 
 class SublistSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.Sublist
-        fields = "__all__"
+        fields = '__all__'
 
 
 class TestListSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.TestList
-        fields = "__all__"
+        fields = '__all__'
 
 
 class UnitTestInfoSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.UnitTestInfo
-        fields = "__all__"
+        fields = '__all__'
 
 
 class TestListMembershipSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.TestListMembership
-        fields = "__all__"
+        fields = '__all__'
 
 
 class UTCTestsObjectRelatedField(serializers.RelatedField):
@@ -118,29 +106,28 @@ class UTCTestsObjectRelatedField(serializers.RelatedField):
 
     def to_representation(self, obj):
         if isinstance(obj, models.TestList):
-            return reverse("testlist-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
-        return reverse("testlistcycle-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
+            return reverse('testlist-detail', kwargs={'pk': obj.pk}, request=self.context['request'])
+        return reverse('testlistcycle-detail', kwargs={'pk': obj.pk}, request=self.context['request'])
 
 
 class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
-
     tests_object = UTCTestsObjectRelatedField(read_only=True)
     next_test_list = serializers.SerializerMethodField(read_only=True)
     next_day = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.UnitTestCollection
-        fields = "__all__"
+        fields = '__all__'
 
     def get_tests_object(self, obj):
         if isinstance(obj, models.TestList):
-            return reverse("testlist-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
-        return reverse("testlistcycle-detail", kwargs={'pk': obj.pk}, request=self.context['request'])
+            return reverse('testlist-detail', kwargs={'pk': obj.pk}, request=self.context['request'])
+        return reverse('testlistcycle-detail', kwargs={'pk': obj.pk}, request=self.context['request'])
 
     def get_next_test_list(self, obj):
         next_day, next_list = obj.next_list()
         if isinstance(next_list, models.TestList):
-            return reverse("testlist-detail", kwargs={'pk': next_list.pk}, request=self.context['request'])
+            return reverse('testlist-detail', kwargs={'pk': next_list.pk}, request=self.context['request'])
         return None
 
     def get_next_day(self, obj):
@@ -149,58 +136,55 @@ class UnitTestCollectionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
-    attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
+    attachments = AttachmentSerializer(many=True, source='attachment_set', required=False)
 
     class Meta:
         model = models.TestInstance
-        fields = "__all__"
+        fields = '__all__'
 
 
 class TestInstanceCreator(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.TestInstance
-        fields = ["value", "string_value", "date_value", "datetime_value", "skipped", "comment", "macro"]
+        fields = ['value', 'string_value', 'date_value', 'datetime_value', 'skipped', 'comment', 'macro']
 
 
 class TestListInstanceSerializer(serializers.HyperlinkedModelSerializer):
-
-    attachments = AttachmentSerializer(many=True, source="attachment_set", required=False)
+    attachments = AttachmentSerializer(many=True, source='attachment_set', required=False)
     comments = CommentSerializer(many=True, required=False)
-    test_instances = TestInstanceSerializer(many=True, source="testinstance_set", required=False)
+    test_instances = TestInstanceSerializer(many=True, source='testinstance_set', required=False)
 
     site_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.TestListInstance
-        fields = "__all__"
+        fields = '__all__'
 
     def get_site_url(self, obj):
         if obj:
-            return reverse("view_test_list_instance", kwargs={'pk': obj.pk}, request=self.context['request'])
-        return ""
+            return reverse('view_test_list_instance', kwargs={'pk': obj.pk}, request=self.context['request'])
+        return ''
 
 
 class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
-
     work_completed = serializers.DateTimeField(default=lambda: timezone.now())
 
     comment = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     tests = serializers.DictField()
     status = serializers.HyperlinkedRelatedField(
-        view_name="testinstancestatus-detail",
+        view_name='testinstancestatus-detail',
         queryset=models.TestInstanceStatus.objects.all(),
         required=False,
     )
 
     return_to_service_qa = serializers.HyperlinkedRelatedField(
-        view_name="returntoserviceqa-detail",
+        view_name='returntoserviceqa-detail',
         queryset=sl_models.ReturnToServiceQA.objects.all(),
         required=False,
     )
 
     unit_test_collection = serializers.HyperlinkedRelatedField(
-        view_name="unittestcollection-detail",
+        view_name='unittestcollection-detail',
         queryset=models.UnitTestCollection.objects.all(),
     )
 
@@ -208,7 +192,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     # made read_only since we get the test list from the UTC & day
     test_list = serializers.HyperlinkedRelatedField(
-        view_name="testlist-detail",
+        view_name='testlist-detail',
         read_only=True,
     )
 
@@ -217,21 +201,21 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.TestListInstance
         exclude = [
-            "modified",
-            "modified_by",
-            "created",
+            'modified',
+            'modified_by',
+            'created',
         ]
 
     def get_site_url(self, obj):
         if obj:
-            return reverse("view_test_list_instance", kwargs={'pk': obj.pk}, request=self.context['request'])
-        return ""
+            return reverse('view_test_list_instance', kwargs={'pk': obj.pk}, request=self.context['request'])
+        return ''
 
     def validate_tests(self, tests):
-        err_fields = ['"%s"' % slug for slug, data in tests.items() if not self.valid_test(data)]
+        err_fields = [f'"{slug}"' for slug, data in tests.items() if not self.valid_test(data)]
         if err_fields:
             fields = ', '.join(err_fields)
-            msg = '%s field(s) have errors. Test data must be a dictionary ' % fields
+            msg = f'{fields} field(s) have errors. Test data must be a dictionary '
             raise serializers.ValidationError(msg)
         return tests
 
@@ -251,9 +235,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     def make_attachment(self, data):
         content = data['value']
-        if data.get("encoding", "base64") == "base64":
+        if data.get('encoding', 'base64') == 'base64':
             if not BASE64_RE.match(content):
-                raise serializers.ValidationError("base64 encoding requested but content does not appear to be base64")
+                raise serializers.ValidationError('base64 encoding requested but content does not appear to be base64')
 
             content = base64.b64decode(content)
 
@@ -261,7 +245,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         return Attachment(
             attachment=ContentFile(content, data['filename']),
-            comment="Uploaded %s by %s" % (timezone.now(), user.username),
+            comment=f'Uploaded {timezone.now()} by {user.username}',
             label=data['filename'],
             created_by=user,
         )
@@ -271,12 +255,11 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         return is_dict
 
     def add_data_from_instance(self, data):
-
         tis = self.instance.testinstance_set.select_related(
-            "unit_test_info",
-            "unit_test_info__test",
+            'unit_test_info',
+            'unit_test_info__test',
         )
-        if "tests" not in data:
+        if 'tests' not in data:
             data['tests'] = {}
         for ti in tis:
             test = ti.unit_test_info.test
@@ -298,24 +281,24 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             elif slug in data['tests'] and data['tests'][slug].get('skipped'):
                 data['tests'][slug] = {
                     'value': None,
-                    'comment': data['tests'][slug].get("comment", ti.comment),
+                    'comment': data['tests'][slug].get('comment', ti.comment),
                     'skipped': True,
                 }
 
-        for key in ["work_completed", "work_started", "in_progress", "include_for_scheduling", "user_key"]:
+        for key in ['work_completed', 'work_started', 'in_progress', 'include_for_scheduling', 'user_key']:
             data[key] = data.get(key, getattr(self.instance, key))
 
     def validate(self, data):
         post_data = copy.deepcopy(data)
 
-        validated_data = super(TestListInstanceCreator, self).validate(data)
+        validated_data = super().validate(data)
 
         if self.instance:
             self.add_data_from_instance(validated_data)
 
         validated_data = self.preprocess(validated_data)
 
-        test_qs = self.tl.all_tests().values_list("slug", "type", "calculation_procedure")
+        test_qs = self.tl.all_tests().values_list('slug', 'type', 'calculation_procedure')
 
         missing = []
         wrong_types = []
@@ -324,14 +307,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         auto_types = [models.CONSTANT] + list(models.CALCULATED_TYPES)
 
         for slug, type_, procedure in test_qs:
-
             if slug not in validated_data['tests']:
                 missing.append(slug)
                 continue
 
-            skipped = validated_data['tests'][slug].get("skipped")
-            provided_val = post_data.get('tests', {}).get(slug, {}).get("value")
-            validated_val = validated_data['tests'][slug].get("value")
+            skipped = validated_data['tests'][slug].get('skipped')
+            provided_val = post_data.get('tests', {}).get(slug, {}).get('value')
+            validated_val = validated_data['tests'][slug].get('value')
             if not skipped and type_ not in auto_types and not self.type_okay(type_, validated_val):
                 wrong_types.append(slug)
 
@@ -342,42 +324,44 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             d = validated_data['tests'][slug]
             if type_ in models.STRING_TYPES and slug in validated_data['tests']:
-                d['string_value'] = d.pop('value', "")
+                d['string_value'] = d.pop('value', '')
             elif type_ == models.DATE and slug in validated_data['tests']:
-                d['date_value'] = parse_date(d.pop('value', ""))
+                d['date_value'] = parse_date(d.pop('value', ''))
             elif type_ == models.DATETIME and slug in validated_data['tests']:
-                dt = parse_datetime(d.pop('value', ""))
+                dt = parse_datetime(d.pop('value', ''))
                 dt = timezone.make_aware(dt) if dt and timezone.is_naive(dt) else dt
                 d['datetime_value'] = dt
             elif type_ == models.UPLOAD and slug in validated_data['tests']:
                 # remove base64 data
-                d.pop('value', "")
+                d.pop('value', '')
                 # string value needs to be set to attachment id for later editing
                 d['string_value'] = self.ti_attachments[slug][0]
                 d['json_value'] = json.dumps(self.ti_upload_analysis_data[slug], cls=QATrackJSONEncoder)
 
         if missing:
-            msgs.append("Missing data for tests: %s" % ', '.join(missing))
+            msgs.append('Missing data for tests: {}'.format(', '.join(missing)))
 
         if wrong_types:
-            msg = '\n'.join([
-                "Wrong value type (number/string) for tests: %s" % ', '.join(wrong_types),
-                (
-                    "If these are composite tests with missing dependencies, "
-                    "they should be marked as skipped in your request "
-                    "(e.g. {'tests': {'%s': {'skipped': True}}})" % wrong_types[0]
-                ),
-            ])
+            msg = '\n'.join(
+                [
+                    'Wrong value type (number/string) for tests: {}'.format(', '.join(wrong_types)),
+                    (
+                        'If these are composite tests with missing dependencies, '
+                        'they should be marked as skipped in your request '
+                        f"(e.g. {{'tests': {{'{wrong_types[0]}': {{'skipped': True}}}}}})"
+                    ),
+                ]
+            )
             msgs.append(msg)
 
         if invalid_autos:
             msgs.append(
-                "The following tests are calculated automatically and should not have values "
-                "provided: %s" % ', '.join(invalid_autos)
+                'The following tests are calculated automatically and should not have values '
+                'provided: {}'.format(', '.join(invalid_autos))
             )
 
         if validated_data['work_completed'] < validated_data['work_started']:
-            msgs.append("work_completed date must be after work_started")
+            msgs.append('work_completed date must be after work_started')
 
         if msgs:
             raise serializers.ValidationError('\n'.join(msgs))
@@ -395,12 +379,11 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         return True
 
     def autovalue_ok(self, calculated, provided):
-        not_provided = provided in (None, "")
+        not_provided = provided in (None, '')
         values_match = calculated == provided
         return not_provided or values_match
 
     def preprocess(self, validated_data):
-
         if self.instance:
             self.utc = self.instance.unit_test_collection
             self.day = self.instance.day
@@ -410,9 +393,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
             self.day = validated_data.get('day')
 
-            if self.utc.content_type.model == "testlist" and self.day is None:
+            if self.utc.content_type.model == 'testlist' and self.day is None:
                 self.day = 0
-            elif self.utc.content_type.model == "testlistcycle" and self.day is None:
+            elif self.utc.content_type.model == 'testlistcycle' and self.day is None:
                 raise serializers.ValidationError("You must include the 'day' key when performing a Test List Cycle")
 
             try:
@@ -423,25 +406,24 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             min_day, max_day = 0, len(self.utc.tests_object) - 1
             if not (min_day <= self.day <= max_day):
                 raise serializers.ValidationError(
-                    "'%s' is not a valid day for this Test Collection.  "
-                    "Day must be between %s & %s" % (self.day, min_day, max_day)
+                    f"'{self.day}' is not a valid day for this Test Collection.  "
+                    f'Day must be between {min_day} & {max_day}'
                 )
 
             self.day, self.tl = self.utc.get_list(day=self.day)
 
-        test_qs = self.tl.all_tests().values_list("id", "slug", "type", "constant_value")
+        test_qs = self.tl.all_tests().values_list('id', 'slug', 'type', 'constant_value')
 
         has_composite = False
         uploads = []
         for pk, slug, type_, cv in test_qs:
-
             if type_ == models.CONSTANT:
                 # here we get data for the test (comments etc) and make sure the constant value
                 # is set correctly (so the user can't send an incorrect value for the constant value)
                 d = validated_data['tests'].get(slug, {})
-                v = d.get("value")
-                if v not in ("", None) and v != cv:
-                    raise serializers.ValidationError("Incorrect constant value passed for %s" % slug)
+                v = d.get('value')
+                if v not in ('', None) and v != cv:
+                    raise serializers.ValidationError(f'Incorrect constant value passed for {slug}')
                 d['value'] = cv
                 validated_data['tests'][slug] = d
             elif type_ == models.UPLOAD:
@@ -452,7 +434,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 if slug not in validated_data['tests']:
                     validated_data['tests'][slug] = {'value': ''}
                 elif 'value' not in validated_data['tests'][slug]:
-                    validated_data['tests'][slug]['value'] = ""
+                    validated_data['tests'][slug]['value'] = ''
 
         self.ti_attachments = defaultdict(list)
         self.ti_upload_analysis_data = {}
@@ -460,35 +442,34 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         user = self.context['request'].user
 
         if has_composite or uploads:
-
             comp_calc_data = self.data_to_composite(validated_data)
             for pk, slug, d in uploads:
                 comp_calc_data['test_id'] = pk
                 try:
                     fname = d['filename']
                 except KeyError:
-                    raise serializers.ValidationError("%s is missing the filename field" % slug)
+                    raise serializers.ValidationError(f'{slug} is missing the filename field')
 
                 content = d['value']
 
-                if d.get("encoding", "base64") == "base64":
+                if d.get('encoding', 'base64') == 'base64':
                     if not (content and BASE64_RE.match(content)):
                         raise serializers.ValidationError(
-                            "base64 encoding requested but content does not appear to be base64"
+                            'base64 encoding requested but content does not appear to be base64'
                         )
                     content = base64.b64decode(content)
 
                 f = ContentFile(content, fname)
                 test_data = UploadHandler(user, comp_calc_data, f).process()
                 if test_data['errors']:
-                    raise serializers.ValidationError("Error with %s test: %s" % (slug, '\n'.join(test_data['errors'])))
+                    raise serializers.ValidationError('Error with {} test: {}'.format(slug, '\n'.join(test_data['errors'])))
 
                 self.ti_attachments[slug].append(test_data['attachment_id'])
                 self.ti_attachments[slug].extend([a['attachment_id'] for a in test_data['user_attached']])
                 self.ti_upload_analysis_data[slug] = test_data['result']
 
                 data = validated_data['tests'].get(slug, {})
-                comment_sources = [data.get("comment", ""), test_data.get("comment")]
+                comment_sources = [data.get('comment', ''), test_data.get('comment')]
                 comp_calc_data['comments'][slug] = '\n'.join(c for c in comment_sources if c)
                 comp_calc_data['tests'][slug] = test_data['result']
                 comp_calc_data.pop('test_id', None)
@@ -496,14 +477,14 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             if has_composite:
                 results = CompositePerformer(user, comp_calc_data).calculate()
                 if not results['success']:  # pragma: no cover
-                    raise serializers.ValidationError(', '.join(results.get("errors", [])))
+                    raise serializers.ValidationError(', '.join(results.get('errors', [])))
 
                 for slug, test_data in results['results'].items():
                     if test_data['error']:
-                        raise serializers.ValidationError("Error with %s test: %s" % (slug, test_data['error']))
+                        raise serializers.ValidationError('Error with {} test: {}'.format(slug, test_data['error']))
 
                     data = validated_data['tests'].get(slug, {})
-                    data['comment'] = '\n'.join(c for c in [data.get("comment", ""), test_data.get("comment")] if c)
+                    data['comment'] = '\n'.join(c for c in [data.get('comment', ''), test_data.get('comment')] if c)
                     data['value'] = test_data['value']
                     validated_data['tests'][slug] = data
 
@@ -515,9 +496,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         """Convert API post data to format suitable for CompositePerformer"""
 
         data = {
-            'tests': {
-                k: v.get("value") for k, v in validated_data['tests'].items()
-            },
+            'tests': {k: v.get('value') for k, v in validated_data['tests'].items()},
             'meta': {
                 'test_list_name': self.tl.name,
                 'unit_number': self.utc.unit.number,
@@ -528,15 +507,12 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             },
             'test_list_id': self.tl.id,
             'unit_id': self.utc.unit.id,
-            'comments': {
-                k: v.get("comment") for k, v in validated_data['tests'].items()
-            }
+            'comments': {k: v.get('comment') for k, v in validated_data['tests'].items()},
         }
         return data
 
     @atomic
     def create(self, validated_data):
-
         utc = validated_data['unit_test_collection']
         user = validated_data['created_by']
         tl = validated_data['test_list']
@@ -545,13 +521,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         test_instance_data = validated_data.pop('tests')
 
         # fields for creating test list instance comment
-        self.comment = validated_data.pop("comment", "")
+        self.comment = validated_data.pop('comment', '')
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
         status = user_set_status or models.TestInstanceStatus.objects.default()
         if status is None:
-            raise serializers.ValidationError("No test instance status available")
+            raise serializers.ValidationError('No test instance status available')
 
         # related return to service
         rtsqa = validated_data.pop('return_to_service_qa', None)
@@ -577,10 +553,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             test__in=tests,
             active=True,
         ).select_related(
-            "reference",
-            "test__category",
-            "tolerance",
-            "unit",
+            'reference',
+            'test__category',
+            'tolerance',
+            'unit',
         )
 
         # make sure utis are correctly ordered
@@ -590,13 +566,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         for order, uti in enumerate(ordered_utis):
             data = test_instance_data[uti.test.slug]
             ti = models.TestInstance(
-                value=data.get("value"),
-                string_value=data.get("string_value", ""),
-                json_value=data.get("json_value", ""),
-                date_value=data.get("date_value"),
-                datetime_value=data.get("datetime_value"),
-                skipped=data.get("skipped", False),
-                comment=data.get("comment", ""),
+                value=data.get('value'),
+                string_value=data.get('string_value', ''),
+                json_value=data.get('json_value', ''),
+                date_value=data.get('date_value'),
+                datetime_value=data.get('datetime_value'),
+                skipped=data.get('skipped', False),
+                comment=data.get('comment', ''),
                 unit_test_info=uti,
                 reference=uti.reference,
                 tolerance=uti.tolerance,
@@ -649,7 +625,6 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
     @atomic
     def update(self, instance, validated_data):
-
         now = timezone.now()
         utc = instance.unit_test_collection
         user = self.context['request'].user
@@ -658,7 +633,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         test_instance_data = validated_data.pop('tests')
 
         # fields for creating test list instance comment
-        self.comment = validated_data.pop("comment", "")
+        self.comment = validated_data.pop('comment', '')
 
         # user set test instance status or default
         user_set_status = validated_data.pop('status', None)
@@ -699,10 +674,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             self.create_comment(self.comment, instance)
 
         tis = instance.testinstance_set.select_related(
-            "unit_test_info",
-            "unit_test_info__test",
-            "unit_test_info__reference",
-            "unit_test_info__tolerance",
+            'unit_test_info',
+            'unit_test_info__test',
+            'unit_test_info__reference',
+            'unit_test_info__tolerance',
         )
         for ti in tis:
             tid = test_instance_data[ti.unit_test_info.test.slug]
@@ -710,13 +685,13 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             ti.modified_by = user
             ti.work_started = instance.work_started
             ti.work_completed = instance.work_completed
-            ti.skipped = tid.get("skipped", ti.skipped)
-            ti.value = tid.get("value", ti.value)
-            ti.string_value = tid.get("string_value", ti.string_value)
-            ti.date_value = tid.get("date_value", ti.date_value)
-            ti.datetime_value = tid.get("datetime_value", ti.datetime_value)
-            ti.skipped = tid.get("skipped", False)
-            ti.comment = tid.get("comment", ti.comment)
+            ti.skipped = tid.get('skipped', ti.skipped)
+            ti.value = tid.get('value', ti.value)
+            ti.string_value = tid.get('string_value', ti.string_value)
+            ti.date_value = tid.get('date_value', ti.date_value)
+            ti.datetime_value = tid.get('datetime_value', ti.datetime_value)
+            ti.skipped = tid.get('skipped', False)
+            ti.comment = tid.get('comment', ti.comment)
 
             ti.calculate_pass_fail()
             if not user_set_status:
@@ -759,10 +734,10 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     def to_representation(self, obj):
         # Monkeypatch on a tests dict here since it doesn't actually
         # exist on the TestListInstance object
-        base_url = reverse("testinstance-list")
-        base_status_url = reverse("testinstancestatus-list")
-        base_ref_url = reverse("reference-list")
-        base_tol_url = reverse("tolerance-list")
+        base_url = reverse('testinstance-list')
+        base_status_url = reverse('testinstancestatus-list')
+        base_ref_url = reverse('reference-list')
+        base_tol_url = reverse('tolerance-list')
         qs = obj.testinstance_set.select_related(
             'status',
             'reference',
@@ -773,53 +748,51 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         obj.return_to_service_qa = None
         obj.tests = {}
         for ti in qs:
-            status = base_status_url + "%d/" % ti.status.pk
-            tol = base_tol_url + "%d/" % ti.tolerance.pk if ti.tolerance else None
-            ref = base_ref_url + "%d/" % ti.reference.pk if ti.reference else None
+            status = base_status_url + '%d/' % ti.status.pk
+            tol = base_tol_url + '%d/' % ti.tolerance.pk if ti.tolerance else None
+            ref = base_ref_url + '%d/' % ti.reference.pk if ti.reference else None
             obj.tests[ti.unit_test_info.test.slug] = {
-                "url": base_url + "%d/" % ti.pk,
-                "value": ti.value,
-                "string_value": ti.string_value,
-                "date_value": ti.date_value,
-                "datetime_value": ti.datetime_value,
-                "value_display": ti.value_display(),
-                "diff_display": ti.diff_display(),
-                "pass_fail": (ti.pass_fail, ti.get_pass_fail_display()),
-                "skipped": ti.skipped,
-                "comment": ti.comment,
-                "status": status,
-                "reference": ref,
-                "tolerance": tol,
-                "attachments": [a.attachment.url for a in ti.attachment_set.all()],
+                'url': base_url + '%d/' % ti.pk,
+                'value': ti.value,
+                'string_value': ti.string_value,
+                'date_value': ti.date_value,
+                'datetime_value': ti.datetime_value,
+                'value_display': ti.value_display(),
+                'diff_display': ti.diff_display(),
+                'pass_fail': (ti.pass_fail, ti.get_pass_fail_display()),
+                'skipped': ti.skipped,
+                'comment': ti.comment,
+                'status': status,
+                'reference': ref,
+                'tolerance': tol,
+                'attachments': [a.attachment.url for a in ti.attachment_set.all()],
             }
 
-        rep = super(TestListInstanceCreator, self).to_representation(obj)
+        rep = super().to_representation(obj)
 
-        if not hasattr(self, "comment"):
+        if not hasattr(self, 'comment'):
             self.comment = ''
             if self.instance:
                 self.comment = '\n'.join(
-                    '%s:%s:%s' % (c.user.username, c.submit_date, c.comment) for c in self.instance.comments.all()
+                    f'{c.user.username}:{c.submit_date}:{c.comment}' for c in self.instance.comments.all()
                 )
 
         if self.comment:
             rep['comment'] = self.comment
 
-        rep.pop("return_to_service_qa", None)
-        rep.pop("status", None)
+        rep.pop('return_to_service_qa', None)
+        rep.pop('status', None)
 
         return rep
 
 
 class TestListCycleSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.TestListCycle
-        fields = "__all__"
+        fields = '__all__'
 
 
 class TestListCycleMembershipSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = models.TestListCycleMembership
-        fields = "__all__"
+        fields = '__all__'

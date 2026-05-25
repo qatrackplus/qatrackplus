@@ -7,9 +7,9 @@
 # passwords) out of version control.
 
 ## Manditory settings:
-### You must set at least the DATABASES setting here. 
+### You must set at least the DATABASES setting here.
 
-DEBUG = False # Set to True to enable debug mode (not safe for regular use!)
+DEBUG = False  # Set to True to enable debug mode (not safe for regular use!)
 TEMPLATE_DBG = True
 
 DATABASES = {
@@ -31,21 +31,20 @@ DATABASES['readonly'] = DATABASES['default']
 # Account and Email settings are a good place to start.
 
 # Example:
-#TIME_ZONE = 'America/Toronto'
-#LANGUAGES = [('en', 'English'), ('fr', 'Français'), ('es', 'Español')]
-#LANGUAGE_CODE = 'fr'
+# TIME_ZONE = 'America/Toronto'
+# LANGUAGES = [('en', 'English'), ('fr', 'Français'), ('es', 'Español')]
+# LANGUAGE_CODE = 'fr'
 
-#AUTOSAVE_DAYS_TO_KEEP = 7
-#MAX_TESTS_PER_TESTLIST = 100
+# AUTOSAVE_DAYS_TO_KEEP = 7
+# MAX_TESTS_PER_TESTLIST = 100
 
-#TODO - add default adfs settings here if needed
+# TODO - add default adfs settings here if needed
 
-#CUSTOM_ROOT_PATH = "/path/to/your/qatrack/storage/directory"
-#MEDIA_ROOT = os.path.join(CUSTOM_ROOT_PATH, "media")
+# CUSTOM_ROOT_PATH = "/path/to/your/qatrack/storage/directory"
+# MEDIA_ROOT = os.path.join(CUSTOM_ROOT_PATH, "media")
 
-#UPLOAD_PATH = "uploads"
-#TMP_UPLOAD_PATH = os.path.join(UPLOAD_PATH, "tmp")
-#UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
-#TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
-#STATIC_ROOT = os.path.join(CUSTOM_ROOT_PATH, "static")
-
+# UPLOAD_PATH = "uploads"
+# TMP_UPLOAD_PATH = os.path.join(UPLOAD_PATH, "tmp")
+# UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
+# TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
+# STATIC_ROOT = os.path.join(CUSTOM_ROOT_PATH, "static")

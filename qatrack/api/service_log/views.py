@@ -10,7 +10,7 @@ from qatrack.service_log import models
 
 
 class ServiceAreaViewSet(viewsets.ModelViewSet):
-    queryset = models.ServiceArea.objects.prefetch_related("units")
+    queryset = models.ServiceArea.objects.prefetch_related('units')
     serializer_class = serializers.ServiceAreaSerializer
     filterset_class = filters.ServiceAreaFilter
     filter_backends = (
@@ -50,7 +50,7 @@ class ServiceEventStatusViewSet(viewsets.ModelViewSet):
 
 
 class ServiceEventViewSet(viewsets.ModelViewSet):
-    queryset = models.ServiceEvent.objects.prefetch_related("service_event_related").all()
+    queryset = models.ServiceEvent.objects.prefetch_related('service_event_related').all()
     serializer_class = serializers.ServiceEventSerializer
     filterset_class = filters.ServiceEventFilter
     filter_backends = (
@@ -62,12 +62,14 @@ class ServiceEventViewSet(viewsets.ModelViewSet):
 class ServiceEventTemplateViewSet(viewsets.ModelViewSet):
     queryset = (
         models.ServiceEventTemplate.objects.select_related(
-            "service_type",
-            "service_area",
-        ).prefetch_related(
-            "return_to_service_test_lists",
-            "return_to_service_cycles",
-        ).all()
+            'service_type',
+            'service_area',
+        )
+        .prefetch_related(
+            'return_to_service_test_lists',
+            'return_to_service_cycles',
+        )
+        .all()
     )
     serializer_class = serializers.ServiceEventTemplateSerializer
     filterset_class = filters.ServiceEventTemplateFilter
@@ -80,14 +82,16 @@ class ServiceEventTemplateViewSet(viewsets.ModelViewSet):
 class ServiceEventScheduleViewSet(viewsets.ModelViewSet):
     queryset = (
         models.ServiceEventSchedule.objects.select_related(
-            "unit_service_area",
-            "service_event_template",
-            "frequency",
-            "assigned_to",
-            "last_instance",
-        ).prefetch_related(
-            "visible_to",
-        ).all()
+            'unit_service_area',
+            'service_event_template',
+            'frequency',
+            'assigned_to',
+            'last_instance',
+        )
+        .prefetch_related(
+            'visible_to',
+        )
+        .all()
     )
     serializer_class = serializers.ServiceEventScheduleSerializer
     filterset_class = filters.ServiceEventScheduleFilter
@@ -150,10 +154,15 @@ class GroupLinkerInstanceViewSet(viewsets.ModelViewSet):
 def service_event_searcher(request):
     q = request.GET.get('q')
     serviceevent = models.ServiceEvent.objects.filter(Q(id__icontains=q))[0:50]
-    return JsonResponse({
-        'items': [{
-            'id': se.id,
-            'display': '{} - Created on {}'.format(se.service_status.name, format_datetime(se.datetime_service))
-        } for se in serviceevent],
-        'name': 'display'
-    })
+    return JsonResponse(
+        {
+            'items': [
+                {
+                    'id': se.id,
+                    'display': f'{se.service_status.name} - Created on {format_datetime(se.datetime_service)}',
+                }
+                for se in serviceevent
+            ],
+            'name': 'display',
+        }
+    )

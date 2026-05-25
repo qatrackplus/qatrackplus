@@ -1,22 +1,20 @@
-import calendar
-import warnings
-
-import django.apps
 from zoneinfo import ZoneInfo
 
+import django.apps
 from django.conf import settings
 from django.utils import timezone
 
 from qatrack.qatrack_core.dates import end_of_day, start_of_day
+
 from ..qa.models import RecurrenceField
 
 # due date choices. For convenience with colors/icons these are the same as the
 # pass fail choices
 
-NO_DUE_DATE = "no_tol"
-NOT_DUE = "ok"
-DUE = "tolerance"
-OVERDUE = "action"
+NO_DUE_DATE = 'no_tol'
+NOT_DUE = 'ok'
+DUE = 'tolerance'
+OVERDUE = 'action'
 
 
 def calc_due_date(completed, due_date, frequency):
@@ -39,8 +37,10 @@ def calc_due_date(completed, due_date, frequency):
     if is_classic_offset or due_date is None:
         # Check if this recurrence was created from string assignment (test compatibility)
         if (
-            is_classic_offset and due_date is not None and hasattr(frequency.recurrences, '_from_string_assignment') and
-            frequency.recurrences._from_string_assignment
+            is_classic_offset
+            and due_date is not None
+            and hasattr(frequency.recurrences, '_from_string_assignment')
+            and frequency.recurrences._from_string_assignment
         ):
             # For string-assigned recurrences, always advance from due_date to preserve time
             return frequency.recurrences.after(due_date, dtstart=due_date)
@@ -52,7 +52,6 @@ def calc_due_date(completed, due_date, frequency):
         return calc_initial_due_date(completed, frequency)
 
     if should_update_schedule(completed, due_date, frequency):
-
         # ok, we're inside or beyond QC window so get next due date
         next_due_date = frequency.recurrences.after(completed, dtstart=due_date)
 
@@ -119,14 +118,14 @@ class SchedulingMixin:
     """
 
     def calc_due_date(self):
-        """return the next due date of this Unit/TestList pair """
+        """return the next due date of this Unit/TestList pair"""
 
         if self.auto_schedule and self.frequency:
             last_valid = self.last_instance_for_scheduling()
             if not last_valid and self.last_instance:
                 # Done before but no valid lists
                 return timezone.now()
-            elif (last_valid and last_valid.work_completed):
+            elif last_valid and last_valid.work_completed:
                 return calc_due_date(last_valid.work_completed, self.due_date, self.frequency)
 
         # return existing due date (could be None)
@@ -165,7 +164,6 @@ class SchedulingMixin:
         return OVERDUE
 
     def window(self):
-
         if self.due_date is None:
             return None
 
@@ -186,7 +184,7 @@ class RecurrenceFieldMixin:
     to update the recurrence rule DTSTART value when the InstitutionSettings
     has a new timezone set"""
 
-    recurrence_field_name = "recurrences"
+    recurrence_field_name = 'recurrences'
 
     def save(self, *args, **kwargs):
         """Set recurrence start date with correct timezone on object creation"""

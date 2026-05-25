@@ -47,14 +47,13 @@ DATABASES = {
 """
 
 
-
 DATABASES['readonly'] = DATABASES['default']
 
 # Test-specific settings
 NOTIFICATIONS_ON = False
 DEFAULT_NUMBER_FORMAT = None
 AD_CLEAN_USERNAME = None
-HTTP_OR_HTTPS = "http"
+HTTP_OR_HTTPS = 'http'
 REVIEW_BULK = True
 TIME_ZONE = 'America/Toronto'
 
@@ -66,20 +65,21 @@ SELENIUM_VIRTUAL_DISPLAY = False
 # Test-specific password hasher for faster testing
 from django.contrib.auth.hashers import BasePasswordHasher
 
+
 class SimplePasswordHasher(BasePasswordHasher):
     """A simple hasher inspired by django-plainpasswordhasher"""
 
-    algorithm = "dumb"  # This attribute is needed by the base class.
+    algorithm = 'dumb'  # This attribute is needed by the base class.
 
     def salt(self):
-        return ""
+        return ''
 
     def encode(self, password, salt):
-        return "dumb$$%s" % password
+        return f'dumb$${password}'
 
     def verify(self, password, encoded):
-        algorithm, hash = encoded.split("$$", 1)
-        assert algorithm == "dumb"
+        algorithm, hash = encoded.split('$$', 1)
+        assert algorithm == 'dumb'
         return password == hash
 
     def safe_summary(self, encoded):
@@ -87,9 +87,10 @@ class SimplePasswordHasher(BasePasswordHasher):
 
         The password is returned in the clear.
         """
-        return {"algorithm": "dumb", "hash": encoded.split("$", 2)[2]}
+        return {'algorithm': 'dumb', 'hash': encoded.split('$', 2)[2]}
 
-PASSWORD_HASHERS = ("qatrack.test_settings.SimplePasswordHasher",)
+
+PASSWORD_HASHERS = ('qatrack.test_settings.SimplePasswordHasher',)
 
 AUTHENTICATION_BACKENDS = ['qatrack.accounts.backends.QATrackAccountBackend']
 

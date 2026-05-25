@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 from south.v2 import DataMigration
 
 
 class Migration(DataMigration):
-
     def forwards(self, orm):
         "Write your forwards methods here."
         # Note: Remember to use orm['appname.ModelName'] rather than "from appname.models..."
@@ -13,7 +11,7 @@ class Migration(DataMigration):
         UnitTestInfo = orm['qa.UnitTestInfo']
         TestInstance = orm['qa.TestInstance']
 
-        distinct_refs = list(Reference.objects.values_list("value", "type").distinct())
+        distinct_refs = list(Reference.objects.values_list('value', 'type').distinct())
 
         for v, t in distinct_refs:
             q = list(Reference.objects.filter(value=v, type=t))
@@ -28,20 +26,18 @@ class Migration(DataMigration):
                 r.delete()
 
         distinct_tols = Tolerance.objects.values_list(
-            "act_low",
-            "tol_low",
-            "tol_high",
-            "act_high",
-            "mc_tol_choices",
-            "mc_pass_choices",
-            "type",
+            'act_low',
+            'tol_low',
+            'tol_high',
+            'act_high',
+            'mc_tol_choices',
+            'mc_pass_choices',
+            'type',
         ).distinct()
 
         for al, tl, th, ah, mc_t, mc_p, t in distinct_tols:
             q = Tolerance.objects.filter(
-                    act_low=al, tol_low=tl, tol_high=th, act_high=ah,
-                    mc_tol_choices=mc_t, mc_pass_choices=mc_p,
-                    type=t
+                act_low=al, tol_low=tl, tol_high=th, act_high=ah, mc_tol_choices=mc_t, mc_pass_choices=mc_p, type=t
             )
             if q.count() <= 1:
                 continue
@@ -61,21 +57,37 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'Group'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
-            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
+            'permissions': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'},
+            ),
         },
         'auth.permission': {
-            'Meta': {'ordering': "('content_type__app_label', 'content_type__model', 'codename')", 'unique_together': "(('content_type', 'codename'),)", 'object_name': 'Permission'},
+            'Meta': {
+                'ordering': "('content_type__app_label', 'content_type__model', 'codename')",
+                'unique_together': "(('content_type', 'codename'),)",
+                'object_name': 'Permission',
+            },
             'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
+            'content_type': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['contenttypes.ContentType']"},
+            ),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
         },
         'auth.user': {
             'Meta': {'object_name': 'User'},
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
+            'groups': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {'to': "orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'},
+            ),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -83,22 +95,31 @@ class Migration(DataMigration):
             'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
-            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
+            'user_permissions': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'},
+            ),
+            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'}),
         },
         'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
+            'Meta': {
+                'ordering': "('name',)",
+                'unique_together': "(('app_label', 'model'),)",
+                'object_name': 'ContentType',
+                'db_table': "'django_content_type'",
+            },
             'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
         },
         'qa.category': {
             'Meta': {'object_name': 'Category'},
             'description': ('django.db.models.fields.TextField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
-            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '255'})
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '255'}),
         },
         'qa.frequency': {
             'Meta': {'ordering': "('nominal_interval',)", 'object_name': 'Frequency'},
@@ -107,58 +128,118 @@ class Migration(DataMigration):
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
             'nominal_interval': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'overdue_interval': ('django.db.models.fields.PositiveIntegerField', [], {}),
-            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'})
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
         },
         'qa.reference': {
             'Meta': {'object_name': 'Reference'},
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'reference_creators'", 'to': "orm['auth.User']"}),
+            'created_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'reference_creators'", 'to': "orm['auth.User']"},
+            ),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modified_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'reference_modifiers'", 'to': "orm['auth.User']"}),
+            'modified_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'reference_modifiers'", 'to': "orm['auth.User']"},
+            ),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'type': ('django.db.models.fields.CharField', [], {'default': "'numerical'", 'max_length': '15'}),
-            'value': ('django.db.models.fields.FloatField', [], {})
+            'value': ('django.db.models.fields.FloatField', [], {}),
         },
         'qa.test': {
             'Meta': {'object_name': 'Test'},
             'calculation_procedure': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'category': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Category']"}),
-            'choices': ('django.db.models.fields.CharField', [], {'max_length': '2048', 'null': 'True', 'blank': 'True'}),
+            'choices': (
+                'django.db.models.fields.CharField',
+                [],
+                {'max_length': '2048', 'null': 'True', 'blank': 'True'},
+            ),
             'constant_value': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'test_creator'", 'to': "orm['auth.User']"}),
+            'created_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'test_creator'", 'to': "orm['auth.User']"},
+            ),
             'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modified_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'test_modifier'", 'to': "orm['auth.User']"}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255', 'db_index': 'True'}),
-            'procedure': ('django.db.models.fields.CharField', [], {'max_length': '512', 'null': 'True', 'blank': 'True'}),
+            'modified_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'test_modifier'", 'to': "orm['auth.User']"},
+            ),
+            'name': (
+                'django.db.models.fields.CharField',
+                [],
+                {'unique': 'True', 'max_length': '255', 'db_index': 'True'},
+            ),
+            'procedure': (
+                'django.db.models.fields.CharField',
+                [],
+                {'max_length': '512', 'null': 'True', 'blank': 'True'},
+            ),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '128'}),
-            'type': ('django.db.models.fields.CharField', [], {'default': "'simple'", 'max_length': '10'})
+            'type': ('django.db.models.fields.CharField', [], {'default': "'simple'", 'max_length': '10'}),
         },
         'qa.testinstance': {
             'Meta': {'object_name': 'TestInstance'},
             'comment': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'test_instance_creator'", 'to': "orm['auth.User']"}),
+            'created_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'test_instance_creator'", 'to': "orm['auth.User']"},
+            ),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'in_progress': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modified_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'test_instance_modifier'", 'to': "orm['auth.User']"}),
+            'modified_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'test_instance_modifier'", 'to': "orm['auth.User']"},
+            ),
             'pass_fail': ('django.db.models.fields.CharField', [], {'max_length': '20', 'db_index': 'True'}),
-            'reference': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Reference']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
+            'reference': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.Reference']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'},
+            ),
             'review_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'reviewed_by': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'}),
+            'reviewed_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'},
+            ),
             'skipped': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestInstanceStatus']"}),
-            'string_value': ('django.db.models.fields.CharField', [], {'max_length': '1024', 'null': 'True', 'blank': 'True'}),
-            'test_list_instance': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestListInstance']", 'null': 'True', 'blank': 'True'}),
-            'tolerance': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Tolerance']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
+            'string_value': (
+                'django.db.models.fields.CharField',
+                [],
+                {'max_length': '1024', 'null': 'True', 'blank': 'True'},
+            ),
+            'test_list_instance': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.TestListInstance']", 'null': 'True', 'blank': 'True'},
+            ),
+            'tolerance': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.Tolerance']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'},
+            ),
             'unit_test_info': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.UnitTestInfo']"}),
             'value': ('django.db.models.fields.FloatField', [], {'null': 'True'}),
-            'work_completed': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'db_index': 'True'}),
-            'work_started': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'})
+            'work_completed': (
+                'django.db.models.fields.DateTimeField',
+                [],
+                {'default': 'datetime.datetime.now', 'db_index': 'True'},
+            ),
+            'work_started': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'}),
         },
         'qa.testinstancestatus': {
             'Meta': {'object_name': 'TestInstanceStatus'},
@@ -169,125 +250,241 @@ class Migration(DataMigration):
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
             'requires_review': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
-            'valid': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
+            'valid': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
         },
         'qa.testlist': {
             'Meta': {'object_name': 'TestList'},
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'qa_testlist_created'", 'to': "orm['auth.User']"}),
+            'created_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'qa_testlist_created'", 'to': "orm['auth.User']"},
+            ),
             'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modified_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'qa_testlist_modified'", 'to': "orm['auth.User']"}),
+            'modified_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'qa_testlist_modified'", 'to': "orm['auth.User']"},
+            ),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
-            'sublists': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': "orm['qa.TestList']", 'null': 'True', 'blank': 'True'}),
-            'tests': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['qa.Test']", 'through': "orm['qa.TestListMembership']", 'symmetrical': 'False'})
+            'sublists': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {'symmetrical': 'False', 'to': "orm['qa.TestList']", 'null': 'True', 'blank': 'True'},
+            ),
+            'tests': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {'to': "orm['qa.Test']", 'through': "orm['qa.TestListMembership']", 'symmetrical': 'False'},
+            ),
         },
         'qa.testlistcycle': {
             'Meta': {'object_name': 'TestListCycle'},
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'qa_testlistcycle_created'", 'to': "orm['auth.User']"}),
+            'created_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'qa_testlistcycle_created'", 'to': "orm['auth.User']"},
+            ),
             'description': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modified_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'qa_testlistcycle_modified'", 'to': "orm['auth.User']"}),
+            'modified_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'qa_testlistcycle_modified'", 'to': "orm['auth.User']"},
+            ),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
-            'test_lists': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['qa.TestList']", 'through': "orm['qa.TestListCycleMembership']", 'symmetrical': 'False'})
+            'test_lists': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {'to': "orm['qa.TestList']", 'through': "orm['qa.TestListCycleMembership']", 'symmetrical': 'False'},
+            ),
         },
         'qa.testlistcyclemembership': {
             'Meta': {'ordering': "('order',)", 'object_name': 'TestListCycleMembership'},
             'cycle': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestListCycle']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'order': ('django.db.models.fields.IntegerField', [], {}),
-            'test_list': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestList']"})
+            'test_list': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestList']"}),
         },
         'qa.testlistinstance': {
             'Meta': {'object_name': 'TestListInstance'},
             'comment': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'test_list_instance_creator'", 'to': "orm['auth.User']"}),
+            'created_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'test_list_instance_creator'", 'to': "orm['auth.User']"},
+            ),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'in_progress': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modified_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'test_list_instance_modifier'", 'to': "orm['auth.User']"}),
+            'modified_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'test_list_instance_modifier'", 'to': "orm['auth.User']"},
+            ),
             'test_list': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestList']"}),
-            'unit_test_collection': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.UnitTestCollection']"}),
-            'work_completed': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'null': 'True', 'db_index': 'True'}),
-            'work_started': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'})
+            'unit_test_collection': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.UnitTestCollection']"},
+            ),
+            'work_completed': (
+                'django.db.models.fields.DateTimeField',
+                [],
+                {'default': 'datetime.datetime.now', 'null': 'True', 'db_index': 'True'},
+            ),
+            'work_started': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'}),
         },
         'qa.testlistmembership': {
-            'Meta': {'ordering': "('order',)", 'unique_together': "(('test_list', 'test'),)", 'object_name': 'TestListMembership'},
+            'Meta': {
+                'ordering': "('order',)",
+                'unique_together': "(('test_list', 'test'),)",
+                'object_name': 'TestListMembership',
+            },
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'order': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
             'test': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Test']"}),
-            'test_list': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestList']"})
+            'test_list': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestList']"}),
         },
         'qa.tolerance': {
             'Meta': {'object_name': 'Tolerance'},
             'act_high': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'act_low': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
-            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'tolerance_creators'", 'to': "orm['auth.User']"}),
+            'created_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'tolerance_creators'", 'to': "orm['auth.User']"},
+            ),
             'created_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'mc_pass_choices': ('django.db.models.fields.CharField', [], {'max_length': '2048', 'null': 'True', 'blank': 'True'}),
-            'mc_tol_choices': ('django.db.models.fields.CharField', [], {'max_length': '2048', 'null': 'True', 'blank': 'True'}),
-            'modified_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'tolerance_modifiers'", 'to': "orm['auth.User']"}),
+            'mc_pass_choices': (
+                'django.db.models.fields.CharField',
+                [],
+                {'max_length': '2048', 'null': 'True', 'blank': 'True'},
+            ),
+            'mc_tol_choices': (
+                'django.db.models.fields.CharField',
+                [],
+                {'max_length': '2048', 'null': 'True', 'blank': 'True'},
+            ),
+            'modified_by': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'related_name': "'tolerance_modifiers'", 'to': "orm['auth.User']"},
+            ),
             'modified_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
             'tol_high': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'tol_low': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
-            'type': ('django.db.models.fields.CharField', [], {'max_length': '20'})
+            'type': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
         },
         'qa.unittestcollection': {
-            'Meta': {'unique_together': "(('unit', 'frequency', 'content_type', 'object_id'),)", 'object_name': 'UnitTestCollection'},
+            'Meta': {
+                'unique_together': "(('unit', 'frequency', 'content_type', 'object_id'),)",
+                'object_name': 'UnitTestCollection',
+            },
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'db_index': 'True'}),
-            'assigned_to': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Group']", 'null': 'True'}),
+            'assigned_to': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['auth.Group']", 'null': 'True'},
+            ),
             'auto_schedule': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
+            'content_type': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['contenttypes.ContentType']"},
+            ),
             'due_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'frequency': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Frequency']", 'null': 'True', 'blank': 'True'}),
+            'frequency': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.Frequency']", 'null': 'True', 'blank': 'True'},
+            ),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_instance': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.TestListInstance']", 'null': 'True', 'on_delete': 'models.SET_NULL'}),
+            'last_instance': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.TestListInstance']", 'null': 'True', 'on_delete': 'models.SET_NULL'},
+            ),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['units.Unit']"}),
-            'visible_to': ('django.db.models.fields.related.ManyToManyField', [], {'default': '[]', 'related_name': "'test_collection_visibility'", 'symmetrical': 'False', 'to': "orm['auth.Group']"})
+            'visible_to': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {
+                    'default': '[]',
+                    'related_name': "'test_collection_visibility'",
+                    'symmetrical': 'False',
+                    'to': "orm['auth.Group']",
+                },
+            ),
         },
         'qa.unittestinfo': {
             'Meta': {'unique_together': "(['test', 'unit'],)", 'object_name': 'UnitTestInfo'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'db_index': 'True'}),
-            'assigned_to': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Group']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
+            'assigned_to': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['auth.Group']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'},
+            ),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'reference': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Reference']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
+            'reference': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.Reference']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'},
+            ),
             'test': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Test']"}),
-            'tolerance': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['qa.Tolerance']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'}),
-            'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['units.Unit']"})
+            'tolerance': (
+                'django.db.models.fields.related.ForeignKey',
+                [],
+                {'to': "orm['qa.Tolerance']", 'null': 'True', 'on_delete': 'models.SET_NULL', 'blank': 'True'},
+            ),
+            'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['units.Unit']"}),
         },
         'units.modality': {
             'Meta': {'unique_together': "[('type', 'energy')]", 'object_name': 'Modality'},
             'energy': ('django.db.models.fields.FloatField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'type': ('django.db.models.fields.CharField', [], {'max_length': '20'})
+            'type': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
         },
         'units.unit': {
             'Meta': {'ordering': "['number']", 'object_name': 'Unit'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'install_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'location': ('django.db.models.fields.CharField', [], {'max_length': '256', 'null': 'True', 'blank': 'True'}),
-            'modalities': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['units.Modality']", 'symmetrical': 'False'}),
+            'location': (
+                'django.db.models.fields.CharField',
+                [],
+                {'max_length': '256', 'null': 'True', 'blank': 'True'},
+            ),
+            'modalities': (
+                'django.db.models.fields.related.ManyToManyField',
+                [],
+                {'to': "orm['units.Modality']", 'symmetrical': 'False'},
+            ),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'number': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
-            'serial_number': ('django.db.models.fields.CharField', [], {'max_length': '256', 'null': 'True', 'blank': 'True'}),
-            'type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['units.UnitType']"})
+            'serial_number': (
+                'django.db.models.fields.CharField',
+                [],
+                {'max_length': '256', 'null': 'True', 'blank': 'True'},
+            ),
+            'type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['units.UnitType']"}),
         },
         'units.unittype': {
             'Meta': {'unique_together': "[('name', 'model')]", 'object_name': 'UnitType'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'vendor': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        }
+            'vendor': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+        },
     }
 
     complete_apps = ['qa']

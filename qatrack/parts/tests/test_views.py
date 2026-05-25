@@ -9,9 +9,7 @@ from qatrack.service_log.tests import utils as sl_utils
 
 
 class TestCreatePart(TestCase):
-
     def setUp(self):
-
         self.factory = RequestFactory()
         self.view = p_views.PartUpdateCreate.as_view()
 
@@ -45,33 +43,32 @@ class TestCreatePart(TestCase):
         }
 
     def test_initial_options(self):
-
         response = self.client.get(self.url)
 
         part_categories = p_models.PartCategory.objects.all()
         self.assertEqual(
             list(part_categories.values_list('id', 'name')),
-            list(response.context_data['form'].fields['part_category'].queryset.values_list('id', 'name'))
+            list(response.context_data['form'].fields['part_category'].queryset.values_list('id', 'name')),
         )
 
         suppliers = p_models.Supplier.objects.all()
         self.assertEqual(
             list(suppliers.values_list('id', 'name')),
             list(
-                response.context_data['supplier_formset'].forms[0].fields['supplier'].queryset.values_list(
-                    'id', 'name'
-                ),
-            )
+                response.context_data['supplier_formset']
+                .forms[0]
+                .fields['supplier']
+                .queryset.values_list('id', 'name'),
+            ),
         )
 
         room = p_models.Room.objects.all()
         self.assertEqual(
             list(room.values_list('id', 'name')),
-            list(response.context_data['storage_formset'].forms[0].fields['room'].queryset.values_list('id', 'name'))
+            list(response.context_data['storage_formset'].forms[0].fields['room'].queryset.values_list('id', 'name')),
         )
 
     def test_submit_valid(self):
-
         data = self.data
 
         data['storage-TOTAL_FORMS'] = 1
@@ -91,7 +88,6 @@ class TestCreatePart(TestCase):
         self.assertEqual(count + 1, p_models.Part.objects.count())
 
     def test_required(self):
-
         data = self.data
 
         data['part_number'] = ''
@@ -115,7 +111,6 @@ class TestCreatePart(TestCase):
         self.assertTrue('supplier' in response.context_data['supplier_formset'].forms[0].errors)
 
     def test_incorrect_storage_combination(self):
-
         data = self.data
         data['storage-TOTAL_FORMS'] = 1
         data['storage-0-quantity'] = 1
@@ -127,9 +122,7 @@ class TestCreatePart(TestCase):
 
 
 class TestEditPart(TestCase):
-
     def setUp(self):
-
         self.factory = RequestFactory()
         self.view = p_views.PartUpdateCreate.as_view()
 
@@ -137,7 +130,7 @@ class TestEditPart(TestCase):
         self.p = sl_utils.create_part(part_category=self.pc)
         self.pc_2 = sl_utils.create_part_category()
 
-        self.url = reverse('part_edit', kwargs={"pk": self.p.pk})
+        self.url = reverse('part_edit', kwargs={'pk': self.p.pk})
         self.user = qa_utils.create_user(is_superuser=True)
 
         self.client.login(username='user', password='password')
@@ -166,7 +159,6 @@ class TestEditPart(TestCase):
         }
 
     def test_submit_valid(self):
-
         data = self.data
 
         data['storage-0-quantity'] = 1
@@ -183,7 +175,6 @@ class TestEditPart(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_new_storage_location(self):
-
         data = self.data
 
         data['storage-TOTAL_FORMS'] = 1
@@ -196,12 +187,11 @@ class TestEditPart(TestCase):
         self.client.post(self.url, data=data)
         self.assertEqual(
             count + 1,
-            p_models.PartStorageCollection.objects.filter(part=self.p, storage__location='new_storage').count()
+            p_models.PartStorageCollection.objects.filter(part=self.p, storage__location='new_storage').count(),
         )
 
 
 class TestPartViews(TestCase):
-
     def setUp(self):
         self.factory = RequestFactory()
 
@@ -215,14 +205,12 @@ class TestPartViews(TestCase):
         sl_utils.create_part(name='a part to find', add_storage=True)
 
     def test_parts_searcher(self):
-
         parts_to_find = p_models.Part.objects.filter(Q(part_number__icontains='find') | Q(name__icontains='find'))
         data = {'q': 'find'}
         response = self.client.get(reverse('parts_searcher'), data=data)
         self.assertEqual(len(parts_to_find), len(response.json()['data']))
 
     def test_storage_searcher(self):
-
         part = p_models.Part.objects.first()
 
         p_models.PartStorageCollection.objects.create(quantity=1, part=part, storage=sl_utils.create_storage())
@@ -240,7 +228,6 @@ class TestPartViews(TestCase):
         self.assertEqual('__clear__', response.json()['data'])
 
     def test_room_location_searcher(self):
-
         room = p_models.Room.objects.first()
         data = {'r_id': room.id}
 

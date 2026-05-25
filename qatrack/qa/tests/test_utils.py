@@ -20,9 +20,8 @@ def time():
 
 
 class TestUtils(TestCase):
-
     def test_unique(self):
-        items = ["foo", "foo", "bar"]
+        items = ['foo', 'foo', 'bar']
         self.assertListEqual(items[1:], qautils.unique(items))
 
     def test_almost_equal_none(self):
@@ -32,13 +31,13 @@ class TestUtils(TestCase):
         self.assertTrue(qautils.almost_equal(1, 1))
 
     def test_almost_equal_small(self):
-        self.assertTrue(qautils.almost_equal(1, 1 + 1E-10))
+        self.assertTrue(qautils.almost_equal(1, 1 + 1e-10))
 
     def test_almost_equal_zero(self):
         self.assertTrue(qautils.almost_equal(0, 0))
 
     def test_tokenize(self):
-        proc = "result = a + 2"
+        proc = 'result = a + 2'
         self.assertListEqual(proc.split(), qautils.tokenize_composite_calc(proc))
 
     def test_set_encoder_set(self):
@@ -46,15 +45,15 @@ class TestUtils(TestCase):
 
     def test_float_format(self):
         numbers = (
-            (0.999, 3, "0.999"),
-            (-0.999, 3, "-0.999"),
-            (0.999, 1, "1"),
-            (0.999, 2, "1.0"),
-            (0.0, 4, "0"),
-            (-0.0, 4, "0"),
-            (1234.567, 1, "1e+3"),
-            (1234.567, 2, "1.2e+3"),
-            (1234.567, 5, "1234.6"),
+            (0.999, 3, '0.999'),
+            (-0.999, 3, '-0.999'),
+            (0.999, 1, '1'),
+            (0.999, 2, '1.0'),
+            (0.0, 4, '0'),
+            (-0.0, 4, '0'),
+            (1234.567, 1, '1e+3'),
+            (1234.567, 2, '1.2e+3'),
+            (1234.567, 5, '1234.6'),
         )
 
         for number, prec, expected in numbers:
@@ -62,18 +61,16 @@ class TestUtils(TestCase):
 
 
 class TestImportExport(TestCase):
-
     def setUp(self):
-
         self.user = utils.create_user()
-        self.tl1 = utils.create_test_list("tl1 é")
-        self.tl2 = utils.create_test_list("tl2")
-        self.tl3 = utils.create_test_list("tl3")
+        self.tl1 = utils.create_test_list('tl1 é')
+        self.tl2 = utils.create_test_list('tl2')
+        self.tl3 = utils.create_test_list('tl3')
         self.tlc = utils.create_cycle([self.tl1, self.tl2])
-        self.t1 = utils.create_test("t1")
-        self.t2 = utils.create_test("t2")
-        self.t3 = utils.create_test("t3")
-        self.t4 = utils.create_test("t4")
+        self.t1 = utils.create_test('t1')
+        self.t2 = utils.create_test('t2')
+        self.t3 = utils.create_test('t3')
+        self.t4 = utils.create_test('t4')
         utils.create_test_list_membership(self.tl1, self.t1)
         utils.create_test_list_membership(self.tl2, self.t2)
         utils.create_test_list_membership(self.tl3, self.t3)
@@ -84,11 +81,13 @@ class TestImportExport(TestCase):
         self.extra = models.Test.objects.filter(pk=self.t4.pk)
 
     def test_round_trip(self):
-        pack = json.dumps(testpack.create_testpack(
-            test_lists=self.tlqs,
-            cycles=self.tlcqs,
-            extra_tests=self.extra,
-        ))
+        pack = json.dumps(
+            testpack.create_testpack(
+                test_lists=self.tlqs,
+                cycles=self.tlcqs,
+                extra_tests=self.extra,
+            )
+        )
         models.TestListCycle.objects.all().delete()
         models.TestList.objects.all().delete()
         models.Test.objects.all().delete()
@@ -102,7 +101,6 @@ class TestImportExport(TestCase):
         assert models.TestListCycleMembership.objects.count() == 2
 
     def test_create_pack(self):
-
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
         assert 'meta' in pack
@@ -125,7 +123,6 @@ class TestImportExport(TestCase):
         assert list_found and test_found
 
     def test_timeout(self):
-
         with self.assertRaises(RuntimeError):
             with mock.patch('time.time', mock.Mock(side_effect=time)):
                 testpack.create_testpack(self.tlqs, self.tlcqs, timeout=1)
@@ -136,7 +133,7 @@ class TestImportExport(TestCase):
         testpack.save_testpack(pack, fp)
         fp.seek(0)
         # check the accented character in test list 1 name was written
-        assert "\\u00e9" in fp.read()
+        assert '\\u00e9' in fp.read()
 
     def test_non_destructive_load(self):
         ntl = models.TestList.objects.count()
@@ -163,7 +160,7 @@ class TestImportExport(TestCase):
         assert models.TestList.objects.filter(name=self.tl1.name).exists()
         assert models.Test.objects.filter(name=self.t1.name).exists()
         assert models.TestListCycle.objects.filter(name=self.tlc.name).exists()
-        assert self.tl1.name in models.TestListCycle.objects.values_list("test_lists__name", flat=True)
+        assert self.tl1.name in models.TestListCycle.objects.values_list('test_lists__name', flat=True)
 
     def test_selective_load(self):
         pack = testpack.create_testpack(models.TestList.objects.all(), self.tlcqs)
@@ -186,7 +183,7 @@ class TestImportExport(TestCase):
         assert models.TestListCycle.objects.count() == 0
 
     def test_existing_created_user_not_overwritten(self):
-        user2 = utils.create_user(uname="user2")
+        user2 = utils.create_user(uname='user2')
         pack = testpack.create_testpack(self.tlqs, self.tlcqs)
 
         fp = io.StringIO()
@@ -214,16 +211,16 @@ class TestImportExport(TestCase):
         assert models.TestListCycle.objects.filter(name__in=[self.tlc.name]).count() == 1
 
     def test_extra_tests(self):
-        extra = utils.create_test("extra test")
+        extra = utils.create_test('extra test')
         extra_qs = models.Test.objects.filter(pk=extra.pk)
         pack = testpack.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
         fp = io.StringIO()
         testpack.save_testpack(pack, fp)
         fp.seek(0)
-        assert "extra test" in fp.read()
+        assert 'extra test' in fp.read()
 
     def test_extra_tests_loaded(self):
-        extra = utils.create_test("extra test")
+        extra = utils.create_test('extra test')
         extra_qs = models.Test.objects.filter(pk=extra.pk)
         pack = testpack.create_testpack(self.tlqs, self.tlcqs, extra_tests=extra_qs)
         fp = io.StringIO()
@@ -234,8 +231,8 @@ class TestImportExport(TestCase):
         assert models.Test.objects.filter(name=extra.name).exists()
 
     def test_sublist(self):
-        tl5 = utils.create_test_list("tl5")
-        t5 = utils.create_test("t5")
+        tl5 = utils.create_test_list('tl5')
+        t5 = utils.create_test('t5')
         utils.create_test_list_membership(tl5, t5, order=0)
         utils.create_sublist(tl5, self.tl1, order=2)
         utils.create_sublist(tl5, self.tl2, order=3)
@@ -249,40 +246,39 @@ class TestImportExport(TestCase):
         for sl in models.Sublist.objects.all():
             assert sl.child.testlistmembership_set.count() == 1
         assert models.TestList.objects.count() == 3
-        assert models.TestList.objects.get(name="tl5")
+        assert models.TestList.objects.get(name='tl5')
 
 
 class TestFormatQCValue:
-
     @override_settings(CONSTANT_PRECISION=2)
     def test_null_format(self):
-        assert qautils.format_qc_value(1, None) == "1.0"
+        assert qautils.format_qc_value(1, None) == '1.0'
 
     @override_settings(CONSTANT_PRECISION=2)
     def test_empty_format(self):
-        assert qautils.format_qc_value(1, "") == "1.0"
+        assert qautils.format_qc_value(1, '') == '1.0'
 
     def test_old_style(self):
-        assert qautils.format_qc_value(1, "%.3f") == "1.000"
+        assert qautils.format_qc_value(1, '%.3f') == '1.000'
 
     def test_new_style(self):
-        assert qautils.format_qc_value(1, "{:.3f}") == "1.000"
+        assert qautils.format_qc_value(1, '{:.3f}') == '1.000'
 
     @override_settings(CONSTANT_PRECISION=2)
     def test_invalid_format(self):
-        assert qautils.format_qc_value(1, "{:foo}") == qautils.to_precision(1, settings.CONSTANT_PRECISION)
+        assert qautils.format_qc_value(1, '{:foo}') == qautils.to_precision(1, settings.CONSTANT_PRECISION)
 
     def test_non_numerical_val(self):
-        assert qautils.format_qc_value(None, "%d") == "None"
+        assert qautils.format_qc_value(None, '%d') == 'None'
 
-    @override_settings(DEFAULT_NUMBER_FORMAT="{:.3f}")
+    @override_settings(DEFAULT_NUMBER_FORMAT='{:.3f}')
     def test_default_format_new(self):
-        assert qautils.format_qc_value(1, "") == qautils.format_qc_value(1, "{:.3f}")
+        assert qautils.format_qc_value(1, '') == qautils.format_qc_value(1, '{:.3f}')
 
-    @override_settings(DEFAULT_NUMBER_FORMAT="%.3f")
+    @override_settings(DEFAULT_NUMBER_FORMAT='%.3f')
     def test_default_format_old(self):
-        assert qautils.format_qc_value(1, None) == qautils.format_qc_value(1, "{:.3f}")
+        assert qautils.format_qc_value(1, None) == qautils.format_qc_value(1, '{:.3f}')
 
-    @override_settings(DEFAULT_NUMBER_FORMAT="{:foo}")
+    @override_settings(DEFAULT_NUMBER_FORMAT='{:foo}')
     def test_invalid_default_fallback(self):
         assert qautils.format_qc_value(1, None) == qautils.to_precision(1, settings.CONSTANT_PRECISION)

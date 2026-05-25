@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0052_auto_20200302_2014'),
     ]
@@ -13,6 +12,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='testlist',
             name='test_lists',
-            field=models.ManyToManyField(blank=True, help_text='Which test lists does this list contain', through='qa.Sublist', to='qa.TestList'),
+            field=models.ManyToManyField(
+                blank=True, help_text='Which test lists does this list contain', through='qa.Sublist', to='qa.TestList'
+            ),
         ),
     ]

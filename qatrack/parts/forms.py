@@ -4,14 +4,13 @@ from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist
 from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
-from qatrack.qatrack_core.forms import BetterModelForm
 
 from qatrack.parts import models as p_models
+from qatrack.qatrack_core.forms import BetterModelForm
 from qatrack.service_log import models as sl_models
 
 
 class PartChoiceField(forms.ModelChoiceField):
-
     def to_python(self, value):
         if value in self.empty_values:
             return None
@@ -23,7 +22,6 @@ class PartChoiceField(forms.ModelChoiceField):
 
 
 class FromStorageField(forms.ModelChoiceField):
-
     def to_python(self, value):
         if value in self.empty_values:
             return None
@@ -35,7 +33,6 @@ class FromStorageField(forms.ModelChoiceField):
 
 
 class PartUsedForm(forms.ModelForm):
-
     from_storage = FromStorageField(required=False, queryset=p_models.Storage.objects.none())
     part = PartChoiceField(
         queryset=p_models.Part.objects.none(), help_text=p_models.PartUsed._meta.get_field('part').help_text
@@ -47,26 +44,26 @@ class PartUsedForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
-        super(PartUsedForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         is_new = self.instance.id is None
 
         if is_new:
-
-            if '%s-part' % self.prefix in self.data and self.data.get('%s-part' % self.prefix):
-                self.fields['part'].queryset = p_models.Part.objects.filter(pk=self.data.get('%s-part' % self.prefix))
-                if '%s-from_storage' % self.prefix in self.data and self.data.get('%s-from_storage' % self.prefix):
+            if f'{self.prefix}-part' in self.data and self.data.get(f'{self.prefix}-part'):
+                self.fields['part'].queryset = p_models.Part.objects.filter(pk=self.data.get(f'{self.prefix}-part'))
+                if f'{self.prefix}-from_storage' in self.data and self.data.get(f'{self.prefix}-from_storage'):
                     self.fields['from_storage'].queryset = p_models.PartStorageCollection.objects.filter(
-                        part=self.data.get('%s-part' % self.prefix)
+                        part=self.data.get(f'{self.prefix}-part')
                     )
                     s_dict = dict(
-                        p_models.PartStorageCollection.objects.filter(part=self.data.get('%s-part' % self.prefix)
-                                                                      ).values_list('storage_id', 'quantity')
+                        p_models.PartStorageCollection.objects.filter(
+                            part=self.data.get(f'{self.prefix}-part')
+                        ).values_list('storage_id', 'quantity')
                     )
                     s_qs = p_models.Storage.objects.filter(id__in=s_dict.keys())
                     self.fields['from_storage'].queryset = s_qs
                     self.fields['from_storage'].choices = [(None, '----------')] + [
-                        (s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs
+                        (s.id, f'{s.__str__()} ({s_dict[s.id]})') for s in s_qs
                     ]
 
         else:
@@ -91,8 +88,9 @@ class PartUsedForm(forms.ModelForm):
             s_qs = p_models.Storage.objects.filter(id__in=s_dict.keys())
             self.fields['from_storage'].queryset = s_qs
             # Edit choices to insert quantity of part in storage
-            self.fields['from_storage'].choices = [(None, '----------')
-                                                   ] + [(s.id, '%s (%s)' % (s.__str__(), s_dict[s.id])) for s in s_qs]
+            self.fields['from_storage'].choices = [(None, '----------')] + [
+                (s.id, f'{s.__str__()} ({s_dict[s.id]})') for s in s_qs
+            ]
 
         self.fields['part'].widget.attrs['data-prefix'] = self.prefix
 
@@ -104,13 +102,11 @@ class PartUsedForm(forms.ModelForm):
         self.fields['from_storage'].widget.attrs['class'] += ' parts-used-from_storage'
 
     def clean_quantity(self):
-
         quantity = self.cleaned_data['quantity']
         from_storage = self.cleaned_data.get('from_storage')
         initial_quantity = self.initial.get('quantity', 0)
 
         if from_storage is not None and ('quantity' in self.changed_data or 'from_storage' in self.changed_data):
-
             quantity_changed = quantity - initial_quantity
             quantity_storage = p_models.PartStorageCollection.objects.get(
                 part=self.cleaned_data['part'], storage=from_storage
@@ -118,8 +114,10 @@ class PartUsedForm(forms.ModelForm):
 
             if from_storage and quantity_changed > quantity_storage:
                 self.add_error(
-                    'quantity', 'Quantity used greater than quantity in storage. {}'.
-                    format('' if initial_quantity == 0 else '(Originally used {})'.format(initial_quantity))
+                    'quantity',
+                    'Quantity used greater than quantity in storage. {}'.format(
+                        '' if initial_quantity == 0 else f'(Originally used {initial_quantity})'
+                    ),
                 )
                 self.add_error('from_storage', '')
 
@@ -133,7 +131,6 @@ PartUsedFormset = forms.inlineformset_factory(sl_models.ServiceEvent, p_models.P
 
 
 class CostInputField(forms.CharField):
-
     widget = forms.TextInput()
 
     def to_python(self, value):
@@ -146,29 +143,37 @@ class CostInputField(forms.CharField):
 
 
 class PartForm(BetterModelForm):
-
     cost = CostInputField(
         help_text=p_models.Part._meta.get_field('cost').help_text,
         required=False,
     )
 
     part_attachments = forms.FileField(
-        label="Attachments",
+        label='Attachments',
         max_length=150,
         required=False,
-        widget=forms.FileInput(attrs={
-            'multiple': '',
-            'class': 'file-upload',
-            'style': 'display:none',
-        })
+        widget=forms.FileInput(
+            attrs={
+                'multiple': '',
+                'class': 'file-upload',
+                'style': 'display:none',
+            }
+        ),
     )
     part_attachments_delete_ids = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = p_models.Part
         fields = [
-            'name', 'part_number', 'alt_part_number', 'part_category', 'cost', 'new_or_used', 'quantity_min', 'notes',
-            'is_obsolete'
+            'name',
+            'part_number',
+            'alt_part_number',
+            'part_category',
+            'cost',
+            'new_or_used',
+            'quantity_min',
+            'notes',
+            'is_obsolete',
         ]
         if not settings.PARTS_ALLOW_BLANK_PART_NUM:
             required_fields = ['part_number', 'new_or_used', 'quantity_min']
@@ -177,20 +182,38 @@ class PartForm(BetterModelForm):
             required_fields = ['new_or_used', 'quantity_min']
             optional_fields = ['part_number', 'alt_part_number', 'part_category', 'cost', 'is_obsolete']
 
-        fieldsets = [('hidden_fields', {
-            'fields': [],
-        }), ('name', {
-            'fields': ['name',],
-        }), ('required_fields', {
-            'fields': required_fields,
-        }), ('optional_fields', {
-            'fields': optional_fields,
-        }), ('notes', {
-            'fields': ['notes']
-        })]
+        fieldsets = [
+            (
+                'hidden_fields',
+                {
+                    'fields': [],
+                },
+            ),
+            (
+                'name',
+                {
+                    'fields': [
+                        'name',
+                    ],
+                },
+            ),
+            (
+                'required_fields',
+                {
+                    'fields': required_fields,
+                },
+            ),
+            (
+                'optional_fields',
+                {
+                    'fields': optional_fields,
+                },
+            ),
+            ('notes', {'fields': ['notes']}),
+        ]
 
     def __init__(self, *args, **kwargs):
-        super(PartForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields['quantity_min'].widget.attrs.update({'min': 0, 'step': 1})
         self.fields['quantity_min'].label = 'Low inventory count'
@@ -207,20 +230,19 @@ class PartForm(BetterModelForm):
             self.fields[f].widget.attrs['placeholder'] = 'required'
 
     def clean_part_number(self):
-        pn = self.cleaned_data.get("part_number")
+        pn = self.cleaned_data.get('part_number')
         if not pn and not settings.PARTS_ALLOW_BLANK_PART_NUM:
             self.add_error('part_number', 'This field is required')
         return pn
 
 
 class PartSupplierCollectionForm(forms.ModelForm):
-
     class Meta:
         fields = ('part', 'supplier', 'part_number')
         model = p_models.PartSupplierCollection
 
     def __init__(self, *args, **kwargs):
-        super(PartSupplierCollectionForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['part'].widget = forms.HiddenInput()
 
         self.fields['part_number'].widget.attrs['class'] = 'form-control part_number'
@@ -233,7 +255,6 @@ PartSupplierCollectionFormset = forms.inlineformset_factory(
 
 
 class LocationField(forms.ChoiceField):
-
     # Validation really done by hidden storage field
     def validate(self, value):
         return value
@@ -243,7 +264,6 @@ class LocationField(forms.ChoiceField):
 
 
 class StorageField(forms.ChoiceField):
-
     def clean(self, value):
         """
 
@@ -268,7 +288,7 @@ class StorageField(forms.ChoiceField):
                 storage = p_models.Storage.objects.get(pk=value)
                 return storage
             except ObjectDoesNotExist:
-                return 'room', ValidationError("Incorrect Storage value")
+                return 'room', ValidationError('Incorrect Storage value')
 
     def has_changed(self, initial, data, tliib=False):
         if initial is None:
@@ -280,11 +300,10 @@ class StorageField(forms.ChoiceField):
 
 
 class PartStorageCollectionForm(forms.ModelForm):
-
     room = forms.ModelChoiceField(
         required=False,
         help_text=p_models.Storage._meta.get_field('room').help_text,
-        queryset=p_models.Room.objects.all()
+        queryset=p_models.Room.objects.all(),
     )
     location = LocationField(required=False)
     storage_field = StorageField(widget=forms.TextInput())
@@ -295,7 +314,7 @@ class PartStorageCollectionForm(forms.ModelForm):
         fields = ('storage_field', 'room', 'location', 'quantity')
 
     def __init__(self, *args, **kwargs):
-        super(PartStorageCollectionForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         is_new = self.instance.id is None
 
@@ -311,13 +330,13 @@ class PartStorageCollectionForm(forms.ModelForm):
         self.fields['storage_field'].widget.attrs['class'] = 'storage_field'
         self.fields['location'].widget.attrs.update({'disabled': True})
 
-        location_data = self.data.get('%s-location' % self.prefix, [])
+        location_data = self.data.get(f'{self.prefix}-location', [])
         if '__new__' in location_data:
             self.fields['location'].widget.choices.append((location_data, location_data.replace('__new__', '')))
             self.initial['location'] = location_data
 
     def clean(self):
-        cleaned_data = super(PartStorageCollectionForm, self).clean()
+        cleaned_data = super().clean()
         storage_field_value = cleaned_data.get('storage_field')
         room = cleaned_data.get('room')
 
@@ -345,7 +364,6 @@ BasePartStorageCollectionFormset = forms.inlineformset_factory(
 
 
 class PartStorageCollectionFormset(BasePartStorageCollectionFormset):
-
     def clean(self):
         if any(self.errors):
             return
@@ -359,5 +377,5 @@ class PartStorageCollectionFormset(BasePartStorageCollectionFormset):
                 continue
 
             if (room, loc) in locations:
-                raise ValidationError(_("Duplicated storage locations are not allowed"))
+                raise ValidationError(_('Duplicated storage locations are not allowed'))
             locations.append((room, loc))

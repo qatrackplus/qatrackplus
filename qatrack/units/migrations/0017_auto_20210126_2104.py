@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('units', '0016_datetimes_to_dates'),
     ]
@@ -14,7 +13,12 @@ class Migration(migrations.Migration):
             name='TreatmentTechnique',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Name of this treatment technique', max_length=255, unique=True, verbose_name='name')),
+                (
+                    'name',
+                    models.CharField(
+                        help_text='Name of this treatment technique', max_length=255, unique=True, verbose_name='name'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'treatment technique',

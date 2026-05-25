@@ -52,7 +52,7 @@ class AutoReviewRuleViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class AutoReviewRuleSetViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.AutoReviewRuleSet.objects.prefetch_related("rules")
+    queryset = models.AutoReviewRuleSet.objects.prefetch_related('rules')
     serializer_class = serializers.AutoReviewRuleSetSerializer
     filterset_class = filters.AutoReviewRuleSetFilter
     filter_backends = (
@@ -103,8 +103,8 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TestListViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.TestList.objects.prefetch_related(
-        "test_lists",
-        "tests",
+        'test_lists',
+        'tests',
     )
     serializer_class = serializers.TestListSerializer
     filterset_class = filters.TestListFilter
@@ -145,13 +145,17 @@ class SublistViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.UnitTestCollection.objects.select_related(
-        "last_instance",
-        "content_type",
-    ).prefetch_related(
-        "visible_to",
-        "tests_object",
-    ).distinct()
+    queryset = (
+        models.UnitTestCollection.objects.select_related(
+            'last_instance',
+            'content_type',
+        )
+        .prefetch_related(
+            'visible_to',
+            'tests_object',
+        )
+        .distinct()
+    )
     serializer_class = serializers.UnitTestCollectionSerializer
     filterset_class = filters.UnitTestCollectionFilter
     filter_backends = (
@@ -162,7 +166,7 @@ class UnitTestCollectionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.TestInstance.objects.prefetch_related("attachment_set").all()
+    queryset = models.TestInstance.objects.prefetch_related('attachment_set').all()
     serializer_class = serializers.TestInstanceSerializer
     filterset_class = filters.TestInstanceFilter
     filter_backends = (
@@ -173,10 +177,10 @@ class TestInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
     queryset = models.TestListInstance.objects.prefetch_related(
-        "attachment_set",
-        "testinstance_set",
-        "testinstance_set__attachment_set",
-        "comments",
+        'attachment_set',
+        'testinstance_set',
+        'testinstance_set__attachment_set',
+        'comments',
     ).all()
     serializer_class = serializers.TestListInstanceSerializer
     filterset_class = filters.TestListInstanceFilter
@@ -190,7 +194,7 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
         'partial_update': serializers.TestListInstanceCreator,
     }
     http_method_names = ['get', 'post', 'patch']
-    throttle_scope = "testlistinstance"
+    throttle_scope = 'testlistinstance'
 
     def create(self, request, *args, **kwargs):
         data = dict(request.data.items())
@@ -235,7 +239,7 @@ class TestListInstanceViewSet(MultiSerializerMixin, viewsets.ModelViewSet):
 
 
 class TestListCycleViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.TestListCycle.objects.prefetch_related("test_lists").all()
+    queryset = models.TestListCycle.objects.prefetch_related('test_lists').all()
     serializer_class = serializers.TestListCycleSerializer
     filterset_class = filters.TestListCycleFilter
     filter_backends = (
@@ -277,7 +281,8 @@ def test_list_cycle_searcher(request):
 def test_instance_searcher(request):
     q = request.GET.get('q')
     testinstance = models.TestInstance.objects.filter(
-        Q(id__icontains=q) | Q(unit_test_info__test__name__icontains=q)
+        Q(id__icontains=q)
+        | Q(unit_test_info__test__name__icontains=q)
         | Q(unit_test_info__test__display_name__icontains=q),
     ).values('id', 'unit_test_info__test__name')[0:50]
     return JsonResponse({'items': list(testinstance), 'name': 'unit_test_info__test__name'})

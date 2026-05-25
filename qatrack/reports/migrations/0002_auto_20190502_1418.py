@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('reports', '0001_initial'),
     ]
@@ -12,11 +11,22 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='savedreport',
-            options={'permissions': (('can_run_reports', 'Can Run Reports'), ('can_create_reports', 'Can create Reports'), ('can_run_sql_reports', 'Can run SQL Data Reports'), ('can_create_sql_reports', 'Can create SQL Data Reports'))},
+            options={
+                'permissions': (
+                    ('can_run_reports', 'Can Run Reports'),
+                    ('can_create_reports', 'Can create Reports'),
+                    ('can_run_sql_reports', 'Can run SQL Data Reports'),
+                    ('can_create_sql_reports', 'Can create SQL Data Reports'),
+                )
+            },
         ),
         migrations.AlterField(
             model_name='savedreport',
             name='visible_to',
-            field=models.ManyToManyField(blank=True, help_text='Select groups who will be able to view and run this report. Leave blank to keep it private.', to='auth.Group'),
+            field=models.ManyToManyField(
+                blank=True,
+                help_text='Select groups who will be able to view and run this report. Leave blank to keep it private.',
+                to='auth.Group',
+            ),
         ),
     ]

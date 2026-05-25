@@ -11,7 +11,7 @@ DATABASES = {
         'PASSWORD': 'Password12!',
         'HOST': 'localhost\\SQL2019',
         'PORT': '',
-        'OPTIONS': {}
+        'OPTIONS': {},
     }
 }
 DATABASES['readonly'] = DATABASES['default']

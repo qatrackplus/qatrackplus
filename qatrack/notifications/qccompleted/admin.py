@@ -18,75 +18,81 @@ class QCCompletedNoticeAdminForm(forms.ModelForm):
     class Meta:
         model = models.QCCompletedNotice
         fields = (
-            "notification_type",
-            "follow_up_days",
-            "recipients",
-            "units",
-            "test_lists",
+            'notification_type',
+            'follow_up_days',
+            'recipients',
+            'units',
+            'test_lists',
         )
 
     def get_queryset(self, request):  # pragma: nocover
-        return super().get_queryset(request).prefetch_related(
-            "recipients__users",
-            "recipients__groups",
-            "test_lists__test_lists",
-            "units__units",
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                'recipients__users',
+                'recipients__groups',
+                'test_lists__test_lists',
+                'units__units',
+            )
         )
 
     def clean(self):
         cleaned_data = super().clean()
 
         is_follow_up = cleaned_data['notification_type'] == models.QCCompletedNotice.FOLLOW_UP
-        if is_follow_up and cleaned_data.get('follow_up_days') in ("", None):
-            msg = _("You must set the number of days to follow after for Follow Up notifications.")
-            self.add_error("follow_up_days", forms.ValidationError(msg))
-        elif cleaned_data.get("follow_up_days") not in ("", None):
+        if is_follow_up and cleaned_data.get('follow_up_days') in ('', None):
+            msg = _('You must set the number of days to follow after for Follow Up notifications.')
+            self.add_error('follow_up_days', forms.ValidationError(msg))
+        elif cleaned_data.get('follow_up_days') not in ('', None):
             msg = _("Leave 'Follow up days' blank if not creating a Follow Up notification")
-            self.add_error("follow_up_days", forms.ValidationError(msg))
+            self.add_error('follow_up_days', forms.ValidationError(msg))
 
         return cleaned_data
 
 
 class QCCompletedAdmin(BaseQATrackAdmin):
-
-    list_display = ["get_notification_type", "get_recipients", "get_testlists", "get_units"]
-    list_filter = ["notification_type", "recipients", "test_lists", "units"]
+    list_display = ['get_notification_type', 'get_recipients', 'get_testlists', 'get_units']
+    list_filter = ['notification_type', 'recipients', 'test_lists', 'units']
     search_fields = [
-        "units__units__number",
-        "units__units__name",
-        "recipients__groups__name",
-        "recipients__users__username",
-        "recipients__users__first_name",
-        "recipients__users__last_name",
-        "recipients__users__email",
-        "recipients__groups__user__email",
-        "recipients__groups__user__username",
-        "recipients__groups__user__first_name",
-        "recipients__groups__user__last_name",
-        "test_lists__test_lists__name",
+        'units__units__number',
+        'units__units__name',
+        'recipients__groups__name',
+        'recipients__users__username',
+        'recipients__users__first_name',
+        'recipients__users__last_name',
+        'recipients__users__email',
+        'recipients__groups__user__email',
+        'recipients__groups__user__username',
+        'recipients__groups__user__first_name',
+        'recipients__groups__user__last_name',
+        'test_lists__test_lists__name',
     ]
 
     form = QCCompletedNoticeAdminForm
 
     fieldsets = (
-        (None, {
-            'fields': ["notification_type", "follow_up_days"],
-        }),
         (
-            "Recipients", {
-                'fields': ["recipients"],
-                'description': _l("Select which recipient group should receive this notification."),
-            }
+            None,
+            {
+                'fields': ['notification_type', 'follow_up_days'],
+            },
         ),
         (
-            "Filters", {
+            'Recipients',
+            {
+                'fields': ['recipients'],
+                'description': _l('Select which recipient group should receive this notification.'),
+            },
+        ),
+        (
+            'Filters',
+            {
                 'fields': ['units', 'test_lists'],
-                'description':
-                    _l(
-                        "By using the below filters, you may limit this notification to "
-                        "certain units or test lists."
-                    ),
-            }
+                'description': _l(
+                    'By using the below filters, you may limit this notification to ' 'certain units or test lists.'
+                ),
+            },
         ),
     )
 
@@ -94,53 +100,57 @@ class QCCompletedAdmin(BaseQATrackAdmin):
         js = (
             'admin/js/jquery.init.js',
             'jquery/js/jquery.min.js',
-            "select2/js/select2.js",
-            "js/notification_admin.js",
+            'select2/js/select2.js',
+            'js/notification_admin.js',
         )
         css = {
-            'all': ("select2/css/select2.css",),
+            'all': ('select2/css/select2.css',),
         }
 
     def get_queryset(self, request):  # pragma: nocover
-        return super().get_queryset(request).prefetch_related(
-            "recipients__users",
-            "recipients__groups",
-            "test_lists__test_lists",
-            "units__units",
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                'recipients__users',
+                'recipients__groups',
+                'test_lists__test_lists',
+                'units__units',
+            )
         )
 
     @admin.display(
-        description=_l("Notification Type"),
-        ordering="notification_type",
+        description=_l('Notification Type'),
+        ordering='notification_type',
     )
     def get_notification_type(self, obj):
         if obj.notification_type == models.QCCompletedNotice.FOLLOW_UP:
-            return _("#%(id)d - Follow up notification (after %(num_days)s days)") % {
+            return _('#%(id)d - Follow up notification (after %(num_days)s days)') % {
                 'num_days': obj.follow_up_days,
                 'id': obj.id,
             }
-        return "#%s - %s" % (obj.pk, obj.get_notification_type_display())
+        return f'#{obj.pk} - {obj.get_notification_type_display()}'
 
     @admin.display(
-        description=_l("Units Group"),
-        ordering="units__name",
+        description=_l('Units Group'),
+        ordering='units__name',
     )
     def get_units(self, obj):
-        return obj.units.name if obj.units else ""
+        return obj.units.name if obj.units else ''
 
     @admin.display(
-        description=_l("Recipient Group"),
-        ordering="recipients__name",
+        description=_l('Recipient Group'),
+        ordering='recipients__name',
     )
     def get_recipients(self, obj):
         return obj.recipients.name
 
     @admin.display(
-        description=_l("TestList Group"),
-        ordering="test_lists__name",
+        description=_l('TestList Group'),
+        ordering='test_lists__name',
     )
     def get_testlists(self, obj):
-        return obj.test_lists.name if obj.test_lists else ""
+        return obj.test_lists.name if obj.test_lists else ''
 
 
 admin.site.register([models.QCCompletedNotice], QCCompletedAdmin)

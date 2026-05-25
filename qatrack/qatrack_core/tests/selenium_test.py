@@ -1,6 +1,6 @@
+import time
 from contextlib import contextmanager
 from functools import wraps
-import time
 
 from django.conf import settings
 from django.contrib.staticfiles.handlers import StaticFilesHandler
@@ -41,9 +41,7 @@ def setup_view(view, request, *args, **kwargs):
 
 # From http://stackoverflow.com/a/20559494
 def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
-
     def outer(func):
-
         @wraps(func)
         def wrapper(*args, **kwargs):
             assert max_retries > 0
@@ -70,7 +68,7 @@ def WebElement_click(self):
     later versions of webdrivers that won't click on an element if it
     is not in view
     """
-    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    self.parent.execute_script('arguments[0].scrollIntoView();', self)
     return self._execute(Command.CLICK_ELEMENT)
 
 
@@ -82,7 +80,7 @@ orig_send_keys = WebElement.send_keys
 @retry_if_exception(WebDriverException, 5, sleep_time=1)  # noqa: E302
 def WebElement_send_keys(self, keys):
     """Monky patch send_keys to ensure element is in view"""
-    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    self.parent.execute_script('arguments[0].scrollIntoView();', self)
     return orig_send_keys(self, keys)
 
 
@@ -100,21 +98,22 @@ class LiveServerSingleThread(LiveServerThread):
 
 class StaticLiveServerSingleThreadedTestCase(StaticLiveServerTestCase):
     "A thin sub-class which only sets the single-threaded server as a class"
+
     server_thread_class = LiveServerSingleThread
 
     static_handler = StaticFilesHandler
 
 
 class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
-
     @classmethod
     def setUpClass(cls):
         use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
-        browser_setting = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
+        getattr(settings, 'SELENIUM_BROWSER', 'firefox')
 
         if use_virtual_display:
             # Make sure xvfb is installed
             from pyvirtualdisplay import Display
+
             cls.display = Display(visible=0, size=(1920, 1080))
             cls.display.start()
         else:
@@ -142,11 +141,10 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         cls.maximize()
         cls.wait = WebDriverWait(cls.driver, 5)
 
-        super(SeleniumTests, cls).setUpClass()
+        super().setUpClass()
 
     @classmethod
     def maximize(cls):
-
         if getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False):
             for i in range(5):
                 try:
@@ -162,7 +160,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         cls.driver.quit()
         if cls.display:
             cls.display.stop()
-        super(SeleniumTests, cls).tearDownClass()
+        super().tearDownClass()
 
     @contextmanager
     def wait_for_page_load(self, timeout=10):
@@ -173,27 +171,27 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     @retry_if_exception(Exception, 5, sleep_time=1)
     def open(self, url):
         with self.wait_for_page_load():
-            self.driver.execute_script("window.location.href='%s%s'" % (self.live_server_url, url))
+            self.driver.execute_script(f"window.location.href='{self.live_server_url}{url}'")
 
     def login(self):
-        self.open("/accounts/login/")
+        self.open('/accounts/login/')
 
         self.driver.find_element(By.ID, 'id_username').send_keys(self.user.username)
         self.driver.find_element(By.ID, 'id_password').send_keys(self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, 'head > title')))
 
     def load_admin(self):
-        self.open("/admin/")
+        self.open('/admin/')
         self.driver.find_element(By.ID, 'id_username').send_keys(self.user.username)
         self.driver.find_element(By.ID, 'id_password').send_keys(self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, 'head > title')))
 
     def load_main(self):
-        self.open("")
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        self.open('')
+        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, 'head > title')))
 
     def wait_for_success(self):
         self.wait.until(
@@ -201,6 +199,5 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         )
 
     def setUp(self):
-
         self.password = 'password'
         self.user = create_user(pwd=self.password)

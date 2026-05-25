@@ -6,7 +6,7 @@ from rest_framework.reverse import reverse
 
 def root_url(app, request, format=None):
     """I don't know how to properly reverse the apps api root :/"""
-    root = reverse("user-list", request=request, format=format).replace("auth/users/", "")
+    root = reverse('user-list', request=request, format=format).replace('auth/users/', '')
     return root + app
 
 

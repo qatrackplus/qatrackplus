@@ -1,18 +1,15 @@
 import calendar
 import collections
-import json
+from zoneinfo import ZoneInfo
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
-from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.db.models import Count, Q
 from django.db.transaction import atomic
 from django.http import Http404, HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
@@ -26,8 +23,6 @@ from django.views.generic import (
     TemplateView,
     View,
 )
-from listable.views import BaseListableView
-from zoneinfo import ZoneInfo
 
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
@@ -39,8 +34,8 @@ from qatrack.service_log.models import (
 )
 from qatrack.units.models import Unit
 
-from . import forms
 from .. import models
+from . import forms
 from .base import (
     BaseEditTestListInstance,
     TestListInstanceMixin,
@@ -51,8 +46,7 @@ from .perform import ChooseUnit
 
 
 class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, DetailView):
-
-    permission_required = "qa.can_view_completed"
+    permission_required = 'qa.can_view_completed'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(kwargs=kwargs)
@@ -76,21 +70,20 @@ class TestListInstanceDetails(PermissionRequiredMixin, TestListInstanceMixin, De
 
 
 def test_list_instance_report(request, pk):
-
     tli = get_object_or_404(models.TestListInstance, id=pk)
     utc = tli.unit_test_collection
     wc = format_datetime(tli.work_completed)
 
     base_opts = {
         'report_type': TestListInstanceDetailsReport.report_type,
-        'report_format': request.GET.get("type", "pdf"),
-        'title': "%s - %s - %s" % (utc.unit.name, tli.test_list.name, wc),
+        'report_format': request.GET.get('type', 'pdf'),
+        'title': f'{utc.unit.name} - {tli.test_list.name} - {wc}',
         'include_signature': False,
         'visible_to': [],
     }
 
     report_opts = {
-        'work_completed': "%s - %s" % (wc, wc),
+        'work_completed': f'{wc} - {wc}',
         'unit_test_collection': [utc.id],
     }
     report = TestListInstanceDetailsReport(base_opts=base_opts, report_opts=report_opts, user=request.user)
@@ -104,18 +97,18 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     and updating the :model:`qa.TestInstance`s :model:`qa.TestInstanceStatus`
     """
 
-    permission_required = "qa.can_review"
+    permission_required = 'qa.can_review'
     raise_exception = True
 
     form_class = forms.ReviewTestListInstanceForm
     formset_class = forms.ReviewTestInstanceFormSet
-    template_name_suffix = "_review"
+    template_name_suffix = '_review'
 
     rtsqa_form = None
     from_se = False
 
     def get_form_kwargs(self):
-        kwargs = super(ReviewTestListInstance, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
@@ -127,7 +120,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         """
 
         context = self.get_context_data()
-        formset = context["formset"]
+        formset = context['formset']
 
         test_list_instance = form.save(commit=False)
         statuses = []
@@ -141,7 +134,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         # If you add something here be very careful to check that the data
         # is clean before updating the db
         for ti_form in formset:
-            status_pk = int(ti_form["status"].value())
+            status_pk = int(ti_form['status'].value())
             statuses.append(status_pk)
             test_instances.append(ti_form.instance)
 
@@ -158,12 +151,12 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
             return JsonResponse({'rtsqa_form': self.rtsqa_form, 'tli_id': test_list_instance.id})
 
         # let user know request succeeded and return to unit list
-        msg = _("Successfully updated %(test_list_name)s") % {'test_list_name': self.object.test_list.name}
+        msg = _('Successfully updated %(test_list_name)s') % {'test_list_name': self.object.test_list.name}
         messages.add_message(request=self.request, message=msg, level=messages.SUCCESS)
         return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
-        context = super(ReviewTestListInstance, self).get_context_data(kwargs=kwargs)
+        context = super().get_context_data(kwargs=kwargs)
 
         rtsqas = ReturnToServiceQA.objects.filter(test_list_instance=self.object)
         se = []
@@ -245,13 +238,13 @@ class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
     This view is for deleting a :model:`qa.TestListInstance`
     """
 
-    permission_required = "qa.delete_testlistinstance"
+    permission_required = 'qa.delete_testlistinstance'
     raise_exception = True
 
     model = models.TestListInstance
 
     def get_success_url(self):
-        return self.request.GET.get("next", reverse("home"))
+        return self.request.GET.get('next', reverse('home'))
 
     def delete(self, request, *args, **kwargs):
         service_events = ServiceEvent.objects.filter(returntoserviceqa__test_list_instance_id=kwargs['pk'])
@@ -264,34 +257,34 @@ class TestListInstanceDelete(PermissionRequiredMixin, DeleteView):
 class UTCReview(PermissionRequiredMixin, UTCList):
     """A simple :view:`qa.base.UTCList` wrapper to check required review permissions"""
 
-    permission_required = "qa.can_review"
+    permission_required = 'qa.can_review'
     raise_exception = True
 
-    action = "review"
-    action_display = "Review"
+    action = 'review'
+    action_display = 'Review'
     visible_only = False
 
     def get_icon(self):
         return 'fa-users'
 
     def get_page_title(self):
-        return _("Review Test List Data")
+        return _('Review Test List Data')
 
 
 class UTCYourReview(PermissionRequiredMixin, UTCList):
     """A simple :view:`qa.base.UTCList` wrapper to check required review permissions"""
 
-    permission_required = "qa.can_view_completed"
+    permission_required = 'qa.can_view_completed'
     raise_exception = True
 
-    action = "review"
-    action_display = _l("Review")
+    action = 'review'
+    action_display = _l('Review')
 
     def get_icon(self):
         return 'fa-users'
 
     def get_page_title(self):
-        return _("Review Your Test List Data")
+        return _('Review Your Test List Data')
 
 
 class UTCFrequencyReview(UTCYourReview):
@@ -300,13 +293,13 @@ class UTCFrequencyReview(UTCYourReview):
     def get_queryset(self):
         """filter queryset by frequency"""
 
-        qs = super(UTCFrequencyReview, self).get_queryset()
+        qs = super().get_queryset()
 
-        freq = self.kwargs["frequency"]
-        self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
+        freq = self.kwargs['frequency']
+        self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs['frequency'].split('/'))
 
         q = Q(frequency__in=self.frequencies)
-        if "ad-hoc" in freq:
+        if 'ad-hoc' in freq:
             q |= Q(frequency=None)
 
         return qs.filter(q).distinct()
@@ -315,8 +308,8 @@ class UTCFrequencyReview(UTCYourReview):
         return 'fa-clock-o'
 
     def get_page_title(self):
-        return _(" Review %(frequency_names)s Test Lists") % {
-            'frequency_names': ", ".join([x.name for x in self.frequencies])
+        return _(' Review %(frequency_names)s Test Lists') % {
+            'frequency_names': ', '.join([x.name for x in self.frequencies])
         }
 
 
@@ -325,15 +318,15 @@ class UTCUnitReview(UTCYourReview):
 
     def get_queryset(self):
         """filter queryset by frequency"""
-        qs = super(UTCUnitReview, self).get_queryset()
-        self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
-        return qs.filter(unit__in=self.units).order_by("unit__number")
+        qs = super().get_queryset()
+        self.units = Unit.objects.filter(number__in=self.kwargs['unit_number'].split('/'))
+        return qs.filter(unit__in=self.units).order_by('unit__number')
 
     def get_icon(self):
         return 'fa-cube'
 
     def get_page_title(self):
-        return _(" Review %(unit_names)s Test Lists") % {'unit_names': ", ".join([x.name for x in self.units])}
+        return _(' Review %(unit_names)s Test Lists') % {'unit_names': ', '.join([x.name for x in self.units])}
 
 
 class ChooseUnitForReview(ChooseUnit):
@@ -348,30 +341,28 @@ class ChooseFrequencyForReview(ListView):
     """Allow user to choose a :model:`qa.Frequency` to review :model:`qa.TestListInstance`s for"""
 
     model = models.Frequency
-    context_object_name = "frequencies"
-    template_name_suffix = "_choose_for_review"
+    context_object_name = 'frequencies'
+    template_name_suffix = '_choose_for_review'
 
 
 class InactiveReview(UTCReview):
-
     active_only = False
     inactive_only = True
 
     def get_page_title(self):
-        return _("Review All Inactive Test Lists")
+        return _('Review All Inactive Test Lists')
 
     def get_icon(self):
         return 'fa-file'
 
 
 class YourInactiveReview(UTCYourReview):
-
     visible_only = True
     active_only = False
     inactive_only = True
 
     def get_page_title(self):
-        return _("Review Your Inactive Test Lists")
+        return _('Review Your Inactive Test Lists')
 
     def get_icon(self):
         return 'fa-file'
@@ -381,47 +372,46 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False"""
 
     headers = {
-        "unit_test_collection__unit__site__name": _("Site"),
-        "unit_test_collection__unit__name": _("Unit"),
-        "unit_test_collection__frequency__name": _("Frequency"),
-        "created_by__username": _("Created By"),
-        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
-        "selected": mark_safe('<input type="checkbox" class="test-selected-toggle" title="%s"/>' % _("Select All")),
+        'unit_test_collection__unit__site__name': _('Site'),
+        'unit_test_collection__unit__name': _('Unit'),
+        'unit_test_collection__frequency__name': _('Frequency'),
+        'created_by__username': _('Created By'),
+        'attachments': mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
+        'selected': mark_safe('<input type="checkbox" class="test-selected-toggle" title="{}"/>'.format(_('Select All'))),
     }
 
     search_fields = {
-        "actions": False,
-        "pass_fail": False,
-        "review_status": False,
-        "bulk_review_status": False,
-        "attachments": False,
-        "selected": False,
+        'actions': False,
+        'pass_fail': False,
+        'review_status': False,
+        'bulk_review_status': False,
+        'attachments': False,
+        'selected': False,
     }
 
     order_fields = {
-        "actions": False,
-        "unit_test_collection__unit__name": "unit_test_collection__unit__number",
-        "unit_test_collection__frequency__name": "unit_test_collection__frequency__nominal_interval",
-        "review_status": False,
-        "pass_fail": False,
-        "bulk_review_status": False,
-        "selected": False,
-        "attachments": "attachment_count",
-        "selected": False,
+        'actions': False,
+        'unit_test_collection__unit__name': 'unit_test_collection__unit__number',
+        'unit_test_collection__frequency__name': 'unit_test_collection__frequency__nominal_interval',
+        'review_status': False,
+        'pass_fail': False,
+        'bulk_review_status': False,
+        'selected': False,
+        'attachments': 'attachment_count',
     }
 
-    permission_required = "qa.can_review"
+    permission_required = 'qa.can_review'
     raise_exception = True
 
     def get_fields(self, request=None):
         fields = super().get_fields(request=request)
         if settings.REVIEW_BULK:
-            fields += ("bulk_review_status", "selected")
+            fields += ('bulk_review_status', 'selected')
 
         return fields
 
     def get_header_for_field(self, field):
-        if settings.REVIEW_BULK and field == "bulk_review_status":
+        if settings.REVIEW_BULK and field == 'bulk_review_status':
             return Unreviewed._status_select(header=True)
 
         return super().get_header_for_field(field)
@@ -429,32 +419,34 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
     @classmethod
     def _status_select(cls, header=False):
         if header:
-            title = _("Select the review status to apply to all currently selected test instance rows")
+            title = _('Select the review status to apply to all currently selected test instance rows')
         else:
-            title = _("Select the review status to apply to this row")
+            title = _('Select the review status to apply to this row')
 
-        return get_template("qa/_testinstancestatus_select.html").render({
-            'name': 'bulk-status' if header else '',
-            'id': 'bulk-status' if header else '',
-            'statuses': models.TestInstanceStatus.objects.all(),
-            'class': 'input-medium' + (' bulk-status' if header else ''),
-            'title': title,
-        })
-
-    def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" title="%s"/>' % _(
-            "Check to include this test list instance when bulk setting approval statuses"
+        return get_template('qa/_testinstancestatus_select.html').render(
+            {
+                'name': 'bulk-status' if header else '',
+                'id': 'bulk-status' if header else '',
+                'statuses': models.TestInstanceStatus.objects.all(),
+                'class': 'input-medium' + (' bulk-status' if header else ''),
+                'title': title,
+            }
         )
 
+    def selected(self, obj):
+        return '<input type="checkbox" class="test-selected" title="{}"/>'.format(_(
+            'Check to include this test list instance when bulk setting approval statuses'
+        ))
+
     def bulk_review_status(self, obj):
-        if not hasattr(self, "_bulk_review"):
+        if not hasattr(self, '_bulk_review'):
             self._bulk_review = self._status_select()
 
-        return self._bulk_review.replace(":TLI_ID:", str(obj.pk))
+        return self._bulk_review.replace(':TLI_ID:', str(obj.pk))
 
     def get_queryset(self):
         qs = models.TestListInstance.objects.unreviewed()
-        qs = qs.annotate(attachment_count=Count("attachment"))
+        qs = qs.annotate(attachment_count=Count('attachment'))
         return qs
 
     def get_context_data(self, *args, **kwargs):
@@ -463,60 +455,58 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         return context
 
     def get_page_title(self):
-        return _("Unreviewed Test List Instances")
+        return _('Unreviewed Test List Instances')
 
 
 def bulk_review(request):
-
     count = 0
     for pairs in request.POST.getlist('tlis'):
-        status, tli = pairs.split(",")
+        status, tli = pairs.split(',')
         tli = models.TestListInstance.objects.get(pk=tli)
         test_instances = tli.testinstance_set.all()
         statuses = [status] * len(test_instances)
         review_test_list_instance(tli, test_instances, statuses, request.user)
         count += 1
 
-    msg = _("Successfully reviewed %(count)s test list instances") % {'count': count}
+    msg = _('Successfully reviewed %(count)s test list instances') % {'count': count}
     messages.add_message(request=request, message=msg, level=messages.SUCCESS)
-    return JsonResponse({"ok": True})
+    return JsonResponse({'ok': True})
 
 
 class UnreviewedVisibleTo(Unreviewed):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
-        the user"""
+    the user"""
 
     def get_queryset(self):
         return models.TestListInstance.objects.your_unreviewed(self.request.user).annotate(
-            attachment_count=Count("attachment"),
+            attachment_count=Count('attachment'),
         )
 
     def get_page_title(self):
-        return _("Unreviewed Test List Instances Visible To Your Groups")
+        return _('Unreviewed Test List Instances Visible To Your Groups')
 
 
 class ChooseGroupVisibleTo(ListView):
-
     active_only = False
-    template_name = "qa/group_choose_visible_to.html"
+    template_name = 'qa/group_choose_visible_to.html'
     model = models.Group
-    context_object_name = "groups"
+    context_object_name = 'groups'
 
 
 class UnreviewedByVisibleToGroup(Unreviewed):
     """Display all :model:`qa.TestListInstance`s with all_reviewed=False and unit_test_collection that is visible to
-        a select :model:`auth.Group`
+    a select :model:`auth.Group`
     """
 
     def get_queryset(self):
-        qs = super(UnreviewedByVisibleToGroup, self).get_queryset()
+        qs = super().get_queryset()
         return qs.filter(unit_test_collection__visible_to=self.kwargs['group'])
 
     def get_icon(self):
         return 'fa-users'
 
     def get_page_title(self):
-        return _("Unreviewed Test List Instances Visible To %(group_name)s") % {
+        return _('Unreviewed Test List Instances Visible To %(group_name)s') % {
             'group_name': models.Group.objects.get(pk=self.kwargs['group']).name
         }
 
@@ -524,16 +514,16 @@ class UnreviewedByVisibleToGroup(Unreviewed):
 class DueDateOverview(PermissionRequiredMixin, TemplateView):
     """View which :model:`qa.UnitTestCollection` are overdue & coming due"""
 
-    template_name = "qa/overview_by_due_date.html"
-    permission_required = ["qa.can_review", "qa.can_view_overview", 'qa.can_review_non_visible_tli']
+    template_name = 'qa/overview_by_due_date.html'
+    permission_required = ['qa.can_review', 'qa.can_view_overview', 'qa.can_review_non_visible_tli']
     raise_exception = True
 
     DUE_DISPLAY_ORDER = (
-        ("overdue", _l("Due & Overdue")),
-        ("this_week", _l("Due This Week")),
-        ("next_week", _l("Due Next Week")),
-        ("this_month", _l("Due This Month")),
-        ("next_month", _l("Due Next Month")),
+        ('overdue', _l('Due & Overdue')),
+        ('this_week', _l('Due This Week')),
+        ('next_week', _l('Due Next Week')),
+        ('this_month', _l('Due This Month')),
+        ('next_month', _l('Due Next Month')),
     )
 
     def check_permissions(self, request):
@@ -543,23 +533,26 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         return False
 
     def get_queryset(self):
-
-        qs = models.UnitTestCollection.objects.filter(
-            active=True, unit__active=True
-        ).select_related(
-            "last_instance",
-            "frequency",
-            "unit",
-            "assigned_to",
-        ).prefetch_related(
-            "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
-            "last_instance__modified_by",
-            "tests_object",
-        ).exclude(due_date=None).order_by(
-            "frequency__nominal_interval",
-            "unit__number",
-            "name",
+        qs = (
+            models.UnitTestCollection.objects.filter(active=True, unit__active=True)
+            .select_related(
+                'last_instance',
+                'frequency',
+                'unit',
+                'assigned_to',
+            )
+            .prefetch_related(
+                'last_instance__testinstance_set',
+                'last_instance__testinstance_set__status',
+                'last_instance__modified_by',
+                'tests_object',
+            )
+            .exclude(due_date=None)
+            .order_by(
+                'frequency__nominal_interval',
+                'unit__number',
+                'name',
+            )
         )
 
         return qs.distinct()
@@ -567,7 +560,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     def get_context_data(self):
         """Group all active :model:`qa.UnitTestCollection` by due date category"""
 
-        context = super(DueDateOverview, self).get_context_data()
+        context = super().get_context_data()
 
         qs = self.get_queryset()
 
@@ -580,9 +573,11 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         if calendar.isleap(now.year) and now.month == 2:
             month_end += timezone.timedelta(days=1)
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = timezone.datetime(
-            next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]
-        ).replace(tzinfo=tz).date()
+        next_month_end = (
+            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
+            .replace(tzinfo=tz)
+            .date()
+        )
 
         due = collections.defaultdict(list)
 
@@ -593,36 +588,35 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
         for utc in qs:
             due_date = utc.due_date.astimezone(tz).date()
             if due_date <= today:
-                due["overdue"].append(utc)
+                due['overdue'].append(utc)
             elif due_date <= friday:
                 if utc.last_instance is None or utc.last_instance.work_completed.astimezone(tz).date() != today:
-                    due["this_week"].append(utc)
+                    due['this_week'].append(utc)
             elif due_date <= next_friday:
-                due["next_week"].append(utc)
+                due['next_week'].append(utc)
             elif due_date <= month_end:
-                due["this_month"].append(utc)  # pragma: nocover
+                due['this_month'].append(utc)  # pragma: nocover
             elif due_date <= next_month_end:
-                due["next_month"].append(utc)
+                due['next_month'].append(utc)
 
             units.add(str(utc.unit))
-            freqs.add(str(utc.frequency or _("Ad Hoc")))
+            freqs.add(str(utc.frequency or _('Ad Hoc')))
             groups.add(str(utc.assigned_to))
 
         ordered_due_lists = []
         for key, display in self.DUE_DISPLAY_ORDER:
             ordered_due_lists.append((key, display, due[key]))
-        context["due"] = ordered_due_lists
-        context["units"] = sorted(units)
-        context["freqs"] = sorted(freqs)
-        context["groups"] = sorted(groups)
+        context['due'] = ordered_due_lists
+        context['units'] = sorted(units)
+        context['freqs'] = sorted(freqs)
+        context['groups'] = sorted(groups)
         context['user_groups'] = '-user' in self.request.path
 
         return context
 
 
 class DueDateOverviewUser(DueDateOverview):
-
-    permission_required = ["qa.can_review", "qa.can_view_overview"]
+    permission_required = ['qa.can_review', 'qa.can_view_overview']
 
     def get_queryset(self):
         return super().get_queryset().filter(visible_to__in=self.request.user.groups.all())
@@ -631,8 +625,8 @@ class DueDateOverviewUser(DueDateOverview):
 class Overview(PermissionRequiredMixin, TemplateView):
     """Overall status of the QC Program"""
 
-    template_name = "qa/overview.html"
-    permission_required = ["qa.can_review", "qa.can_view_overview"]
+    template_name = 'qa/overview.html'
+    permission_required = ['qa.can_review', 'qa.can_view_overview']
     raise_exception = True
 
     def check_permissions(self, request):
@@ -642,7 +636,7 @@ class Overview(PermissionRequiredMixin, TemplateView):
         return False
 
     def get_context_data(self, **kwargs):
-        context = super(Overview, self).get_context_data()
+        context = super().get_context_data()
         context['title'] = _('QC Program Overview')
         context['msg'] = _('Overview of current QC status on all units')
         if '-user' in self.request.path:
@@ -653,25 +647,28 @@ class Overview(PermissionRequiredMixin, TemplateView):
 
 
 class OverviewObjects(JSONResponseMixin, View):
-
     def get_queryset(self, request):
-
-        qs = models.UnitTestCollection.objects.filter(
-            active=True,
-            unit__active=True,
-        ).select_related(
-            "last_instance",
-            "frequency",
-            "unit",
-            "assigned_to",
-        ).prefetch_related(
-            "last_instance__testinstance_set",
-            "last_instance__testinstance_set__status",
-            "last_instance__modified_by",
-        ).order_by(
-            "frequency__nominal_interval",
-            "unit__number",
-            "name",
+        qs = (
+            models.UnitTestCollection.objects.filter(
+                active=True,
+                unit__active=True,
+            )
+            .select_related(
+                'last_instance',
+                'frequency',
+                'unit',
+                'assigned_to',
+            )
+            .prefetch_related(
+                'last_instance__testinstance_set',
+                'last_instance__testinstance_set__status',
+                'last_instance__modified_by',
+            )
+            .order_by(
+                'frequency__nominal_interval',
+                'unit__number',
+                'name',
+            )
         )
 
         if request.GET.get('user') == 'true':
@@ -680,11 +677,10 @@ class OverviewObjects(JSONResponseMixin, View):
         return qs.distinct()
 
     def get(self, request):
-
         qs = self.get_queryset(request)
 
-        units = Unit.objects.order_by("number")
-        frequencies = list(models.Frequency.objects.order_by("nominal_interval")) + [None]
+        units = Unit.objects.order_by('number')
+        frequencies = list(models.Frequency.objects.order_by('nominal_interval')) + [None]
 
         unit_lists = collections.OrderedDict()
         due_counts = {'ok': 0, 'tolerance': 0, 'action': 0, 'no_tol': 0}
@@ -697,7 +693,6 @@ class OverviewObjects(JSONResponseMixin, View):
                     unit_freqs[freq_name] = collections.OrderedDict()
                 for utc in qs:
                     if utc.frequency == freq and utc.unit == unit:
-
                         if utc.last_instance:
                             last_instance_pfs = {}
                             for lipfs in utc.last_instance.pass_fail_status():
@@ -713,7 +708,7 @@ class OverviewObjects(JSONResponseMixin, View):
                             'last_instance_status': last_instance_pfs,
                             'last_instance_work_completed': last_completed,
                             'due_date': utc.due_date,
-                            'due_status': ds
+                            'due_status': ds,
                         }
                         due_counts[ds] += 1
 
@@ -725,18 +720,18 @@ class OverviewObjects(JSONResponseMixin, View):
 class UTCInstances(PermissionRequiredMixin, TestListInstances):
     """Show all :model:`qa.TestListInstance`s for a given :model:`qa.UnitTestCollection`"""
 
-    permission_required = "qa.can_view_completed"
+    permission_required = 'qa.can_view_completed'
 
     def get_page_title(self):
         try:
-            utc = models.UnitTestCollection.objects.get(pk=self.kwargs["pk"])
-            return _("History for %(unit_name)s :: %(unit_test_collection_name)s") % {
+            utc = models.UnitTestCollection.objects.get(pk=self.kwargs['pk'])
+            return _('History for %(unit_name)s :: %(unit_test_collection_name)s') % {
                 'unit_name': utc.unit.name,
-                'unit_test_collection_name': utc.name
+                'unit_test_collection_name': utc.name,
             }
         except models.UnitTestCollection.DoesNotExist:
             raise Http404
 
     def get_queryset(self):
-        qs = super(UTCInstances, self).get_queryset()
-        return qs.filter(unit_test_collection__pk=self.kwargs["pk"])
+        qs = super().get_queryset()
+        return qs.filter(unit_test_collection__pk=self.kwargs['pk'])

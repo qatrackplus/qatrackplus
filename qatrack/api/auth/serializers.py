@@ -3,7 +3,6 @@ from rest_framework import serializers
 
 
 class UserListSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -17,7 +16,6 @@ class UserListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-
     permissions = serializers.SerializerMethodField()
 
     class Meta:
@@ -38,36 +36,40 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class GroupListSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = Group
         fields = ('url', 'name')
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
-
     permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ('url', 'name', "permissions", "user_set")
+        fields = ('url', 'name', 'permissions', 'user_set')
 
     def get_permissions(self, obj):
-        return [
-            '.'.join(x) for x in obj.permissions.select_related(
-                "content_type",
-            ).order_by(
-                'content_type__app_label',
-                'codename',
-            ).values_list(
-                "content_type__app_label",
-                "codename",
-            )
-        ] if obj else []
+        return (
+            [
+                '.'.join(x)
+                for x in obj.permissions.select_related(
+                    'content_type',
+                )
+                .order_by(
+                    'content_type__app_label',
+                    'codename',
+                )
+                .values_list(
+                    'content_type__app_label',
+                    'codename',
+                )
+            ]
+            if obj
+            else []
+        )
 
 
 class PermissionSerializer(serializers.HyperlinkedModelSerializer):
-
     class Meta:
         model = Permission
         fields = (

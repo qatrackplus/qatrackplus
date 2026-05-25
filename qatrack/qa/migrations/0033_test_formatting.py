@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('qa', '0032_auto_20190313_2112'),
     ]
@@ -16,9 +15,8 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 default='',
-                help_text=
-                "Python style string format for numerical results. Leave blank for the QATrack+ default, select one of the predefined options, or enter your own formatting string. <br>Use e.g. %.2F to display as fixed precision with 2 decimal places, or %.3E to show as scientific format with 3 significant figures, or %.4G to use 'general' formatting with up to 4 significant figures.<br>You may also use new style Python string formatting (e.g. {:06.2f}).",
-                max_length=10
+                help_text="Python style string format for numerical results. Leave blank for the QATrack+ default, select one of the predefined options, or enter your own formatting string. <br>Use e.g. %.2F to display as fixed precision with 2 decimal places, or %.3E to show as scientific format with 3 significant figures, or %.4G to use 'general' formatting with up to 4 significant figures.<br>You may also use new style Python string formatting (e.g. {:06.2f}).",
+                max_length=10,
             ),
         ),
     ]

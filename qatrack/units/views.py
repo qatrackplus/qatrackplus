@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo
+
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
@@ -6,7 +8,6 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
-from zoneinfo import ZoneInfo
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
@@ -15,7 +16,6 @@ from qatrack.units import models as u_models
 
 
 def get_unit_available_time_data(request):
-
     unit_qs = u_models.Unit.objects.prefetch_related('unitavailabletime_set', 'unitavailabletimeedit_set').all()
     unit_available_time_data = {
         u.id: {
@@ -24,26 +24,24 @@ def get_unit_available_time_data(request):
             'active': u.active,
             'date_acceptance': fmt_date(u.date_acceptance) if u.date_acceptance else None,
             'available_time_edits': {
-                fmt_date(uate.date): {
-                    'name': uate.name,
-                    'hours': uate.hours
-                } for uate in u.unitavailabletimeedit_set.all()
+                fmt_date(uate.date): {'name': uate.name, 'hours': uate.hours}
+                for uate in u.unitavailabletimeedit_set.all()
             },
             'available_times': u.get_available_times_list(),
-        } for u in unit_qs
+        }
+        for u in unit_qs
     }
 
     return JsonResponse({'unit_available_time_data': unit_available_time_data})
 
 
 class UnitAvailableTimeChange(PermissionRequiredMixin, TemplateView):
-
     permission_required = 'units.change_unitavailabletime'
     raise_exception = True
     template_name = 'units/unit_available_time_change.html'
 
     def get_context_data(self, **kwargs):
-        context = super(UnitAvailableTimeChange, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['unit_available_time_form'] = forms.UnitAvailableTimeForm()
         context['unit_available_time_edit_form'] = forms.UnitAvailableTimeEditForm()
         context['units'] = u_models.Unit.objects.filter(is_serviceable=True)
@@ -55,9 +53,8 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, TemplateView):
 @permission_required('units.change_unitavailabletime')
 @csrf_protect
 def handle_unit_available_time(request):
-
     units = request.POST.getlist('units[]')
-    tz = request.POST.get("tz", settings.TIME_ZONE)
+    tz = request.POST.get('tz', settings.TIME_ZONE)
     try:
         tz = ZoneInfo(tz)
     except Exception:
@@ -74,7 +71,7 @@ def handle_unit_available_time(request):
         'thursday': ['0', '0'],
         'friday': ['0', '0'],
         'saturday': ['0', '0'],
-        'sunday': ['0', '0']
+        'sunday': ['0', '0'],
     }
 
     for h in hours:
@@ -95,7 +92,9 @@ def handle_unit_available_time(request):
                 date_changed=day,
                 hours_monday=timezone.timedelta(hours=int(hours['monday'][0]), minutes=int(hours['monday'][1])),
                 hours_tuesday=timezone.timedelta(hours=int(hours['tuesday'][0]), minutes=int(hours['tuesday'][1])),
-                hours_wednesday=timezone.timedelta(hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])),  # noqa: E501
+                hours_wednesday=timezone.timedelta(
+                    hours=int(hours['wednesday'][0]), minutes=int(hours['wednesday'][1])
+                ),  # noqa: E501
                 hours_thursday=timezone.timedelta(hours=int(hours['thursday'][0]), minutes=int(hours['thursday'][1])),
                 hours_friday=timezone.timedelta(hours=int(hours['friday'][0]), minutes=int(hours['friday'][1])),
                 hours_saturday=timezone.timedelta(hours=int(hours['saturday'][0]), minutes=int(hours['saturday'][1])),
@@ -108,17 +107,16 @@ def handle_unit_available_time(request):
 @permission_required('units.change_unitavailabletime')
 @csrf_protect
 def handle_unit_available_time_edit(request):
-
     def safe_date_str(date_obj, tz_name):
         try:
             tz = ZoneInfo(tz_name)
         except Exception:
             tz = timezone.get_current_timezone()
 
-        return date_obj.astimezone(tz).strftime("%Y-%m-%d")
+        return date_obj.astimezone(tz).strftime('%Y-%m-%d')
 
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
-    tz = request.POST.get("tz", settings.TIME_ZONE)
+    tz = request.POST.get('tz', settings.TIME_ZONE)
     try:
         tz = ZoneInfo(tz)
     except Exception:
@@ -158,9 +156,8 @@ def handle_unit_available_time_edit(request):
 @permission_required('units.change_unitavailabletime')
 @csrf_protect
 def delete_schedules(request):
-
     unit_ids = request.POST.getlist('units[]', [])
-    tz = request.POST.get("tz", settings.TIME_ZONE)
+    tz = request.POST.get('tz', settings.TIME_ZONE)
     try:
         tz = ZoneInfo(tz)
     except Exception:
@@ -178,7 +175,7 @@ def delete_schedules(request):
 
 
 def get_unit_info(request):
-    units = request.GET.getlist("units[]", [])
-    serviceable_only = request.GET.get("serviceable_only", "false") == "true"
+    units = request.GET.getlist('units[]', [])
+    serviceable_only = request.GET.get('serviceable_only', 'false') == 'true'
     unit_info = u_models.get_unit_info(unit_ids=units, serviceable_only=serviceable_only)
     return JsonResponse(unit_info, encoder=QATrackJSONEncoder)

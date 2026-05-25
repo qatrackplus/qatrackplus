@@ -25,77 +25,77 @@ from qatrack.parts import models as p_models
 
 def parts_searcher(request):
     p_search = request.GET['q']
-    parts = p_models.Part.objects\
-        .filter(Q(part_number__icontains=p_search) | Q(name__icontains=p_search)) \
-        .order_by('part_number')[0:50]\
+    parts = (
+        p_models.Part.objects.filter(Q(part_number__icontains=p_search) | Q(name__icontains=p_search))
+        .order_by('part_number')[0:50]
         .values_list('id', 'part_number', 'alt_part_number', 'name', 'quantity_current')
+    )
     return JsonResponse({'data': list(parts)}, safe=False)
 
 
 def parts_storage_searcher(request):
-
     try:
         p_id = int(request.GET['p_id'])
     except ValueError:
         return JsonResponse({'data': '__clear__'}, safe=False)
 
-    psc = p_models.PartStorageCollection.objects \
-        .filter(part=p_id) \
-        .select_related('storage', 'storage__room', 'storage__room__site') \
-        .order_by('storage__room__site__name', 'storage__room__name', 'storage__location')[0:50] \
+    psc = (
+        p_models.PartStorageCollection.objects.filter(part=p_id)
+        .select_related('storage', 'storage__room', 'storage__room__site')
+        .order_by('storage__room__site__name', 'storage__room__name', 'storage__location')[0:50]
         .values_list('storage_id', 'storage__room__site__name', 'storage__room__name', 'storage__location', 'quantity')
+    )
 
     return JsonResponse({'data': list(psc)}, safe=False)
 
 
 def room_location_searcher(request):
-
     try:
         r_id = int(request.GET['r_id'])
     except ValueError:
         return JsonResponse({'data': '__clear__'}, safe=False)
 
-    storage = p_models.Storage.objects \
-        .filter(room=r_id, location__isnull=False) \
-        .select_related('room', 'room__site') \
-        .order_by('room__site__name', 'room__name', 'location') \
+    storage = (
+        p_models.Storage.objects.filter(room=r_id, location__isnull=False)
+        .select_related('room', 'room__site')
+        .order_by('room__site__name', 'room__name', 'location')
         .values_list('id', 'location', 'description')
+    )
 
-    storage_no_location, _ = p_models.Storage.objects \
-        .get_or_create(room=p_models.Room.objects.get(pk=r_id), location__isnull=True)
+    storage_no_location, _ = p_models.Storage.objects.get_or_create(
+        room=p_models.Room.objects.get(pk=r_id), location__isnull=True
+    )
 
     return JsonResponse({'storage': list(storage), 'storage_no_location': storage_no_location.id}, safe=False)
 
 
 class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, ModelFormMixin, ProcessFormView):
-
     model = p_models.Part
     template_name = 'parts/part_update.html'
     form_class = p_forms.PartForm
 
     def dispatch(self, request, *args, **kwargs):
         self.user = request.user
-        return super(PartUpdateCreate, self).dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         try:
-            return super(PartUpdateCreate, self).get_object(queryset)
+            return super().get_object(queryset)
         except AttributeError:
             return None
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return super(PartUpdateCreate, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return super(PartUpdateCreate, self).post(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
-        context_data = super(PartUpdateCreate, self).get_context_data(**kwargs)
+        context_data = super().get_context_data(**kwargs)
 
         if self.request.method == 'POST':
-
             context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(
                 self.request.POST, instance=self.object, prefix='supplier'
             )
@@ -121,10 +121,10 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         for idx, f in enumerate(self.request.FILES.getlist('part_attachments')):
             Attachment.objects.create(
                 attachment=f,
-                comment="Uploaded %s by %s" % (timezone.now(), self.request.user.username),
+                comment=f'Uploaded {timezone.now()} by {self.request.user.username}',
                 label=f.name,
                 part=part,
-                created_by=self.request.user
+                created_by=self.request.user,
             )
 
         a_ids = self.request.POST.get('part_attachments_delete_ids', '').split(',')
@@ -132,7 +132,6 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
             Attachment.objects.filter(id__in=a_ids).delete()
 
     def form_valid(self, form):
-
         context = self.get_context_data()
         supplier_formset = context['supplier_formset']
         storage_formset = context['storage_formset']
@@ -151,7 +150,6 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
         part.save()
 
         for sup_form in supplier_formset:
-
             delete = sup_form.cleaned_data.get('DELETE')
             is_new = sup_form.instance.id is None
 
@@ -166,7 +164,6 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
                 psc_instance.save()
 
         for sto_form in storage_formset:
-
             delete = sto_form.cleaned_data.get('DELETE')
             is_new = sto_form.instance.id is None
 
@@ -197,14 +194,12 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
 
 class PartDetails(DetailView):
-
     model = p_models.Part
     template_name = 'parts/part_details.html'
 
 
 class PartsList(BaseListableView):
-
-    page_title = _l("All Parts")
+    page_title = _l('All Parts')
     model = p_models.Part
     template_name = 'parts/parts_list.html'
     paginate_by = 50
@@ -233,10 +228,10 @@ class PartsList(BaseListableView):
         'new_or_used': _l('New or Used'),
         'quantity_current': _l('In Storage'),
         'quantity_min': _l('Min Quantity'),
-        'locations': _l("Locations"),
-        'partstoragecollection__storage__room__name': _l("Rooms"),
+        'locations': _l('Locations'),
+        'partstoragecollection__storage__room__name': _l('Rooms'),
         'part_category__name': _l('Category'),
-        "attachments": mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
+        'attachments': mark_safe('<i class="fa fa-paperclip fa-fw" aria-hidden="true"></i>'),
     }
 
     widgets = {
@@ -263,12 +258,12 @@ class PartsList(BaseListableView):
     order_fields = {
         'actions': False,
         'part_category__name': 'part_category__name',
-        'locations': "partstoragecollection__storage__location",
-        "attachments": "attachment_count",
+        'locations': 'partstoragecollection__storage__location',
+        'attachments': 'attachment_count',
     }
 
     select_related = ('part_category',)
-    prefetch_related = ("attachment_set",)
+    prefetch_related = ('attachment_set',)
 
     def get_icon(self):
         return 'fa-cog'
@@ -276,18 +271,18 @@ class PartsList(BaseListableView):
     def get(self, request, *args, **kwargs):
         if self.kwarg_filters is None:
             self.kwarg_filters = kwargs.pop('f', None)
-        return super(PartsList, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = super(PartsList, self).get_queryset()
-        return qs.order_by("part_number").annotate(attachment_count=Count("attachment"))
+        qs = super().get_queryset()
+        return qs.order_by('part_number').annotate(attachment_count=Count('attachment'))
 
     def format_col(self, field, obj):
-        col = super(PartsList, self).format_col(field, obj)
+        col = super().format_col(field, obj)
         return col
 
     def get_context_data(self, *args, **kwargs):
-        context = super(PartsList, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
@@ -303,42 +298,41 @@ class PartsList(BaseListableView):
 
     def partstoragecollection__storage__room__name(self, p):
         rooms = self.parts_locations_cache.get(p.id, {'rooms': []})['rooms']
-        return rooms or _("None in storage")
+        return rooms or _('None in storage')
 
     def locations(self, obj):
         locs = self.parts_locations_cache.get(obj.id, {'locations': []})['locations']
-        return locs or _("None in storage")
+        return locs or _('None in storage')
 
     @property
     def parts_locations_cache(self):
-        if not hasattr(self, "_parts_locations_cache"):
+        if not hasattr(self, '_parts_locations_cache'):
             self._generate_parts_locations()
         return self._parts_locations_cache
 
     def _generate_parts_locations(self):
-
         psc = p_models.PartStorageCollection.objects.order_by(
-            "storage__room__site__name",
-            "storage__room__name",
-            "storage__location",
+            'storage__room__site__name',
+            'storage__room__name',
+            'storage__location',
         ).values_list(
-            "part_id",
-            "quantity",
-            "storage__location",
-            "storage__room__site__name",
-            "storage__room__name",
+            'part_id',
+            'quantity',
+            'storage__location',
+            'storage__room__site__name',
+            'storage__room__name',
         )
 
         tmp_cache = defaultdict(lambda: {'rooms': [], 'locations': []})
         for part_id, quantity, loc, site_name, room_name in psc:
-            site = "%s/" % site_name if site_name else ""
+            site = f'{site_name}/' if site_name else ''
             text = (
                 '<div style="display: inline-block; white-space: nowrap;">'
                 '%s%s/%s <span class="badge">%d</span>'
                 '</div>'
-            ) % (site, room_name, loc or "", quantity)
+            ) % (site, room_name, loc or '', quantity)
             tmp_cache[part_id]['locations'].append(text)
-            tmp_cache[part_id]['rooms'].append(f"{site}{room_name}")
+            tmp_cache[part_id]['rooms'].append(f'{site}{room_name}')
 
         self._parts_locations_cache = defaultdict(dict)
         for part_id, storages in tmp_cache.items():
@@ -346,15 +340,14 @@ class PartsList(BaseListableView):
                 self._parts_locations_cache[part_id][storage_loc] = ', '.join(storages[storage_loc])
 
     def part_number(self, part):
-        return part.part_number or "<em>N/A</em>"
+        return part.part_number or '<em>N/A</em>'
 
     def attachments(self, part):
         return listable_attachment_tags(part)
 
 
 class LowInventoryPartsList(PartsList):
-
-    page_title = _l("Low Inventory Parts")
+    page_title = _l('Low Inventory Parts')
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -362,7 +355,6 @@ class LowInventoryPartsList(PartsList):
 
 
 class SuppliersList(BaseListableView):
-
     model = p_models.Supplier
     template_name = 'service_log/service_event_list.html'
     paginate_by = 50
@@ -380,8 +372,8 @@ class SuppliersList(BaseListableView):
     headers = {
         'actions': _l('Actions'),
         'name': _l('Name'),
-        'phone_number': _l("Phone Number"),
-        'get_website_tag': _l("Website"),
+        'phone_number': _l('Phone Number'),
+        'get_website_tag': _l('Website'),
     }
 
     widgets = {
@@ -402,11 +394,11 @@ class SuppliersList(BaseListableView):
     }
 
     def get_context_data(self, *args, **kwargs):
-        context = super(SuppliersList, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = 'fa-microchip'
-        context['page_title'] = _l("All Suppliers")
+        context['page_title'] = _l('All Suppliers')
         return context
 
     def actions(self, supplier):
@@ -422,7 +414,6 @@ class SuppliersList(BaseListableView):
 
 
 class SupplierDetails(PartsList):
-
     template_name = 'parts/supplier_details.html'
 
     def get_queryset(self):

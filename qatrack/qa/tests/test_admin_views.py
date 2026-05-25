@@ -23,8 +23,8 @@ class TestListAdminViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('admin:qa_export_testpack'))
         self.assertContains(response, reverse('admin:qa_import_testpack'))
-        self.assertContains(response, _("Export Test Pack"))
-        self.assertContains(response, _("Import Test Pack"))
+        self.assertContains(response, _('Export Test Pack'))
+        self.assertContains(response, _('Import Test Pack'))
 
     def test_export_testpack_view_requires_permission(self):
         """Test that export testpack view requires proper permission"""
@@ -72,13 +72,14 @@ class TestListAdminViewsTest(TestCase):
         """Test that export and import work together"""
         # First export
         response = self.client.post(
-            reverse('admin:qa_export_testpack'), {
+            reverse('admin:qa_export_testpack'),
+            {
                 'name': 'test-export',
                 'description': 'Test export',
                 'testlists': str(self.test_list.id),
                 'testlistcycles': '',
                 'tests': '',
-            }
+            },
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/json')
@@ -97,7 +98,7 @@ class TestListAdminViewsTest(TestCase):
                 'testlists': '[["' + self.test_list.slug + '"]]',  # Natural key format
                 'testlistcycles': '[]',
                 'tests': '[]',
-            }
+            },
         )
         self.assertEqual(response.status_code, 302)  # Redirect on success
 

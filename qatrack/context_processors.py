@@ -1,4 +1,5 @@
 import json
+import os
 from random import Random
 
 from django.conf import settings
@@ -10,9 +11,6 @@ from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.formats import get_format
 from django.utils.translation import get_language_info
-from django.utils.translation import gettext_lazy as _l
-
-import os
 
 from qatrack.faults.models import Fault
 from qatrack.parts.models import PartStorageCollection, PartUsed
@@ -54,7 +52,6 @@ def update_part_storage_quantity(*args, **kwargs):
 
 @receiver(post_delete, sender=PartStorageCollection)
 def update_part_quantity(*args, **kwargs):
-
     psc = kwargs['instance']
     part = psc.part
     part.set_quantity_current()
@@ -122,7 +119,6 @@ def update_colours(*args, **kwargs):
 
 
 def site(request):
-
     context = {
         'SELF_REGISTER': settings.ACCOUNTS_SELF_REGISTER,
         'USE_ADFS': settings.USE_ADFS,
@@ -140,14 +136,13 @@ def site(request):
         'USE_SQL_REPORTS': settings.USE_SQL_REPORTS,
         'USE_ISSUES': settings.USE_ISSUES,
         'PING_INTERVAL_S': settings.PING_INTERVAL_S,
-
         # JavaScript Date Formats
-        'MOMENT_DATE_DATA_FMT': get_format("MOMENT_DATE_DATA_FMT"),
-        'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
-        'MOMENT_DATETIME_FMT': get_format("MOMENT_DATETIME_FMT"),
-        'FLATPICKR_DATE_FMT': get_format("FLATPICKR_DATE_FMT"),
-        'FLATPICKR_DATETIME_FMT': get_format("FLATPICKR_DATETIME_FMT"),
-        'DATERANGEPICKER_DATE_FMT': get_format("DATERANGEPICKER_DATE_FMT"),
+        'MOMENT_DATE_DATA_FMT': get_format('MOMENT_DATE_DATA_FMT'),
+        'MOMENT_DATE_FMT': get_format('MOMENT_DATE_FMT'),
+        'MOMENT_DATETIME_FMT': get_format('MOMENT_DATETIME_FMT'),
+        'FLATPICKR_DATE_FMT': get_format('FLATPICKR_DATE_FMT'),
+        'FLATPICKR_DATETIME_FMT': get_format('FLATPICKR_DATETIME_FMT'),
+        'DATERANGEPICKER_DATE_FMT': get_format('DATERANGEPICKER_DATE_FMT'),
     }
     cur_site = get_current_site(request)
     context.update({'SITE_NAME': cur_site.name, 'SITE_URL': cur_site.domain})
@@ -208,16 +203,15 @@ def site(request):
 
     cache.get_or_set(
         settings.CACHE_SERVICE_STATUS_COLOURS,
-        lambda: {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
+        lambda: {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()},
     )
 
     return context
 
 
 def get_user_count(request, key, manager_method):
-
     counts = cache.get(key)
-    if counts is None and hasattr(request, "user"):
+    if counts is None and hasattr(request, 'user'):
         user_count = manager_method(request.user)
         counts = {request.user.pk: user_count}
         cache.set(key, counts)
@@ -249,31 +243,35 @@ def available_languages(request):
     LANGUAGES setting takes precedence over auto-detection when explicitly set.
     """
     languages = []
-    
+
     # Check if LANGUAGES is explicitly set in settings
     languages_explicitly_set = hasattr(settings, 'LANGUAGES') and settings.LANGUAGES
-    
+
     # Get languages from Django settings
     if languages_explicitly_set:
         for lang_code, lang_name in settings.LANGUAGES:
             try:
                 # Get detailed language info
                 lang_info = get_language_info(lang_code)
-                languages.append({
-                    'code': lang_code,
-                    'name': lang_info['name_local'],  # Name in the language itself
-                    'name_translated': lang_name,     # Name in current language
-                    'bidi': lang_info['bidi'],       # Right-to-left support
-                })
+                languages.append(
+                    {
+                        'code': lang_code,
+                        'name': lang_info['name_local'],  # Name in the language itself
+                        'name_translated': lang_name,  # Name in current language
+                        'bidi': lang_info['bidi'],  # Right-to-left support
+                    }
+                )
             except:
                 # Fallback if language info not available
-                languages.append({
-                    'code': lang_code,
-                    'name': lang_name,
-                    'name_translated': lang_name,
-                    'bidi': False,
-                })
-    
+                languages.append(
+                    {
+                        'code': lang_code,
+                        'name': lang_name,
+                        'name_translated': lang_name,
+                        'bidi': False,
+                    }
+                )
+
     # Only scan locale directory if LANGUAGES is NOT explicitly set
     # This allows auto-detection when no LANGUAGES is specified
     if not languages_explicitly_set and hasattr(settings, 'LOCALE_PATHS'):
@@ -287,25 +285,29 @@ def available_languages(request):
                             if not any(lang['code'] == item for lang in languages):
                                 try:
                                     lang_info = get_language_info(item)
-                                    languages.append({
-                                        'code': item,
-                                        'name': lang_info['name_local'],
-                                        'name_translated': lang_info['name'],
-                                        'bidi': lang_info['bidi'],
-                                    })
+                                    languages.append(
+                                        {
+                                            'code': item,
+                                            'name': lang_info['name_local'],
+                                            'name_translated': lang_info['name'],
+                                            'bidi': lang_info['bidi'],
+                                        }
+                                    )
                                 except:
                                     # Fallback for unknown languages
-                                    languages.append({
-                                        'code': item,
-                                        'name': item.upper(),
-                                        'name_translated': item.upper(),
-                                        'bidi': False,
-                                    })
+                                    languages.append(
+                                        {
+                                            'code': item,
+                                            'name': item.upper(),
+                                            'name_translated': item.upper(),
+                                            'bidi': False,
+                                        }
+                                    )
                 except (OSError, PermissionError):
                     # Skip if we can't read the directory
                     pass
-    
+
     # Sort languages by code for consistent ordering
     languages.sort(key=lambda x: x['code'])
-    
+
     return {'available_languages': languages}
