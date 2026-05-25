@@ -53,12 +53,12 @@ class FaultType(models.Model):
         verbose_name = _l('Fault Type')
         verbose_name_plural = _l('Fault Types')
 
+    def __str__(self):
+        return self.code
+
     def save(self, *args, **kwargs):
         self.slug = unique_slug_generator(self, self.code)
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.code
 
 
 class FaultManager(models.Manager):
@@ -138,6 +138,9 @@ class Fault(models.Model):
         verbose_name_plural = _l('Faults')
         permissions = (('can_review', _l('Can review faults')),)
 
+    def __str__(self):
+        return 'Fault ID: %d' % self.pk
+
     def get_absolute_url(self):
         return reverse('fault_details', kwargs={'pk': self.pk})
 
@@ -181,9 +184,6 @@ class Fault(models.Model):
 
     def fault_types_display(self):
         return ', '.join(ft.code for ft in self.fault_types.order_by('code'))
-
-    def __str__(self):
-        return 'Fault ID: %d' % self.pk
 
 
 class FaultReviewGroup(models.Model):

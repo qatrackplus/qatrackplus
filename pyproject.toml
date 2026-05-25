@@ -181,7 +181,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "DJ"]
-ignore = ["E741", "E501"]
+ignore = ["E741", "E501", "DJ001", "DJ008", "DJ007"]
 
 [tool.ruff.lint.per-file-ignores]
 "manage.py" = ["E402"]

@@ -40,6 +40,17 @@ class RecipientGroup(models.Model):
         blank=True,
     )
 
+    class Meta:
+        verbose_name = _l('Recipient Group')
+        verbose_name_plural = _l('Recipient Groups')
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self._sort_emails()
+        super().save(*args, **kwargs)
+
     def recipient_emails(self):
         users = set(self.users.filter(is_active=True).exclude(email='').values_list('email', flat=True))
         group_users = set(
@@ -50,17 +61,6 @@ class RecipientGroup(models.Model):
 
     def _sort_emails(self):
         self.emails = ', '.join(sorted(e.strip() for e in self.emails.split(',')))
-
-    def save(self, *args, **kwargs):
-        self._sort_emails()
-        super().save(*args, **kwargs)
-
-    class Meta:
-        verbose_name = _l('Recipient Group')
-        verbose_name_plural = _l('Recipient Groups')
-
-    def __str__(self):
-        return self.name
 
 
 class TestListGroup(models.Model):
@@ -73,11 +73,11 @@ class TestListGroup(models.Model):
         help_text=_l('Select which Test Lists should be included in this notification group.'),
     )
 
+    __test__ = False  # supress pytest warning
+
     class Meta:
         verbose_name = _l('Test List Group')
         verbose_name_plural = _l('Test List Groups')
-
-    __test__ = False  # supress pytest warning
 
     def __str__(self):
         return self.name

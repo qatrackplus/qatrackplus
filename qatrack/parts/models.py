@@ -48,6 +48,9 @@ class Supplier(models.Model):
         verbose_name = _l('Supplier')
         verbose_name_plural = _l('Suppliers')
 
+    def __str__(self):
+        return self.name
+
     def get_absolute_url(self):
         return reverse('supplier_details', kwargs={'pk': self.pk})
 
@@ -61,9 +64,6 @@ class Supplier(models.Model):
                 )
             )
         return ''
-
-    def __str__(self):
-        return self.name
 
 
 class Contact(models.Model):
@@ -324,6 +324,9 @@ class Part(models.Model):
 
         return f'{pn} - {self.name}'
 
+    def get_absolute_url(self):
+        return reverse('part_details', kwargs={'pk': self.pk})
+
     def set_quantity_current(self):
         qs = PartStorageCollection.objects.filter(part=self, storage__isnull=False)
         initial_quantity = self.quantity_current
@@ -338,9 +341,6 @@ class Part(models.Model):
 
         self.save(update_fields=update_fields)
         return self.quantity_current < self.quantity_min
-
-    def get_absolute_url(self):
-        return reverse('part_details', kwargs={'pk': self.pk})
 
 
 class PartStorageCollectionManager(models.Manager):
@@ -387,11 +387,6 @@ class PartStorageCollection(models.Model):
         verbose_name = _l('Part Storage Collection')
         verbose_name_plural = _l('Part Storage Collections')
 
-    def save(self, *args, **kwargs):
-        self.quantity = self.quantity if self.quantity >= 0 else 0
-        super().save(*args, **kwargs)
-        self.part.set_quantity_current()
-
     def __str__(self):
         locs = []
         if self.storage.room.site:
@@ -401,6 +396,11 @@ class PartStorageCollection(models.Model):
             locs.append(self.storage.location)
         locs.append(f'({self.quantity})')
         return ' - '.join(locs)
+
+    def save(self, *args, **kwargs):
+        self.quantity = self.quantity if self.quantity >= 0 else 0
+        super().save(*args, **kwargs)
+        self.part.set_quantity_current()
 
 
 class PartSupplierCollection(models.Model):
