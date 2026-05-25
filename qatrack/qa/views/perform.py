@@ -655,7 +655,7 @@ class CompositePerformer:
                 key = 'result' if 'result' in self.calculation_context else slug
                 result = self.calculation_context[key]
 
-                if type(result) == float and result in (numpy.nan, numpy.inf):
+                if isinstance(result, float) and result in (numpy.nan, numpy.inf):
                     raise ValueError(
                         _("%(test)s has a result of '%(test_result)s'") % {'test': slug, 'test_result': str(result)}
                     )

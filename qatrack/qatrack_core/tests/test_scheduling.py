@@ -372,17 +372,6 @@ class TestCalcDueDate(TestCase):
         expected_due_date = self.make_dt(timezone.datetime(2018, 12, 23, 7, 0))
         assert scheduling.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
 
-    def test_first_of_month_performed_long_after_past_next_window_2(self):
-        """If a test list is due on say Apr 15th and is not performed until Nov 26
-        the due date should be updated to Dec 23"""
-
-        today = self.make_dt(timezone.datetime(2018, 11, 26, 7, 0))
-        due_date = self.make_dt(timezone.datetime(2018, 4, 15, 7, 0))
-        # due date in Nov is 8 4 week periods after April 15 which is Nov 25
-        # due date in Dec is 9 4 week periods after April 15 which is Dec 23
-        expected_due_date = self.make_dt(timezone.datetime(2018, 12, 23, 7, 0))
-        assert scheduling.calc_due_date(today, due_date, self.n_weekly(4)).date() == expected_due_date.date()
-
     def test_first_of_month_us_classical_offset(self):
         """Ensure due date is calculated correctly when the UTC date is ahead
         of the local date.  See RAM-2297."""

@@ -2,6 +2,8 @@
 # Copy this file to qatrack/local_test_settings.py and customize as needed
 
 # Development settings
+from django.contrib.auth.hashers import BasePasswordHasher
+
 DEBUG = True
 TEMPLATE_DBG = True
 
@@ -61,9 +63,6 @@ TIME_ZONE = 'America/Toronto'
 # Set to True to use headless browser for testing (requires xvfb)
 # Set to False to see the browser during test execution
 SELENIUM_VIRTUAL_DISPLAY = False
-
-# Test-specific password hasher for faster testing
-from django.contrib.auth.hashers import BasePasswordHasher
 
 
 class SimplePasswordHasher(BasePasswordHasher):

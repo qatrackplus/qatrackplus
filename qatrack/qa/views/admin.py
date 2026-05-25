@@ -16,7 +16,6 @@ from django.views.generic import FormView
 from formtools.preview import FormPreview
 
 from qatrack.qa import models
-from qatrack.qa.forms.admin import CopyReferencesAndTolerancesForm
 from qatrack.qa.testpack import add_testpack, create_testpack
 from qatrack.units.forms import unit_site_unit_type_choices
 from qatrack.units.models import Unit

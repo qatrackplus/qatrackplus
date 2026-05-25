@@ -181,12 +181,13 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "DJ"]
-ignore = ["E741", "E501", "DJ001", "DJ008", "DJ007", "UP031"]
+ignore = ["E741", "E501", "DJ001", "DJ008", "DJ007", "UP031", "DJ006"]
 
 [tool.ruff.lint.per-file-ignores]
 "manage.py" = ["E402"]
 "qatrack/wsgi.py" = ["E402"]
 "__init__.py" = ["F401"]
+"qatrack/accel_migration_tool/accel_migration_settings.py" = ["E402", "F403"]
 
 [tool.ruff.format]
 quote-style = "single"
