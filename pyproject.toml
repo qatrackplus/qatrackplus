@@ -141,12 +141,6 @@ python-ldap = { url = "https://github.com/cgohlke/python-ldap-build/releases/dow
 
 [dependency-groups]
 dev = [
-    "black==23.1.0",
-    "pep8>=1.7.1,<2.0",
-    "isort",
-    "flake8",
-    "pylint>=2.12,<3.0",
-    "yapf",
     
     # Testing framework and utilities
     "pytest>=7.0,<8.0",
@@ -177,6 +171,17 @@ dev = [
     "sphinxcontrib-jquery==4.1",
     "sphinxcontrib-jsmath==1.0.1",
     "sphinxcontrib-qthelp==1.0.3",
-    "sphinxcontrib-serializinghtml==2.0.0",
     "sphinxcontrib-websupport==1.2.4",
+    "ruff",
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "DJ"]
+ignore = ["E741"]
+
+[tool.ruff.format]
+quote-style = "single"
