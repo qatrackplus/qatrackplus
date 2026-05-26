@@ -11,6 +11,7 @@ from django.db.utils import ProgrammingError
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.utils import timezone
+from datetime import timezone as tz
 from django.views.generic import TemplateView, View
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -284,7 +285,8 @@ class BaseChartView(View):
         d_to = timezone.datetime(d_to.year, d_to.month, d_to.day, 23, 59, 59, tzinfo=timezone.get_current_timezone())
         d_from = timezone.datetime(d_from.year, d_from.month, d_from.day, tzinfo=timezone.get_current_timezone())
 
-        return [d_from.astimezone(timezone.utc), d_to.astimezone(timezone.utc)]
+        return [d_from.astimezone(tz.utc), d_to.astimezone(tz.utc)]
+
 
     def convert_date(self, date):
         """by default we assume date is being used by javascript, so convert to ISO"""
