@@ -1,9 +1,17 @@
 repos:
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.5
+    hooks:
+    -   id: ruff
+        name: Lint
+        # Run the linter without auto-fixing.
+        args: [ --no-fix ]
+
 -   repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.25.0"  # Use the latest tag from GitHub
+    rev: "1.25.0"
     hooks:
     -   id: django-upgrade
-        args: [--target-version, "4.2"]   # Target Django 4.2 
+        args: [--target-version, "4.2", --skip, use_l10n]   # Target Django 4.2 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.4
     hooks:

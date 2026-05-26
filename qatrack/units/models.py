@@ -300,8 +300,15 @@ class Unit(models.Model):
         self_uate_set = self.unitavailabletimeedit_set.filter(date__range=[date_from, date_to]).order_by('date')
 
         # add latest uat where available
-        latest_uat = self.unitavailabletime_set.filter(date_changed__lte=date_from).order_by('-date_changed')[:1]
-        self_uat_set = self_uat_set | latest_uat
+        latest_uat_id = (
+            self.unitavailabletime_set.filter(date_changed__lte=date_from)
+            .order_by('-date_changed')
+            .values_list('id', flat=True)
+            .first()
+        )
+        if latest_uat_id:
+            latest_uat = self.unitavailabletime_set.filter(id=latest_uat_id)
+            self_uat_set = self_uat_set | latest_uat
 
         potential_time = 0
 

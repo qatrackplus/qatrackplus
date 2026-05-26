@@ -151,4 +151,4 @@ def run_restore():
         os.unlink(restore_filepath)
 
     if len(restore_filelist) > 1:
-        raise ValueError('Only one restoration file should be placed within the restore ' 'directory')
+        raise ValueError('Only one restoration file should be placed within the restore directory')

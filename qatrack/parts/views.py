@@ -327,9 +327,7 @@ class PartsList(BaseListableView):
         for part_id, quantity, loc, site_name, room_name in psc:
             site = f'{site_name}/' if site_name else ''
             text = (
-                '<div style="display: inline-block; white-space: nowrap;">'
-                '%s%s/%s <span class="badge">%d</span>'
-                '</div>'
+                '<div style="display: inline-block; white-space: nowrap;">%s%s/%s <span class="badge">%d</span></div>'
             ) % (site, room_name, loc or '', quantity)
             tmp_cache[part_id]['locations'].append(text)
             tmp_cache[part_id]['rooms'].append(f'{site}{room_name}')

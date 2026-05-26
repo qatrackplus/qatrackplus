@@ -279,7 +279,7 @@ PERMISSIONS += (
             (
                 'service_log.review_serviceevent',
                 _l('Can review service events'),
-                _l('Allows user to change status of service events ' "to statuses with 'is review required = false'."),
+                _l("Allows user to change status of service events to statuses with 'is review required = false'."),
             ),
             (
                 'parts.add_part',

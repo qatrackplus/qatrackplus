@@ -23,9 +23,7 @@ class FaultDetailsReport(FaultReportMixin, BaseReport):
     report_type = 'fault_details'
     name = _l('Fault Details')
     filter_class = filters.FaultDetailsFilter
-    description = mark_safe(
-        _l('This report includes details of all Faults from a given' 'time period for selected units')
-    )
+    description = mark_safe(_l('This report includes details of all Faults from a giventime period for selected units'))
 
     template = 'reports/faults/details.html'
 

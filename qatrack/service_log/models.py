@@ -782,8 +782,7 @@ class ServiceEventTemplate(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_l('service type'),
         help_text=_l(
-            'Select the Service Type this Service Event Template applies to. '
-            'Leave blank to create a generic template.'
+            'Select the Service Type this Service Event Template applies to. Leave blank to create a generic template.'
         ),
     )
     service_area = models.ForeignKey(
@@ -793,8 +792,7 @@ class ServiceEventTemplate(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_l('service area'),
         help_text=_l(
-            'Select the Service Area this Service Event Template applies to. '
-            'Leave blank to create a generic template.'
+            'Select the Service Area this Service Event Template applies to. Leave blank to create a generic template.'
         ),
     )
     problem_description = models.TextField(

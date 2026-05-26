@@ -21,10 +21,7 @@ class ServiceTimesReport(ServiceEventReportMixin, BaseReport):
     name = _l('Service Times')
     filter_class = filters.ServiceEventDetailsFilter
     description = mark_safe(
-        _l(
-            'This report summarizes the service times, including lost time, '
-            'for service events on all selected units.'
-        )
+        _l('This report summarizes the service times, including lost time, for service events on all selected units.')
     )
 
     category = _l('Service Log')

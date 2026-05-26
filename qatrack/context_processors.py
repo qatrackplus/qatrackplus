@@ -180,13 +180,11 @@ def site(request):
 
     context['SL_NOTIFICATION_TOTAL'] = cache.get_or_set(
         settings.CACHE_SL_NOTIFICATION_TOTAL,
-        lambda: (
-            get_sl_notification_total(
-                request,
-                context['SE_NEEDING_REVIEW_COUNT'],
-                context['SE_RTS_INCOMPLETE_QA_COUNT'],
-                context['SE_RTS_UNREVIEWED_QA_COUNT'],
-            )
+        lambda: get_sl_notification_total(
+            request,
+            context['SE_NEEDING_REVIEW_COUNT'],
+            context['SE_RTS_INCOMPLETE_QA_COUNT'],
+            context['SE_RTS_UNREVIEWED_QA_COUNT'],
         ),
     )
 

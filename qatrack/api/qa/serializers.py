@@ -356,7 +356,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
 
         if invalid_autos:
             msgs.append(
-                'The following tests are calculated automatically and should not have values ' 'provided: {}'.format(
+                'The following tests are calculated automatically and should not have values provided: {}'.format(
                     ', '.join(invalid_autos)
                 )
             )

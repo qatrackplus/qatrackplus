@@ -124,15 +124,7 @@ class RadioButton:
         checked = ''
         if self.checked:
             checked = "checked='checked'"
-        return (
-            '<input '
-            "type='radio' "
-            f"name='{self.name}' "
-            f"value='{self.value}' "
-            f'{checked}>'
-            f'{self.description}'
-            '</input><br />'
-        )
+        return f"<input type='radio' name='{self.name}' value='{self.value}' {checked}>{self.description}</input><br />"
 
 
 class RadioButtons:

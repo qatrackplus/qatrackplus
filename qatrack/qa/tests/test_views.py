@@ -894,7 +894,7 @@ class TestComposite(TestCase):
             'results': {
                 'testc': {
                     'error': (
-                        'Invalid Test Procedure: testc", line 1, in ' 'testc\n' "NameError: name 'foo' is not defined\n"
+                        "Invalid Test Procedure: testc\", line 1, in testc\nNameError: name 'foo' is not defined\n"
                     ),
                     'user_attached': [],
                     'comment': '',

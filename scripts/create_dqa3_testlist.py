@@ -138,8 +138,7 @@ def create_dqa3(mode, tl_name, beam):
 
     except IntegrityError:
         print(
-            '\tThere was a conflict with an existing Test List slug or '
-            'Test name when trying to create this test list.'
+            '\tThere was a conflict with an existing Test List slug or Test name when trying to create this test list.'
         )
     except Rollback:
         pass

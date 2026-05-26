@@ -1,0 +1,211 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+  requirements:
+    name: Requirements Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Install system dependencies for python-ldap
+        run: sudo apt-get update && sudo apt-get install -y libldap2-dev libsasl2-dev
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+        with:
+          enable-cache: true
+      - name: Sync dependencies
+        run: uv sync --all-extras
+      - name: Check dependencies
+        run: uv pip check
+
+  linux-tests:
+    name: Linux Tests
+    runs-on: ubuntu-latest
+    needs: [lint, requirements]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"]
+        db: [sqlite, postgres, mysql]
+    
+    services:
+      postgres:
+        image: postgres@sha256:1b92e7a80c021647bf70f5d3eb66066a998e4f5cf43c07bb9dc9f729782cf88e
+        env:
+          POSTGRES_DB: qatrackplus31
+          POSTGRES_USER: qatrack
+          POSTGRES_PASSWORD: qatrackpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      mysql:
+        image: mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies (SQLite)
+        if: matrix.db == 'sqlite'
+        run: uv sync
+
+      - name: Install dependencies (Postgres)
+        if: matrix.db == 'postgres'
+        run: |
+          sudo apt-get update && sudo apt-get install -y libpq-dev
+          uv sync --extra postgres
+
+      - name: Install dependencies (MySQL)
+        if: matrix.db == 'mysql'
+        run: |
+          sudo apt-get update && sudo apt-get install -y libmysqlclient-dev
+          uv sync --extra mysql
+
+      - name: Setup Database configuration (SQLite)
+        if: matrix.db == 'sqlite'
+        run: cp deploy/sqlite/local_settings.py qatrack/local_settings.py
+
+      - name: Setup Database configuration (Postgres)
+        if: matrix.db == 'postgres'
+        run: |
+          cp deploy/postgres/local_settings.py qatrack/local_settings.py
+          sed -i "s/'HOST': ''/'HOST': '127.0.0.1'/g" qatrack/local_settings.py
+          # User qatrack is already created with full privileges by the service container
+
+      - name: Setup Database configuration (MySQL)
+        if: matrix.db == 'mysql'
+        run: |
+          cp deploy/mysql/local_settings.py qatrack/local_settings.py
+          sed -i "s/'HOST': ''/'HOST': '127.0.0.1'/g" qatrack/local_settings.py
+          # Setup mysql users and privileges for MySQL 8 compat
+          docker exec -i ${{ job.services.mysql.id }} mysql -u root -proot -e "CREATE USER 'qatrack'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE USER 'qatrack_reports'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE DATABASE qatrackplus31 CHARACTER SET utf8; GRANT ALL ON *.* TO 'qatrack'@'%'; GRANT ALL ON *.* TO 'qatrack_reports'@'%'; FLUSH PRIVILEGES;"
+          docker exec -i ${{ job.services.mysql.id }} sh -c "mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -proot mysql"
+
+      - name: Run Tests
+        run: uv run pytest -x -m "not selenium"
+
+  windows-tests:
+    name: Windows Tests
+    runs-on: windows-latest
+    needs: [lint, requirements]
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, mssql]
+    
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+        with:
+          enable-cache: true
+          python-version: "3.12"
+          
+      - name: Install dependencies (SQLite)
+        if: matrix.db == 'sqlite'
+        run: uv sync --extra win
+        
+      - name: Install dependencies (MSSQL)
+        if: matrix.db == 'mssql'
+        run: uv sync --extra win --extra mssql
+        
+      - name: Setup Database configuration (SQLite)
+        if: matrix.db == 'sqlite'
+        run: copy deploy\sqlite\local_settings.py qatrack\local_settings.py
+        
+      - name: Setup Database configuration (MSSQL)
+        if: matrix.db == 'mssql'
+        uses: Particular/install-sql-server-action@669fc7147c13cb314685bab823a55a5e22a0c95f
+        with:
+          catalog: qatrackplus31
+          connection-string-env-var: SQL_CONNECTION_STRING
+
+      - name: Configure MSSQL local_settings.py
+        if: matrix.db == 'mssql'
+        run: |
+          $code = @"
+          import os
+          conn_str = os.environ.get('SQL_CONNECTION_STRING', '')
+          parts = dict(part.split('=', 1) for part in conn_str.split(';') if '=' in part)
+          db_settings = {
+              'ENGINE': 'mssql',
+              'NAME': parts.get('Database', parts.get('Initial Catalog', 'qatrackplus31')),
+              'HOST': parts.get('Server', parts.get('Data Source', r'localhost\SQLEXPRESS')),
+              'PORT': '',
+              'OPTIONS': {
+                  'driver': 'ODBC Driver 17 for SQL Server',
+              },
+          }
+          if 'User Id' in parts and 'Password' in parts:
+              db_settings['USER'] = parts['User Id']
+              db_settings['PASSWORD'] = parts['Password']
+          elif 'Uid' in parts and 'Pwd' in parts:
+              db_settings['USER'] = parts['Uid']
+              db_settings['PASSWORD'] = parts['Pwd']
+          else:
+              db_settings['OPTIONS']['extra_params'] = 'Trusted_Connection=yes'
+          with open('qatrack/local_settings.py', 'w', encoding='utf8') as f:
+              f.write('DEBUG = False\n')
+              f.write('DATABASES = { "default": ' + repr(db_settings) + ' }\n')
+              f.write('DATABASES["readonly"] = DATABASES["default"]\n')
+          "@
+          $code | Out-File -FilePath generate_settings.py -Encoding utf8
+          python generate_settings.py
+
+      - name: Run Tests
+        run: uv run pytest -x -m "not selenium"

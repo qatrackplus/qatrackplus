@@ -90,7 +90,7 @@ class QCCompletedAdmin(BaseQATrackAdmin):
             {
                 'fields': ['units', 'test_lists'],
                 'description': _l(
-                    'By using the below filters, you may limit this notification to ' 'certain units or test lists.'
+                    'By using the below filters, you may limit this notification to certain units or test lists.'
                 ),
             },
         ),

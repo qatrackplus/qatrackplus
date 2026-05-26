@@ -408,7 +408,7 @@ result = foo + bar
     def test_invalid_clean_slug(self):
         test = self.create_test()
 
-        invalid = ('0 foo', 'foo ', ' foo' 'foo bar', 'foo*bar', '%foo', 'foo$')
+        invalid = ('0 foo', 'foo ', ' foofoo bar', 'foo*bar', '%foo', 'foo$')
 
         for i in invalid:
             test.slug = i
