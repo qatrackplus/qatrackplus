@@ -224,6 +224,6 @@ class RecurrenceFieldMixin:
                 continue
 
             for field in model._meta.fields:
-                if isinstance(field, (RecurrenceField,)):
+                if isinstance(field, RecurrenceField):
                     models_with_recurrence.append((model, field.name))
         return models_with_recurrence

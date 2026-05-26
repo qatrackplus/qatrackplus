@@ -36,14 +36,7 @@ def item_val_to_string(item):
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
         return f'{hours}:{minutes:02}'
-    elif isinstance(
-        item,
-        (
-            QuerySet,
-            list,
-            tuple,
-        ),
-    ):
+    elif isinstance(item, QuerySet | list | tuple):
         return ', '.join([str(i) for i in item])
     else:
         return str(item)

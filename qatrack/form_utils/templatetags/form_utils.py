@@ -33,7 +33,7 @@ def render(form, template_name=None):
 
     """
     default = 'form_utils/form.html'
-    if isinstance(form, (BetterForm, BetterModelForm)):
+    if isinstance(form, BetterForm | BetterModelForm):
         default = ','.join(['form_utils/better_form.html', default])
     tpl = select_template_from_string(template_name or default)
 
