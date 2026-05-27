@@ -417,11 +417,11 @@ def get_subgroups(x, sgSize, dates):
 ################################################################################
 
 def get_ranges(sg, n):
-
+    print("sg = %r" % sg, "n = %r" % n)
     r = np.zeros(len(sg))
     if n == 1:
         for i in np.arange(1, len(sg)):
-            r[i] = np.abs(sg[i] - sg[i - 1])
+            r[i] = np.abs(sg[i][0] - sg[i - 1][0])
     else:
         for i in np.arange(0, len(sg)):
             r[i] = np.max(sg[i]) - np.min(sg[i])
