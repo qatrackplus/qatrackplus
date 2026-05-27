@@ -53,5 +53,6 @@ requests==2.34.2
 scipy==1.17.1
 selenium==4.44.0
 standard-imghdr==3.13.0
+tzdata==2026.2
 xlrd==2.0.2
 xlsxwriter==3.2.9
