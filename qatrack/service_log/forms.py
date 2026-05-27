@@ -327,7 +327,7 @@ class ModelSelectWithOptionTitles(forms.Select):
         if value in [None, '']:
             title = '-----'
         elif self.title_variable is not None and self.model is not None:
-            title = getattr(self.model.objects.get(pk=value), self.title_variable)
+            title = getattr(self.model.objects.get(pk=value.value), self.title_variable)
         else:
             title = ''
         if attrs is None:
