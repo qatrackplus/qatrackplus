@@ -468,7 +468,6 @@ class TestCreateServiceEvent(TestCase):
             'parts-0-part': self.part.id,
             'hours-0-user_or_thirdparty': 'user-%s' % self.user.id
         }
-
         response = self.client.post(self.url, data=data)
         self.assertTrue('quantity' in response.context_data['part_used_formset'].errors[0])
         self.assertTrue('time' in response.context_data['hours_formset'].errors[0])

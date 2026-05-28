@@ -477,7 +477,7 @@ class ServiceEventForm(BetterModelForm):
             try:
                 g_link_instances = models.GroupLinkerInstance.objects.filter(
                     group_linker=g_link,
-                    service_event=self.instance
+                    service_event_id=self.instance.id
                 )
                 g_link_users = [gli.user for gli in g_link_instances]
                 self.initial[field_name] = g_link_users

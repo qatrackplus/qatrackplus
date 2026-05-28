@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_comments.models import Comment
 import pytz
+from zoneinfo import ZoneInfo
 
 from qatrack.attachments.models import Attachment
 from qatrack.qa.models import Frequency, TestListInstance
@@ -45,8 +46,8 @@ class TestTestListInstanceSummaryReport(TestCase):
     def test_get_work_completed_html(self):
         rep = qc.TestListInstanceSummaryReport()
         rep.report_format = "html"
-        tz = pytz.timezone("America/Toronto")
-        work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
+        tz = ZoneInfo("America/Toronto")
+        work_completed = timezone.datetime(2019, 1, 1, 12).astimezone(tz)
         tli = utils.create_test_list_instance(work_completed=work_completed)
         wc = rep.get_work_completed(tli)
         assert "01 Jan 2019" in wc
@@ -56,8 +57,8 @@ class TestTestListInstanceSummaryReport(TestCase):
     def test_get_work_completed_plain(self):
         rep = qc.TestListInstanceSummaryReport()
         rep.report_format = "csv"
-        tz = pytz.timezone("America/Toronto")
-        work_completed = tz.localize(timezone.datetime(2019, 1, 1, 12))
+        tz = ZoneInfo("America/Toronto")
+        work_completed = timezone.datetime(2019, 1, 1, 12).astimezone(tz)
         tli = utils.create_test_list_instance(work_completed=work_completed)
         wc = rep.get_work_completed(tli)
         assert "01 Jan 2019" in wc

@@ -301,7 +301,7 @@ def create_frequency(name=None, slug=None, interval=1, window_end=1, save=True):
         slug=slug,
         recurrences=recurrence.Recurrence(
             rrules=[rule],
-            dtstart=timezone.get_current_timezone().localize(timezone.datetime(2012, 1, 1)),
+            dtstart=timezone.datetime(2012, 1, 1).astimezone(timezone.get_current_timezone()),
         ),
         window_start=None,
         window_end=window_end,

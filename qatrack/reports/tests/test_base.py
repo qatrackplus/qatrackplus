@@ -11,6 +11,7 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from datetime import timezone as tz
 from django_q.models import Schedule
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as e_c
@@ -501,8 +502,8 @@ class TestFilters(TestCase):
         for test_input in test_inputs:
             start, end = cdf.clean(test_input)
             tz = timezone.get_current_timezone()
-            expected_start = tz.localize(timezone.datetime(2019, 1, 1))
-            expected_end = tz.localize(timezone.datetime(2019, 1, 2, 23, 59, 59))
+            expected_start = timezone.datetime(2019, 1, 1).astimezone(tz)
+            expected_end = timezone.datetime(2019, 1, 2, 23, 59, 59).astimezone(tz)
             assert (start, end) == (expected_start, expected_end)
 
     def test_category_choices(self):
@@ -782,7 +783,7 @@ class TestBaseReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_utc(self):
-        dt = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=timezone.utc)
+        dt = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=tz.utc)
         assert reports.BaseReport().default_detail_value_format(dt) == "01 Jan 2019"
 
     @override_settings(TIME_ZONE="America/Toronto")
@@ -792,8 +793,8 @@ class TestBaseReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_range_utc(self):
-        dt1 = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=timezone.utc)
-        dt2 = timezone.datetime(2019, 1, 3, 2, 0, tzinfo=timezone.utc)
+        dt1 = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=tz.utc)
+        dt2 = timezone.datetime(2019, 1, 3, 2, 0, tzinfo=tz.utc)
         assert reports.BaseReport().default_detail_value_format([dt1, dt2]) == "01 Jan 2019 - 02 Jan 2019"
 
     @override_settings(TIME_ZONE="America/Toronto")

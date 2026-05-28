@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
 import pytz
+from zoneinfo import ZoneInfo
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
@@ -59,7 +60,7 @@ def handle_unit_available_time(request):
 
     units = request.POST.getlist('units[]')
     tz = request.POST.get("tz", settings.TIME_ZONE)
-    tz = pytz.timezone(tz)
+    tz = ZoneInfo(tz)
     day = request.POST.get('day')
     day = timezone.localtime(timezone.datetime.fromtimestamp(int(day) / 1000, tz)).date() if day else None
 
@@ -102,7 +103,7 @@ def handle_unit_available_time_edit(request):
 
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
     tz = request.POST.get("tz", settings.TIME_ZONE)
-    tz = pytz.timezone(tz)
+    tz = ZoneInfo(tz)
     days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]  # noqa: E501
 
     hours_mins = request.POST.get('hours_mins', None)
@@ -138,7 +139,7 @@ def delete_schedules(request):
 
     unit_ids = request.POST.getlist('units[]', [])
     tz = request.POST.get("tz", settings.TIME_ZONE)
-    tz = pytz.timezone(tz)
+    tz = ZoneInfo(tz)
     days = [
         timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date()
         for d in request.POST.getlist('days[]', [])

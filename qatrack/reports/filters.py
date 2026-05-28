@@ -38,8 +38,8 @@ class RelativeDateRangeField(forms.fields.CharField):
             else:
                 start, end = [x.strip() for x in val.split("-")]
             tz = timezone.get_current_timezone()
-            start = tz.localize(dateutil.parser.parse(start))
-            end = tz.localize(dateutil.parser.parse(end)).replace(hour=23, minute=59, second=59)
+            start = dateutil.parser.parse(start).astimezone(tz)
+            end = dateutil.parser.parse(end).astimezone(tz).replace(hour=23, minute=59, second=59)
         except:  # noqa: E722
             raise forms.ValidationError("Format must be a range e.g. 01 Jan 2000 - 01 Feb 2000", code="invalid")
 

@@ -62,7 +62,7 @@ from listable.views import (
     YESTERDAY,
     BaseListableView,
 )
-import pytz
+from zoneinfo import ZoneInfo
 
 from qatrack.attachments.models import Attachment
 from qatrack.parts import forms as p_forms
@@ -1456,8 +1456,8 @@ def handle_unit_down_time(request):
         date_from = parse_date(from_, as_date=False)
         date_to = parse_date(to, as_date=False)
         date_to = timezone.datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
-        date_from = tz.localize(date_from)
-        date_to = tz.localize(date_to)
+        date_from = date_from.astimezone(tz)
+        date_to = date_to.astimezone(tz)
         se_qs = se_qs.filter(datetime_service__gte=date_from, datetime_service__lte=date_to)
         date_to = date_to.date()
         date_from = date_from.date()
@@ -1926,18 +1926,17 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         qs = self.get_queryset()
 
-        tz = pytz.timezone(settings.TIME_ZONE)
+        tz = ZoneInfo(settings.TIME_ZONE)
         now = timezone.now().astimezone(tz)
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
-        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).astimezone(tz).date()
         if calendar.isleap(now.year) and now.month == 2:
             month_end += timezone.timedelta(days=1)
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = tz.localize(
-            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
-        ).date()
+        next_month_end = timezone.datetime(next_month_start.year, next_month_start.month,
+                                            calendar.mdays[next_month_start.month]).astimezone(tz).date()
 
         due = collections.defaultdict(list)
 

@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django_comments.models import Comment
 import pytest
-
+import datetime
 from qatrack.qa import models
 from qatrack.qatrack_core import scheduling
 
@@ -17,7 +17,8 @@ from . import utils
 
 
 def utc_2am():
-    return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), timezone.utc)
+    utc = datetime.timezone.utc
+    return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), utc)
 
 
 class TestFrequencyManager(TestCase):
@@ -241,7 +242,7 @@ class TestTolerance(TestCase):
 class TestTestCollectionInterface(TestCase):
 
     def test_abstract_test_list_members(self):
-        self.assertRaises(NotImplementedError, models.TestCollectionInterface().test_list_members)
+        self.assertRaises(NotImplementedError, models.TestCollectionInterface.test_list_members, None)
 
 
 class TestTest(TestCase):

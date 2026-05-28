@@ -619,7 +619,6 @@ class TestComposite(TestCase):
         request.user = self.user
         response = self.view(request)
         values = json.loads(response.content.decode("UTF-8"))
-
         expected = {
             "errors": [],
             "results": {
@@ -1340,7 +1339,8 @@ class TestPerformQA(TestCase):
 
         # user is redirected if form submitted successfully
         self.assertEqual(response.status_code, 302)
-        self.assertIn("qc/unit/%d" % self.unit_test_list.unit.number, response._headers['location'][1])
+        
+        self.assertIn("qc/unit/%d" % self.unit_test_list.unit.number, response.headers['location'])
 
     def test_perform_invalid(self):
         data = {
@@ -2260,7 +2260,8 @@ class TestAutoSave(TestCase):
         self.client.post(self.url, content_type="application/json", data=json.dumps(data))
 
         auto.refresh_from_db()
-        assert auto.work_started == timezone.get_current_timezone().localize(timezone.datetime(1980, 5, 12, 12, 0))
+        tz = timezone.get_current_timezone()
+        assert auto.work_started == timezone.datetime(1980, 5, 12, 12, 0).astimezone(tz)
         assert auto.data == {
             'tests': {
                 'foo': 'bar'

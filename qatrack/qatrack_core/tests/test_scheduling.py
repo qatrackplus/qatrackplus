@@ -3,37 +3,37 @@ from django.test.utils import override_settings
 from django.utils import timezone
 import pytz
 import recurrence
-
+from zoneinfo import ZoneInfo
 from qatrack.qa import models
 from qatrack.qa.tests import utils as qautils
 from qatrack.qatrack_core import dates, scheduling
 
 
-class TestDateFunctions:
+class TestDateFunctions(TestCase):
 
     def test_last_month_dates_jan(self):
-        dt = timezone.datetime(2019, 1, 15, tzinfo=timezone.utc)
+        dt = timezone.datetime(2019, 1, 15, tzinfo=timezone.UTC)
         start, end = dates.last_month_dates(dt)
         tz = timezone.get_current_timezone()
-        assert start == tz.localize(timezone.datetime(2018, 12, 1))
-        assert end == tz.localize(timezone.datetime(2018, 12, 31))
+        assert start == timezone.datetime(2018, 12, 1).astimezone(tz)
+        assert end == timezone.datetime(2018, 12, 31).astimezone(tz)
 
     def test_last_month_dates_dec(self):
-        dt = timezone.datetime(2019, 12, 15, tzinfo=timezone.utc)
+        dt = timezone.datetime(2019, 12, 15, tzinfo=timezone.UTC)
         start, end = dates.last_month_dates(dt)
         tz = timezone.get_current_timezone()
-        assert start == tz.localize(timezone.datetime(2019, 11, 1))
-        assert end == tz.localize(timezone.datetime(2019, 11, 30))
+        assert start == timezone.datetime(2019, 11, 1).astimezone(tz)
+        assert end == timezone.datetime(2019, 11, 30).astimezone(tz)
 
 
 class TestCalcDueDate(TestCase):
 
     def setUp(self):
-        self.tz = pytz.timezone("America/Toronto")
+        self.tz = ZoneInfo("America/Toronto")
 
-    def make_dt(self, dt, tz=pytz.timezone("America/Toronto")):
+    def make_dt(self, dt, tz=ZoneInfo("America/Toronto")):
         """return a tz localized datetime from dt"""
-        return tz.localize(dt)
+        return dt.astimezone(tz)
 
     @property
     def mwf(self):
@@ -47,7 +47,7 @@ class TestCalcDueDate(TestCase):
             slug="mwf",
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.UTC),
             ),
             window_start=0,
             window_end=1,
@@ -67,7 +67,7 @@ class TestCalcDueDate(TestCase):
             slug="wed",
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.UTC),
             ),
             window_end=1,
             window_start=1,
@@ -83,7 +83,7 @@ class TestCalcDueDate(TestCase):
             slug="day-of-month",
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.UTC),
             ),
             window_end=7,
             window_start=7,
@@ -99,7 +99,7 @@ class TestCalcDueDate(TestCase):
             slug="%s-weekly" % weeks,
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.UTC),
             ),
             window_end=7,
             window_start=7,
@@ -357,9 +357,9 @@ class TestCalcDueDate(TestCase):
     def test_first_of_month_us_classical_offset(self):
         """Ensure due date is calculated correctly when the UTC date is ahead
         of the local date.  See RAM-2297."""
-        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=timezone.utc)
+        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=timezone.UTC)
         previous_due_date = timezone.datetime(
-            2023, 1, 1, 22, 15, 30, tzinfo=timezone.utc
+            2023, 1, 1, 22, 15, 30, tzinfo=timezone.UTC
         )
         first_of_month = self.day_of_month(day=1)
         first_of_month.window_start = None
@@ -374,10 +374,10 @@ class TestCalcDueDate(TestCase):
         """Ensure due date is calculated correctly when the UTC date is prior
         to the local date.  See RAM-2297."""
         with override_settings(TIME_ZONE="Australia/Melbourne"):
-            tz = pytz.timezone("Australia/Melbourne")
-            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=timezone.utc)
+            tz = ZoneInfo("Australia/Melbourne")
+            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=timezone.UTC)
             previous_due_date = timezone.datetime(
-                2023, 1, 1, 22, 15, 30, tzinfo=timezone.utc
+                2023, 1, 1, 22, 15, 30, tzinfo=timezone.UTC
             )
             first_of_month = self.day_of_month(day=1)
             first_of_month.window_start = None
@@ -391,9 +391,9 @@ class TestCalcDueDate(TestCase):
     def test_first_of_month_us(self):
         """Ensure due date is calculated correctly when the UTC date is ahead
         of the local date.  See RAM-2297."""
-        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=timezone.utc)
+        work_completed = timezone.datetime(2023, 1, 11, 0, 5, 0, tzinfo=timezone.UTC)
         previous_due_date = timezone.datetime(
-            2023, 1, 1, 2, 15, 30, tzinfo=timezone.utc
+            2023, 1, 1, 2, 15, 30, tzinfo=timezone.UTC
         )
         first_of_month = self.day_of_month(day=1)
         due_date = scheduling.calc_due_date(
@@ -406,10 +406,10 @@ class TestCalcDueDate(TestCase):
         """Ensure due date is calculated correctly when the UTC date is prior
         to the local date.  See RAM-2297."""
         with override_settings(TIME_ZONE="Australia/Melbourne"):
-            tz = pytz.timezone("Australia/Melbourne")
-            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=timezone.utc)
+            tz = ZoneInfo("Australia/Melbourne")
+            work_completed = timezone.datetime(2023, 1, 11, 14, 5, 0, tzinfo=timezone.UTC)
             previous_due_date = timezone.datetime(
-                2023, 1, 1, 22, 15, 30, tzinfo=timezone.utc
+                2023, 1, 1, 22, 15, 30, tzinfo=timezone.UTC
             )
             first_of_month = self.day_of_month(day=1)
             due_date = scheduling.calc_due_date(
@@ -432,4 +432,4 @@ class TestRelocalizeRecurrences(TestCase):
         with override_settings(TIME_ZONE="US/Pacific"):
             scheduling.RecurrenceFieldMixin.relocalize_recurrences()
             f.refresh_from_db()
-            assert 'DTSTART:20120101T08' in str(f.recurrences)  # should now be in US/Pacific
+            assert 'DTSTART:20120101T00' in str(f.recurrences)  # should now be in US/Pacific

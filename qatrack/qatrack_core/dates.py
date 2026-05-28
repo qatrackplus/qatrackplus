@@ -9,7 +9,8 @@ from django.utils.formats import get_format
 def date_to_datetime(date):
     """If passed a date object will return an equivalent datetime at 00:00 in the current timezone"""
     if isinstance(date, datetime.date):
-        return timezone.get_current_timezone().localize(timezone.datetime(date.year, date.month, date.day))
+        tz = timezone.get_current_timezone()
+        return timezone.datetime(date.year, date.month, date.day).astimezone(tz)
     return date
 
 
@@ -28,8 +29,8 @@ def end_of_day(dt):
 def month_start_and_end(year, month):
     """Return start, end tuple of datetimes representing the start and end of input year/month"""
     tz = timezone.get_current_timezone()
-    start = tz.localize(timezone.datetime(year, month, 1))
-    end = tz.localize(timezone.datetime(year, month, calendar.monthrange(year, month)[1]))
+    start = timezone.datetime(year, month, 1).astimezone(tz)
+    end = timezone.datetime(year, month, calendar.monthrange(year, month)[1]).astimezone(tz)
     return start, end
 
 
