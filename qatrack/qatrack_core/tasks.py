@@ -119,5 +119,5 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
         )
         if occurences and start_time.time() <= getattr(instance, time_field) <= end_time.time():
             tz = timezone.get_current_timezone()
-            send_time = tz.localize(timezone.datetime.combine(start_today, getattr(instance, time_field)))
+            send_time = timezone.datetime.combine(start_today, getattr(instance, time_field)).astimezone(tz)
             handler(instance, send_time)

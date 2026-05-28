@@ -6,7 +6,7 @@ from django.db.models import ObjectDoesNotExist, Q, QuerySet
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from form_utils.forms import BetterModelForm
@@ -75,7 +75,7 @@ class HoursMinDurationField(forms.DurationField):
         if isinstance(value, timezone.timedelta):
             return value
         value = '{:04d}'.format(int(value))
-        value = parse_duration(force_text(':'.join([value[:2], value[2:], '00'])))
+        value = parse_duration(force_str(':'.join([value[:2], value[2:], '00'])))
         if value is None:
             raise ValidationError(self.error_messages['invalid'], code='invalid')
 
@@ -257,9 +257,9 @@ class ServiceEventMultipleField(forms.ModelMultipleChoiceField):
                     params={'pk': pk},
                 )
         qs = models.ServiceEvent.objects.filter(**{'%s__in' % key: value})
-        pks = set(force_text(getattr(o, key)) for o in qs)
+        pks = set(force_str(getattr(o, key)) for o in qs)
         for val in value:
-            if force_text(val) not in pks:
+            if force_str(val) not in pks:
                 raise ValidationError(
                     self.error_messages['invalid_choice'],
                     code='invalid_choice',
@@ -327,7 +327,7 @@ class ModelSelectWithOptionTitles(forms.Select):
         if value in [None, '']:
             title = '-----'
         elif self.title_variable is not None and self.model is not None:
-            title = getattr(self.model.objects.get(pk=value), self.title_variable)
+            title = getattr(self.model.objects.get(pk=value.value), self.title_variable)
         else:
             title = ''
         if attrs is None:
@@ -477,7 +477,7 @@ class ServiceEventForm(BetterModelForm):
             try:
                 g_link_instances = models.GroupLinkerInstance.objects.filter(
                     group_linker=g_link,
-                    service_event=self.instance
+                    service_event_id=self.instance.id
                 )
                 g_link_users = [gli.user for gli in g_link_instances]
                 self.initial[field_name] = g_link_users

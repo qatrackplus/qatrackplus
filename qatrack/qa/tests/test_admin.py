@@ -354,7 +354,7 @@ class TestUnitTestCollectionAdmin(TestCase):
 
     def test_active_filter(self):
         fylter = qa_admin.ActiveFilter(
-            None, {'activefilter': 1}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
+            None, {'activefilter': [str(1)]}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.UnitTestCollection.objects.all())
         filtered_2 = qa_models.UnitTestCollection.objects.filter(active=True)
@@ -362,7 +362,7 @@ class TestUnitTestCollectionAdmin(TestCase):
 
     def test_assigned_to_filter(self):
         fylter = qa_admin.AssignedToFilter(
-            None, {'assignedtoname': self.g_1.id}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
+            None, {'assignedtoname': [str(self.g_1.id)]}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.UnitTestCollection.objects.all())
         filtered_2 = qa_models.UnitTestCollection.objects.filter(assigned_to=self.g_1)
@@ -370,7 +370,7 @@ class TestUnitTestCollectionAdmin(TestCase):
 
     def test_frequency_filter(self):
         fylter = qa_admin.FrequencyFilter(
-            None, {'freqfilter': self.f_1.id}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
+            None, {'freqfilter': [str(self.f_1.id)]}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.UnitTestCollection.objects.all())
         filtered_2 = qa_models.UnitTestCollection.objects.filter(frequency=self.f_1)
@@ -378,7 +378,7 @@ class TestUnitTestCollectionAdmin(TestCase):
 
     def test_unit_filter(self):
         fylter = qa_admin.UnitFilter(
-            None, {'unitfilter': self.u_1.id}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
+            None, {'unitfilter': [str(self.u_1.id)]}, qa_models.UnitTestCollection, qa_admin.UnitTestCollectionAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.UnitTestCollection.objects.all())
         filtered_2 = qa_models.UnitTestCollection.objects.filter(unit=self.u_1)
@@ -458,7 +458,7 @@ class TestTestAdmin(TestCase):
         qs = qa_models.Test.objects.annotate(tlcount=Count("testlistmembership"))
         fylter = qa_admin.TestListMembershipFilter(
             None,
-            {'tlmembership': qa_admin.TestListMembershipFilter.HASMEMBERSHIPS},
+            {'tlmembership': [qa_admin.TestListMembershipFilter.HASMEMBERSHIPS]},
             qa_models.Test,
             qa_admin.TestAdmin
         )
@@ -468,7 +468,7 @@ class TestTestAdmin(TestCase):
 
         fylter = qa_admin.TestListMembershipFilter(
             None,
-            {'tlmembership': qa_admin.TestListMembershipFilter.NOMEMBERSHIPS},
+            {'tlmembership': [qa_admin.TestListMembershipFilter.NOMEMBERSHIPS]},
             qa_models.Test,
             qa_admin.TestAdmin
         )
@@ -560,7 +560,7 @@ class TestTestListAdmin(TestCase):
 
     def test_frequency_test_list_filter(self):
         fylter = qa_admin.FrequencyTestListFilter(
-            None, {'assignedbyfreq': self.f_1.id}, qa_models.TestList, qa_admin.TestListAdmin
+            None, {'assignedbyfreq': [str(self.f_1.id)]}, qa_models.TestList, qa_admin.TestListAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.TestList.objects.all())
         freq_tl_ids = qa_models.get_utc_tl_ids(frequencies=[self.f_1])
@@ -569,7 +569,7 @@ class TestTestListAdmin(TestCase):
 
     def test_unit_test_list_filter(self):
         fylter = qa_admin.UnitTestListFilter(
-            None, {'assignedtounit': self.u_1.id}, qa_models.TestList, qa_admin.TestListAdmin
+            None, {'assignedtounit': [str(self.u_1.id)]}, qa_models.TestList, qa_admin.TestListAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.TestList.objects.all())
         unit_tl_ids = qa_models.get_utc_tl_ids(units=[self.u_1])
@@ -581,10 +581,9 @@ class TestTestListAdmin(TestCase):
         active_sub_tl_ids = list(qa_models.TestList.objects.filter(
             id__in=active_tl_ids, children__isnull=False
         ).values_list('children__child__id', flat=True).distinct())
-
         fylter = qa_admin.ActiveTestListFilter(
             None,
-            {'activeutcs': qa_admin.ActiveTestListFilter.HASACTIVEUTCS},
+            {'activeutcs': [qa_admin.ActiveTestListFilter.HASACTIVEUTCS]},
             qa_models.TestList,
             qa_admin.TestListAdmin
         )
@@ -594,10 +593,9 @@ class TestTestListAdmin(TestCase):
             Q(id__in=active_sub_tl_ids)
         )
         self.assertListEqual(list(filtered_2), list(filtered_1))
-
         fylter = qa_admin.ActiveTestListFilter(
             None,
-            {'activeutcs': qa_admin.ActiveTestListFilter.NOACTIVEUTCS},
+            {'activeutcs': [qa_admin.ActiveTestListFilter.NOACTIVEUTCS]},
             qa_models.TestList,
             qa_admin.TestListAdmin
         )
@@ -607,7 +605,7 @@ class TestTestListAdmin(TestCase):
             Q(id__in=active_sub_tl_ids)
         )
         self.assertListEqual(list(filtered_2), list(filtered_1))
-
+        
     def test_change_page(self):
         self.client.get(self.url_change)
 

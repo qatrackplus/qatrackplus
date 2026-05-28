@@ -1,4 +1,5 @@
-from django.conf.urls import include, url
+from django.conf.urls import include
+from django.urls import re_path
 from rest_framework import routers
 
 from qatrack.api.qa import views
@@ -25,16 +26,16 @@ router.register(r'testlistcyclememberships', views.TestListCycleMembershipViewSe
 
 urlpatterns = [
     # view for composite calculations via api
-    url(r"^composite/$", views.CompositeCalculation.as_view(), name="api.composite"),
+    re_path(r"^composite/$", views.CompositeCalculation.as_view(), name="api.composite"),
 
     # view for uploads via api
-    url(r"^upload/$", views.Upload.as_view(), name="api.upload"),
+    re_path(r"^upload/$", views.Upload.as_view(), name="api.upload"),
 
     # search urls
-    url(r"^searcher/test/$", views.test_searcher, name='test_searcher'),
-    url(r"^searcher/test_list/$", views.test_list_searcher, name='test_list_searcher'),
-    url(r"^searcher/test_list_cycle/$", views.test_list_cycle_searcher, name='test_list_cycle_searcher'),
-    url(r"^searcher/test_instance/$", views.test_instance_searcher, name='test_instance_searcher'),
-    url(r"^searcher/test_list_instance/$", views.test_list_instance_searcher, name='test_list_instance_searcher'),
-    url(r'^', include(router.urls)),
+    re_path(r"^searcher/test/$", views.test_searcher, name='test_searcher'),
+    re_path(r"^searcher/test_list/$", views.test_list_searcher, name='test_list_searcher'),
+    re_path(r"^searcher/test_list_cycle/$", views.test_list_cycle_searcher, name='test_list_cycle_searcher'),
+    re_path(r"^searcher/test_instance/$", views.test_instance_searcher, name='test_instance_searcher'),
+    re_path(r"^searcher/test_list_instance/$", views.test_list_instance_searcher, name='test_list_instance_searcher'),
+    re_path(r'^', include(router.urls)),
 ]

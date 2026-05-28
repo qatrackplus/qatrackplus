@@ -535,6 +535,7 @@ class SublistInlineFormSet(forms.models.BaseInlineFormSet):
 
         children = [f.instance.child for f in self.forms if hasattr(f.instance, 'child') and not f.cleaned_data.get("DELETE")]  # noqa: E501
         children_with_child = [child for child in children if child.children.exists()]
+        
         if self.instance and self.instance in children:
             raise forms.ValidationError(
                 _("A Test List can not be its own child. Please remove Sublist ID %(sublist_id)d and try again") %
@@ -548,14 +549,15 @@ class SublistInlineFormSet(forms.models.BaseInlineFormSet):
                     "%(test_list_names)s already has(have) a sublist and therefore can't be used as a sublist."
                 ) % {'test_list_names': names}
             )
-        elif self.instance and self.instance.sublist_set.exists() and children:
-            raise forms.ValidationError(
-                _(
-                    "This Test List is a Sublist of Test Lists: %(sublist_name)s"
-                    " and therefore can't have sublists of its own."
-                ) % {'sublist_name': ', '.join(self.instance.sublist_set.values_list("parent__name", flat=True))}
-            )
-
+        elif self.instance.pk:
+            if self.instance and self.instance.sublist_set.exists() and children:
+                raise forms.ValidationError(
+                    _(
+                        "This Test List is a Sublist of Test Lists: %(sublist_name)s"
+                        " and therefore can't have sublists of its own."
+                    ) % {'sublist_name': ', '.join(self.instance.sublist_set.values_list("parent__name", flat=True))}
+             )
+    
         return self.cleaned_data
 
 
@@ -615,17 +617,17 @@ class TestListMembershipInline(DynamicRawIDMixin, admin.TabularInline):
         # so we can override the label_for_value function for the test raw id widget
         db = kwargs.get('using')
         if db_field.name == "test":
-            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.remote_field
             widget = DynamicRawIDWidget(rel, self.admin_site)
             widget.label_for_value = self.label_for_value
             kwargs['widget'] = widget
             return db_field.formfield(**kwargs)
         elif db_field.name in self.dynamic_raw_id_fields:
-            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.remote_field
             kwargs['widget'] = DynamicRawIDWidget(rel, self.admin_site)
             return db_field.formfield(**kwargs)
         elif db_field.name in self.raw_id_fields:
-            kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
+            kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.remote_field,
                                                              self.admin_site, using=db)
         elif db_field.name in self.radio_fields:
             kwargs['widget'] = widgets.AdminRadioSelect(attrs={
@@ -666,19 +668,19 @@ class SublistInline(DynamicRawIDMixin, admin.TabularInline):
         # for the test raw id widget
         db = kwargs.get('using')
         if db_field.name == "child":
-            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.remote_field
             widget = DynamicRawIDWidget(rel, self.admin_site)
             widget.label_for_value = self.label_for_value
             kwargs['widget'] = widget
             return db_field.formfield(**kwargs)
 
         elif db_field.name in self.dynamic_raw_id_fields:
-            rel = db_field.remote_field if VERSION[0] == 2 else db_field.rel
+            rel = db_field.remote_field if VERSION[0] == 2 else db_field.remote_field
             kwargs['widget'] = DynamicRawIDWidget(rel, self.admin_site)
             return db_field.formfield(**kwargs)
 
         elif db_field.name in self.raw_id_fields:
-            kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.rel,
+            kwargs['widget'] = widgets.ForeignKeyRawIdWidget(db_field.remote_field,
                                                              self.admin_site, using=db)
         elif db_field.name in self.radio_fields:
             kwargs['widget'] = widgets.AdminRadioSelect(attrs={
@@ -808,7 +810,7 @@ class TestListAdmin(AdminViews, SaveUserMixin, SaveInlineAttachmentUserMixin, Ba
     search_fields = ("name", "description", "slug", "sublist__parent__name", "sublist__child__name")
     readonly_fields = ("id",)
 
-    filter_horizontal = ("tests",)
+    #filter_horizontal = ("tests",)
 
     actions = ['export_test_lists']
     list_display = (
@@ -903,7 +905,13 @@ class TestForm(forms.ModelForm):
 
         test_type = cleaned_data.get("type")
         user_changing_type = self.instance.type != test_type
-        has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
+        try:
+            has_history = models.TestInstance.objects.filter(unit_test_info__test=self.instance).exists()
+            print("has history: %s" % has_history, self.instance)
+        except Exception as e:
+            print("Error occurred while checking test history: %s" % e)
+            has_history = False
+
         if user_changing_type and has_history and not models.Test.allow_type_transition(self.instance.type, test_type):
             msg = _(
                 "You can't change the test type from %(old_test_type)s to %(new_test_type)s for a test that "

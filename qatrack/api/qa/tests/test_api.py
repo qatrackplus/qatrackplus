@@ -9,7 +9,7 @@ from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.utils import timezone
 import pytest
-import pytz
+from zoneinfo import ZoneInfo
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -476,7 +476,7 @@ class TestTestListInstanceAPI(APITestCase):
         utils.create_test_list_membership(self.test_list, self.tdatetime)
         now = timezone.now()
         self.data['tests']['testdatetime'] = {
-            'value': now.astimezone(pytz.timezone("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S.%f")
+            'value': now.astimezone(ZoneInfo("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S.%f")
         }
         response = self.client.post(self.create_url, self.data)
         assert response.status_code == status.HTTP_201_CREATED

@@ -2,12 +2,15 @@
 
 from django.contrib.auth.hashers import make_password
 from django.db import migrations
+from django.utils.crypto import get_random_string
 
 
 def update_internal_pass(apps, schema):
     User = apps.get_model("auth", "User")
     user = User.objects.get(username="QATrack+ Internal")
-    user.password = make_password(User.objects.make_random_password())
+    random_password = get_random_string(length=12)
+    pwd = random_password        
+    user.password = pwd 
     user.save()
 
 

@@ -810,8 +810,8 @@ class TestPerformQC(BaseQATests):
             unit_test_collection=utc,
             test_list=tl2,
             day=1,
-            work_started=tz.localize(timezone.datetime(1980, 5, 12, 12)),
-            work_completed=tz.localize(timezone.datetime(1980, 5, 12, 12, 1)),
+            work_started=timezone.datetime(1980, 5, 12, 12).astimezone(tz),
+            work_completed=timezone.datetime(1980, 5, 12, 12, 1).astimezone(tz),
             created_by=self.user,
             modified_by=self.user,
             data={
@@ -859,8 +859,8 @@ class TestPerformQC(BaseQATests):
             unit_test_collection=utc,
             test_list=tl2,
             day=1,
-            work_started=tz.localize(timezone.datetime(1980, 5, 12, 12)),
-            work_completed=tz.localize(timezone.datetime(1980, 5, 12, 12, 1)),
+            work_started=timezone.datetime(1980, 5, 12, 12).astimezone(tz),
+            work_completed=timezone.datetime(1980, 5, 12, 12, 1).astimezone(tz),
             created_by=self.user,
             modified_by=self.user,
             data={

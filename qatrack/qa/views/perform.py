@@ -416,7 +416,7 @@ class UploadHandler:
         tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
+                meta_data[d] = parse_datetime(meta_data[d]).astimezone(tz)
             except (TypeError, KeyError, AttributeError):
                 pass
 
@@ -554,7 +554,7 @@ class Upload(JSONResponseMixin, View):
         tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
+                meta_data[d] = parse_datetime(meta_data[d]).astimezone(tz)
             except (KeyError, AttributeError, TypeError):
                 pass
 
@@ -749,7 +749,7 @@ class CompositePerformer:
         tz = timezone.get_current_timezone()
         for d in ("work_completed", "work_started"):
             try:
-                meta_data[d] = tz.localize(parse_datetime(meta_data[d]))
+                meta_data[d] = parse_datetime(meta_data[d]).astimezone(tz)
             except (TypeError, KeyError, AttributeError):
                 pass
 
@@ -787,7 +787,7 @@ class CompositePerformer:
             if self.test_types.get(slug) == models.DATETIME:
 
                 try:
-                    dt = tz.localize(parse_datetime(val))
+                    dt = parse_datetime(val).astimezone(tz)
                     self.calculation_context[slug] = dt
                 except:  # noqa: E722
                     self.calculation_context[slug] = None
@@ -1700,7 +1700,7 @@ def autosave(request):
     tz = timezone.get_current_timezone()
     for d in ("work_completed", "work_started"):
         try:
-            data['meta'][d] = tz.localize(parse_datetime(data['meta'][d]))
+            data['meta'][d] = parse_datetime(data['meta'][d]).astimezone(tz)
         except (TypeError, KeyError, AttributeError):
             data['meta'][d] = None
 

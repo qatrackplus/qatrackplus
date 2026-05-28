@@ -837,10 +837,23 @@
                 </a>
               </li>
               <li>
-                <a href="{% url 'auth_logout' %}" class="margin-left-10 control-sidebar-subheading">
-                  <i class="fa fa-sign-out fa-fw"></i>
-                  {% trans "Logout" %}
-                </a>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="margin-left-10 control-sidebar-subheading"
+                    style="background: none;  border: none; cursor: pointer; display: block;
+                    font-weight: 400; font-size: 14px; 
+                    height: 35px;
+                    text-align: left;
+                    border-left:20px;
+
+                    width: 230px;"  
+                    onmouseenter="this.style.backgroundColor='#fff'; this.style.color='#111';" 
+                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#fff';"
+                    >
+                    <i class="fa fa-sign-out fa-fw"></i>
+                    {% trans "Logout" %}
+                    </button>
+                </form>
               </li>
             </ul>
 

@@ -2,7 +2,7 @@ from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
 from form_utils.forms import BetterModelForm
 
@@ -280,7 +280,7 @@ class StorageField(forms.ChoiceField):
                 return False
             return True
         else:
-            return force_text(initial) != force_text(data)
+            return force_str(initial) != force_str(data)
 
 
 class PartStorageCollectionForm(forms.ModelForm):

@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.serializers import get_serializer
 from django.db.transaction import atomic
 from django.utils import timezone
+from datetime import timezone as tz
 import pytest
 
 from qatrack.qa.utils import get_internal_user
@@ -68,7 +69,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         },
         'meta': {
             'version': settings.VERSION,
-            'datetime': "%s" % (timezone.now().astimezone(timezone.utc)),
+            'datetime': "%s" % (timezone.now().astimezone(tz.utc)),
             'description': description,
             'contact': testpack_user_string(user),
             'name': name,

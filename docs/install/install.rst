@@ -18,6 +18,7 @@ be expensive!).
    :maxdepth: 2
    :caption: Ubuntu Linux
 
+   linux_ubuntu_26
    linux
    linux_upgrade_from_3
    linux_upgrade_from_030

@@ -3,6 +3,7 @@ from unittest import mock
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
+from datetime import timezone as tz
 import recurrence
 
 from qatrack.qa import models
@@ -147,7 +148,7 @@ class TestAsQCWindow:
             slug="wed",
             recurrences=recurrence.Recurrence(
                 rrules=[rule],
-                dtstart=timezone.datetime(2012, 1, 1, tzinfo=timezone.utc),
+                dtstart=timezone.datetime(2012, 1, 1, tzinfo=tz.utc),
             ),
             window_start=1,
             window_end=1,
@@ -156,7 +157,7 @@ class TestAsQCWindow:
     def test_start_and_end(self):
         """Window start and end so should show 1 day before and after due date"""
         utc = mock.Mock()
-        utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=timezone.utc)  # 28th in EST
+        utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=tz.utc)  # 28th in EST
         utc.frequency = self.wed
         window = qa_tags.as_qc_window(utc)
         assert window == "27 Nov 2018 - 29 Nov 2018"
@@ -164,7 +165,7 @@ class TestAsQCWindow:
     def test_no_start(self):
         """No window_start so window should show as due date to overdue date"""
         utc = mock.Mock()
-        utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=timezone.utc)  # 28th in EST
+        utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=tz.utc)  # 28th in EST
         utc.frequency = utils.create_frequency(name="w", slug="w", interval=7, window_end=4, save=False)
         window = qa_tags.as_qc_window(utc)
         assert window == "28 Nov 2018 - 02 Dec 2018"

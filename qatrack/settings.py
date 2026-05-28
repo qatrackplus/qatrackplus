@@ -14,8 +14,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
-DEBUG = False
-DEBUG_TOOLBAR = False
+DEBUG = True
+DEBUG_TOOLBAR = True
 
 # Who to email when server errors occur
 ADMINS = (
@@ -30,7 +30,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 
-VERSION = "3.1.1.3"
+VERSION = "3.2.0.0"
 BUG_REPORT_URL = "https://github.com/qatrackplus/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -224,6 +224,7 @@ FIXTURE_DIRS = (
 
 # ------------------------------------------------------------------------------
 INSTALLED_APPS = [
+    'admin_views',
     'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.auth',
@@ -255,12 +256,11 @@ INSTALLED_APPS = [
     'qatrack.notifications',
     'qatrack.contacts',
     'qatrack.issue_tracker',
-    'qatrack.service_log',
     'qatrack.parts',
     'qatrack.faults',
     'qatrack.attachments',
     'qatrack.reports',
-    'admin_views',
+    'qatrack.service_log',
 ]
 
 
@@ -277,7 +277,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100,
     'DATETIME_INPUT_FORMATS': DATETIME_INPUT_FORMATS,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-    'DEFAULT_FILTER_BACKENDS': ('rest_framework_filters.backends.RestFrameworkFilterBackend',),
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.ScopedRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
@@ -443,12 +443,25 @@ AUTH_ADFS = {
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 def skip_requests(record):  # noqa: E302
-    skip = (
-        record.args[0].startswith("GET /static/") or
-        record.args[0].startswith("GET /accounts/ping/")
-    )
-    return not skip
+    if not record.args or not isinstance(record.args, (list, tuple)):
+        return True
 
+    first_arg = record.args[0]
+
+    # If the first argument is an HTTP request object instead of a string, extract its path
+    if hasattr(first_arg, 'path'):
+        msg_str = f"GET {first_arg.path}"
+    elif isinstance(first_arg, str):
+        msg_str = first_arg
+    else:
+        # Fallback if it is an unexpected format or un-parseable tuple
+        msg_str = str(first_arg)
+
+    # Safely perform the prefix check
+    return not (
+        msg_str.startswith("GET /static/") or 
+        msg_str.startswith("GET /media/")
+    )
 
 LOGGING = {
     'version': 1,

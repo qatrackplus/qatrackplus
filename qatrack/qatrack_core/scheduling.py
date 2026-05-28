@@ -2,8 +2,7 @@ from django.conf import settings
 from django.utils import timezone
 from recurrence.fields import RecurrenceField
 import django.apps
-import pytz
-
+from zoneinfo import ZoneInfo
 from qatrack.qatrack_core.dates import end_of_day, start_of_day
 
 
@@ -24,7 +23,7 @@ def calc_due_date(completed, due_date, frequency):
     # The behaviour of recurrence rules differs slightly depending on the
     # timezone of the datetimes so it's important datetimes are localized
     # correctly before calculating the next occurence.
-    tz = pytz.timezone(settings.TIME_ZONE)
+    tz = ZoneInfo(settings.TIME_ZONE)
     completed = completed.astimezone(tz)
     if due_date:
         due_date = due_date.astimezone(tz)
@@ -92,9 +91,10 @@ def should_update_schedule(date, due_date, frequency):
 def calc_nominal_interval(recurrence):
     """Calculate avg number of days between tests for ordering purposes"""
     tz = timezone.get_current_timezone()
+
     occurrences = recurrence.occurrences(
-        dtstart=tz.localize(timezone.datetime(2012, 1, 1)),
-        dtend=end_of_day(tz.localize(timezone.datetime(2017, 12, 31))),
+        dtstart=timezone.datetime(2012, 1, 1).astimezone(tz),
+        dtend=end_of_day(timezone.datetime(2017, 12, 31).astimezone(tz)),
     )
     deltas = [(t2 - t1).total_seconds() / (60 * 60 * 24) for t1, t2 in zip(occurrences, occurrences[1:])]
     return sum(deltas) / len(deltas) if deltas else None
@@ -185,8 +185,8 @@ class RecurrenceFieldMixin:
     def relocalize_recurrence(self, recurrence_start=None):
         """Update recurrence fields start date"""
         if not recurrence_start:
-            tz = pytz.timezone(settings.TIME_ZONE)
-            recurrence_start = tz.localize(timezone.datetime(2012, 1, 1))
+            tz = ZoneInfo(settings.TIME_ZONE)
+            recurrence_start = timezone.datetime(2012, 1, 1).astimezone(tz)
         getattr(self, self.recurrence_field_name).dtstart = recurrence_start
 
     @classmethod
@@ -194,9 +194,9 @@ class RecurrenceFieldMixin:
         """Look up all models with recurrence fields and update all instances
         dtstart value with the proper timezone.  Needed for example when the sites
         time zone setting changes"""
-
-        tz = pytz.timezone(settings.TIME_ZONE)
-        start = tz.localize(timezone.datetime(2012, 1, 1))
+        print(settings.TIME_ZONE)
+        tz = ZoneInfo(settings.TIME_ZONE)
+        start = timezone.datetime(2012, 1, 1).astimezone(tz)
 
         for model, field_name in cls.recurrence_models():
             for obj in model.objects.all():

@@ -1,6 +1,6 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static admin_views %}
-
+{% load admin_urls %}
+{% load i18n static  %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />{% endblock %}
 
 {% block coltype %}colMS{% endblock %}
@@ -38,7 +38,6 @@
             {% endif %}
             </tr>
         {% endfor %}
-        {% get_admin_views app perms %}
         </table>
         </div>
     {% endfor %}

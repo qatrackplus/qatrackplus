@@ -22,8 +22,7 @@ from django.views.generic import (
     TemplateView,
     View,
 )
-import pytz
-
+from zoneinfo import ZoneInfo
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
 from qatrack.service_log.models import (
@@ -439,15 +438,15 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         })
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" title="%s"/>' % _(
+        return mark_safe('<input type="checkbox" class="test-selected" title="%s"/>' % _(
             "Check to include this test list instance when bulk setting approval statuses"
-        )
+        ))
 
     def bulk_review_status(self, obj):
         if not hasattr(self, "_bulk_review"):
             self._bulk_review = self._status_select()
 
-        return self._bulk_review.replace(":TLI_ID:", str(obj.pk))
+        return mark_safe(self._bulk_review.replace(":TLI_ID:", str(obj.pk)))
 
     def get_queryset(self):
         qs = models.TestListInstance.objects.unreviewed()
@@ -569,18 +568,17 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
 
         qs = self.get_queryset()
 
-        tz = pytz.timezone(settings.TIME_ZONE)
+        tz = ZoneInfo(settings.TIME_ZONE)
         now = timezone.now().astimezone(tz)
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
-        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).astimezone(tz).date()
         if calendar.isleap(now.year) and now.month == 2:
             month_end += timezone.timedelta(days=1)
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = tz.localize(
-            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
-        ).date()
+        next_month_end = timezone.datetime(next_month_start.year, next_month_start.month,
+                                            calendar.mdays[next_month_start.month]).astimezone(tz).date()
 
         due = collections.defaultdict(list)
 
@@ -733,4 +731,7 @@ class UTCInstances(PermissionRequiredMixin, TestListInstances):
 
     def get_queryset(self):
         qs = super(UTCInstances, self).get_queryset()
-        return qs.filter(unit_test_collection__pk=self.kwargs["pk"])
+        try:
+            return qs.filter(unit_test_collection__pk=self.kwargs["pk"])
+        except:
+            raise Http404
