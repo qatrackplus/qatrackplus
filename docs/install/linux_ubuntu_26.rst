@@ -291,9 +291,21 @@ our database and install the default data:
 
 .. code-block:: bash
 
-    python manage.py migrate
+    python manage.py migrate 
+
+You can load either qatrack defualt fixture (which contains some pre-added units, frequencies, etc.) or your dumped qatrack postgress databased as json.
+
+To load default qatrack fixture 
+
+.. code-block:: bash
+
     python manage.py loaddata fixtures/defaults/*/*
 
+To load your dumped db, put the json file inside qatackplus folder and then:  
+
+.. code-block:: bash
+
+    python manage.py loaddata ~/web/qatrackplus/qatrack-dump.json
 
 After that completes, we can grant privileges to our readonly database user as
 follows:
