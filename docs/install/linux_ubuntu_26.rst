@@ -1,6 +1,6 @@
 .. _linux_install_31:
 
-New Installation of QATrack+ v3.2 on Ubuntu 26.04 Linux 
+New Installation of QATrack+ v3.2.0.0 on Ubuntu 26.04 Linux 
 ===================================================
 
 .. note::
@@ -10,21 +10,19 @@ New Installation of QATrack+ v3.2 on Ubuntu 26.04 Linux
 
 
 This guide is going to walk you through installing everything required to run
-QATrack+ on an Ubuntu 26.04 LTS (Focal Fossa) server with Python 3.14, Apache
-2.4.66 as the web server and PostgreSQL 18 as the database.  The
-instructions have also been tested on Ubuntu 18.04 and installation
+QATrack+ on an Ubuntu 26.04 LTS server with Python 3.14, Apache
+2.4.66 as the web server and PostgreSQL 18 as the database. This installation uses django version 6.0.5.
 instructions should be similar on other Ubuntu systems. Similar steps will also
 likely work on other Linux distributions but those distributions are not
-officially supported or tested.
+officially supported or tested. this verisos was devloped by Maan Najem. If you would like to install the final version developed by 
+Randy Taylor, please follow:
+
 
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
-* :ref:`Upgrading an existing v3.x.y installation to v3.1.1.4
-  <linux_upgrading_31>`. 
-* :ref:`Upgrading an existing v0.3.0 installation to v3.1.1
-  <linux_upgrading_030_to_31>`. 
-*  :ref:`Upgrading an existing v0.2.X installation to v3.1.1 <linux_upgrading_02X_to_31>`. 
+* :ref:`New Installation of QATrack+ v3.1.1 on Ubuntu Linux
+  <linux>`. 
 
 The steps we will be undertaking are:
 
