@@ -4,7 +4,6 @@ import time
 import uuid
 from collections import Counter, defaultdict
 
-import pytest
 from django.conf import settings
 from django.core.serializers import get_serializer
 from django.db.transaction import atomic
@@ -12,7 +11,6 @@ from django.utils import timezone
 
 from qatrack.qa.utils import get_internal_user
 
-pytestmark = pytest.mark.skip("This file doesn't actually have tests")
 logger = logging.getLogger('qatrack')
 
 

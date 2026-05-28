@@ -13,3 +13,4 @@ repos:
     hooks:
     -   id: django-upgrade
         args: [--target-version, "4.2"]
+        exclude: qatrack/settings\.py

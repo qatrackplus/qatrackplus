@@ -661,8 +661,6 @@ def EXPLORER_PERMISSION_VIEW(request):
     return request.user.has_perm("reports.can_run_sql_reports")
 
 
-if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
-    from .docker_settings import *  # NOQA
 
 CHROME_PATH = ""
 if os.name.lower() == "nt":
@@ -691,7 +689,36 @@ for path in chrome_paths:
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-from .local_settings import *  # noqa: F403, F401, E402
+use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+if use_docker:
+    ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+
+    SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
+    try:
+        with open(SECRET_FILEPATH) as f:
+            SECRET_KEY = f.read()
+    except OSError:
+        import secrets
+        SECRET_KEY = secrets.token_urlsafe(64)
+        os.makedirs(os.path.dirname(SECRET_FILEPATH), exist_ok=True)
+        with open(SECRET_FILEPATH, 'w') as f:
+            f.write(SECRET_KEY)
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB', 'qatrackplus'),
+            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
+            'HOST': 'postgres',
+            'PORT': 5432
+        }
+    }
+
+    if 'readonly' not in DATABASES and USE_SQL_REPORTS:
+        DATABASES['readonly'] = DATABASES['default']
+else:
+    from .local_settings import *  # noqa: F403, F401, E402
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
