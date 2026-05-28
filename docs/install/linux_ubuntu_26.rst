@@ -89,16 +89,12 @@ QATrack+.  To checkout the code enter the following commands:
 
     mkdir -p ~/web
     cd web
-    git clone https://github.com/qatrackplus/qatrackplus.git
+    git clone https://github.com/maan8005/qatrackplus.git
     cd qatrackplus
-    git checkout v3.1.1.4
 
 
 Installing a Database System
 ----------------------------
-
-It is *highly* recommended that you choose PostgreSQL for your database,
-however it is possible to use MySQL/MariaDB if you need to.
 
 Installing PostgreSQL
 ~~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +107,7 @@ PostgreSQL locally. Run the following commands:
     sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common
 
 After that completes, we can create a new database and Postgres user (db
-name/user/pwd = qatrackplus31/qatrack/qatrackpass) as follows:
+name/user/pwd = qatrackplus32/qatrack/qatrackpass) as follows:
 
 .. code-block:: bash
 
@@ -125,10 +121,10 @@ And then create a readonly user for the SQL query tool:
     sudo -u postgres psql < deploy/postgres/create_ro_role.sql
 
 
-Now edit /etc/postgresql/12/main/pg_hba.conf (use your favourite editor, e.g.
-`sudo nano /etc/postgresql/12/main/pg_hba.conf` (note, if you have a different
-version of Postgres installed, then you would need to change the 12 in that
-path e.g. /etc/postgresql/9.3/main/pg_hba.conf) and scroll down to the bottom
+Now edit /etc/postgresql/18/main/pg_hba.conf (use your favourite editor, e.g.
+`sudo nano /etc/postgresql/18/main/pg_hba.conf` (note, if you have a different
+version of Postgres installed, then you would need to change the 18 in that
+path e.g. /etc/postgresql/16/main/pg_hba.conf) and scroll down to the bottom
 and change `peer` to `md5` for the `local all all` entry so it looks like:
 
 .. code-block:: bash
@@ -157,46 +153,6 @@ and restart the pg server:
 
     sudo service postgresql restart
 
-
-Installing MySQL (only required if you prefer to use MySQL over Postgres)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-    sudo apt-get install mysql-server libmysqlclient-dev
-
-.. note::
-
-    You should use the InnoDB storage engine for MySQL.  If you are using MySQL
-    >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
-    5.5.5 you need to set the default storage engine to InnoDB:
-    https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
-
-
-Now we can create and configure a user (db name/user/pwd =
-qatrackplus31/qatrack/qatrackpass) and database for QATrack+:
-
-.. code-block:: bash
-
-    # if you set a password during mysql install
-    sudo mysql -u root -p < deploy/mysql/create_db_and_role.sql
-
-    # if you didn't
-    sudo mysql < deploy/mysql/create_db_and_role.sql
-
-
-And then create a readonly user for the SQL query tool:
-
-
-.. code-block:: bash
-
-    # if you  set a password during mysql install
-    sudo mysql -u root -p < deploy/mysql/create_ro_role.sql
-
-    # if you didn't
-    sudo mysql < deploy/mysql/create_ro_role.sql
-
-
 Setting up our Python environment (including virtualenv)
 --------------------------------------------------------
 
@@ -204,14 +160,14 @@ Setting up our Python environment (including virtualenv)
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 3.1.1, runs on Python 3.6, 3.7, 3.8, & 3.9 Check your version of
+Version 3.2, runs on Python 3.14.4 (other version was not tested but you could try!),  Check your version of
 python3 with the command:
 
 .. code-block:: bash
 
    python3 -V
 
-Which should show the result `Python 3.6.8` or similar.  In order to keep
+Which should show the result `Python 3.14.4` or similar.  In order to keep
 QATrack+'s Python environment isolated from the system Python, we will run
 QATrack+ inside a Python `Virtual Environment`. To create the virtual
 environment run the following commands:
@@ -223,7 +179,7 @@ Creating our virtual environment
 .. code-block:: bash
 
     mkdir -p ~/venvs
-    python3 -m venv ~/venvs/qatrack31
+    python3 -m venv ~/venvs/qatrack32
 
 
 Anytime you open a new terminal/shell to work with your QATrack+ installation
@@ -231,9 +187,9 @@ you will want to activate your virtual environment.  Do so now like this:
 
 .. code-block:: bash
 
-    source ~/venvs/qatrack31/bin/activate
+    source ~/venvs/qatrack32/bin/activate
 
-Your command prompt should now be prefixed with `(qatrack31)`.
+Your command prompt should now be prefixed with `(qatrack32)`.
 
 It's also a good idea to upgrade `pip` the Python package installer:
 
@@ -248,14 +204,6 @@ We will now install all the libraries required for QATrack+ with PostgresSQL
 
     cd ~/web/qatrackplus
     pip install -r requirements/postgres.txt
-
-or for MySQL:
-
-.. code-block:: bash
-
-    cd ~/web/qatrackplus
-    pip install -r requirements/mysql.txt
-
 
 Making sure everything is working up to this point
 --------------------------------------------------
@@ -275,7 +223,7 @@ similar to the following:
 
     Results (88.45s):
 
-        975 passed
+        1073 passed
         5 skipped
         32 deselected
 
@@ -293,10 +241,6 @@ Create your `local_settings.py` file by copying the example from `deploy/{postgr
     # postgres
     cp deploy/postgres/local_settings.py qatrack/local_settings.py
 
-    # mysql
-    cp deploy/mysql/local_settings.py qatrack/local_settings.py
-
-
 then open the file in a text editor.  There are many available settings and
 they are documented within the example file and more completely on :ref:`the
 settings page <qatrack-config>`. Directions for :ref:`setting up email
@@ -311,7 +255,7 @@ required):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2', 
-            'NAME': 'qatrackplus31',
+            'NAME': 'qatrackplus32',
             'USER': 'qatrack',
             'PASSWORD': 'qatrackpass',
             'HOST': '',
@@ -319,7 +263,7 @@ required):
         },
         'readonly': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'qatrackplus31',
+            'NAME': 'qatrackplus32',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '',
@@ -362,14 +306,6 @@ follows:
 
     # PostgreSQL
     sudo -u postgres psql < deploy/postgres/grant_ro_rights.sql
-
-    # or MySQL if you set a password during install
-    sudo mysql -u root -p -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql -u root -p --database qatrackplus31 < grant_ro_privileges.sql
-
-    # or MySQL if you did not set a password during install
-    sudo mysql -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql --database qatrackplus31 < grant_ro_privileges.sql
 
 
 You also need to create a super user so you can login and begin configuring
@@ -437,7 +373,7 @@ You can also check on the status of your task cluster at any time like this:
 
 .. code-block:: bash
 
-    source ~/venvs/qatrack31/bin/activate
+    source ~/venvs/qatrack32/bin/activate
     cd ~/web/qatrackplus/
     python manage.py qmonitor
 
