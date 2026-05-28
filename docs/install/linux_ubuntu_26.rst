@@ -17,10 +17,6 @@ likely work on other Linux distributions but those distributions are not
 officially supported or tested. this verisos was devloped by Maan Najem. If you would like to install the final version developed by 
 Randy Taylor, please follow:
 
-
-If you are upgrading an existing QATrack+ installation, please see
-one of the following pages:
-
 * :ref:`New Installation of QATrack+ v3.1.1 on Ubuntu Linux
   <linux>`. 
 
