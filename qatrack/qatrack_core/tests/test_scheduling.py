@@ -1,7 +1,6 @@
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
-import pytz
 import recurrence
 from zoneinfo import ZoneInfo
 from qatrack.qa import models

@@ -5,7 +5,6 @@ from django.test.utils import override_settings
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_comments.models import Comment
-import pytz
 from zoneinfo import ZoneInfo
 
 from qatrack.attachments.models import Attachment

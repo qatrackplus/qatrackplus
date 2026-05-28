@@ -9,7 +9,6 @@ from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.utils import timezone
 import pytest
-import pytz
 from zoneinfo import ZoneInfo
 from rest_framework import status
 from rest_framework.test import APITestCase

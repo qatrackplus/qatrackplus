@@ -8,7 +8,6 @@ from django.urls import reverse
 from django.utils import timezone
 import numpy as np
 import pandas as pd
-import pytz
 from zoneinfo import ZoneInfo
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder

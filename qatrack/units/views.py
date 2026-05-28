@@ -7,7 +7,6 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
-import pytz
 from zoneinfo import ZoneInfo
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date

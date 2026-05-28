@@ -22,7 +22,6 @@ from django.views.generic import (
     TemplateView,
     View,
 )
-import pytz
 from zoneinfo import ZoneInfo
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
