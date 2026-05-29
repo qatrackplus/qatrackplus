@@ -9,7 +9,7 @@ repos:
         args: [ --no-fix ]
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
     -   id: check-yaml                 # Validates YAML syntax
     -   id: check-toml                 # Validates TOML syntax (e.g. pyproject.toml)
