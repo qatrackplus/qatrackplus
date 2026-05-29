@@ -308,7 +308,7 @@ class PartsList(BaseListableView):
 
     def locations(self, obj):
         locs = self.parts_locations_cache.get(obj.id, {'locations': []})['locations']
-        return locs or _("None in storage")
+        return mark_safe(locs or _("None in storage"))
 
     @property
     def parts_locations_cache(self):
