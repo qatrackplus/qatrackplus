@@ -7,8 +7,10 @@ register = template.Library()
 
 @register.simple_tag
 def part_list_in_storage(s):
-
-    psc = s.partstoragecollection_set.all()
+    try:
+        psc = s.partstoragecollection_set.all()
+    except:
+        return ''
 
     if len(psc) == 0:
         return ''
