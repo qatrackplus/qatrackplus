@@ -5,12 +5,31 @@ repos:
     -   id: ruff
         name: Lint
         # Run the linter without auto-fixing.
-        # Devs are to fix themselves, prevents confusion with pre-commit 
+        # Devs are to fix themselves, prevents confusion with pre-commit
         args: [ --no-fix ]
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+    -   id: check-yaml                 # Validates YAML syntax
+    -   id: check-toml                 # Validates TOML syntax (e.g. pyproject.toml)
+    -   id: check-added-large-files    # Prevents committing giant files by accident
+    -   id: check-merge-conflict       # Prevents committing unresolved git merge conflicts
+    -   id: debug-statements           # Prevents committing code with pdb/ipdb breakpoints
 
 -   repo: https://github.com/adamchainz/django-upgrade
     rev: "1.25.0"
     hooks:
     -   id: django-upgrade
+        name: Django Version Check
         args: [--target-version, "4.2"]
         exclude: qatrack/settings\.py
+
+-   repo: local
+    hooks:
+    -   id: django-check
+        name: Django System Check
+        entry: uv run python manage.py check
+        language: system
+        pass_filenames: false
+        types_or: [python, html] # only trigger on Python or template changes
