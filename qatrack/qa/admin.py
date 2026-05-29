@@ -453,11 +453,11 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
 
         super(UnitTestInfoAdmin, self).save_model(request, test_info, form, change)
 
-    def lookup_allowed(self, lookup, value):
+    def lookup_allowed(self, lookup, value,request):
         if lookup in ['test__testlistmembership__test_list__id__exact']:
             return True
         
-        return super(UnitTestInfoAdmin, self).lookup_allowed(lookup, value)
+        return super(UnitTestInfoAdmin, self).lookup_allowed(lookup, value,request)
 
     @mark_safe
     def history(self, obj):
