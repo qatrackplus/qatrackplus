@@ -456,6 +456,7 @@ class UnitTestInfoAdmin(AdminViews, BaseQATrackAdmin):
     def lookup_allowed(self, lookup, value):
         if lookup in ['test__testlistmembership__test_list__id__exact']:
             return True
+        
         return super(UnitTestInfoAdmin, self).lookup_allowed(lookup, value)
 
     @mark_safe
@@ -513,7 +514,7 @@ class TestListAdminForm(forms.ModelForm):
 class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
-        qs = kwargs["queryset"].filter(test_list=kwargs["instance"]).select_related("test")
+        qs = kwargs["queryset"].filter(test_list_id=kwargs["instance"].id).select_related("test")
         kwargs["queryset"] = qs
         super(TestListMembershipInlineFormSet, self).__init__(*args, **kwargs)
 
@@ -521,7 +522,7 @@ class TestListMembershipInlineFormSet(forms.models.BaseInlineFormSet):
 class SublistInlineFormSet(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
-        qs = kwargs["queryset"].filter(parent=kwargs["instance"])
+        qs = kwargs["queryset"].filter(parent_id=kwargs["instance"].id)
         kwargs["queryset"] = qs
         super(SublistInlineFormSet, self).__init__(*args, **kwargs)
 

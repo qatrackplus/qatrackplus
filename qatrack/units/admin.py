@@ -98,8 +98,8 @@ class UnitFormAdmin(ModelForm):
         if self.instance:
             unit = self.instance
 
-            for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
-                if ServiceEvent.objects.filter(unit_service_area=usa).exists():
+            for usa in UnitServiceArea.objects.filter(unit_id=unit.id).exclude(service_area__in=service_areas):
+                if ServiceEvent.objects.filter(unit_service_area_id=usa.id).exists():
                     data_copy = self.data.copy()
                     data_copy.setlist(
                         'service_areas',
@@ -126,8 +126,8 @@ class UnitFormAdmin(ModelForm):
         for sa in service_areas:
             UnitServiceArea.objects.get_or_create(unit=unit, service_area=sa)
 
-        for usa in UnitServiceArea.objects.filter(unit=unit).exclude(service_area__in=service_areas):
-            if not ServiceEvent.objects.filter(unit_service_area=usa).exists():
+        for usa in UnitServiceArea.objects.filter(unit_id=unit.id).exclude(service_area__in=service_areas):
+            if not ServiceEvent.objects.filter(unit_service_area_id=usa.id).exists():
                 usa.delete()
 
         return unit
