@@ -355,7 +355,7 @@ your Test Lists:
 
     python manage.py createsuperuser
 
-In additon, you also need to create a cachetable in the database:
+In additon, you also need to create a cachetable in the database (Only if you are not loading from previous installation), if you are loading from previous installation, you can skip this step since the cachetable should already be created in your database):
 
 .. code-block:: bash
 
