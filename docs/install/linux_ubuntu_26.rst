@@ -330,7 +330,7 @@ To load your dumped db, put the dumped json file inside qatackplus folder and th
 
 .. code-block:: bash
 
-    . ~/web/qatrackplus/load_db_from_json.sh # type yes if you prompted to delete existing db data. 
+    . ~/web/qatrackplus/load_db_from_json.sh # type yes if you prompted to delete any data from the new db. 
 
 Copy the media files from your backup location to the media folder in your qatrackplus installation:
 
