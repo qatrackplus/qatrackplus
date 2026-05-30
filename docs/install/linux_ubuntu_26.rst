@@ -45,6 +45,15 @@ To dump your existing database, you can use the following command (run this from
     cd ~/web/qatrackplus # or similar to navigate to your existing qatrackplus folder
     python manage.py dumpdata qatrack-dump.json
 
+navigate to your existing media folder and copy the contents to a safe location (e.g. ~/qatrack_media_backup):
+
+.. code-block:: bash
+
+    cd ~/web/qatrackplus/qatrack/media
+    mkdir -p ~/qatrack_media_backup
+    cp -r * ~/qatrack_media_backup/
+
+
 Prerequisites
 -------------
 
@@ -323,6 +332,12 @@ To load your dumped db, put the dumped json file inside qatackplus folder and th
 
     . ~/web/qatrackplus/load_db_from_json.sh # type yes if you prompted to delete existing db data. 
 
+Copy the media files from your backup location to the media folder in your qatrackplus installation:
+
+.. code-block:: bash
+
+    cp -r ~/qatrack_media_backup/* ~/web/qatrackplus/qatrack/media/
+
 After that completes, we can grant privileges to our readonly database user as
 follows:
 
@@ -332,7 +347,7 @@ follows:
     sudo -u postgres psql < deploy/postgres/grant_ro_rights.sql
 
 
-You also need to create a super user so you can login and begin configuring
+If you are not backing up from previous installation, you also need to create a super user so you can login and begin configuring
 your Test Lists:
 
 
@@ -340,13 +355,13 @@ your Test Lists:
 
     python manage.py createsuperuser
 
-and to create a cachetable in the database:
+In additon, you also need to create a cachetable in the database:
 
 .. code-block:: bash
 
     python manage.py createcachetable
 
-and finally we need to collect all our static media files in one location for
+Finally, we need to collect all our static media files in one location for
 Apache to serve:
 
 .. code-block:: bash
