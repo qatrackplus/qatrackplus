@@ -29,6 +29,22 @@ If you hit an error along the way, stop and figure out why the error is
 occuring before proceeding with the next step!  You can seek help on the on the
 :mailinglist:`mailing list <>`.
 
+importat if you are upgrading from an older version of QATrack+
+----------------------------------------------------------------
+If you are upgrading from an older version of QATrack+ (e.g. 3.1.4), 
+you should back up your existing database and media files and then restore them 
+after you have completed the installation of the new version. 
+
+The easiest way to do that is to dump your existing database to a json file and then load 
+that json file into the new database after you have completed the installation.
+To dump your existing database, you can use the following command (run this from your existing qatrackplus folder):
+
+.. code-block:: bash
+
+    source ~/venvs/qatrack31/bin/activate # or similar to activate your existing qatrack virtualenv
+    cd ~/web/qatrackplus # or similar to navigate to your existing qatrackplus folder
+    python manage.py dumpdata qatrack-dump.json
+
 Prerequisites
 -------------
 
@@ -301,11 +317,11 @@ To load default qatrack fixture
 
     python manage.py loaddata fixtures/defaults/*/*
 
-To load your dumped db, put the json file inside qatackplus folder and then:  
+To load your dumped db, put the dumped json file inside qatackplus folder and then:  
 
 .. code-block:: bash
 
-    python manage.py loaddata ~/web/qatrackplus/qatrack-dump.json
+    . ~/web/qatrackplus/load_db_from_json.sh # type yes if you prompted to delete existing db data. 
 
 After that completes, we can grant privileges to our readonly database user as
 follows:
