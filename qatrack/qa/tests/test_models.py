@@ -881,6 +881,7 @@ class TestUTCDueDates(TestCase):
 
         self.utc_hist.refresh_from_db()
         self.utc_hist.set_due_date()
+        self.utc_hist.refresh_from_db()
         assert self.utc_hist.due_date.date() == orig_due_date.date()
 
     def test_modified_to_valid(self):
@@ -909,6 +910,7 @@ class TestUTCDueDates(TestCase):
         ti2.status = self.valid_status
         ti2.save()
         self.utc_hist.set_due_date()
+        self.utc_hist.refresh_from_db()
 
         # due date should now be based on tli2 since it is valid
         self.assertEqual(self.utc_hist.due_date.date(), (tli2.work_completed + timezone.timedelta(days=1)).date())
@@ -1082,6 +1084,7 @@ class TestUnitTestCollection(TestCase):
         utils.create_test_list_instance(unit_test_collection=utc, work_completed=now)
         utc = models.UnitTestCollection.objects.get(pk=utc.pk)
         utc.set_due_date(due_date=None)
+        utc.refresh_from_db()
         due = now + timezone.timedelta(days=1)
         assert utc.due_date.date() == due.date()
 
