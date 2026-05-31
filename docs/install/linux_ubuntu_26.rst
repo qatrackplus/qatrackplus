@@ -11,7 +11,7 @@ New Installation of QATrack+ v3.2.0.0 on Ubuntu 26.04 Linux
 
 This guide is going to walk you through installing everything required to run
 QATrack+ on an Ubuntu 26.04 LTS server with Python 3.14, Apache
-2.4.66 as the web server and PostgreSQL 18 as the database. This installation uses django version 6.0.5.
+2.4.66 as the web server. This installation uses django version 6.0.5.
 instructions should be similar on other Ubuntu systems. Similar steps will also
 likely work on other Linux distributions but those distributions are not
 officially supported or tested. this verisos was devloped by Maan Najem. If you would like to install the final version developed by 
@@ -174,6 +174,35 @@ and restart the pg server:
 
     sudo service postgresql restart
 
+Installing MySQL (only required if you prefer to use MySQL over Postgres)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: bash
+
+    sudo apt-get install mysql-server libmysqlclient-dev default-libmysqlclient-dev 
+
+Now we can create and configure a user (db name/user/pwd =
+qatrackplus31/qatrack/qatrackpass) and database for QATrack+:
+
+.. code-block:: bash
+
+    # if you set a password during mysql install
+    sudo mysql -u root -p < deploy/mysql/create_db_and_role.sql
+
+    # if you didn't
+    sudo mysql < deploy/mysql/create_db_and_role.sql
+
+
+And then create a readonly user for the SQL query tool:
+
+
+.. code-block:: bash
+
+    # if you  set a password during mysql install
+    sudo mysql -u root -p < deploy/mysql/create_ro_role.sql
+
+    # if you didn't
+    sudo mysql < deploy/mysql/create_ro_role.sql
+
 Setting up our Python environment (including virtualenv)
 --------------------------------------------------------
 
@@ -226,6 +255,14 @@ We will now install all the libraries required for QATrack+ with PostgresSQL
     cd ~/web/qatrackplus
     pip install -r requirements/postgres.txt
 
+or for MySQL:
+
+.. code-block:: bash
+
+    cd ~/web/qatrackplus
+    pip install -r requirements/mysql.txt
+
+
 Making sure everything is working up to this point
 --------------------------------------------------
 
@@ -261,6 +298,10 @@ Create your `local_settings.py` file by copying the example from `deploy/{postgr
 
     # postgres
     cp deploy/postgres/local_settings.py qatrack/local_settings.py
+
+    # mysql
+    cp deploy/mysql/local_settings.py qatrack/local_settings.py
+
 
 then open the file in a text editor.  There are many available settings and
 they are documented within the example file and more completely on :ref:`the
@@ -330,7 +371,11 @@ To load your dumped db, put the dumped json file inside qatackplus folder and th
 
 .. code-block:: bash
 
-    . ~/web/qatrackplus/load_db_from_json.sh # type yes if you prompted to delete any data from the new db. 
+    # PostgreSQL
+    . ~/web/qatrackplus/load_db_from_json_pgsql.sh  
+
+    # MySQL 
+    . ~/web/qatrackplus/load_db_from_json_mysql.sh  
 
 Copy the media files from your backup location to the media folder in your qatrackplus installation:
 
@@ -345,7 +390,14 @@ follows:
 
     # PostgreSQL
     sudo -u postgres psql < deploy/postgres/grant_ro_rights.sql
+    
+    # or MySQL if you set a password during install
+    sudo mysql -u root -p -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
+    sudo mysql -u root -p --database qatrackplus31 < grant_ro_privileges.sql
 
+    # or MySQL if you did not set a password during install
+    sudo mysql -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
+    sudo mysql --database qatrackplus31 < grant_ro_privileges.sql
 
 If you are not backing up from previous installation, you also need to create a super user so you can login and begin configuring
 your Test Lists:
@@ -355,7 +407,7 @@ your Test Lists:
 
     python manage.py createsuperuser
 
-In additon, you also need to create a cachetable in the database (Only if you are not loading from previous installation), if you are loading from previous installation, you can skip this step since the cachetable should already be created in your database):
+In additon, you also need to create a cachetable in the database:
 
 .. code-block:: bash
 
