@@ -32,7 +32,7 @@ occuring before proceeding with the next step!  You can seek help on the on the
 importat if you are upgrading from an older version of QATrack+
 ----------------------------------------------------------------
 If you are upgrading from an older version of QATrack+ (e.g. 3.1.4), 
-you should back up your existing database and media files and then restore them 
+you should back up your existing database, media files and local_settings.py (if it was modified) and then restore them 
 after you have completed the installation of the new version. 
 
 The easiest way to do that is to dump your existing database to a json file and then load 
@@ -45,7 +45,7 @@ To dump your existing database, you can use the following command (run this from
     cd ~/web/qatrackplus # or similar to navigate to your existing qatrackplus folder
     python manage.py dumpdata qatrack-dump.json
 
-navigate to your existing media folder and copy the contents to a safe location (e.g. ~/qatrack_media_backup):
+Navigate to your existing media folder and copy the contents to a safe location (e.g. ~/qatrack_media_backup):
 
 .. code-block:: bash
 
@@ -53,6 +53,13 @@ navigate to your existing media folder and copy the contents to a safe location 
     mkdir -p ~/qatrack_media_backup
     cp -r * ~/qatrack_media_backup/
 
+Copy your local_settings.py file to a safe location, for example:
+
+.. code-block:: bash
+
+    cd ~/web/qatrackplus/qatrack/
+    mkdir -p ~/local_settings_backup
+    cp local_settings.py ~/local_settings_backup/
 
 Prerequisites
 -------------
