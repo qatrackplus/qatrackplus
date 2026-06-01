@@ -1,7 +1,7 @@
-# About this Verion:
-This verion of QATrack+ (3.2.0.0) was updated to work on Ubunut 26.04, python 3.14 and django 6.0.5. 
-All functionalities add features stay the same as in the previous version. 
-to install this version see:
+# About this Version:
+This version of QATrack+ (3.2.0.0) was updated to work on Ubuntu 26.04, Python 3.14 and Django 6.0.5. 
+All functionalities and features stay the same as in the previous version. 
+To install this version, see:
 
 [New Installation of QATrack+ v3.2.0.0 on Ubuntu 26.04 Linux](docs/install/linux_ubuntu_26.rst)
 
@@ -64,7 +64,10 @@ The main features include:
 
 ## Documentation & Release Notes
 
-The latest version is 3.1.1 Please review the
+Please note, this version 3.2.0.0 was not related by Randy. 
+[Release Notes](release_notes.md)
+
+The latest version is 3.1.1 released by Randy. Please review the
 [release_notes](https://docs.qatrackplus.com/en/stable/release_notes.html)
 before installing or upgrading.
 
