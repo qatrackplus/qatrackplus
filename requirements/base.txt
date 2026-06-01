@@ -16,18 +16,18 @@ django-dynamic-raw-id==4.4
 django-extensions==4.1  
 django-filter==25.2
 git+https://github.com/maan8005/django-form-utils.git#egg=django-form-utils
-django-formtools==2.6.1 # might need amending and putting on github
+django-formtools==2.6.1 
 git+https://github.com/maan8005/Django-genericdropdown.git#egg=django-genericdropdown 
-django-listable==0.9.4  # might need amending and putting on github
+django-listable==0.9.4  
 django-mptt==0.18.0
 django-mptt-admin==2.9.0
 django-picklefield==3.4.0
 django-q2==1.10.0
-django-recurrence==1.14  # might need amending and putting on github
+django-recurrence==1.14 
 django-registration==5.2.1
-django-sql-explorer==5.3  # might need amending and putting on github
+django-sql-explorer==5.3  
 django-widget-tweaks==1.5.1
-djangorestframework==3.17.1 # might need amending and putting on github
+djangorestframework==3.17.1 
 git+https://github.com/maan8005/django-rest-framework-filters.git#egg=djangorestframework-filters
 freezegun==1.5.5
 html5lib==1.1
