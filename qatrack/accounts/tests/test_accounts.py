@@ -1,7 +1,11 @@
+from unittest import mock
+
 import pytest
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 from django.test.utils import override_settings
+from django_auth_adfs.backend import AdfsAuthCodeBackend
 
 from qatrack.accounts import models
 from qatrack.accounts.admin import AdminFilter
@@ -126,3 +130,58 @@ class TestADFSBackend(TestCase):
         be.update_user_groups(self.user, claims)
         expected = list(sorted([self.group1.pk, self.group2.pk]))
         assert list(sorted(self.user.groups.values_list("pk", flat=True))) == expected
+
+
+class TestADFSCreateUser(TestCase):
+
+    def setUp(self):
+        from django_auth_adfs.config import settings as adfs_settings
+        adfs_settings.MIRROR_GROUPS = False
+        self.backend = QATrackAdfsAuthCodeBackend()
+
+    def claims(self, **over):
+        c = {
+            "winaccountname": "jdoe",
+            "given_name": "Jane", "family_name": "Doe",
+            "email": "jdoe@example.com",
+            "group": ["Physicists"],
+        }
+        c.update(over)
+        return c
+
+    def test_no_qualifying_groups_lets_anyone_in(self):
+        # No account_qualifier groups defined -> gate is skipped
+        user = self.backend.create_user(self.claims())
+        assert user.username == "jdoe"
+
+    def test_qualifying_group_match_allowed(self):
+        models.ActiveDirectoryGroupMap.objects.create(
+            ad_group="Physicists", account_qualifier=True,
+        )
+        user = self.backend.create_user(self.claims(group=["Physicists"]))
+        assert user.username == "jdoe"
+
+    def test_qualifying_group_mismatch_denied(self):
+        models.ActiveDirectoryGroupMap.objects.create(
+            ad_group="Admins", account_qualifier=True,
+        )
+        with self.assertRaises(PermissionDenied):
+            self.backend.create_user(self.claims(group=["Physicists"]))
+
+    @override_settings(ACCOUNTS_CLEAN_USERNAME=lambda u: u.lower())
+    def test_username_cleaned_on_create(self):
+        user = self.backend.create_user(self.claims(winaccountname="JDoe"))
+        assert user.username == "jdoe"
+
+    def test_claim_mapping_populates_user_attributes(self):
+        # CLAIM_MAPPING (first_name/last_name/email) is applied by the parent
+        user = self.backend.create_user(self.claims())
+        self.backend.update_user_attributes(user, self.claims())
+        assert user.first_name == "Jane"
+        assert user.last_name == "Doe"
+        assert user.email == "jdoe@example.com"
+
+    def test_authenticate_returns_none_on_permission_denied(self):
+        # QATrack+ overrides authenticate to swallow PermissionDenied -> None
+        with mock.patch.object(AdfsAuthCodeBackend, "authenticate", side_effect=PermissionDenied):
+            assert self.backend.authenticate(authorization_code="x") is None

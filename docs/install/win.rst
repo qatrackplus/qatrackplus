@@ -102,14 +102,11 @@ We're now ready to install all the libraries QATrack+ depends on.
 
 .. code-block:: console
 
-    mkdir venvs
-    python -m pip install --upgrade pip
-    python -m venv venvs\qatrack31
-    .\venvs\qatrack31\Scripts\Activate.ps1
-    python -m pip install --upgrade pip
     cd qatrackplus
     git checkout v3.1.1.4
-    pip install -r requirements\win.txt
+    python -m pip install uv
+    uv sync --extra mssql --extra win
+    .\.venv\Scripts\Activate.ps1
 
 
 .. warning::
@@ -204,7 +201,7 @@ way you set up your database above.
 
     DATABASES = {
         'default': {
-            'ENGINE': 'sql_server.pyodbc',
+            'ENGINE': 'mssql',
             'NAME': 'qatrackplus31',
             'USER': 'qatrack',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
             'PASSWORD': 'qatrackpass',
@@ -215,7 +212,7 @@ way you set up your database above.
             },
         },
         'readonly': {
-            'ENGINE': 'sql_server.pyodbc',
+            'ENGINE': 'mssql',
             'NAME': 'qatrackplus31',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
@@ -272,11 +269,10 @@ PowerShell and click "Run as Administrator") and run the following commands:
 
 .. code-block:: console
 
-    cd C:\deploy
-    .\venvs\qatrack31\Scripts\Activate.ps1
-    cd qatrackplus
+    cd C:\deploy\qatrackplus
+    .\.venv\Scripts\Activate.ps1
     cp deploy\win\QATrack31CherryPyService.py .
-    python C:\deploy\venvs\qatrack31\Scripts\pywin32_postinstall.py -install
+    python .\.venv\Scripts\pywin32_postinstall.py -install
     python QATrack31CherryPyService.py --startup=auto install
     python QATrack31CherryPyService.py start
 
@@ -450,7 +446,7 @@ click `OK`.
     QCluster Trigger
 
 Now go to the `Actions` tab and click `New...`.  In the `Program/script:` box
-enter `C:\\deploy\\venvs\\qatrack31\\Scripts\\python.exe`. In the `Add arguments
+enter `C:\\deploy\\qatrackplus\\.venv\\Scripts\\python.exe`. In the `Add arguments
 (optional)`: field enter `manage.py qcluster`, and in the `Start in
 (optional):` field put `C:\\deploy\\qatrackplus`  (no trailing slash!).
 

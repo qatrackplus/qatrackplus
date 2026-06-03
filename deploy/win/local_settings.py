@@ -3,30 +3,40 @@ DEBUG = False
 
 DATABASES = {
     'default': {
-        'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'qatrackplus31',
+        'ENGINE': 'mssql',
+        'NAME': 'qatrack40',
         'USER': 'qatrack',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
         'OPTIONS': {
-            'driver': 'ODBC Driver 13 for SQL Server'
+            'driver': 'ODBC Driver 17 for SQL Server'
         },
     },
     'readonly': {
-        'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'qatrackplus31',
+        'ENGINE': 'mssql',
+        'NAME': 'qatrack40',
         'USER': 'qatrack_reports',
         'PASSWORD': 'qatrackpass',
         'HOST': '',  # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
         'OPTIONS': {
-            'driver': 'ODBC Driver 13 for SQL Server'
+            'driver': 'ODBC Driver 17 for SQL Server'
         },
     }
 }
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', "YOUR_HOST_NAME_HERE"]
+
+# -----------------------------------------------------------------------------
+# Backup settings
+# Use the python manage.py backup_site command to backup the database and uploads
+# BACKUP_DIR = "C:\\deploy\\backups"
+# BACKUP_WEEKLY_DAY = 2  # 0 = Monday, 6 = Sunday (2 = Wednesday)
+# BACKUP_MONTHLY_DAY = 3
+# BACKUP_DAYS_TO_KEEP = 7
+# BACKUP_WEEKS_TO_KEEP = 5
+# BACKUP_MONTHS_TO_KEEP = 12
 
 # needs to be set to True when running behind reverse proxy (normal deploy)
 # set to False when not running behind reverse proxy

@@ -57,7 +57,7 @@ section. Add the `backup.sh` script to your crontab:
 Backing up QATrack+ on Windows
 ------------------------------
 
-First copy the script `deploy/backup/win/backup.ps1` to the main qatrackplus
+First copy the wrapper script `deploy/win/backup.ps1` to the main qatrackplus
 directory:
 
 .. code-block:: console
@@ -65,7 +65,18 @@ directory:
     cd C:\deploy\qatrackplus
     cp deploy\win\backup.ps1 .
 
-Then edit the backup.ps1 file and set the configuration variables appropriately.
+Then edit your ``local_settings.py`` file and configure the backup variables (e.g., ``BACKUP_DIR``, ``BACKUP_DAYS_TO_KEEP``) if you want to change the defaults.
+
+.. note::
+    **Folder Permissions Warning**
+    
+    If your backups fail with an ``Access is denied`` error, this usually means the 
+    background Windows Service running SQL Server does not have write access to your 
+    backup directory (e.g. ``C:\deploy\backups``). You must grant the SQL Server service 
+    (or ``Everyone``) write permissions to this folder.
+    
+    *(Note: QATrack+ is designed safely; it will never delete your old historical 
+    backups if a new backup fails to be created due to permission errors.)*
 
 
 Next open the Task Scheduler and select `Create Task` in the `Action` menu.
