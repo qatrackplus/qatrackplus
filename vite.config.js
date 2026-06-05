@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     outDir: resolve(__dirname, 'qatrack/qatrack_core/static/dist'),
-    emptyOutDir: true,
+    emptyOutDir: false,
     rollupOptions: {
       input: {
         faults: resolve(__dirname, 'qatrack/faults/static/faults/src/main.js')

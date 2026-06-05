@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.db.models import Count, Max
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -143,9 +143,9 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
         return super().delete_view(request, object_id, extra_context)
 
     @admin.display(description=_l("Color"))
-    @mark_safe
     def get_colour(self, obj):
-        return '<div style="display: inline-block; width: 20px; height:20px; background-color: %s;"></div>' % obj.colour
+        return format_html('<div style="display: inline-block; width: 20px; height:20px; background-color: {};"></div>', obj.colour)
+        return format_html('<div style="display: inline-block; width: 20px; height:20px; background-color: {};"></div>', obj.colour)
 
 
 @admin.register(ServiceType)

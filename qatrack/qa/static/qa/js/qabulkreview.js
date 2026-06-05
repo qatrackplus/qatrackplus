@@ -37,6 +37,12 @@
 
         $("#submit-review").click(function () {
 
+            if (unitIdx === -1 || testListNameIdx === -1 || statusIdx === -1) {
+                console.error("Missing required table columns (unit, test list name, or bulk review) for aggregation.");
+                alert("Cannot aggregate reviews: missing required table columns.");
+                return;
+            }
+
             var $tableBody = $("#instance-summary tbody");
 
             var $rows = $("#listable-table-unreviewed tbody tr").filter(function () {
@@ -46,10 +52,18 @@
             });
 
             var counter = {};
+            var abort = false;
             $rows.each(function (idx, el) {
                 var $el = $(el);
                 var children = $el.children();
-                var site = siteIdx >= 0 ? (children[siteIdx].innerText || "Other") + ": " : "";
+
+                if (!children[unitIdx] || !children[testListNameIdx] || !children[statusIdx]) {
+                    console.error("Row is missing required columns.");
+                    abort = true;
+                    return false;
+                }
+
+                var site = (siteIdx >= 0 && children[siteIdx]) ? (children[siteIdx].innerText || "Other") + ": " : "";
                 var unit = site + children[unitIdx].innerText;
                 var tl = children[testListNameIdx].innerText;
                 var statusVal = $(children[statusIdx]).find("option:selected ").val();
@@ -64,6 +78,11 @@
                     }
                 }
             });
+
+            if (abort) {
+                alert("Failed to build summary: a row is missing required data.");
+                return;
+            }
 
             var $tbody = $("#instance-summary tbody");
             $tbody.html("");

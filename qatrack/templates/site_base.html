@@ -8,7 +8,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <meta charset="utf-8">
-    <meta name="htmx-config" content='{"antiForgery":{"headerName":"X-CSRFToken","cookieName":"csrftoken"}}'>
     <title>{% block head_title_base %}{% if SITE_NAME %}{{ SITE_NAME }}: {% endif %}{% block head_title %}{% endblock %}{% endblock %}</title>
 
     {% block favicon %}
@@ -137,9 +136,9 @@
     </script>
     <script src="{% static 'htmx/js/htmx.min.js' %}"></script>
     <script type="text/javascript">
-      document.body.addEventListener('htmx:afterSettle', function(evt) {
+      document.addEventListener('htmx:afterSettle', function(evt) {
           // Re-init requireJS modules that may have been lost on DOM swap
-          if (typeof require !== 'undefined') {
+          if (typeof require !== 'undefined' && document.querySelector('.requires-legacy-faults')) {
               require(['faults']);
           }
       });
@@ -150,8 +149,7 @@
     {% block extra_head %}{% endblock extra_head %}
     {% block head_extra %}{% endblock head_extra %}
   </head>
-
-  <body hx-boost="true" class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
+  <body {% block body_attrs %}{% endblock body_attrs %} class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
 
     <div class="wrapper">
 

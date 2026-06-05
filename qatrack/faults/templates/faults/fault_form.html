@@ -9,6 +9,7 @@
 
 
 {% block head_title %}{% trans "Log a new fault" %}{% endblock %}
+{% block body_attrs %}hx-boost="true"{% endblock body_attrs %}
 
 {% block extra_css %}
   {{ block.super }}
@@ -22,11 +23,12 @@
 {% endblock extra_css %}
 
 {% block extra_js %}
+  {{ block.super }}
   <script type="text/javascript">
     var status_colours_dict = {{ status_tag_colours|safe }};
     var se_statuses =  {{ se_statuses|safe }};
   </script>
-  <script type="module" src="{% static 'dist/faults.js' %}"></script>
+  <script type="module" src="{% static 'dist/faults.js' %}?v={{ VERSION }}"></script>
 {% endblock extra_js %}
 
 {% block require_javascript %}

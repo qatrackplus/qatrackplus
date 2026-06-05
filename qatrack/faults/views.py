@@ -295,7 +295,7 @@ class CreateFault(PermissionRequiredMixin, CreateView):
                 'group_name': f.fields['group'].initial,
                 'required': f.fields['reviewed_by'].required,
                 'users': [{'id': u.id, 'name': u.get_full_name() or u.username} for u in f.fields['reviewed_by'].queryset],
-                'selected': f.data.get(f.prefix + '-reviewed_by') if f.is_bound else f.initial.get('reviewed_by')
+                'selected': f.data.get(f.prefix + '-reviewed_by') if f.is_bound else (f.initial.get('reviewed_by').id if hasattr(f.initial.get('reviewed_by'), 'id') else f.initial.get('reviewed_by'))
             })
         context_data['review_forms_json'] = json.dumps(review_forms_data)
         

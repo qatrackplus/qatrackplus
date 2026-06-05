@@ -76,3 +76,8 @@ source (or a url where you can find it).
 
 TODO: Deprecation Check `python -Wd manage.py check`
 TODO: Detail branches 
+
+## Deployment Note: Vite Built Assets
+
+The directory `qatrack/qatrack_core/static/dist/` is force-included in `.gitignore` because Django templates directly load the built Vite artifact (`dist/faults.js`). We intentionally commit the built files so that users deploying QATrack+ do not need to install Node.js and run `npm run build` during deployment.
+If you make changes to the Vue components or Vite configuration, you must run `npm run build` from the `qatrack/faults/static/faults/src/` directory and commit the updated `dist/` files.
