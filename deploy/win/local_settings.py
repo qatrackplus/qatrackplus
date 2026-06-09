@@ -27,7 +27,14 @@ DATABASES = {
 }
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'YOUR_HOST_NAME_HERE'] # Windows key + i -> System -> About -> Device Name
-CSRF_TRUSTED_ORIGINS = ['http://YOUR_HOST_NAME_HERE', 'https://YOUR_HOST_NAME_HERE']
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1',
+    'https://127.0.0.1',
+    'http://localhost',
+    'https://localhost',
+    'http://YOUR_HOST_NAME_HERE',
+    'https://YOUR_HOST_NAME_HERE'
+]
 
 # -----------------------------------------------------------------------------
 # Backup settings
