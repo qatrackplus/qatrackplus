@@ -3,147 +3,59 @@
 Backing up QATrack+
 ===================
 
-.. note::
-
-    Note, please speak with your server administrator to see if you already
-    have a backup plan in place for both databases and files. If you already do
-    then great, you can ignore this page! If not then please read on.
-
-
 It is **highly** recommended you put an automated backup solution in place for
-your QATrack+ installation. It is also highly recommended that your backups not
-reside on the QATrack+ server itself. That is to say, you should favour having
-your backups stored on a remote system (e.g. a network or shared drive) so that
-if your server loses its primary hard drive you will still have access to your
-backups.  Example backup scripts for Linux (to be run by cronjob) and Windows
-(run by Task Scheduler) are included below. These scripts back up nightly, and
-retain daily backups for a week, weekly backups for 5 weeks and monthly backups
-for ~1 year (these values are configurable).
+your QATrack+ installation. We expect users to consult with their internal IT
+departments for guidance on implementing a robust, automated backup strategy.
+
+At a minimum, you must ensure that you keep secure, off-server backups of:
+
+1. Your database (e.g., SQL Server, PostgreSQL, MySQL)
+2. Your ``local_settings.py`` file (located in ``qatrackplus\qatrack\local_settings.py`` or ``qatrackplus/qatrack/local_settings.py``)
+3. Your ``media`` folder (located in ``qatrackplus\qatrack\media`` or ``qatrackplus/qatrack/media``)
+
+It is highly recommended that your backups do not reside on the QATrack+ server itself.
+Store them on a remote system (e.g. a network or shared drive) so that if your server
+loses its primary hard drive, or if the files become corrupted or locked by ransomware,
+you will still have access to your backups.
 
 .. danger::
 
-    The scripts included below can be used as is, or modified to suit your
-    needs, but ultimately **it is up to you to ensure your QATrack+
+    Ultimately, **it is up to you and your IT department to ensure your QATrack+
     installation is backed up correctly**.
-
-
-Backing up QATrack+ on Linux
-----------------------------
-
-To use one of the example backup scripts on a Linux install, copy the
-appropriate script for your database to the main QATrack+ directory:
-
-.. code-block:: console
-
-    cp deploy/postgres/backup.sh .
-    # - or - #
-    cp deploy/mysql/backup.sh
-
-Now edit the backup.sh file and set the various options in the configuration
-section. Add the `backup.sh` script to your crontab:
-
-.. code-block:: console
-
-    # make the script executable by everyone so cron can run it
-    chmod 755 backup.sh
-
-    # add the crontab entry to run every night at 3am
-    (crontab -l && echo "0 3 * * * $PWD/backup.sh") | crontab -
-
-    # -or edit your crontab manually and append a line like "0 3 * * * /home/randlet/web/qatrackplus/backup.sh"
-    crontab -e
-
-
-Backing up QATrack+ on Windows
-------------------------------
-
-First copy the wrapper script `deploy/win/backup.ps1` to the main qatrackplus
-directory:
-
-.. code-block:: console
-
-    cd C:\deploy\qatrackplus
-    cp deploy\win\backup.ps1 .
-
-Then edit your ``local_settings.py`` file and configure the backup variables (e.g., ``BACKUP_DIR``, ``BACKUP_DAYS_TO_KEEP``) if you want to change the defaults.
-
-.. note::
-    **Folder Permissions Warning**
-    
-    If your backups fail with an ``Access is denied`` error, this usually means the 
-    background Windows Service running SQL Server does not have write access to your 
-    backup directory (e.g. ``C:\deploy\backups``). You must grant the SQL Server service 
-    (or ``Everyone``) write permissions to this folder.
-    
-    *(Note: QATrack+ is designed safely; it will never delete your old historical 
-    backups if a new backup fails to be created due to permission errors.)*
-
-
-Next open the Task Scheduler and select `Create Task` in the `Action` menu.
-
-On the `General` tab set the `Name` field to `QATrack+ Backup` (or similar).
-Check the `Run whether user is logged on or not` checkbox.
-
-
-On the `Triggers` tab click `New` and select `Daily` and choose the `Start`
-date and `Time` (e.g. 3am) and `Recur every` to `1` then click OK.
-
-Now go to the `Actions` tab and click `New` then enter `PowerShell.exe` in the
-`Program/Script` field and `-ExecutionPolicy Bypass
-C:\\deploy\\qatrackplus\\backup.ps1` in the `Add Arguments` field.
-
-Now save your scheduled task and run it and manually to confirm it worked
-correctly.
 
 
 Using Django to Dump The Database To JSON
 -----------------------------------------
 
-In some cases you may want to move your database from one type of SQL database
-to another, say from Postgres to SQLite.  In this case, one way to do this is
-to dump your database to a JSON file and then load it in your other database.
+.. warning::
+    **Do NOT use this method for your regular database backups.**
+    Dumping to JSON is slow, memory-intensive, and is not a reliable backup strategy for a production database. Always use the native backup tools provided by your database engine (e.g. ``pg_dump`` for PostgreSQL, or SQL Server Management Studio for MS SQL) for your regular backups.
 
-Dumping your database
-.....................
+Restoring from Backups
+----------------------
 
-Open a terminal, and activate your virtual environment and then:
+If you need to restore your QATrack+ instance from a backup (for example, when migrating to a new server or recovering from an issue), follow the general guidelines below for your deployment platform.
 
+Linux
+.....
 
-.. code-block:: console
+1. **Re-install QATrack+:** Follow the standard Linux installation instructions to rebuild your server. Ensure you check out the *exact same version* of QATrack+ that you were running when the backup was taken.
+2. **Restore Database:** Consult your IT department to restore the database from your automated backups using the native database tools (e.g., ``pg_restore`` or ``mysql``).
+3. **Restore Settings and Media:** Copy your backed-up ``local_settings.py`` file to the ``qatrackplus/qatrack/`` directory. Extract your backed-up ``media`` folder into the ``qatrackplus/qatrack/media/`` directory.
+4. **Permissions and Restart:** Ensure the web server user (e.g., ``www-data``) has the correct ownership and permissions for the restored ``media`` folder. Finally, restart the web server and your background task runner.
 
-    python manage.py dumpdata > qatrack-dump.json
+Windows
+.......
 
+1. **Re-install QATrack+:** Follow the standard Windows installation instructions. Ensure you check out the *exact same version* of QATrack+ that you were running when the backup was taken.
+2. **Restore Database:** Consult your IT department to restore your database using SQL Server Management Studio or native MS SQL backup tools.
+3. **Restore Settings and Media:** Copy your backed-up ``local_settings.py`` file to the ``qatrackplus\qatrack\`` directory. Copy your backed-up ``media`` folder into the ``qatrackplus\qatrack\media\`` directory.
+4. **Permissions and Restart:** Ensure the Windows Service account or IIS application pool has write permissions to the restored ``media`` folder. Finally, restart your QATrack+ CherryPy Windows Service and your Django Q Scheduled Task.
 
-The qatrack-dump.json file can now be used to populate a fresh database.
+Docker
+......
 
-
-Loading your database
-.....................
-
-
-.. danger::
-
-    This will completely erase all of the data in your database.  Only do this
-    if you are sure you are dealing with a fresh database
-
-
-You must load your previously dumped database into the same version of
-QATrack+.  First you need to create a new database, and then configure QATrack+
-to access it. Then migrate your database and clean out the autopopulated data:
-
-.. code-block:: console
-
-    python manage.py migrate
-    python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"
-
-
-Then you can load in your new data:
-
-
-.. code-block:: console
-
-    python manage.py loaddata qatrack-dump.json
-
-
-
-
+1. **Re-deploy Containers:** On a fresh Docker host, clone the QATrack+ repository and ensure you are on the *exact same version* (branch/tag) as your backup.
+2. **Restore Database:** If you are using an external database, consult your IT department to restore it. If you are using a containerized database volume, follow Docker best practices to restore the database volume from your backup archives.
+3. **Restore Settings and Media:** Restore your ``local_settings.py`` file and ``media`` files to the appropriate mounted volumes or host directories as configured in your ``docker-compose.yml``.
+4. **Start Containers:** Run ``docker compose up -d`` to bring the restored QATrack+ containers back online.
