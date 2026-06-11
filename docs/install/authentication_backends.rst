@@ -29,27 +29,24 @@ Installation of python-ldap
 Windows
 ~~~~~~~
 
-If you happen to be on a Windows system with Visual Studio installed, you
-should just be able to do `pip install python-ldap` and have the latest version of
-the pyldap package installed.  Otherwise,  there are binaries available on this
-page: https://github.com/cgohlke/python-ldap-build/releases.  Download the binary
-relevant to your Python 3 installation (e.g.
-python_ldap‑3.3.1‑cp36‑cp36m‑win_amd64.whl) and then pip install it:
+There are binaries available on this page: https://github.com/cgohlke/python-ldap-build.
+Download the relevant wheel for your Python installation (e.g.
+python_ldap-3.4.5-cp312-cp312-win_amd64.whl) and install the file directly into your venv:
 
 .. code-block:: console
 
-    pip install C:\path\to\python_ldap‑3.3.1‑cp36‑cp36m‑win_amd64.whl
+    uv pip install C:\path\to\python_ldap-3.4.5-cp312-cp312-win_amd64.whl
 
 
-To confirm your installation is working, activate your virtual env
+To confirm your installation is working, activate your virtual env and verify the import works
 
 .. code-block:: console
 
-    cd C:\deploy
-    .\venvs\qatrack3\scripts\activate
+    cd C:\deploy\qatrackplus
+    .\.venv\Scripts\Activate.ps1
     python -c "import ldap; print(ldap.__version__)"
 
-If that commands prints the ldap version then ldap is installed correctly.
+If that command prints the ldap version then ldap is installed correctly.
 
 Linux
 ~~~~~

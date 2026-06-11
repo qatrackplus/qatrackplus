@@ -115,13 +115,13 @@ We're now ready to install all the libraries QATrack+ depends on.
     If you are going to be using :ref:`Active Directory <active_directory>` for
     authenticating your users, you need to install pyldap.  There are binaries
     available on this page:
-    https://github.com/cgohlke/python-ldap-build/releases.  Download the
-    binary relavant to your distribution (e.g.
-    python_ldap‑3.3.1‑cp39‑cp39‑win_amd64.whl) and then pip install it:
+    https://github.com/cgohlke/python-ldap-build.  Download the
+    relevant wheel for your distribution (e.g.
+    python_ldap-3.4.5-cp312-cp312-win_amd64.whl) and install it directly into your venv:
 
     .. code-block:: console
 
-        pip install C:\path\to\python_ldap‑3.3.1‑cp39‑cp39‑win_amd64.whl
+        uv pip install C:\path\to\python_ldap-3.4.5-cp312-cp312-win_amd64.whl
 
 
 
