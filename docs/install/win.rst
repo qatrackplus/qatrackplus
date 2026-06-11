@@ -14,19 +14,15 @@ New Installation
 ----------------
 
 This guide is going to walk you through installing QATrack+ on a Windows Server
-2016-2019 server with IIS serving static assets (images, javascript and
+2022 server with IIS serving static assets (images, javascript and
 stylesheets) and acting as a reverse proxy for a CherryPy web server which
 serves our Django application (QATrack+).  The instructions have been tested
-with SQL Server 2016 & 2019 database
+with SQL Server 2022 database (and SQL Express).
 
-If you are upgrading an existing QATrack+ installation, please see
-one of the following pages:
+If you are upgrading an existing QATrack+ installation from version 3.1, please see:
 
-* :ref:`Upgrading an existing v3.x.y installation to v3.1.1.4
-  <win_upgrading_31>`. 
-* :ref:`Upgrading an existing v0.3.0 installation to v3.1.1
-  <win_upgrading_030_to_31>`. 
-*  :ref:`Upgrading an existing v0.2.X installation to v3.1.1 <win_upgrading_02X_to_31>`. 
+* :ref:`Upgrading an existing v3.x.y installation to v4.0.0
+  <win_upgrading_40>`. 
 
 
 .. note::
@@ -43,39 +39,51 @@ The steps we will be undertaking are:
 
 
 
-Install Google Chrome
----------------------
+Prerequisites
+-------------
 
-If you want to be able to generate or schedule PDF reports, you need to have
-Google Chrome installed.  Download and install Chrome here: https://www.google.com/chrome/index.html
+Before beginning the installation, ensure the following software is installed on your server:
+
+* **Google Chrome**: Required to generate or schedule PDF reports.
+  https://www.google.com/chrome/index.html
+
+* **Microsoft Visual C++ Redistributable**: The ODBC Driver for SQL Server requires this.
+  https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-supported-redistributable-version
+
+* **ODBC Driver 17 for SQL Server**: Required for QATrack+ to communicate with the database.
+  https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver17
+
+* **SQL Server Management Studio (SSMS)**: Required for setting up the database.
+  https://learn.microsoft.com/en-us/ssms/install/install
+
+* **Git for Windows**: Required to check out the QATrack+ source code.
+  https://git-scm.com/install/windows
 
 .. _install_py3_win:
 
-Installing Python 3
--------------------
+Installing Python 3.12
+----------------------
 
-Go to http://www.python.org/downloads/ and download the latest Python 3.9.X
-(3.9.1 at the time of writing) 64 bit version (e.g. the "Windows installer
-(64-bit)" link).  Run the installer and on the first page, make sure both
-"Install launcher for all users" and "Add Python 3.9 to PATH" are checked and
+Download the Python 3.12.10 (64-bit) installer:
+https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe
+
+Run the installer and on the first page, make sure both
+"Install launcher for all users" and "Add Python 3.12 to PATH" are checked and
 then click the "Customize Installation" button.
 
 On the second page of the installer, leave the defaults and click "Next".
 
 On the third page, make sure you have "Install for all users" selected (this
-is important!) before clicking "Install".
+is important!) before clicking "Install". You can verify the installation in a command prompt:
+
+.. code-block:: console
+
+    python --version
+    # should print Python 3.12.10
 
 
-Installing git and checking out the QATrack+ Source Code
---------------------------------------------------------
-
-Go to http://git-scm.com and download the latest version of git (msysgit) for
-Windows (Git-2.30.0 at the time of writing).  Run the installer.  I just leave
-all the settings on the defaults but you are free to modify them if you like.
-
-
-Checkout the latest release of QATrack+ source code from GitHub
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Checking out the QATrack+ Source Code
+-------------------------------------
 
 Open a Windows PowerShell terminal and then create a directory for QATrack+ and
 check out the source code, use the following commands:
@@ -91,21 +99,14 @@ check out the source code, use the following commands:
 Setting up our Python environment
 ---------------------------------
 
-Ensure you have python3 installed correctly and on your PATH by running:
-
-.. code-block:: console
-
-    python --version
-    # should print e.g. Python 3.9.1 or similar
-
 We're now ready to install all the libraries QATrack+ depends on.
 
 .. code-block:: console
 
     cd qatrackplus
-    git checkout v3.1.1.4
-    python -m pip install uv
-    uv sync --extra mssql --extra win
+    git checkout v4.0.0
+    pip install uv
+    uv sync --extra win --extra mssql
     .\.venv\Scripts\Activate.ps1
 
 
@@ -127,15 +128,6 @@ We're now ready to install all the libraries QATrack+ depends on.
 Creating a database with SQL Server
 -----------------------------------
 
-Ensure ODBC Driver 17 (or 13.1) is installed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In order for QATrack+ to connect to your database, you need to have the `ODBC
-Driver 17` installed.  Visit
-https://www.microsoft.com/en-us/download/details.aspx?id=56567 and download and
-install the driver (64 bit).
-
-
 Ensure `SQL Server Authentication` is enabled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -154,7 +146,7 @@ Create a new database
 In the Object Explorer frame, right click the Databases folder and select "New
 Database...".
 
-Enter 'qatrackplus31' as the database name and click OK.
+Enter 'qatrackplus40' as the database name and click OK.
 
 Back in the Object Explorer frame, right click on the main Server Security
 folder and click New Login...  Set the login name to 'qatrack', select SQL
@@ -166,7 +158,7 @@ click New Login...  Set the login name to 'qatrack_reports', select SQL Server
 Authentication. Enter 'qatrackpass' (or whatever you like) for the password
 fields and uncheck Enforce Password Policy. Click OK.
 
-Back in the Object Explorer frame, expand the qatrackplus31 database, right
+Back in the Object Explorer frame, expand the qatrackplus40 database, right
 click on Security and select New->User.
 
 Enter 'qatrack' as the User name and Login name and then in the Database Role
@@ -174,7 +166,7 @@ Membership region select 'db_ddladmin', 'db_datawriter',
 'db_datareader' and 'db_owner'.  Click OK.
 
 Now add the readonly database user for the query tool. In the Object Explorer
-frame, expand the qatrackplus31 database, right click on Security and select
+frame, expand the qatrackplus40 database, right click on Security and select
 New->User.
 
 Enter 'qatrack_reports' as the User name and Login name and then in the
@@ -192,7 +184,7 @@ Copy the example local_settings file:
 
 
 and then edit it so that the `NAME`, `USER`, and `PASSWORD` settings match the
-way you set up your database above.
+way you set up your database above. Also, ensure you configure `CSRF_TRUSTED_ORIGINS` which is required. You can find your Device Name by pressing `Windows Key + I -> System -> About`.
 
 
 .. code-block:: python
@@ -202,7 +194,7 @@ way you set up your database above.
     DATABASES = {
         'default': {
             'ENGINE': 'mssql',
-            'NAME': 'qatrackplus31',
+            'NAME': 'qatrackplus40',
             'USER': 'qatrack',  # USER/PWD can usually be left blank if SQL server is running on the same server as QATrack+
             'PASSWORD': 'qatrackpass',
             'HOST': '', # leave blank unless using remote server or SQLExpress (use 127.0.0.1\\SQLExpress or COMPUTERNAME\\SQLExpress)
@@ -213,7 +205,7 @@ way you set up your database above.
         },
         'readonly': {
             'ENGINE': 'mssql',
-            'NAME': 'qatrackplus31',
+            'NAME': 'qatrackplus40',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '',
@@ -224,7 +216,19 @@ way you set up your database above.
         }
     }
 
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # See local settings docs
+    ALLOWED_HOSTS = [
+        '127.0.0.1',
+        'localhost',
+        'YOUR_DEVICE_NAME',
+        'YOUR_IP_ADDRESS']
+
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost',
+        'https://localhost',
+        'http://127.0.0.1',
+        'https://127.0.0.1',
+        'http://YOUR_DEVICE_NAME',
+        'https://YOUR_DEVICE_NAME']
 
 
 Confirm you can connect to your database by running the `showmigrations` command:
@@ -241,6 +245,7 @@ which should show output like:
         [ ] 0001_initial
         [ ] 0002_activedirectorygroupmap_defaultgroup
         [ ] 0003_auto_20210207_1027
+        [ ] 0004_Auto_BigAuto_TimeZone_Django42
 
 
 
@@ -271,13 +276,13 @@ PowerShell and click "Run as Administrator") and run the following commands:
 
     cd C:\deploy\qatrackplus
     .\.venv\Scripts\Activate.ps1
-    cp deploy\win\QATrack31CherryPyService.py .
+    cp deploy\win\QATrack40CherryPyService.py .
     python .\.venv\Scripts\pywin32_postinstall.py -install
-    python QATrack31CherryPyService.py --startup=auto install
-    python QATrack31CherryPyService.py start
+    python QATrack40CherryPyService.py --startup=auto install
+    python QATrack40CherryPyService.py start
 
 
-Open the Windows Services dialog and confirm the `QATrack 31 CherryPy Service`
+Open the Windows Services dialog and confirm the `QATrack 40 CherryPy Service`
 is installed and has a status of `Running`.   Next open a browser on the server
 and navigate to http://localhost:8080/ and ensure you see a plain login form
 there (it won't look like this once we're finished!). If not, check the
@@ -304,16 +309,15 @@ going to use IIS for two purposes: first, it is going to serve all of our
 static media (css, js and images) and second it is going to act as a reverse
 proxy to forward the QATrack+ specific requests to CherryPy.
 
+If IIS is not installed, open Server Manager, select `Manage -> Add Roles and Features`, click `Next` until you reach `Server Roles`, check `Web Server (IIS)`, and follow the prompts to install it.
 
-Before starting please make sure you have both `URL Rewrite 2.1
+Before configuring IIS, please make sure you have both `URL Rewrite 2.1
 <https://www.iis.net/downloads/microsoft/url-rewrite>`__ and `Application
 Request Routing 3.0
-<http://www.iis.net/downloads/microsoft/application-request-routing>`__ IIS
-modules installed.  These can be installed by clicking on the "Get New Web
-Platform Components" link in the right hand side bar of IIS (you may need to
-install the Web Platform Installer first). 
+<https://www.iis.net/downloads/microsoft/application-request-routing>`__ IIS
+modules installed. These can be installed manually from the provided links.
 
-After installing these modules, you will need to close & re-open IIS.
+After installing these modules, you will need to close & re-open IIS. Alternatively, the `deploy\win\iis_install.ps1` script can automate some of this setup. When testing static access, ensure the IIS server is running.
 
 Enabling Proxy in Application Request Routing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -483,7 +487,7 @@ What Next
   restart both your QATrack CherryPy Service, and Django Q cluster via the task
   scheduler after changing any settings!)
 
-* Automate the :ref:`backup of your QATrack+ installation <qatrack_backup>`.
+* Set up a Backup Strategy. You must routinely backup your database, the `media` folder, and your `local_settings.py` file. Please consult with your IT department to automate this. More details can be found here: :ref:`backup of your QATrack+ installation <qatrack_backup>`.
 
 * Read the :ref:`Administration Guide <admin_guide>`, :ref:`User Guide
   <users_guide>`, and :ref:`Tutorials <tutorials>`.
