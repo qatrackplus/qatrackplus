@@ -5,8 +5,9 @@ try:
 except ImportError:
     pass
 
+
 try:
-    from .local_settings import *  # noqa: F403,F401
+    from .local_test_settings import *  # noqa: F403,F401
 except ImportError:
     pass
 
