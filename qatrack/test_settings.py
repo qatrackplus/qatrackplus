@@ -5,16 +5,9 @@ try:
 except ImportError:
     pass
 
-
-try:
-    from .local_test_settings import *  # noqa: F403,F401
-except ImportError:
-    pass
-
 NOTIFICATIONS_ON = False
 DEFAULT_NUMBER_FORMAT = None
 DEBUG = False
-SELENIUM_VIRTUAL_DISPLAY = False # Set to True to use headless browser for testing (requires xvfb)
 AD_CLEAN_USERNAME = None
 HTTP_OR_HTTPS = "http"
 REVIEW_BULK = True

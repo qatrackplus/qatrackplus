@@ -7,6 +7,8 @@ from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.servers.basehttp import WSGIServer
 from django.test.testcases import LiveServerThread, QuietWSGIRequestHandler
+from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
+from selenium.webdriver import Chrome as ChromeWebDriver, ChromeOptions
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -80,10 +82,10 @@ orig_send_keys = WebElement.send_keys
 
 
 @retry_if_exception(WebDriverException, 5, sleep_time=1)  # noqa: E302
-def WebElement_send_keys(self, keys):
+def WebElement_send_keys(self, *keys):
     """Monky patch send_keys to ensure element is in view"""
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
-    return orig_send_keys(self, keys)
+    return orig_send_keys(self, *keys)
 
 
 WebElement.send_keys = WebElement_send_keys  # noqa: E305
@@ -109,38 +111,37 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @classmethod
     def setUpClass(cls):
-        use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
-        use_chrome = getattr(settings, 'SELENIUM_BROWSER', 'firefox') == 'chrome'
-
-        if use_virtual_display:
-            # Make sure xvfb is installed
-            from pyvirtualdisplay import Display
-            cls.display = Display(visible=0, size=(1920, 1080))
-            cls.display.start()
+        super().setUpClass()
+        headless = getattr(settings, 'SELENIUM_HEADLESS', False)
+        browser = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
+        
+        if browser.lower() == 'chrome':
+            options = ChromeOptions()
+            if headless:
+                options.add_argument("--headless=new")
+            cls.selenium = ChromeWebDriver(options=options)
+        elif browser.lower() == 'firefox':
+            options = webdriver.FirefoxOptions()
+            if headless:
+                options.add_argument("--headless")
+            cls.selenium = FirefoxWebDriver(options=options)
         else:
-            cls.display = None
+            raise ValueError("Unsupported browser: %s" % browser)
 
-        if use_chrome:
-            chrome_driver_path = getattr(settings, 'SELENIUM_CHROME_PATH', '')
-            cls.driver = webdriver.Chrome(executable_path=chrome_driver_path)
-        else:
-            ff_profile = FirefoxProfile()
-            cls.driver = webdriver.Firefox(ff_profile)
-
-        orig_find_element = cls.driver.find_element
+        orig_find_element = cls.selenium.find_element
 
         @retry_if_exception(WebDriverException, 5, sleep_time=1)
         def WebElement_find_element(*args, **kwargs):
             """Monky patch find element to allow retries"""
             return orig_find_element(*args, **kwargs)
 
-        cls.driver.find_element = WebElement_find_element
+        cls.selenium.find_element = WebElement_find_element
 
-        cls.driver.set_page_load_timeout(5)
-        cls.driver.implicitly_wait(5)
+        cls.selenium.set_page_load_timeout(5)
+        cls.selenium.implicitly_wait(5)
 
         cls.maximize()
-        cls.wait = WebDriverWait(cls.driver, 5)
+        cls.wait = WebDriverWait(cls.selenium, 5)
 
         super().setUpClass()
 
@@ -150,44 +151,42 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         if getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False):
             for i in range(5):
                 try:
-                    cls.driver.maximize_window()
+                    cls.selenium.maximize_window()
                     return
                 except WebDriverException:
                     time.sleep(1)
 
-        cls.driver.set_window_size(1920, 1080)
+        cls.selenium.set_window_size(1920, 1080)
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.quit()
-        if cls.display:
-            cls.display.stop()
+        cls.selenium.quit()
         super().tearDownClass()
 
     @contextmanager
     def wait_for_page_load(self, timeout=10):
-        old_page = self.driver.find_element(By.TAG_NAME, 'html')
+        old_page = self.selenium.find_element(By.TAG_NAME, 'html')
         yield
-        WebDriverWait(self.driver, timeout).until(staleness_of(old_page))
+        WebDriverWait(self.selenium, timeout).until(staleness_of(old_page))
 
     @retry_if_exception(Exception, 5, sleep_time=1)
     def open(self, url):
         with self.wait_for_page_load():
-            self.driver.execute_script("window.location.href='%s%s'" % (self.live_server_url, url))
+            self.selenium.execute_script("window.location.href='%s%s'" % (self.live_server_url, url))
 
     def login(self):
         self.open("/accounts/login/")
 
-        self.driver.find_element(By.ID, 'id_username').send_keys(self.user.username)
-        self.driver.find_element(By.ID, 'id_password').send_keys(self.password)
-        self.driver.find_element(By.CSS_SELECTOR, 'button').click()
+        self.selenium.find_element(By.ID, 'id_username').send_keys(self.user.username)
+        self.selenium.find_element(By.ID, 'id_password').send_keys(self.password)
+        self.selenium.find_element(By.CSS_SELECTOR, 'button').click()
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
     def load_admin(self):
         self.open("/admin/")
-        self.driver.find_element(By.ID, 'id_username').send_keys(self.user.username)
-        self.driver.find_element(By.ID, 'id_password').send_keys(self.password)
-        self.driver.find_element(By.CSS_SELECTOR, 'button').click()
+        self.selenium.find_element(By.ID, 'id_username').send_keys(self.user.username)
+        self.selenium.find_element(By.ID, 'id_password').send_keys(self.password)
+        self.selenium.find_element(By.CSS_SELECTOR, 'button').click()
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
