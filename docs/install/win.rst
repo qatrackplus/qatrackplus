@@ -6,8 +6,9 @@ Installing and Deploying QATrack+ on Windows Server
 
 .. note::
 
-    This guide assumes you have at least a basic level of familiarity with
-    Windows Server, SQL Server Management Studio, and the command line.
+    This guide assumes you have at least a basic level of familiarity with Windows Server, SQL Server Management Studio, and the command line. 
+    
+    There are many community members who have successfully installed QATrack+ on Windows Server and can provide guidance and support. You can reach out to the QATrack+ community through the :mailinglist:`QATrack+ Google Group <>` for assistance.
 
 
 New Installation
@@ -44,20 +45,23 @@ Prerequisites
 
 Before beginning the installation, ensure the following software is installed on your server:
 
-* **Google Chrome**: Required to generate or schedule PDF reports.
-  https://www.google.com/chrome/index.html
+* **Google Chrome**: `Required to generate or schedule PDF reports. <https://www.google.com/chrome/index.html>`_
 
-* **Microsoft Visual C++ Redistributable**: The ODBC Driver for SQL Server requires this.
-  https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-supported-redistributable-version
+* **Microsoft Visual C++ Redistributable**: `The ODBC Driver for SQL Server requires this. <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-supported-redistributable-version>`_
 
-* **ODBC Driver 17 for SQL Server**: Required for QATrack+ to communicate with the database.
-  https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver17
+* **ODBC Driver 17 for SQL Server**: `Required for QATrack+ to communicate with the database. <https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver17>`_
 
-* **SQL Server Management Studio (SSMS)**: Required for setting up the database.
-  https://learn.microsoft.com/en-us/ssms/install/install
+* **SQL Server Management Studio (SSMS)**: `Required for setting up the database. <https://learn.microsoft.com/en-us/ssms/install/install>`_
 
-* **Git for Windows**: Required to check out the QATrack+ source code.
-  https://git-scm.com/install/windows
+* **Git for Windows**: `Required to check out the QATrack+ source code. <https://git-scm.com/install/windows>`_ 
+
+For convenience, these installers may be kept in a folder on the server (e.g. C:\\deploy\\installers) for future reference and re-use.
+
+* **SQL Server Express**: Required if you do not have access to a full SQL Server instance `SQL Server may be installed locally. <https://www.microsoft.com/en-us/sql-server/sql-server-downloads>`_ This option should only be used if local IT resources will not support using a full SQL Server instance. QATrack+ should fit within the licensing limits of SQL Server Express, but it is up to each site to confirm their Microsoft licensing requirements. 
+
+IIS requires the `URL Rewrite 2.1
+<https://www.iis.net/downloads/microsoft/url-rewrite>`__ and `Application
+Request Routing 3.0 <https://www.iis.net/downloads/microsoft/application-request-routing>`__ modules. 
 
 .. _install_py3_win:
 
@@ -67,19 +71,30 @@ Installing Python 3.12
 Download the Python 3.12.10 (64-bit) installer:
 https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe
 
-Run the installer and on the first page, make sure both
-"Install launcher for all users" and "Add Python 3.12 to PATH" are checked and
-then click the "Customize Installation" button.
+We need to be careful to ensure Python is installed for all users and that the Python executable is added to the PATH variable. Here we will step through the installation process to ensure this is the case.
 
-On the second page of the installer, leave the defaults and click "Next".
+.. figure:: images/python-3.12-pg1.png
+    :alt: Use Admin Privileges
 
-On the third page, make sure you have "Install for all users" selected (this
-is important!) before clicking "Install". You can verify the installation in a command prompt:
+
+Select the checkboxes to install for all users and add Python to PATH, then click "Customize Installation" to continue.
+
+.. figure:: images/python-3.12-pg2.png
+    :alt: All Users
+
+Leave the defaults, check that the "Install for all users" option is selected, and click "Next" to continue.
+
+.. figure:: images/python-3.12-pg3.png
+    :alt: Advanced Options: Install
+
+Ensure "Install for all users" is selected, then click "Install" to continue. The installer will now run, before it finishes you may be prompted to Disable path length limit. Select this option if prompted. 
+
+Once complete, we can verify the installation in a command prompt or a PowerShell terminal by running the following command:
 
 .. code-block:: console
 
-    python --version
-    # should print Python 3.12.10
+    >>  python --version
+    # this should print Python 3.12.10
 
 
 Checking out the QATrack+ Source Code
@@ -90,24 +105,24 @@ check out the source code, use the following commands:
 
 .. code-block:: console
 
-    mkdir C:\deploy
-    cd C:\deploy
-    git clone https://github.com/qatrackplus/qatrackplus.git
+    >>  mkdir C:\deploy
+    >>  cd C:\deploy
+    >>  git clone https://github.com/qatrackplus/qatrackplus.git
 
 
 
 Setting up our Python environment
 ---------------------------------
 
-We're now ready to install all the libraries QATrack+ depends on.
+We're now ready to install all the libraries QATrack+ depends on. 
 
 .. code-block:: console
 
-    cd qatrackplus
-    git checkout v4.0.0
-    pip install uv
-    uv sync --extra win --extra mssql
-    .\.venv\Scripts\Activate.ps1
+    >>  cd qatrackplus
+    >>  git checkout v4.0.0
+    >>  pip install uv
+    >>  uv sync --extra win --extra mssql
+    >>  .\.venv\Scripts\Activate.ps1
 
 
 .. warning::
@@ -128,6 +143,16 @@ We're now ready to install all the libraries QATrack+ depends on.
 Creating a database with SQL Server
 -----------------------------------
 
+If you, or your IT department has familiarity with SQL Server, here is a quick summary of the configuration needed. 
+
+- a SQL Server instance (either local or remote) with SQL Server Authentication enabled. 
+- a database named `qatrackplus40`. 
+- a database user named `qatrack` with `db_ddladmin`, `db_datawriter`, `db_datareader` and `db_owner` permissions on the `qatrackplus40` database. 
+- a database user named `qatrack_reports` with `db_datareader` permissions on the `qatrackplus40` database.
+
+
+For most of us, the easiest way to set this up is to use SQL Server Management Studio (SSMS) and follow the instructions below.  If you have a different method of setting up your database that meets the above requirements, that will work too.
+
 Ensure `SQL Server Authentication` is enabled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -146,31 +171,41 @@ Create a new database
 In the Object Explorer frame, right click the Databases folder and select "New
 Database...".
 
-Enter 'qatrackplus40' as the database name and click OK.
+Enter 'qatrackplus' as the database name and click OK.
 
 Back in the Object Explorer frame, right click on the main Server Security
 folder and click New Login...  Set the login name to 'qatrack', select SQL
 Server Authentication. Enter 'qatrackpass' (or whatever you like) for the
-password fields and uncheck Enforce Password Policy. Click OK.
+password fields and **uncheck** Enforce Password Policy. Click OK.
+
+.. figure:: images/SQL-User.png
+    :alt: New SQL User
 
 Again in the Object Explorer frame, right click on the main Security folder and
 click New Login...  Set the login name to 'qatrack_reports', select SQL Server
 Authentication. Enter 'qatrackpass' (or whatever you like) for the password
-fields and uncheck Enforce Password Policy. Click OK.
+fields and **uncheck** Enforce Password Policy. Click OK.
 
-Back in the Object Explorer frame, expand the qatrackplus40 database, right
+Now we have a database and two users, but the users don't have permissions to do anything with the database yet. Back in the Object Explorer frame expand the qatrackplus database, right
 click on Security and select New->User.
 
-Enter 'qatrack' as the User name and Login name and then in the Database Role
+.. figure:: images/db_user_1.png
+     :alt: New SQL User for Database
+
+Enter 'qatrack' as both the User name and Login name and then in the Database Role
 Membership region select 'db_ddladmin', 'db_datawriter',
 'db_datareader' and 'db_owner'.  Click OK.
 
-Now add the readonly database user for the query tool. In the Object Explorer
-frame, expand the qatrackplus40 database, right click on Security and select
-New->User.
 
-Enter 'qatrack_reports' as the User name and Login name and then in the
+.. image:: images/db_user_2.png
+   :width: 47%
+.. image:: images/db_user_3.png
+   :width: 47%
+
+
+The second user is readonly since it will only be used for queries and reports. In the new user dialog,enter 'qatrack_reports' as the User name and Login name and then in the
 Database Role Membership region select 'db_datareader'.  Click OK.
+
 
 
 Configuring QATrack+ to use your new database
@@ -180,11 +215,13 @@ Copy the example local_settings file:
 
 .. code-block:: console
 
-    cp deploy\win\local_settings.py qatrack\local_settings.py
+    >>  cp deploy\win\local_settings.py qatrack\local_settings.py
 
 
 and then edit it so that the `NAME`, `USER`, and `PASSWORD` settings match the
-way you set up your database above. Also, ensure you configure `CSRF_TRUSTED_ORIGINS` which is required. You can find your Device Name by pressing `Windows Key + I -> System -> About`.
+way you set up your database above. Also, ensure you configure `CSRF_TRUSTED_ORIGINS` which is required. You can find your Device Name by pressing `Windows Key + I -> System -> About`. Alternatively, you can use `hostname` in a command prompt to get your device name, and `ipconfig` to get your IP address. 
+
+Your local_settings.py file should look something like the following (but with the correct values for your server):
 
 
 .. code-block:: python
@@ -235,7 +272,7 @@ Confirm you can connect to your database by running the `showmigrations` command
 
 .. code-block:: console
 
-    python manage.py showmigrations accounts
+    >>  python manage.py showmigrations accounts
 
 which should show output like:
 
@@ -250,21 +287,27 @@ which should show output like:
 
 
 We will now create the database tables and load some configuration data into
-our new database from the command prompt:
+our new database from the command prompt. Createsuperuser will prompt you to create the highest level admin user for logging into QATrack+. Make sure to remember the username and password you create here as you will need it to log in to QATrack+ for the first time! 
+
+Now run the following commands to set up your database and load the default configuration data:
 
 .. code-block:: console
 
-    python manage.py migrate
-    python manage.py createsuperuser
-    python manage.py createcachetable
-    python manage.py collectstatic
-    Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
+    >>  python manage.py migrate
+    >>  python manage.py createsuperuser
+    >>  python manage.py createcachetable
+    >>  python manage.py collectstatic
+    >>  Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
+
+
+We now have a database, we have configured QATrack+ to use it, and we've loaded the default configuration data. Next, we should test that everything is working correctly by running the development server with `python manage.py runserver` and navigating to http://localhost:8000/ in a browser on the server. You should see a poor approximation of the QATrack+ login page (it won't look like this once we're finished!). If you see any errors, check the terminal output for details on what went wrong.  If you can log in successfully, then we know our database is configured correctly and we can move on to the next step.
+
 
 
 Configuring CherryPy to Serve QATrack+
 --------------------------------------
 
-In order to have QATack+ start when you reboot your server, or restart after a
+Next we need to set up a web server to serve QATrack+ and allow users to log in and use it. In order to have QATack+ start when you reboot your server, or restart after a
 crash, we will run QATrack+ with a CherryPy server installed as a Windows
 service (running on port 8080, see note below if you need to change the port).
 
@@ -274,18 +317,22 @@ PowerShell and click "Run as Administrator") and run the following commands:
 
 .. code-block:: console
 
-    cd C:\deploy\qatrackplus
-    .\.venv\Scripts\Activate.ps1
-    cp deploy\win\QATrack40CherryPyService.py .
-    python .\.venv\Scripts\pywin32_postinstall.py -install
-    python QATrack40CherryPyService.py --startup=auto install
-    python QATrack40CherryPyService.py start
+    >>  cd C:\deploy\qatrackplus
+    >>  .\.venv\Scripts\Activate.ps1
+    >>  cp deploy\win\QATrack40CherryPyService.py .
+    >>  python .\.venv\Scripts\pywin32_postinstall.py -install
+    >>  python QATrack40CherryPyService.py --startup=auto install
+    >>  python QATrack40CherryPyService.py start
+
 
 
 Open the Windows Services dialog and confirm the `QATrack 40 CherryPy Service`
-is installed and has a status of `Running`.   Next open a browser on the server
-and navigate to http://localhost:8080/ and ensure you see a plain login form
-there (it won't look like this once we're finished!). If not, check the
+is installed and has a status of `Running`.   
+
+.. figure:: images/service_is_running-cropped.png
+    :alt: CherryPy Service
+
+Next open a browser on the server and navigate to http://localhost:8080/ and ensure you see a plain login form there (it won't look like this once we're finished!). If not, check the
 `logs\cherry_py_err.log` file for any errors.
 
 Your QATrack+ installation is now installed as a Windows Service running on
@@ -309,7 +356,7 @@ going to use IIS for two purposes: first, it is going to serve all of our
 static media (css, js and images) and second it is going to act as a reverse
 proxy to forward the QATrack+ specific requests to CherryPy.
 
-If IIS is not installed, open Server Manager, select `Manage -> Add Roles and Features`, click `Next` until you reach `Server Roles`, check `Web Server (IIS)`, and follow the prompts to install it.
+If IIS is not installed, open Server Manager, select `Manage -> Add Roles and Features`, click `Next` until you reach `Server Roles`, check `Web Server (IIS)`, and follow the prompts to install it. The default options are sufficient. 
 
 Before configuring IIS, please make sure you have both `URL Rewrite 2.1
 <https://www.iis.net/downloads/microsoft/url-rewrite>`__ and `Application
@@ -317,7 +364,7 @@ Request Routing 3.0
 <https://www.iis.net/downloads/microsoft/application-request-routing>`__ IIS
 modules installed. These can be installed manually from the provided links.
 
-After installing these modules, you will need to close & re-open IIS. Alternatively, the `deploy\win\iis_install.ps1` script can automate some of this setup. When testing static access, ensure the IIS server is running.
+After installing these modules, you will need to close & re-open IIS. Alternatively, the `deploy\\win\\iis_install.ps1` script can automate some of this setup. When testing static access, ensure the IIS server is running.
 
 Enabling Proxy in Application Request Routing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -341,7 +388,7 @@ isn't, enable that role.
 Setting up the site and URL rewrite rules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once you have Applicationn Request Routing installed and proxies enabled, in
+Once you have Application Request Routing installed and proxies enabled, in
 the left panel of IIS under Sites, select the default Web Site and click Stop
 on the right hand side.
 
@@ -454,7 +501,7 @@ enter `C:\\deploy\\qatrackplus\\.venv\\Scripts\\python.exe`. In the `Add argumen
 (optional)`: field enter `manage.py qcluster`, and in the `Start in
 (optional):` field put `C:\\deploy\\qatrackplus`  (no trailing slash!).
 
-.. figure:: images/win/qcluster_action.png
+.. figure:: images/win/django_q_action-cropped.png
     :alt: QCluster Action
 
     QCluster Action

@@ -49,6 +49,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+    'sphinx_copybutton',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -183,6 +184,9 @@ rst_prolog = """
 
 
 # -- Extension configuration -------------------------------------------------
+
+copybutton_prompt_text = ">>  " ## Note the double space at the end, which is intentional to avoid matching the prompt in the output of some commands
+
 
 # -- Options for todo extension ----------------------------------------------
 

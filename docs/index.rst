@@ -1,26 +1,20 @@
-Important Notice
-================
-
-QATrack+ no longer has a maintainer. Please see the announcement on
-the `QATrack+ Mailing List <https://groups.google.com/g/qatrack/c/79EoHF4U54Y>`_.
-
 Welcome to QATrack+'s documentation!
 ====================================
 
 
-About QATrack+ v3.1.1
+About QATrack+ 4.0
 ---------------------
 
-QATrack+ is a fully configurable, free, and open source (MIT License) web
+QATrack+ is a fully configurable, free, and open source (Apache License 2.0) web
 application for managing QC data for radiation therapy and medical imaging
 equipment. QATrack+ is used in `many hospitals and clinics around the world
 <http://qatrackplus.com/#whos-using>`_!
 
 QATrack+ is a replacement for error prone spreadsheets and other in-house
-databases. It brings structure and organization to your QA program while
+databases. It brings structure and organization to your QA/QC program while
 retaining much of the flexibility of spreadsheets.  Built in scheduling,
 reports, notifications, and charts make keeping on top of your machine QA
-program a breeze!
+a breeze!
 
 The main features include:
 
