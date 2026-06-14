@@ -436,15 +436,15 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         })
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" title="%s"/>' % _(
+        return mark_safe('<input type="checkbox" class="test-selected" title="%s"/>' % _(
             "Check to include this test list instance when bulk setting approval statuses"
-        )
+        ))
 
     def bulk_review_status(self, obj):
         if not hasattr(self, "_bulk_review"):
             self._bulk_review = self._status_select()
 
-        return self._bulk_review.replace(":TLI_ID:", str(obj.pk))
+        return mark_safe(self._bulk_review.replace(":TLI_ID:", str(obj.pk)))
 
     def get_queryset(self):
         qs = models.TestListInstance.objects.unreviewed()

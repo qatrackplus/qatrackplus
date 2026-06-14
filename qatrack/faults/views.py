@@ -212,10 +212,10 @@ class UnreviewedFaultList(FaultList):
         return fields
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" data-fault="%s" title="%s"/>' % (
+        return mark_safe('<input type="checkbox" class="test-selected" data-fault="%s" title="%s"/>' % (
             obj.id,
             _("Check to include this fault bulk setting approval statuses"),
-        )
+        ))
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)

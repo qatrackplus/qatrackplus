@@ -52,6 +52,17 @@ SITE_NAME = "QATrack+"
 DATABASES = {
 }
 
+# -----------------------------------------------------------------------------
+# Backup settings
+# Override these in local_settings.py if you are using the backup_site command.
+BACKUP_DIR = "C:\\deploy\\backups"
+BACKUP_WEEKLY_DAY = 2  # 0 = Monday, 6 = Sunday (2 = Wednesday)
+BACKUP_MONTHLY_DAY = 3
+
+BACKUP_DAYS_TO_KEEP = 7
+BACKUP_WEEKS_TO_KEEP = 5
+BACKUP_MONTHS_TO_KEEP = 12
+
 # ----------------------------------------------------------------------------
 # Default local settings
 
@@ -453,10 +464,10 @@ LOGGING = {
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
-        'django-q': {
+        'django-q2': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
-            'filename': os.path.join(LOG_ROOT, "django-q.log"),
+            'filename': os.path.join(LOG_ROOT, "django-q2.log"),
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
@@ -510,8 +521,8 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'django-q': {
-            'handlers': ['console', 'django-q'],
+        'django-q2': {
+            'handlers': ['console', 'django-q2'],
             'level': 'DEBUG',
             'propagate': True,
         },

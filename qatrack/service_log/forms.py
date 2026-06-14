@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, Q, QuerySet
+from django.forms.models import ModelChoiceIteratorValue
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
@@ -318,10 +319,15 @@ class ModelSelectWithOptionTitles(forms.Select):
         self.title_variable = title_variable
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-        if value in [None, '']:
+        actual_value = getattr(value, 'value', value)
+        # In Django 4.0+, actual_value might still be a ModelChoiceIteratorValue
+        # Calling str() on it reliably extracts the primary key string
+        actual_str = str(actual_value)
+            
+        if actual_str in ['None', '']:
             title = '-----'
         elif self.title_variable is not None and self.model is not None:
-            title = getattr(self.model.objects.get(pk=value), self.title_variable)
+            title = getattr(self.model.objects.get(pk=actual_str), self.title_variable)
         else:
             title = ''
         if attrs is None:
@@ -764,8 +770,9 @@ class ServiceEventForm(BetterModelForm):
                 new = new.str_verbose()
             if old is not None:
                 old = old.str_verbose()
-        elif isinstance(old, int) and issubclass(type(self.fields.get(item)), forms.ModelChoiceField):
-            old = self.fields[item].queryset.model.objects.get(pk=old)
+        elif (isinstance(old, int) or isinstance(old, ModelChoiceIteratorValue)) and issubclass(type(self.fields.get(item)), forms.ModelChoiceField):
+            old_pk = str(old)
+            old = self.fields[item].queryset.model.objects.get(pk=old_pk)
 
         new = item_val_to_string(new)
         old = item_val_to_string(old)

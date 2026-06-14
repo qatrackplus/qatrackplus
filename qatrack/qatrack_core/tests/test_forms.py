@@ -41,7 +41,7 @@ class BetterFormMixinTest(TestCase):
         self.assertEqual(name, 'personal')
         self.assertEqual(options['fields'], ['name', 'age'])
         self.assertEqual(options['legend'], 'Personal Information')
-        self.assertEqual(options['classes'], ['personal-info'])
+        self.assertEqual(options['classes'], 'personal-info')
         self.assertEqual(options['description'], 'Your personal details')
 
         # Test contact fieldset
@@ -49,7 +49,7 @@ class BetterFormMixinTest(TestCase):
         self.assertEqual(name, 'contact')
         self.assertEqual(options['fields'], ['email'])
         self.assertEqual(options['legend'], 'Contact')
-        self.assertEqual(options['classes'], ())
+        self.assertEqual(options['classes'], '')
         self.assertEqual(options['description'], '')
 
     def test_as_fieldset(self):
@@ -65,6 +65,25 @@ class BetterFormMixinTest(TestCase):
         self.assertIn('name="name"', html)
         self.assertIn('name="age"', html)
         self.assertIn('name="email"', html)
+
+    def test_fieldset_attribute_access(self):
+        """Test that fieldsets can be accessed as attributes by name."""
+        self.assertTrue(hasattr(self.form.fieldsets, 'personal'))
+        
+        # Test attribute access
+        personal_fs = self.form.fieldsets.personal
+        self.assertEqual(personal_fs.name, 'personal')
+        self.assertEqual(personal_fs.legend, 'Personal Information')
+        
+        # Test item access
+        contact_fs = self.form.fieldsets['contact']
+        self.assertEqual(contact_fs.name, 'contact')
+        
+        # Test iteration over fieldset yields bound fields
+        personal_fields = list(personal_fs)
+        self.assertEqual(len(personal_fields), 2)
+        self.assertEqual(personal_fields[0].name, 'name')
+        self.assertEqual(personal_fields[1].name, 'age')
 
     def test_no_fieldsets(self):
         """Test form without fieldsets defined."""
