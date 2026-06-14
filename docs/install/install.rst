@@ -8,7 +8,7 @@ Selecting a platform for QATrack+
 
 Currently there are two "officially" supported platforms for deploying QATrack+
 on: 1) Ubuntu Linux (18.04+) with PostgreSql (or MySQL) and 2) Windows Server
-2017+ with SQL Server.
+2022+ with SQL Server.
 
 The platform you choose will generally depend on what type of system you or
 your clinic has the most expertise in and / or your budget (Microsoft tools can
@@ -30,8 +30,6 @@ be expensive!).
 
    win
    win_upgrade_from_3
-   win_upgrade_from_030
-   win_upgrade_from_02X
 
 
 Note there is no official support for the platforms listed below.  That doesn't
