@@ -394,7 +394,7 @@ and to create a cachetable in the database:
     python manage.py createcachetable
 
 and finally we need to collect all our static media files in one location for
-Apache to serve:
+Nginx to serve:
 
 .. code-block:: bash
 
@@ -417,7 +417,7 @@ Install supervisor:
     sudo apt install supervisor
 
 
-In order for Django Q to run properly and for Apache to serve uploaded files, we need to create the logging and media directories and ensure the web server and QATrack+ background tasks can share permissions:
+In order for Django Q to run properly and for Nginx to serve uploaded files, we need to create the logging and media directories and ensure the web server and QATrack+ background tasks can share permissions:
 
 .. code-block:: bash
 
@@ -500,7 +500,7 @@ Next Steps
 
 * Check the :ref:`the settings page <qatrack-config>` for any available
   customizations you want to add to your QATrack+ installation (don't forget to
-  restart Apache after changing any settings!)
+  restart your Nginx and Supervisor services after changing any settings!)
 
 * Automate the :ref:`backup of your QATrack+ installation <qatrack_backup>`.
 
