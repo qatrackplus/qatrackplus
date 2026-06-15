@@ -700,16 +700,16 @@ for path in chrome_paths:
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-import os
+
 use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', 'yes', 'on'}
 if use_docker:
     ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
     SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
     try:
-        with open(SECRET_FILEPATH, 'r') as f:
+        with open(SECRET_FILEPATH) as f:
             SECRET_KEY = f.read()
-    except IOError:
+    except OSError:
         import secrets
         SECRET_KEY = secrets.token_urlsafe(64)
         os.makedirs(os.path.dirname(SECRET_FILEPATH), exist_ok=True)

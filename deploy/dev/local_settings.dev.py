@@ -9,7 +9,7 @@
 ## Manditory settings:
 ### You must set at least the DATABASES setting here. 
 
-DEBUG = False # Set to True to enable debug mode (not safe for regular use!)
+DEBUG = True # Set to True to enable debug mode (not safe for regular use!)
 TEMPLATE_DBG = True
 
 DATABASES = {
