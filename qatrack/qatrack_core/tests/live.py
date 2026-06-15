@@ -1,4 +1,3 @@
-import shutil
 import time
 from contextlib import contextmanager
 from functools import wraps
@@ -9,12 +8,13 @@ from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.servers.basehttp import WSGIServer
 from django.test.testcases import LiveServerThread, QuietWSGIRequestHandler
-from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
-from selenium.webdriver import Chrome as ChromeWebDriver, ChromeOptions
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver import Chrome as ChromeWebDriver
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
 from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as e_c
