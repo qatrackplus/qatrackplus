@@ -1,4 +1,4 @@
-VERSION=3.1.0
+VERSION=4.0.0
 DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 
 
