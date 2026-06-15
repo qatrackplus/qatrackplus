@@ -1,3 +1,3 @@
 CREATE USER qatrack WITH PASSWORD 'qatrackpass';
-CREATE DATABASE qatrackplus31;
-GRANT ALL PRIVILEGES ON DATABASE qatrackplus31 to qatrack;
+CREATE DATABASE qatrackplus40 OWNER qatrack;
+GRANT ALL PRIVILEGES ON DATABASE qatrackplus40 to qatrack;

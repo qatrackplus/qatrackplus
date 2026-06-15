@@ -67,7 +67,7 @@ jobs:
       postgres:
         image: postgres@sha256:1b92e7a80c021647bf70f5d3eb66066a998e4f5cf43c07bb9dc9f729782cf88e
         env:
-          POSTGRES_DB: qatrackplus31
+          POSTGRES_DB: qatrackplus40
           POSTGRES_USER: qatrack
           POSTGRES_PASSWORD: qatrackpass
         ports:
@@ -134,7 +134,7 @@ jobs:
           cp deploy/mysql/local_settings.py qatrack/local_settings.py
           sed -i "s/'HOST': ''/'HOST': '127.0.0.1'/g" qatrack/local_settings.py
           # Setup mysql users and privileges for MySQL 8 compat
-          docker exec -i ${{ job.services.mysql.id }} mysql -u root -proot -e "CREATE USER 'qatrack'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE USER 'qatrack_reports'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE DATABASE qatrackplus31 CHARACTER SET utf8; GRANT ALL ON *.* TO 'qatrack'@'%'; GRANT ALL ON *.* TO 'qatrack_reports'@'%'; FLUSH PRIVILEGES;"
+          docker exec -i ${{ job.services.mysql.id }} mysql -u root -proot -e "CREATE USER 'qatrack'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE USER 'qatrack_reports'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE DATABASE qatrackplus40 CHARACTER SET utf8mb4; GRANT ALL ON qatrackplus40.* TO 'qatrack'@'%'; GRANT ALL ON test_qatrackplus40.* TO 'qatrack'@'%'; GRANT SELECT ON qatrackplus40.* TO 'qatrack_reports'@'%'; FLUSH PRIVILEGES;"
           docker exec -i ${{ job.services.mysql.id }} sh -c "mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -proot mysql"
 
       - name: Run Tests
@@ -176,7 +176,7 @@ jobs:
         if: matrix.db == 'mssql'
         uses: Particular/install-sql-server-action@669fc7147c13cb314685bab823a55a5e22a0c95f
         with:
-          catalog: qatrackplus31
+          catalog: qatrackplus40
           connection-string-env-var: SQL_CONNECTION_STRING
 
       - name: Configure MSSQL local_settings.py
@@ -188,7 +188,7 @@ jobs:
           parts = dict(part.split('=', 1) for part in conn_str.split(';') if '=' in part)
           db_settings = {
               'ENGINE': 'mssql',
-              'NAME': parts.get('Database', parts.get('Initial Catalog', 'qatrackplus31')),
+              'NAME': parts.get('Database', parts.get('Initial Catalog', 'qatrackplus40')),
               'HOST': parts.get('Server', parts.get('Data Source', r'localhost\SQLEXPRESS')),
               'PORT': '',
               'OPTIONS': {

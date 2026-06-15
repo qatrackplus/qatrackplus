@@ -1,6 +1,6 @@
-.. _linux_install_31:
+.. _linux_install_40:
 
-New Installation of QATrack+ v3.1.1 on Ubuntu Linux
+New Installation of QATrack+ v4.0.0 on Ubuntu Linux
 ===================================================
 
 .. note::
@@ -10,9 +10,9 @@ New Installation of QATrack+ v3.1.1 on Ubuntu Linux
 
 
 This guide is going to walk you through installing everything required to run
-QATrack+ on an Ubuntu 20.04 LTS (Focal Fossa) server with Python 3.8, Apache
-2.4 as the web server and PostgreSQL 12 (MySQL 8.0) as the database.  The
-instructions have also been tested on Ubuntu 18.04 and installation
+QATrack+ on an Ubuntu 24.04 LTS (Noble Numbat) server with Python 3.12, Nginx
+as the web server and PostgreSQL 16 (MySQL 8.0) as the database.  The
+instructions have also been tested on Ubuntu 22.04 and installation
 instructions should be similar on other Ubuntu systems. Similar steps will also
 likely work on other Linux distributions but those distributions are not
 officially supported or tested.
@@ -20,11 +20,8 @@ officially supported or tested.
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
-* :ref:`Upgrading an existing v3.x.y installation to v3.1.1.4
-  <linux_upgrading_31>`. 
-* :ref:`Upgrading an existing v0.3.0 installation to v3.1.1
-  <linux_upgrading_030_to_31>`. 
-*  :ref:`Upgrading an existing v0.2.X installation to v3.1.1 <linux_upgrading_02X_to_31>`. 
+* :ref:`Upgrading an existing v3.x.y installation to v4.0.0
+  <linux_upgrading_40>`. 
 
 The steps we will be undertaking are:
 
@@ -54,7 +51,7 @@ this deployment. Install install them as follows:
 
 .. code-block:: bash
 
-    sudo apt install make build-essential python3-dev python3-tk python3-venv
+    sudo apt install make build-essential python3-dev python3-tk curl
 
 You will also need the Chrome browser installed for generating PDF reports:
 
@@ -78,8 +75,8 @@ and then configure git (substituting your name and email address!)
 
 .. code-block:: bash
 
-   git config --global user.name "randlet"
-   git config --global user.email randy@multileaf.ca
+   git config --global user.name ccody
+   git config --global user.email ccody@example.com
 
 Check out the QATrack+ source code from GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,10 +87,10 @@ QATrack+.  To checkout the code enter the following commands:
 .. code-block:: bash
 
     mkdir -p ~/web
-    cd web
+    cd ~/web
     git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
-    git checkout v3.1.1.4
+    git checkout v4.0.0
 
 
 Installing a Database System
@@ -113,7 +110,7 @@ PostgreSQL locally. Run the following commands:
     sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common
 
 After that completes, we can create a new database and Postgres user (db
-name/user/pwd = qatrackplus31/qatrack/qatrackpass) as follows:
+name/user/pwd = qatrackplus40/qatrack/qatrackpass) as follows:
 
 .. code-block:: bash
 
@@ -127,10 +124,10 @@ And then create a readonly user for the SQL query tool:
     sudo -u postgres psql < deploy/postgres/create_ro_role.sql
 
 
-Now edit /etc/postgresql/12/main/pg_hba.conf (use your favourite editor, e.g.
-`sudo nano /etc/postgresql/12/main/pg_hba.conf` (note, if you have a different
-version of Postgres installed, then you would need to change the 12 in that
-path e.g. /etc/postgresql/9.3/main/pg_hba.conf) and scroll down to the bottom
+Now edit /etc/postgresql/18/main/pg_hba.conf (use your favourite editor, e.g.
+`sudo nano /etc/postgresql/18/main/pg_hba.conf` (note, if you have a different
+version of Postgres installed, then you would need to change the 18 in that
+path e.g. /etc/postgresql/16/main/pg_hba.conf) and scroll down to the bottom
 and change `peer` to `md5` for the `local all all` entry so it looks like:
 
 .. code-block:: bash
@@ -176,7 +173,7 @@ Installing MySQL (only required if you prefer to use MySQL over Postgres)
 
 
 Now we can create and configure a user (db name/user/pwd =
-qatrackplus31/qatrack/qatrackpass) and database for QATrack+:
+qatrackplus40/qatrack/qatrackpass) and database for QATrack+:
 
 .. code-block:: bash
 
@@ -206,26 +203,31 @@ Setting up our Python environment (including virtualenv)
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 3.1.1, runs on Python 3.6, 3.7, 3.8, & 3.9 Check your version of
+Version 4.0.0 runs on Python 3.12. Check your version of
 python3 with the command:
 
 .. code-block:: bash
 
    python3 -V
 
-Which should show the result `Python 3.6.8` or similar.  In order to keep
+Which should show the result `Python 3.12.10` or similar.  In order to keep
 QATrack+'s Python environment isolated from the system Python, we will run
-QATrack+ inside a Python `Virtual Environment`. To create the virtual
-environment run the following commands:
+QATrack+ inside a Python `Virtual Environment` managed by `uv`.
+
+First, install `uv`:
+
+.. code-block:: bash
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    source $HOME/.local/bin/env
 
 Creating our virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 .. code-block:: bash
 
-    mkdir -p ~/venvs
-    python3 -m venv ~/venvs/qatrack31
+    cd ~/web/qatrackplus
+    uv venv --prompt qatrackplus .venv
 
 
 Anytime you open a new terminal/shell to work with your QATrack+ installation
@@ -233,15 +235,9 @@ you will want to activate your virtual environment.  Do so now like this:
 
 .. code-block:: bash
 
-    source ~/venvs/qatrack31/bin/activate
+    source .venv/bin/activate
 
-Your command prompt should now be prefixed with `(qatrack31)`.
-
-It's also a good idea to upgrade `pip` the Python package installer:
-
-.. code-block:: bash
-
-    pip install --upgrade pip
+Your command prompt should now be prefixed with `(qatrackplus)`.
 
 We will now install all the libraries required for QATrack+ with PostgresSQL
 (be patient, this can take a few minutes!):
@@ -249,14 +245,14 @@ We will now install all the libraries required for QATrack+ with PostgresSQL
 .. code-block:: bash
 
     cd ~/web/qatrackplus
-    pip install -r requirements/postgres.txt
+    uv sync --extra postgres
 
 or for MySQL:
 
 .. code-block:: bash
 
     cd ~/web/qatrackplus
-    pip install -r requirements/mysql.txt
+    uv sync --extra mysql
 
 
 Making sure everything is working up to this point
@@ -267,7 +263,7 @@ At this point you can run the QATrack+ test suite to ensure your environment is 
 .. code-block:: bash
 
     cd ~/web/qatrackplus
-    touch qatrack/local_settings.py
+    cp deploy/sqlite/local_settings.py qatrack/local_settings.py
     make test_simple
 
 This should take a few minutes to run and should exit with output that looks
@@ -306,25 +302,29 @@ settings page <qatrack-config>`. Directions for :ref:`setting up email
 
 However, the two most important settings are `DATABASES` and `ALLOWED_HOSTS`:
 which should be set like the following (switch the `ENGINE` to mysql if
-required):
+required).
+
+.. tip::
+
+    You can quickly find your server's IP address by running ``hostname -I`` in your terminal.
 
 .. code-block:: python
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2', 
-            'NAME': 'qatrackplus31',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'qatrackplus40',
             'USER': 'qatrack',
             'PASSWORD': 'qatrackpass',
-            'HOST': '',
+            'HOST': '127.0.0.1',
             'PORT': '',
         },
         'readonly': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'qatrackplus31',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'qatrackplus40',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
-            'HOST': '',
+            'HOST': '127.0.0.1',
             'PORT': '',
         }
     }
@@ -332,6 +332,9 @@ required):
 
     # Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
     ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
+
+    # CSRF_TRUSTED_ORIGINS is required for Django 4.0+. It must include the scheme (http/https).
+    CSRF_TRUSTED_ORIGINS = ['http://XX.XXX.XXX.XX', 'https://XX.XXX.XXX.XX']
 
 Once you have got those settings done, we can now test our database connection:
 
@@ -344,9 +347,11 @@ which should show output like:
 .. code-block:: bash
 
     accounts
-        [ ] 0001_initial
-        [ ] 0002_activedirectorygroupmap_defaultgroup
-        [ ] 0003_auto_20210207_1027
+     [ ] 0001_initial
+     [ ] 0002_activedirectorygroupmap_defaultgroup
+     [ ] 0003_auto_20210207_1027
+     [ ] 0004_Auto_BigAuto_TimeZone_Django42
+
 
 If you were able to connect to your database, we can now create the tables in
 our database and install the default data:
@@ -367,11 +372,11 @@ follows:
 
     # or MySQL if you set a password during install
     sudo mysql -u root -p -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql -u root -p --database qatrackplus31 < grant_ro_privileges.sql
+    sudo mysql -u root -p --database qatrackplus40 < grant_ro_privileges.sql
 
     # or MySQL if you did not set a password during install
     sudo mysql -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql --database qatrackplus31 < grant_ro_privileges.sql
+    sudo mysql --database qatrackplus40 < grant_ro_privileges.sql
 
 
 You also need to create a super user so you can login and begin configuring
@@ -412,6 +417,18 @@ Install supervisor:
     sudo apt install supervisor
 
 
+In order for Django Q to run properly and for Apache to serve uploaded files, we need to create the logging and media directories and ensure the web server and QATrack+ background tasks can share permissions:
+
+.. code-block:: bash
+
+    sudo usermod -a -G www-data $USER
+    exec sg www-data newgrp `id -gn` # this refreshes users group memberships without needing to log off/on
+    mkdir -p logs qatrack/media
+    touch logs/{migrate,debug,django-q2,auth}.log
+    sudo chown -R www-data:www-data logs qatrack/media
+    sudo chmod ug+rwxs logs qatrack/media
+
+
 and then set up the Django Q configuration:
 
 .. code-block:: bash
@@ -439,36 +456,22 @@ You can also check on the status of your task cluster at any time like this:
 
 .. code-block:: bash
 
-    source ~/venvs/qatrack31/bin/activate
     cd ~/web/qatrackplus/
+    source .venv/bin/activate
     python manage.py qmonitor
 
 
-Installing Apache web server and mod_wsgi
------------------------------------------
+Installing Nginx web server
+---------------------------
 
-The next step to take is to install and configure the Apache web server.
-Apache and mod_wsgi can be installed with the following commands:
-
-.. code-block:: bash
-
-    sudo apt-get install apache2 apache2-dev libapache2-mod-wsgi-py3 python3-dev
-
-
-Next, lets make sure Apache can write to our logs and media directories:
+The next step to take is to install and configure the Nginx web server.
+Nginx can be installed with the following command:
 
 .. code-block:: bash
 
-    sudo usermod -a -G www-data $USER
-    exec sg www-data newgrp `id -gn` # this refreshes users group memberships without needing to log off/on
-    mkdir -p logs
-    touch logs/{migrate,debug,django-q2,auth}.log
-    sudo chown -R www-data:www-data logs
-    sudo chown -R www-data:www-data qatrack/media
-    sudo chmod ug+rwxs logs
-    sudo chmod ug+rwxs qatrack/media
+    sudo apt-get install nginx
 
-Now we can remove the default Apache config file and copy over the QATrack+ config
+Now we can remove the default Nginx config file and copy over the QATrack+ config
 file:
 
 .. danger::
@@ -479,14 +482,14 @@ file:
 
 .. code-block:: bash
 
-    make qatrack_daemon.conf
-    sudo rm /etc/apache2/sites-enabled/000-default.conf
+    make nginx.conf
+    sudo rm -f /etc/nginx/sites-enabled/default
 
-and finally restart Apache:
+and finally restart Nginx:
 
 .. code-block:: bash
 
-    sudo service apache2 restart
+    sudo service nginx restart
 
 
 You should now be able to log into your server at http://yourserver/!

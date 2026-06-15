@@ -44,7 +44,7 @@ qatrack/local_settings.py
 qatrack/local_test_settings.py
 logs/
 mail/*
-qatrack*.conf
+/qatrack*.conf
 qatrack/accel_migration_tool/db/
 qatrack/accel_migration_tool/local_accel_settings.py
 qatrack/assets

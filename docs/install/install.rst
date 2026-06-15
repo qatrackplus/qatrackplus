@@ -20,8 +20,6 @@ be expensive!).
 
    linux
    linux_upgrade_from_3
-   linux_upgrade_from_030
-   linux_upgrade_from_02X
 
 
 .. toctree::
