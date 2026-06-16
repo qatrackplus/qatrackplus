@@ -176,6 +176,103 @@ timezones on Wikipedia
 <http://en.wikipedia.org/wiki/List_of_tz_database_time_zones>`_.
 
 
+.. _config:Localization & Language Settings:
+
+Localization & Language Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ supports Django's internationalization framework, so administrators
+can configure the default language for their installation and, optionally,
+allow users to switch between languages.
+
+
+LANGUAGE_CODE
+^^^^^^^^^^^^^
+
+Sets the default language used by the installation.  The built-in default is
+``'en-us'``.  To change it, add the following to your ``local_settings.py``:
+
+.. code-block:: python
+
+    LANGUAGE_CODE = 'fr'
+
+Common language codes include ``'fr'`` (French), ``'de'`` (German),
+``'es'`` (Spanish), and ``'pt-br'`` (Brazilian Portuguese).  Changing this
+setting will switch the default language as long as a translation for that
+language is available.  See `Django's documentation on language identifiers
+<https://docs.djangoproject.com/en/stable/topics/i18n/#term-language-code>`__
+for a full list of valid codes.
+
+
+LANGUAGES
+^^^^^^^^^
+
+If language switching is enabled (see below), the ``LANGUAGES`` setting
+controls which languages appear in the language-selector widget.  It takes a
+list of ``(language_code, language_name)`` tuples:
+
+.. code-block:: python
+
+    from django.utils.translation import gettext_lazy as _
+
+    LANGUAGES = [
+        ('en', _('English')),
+        ('fr', _('French')),
+    ]
+
+This setting is optional when only a single language will be used.
+
+
+LOCALE_PATHS
+^^^^^^^^^^^^
+
+Tells Django where to look for ``.po`` translation files.  This is typically
+only required when translation files are stored in a non-standard location.
+The standard location used by QATrack+ is already configured in the base
+settings, but you can override it in ``local_settings.py``:
+
+.. code-block:: python
+
+    import os
+    LOCALE_PATHS = [
+        os.path.join(BASE_DIR, 'qatrack', 'locale'),
+    ]
+
+
+Language Switching (Advanced / Optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default QATrack+ serves a single language.  If you want users to be able
+to select their preferred language at runtime, you need to enable Django's
+``LocaleMiddleware``.
+
+Add ``'django.middleware.locale.LocaleMiddleware'`` to the ``MIDDLEWARE``
+setting in ``local_settings.py``.  It must appear **after**
+``SessionMiddleware`` and **before** ``CommonMiddleware``:
+
+.. code-block:: python
+
+    MIDDLEWARE = [
+        ...
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.locale.LocaleMiddleware',   # <-- add here
+        'django.middleware.common.CommonMiddleware',
+        ...
+    ]
+
+For installations that also want language-prefixed URLs (e.g.
+``/fr/perform/``), additional ``i18n_patterns`` URL configuration is required.
+See the `Django i18n URL documentation
+<https://docs.djangoproject.com/en/stable/topics/i18n/translation/#language-prefix-in-url-patterns>`__
+for details.
+
+.. note::
+
+    Most QATrack+ installations serve a single language and do not need
+    ``LocaleMiddleware`` or ``i18n_patterns``.  Add this configuration only
+    when runtime language switching is explicitly required.
+
+
 Icon Settings
 ~~~~~~~~~~~~~
 

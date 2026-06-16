@@ -153,11 +153,118 @@ QATrack+.
 Internationalization & Translation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please mark all strings and templates in QATrack+ for translation. This will
-allow for QATrack+ to be made avaialable in multiple languages.  For discussion
-of how to mark templates and strings for translation please read the `Django
-docs on translation
-<https://docs.djangoproject.com/en/1.11/topics/i18n/translation/>`__.
+QATrack+ templates and Python code are already marked for translation using
+Django's standard internationalization framework.  Contributors can help by
+creating new language translations or improving existing ones.  For a full
+discussion of how Django handles translation please read the `Django docs on
+translation <https://docs.djangoproject.com/en/stable/topics/i18n/translation/>`__.
+
+
+Translation File Structure
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Locale (translation) files live under ``qatrack/locale/`` and follow the
+standard Django layout::
+
+    qatrack/locale/<language_code>/LC_MESSAGES/django.po
+    qatrack/locale/<language_code>/LC_MESSAGES/django.mo
+
+The project's ``LOCALE_PATHS`` setting tells Django to look in
+``qatrack/locale/`` for ``.po`` files, so new language directories should be
+created there.
+
+The ``qatrack/formats/`` directory contains locale-specific date/time format
+overrides.  The file ``qatrack/formats/en/formats.py`` is the reference
+implementation.  To add formats for a new locale, create a corresponding
+directory and ``formats.py`` file following the same pattern, for example
+``qatrack/formats/fr/formats.py``.
+
+
+Extracting Translatable Strings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Run the following command from the project root (the directory containing
+``manage.py``) to create or update the ``.po`` file for a language:
+
+.. code-block:: bash
+
+    django-admin makemessages -l <language_code> --ignore=venv --ignore=node_modules
+
+* Replace ``<language_code>`` with the target language code, e.g. ``fr``,
+  ``de``, or ``es``.
+* The ``-l`` flag specifies the language whose catalogue should be created or
+  updated.
+* The ``--ignore`` flag excludes directories (such as ``venv/`` or
+  ``node_modules/``) that should not be scanned for translatable strings.
+* The command must be run from the project root where ``manage.py`` resides so
+  that Django can discover all installed apps.
+
+
+Editing Translation Files
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A ``.po`` file is a plain-text catalogue of ``msgid``/``msgstr`` pairs:
+
+.. code-block:: po
+
+    # Translator comment
+    #: qatrack/qa/views.py:42
+    #, fuzzy
+    msgid "Test list"
+    msgstr ""
+
+* ``msgid`` is the original (English) string – **do not change this**.
+* ``msgstr`` is where you enter the translated text.
+* Lines beginning with ``#,`` carry flags; the ``fuzzy`` flag means Django will
+  not use the translation until the flag is removed after review.
+* Comments beginning with ``#:`` indicate where in the source the string
+  appears.
+
+Recommended editing tools include any plain-text editor, `Poedit
+<https://poedit.net/>`__, or similar GUI ``.po`` editors.
+
+**Pluralization** is handled with ``ngettext`` entries that include
+``msgid_plural`` and indexed ``msgstr[n]`` entries – preserve these carefully
+when translating.
+
+**Preserve all placeholders** such as ``%(variable)s`` or ``{variable}``
+exactly as they appear in ``msgid``.  Removing or misspelling a placeholder
+will cause a runtime error.
+
+
+Compiling and Testing Translations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After editing a ``.po`` file, compile it to a binary ``.mo`` file:
+
+.. code-block:: bash
+
+    django-admin compilemessages
+
+To test translations locally, temporarily set ``LANGUAGE_CODE`` in your
+``local_settings.py`` to the target language code:
+
+.. code-block:: python
+
+    LANGUAGE_CODE = 'fr'
+
+If ``LocaleMiddleware`` is enabled (see the *Localization & Language Settings*
+section of the deployment configuration docs) you can also
+test by setting your browser's preferred language and verifying that the
+correct strings appear in the UI.
+
+
+Submitting Translations
+^^^^^^^^^^^^^^^^^^^^^^^
+
+* Submit new or updated ``.po`` files via a pull request to the project
+  repository.
+* **Do not commit** ``.mo`` files – these are generated automatically during
+  deployment.
+* Partial translations are welcome; untranslated strings will fall back to
+  English.
+* For questions, see the "How can I help?" section of the project documentation
+  for contact information.
 
 
 Tool Tips And User Hints
