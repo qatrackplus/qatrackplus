@@ -102,18 +102,25 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.se = sl_utils.create_service_event()
 
     @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
-    def test_third_party_and_hours(self):
+    def test_hours_unique_together(self):
 
         se = sl_models.ServiceEvent.objects.first()
         tp = sl_utils.create_third_party()
 
-        h_01 = sl_utils.create_hours(service_event=se, third_party=tp, user=None)
+        sl_utils.create_hours(service_event=se, third_party=tp, user=None)
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 sl_models.Hours.objects.create(
                     service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1)
                 )
+
+    def test_third_party_and_hours(self):
+
+        se = sl_models.ServiceEvent.objects.first()
+        tp = sl_utils.create_third_party()
+
+        h_01 = sl_utils.create_hours(service_event=se, third_party=tp, user=None)
 
         u_02 = create_user(is_superuser=False, uname='user_02')
         h_02 = sl_utils.create_hours(service_event=se, user=u_02)
@@ -123,6 +130,24 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.assertEqual((u_02.__class__, u_02.id), (h_02.user_or_thirdparty().__class__, h_02.user_or_thirdparty().id))
 
     @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
+    def test_group_linkers_unique_together(self):
+
+        se = sl_models.ServiceEvent.objects.first()
+        g_01 = create_group()
+
+        gl_01 = sl_utils.create_group_linker(group=g_01)
+        gl_01_name = gl_01.name
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                sl_models.GroupLinker.objects.create(name=gl_01_name, group=g_01)
+
+        sl_utils.create_group_linker_instance(group_linker=gl_01, service_event=se)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                sl_models.GroupLinkerInstance.objects.create(group_linker=gl_01, service_event=se)
+
     def test_group_linkers(self):
 
         se = sl_models.ServiceEvent.objects.first()
@@ -132,17 +157,8 @@ class TestServiceEventAndRelated(TransactionTestCase):
         gl_01 = sl_utils.create_group_linker(group=g_01)
         gl_01_name = gl_01.name
 
-        with self.assertRaises(IntegrityError):
-            with transaction.atomic():
-                sl_models.GroupLinker.objects.create(name=gl_01_name, group=g_01)
-
         gl_02 = sl_utils.create_group_linker(group=g_02)
         sl_utils.create_group_linker_instance(group_linker=gl_01, service_event=se)
-
-        with self.assertRaises(IntegrityError):
-            with transaction.atomic():
-                sl_models.GroupLinkerInstance.objects.create(group_linker=gl_01, service_event=se)
-
         sl_utils.create_group_linker_instance(group_linker=gl_02, service_event=se)
 
         self.assertEqual(2, len(se.grouplinkerinstance_set.all()))

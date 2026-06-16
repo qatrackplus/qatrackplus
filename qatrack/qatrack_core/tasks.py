@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db import ProgrammingError, connection
+from django.db.models import Q
 from django.utils import timezone
 from django_q.models import Schedule
 from django_q.tasks import schedule
@@ -103,7 +104,6 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
             }
         )
     else:
-        from django.db.models import Q
         instances = model.objects.filter(
             Q(**{"%s__gte" % time_field: start_time_str}) |
             Q(**{"%s__lte" % time_field: end_time_str})
@@ -126,19 +126,19 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
                 target_start = start_today + timezone.timedelta(days=day_offset)
                 target_end = end_today + timezone.timedelta(days=day_offset)
 
-                occurences = getattr(instance, recurrence_field).between(target_start, target_end, inc=True)
+                occurrences = getattr(instance, recurrence_field).between(target_start, target_end, inc=True)
                 
                 logger.info(
-                    "Occurences for %s %s: %s (between %s & %s)" % (
+                    "Occurrences for %s %s: %s (between %s & %s)" % (
                         model._meta.model_name,
                         instance.id,
-                        occurences,
+                        occurrences,
                         target_start,
                         target_end,
                     )
                 )
 
-                if occurences:
+                if occurrences:
                     send_time = dt.replace(tzinfo=tz)
                     handler(instance, send_time)
                 
