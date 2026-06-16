@@ -688,20 +688,20 @@ class TestSerializeFormData(TestCase):
         g = Group.objects.create(name="group")
         data = {'groups': Group.objects.all()}
         serialized = forms.serialize_form_data(data)
-        assert json.loads(serialized) == {'groups': [g.pk]}
+        assert serialized == {'groups': [g.pk]}
 
     def test_object(self):
         """Model instance should be serialized as instace pk"""
         g = Group.objects.create(name="group")
         data = {'group': g}
         serialized = forms.serialize_form_data(data)
-        assert json.loads(serialized) == {'group': g.pk}
+        assert serialized == {'group': g.pk}
 
     def test_list(self):
         """iterable of objects without pk attribute should be returned as list"""
         data = {'list': ['a', 'b', 'c']}
         serialized = forms.serialize_form_data(data)
-        assert json.loads(serialized) == data
+        assert serialized == data
 
 
 class TestBaseReport(TestCase):

@@ -1,8 +1,10 @@
+import unittest
+
 from django.conf import settings
-from django.db import transaction
+from django.db import connection, transaction
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
-from django.test import TestCase, TransactionTestCase
+from django.test import TransactionTestCase
 from django.utils import timezone
 
 from qatrack.accounts.tests.utils import create_group, create_user
@@ -11,13 +13,14 @@ from qatrack.service_log import models as sl_models
 from qatrack.service_log.tests import utils as sl_utils
 
 
-class TestUnitServiceArea(TestCase):
+class TestUnitServiceArea(TransactionTestCase):
 
     def setUp(self):
 
         self.u = qa_utils.create_unit()
         self.sa = sl_utils.create_service_area()
 
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_unique_together(self):
 
         sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
@@ -31,7 +34,7 @@ class TestUnitServiceArea(TestCase):
         self.assertTrue(self.u.name in str(usa) and self.sa.name in str(usa))
 
 
-class TestServiceEventStatus(TestCase):
+class TestServiceEventStatus(TransactionTestCase):
 
     def setUp(self):
         self.ses = sl_utils.create_service_event_status()
@@ -73,8 +76,9 @@ class TestServiceEventStatus(TestCase):
         self.assertTrue(self.ses.name in str(self.ses))
 
 
-class TestThirdParty(TestCase):
+class TestThirdParty(TransactionTestCase):
 
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_unique_together(self):
 
         v_01 = qa_utils.create_vendor()
@@ -97,6 +101,7 @@ class TestServiceEventAndRelated(TransactionTestCase):
     def setUp(self):
         self.se = sl_utils.create_service_event()
 
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_third_party_and_hours(self):
 
         se = sl_models.ServiceEvent.objects.first()
@@ -117,6 +122,7 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.assertEqual((tp.__class__, tp.id), (h_01.user_or_thirdparty().__class__, h_01.user_or_thirdparty().id))
         self.assertEqual((u_02.__class__, u_02.id), (h_02.user_or_thirdparty().__class__, h_02.user_or_thirdparty().id))
 
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_group_linkers(self):
 
         se = sl_models.ServiceEvent.objects.first()

@@ -92,35 +92,54 @@ def run_periodic_scheduler(model, log_name, handler, time_field="time", recurren
     logger.info("Running %s task at %s for notices between %s and %s" % (log_name, now, start_time, end_time))
 
     # first narrow down notices to those supposed to run in this 15 minute block
-    instances = model.objects.filter(
-        **{
-            "%s__gte" % time_field: start_time.strftime("%H:%M"),
-            "%s__lte" % time_field: end_time.strftime("%H:%M"),
-        }
-    )
+    start_time_str = start_time.strftime("%H:%M")
+    end_time_str = end_time.strftime("%H:%M")
+
+    if start_time_str <= end_time_str:
+        instances = model.objects.filter(
+            **{
+                "%s__gte" % time_field: start_time_str,
+                "%s__lte" % time_field: end_time_str,
+            }
+        )
+    else:
+        from django.db.models import Q
+        instances = model.objects.filter(
+            Q(**{"%s__gte" % time_field: start_time_str}) |
+            Q(**{"%s__lte" % time_field: end_time_str})
+        )
 
     if settings.DEBUG:  # pragma: nocover
         instances = model.objects.all()
 
+    tz = ZoneInfo(settings.TIME_ZONE)
+
     # now look at recurrences occuring today and see if they should be sent now
     for instance in instances:
+        t = getattr(instance, time_field)
 
-        # since our recurrence can only occur with a maximum frequency of 1 /
-        # day, between will just return ~timezone.now() if the report is to be
-        # sent today.  If we make reports available at a higher frequency this
-        # check will need to be adjusted.
-        # note: inc=True required to catch daily recurrences
-        occurences = getattr(instance, recurrence_field).between(start_today, end_today, inc=True)
-        logger.info(
-            "Occurences for %s %s: %s (between %s & %s)" % (
-                model._meta.model_name,
-                instance.id,
-                occurences,
-                start_today,
-                end_today,
-            )
-        )
-        if occurences and start_time.time() <= getattr(instance, time_field) <= end_time.time():
-            tz = ZoneInfo(settings.TIME_ZONE)
-            send_time = timezone.datetime.combine(start_today, getattr(instance, time_field)).replace(tzinfo=tz)
-            handler(instance, send_time)
+        for day_offset in (0, 1):
+            target_date = start_today.date() + timezone.timedelta(days=day_offset)
+            dt = timezone.datetime.combine(target_date, t)
+
+            if start_time <= dt <= end_time:
+                target_start = start_today + timezone.timedelta(days=day_offset)
+                target_end = end_today + timezone.timedelta(days=day_offset)
+
+                occurences = getattr(instance, recurrence_field).between(target_start, target_end, inc=True)
+                
+                logger.info(
+                    "Occurences for %s %s: %s (between %s & %s)" % (
+                        model._meta.model_name,
+                        instance.id,
+                        occurences,
+                        target_start,
+                        target_end,
+                    )
+                )
+
+                if occurences:
+                    send_time = dt.replace(tzinfo=tz)
+                    handler(instance, send_time)
+                
+                break
