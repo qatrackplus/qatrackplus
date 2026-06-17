@@ -1,0 +1,17 @@
+{
+  "name": "qatrackplus-vue",
+  "version": "1.0.0",
+  "description": "Vue 3 integration for QATrack+",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.2.8"
+  }
+}

@@ -30,7 +30,7 @@
 
 {% block body %}
 
-<div class="max-width-lg">
+<div class="max-width-lg requires-legacy-faults">
   <div class="row">
     <div class="col-md-12">
       <div class="box">
@@ -41,7 +41,7 @@
             <div class="col-md-12">
 
                 <hr/>
-                <form id="review-form" action="{% url "fault_review" pk=fault.id %}" method="POST">
+                <form id="review-form" action="{% url 'fault_review' pk=fault.id %}" method="POST" hx-post="{% url 'fault_review' pk=fault.id %}" hx-target="body" hx-push-url="true">
                   {% csrf_token %}
                   {% include "_form_horizontal.html" with form=review_form %}
                   {% if perms.faults.delete_fault %}

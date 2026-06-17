@@ -1,3 +1,5 @@
+import json
+
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.contrib import messages
@@ -262,6 +264,19 @@ class CreateFault(PermissionRequiredMixin, CreateView):
         else:
             context_data['se_statuses'] = {}
 
+        context_data['se_statuses_json'] = json.dumps(context_data['se_statuses'])
+        units_choices = [{'id': str(k), 'text': str(v)} for k, v in context_data['form'].fields['unit'].choices]
+        context_data['units_json'] = json.dumps(units_choices)
+        
+        modality_choices = [{'id': str(k), 'text': str(v)} for k, v in context_data['form'].fields['modality'].choices]
+        context_data['modalities_json'] = json.dumps(modality_choices)
+        
+        context_data['fault_json'] = 'null'
+        if context_data['form'].errors:
+            context_data['form_errors_json'] = context_data['form'].errors.as_json()
+        else:
+            context_data['form_errors_json'] = '{}'
+
         frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
         context_data['review_forms'] = []
         for idx, frg in enumerate(frgs):
@@ -269,6 +284,21 @@ class CreateFault(PermissionRequiredMixin, CreateView):
             data = self.request.POST if self.request.method == "POST" else None
             frg_form = forms.InlineReviewForm(data, fault_review_group=frg, prefix=prefix)
             context_data['review_forms'].append(frg_form)
+            
+        review_errors = {f.prefix: f.errors.get_json_data() for f in context_data['review_forms'] if f.errors}
+        context_data['review_errors_json'] = json.dumps(review_errors)
+        
+        review_forms_data = []
+        for f in context_data['review_forms']:
+            review_forms_data.append({
+                'prefix': f.prefix,
+                'group_name': f.fields['group'].initial,
+                'required': f.fields['reviewed_by'].required,
+                'users': [{'id': u.id, 'name': u.get_full_name() or u.username} for u in f.fields['reviewed_by'].queryset],
+                'selected': f.data.get(f.prefix + '-reviewed_by') if f.is_bound else f.initial.get('reviewed_by')
+            })
+        context_data['review_forms_json'] = json.dumps(review_forms_data)
+        
         return context_data
 
 
@@ -339,6 +369,29 @@ class EditFault(PermissionRequiredMixin, UpdateView):
                 se.id: se.service_status.id for se in self.object.related_service_events.all()
             }
 
+        context_data['se_statuses_json'] = json.dumps(context_data['se_statuses'])
+        units_choices = [{'id': str(k), 'text': str(v)} for k, v in context_data['form'].fields['unit'].choices]
+        context_data['units_json'] = json.dumps(units_choices)
+        
+        modality_choices = [{'id': str(k), 'text': str(v)} for k, v in context_data['form'].fields['modality'].choices]
+        context_data['modalities_json'] = json.dumps(modality_choices)
+        
+        fault_json = {
+            'id': self.object.id,
+            'unit': self.object.unit_id if self.object.unit else None,
+            'modality': self.object.modality_id if self.object.modality else None,
+            'occurred': self.object.occurred.isoformat() if self.object.occurred else None,
+            'fault_types': [ft.code for ft in self.object.fault_types.all()],
+            'related_service_events': [se.id for se in self.object.related_service_events.all()],
+            'attachments': [{'id': a.id, 'name': a.label, 'url': a.attachment.url} for a in self.object.attachment_set.all()]
+        }
+        context_data['fault_json'] = json.dumps(fault_json)
+        
+        if context_data['form'].errors:
+            context_data['form_errors_json'] = context_data['form'].errors.as_json()
+        else:
+            context_data['form_errors_json'] = '{}'
+
         frgs = models.FaultReviewGroup.objects.order_by("-required", "group__name")
 
         # if there are existing reviews we will use those to populate the initial data
@@ -354,6 +407,20 @@ class EditFault(PermissionRequiredMixin, UpdateView):
             frg_form = forms.InlineReviewForm(data, instance=instance, fault_review_group=frg, prefix=prefix)
             context_data['review_forms'].append(frg_form)
 
+        review_errors = {f.prefix: f.errors.get_json_data() for f in context_data['review_forms'] if f.errors}
+        context_data['review_errors_json'] = json.dumps(review_errors)
+        
+        review_forms_data = []
+        for f in context_data['review_forms']:
+            review_forms_data.append({
+                'prefix': f.prefix,
+                'group_name': f.fields['group'].initial,
+                'required': f.fields['reviewed_by'].required,
+                'users': [{'id': u.id, 'name': u.get_full_name() or u.username} for u in f.fields['reviewed_by'].queryset],
+                'selected': f.data.get(f.prefix + '-reviewed_by') if f.is_bound else (f.initial.get('reviewed_by').id if hasattr(f.initial.get('reviewed_by'), 'id') else f.initial.get('reviewed_by'))
+            })
+        context_data['review_forms_json'] = json.dumps(review_forms_data)
+        
         return context_data
 
 

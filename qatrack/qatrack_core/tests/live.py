@@ -52,7 +52,7 @@ def WebElement_click(self):
     later versions of webdrivers that won't click on an element if it
     is not in view
     """
-    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    self.parent.execute_script("arguments[0].scrollIntoView({block: 'center'});", self)
     return self._execute(Command.CLICK_ELEMENT)
 
 
@@ -64,7 +64,7 @@ orig_send_keys = WebElement.send_keys
 @retry_if_exception(WebDriverException, 5, sleep_time=1)  # noqa: E302
 def WebElement_send_keys(self, keys):
     """Monky patch send_keys to ensure element is in view"""
-    self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    self.parent.execute_script("arguments[0].scrollIntoView({block: 'center'});", self)
     return orig_send_keys(self, keys)
 
 
@@ -201,7 +201,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         try:
             actions.perform()
             self.driver.find_element(By.CSS_SELECTOR, "body").click()
-            self.driver.execute_script("window.scrollTo(0, -200);")
+            self.driver.execute_script("window.scrollBy(0, -200);")
         except:  # noqa: E722
             pass
 
@@ -213,7 +213,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         time.sleep(1)
         try:
             actions.perform()
-            self.driver.execute_script("window.scrollTo(0, -200);")
+            self.driver.execute_script("window.scrollBy(0, -200);")
         except:  # noqa: E722
             pass
 

@@ -20,10 +20,11 @@
   {% autoescape off %}
     {% listable view_name dom="<'row'<'col-sm-5'i><'col-sm-7'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'><'col-sm-7'p>>" requirejs=True pagination_type='bootstrap3' css_table_class='table-hover table-condensed table-custom-listable' css_input_class='btn-flat btn-sm input-sm full-width' auto_width=False %}
   {% endautoescape %}
+  <script type="module" src="{% static 'dist/faults.js' %}"></script>
 {% endblock %}
 
 {% block require_javascript %}
-  require(['listable'{% if bulk_review %}, 'faultsbulkreview'{% endif %}]);
+  require(['listable']);
 {% endblock require_javascript %}
 
 {% block body %}
@@ -41,21 +42,8 @@
 
         {% if perms.faults.can_review and bulk_review %}
           <div class="row pad"></div>
-          <div class="row">
-            <div class="col-sm-12">
-
-              <button id="submit-review"
-                      type="button"
-                      class="btn btn-primary btn-flat pull-right margin-r-5"
-                      title="{% trans "Click to update the review status of the selected faults" %}"
-                      data-toggle="modal"
-                      data-target="#bulk-review-modal"
-
-              >
-                <i class="fa fa-save"></i>
-                {% trans "Acknowledge Selected Faults" %}
-              </button>
-            </div>
+          <div id="bulk-review-app">
+             <div class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading Bulk Review...</div>
           </div>
         {% endif %}
       </div>
@@ -63,44 +51,5 @@
   </div>
 </div>
 
-{% if bulk_review %}
-<div id="bulk-review-modal" class="modal fade" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">{% trans "Confirm Bulk Review" %}</h4>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-sm-12">
-            <p>{% trans "You are about to update the review status for all the following faults" %}</p>
-            <form class="form">
-              <div class="form-group">
-                <table id="instance-summary" class="table table-bordered table-striped table-condensed fixed">
-                  <thead>
-                    <tr>
-                      <th>{% trans "Fault" %}</th>
-                      <th>{% trans "Unit" %}</th>
-                      <th>{% trans "# of Faults" %}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
-              <p id="bulk-review-msg"></p>
-            </form>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Cancel" %}</button>
-        <a id="confirm-update" type="button" class="btn btn-primary">{% trans "Confirm" %}</a>
-        {% csrf_token %}
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
+
 {% endblock body %}
