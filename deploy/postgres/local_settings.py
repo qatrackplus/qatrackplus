@@ -4,24 +4,27 @@ DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'qatrackplus31',
+        'NAME': 'qatrackplus40',
         'USER': 'qatrack',
         'PASSWORD': 'qatrackpass',
-        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
+        'HOST': '127.0.0.1',  # Set to 127.0.0.1 for localhost. Not used with sqlite3.
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     },
     'readonly': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'qatrackplus31',
+        'NAME': 'qatrackplus40',
         'USER': 'qatrack_reports',
         'PASSWORD': 'qatrackpass',
-        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
+        'HOST': '127.0.0.1',  # Set to 127.0.0.1 for localhost. Not used with sqlite3.
         'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
 # Change XX.XXX.XXX.XX to your servers IP address and/or host name e.g. ALLOWED_HOSTS = ['54.123.45.1', 'yourhostname']
 ALLOWED_HOSTS = ['XX.XXX.XXX.XX']
+
+# CSRF_TRUSTED_ORIGINS is required for Django 4.0+. It must include the scheme (http/https).
+CSRF_TRUSTED_ORIGINS = ['http://XX.XXX.XXX.XX', 'https://XX.XXX.XXX.XX']
 
 # Set to False to disable the SQL Query Tool
 USE_SQL_REPORTS =  True

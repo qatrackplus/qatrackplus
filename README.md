@@ -1,83 +1,64 @@
-# Important Notice
+# Welcome
 
-We are looking for contributors, especially those interested in helping with localization and translation. 
-Community discussion is available both on GitHub via [Discussions](https://github.com/qatrackplus/qatrackplus/discussions) 
-and on [Google Groups](https://groups.google.com/g/qatrack). The project also needs users open to 
-testing upgrade instructions on a copy of their production data. 
+I would like to welcome you to the QATrack+ main repository. Here I feel I need to start with a personal message. I am attempting to revitalize both the project and the community in a way that balances the user and the developer. Everyone should *feel* welcome. Everyone should ***be*** welcome. I am not perfect and maintaining this project is an honour that I do not have all the skills to match. Please grant me the grace to make mistakes, and, for all here, assume comments come from a good place. There are many here who have only contributed to one FOSS project, there are many for which this might be their only exposure to open source at all. This project is coded in English, and used across at least a dozen nations for which English is not their primary language. Please try to assume all interactions start from a place of respect and a desire to help.
 
-# QATrack+
+To start, I would like to specifically point out two changes as we move this project forward.
 
-###### Copyright 2012 The Ottawa Hospital Cancer Center
+- Licensing: starting with version 4.0, this project will switch to [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) ([Wiki](https://en.wikipedia.org/wiki/Apache_License)), aligning with many of the tools QATrack+ relies on. Until then, the current license remains MIT. The license holder remains with the Ottawa Cancer Center. This change will have no impact on deployments or contributors.
+- Releases: The future goal for this project will be for 1 release per year. Django releases Long-Term-Service (LTS) versions approximately every 2 years, so QATrack will attempt to release a matching X.0 release within 6-9 months following the X.2 Django LTS release. This will be followed, about a year later with a feature release (X.1) with additional work that could not be tested in time for the X.0 Release. You should not feel that you have to upgrade to every release, your site will have its own pressures and needs. This project will attempt to support `X.Y -> (X + 3).0` upgrade paths going forward.
 
----
+With all respect, please grant me as much patience as you can. I welcome all the help you wish to give.
 
-QATrack+ is a fully configurable, free, and open source (Apache License 2.0) web
-application for managing QA data for radiation therapy and medical imaging
-equipment. QATrack+ is now used in many hospitals and clinics [around the
-world](http://qatrackplus.com/#whos-using)! Visit the QATrack+ homepage at
-http://qatrackplus.com
+@crcrewso.
 
-QATrack+ is deployable on most operating system/server/database platform
-combinations. It was developed in the popular Python programming language using
-the Django web framework so that QC data may be entered, reviewed, and analyzed
-using a web browser.
+## What QATrack+ is
 
-The main features include:
+QATrack+ is a tool, used for tracking activities common within equipment maintenance at Radiation Therapy facilities. This, at present, includes QA/QC and Break-Fix/Preventative Maintenance activities. The goal is for this to be a full Quality Management solution for a Radiation Therapy facility.
 
-- Ability to define QC tests via an user-friendly interface. Configuration
-  settings are available for data type (Boolean, float, computational result,
-  or multiple choice selection), test frequency (due/past due dates), reference
-  values, and tolerance and action levels. Test configurations can be grouped
-  and assigned to multiple units/devices to reduce configuration workload, and
-  to simplify the configuration maintenance.
-- Several options for trending numerical data via control charts and other
-  tools. Data can be filtered by unit, date, or frequency, and can also be
-  exported for external analysis.
-- Support for multiple, unique user groups (e.g. administrators, physicists,
-  assistants, therapists, etc) with user & group-specific privileges and test
-  lists, as well as a configurable user authentication system.
-- Easily integrate test procedures into data entry forms via embedded html
-  or links to external documentation.
-- Save incomplete work and complete it a later date.
-- Configure a review/approval process with additional options for
-  classifying data. The software also allows reviewers to easily differentiate
-  between measurements performed as part of investigative work, or as part of
-  routine QC testing.
-- Integrated Service Log for tracking service events and machine downtime
-- Parts tracker for tracking spare parts on hand, part costs and vendors
-- Optional and configurable email notifications.
-- The flexibility to host on an intranet or www, requiring minimal resources
-  from IT departments. Can optionally be managed within a physics department if
-  permitted by local institution policies.
+This is a Free and Open Source (FOSS) project. The goal is to provide a tool for quality management that any site can rely upon, without being tied to a single vendor or deployment solution. This is a Django (web framework) based tool, that needs to be reliable, and approachable.
 
-## Documentation & Release Notes
+### Where do I go
 
-The latest version is 4.0.0 Please review the
-[release_notes](https://docs.qatrackplus.com/en/stable/release_notes.html)
-before installing or upgrading.
+- Main deployment and developer documentation can be found on the [Read-The_Docs site](https://docs.qatrackplus.com/en/stable/).
+- Community support is available either via [GitHub Discussions](https://github.com/qatrackplus/qatrackplus/discussions) or [Google Groups](https://groups.google.com/g/qatrack)
+- FAQ's, community guides for unsupported solutions, rules, and other developer focused information can be found on the [project wiki](https://github.com/qatrackplus/qatrackplus/wiki) currently a work in progress.
+- Email - for inquiries not covered within the scope of the above tools, please email [medphys@crcrewso.ca](mailto:medphys@crcrewso.ca)
+- Here are the links for the [main website](http://qatrackplus.com) and the [list of users around the world](http://qatrackplus.com/#whos-using). If you would like to be listed, please email us.
 
-The [documentation for versions 0.3.0+ can be found online](http://docs.qatrackplus.com)
-and is where you should start if you are interested in installing or helping
-develop QATrack+.
+### In-Scope
 
-Documentation for earlier versions of QATrack+ (v0.2.7-v0.2.9) can be found in
-the [QATrack+ Wiki on BitBucket](https://bitbucket.org/tohccmedphys/qatrackplus/wiki/Home).
+- A limited, well tested number of installation environments
+- Upgrade instructions and upgrade paths
+- Friendly Documentation
+- A place to share community created solutions.
 
----
+### Out-of-Scope
 
-## Important notes regarding 3rd party code in QATrack+
+- Security Model - QATrack+ is designed to be an intranet solution, and should therefore not be directly open to the world wide web.
+- Backup - Maintaining day-to-day backups should be handled by best practices of the deployment and the tools available to the site.
+- Supporting community solutions - Limited developer resources means that while we will endeavor to support as much as possible, we do not have access to recreate all issues, and thus cannot test
 
-QATrack+ relies on a number of open source projects, many of which are
-distributed along with QATrack+; licenses covering their usage and modification
-are either included along with the source code files or embeded directly in the
-source (or a url where you can find it).
+## AI
 
-## Tasks
+The world of FOSS has been radically changed by AI in recent years. I'll borrow from the YouTuber [Alberta Tech](https://www.youtube.com/watch?v=PbsocBPkoUc) for some of the language here. Vibe Coding in common use has two distinct meanings, that need to be split out. Agentic AI is where a developer understands a significant portion of what they're trying to accomplish, and relies on tools such as GitHub Copilot, Claude Code, or similar tools. Vibe Coding as originally defined is where someone who only uses prompts, without trying to understand the code at any level. Agentic AI is welcome, it is a collection of tools that many programmers, this maintainer included, have come to rely upon to create time. Unfortunately this project does not have the resources to support code put forward without significant human review. This might change in the future, but for now, please, any contributions need to be understood by the contributor and understandable by the maintainers.
 
-TODO: Deprecation Check `python -Wd manage.py check`
-TODO: Detail branches 
+## Funding and Contributions
 
-## Deployment Note: Vite Built Assets
+FOSS projects need backing, and this project is no exception. Up to this point significant sources of project funding have come from The Ottawa Hospital Cancer Centre and the Canadian Nuclear Safety Commission, with a long list of contributors that will be added to this section in short order. Currently the CNSC has provided a grant for helping finalize the localization work, and support Canadian Cancer Centers in upgrading their installations. Over this next year I will be keeping track of nice to have and need to have budgets to keep this project sustainable without relying on a single person. If you would like to support this project, please reach out.
 
-The directory `qatrack/qatrack_core/static/dist/` is force-included in `.gitignore` because Django templates directly load the built Vite artifact (`dist/faults.js`). We intentionally commit the built files so that users deploying QATrack+ do not need to install Node.js and run `npm run build` during deployment.
-If you make changes to the Vue components or Vite configuration, you must run `npm run build` from the `qatrack/faults/static/faults/src/` directory and commit the updated `dist/` files.
+If you would like past contributions to be recognized, please [email](mailto:medphys@crcrewso.ca) We want to acknowledge all contributors, large and small, this includes direct funding, and employer sponsored time.
+
+I would like to specifically call out @randlet for their long history of supporting this project.
+
+<!-- 
+### Contributions in kind
+
+This list is unpublished until each member is verified as wanting to be listed, and the list includes a significant % of total contributors
+
+[The Ottawa Hospital Cancer Centre](https://www.ottawahospital.on.ca/en/clinical-services/deptpgrmcs/programs/cancer-program/what-we-offer-our-programs-and-services/radiation-therapy-program/) started this whole project and made sure it was available to an entire international community
+
+[BC Cancer](https://www.bccancer.bc.ca/about/who-we-are) allowing @nsmale contributions to be shared by this community. 
+
+[The Saskatchewan Cancer Agency](https://saskcancer.ca/about-us/who-we-are) funding @ets1199 work implementing localization. 
+
+-->
