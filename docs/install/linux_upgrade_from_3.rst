@@ -13,6 +13,11 @@ Upgrading an existing Linux v3.X.Y installation to v4.0.0
 This guide will walk you through upgrading your existing v3.X.Y installation to
 v4.0.0.
 
+.. warning::
+
+    These upgrade steps should be done using a regular user account. They will not
+    work if you are currently logged in as 'root'.
+
 .. contents::
     :local:
     :depth: 2
@@ -37,8 +42,13 @@ upgrade. Generate a backup file for your database
     # postgres
     sudo -u postgres pg_dump -d qatrackplus > backup-3.1.0-$(date -I).sql 
 
-    # or for MySQL
-    mysqldump --user qatrack --password=qatrackpass qatrackplus > backup-3.1.0-$(date -I).sql 
+.. dropdown:: For MySQL: Backup Database
+    :color: warning
+
+    .. code-block:: bash
+
+        # or for MySQL
+        mysqldump --user qatrack --password=qatrackpass qatrackplus > backup-3.1.0-$(date -I).sql 
 
 Backing up your Media folder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +121,7 @@ Then, create your new virtual environment and activate it:
 .. code-block:: bash
 
     cd ~/web/qatrackplus
-    uv venv --prompt qatrackplus .venv
+    uv venv --python 3.12 --prompt qatrackplus .venv
     source .venv/bin/activate
 
 Your command prompt should now be prefixed with `(qatrackplus)`.
@@ -124,12 +134,15 @@ We will now install all the libraries required for QATrack+ with PostgresSQL
     cd ~/web/qatrackplus
     uv sync --extra postgres
 
-or for MySQL:
+.. dropdown:: For MySQL: Install Requirements
+    :color: warning
 
-.. code-block:: bash
+    or for MySQL:
 
-    cd ~/web/qatrackplus
-    uv sync --extra mysql
+    .. code-block:: bash
+
+        cd ~/web/qatrackplus
+        uv sync --extra mysql
 
 
 Performing the migration
@@ -167,8 +180,8 @@ Now we can generate our new Nginx and Supervisor configurations:
     cd ~/web/qatrackplus
     source .venv/bin/activate
     make supervisor.conf
-    make nginx.conf
     sudo rm -f /etc/nginx/sites-enabled/default
+    make nginx.conf
 
 Finally we need to reload Supervisor and restart Nginx:
 

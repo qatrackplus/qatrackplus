@@ -35,9 +35,11 @@ occuring before proceeding with the next step!  You can seek help on the on the
 Prerequisites
 -------------
 
-These install steps should be done using a regular user account.  They will not
-work if you are currently logged in as 'root'.  If you have don't have a
-regular user account you should set one up before continuing.
+.. warning::
+
+    These install steps should be done using a regular user account. They will not
+    work if you are currently logged in as 'root'. If you don't have a
+    regular user account, you should set one up before continuing.
 
 Make sure your existing packages are up to date:
 
@@ -157,43 +159,45 @@ and restart the pg server:
     sudo service postgresql restart
 
 
-Installing MySQL (only required if you prefer to use MySQL over Postgres)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. dropdown:: For MySQL: Install & Configure Database
+    :color: warning
 
-.. code-block:: bash
+    **Installing MySQL (only required if you prefer to use MySQL over Postgres)**
 
-    sudo apt-get install mysql-server libmysqlclient-dev
+    .. code-block:: bash
 
-.. note::
+        sudo apt-get install mysql-server libmysqlclient-dev
 
-    You should use the InnoDB storage engine for MySQL.  If you are using MySQL
-    >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
-    5.5.5 you need to set the default storage engine to InnoDB:
-    https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
+    .. note::
 
-
-Now we can create and configure a user (db name/user/pwd =
-qatrackplus40/qatrack/qatrackpass) and database for QATrack+:
-
-.. code-block:: bash
-
-    # if you set a password during mysql install
-    sudo mysql -u root -p < deploy/mysql/create_db_and_role.sql
-
-    # if you didn't
-    sudo mysql < deploy/mysql/create_db_and_role.sql
+        You should use the InnoDB storage engine for MySQL.  If you are using MySQL
+        >= 5.5.5 then it uses InnoDB by default, otherwise if you are using MySQL <
+        5.5.5 you need to set the default storage engine to InnoDB:
+        https://dev.mysql.com/doc/refman/5.5/en/storage-engine-setting.html
 
 
-And then create a readonly user for the SQL query tool:
+    Now we can create and configure a user (db name/user/pwd =
+    qatrackplus40/qatrack/qatrackpass) and database for QATrack+:
+
+    .. code-block:: bash
+
+        # if you set a password during mysql install
+        sudo mysql -u root -p < deploy/mysql/create_db_and_role.sql
+
+        # if you didn't
+        sudo mysql < deploy/mysql/create_db_and_role.sql
 
 
-.. code-block:: bash
+    And then create a readonly user for the SQL query tool:
 
-    # if you  set a password during mysql install
-    sudo mysql -u root -p < deploy/mysql/create_ro_role.sql
 
-    # if you didn't
-    sudo mysql < deploy/mysql/create_ro_role.sql
+    .. code-block:: bash
+
+        # if you  set a password during mysql install
+        sudo mysql -u root -p < deploy/mysql/create_ro_role.sql
+
+        # if you didn't
+        sudo mysql < deploy/mysql/create_ro_role.sql
 
 
 Setting up our Python environment (including virtualenv)
@@ -227,7 +231,7 @@ Creating our virtual environment
 .. code-block:: bash
 
     cd ~/web/qatrackplus
-    uv venv --prompt qatrackplus .venv
+    uv venv --python 3.12 --prompt qatrackplus .venv
 
 
 Anytime you open a new terminal/shell to work with your QATrack+ installation
@@ -247,12 +251,15 @@ We will now install all the libraries required for QATrack+ with PostgresSQL
     cd ~/web/qatrackplus
     uv sync --extra postgres
 
-or for MySQL:
+.. dropdown:: For MySQL: Install Requirements
+    :color: warning
 
-.. code-block:: bash
+    or for MySQL:
 
-    cd ~/web/qatrackplus
-    uv sync --extra mysql
+    .. code-block:: bash
+
+        cd ~/web/qatrackplus
+        uv sync --extra mysql
 
 
 Making sure everything is working up to this point
@@ -291,8 +298,13 @@ Create your `local_settings.py` file by copying the example from `deploy/{postgr
     # postgres
     cp deploy/postgres/local_settings.py qatrack/local_settings.py
 
-    # mysql
-    cp deploy/mysql/local_settings.py qatrack/local_settings.py
+.. dropdown:: For MySQL: Copy Settings File
+    :color: warning
+
+    .. code-block:: bash
+
+        # mysql
+        cp deploy/mysql/local_settings.py qatrack/local_settings.py
 
 
 then open the file in a text editor.  There are many available settings and
@@ -370,13 +382,18 @@ follows:
     # PostgreSQL
     sudo -u postgres psql < deploy/postgres/grant_ro_rights.sql
 
-    # or MySQL if you set a password during install
-    sudo mysql -u root -p -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql -u root -p --database qatrackplus40 < grant_ro_privileges.sql
+.. dropdown:: For MySQL: Grant Read-Only Privileges
+    :color: warning
 
-    # or MySQL if you did not set a password during install
-    sudo mysql -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-    sudo mysql --database qatrackplus40 < grant_ro_privileges.sql
+    .. code-block:: bash
+
+        # or MySQL if you set a password during install
+        sudo mysql -u root -p -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
+        sudo mysql -u root -p --database qatrackplus40 < grant_ro_privileges.sql
+
+        # or MySQL if you did not set a password during install
+        sudo mysql -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
+        sudo mysql --database qatrackplus40 < grant_ro_privileges.sql
 
 
 You also need to create a super user so you can login and begin configuring
@@ -447,6 +464,7 @@ which should result in output like:
 .. code-block:: bash
 
     django-q2                        RUNNING   pid 15860, uptime 0:00:05
+    gunicorn                         RUNNING   pid 1332294, uptime 0:00:10
 
 
 If supervisor does not show `RUNNING` you can check the error log which 
@@ -482,8 +500,8 @@ file:
 
 .. code-block:: bash
 
-    make nginx.conf
     sudo rm -f /etc/nginx/sites-enabled/default
+    make nginx.conf
 
 and finally restart Nginx:
 
