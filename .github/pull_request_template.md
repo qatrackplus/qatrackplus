@@ -1,4 +1,4 @@
-<!-- Proposed template-->
+# Pull Request Template
 
 ## Summary
 
