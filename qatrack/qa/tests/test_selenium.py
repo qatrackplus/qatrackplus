@@ -778,6 +778,8 @@ class TestPerformQC(BaseQATests):
         time.sleep(0.3)
         self.click_by_css_selector(".today")
         time.sleep(0.2)
+        self.driver.execute_script("document.querySelector('#id_datetime_service')._flatpickr.close()")
+        time.sleep(0.2)
         self.select_by_index("id_service_area_field_fake", 1)
         time.sleep(0.2)
         self.select_by_index("id_service_type", 1)
@@ -785,6 +787,7 @@ class TestPerformQC(BaseQATests):
         self.click("save-se")
         time.sleep(0.2)
         assert models.TestListInstance.objects.first().serviceevents_initiated.count() == 1
+
 
     def test_autosave(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""

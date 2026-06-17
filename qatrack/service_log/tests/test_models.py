@@ -20,7 +20,6 @@ class TestUnitServiceArea(TransactionTestCase):
         self.u = qa_utils.create_unit()
         self.sa = sl_utils.create_service_area()
 
-    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_unique_together(self):
 
         sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
@@ -78,7 +77,6 @@ class TestServiceEventStatus(TransactionTestCase):
 
 class TestThirdParty(TransactionTestCase):
 
-    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_unique_together(self):
 
         v_01 = qa_utils.create_vendor()
@@ -129,10 +127,8 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.assertEqual((tp.__class__, tp.id), (h_01.user_or_thirdparty().__class__, h_01.user_or_thirdparty().id))
         self.assertEqual((u_02.__class__, u_02.id), (h_02.user_or_thirdparty().__class__, h_02.user_or_thirdparty().id))
 
-    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
-    def test_group_linkers_unique_together(self):
+    def test_group_linkers_unique_together_linker(self):
 
-        se = sl_models.ServiceEvent.objects.first()
         g_01 = create_group()
 
         gl_01 = sl_utils.create_group_linker(group=g_01)
@@ -141,6 +137,12 @@ class TestServiceEventAndRelated(TransactionTestCase):
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 sl_models.GroupLinker.objects.create(name=gl_01_name, group=g_01)
+
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
+    def test_group_linkers_unique_together_instance(self):
+
+        se = sl_models.ServiceEvent.objects.first()
+        gl_01 = sl_utils.create_group_linker()
 
         sl_utils.create_group_linker_instance(group_linker=gl_01, service_event=se)
 

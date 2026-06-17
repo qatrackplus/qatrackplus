@@ -6,7 +6,14 @@ from qatrack.service_log import models
 
 
 def update_last_instances(service_event):
-    schedule = service_event.service_event_schedule
+    try:
+        schedule = service_event.service_event_schedule
+    except models.ServiceEventSchedule.DoesNotExist:
+        # this will occur when a ServiceEventSchedule deletion cascades and
+        # deletes all service_events_associated with it.
+        # in that case it doesn't make sense to try to update anything
+        return
+
     if not schedule:
         return
 
@@ -14,11 +21,6 @@ def update_last_instances(service_event):
         last_instance = models.ServiceEvent.objects.filter(service_event_schedule=schedule).latest("datetime_service")
     except models.ServiceEvent.DoesNotExist:
         last_instance = None
-    except models.ServiceEventSchedule.DoesNotExist:
-        # this will occur when a ServiceEventSchedule deletion cascades and
-        # deletes all service_events_associated with it.
-        # in that case it doesn't make sense to try to update anything
-        return
 
     schedule.last_instance = last_instance
     due_date = schedule.calc_due_date()
