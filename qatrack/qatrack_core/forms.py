@@ -66,8 +66,13 @@ class Fieldsets:
         return self._dict[key]
 
     def __getattr__(self, name):
-        if name in self._dict:
-            return self._dict[name]
+        try:
+            _dict = object.__getattribute__(self, "_dict")
+        except AttributeError:
+            raise AttributeError(f"No fieldset named '{name}'")
+            
+        if name in _dict:
+            return _dict[name]
         raise AttributeError(f"No fieldset named '{name}'")
 
 

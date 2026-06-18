@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "Vue 3 integration for QATrack+",
   "scripts": {
-    "dev": "vite build --watch",
+    "dev": "vite",
     "build": "vite build"
   },
   "dependencies": {
-    "axios": "^1.6.8",
-    "vue": "^3.4.21"
+    "axios": "^1.17.0",
+    "vue": "^3.5.35"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.8"
+    "@vitejs/plugin-vue": "^6.0.7",
+    "vite": "^8.0.16"
   }
 }

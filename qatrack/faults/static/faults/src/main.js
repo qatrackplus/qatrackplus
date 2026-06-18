@@ -2,26 +2,29 @@ import { createApp } from 'vue';
 
 import FaultForm from './components/FaultForm.vue';
 import UnreviewedFaultList from './components/UnreviewedFaultList.vue';
-// import FaultReviewButton from './components/FaultReviewButton.vue';
+
+const mountedApps = new Map();
 
 const initVueApps = () => {
-  const faultFormEl = document.getElementById('fault-form-app');
-  if (faultFormEl) {
-    const app = createApp(FaultForm);
-    app.mount(faultFormEl);
-  }
+  const mountApp = (id, Component) => {
+    const el = document.getElementById(id);
+    
+    // If we previously mounted an app here, unmount it first to prevent leaks
+    if (mountedApps.has(id)) {
+      mountedApps.get(id).unmount();
+      mountedApps.delete(id);
+    }
+    
+    // If the target element exists in the new DOM, create and mount the new app
+    if (el) {
+      const app = createApp(Component);
+      app.mount(el);
+      mountedApps.set(id, app);
+    }
+  };
 
-  const bulkReviewEl = document.getElementById('bulk-review-app');
-  if (bulkReviewEl) {
-    const app = createApp(UnreviewedFaultList);
-    app.mount(bulkReviewEl);
-  }
-
-  const faultReviewEl = document.getElementById('fault-review-app');
-  if (faultReviewEl) {
-    // const app = createApp(FaultReviewButton);
-    // app.mount(faultReviewEl);
-  }
+  mountApp('fault-form-app', FaultForm);
+  mountApp('bulk-review-app', UnreviewedFaultList);
 };
 
 // Initialize on page load

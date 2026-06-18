@@ -42,18 +42,36 @@ const props = defineProps({
   error: String
 });
 
+const emit = defineEmits(['se-status-updated']);
+
 const selected = ref([]);
 const searchQuery = ref('');
 const results = ref([]);
 const showDropdown = ref(false);
 let searchTimeout = null;
 
+const isLightColor = (color) => {
+  if (!color) return false;
+  let hex = color.replace('#', '');
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('');
+  }
+  if (hex.length !== 6) return false;
+
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return yiq >= 128;
+};
+
 const getBadgeStyle = (statusId) => {
   const color = (window.status_colours_dict && window.status_colours_dict[statusId]) || '#777';
   return {
     backgroundColor: color,
     borderColor: color,
-    color: '#fff' // Simplification: assume white text is ok, or implement isTooBright logic
+    color: isLightColor(color) ? '#000' : '#fff'
   };
 };
 
@@ -84,14 +102,14 @@ const populateInitial = () => {
   if (!props.initialServiceEvents) return;
   const seStatuses = window.se_statuses || {};
   for (const seId of props.initialServiceEvents) {
-    if (!selected.value.find(s => s.id == seId)) {
+    if (!selected.value.find(s => String(s.id) === String(seId))) {
       selected.value.push({
-        id: seId,
-        text: seId,
+        id: String(seId),
+        text: String(seId),
         date: '',
         title: '',
         status: '',
-        status_id: seStatuses[seId]
+        status_id: seStatuses[String(seId)] || seStatuses[Number(seId)]
       });
     }
   }
@@ -107,7 +125,7 @@ const search = async () => {
   showDropdown.value = true;
   try {
     const url = (window.QAURLs && window.QAURLs.SE_SEARCHER) || '/service_log/se_searcher/';
-    const res = await axios.get(url, { params: { q: searchQuery.value, page: 1, unit_id: props.unitId } });
+    const res = await axios.get(url, { params: { q: searchQuery.value, unit_id: props.unitId } });
     
     // Parse QATrack+ specific JSON structure
     const data = res.data;
@@ -121,17 +139,15 @@ const search = async () => {
         seDateStr = window.moment(seArray[3]).format(window.siteConfig.MOMENT_DATETIME_FMT);
       }
       parsedResults.push({
-        id: seArray[0],
+        id: String(seArray[0]),
         status_id: seArray[1],
         title: seArray[2],
         date: seDateStr,
         status: seArray[4],
-        text: seArray[0]
+        text: String(seArray[0])
       });
-      // also update global se_statuses cache
-      if (window.se_statuses) {
-        window.se_statuses[seArray[0]] = seArray[1];
-      }
+      // Emit event instead of mutating global state directly
+      emit('se-status-updated', { id: String(seArray[0]), statusId: seArray[1] });
     }
     results.value = parsedResults;
   } catch(e) {
@@ -140,9 +156,9 @@ const search = async () => {
 };
 
 const selectResult = (res) => {
-  if (!selected.value.find(s => s.id === res.id)) {
+  if (!selected.value.find(s => String(s.id) === String(res.id))) {
     // replace dummy entry if we select it and it didn't have full info
-    const existingIdx = selected.value.findIndex(s => s.id == res.id);
+    const existingIdx = selected.value.findIndex(s => String(s.id) === String(res.id));
     if (existingIdx >= 0) {
       selected.value[existingIdx] = res;
     } else {
@@ -155,7 +171,7 @@ const selectResult = (res) => {
 };
 
 const removeSelected = (res) => {
-  selected.value = selected.value.filter(s => s.id !== res.id);
+  selected.value = selected.value.filter(s => String(s.id) !== String(res.id));
 };
 
 const hideDropdownDelay = () => {

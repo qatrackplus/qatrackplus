@@ -137,7 +137,7 @@
     </script>
     <script src="{% static 'htmx/js/htmx.min.js' %}"></script>
     <script type="text/javascript">
-      document.body.addEventListener('htmx:afterSettle', function(evt) {
+      document.addEventListener('htmx:afterSettle', function(evt) {
           // Re-init requireJS modules that may have been lost on DOM swap
           if (typeof require !== 'undefined' && document.querySelector('.requires-legacy-faults')) {
               require(['faults']);
@@ -150,8 +150,7 @@
     {% block extra_head %}{% endblock extra_head %}
     {% block head_extra %}{% endblock head_extra %}
   </head>
-
-  <body hx-boost="true" class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
+  <body {% block body_attrs %}{% endblock body_attrs %} class="skin-black-dark fixed {% block body_class %}layout-top-nav{% endblock body_class %} preload">
 
     <div class="wrapper">
 

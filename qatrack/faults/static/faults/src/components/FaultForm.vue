@@ -1,6 +1,6 @@
 <template>
   <div class="box-body">
-    <div class="row" v-if="formErrors.length">
+    <div class="row" v-if="Object.keys(formErrors).length > 0">
       <div class="col-md-12">
         <div class="alert alert-danger">
           <p>Please resolve the errors below and submit again.</p>
@@ -38,7 +38,8 @@
           <ServiceEventSelector
              :initial-service-events="form.related_service_events"
              :unit-id="form.unit"
-             :error="getError('related_service_events')" />
+             :error="getError('related_service_events')"
+             @se-status-updated="handleSeStatusUpdated" />
 
           <div class="form-group" :class="{'has-error': getError('comment')}">
             <label class="col-sm-3 control-label">Comment</label>
@@ -94,6 +95,12 @@ const reviewErrors = ref({});
 const reviewFormsData = ref([]);
 const unitsData = ref([]);
 const modalitiesData = ref([]);
+
+const handleSeStatusUpdated = (payload) => {
+  if (window.se_statuses) {
+    window.se_statuses[payload.id] = payload.statusId;
+  }
+};
 
 const getError = (field) => {
   return formErrors.value[field] ? formErrors.value[field].map(e => e.message).join(', ') : '';

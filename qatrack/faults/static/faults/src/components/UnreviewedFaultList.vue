@@ -92,9 +92,10 @@ const openModal = () => {
   const ids = [];
   
   checkboxes.forEach(el => {
-    if (el.value === "") return;
+    const faultId = el.dataset.fault;
+    if (!faultId) return; // Skip if undefined or empty
     
-    ids.push(el.dataset.fault);
+    ids.push(faultId);
     const row = el.closest("tr");
     const children = row.children;
     

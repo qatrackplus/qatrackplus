@@ -48,7 +48,7 @@ const unitInfo = ref({});
 // We assume there's a global QAURLs.UNIT_INFO available
 const fetchUnitInfo = async () => {
   try {
-    const url = (window.QAURLs && window.QAURLs.UNIT_INFO) || '/api/units/info/';
+    const url = (window.QAURLs && window.QAURLs.UNIT_INFO) || '/units/info/';
     const res = await axios.get(url, { params: { serviceable_only: true } });
     unitInfo.value = res.data;
     updateAvailableModalities();
@@ -84,17 +84,17 @@ const onModalityChange = () => {
   emit('update:modality', selectedModality.value);
 };
 
+watch(() => props.initialUnit, (newVal) => {
+  selectedUnit.value = newVal;
+  updateAvailableModalities();
+});
+
+watch(() => props.initialModality, (newVal) => {
+  selectedModality.value = newVal;
+});
+
 onMounted(() => {
   fetchUnitInfo();
   updateAvailableModalities();
-  
-  watch(() => props.initialUnit, (newVal) => {
-    selectedUnit.value = newVal;
-    updateAvailableModalities();
-  });
-  
-  watch(() => props.initialModality, (newVal) => {
-    selectedModality.value = newVal;
-  });
 });
 </script>

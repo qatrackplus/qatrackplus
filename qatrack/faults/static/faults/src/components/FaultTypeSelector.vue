@@ -54,17 +54,21 @@ let searchTimeout = null;
 const fetchInitialTypes = async () => {
   if (!props.initialFaultTypes || props.initialFaultTypes.length === 0) return;
   
-  for (const ftCode of props.initialFaultTypes) {
-    try {
-      const url = (window.QAURLs && window.QAURLs.FAULT_TYPE_AUTOCOMPLETE) || '/faults/type/autocomplete.json';
-      const res = await axios.get(url, { params: { q: ftCode, suggestions: 1 } });
-      if (res.data && res.data.results && res.data.results.length > 0) {
-        selected.value.push(res.data.results[0]);
-      }
-    } catch (e) {
+  const url = (window.QAURLs && window.QAURLs.FAULT_TYPE_AUTOCOMPLETE) || '/faults/type/autocomplete.json';
+  
+  const promises = props.initialFaultTypes.map(ftCode => {
+    return axios.get(url, { params: { q: ftCode } }).catch(e => {
       console.error(e);
+      return null;
+    });
+  });
+
+  const responses = await Promise.all(promises);
+  responses.forEach(res => {
+    if (res && res.data && res.data.results && res.data.results.length > 0) {
+      selected.value.push(res.data.results[0]);
     }
-  }
+  });
 };
 
 const debouncedSearch = () => {

@@ -7,6 +7,7 @@
 {% load static %}
 
 {% block head_title %}{% blocktrans with fault_id=fault.id %}Fault ID {{ fault_id }}{% endblocktrans %}{% endblock %}
+{% block body_attrs %}hx-boost="true"{% endblock body_attrs %}
 
 {% block extra_css %}
     {{ block.super }}

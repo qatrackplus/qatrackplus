@@ -32,9 +32,15 @@
             $rows.each(function (idx, el) {
                 var $el = $(el);
                 var children = $el.children();
-                var site = siteIdx >= 0 ? (children[siteIdx].innerText || "Other") + ": " : "";
-                var unit = site + children[unitIdx].innerText;
-                var ft = children[faultTypeIdx].innerText;
+
+                if (unitIdx < 0 || faultTypeIdx < 0) {
+                    console.error("Missing required headers 'unit' or 'fault types' in table; skipping row.");
+                    return;
+                }
+
+                var site = siteIdx >= 0 && children[siteIdx] ? (children[siteIdx].innerText || "Other") + ": " : "";
+                var unit = site + (children[unitIdx] ? children[unitIdx].innerText : "Unknown Unit");
+                var ft = children[faultTypeIdx] ? children[faultTypeIdx].innerText : "Unknown Fault Type";
                 var key = [ft, unit].join("||");
 
                 if (key in counter) {
