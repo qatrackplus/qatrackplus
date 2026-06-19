@@ -167,6 +167,10 @@ class Attachment(models.Model):
     @property
     def is_in_tmp(self):
         """Return bool indicating whether this attachment is currently in staging area"""
+        # A blank file name has no path (Django's FieldFile.path raises for it)
+        # and cannot be a staging file, so treat it as not in tmp.
+        if not self.attachment.name:
+            return False
         return settings.TMP_UPLOAD_ROOT in self.attachment.path
 
     @property
@@ -178,6 +182,17 @@ class Attachment(models.Model):
     def can_finalize(self):
         """Return bool indicating whether this file is ready to be finalized"""
         return self.has_owner and self.is_in_tmp
+
+    @property
+    def file_exists(self):
+        """Return bool indicating whether the backing file still exists in storage.
+
+        A blank/missing file name is treated as not existing rather than raising.
+        """
+        name = self.attachment.name
+        if not name:
+            return False
+        return self.attachment.storage.exists(name)
 
     @property
     def is_image(self):
