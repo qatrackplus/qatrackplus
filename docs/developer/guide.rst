@@ -33,6 +33,15 @@ Prerequisites
 QATrack+ is developed using Python 3.12. We recommend using the latest stable
 version of Python 3.12 for the best development experience and compatibility.
 
+Node.js (Frontend)
+~~~~~~~~~~~~~~~~~~
+
+QATrack+ includes a Vue 3 frontend bundle compiled with Vite. Node.js 22 or newer
+is required to build it locally. The compiled file is **not** committed to the
+repository — release archives include a pre-built copy so deployers have no Node.js
+requirement. If you are developing from a ``git clone`` you must build it yourself
+(see :ref:`building-frontend` below).
+
 Git
 ~~~
 
@@ -91,6 +100,26 @@ Then clone your fork to your local machine:
 .. code-block:: shell
 
     git clone https://github.com/YOUR_USERNAME/qatrackplus.git
+.. _building-frontend:
+
+Building the Frontend
+~~~~~~~~~~~~~~~~~~~~~
+
+The compiled Vue frontend bundle (``qatrack/qatrack_core/static/dist/faults.js``)
+is **not** tracked in version control. Release archives ship with a pre-built copy,
+but developers working from a ``git clone`` must generate it manually.
+
+After cloning (and whenever source files under ``qatrack/faults/static/faults/src/``
+change), run:
+
+.. code-block:: shell
+
+    npm ci          # install dependencies (once, or after package.json changes)
+    npm run build   # compile faults.js into qatrack/qatrack_core/static/dist/
+
+.. note::
+
+    The generated ``faults.js`` file is gitignored — do **not** commit it.
 
 Selecting an Editor or IDE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -42,6 +42,19 @@ This is a Free and Open Source (FOSS) project. The goal is to provide a tool for
 
 The world of FOSS has been radically changed by AI in recent years. I'll borrow from the YouTuber [Alberta Tech](https://www.youtube.com/watch?v=PbsocBPkoUc) for some of the language here. Vibe Coding in common use has two distinct meanings, that need to be split out. Agentic AI is where a developer understands a significant portion of what they're trying to accomplish, and relies on tools such as GitHub Copilot, Claude Code, or similar tools. Vibe Coding as originally defined is where someone who only uses prompts, without trying to understand the code at any level. Agentic AI is welcome, it is a collection of tools that many programmers, this maintainer included, have come to rely upon to create time. Unfortunately this project does not have the resources to support code put forward without significant human review. This might change in the future, but for now, please, any contributions need to be understood by the contributor and understandable by the maintainers.
 
+## For contributors / development installs
+
+The compiled frontend bundle (`qatrack/qatrack_core/static/dist/faults.js`) is **not** committed to the repository. Release archives (downloaded from the [GitHub Releases page](https://github.com/qatrackplus/qatrackplus/releases)) include a pre-built copy, so deployers have no Node.js requirement.
+
+If you are working from a `git clone`, you must build the frontend yourself after pulling any changes to the Vue source files under `qatrack/faults/static/faults/src/`:
+
+```bash
+npm ci          # install dependencies (needed once, or after package.json/package-lock.json changes)
+npm run build   # compile faults.js into qatrack/qatrack_core/static/dist/
+```
+
+Node.js 22+ is required (matching the CI release workflow). The built file is gitignored and should not be committed.
+
 ## Funding and Contributions
 
 FOSS projects need backing, and this project is no exception. Up to this point significant sources of project funding have come from The Ottawa Hospital Cancer Centre and the Canadian Nuclear Safety Commission, with a long list of contributors that will be added to this section in short order. Currently the CNSC has provided a grant for helping finalize the localization work, and support Canadian Cancer Centers in upgrading their installations. Over this next year I will be keeping track of nice to have and need to have budgets to keep this project sustainable without relying on a single person. If you would like to support this project, please reach out.

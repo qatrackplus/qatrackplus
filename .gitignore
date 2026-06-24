@@ -65,5 +65,4 @@ db/
 .poetry-venv/
 src/
 !qatrack/faults/static/faults/src/
-!qatrack/qatrack_core/static/dist/
 node_modules/
