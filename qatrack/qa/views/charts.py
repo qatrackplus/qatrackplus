@@ -1,4 +1,5 @@
 import collections
+import datetime
 import io
 import itertools
 import json
@@ -273,7 +274,7 @@ class BaseChartView(View):
         d_to = timezone.datetime(d_to.year, d_to.month, d_to.day, 23, 59, 59, tzinfo=timezone.get_current_timezone())
         d_from = timezone.datetime(d_from.year, d_from.month, d_from.day, tzinfo=timezone.get_current_timezone())
 
-        return [d_from.astimezone(timezone.utc), d_to.astimezone(timezone.utc)]
+        return [d_from.astimezone(datetime.UTC), d_to.astimezone(datetime.UTC)]
 
     def convert_date(self, date):
         """by default we assume date is being used by javascript, so convert to ISO"""

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import connection, transaction
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
-from django.test import TransactionTestCase
+from django.test import TestCase
 from django.utils import timezone
 
 from qatrack.accounts.tests.utils import create_group, create_user
@@ -13,7 +13,7 @@ from qatrack.service_log import models as sl_models
 from qatrack.service_log.tests import utils as sl_utils
 
 
-class TestUnitServiceArea(TransactionTestCase):
+class TestUnitServiceArea(TestCase):
 
     def setUp(self):
 
@@ -34,7 +34,7 @@ class TestUnitServiceArea(TransactionTestCase):
         self.assertTrue(self.u.name in str(usa) and self.sa.name in str(usa))
 
 
-class TestServiceEventStatus(TransactionTestCase):
+class TestServiceEventStatus(TestCase):
 
     def setUp(self):
         self.ses = sl_utils.create_service_event_status()
@@ -76,7 +76,7 @@ class TestServiceEventStatus(TransactionTestCase):
         self.assertTrue(self.ses.name in str(self.ses))
 
 
-class TestThirdParty(TransactionTestCase):
+class TestThirdParty(TestCase):
 
     @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_unique_together(self):
@@ -96,7 +96,7 @@ class TestThirdParty(TransactionTestCase):
         self.assertTrue(tp.vendor.name in tp.get_full_name())
 
 
-class TestServiceEventAndRelated(TransactionTestCase):
+class TestServiceEventAndRelated(TestCase):
 
     def setUp(self):
         self.se = sl_utils.create_service_event()
@@ -169,7 +169,7 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.assertTrue(str(self.se.id) in str(self.se))
 
 
-class TestDeletions(TransactionTestCase):
+class TestDeletions(TestCase):
 
     def test_delete_grouplinkerinstance_variables(self):
 

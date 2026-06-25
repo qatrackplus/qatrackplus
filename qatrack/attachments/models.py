@@ -1,5 +1,4 @@
 import gc
-import imghdr
 import logging
 import os
 import os.path
@@ -196,13 +195,8 @@ class Attachment(models.Model):
 
     @property
     def is_image(self):
-
-        try:
-            img = imghdr.what(self.attachment) is not None
-        except FileNotFoundError:
+        if not self.attachment.name:
             return False
-        ext = os.path.splitext(self.attachment.name)[1].strip(".")
+        ext = os.path.splitext(self.attachment.name)[1].strip(".").lower()
         displayable = ["jpg", "jpeg", "png", "svg", "bmp", "gif"]
-        force = ext in displayable
-        is_img = img in displayable
-        return is_img or force
+        return ext in displayable

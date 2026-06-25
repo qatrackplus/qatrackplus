@@ -140,6 +140,9 @@ python_files = ["test_*.py", "*_test.py"]
 addopts = "-ra -q"
 django_find_project = true
 DJANGO_SETTINGS_MODULE = "qatrack.settings"
+markers = [
+    "selenium: mark a test as a selenium test",
+]
 
 [tool.uv.sources]
 python-ldap = { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl", marker = "sys_platform == 'win32' and python_version== '3.12'" }

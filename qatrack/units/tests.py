@@ -1,3 +1,5 @@
+import datetime
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -129,7 +131,7 @@ class TestUnitAvailableTime(TestCase):
             hours_sunday=init_hours,
         )
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         len_uat_before = len(models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
 
         self.client.post(self.post_url, data=data)
@@ -168,7 +170,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         len_uate_before = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         self.client.post(self.post_url, data=data)
         len_uate_after = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
@@ -194,7 +196,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         self.client.post(self.post_url, data=data)
         len_uate_after = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         assert len_uate_after == 0
@@ -214,7 +216,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         len_uate_before = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
 
         self.client.post(self.post_url, data=data)

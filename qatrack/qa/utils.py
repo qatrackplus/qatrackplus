@@ -195,7 +195,8 @@ def get_internal_user(user_klass=None):
     try:
         u = user_klass.objects.get(username="QATrack+ Internal")
     except user_klass.DoesNotExist:
-        pwd = make_password(user_klass.objects.make_random_password())
+        from django.utils.crypto import get_random_string
+        pwd = make_password(get_random_string(length=12))
         u = user_klass.objects.create(username="QATrack+ Internal", password=pwd)
         u.is_active = False
         u.save()

@@ -29,3 +29,4 @@ class QAAppConfig(AppConfig):
     def ready(self):
         post_migrate.connect(do_scheduling, sender=self)
         post_migrate.connect(rebuild_trees, sender=self)
+        import qatrack.qa.signals  # noqa

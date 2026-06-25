@@ -16,7 +16,14 @@ def create_user(is_staff=True, is_superuser=True, uname="user", pwd="password", 
                 uname, "user@qatrackplus.com", password=pwd, is_staff=is_staff, is_active=is_active
             )
     finally:
-        u.user_permissions.add(Permission.objects.get(codename="add_testlistinstance"))
+        from django.contrib.contenttypes.models import ContentType
+
+        from qatrack.qa.models import TestListInstance
+        ct = ContentType.objects.get_for_model(TestListInstance)
+        perm, _ = Permission.objects.get_or_create(
+            codename="add_testlistinstance", content_type=ct, defaults={"name": "Can add test list instance"}
+        )
+        u.user_permissions.add(perm)
     return u
 
 
@@ -25,5 +32,12 @@ def create_group(name=None):
         name = 'group_%04d' % get_next_id(Group.objects.order_by('id').last())
     g = Group(name=name)
     g.save()
-    g.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
+    from django.contrib.contenttypes.models import ContentType
+
+    from qatrack.qa.models import TestListInstance
+    ct = ContentType.objects.get_for_model(TestListInstance)
+    perm, _ = Permission.objects.get_or_create(
+        codename="add_testlistinstance", content_type=ct, defaults={"name": "Can add test list instance"}
+    )
+    g.permissions.add(perm)
     return g

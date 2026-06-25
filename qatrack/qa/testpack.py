@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import time
@@ -66,7 +67,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         },
         'meta': {
             'version': settings.VERSION,
-            'datetime': "%s" % (timezone.now().astimezone(timezone.utc)),
+            'datetime': str(timezone.now().astimezone(datetime.UTC)),
             'description': description,
             'contact': testpack_user_string(user),
             'name': name,

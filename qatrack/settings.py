@@ -412,6 +412,8 @@ AUTH_ADFS = {
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 def skip_requests(record):  # noqa: E302
+    if not record.args or not isinstance(record.args[0], str):
+        return True
     skip = (record.args[0].startswith("GET /static/") or record.args[0].startswith("GET /accounts/ping/"))
     return not skip
 

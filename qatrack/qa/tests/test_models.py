@@ -1,3 +1,4 @@
+import datetime
 import inspect
 from unittest import mock
 
@@ -18,7 +19,7 @@ from . import utils
 
 
 def utc_2am():
-    return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), timezone.utc)
+    return timezone.make_aware(timezone.datetime(2014, 4, 2, 2), datetime.UTC)
 
 
 class TestFrequencyManager(TestCase):

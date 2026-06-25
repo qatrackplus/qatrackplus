@@ -5,7 +5,6 @@ import os
 import time
 from zoneinfo import ZoneInfo
 
-import pytest
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.urls import reverse
@@ -363,7 +362,6 @@ class TestTestListInstanceAPI(APITestCase):
         assert models.TestListInstance.objects.count() == 1
         assert models.TestInstance.objects.count() == self.ntests + 1
 
-    @pytest.mark.skip("causing a segfault with sqlite :(")
     def test_create_composite_with_null_data(self):
         """
         Add a composite test to our test list.  Submitting with null data

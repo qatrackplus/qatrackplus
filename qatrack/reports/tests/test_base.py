@@ -1,3 +1,4 @@
+import datetime
 import io
 import json
 import time
@@ -781,7 +782,7 @@ class TestBaseReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_utc(self):
-        dt = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=timezone.utc)
+        dt = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=datetime.UTC)
         assert reports.BaseReport().default_detail_value_format(dt) == "01 Jan 2019"
 
     @override_settings(TIME_ZONE="America/Toronto")
@@ -791,8 +792,8 @@ class TestBaseReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_range_utc(self):
-        dt1 = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=timezone.utc)
-        dt2 = timezone.datetime(2019, 1, 3, 2, 0, tzinfo=timezone.utc)
+        dt1 = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=datetime.UTC)
+        dt2 = timezone.datetime(2019, 1, 3, 2, 0, tzinfo=datetime.UTC)
         assert reports.BaseReport().default_detail_value_format([dt1, dt2]) == "01 Jan 2019 - 02 Jan 2019"
 
     @override_settings(TIME_ZONE="America/Toronto")

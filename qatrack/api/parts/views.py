@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework_filters import backends
@@ -74,3 +75,16 @@ class PartUsedViewSet(viewsets.ModelViewSet):
         backends.RestFrameworkFilterBackend,
         OrderingFilter,
     )
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.remove_from_storage()
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        old_instance = type(self.get_object()).objects.select_for_update().get(pk=self.kwargs.get('pk') or self.kwargs.get(self.lookup_field))
+        old_instance.add_back_to_storage()
+        serializer.instance = old_instance
+        instance = serializer.save()
+        instance.remove_from_storage()

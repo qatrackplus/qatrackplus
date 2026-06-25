@@ -4,7 +4,7 @@ from django.test import TestCase
 from qatrack.qatrack_core.forms import BetterFormMixin
 
 
-class TestForm(BetterFormMixin, forms.Form):
+class DummyForm(BetterFormMixin, forms.Form):
     """A test form with fieldsets."""
     name = forms.CharField()
     age = forms.IntegerField()
@@ -29,7 +29,7 @@ class BetterFormMixinTest(TestCase):
     """Test the BetterFormMixin functionality."""
 
     def setUp(self):
-        self.form = TestForm()
+        self.form = DummyForm()
 
     def test_get_fieldsets(self):
         """Test that get_fieldsets returns the correct structure."""

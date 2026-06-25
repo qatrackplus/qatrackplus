@@ -2,6 +2,7 @@
 Test module specifically for zoneinfo migration functionality.
 Tests all the key areas that were changed from pytz to zoneinfo.
 """
+import datetime
 from datetime import date, timedelta
 from zoneinfo import ZoneInfo
 
@@ -91,7 +92,7 @@ class TestZoneinfoDateUtilities(TestCase):
     def test_local_start_of_day(self):
         """Test local_start_of_day function"""
         tz = ZoneInfo("America/Toronto")
-        dt = timezone.datetime(2023, 6, 15, 14, 30, 45, tzinfo=timezone.utc)
+        dt = timezone.datetime(2023, 6, 15, 14, 30, 45, tzinfo=datetime.UTC)
 
         result = dates.local_start_of_day(dt)
         # Should convert to local timezone and get start of day
@@ -103,7 +104,7 @@ class TestZoneinfoDateUtilities(TestCase):
     def test_local_end_of_day(self):
         """Test local_end_of_day function"""
         tz = ZoneInfo("America/Toronto")
-        dt = timezone.datetime(2023, 6, 15, 14, 30, 45, tzinfo=timezone.utc)
+        dt = timezone.datetime(2023, 6, 15, 14, 30, 45, tzinfo=datetime.UTC)
 
         result = dates.local_end_of_day(dt)
         # Should convert to local timezone and get end of day
@@ -303,7 +304,7 @@ class TestCrossTimezoneCompatibility(TestCase):
         local_dt = timezone.datetime(2023, 6, 15, 14, 30).replace(tzinfo=tz)
 
         # Convert to UTC and back
-        utc_dt = local_dt.astimezone(timezone.utc)
+        utc_dt = local_dt.astimezone(datetime.UTC)
         back_to_local = utc_dt.astimezone(tz)
 
         self.assertEqual(local_dt, back_to_local)

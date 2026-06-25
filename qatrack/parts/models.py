@@ -388,9 +388,10 @@ class PartStorageCollection(models.Model):
 
     def __str__(self):
         locs = []
-        if self.storage.room.site:
-            locs.append(self.storage.room.site.name)
-        locs.append(self.storage.room.name)
+        if self.storage.room:
+            if self.storage.room.site:
+                locs.append(self.storage.room.site.name)
+            locs.append(self.storage.room.name)
         if self.storage.location:
             locs.append(self.storage.location)
         locs.append('(%s)' % self.quantity)
@@ -468,7 +469,7 @@ class PartUsed(models.Model):
 
         if self.from_storage:
             try:
-                psc = PartStorageCollection.objects.get(part=self.part, storage=self.from_storage)
+                psc = PartStorageCollection.objects.select_related(None).select_for_update().get(part=self.part, storage=self.from_storage)
                 psc.quantity += self.quantity
                 psc.save()
             except PartStorageCollection.DoesNotExist:
@@ -478,7 +479,7 @@ class PartUsed(models.Model):
 
         if self.from_storage:
             try:
-                psc = PartStorageCollection.objects.get(part=self.part, storage=self.from_storage)
+                psc = PartStorageCollection.objects.select_related(None).select_for_update().get(part=self.part, storage=self.from_storage)
                 psc.quantity -= self.quantity
                 psc.save()
             except PartStorageCollection.DoesNotExist:

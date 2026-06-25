@@ -42,3 +42,10 @@ class TestPartStorageCollection(TestCase):
         self.assertEqual(
             str(self.psc_1), '%s - %s - %s - (%s)' % (self.si_1.name, self.r_1.name, self.st_1.location, 1000)
         )
+
+    def test_str_no_room(self):
+        from qatrack.parts.models import Storage
+        st_no_room, _ = Storage.objects.get_or_create(room=None, location='no_room_loc')
+        psc_no_room = sl_utils.create_part_storage_collection(part=self.p_1, storage=st_no_room, quantity=5)
+        self.assertEqual(str(psc_no_room), 'no_room_loc - (5)')
+

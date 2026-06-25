@@ -176,6 +176,10 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             cls.display.stop()
         super().tearDownClass()
 
+    def tearDown(self):
+        self.driver.get("about:blank")
+        super().tearDown()
+
     @contextmanager
     def wait_for_page_load(self, timeout=2):
         old_page = self.driver.find_element(By.TAG_NAME, 'html')
@@ -229,16 +233,32 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             els = self.driver.find_elements(By.CLASS_NAME, "select2-results__option")
             els[index].click()
         except:  # noqa: E722
-            select = Select(self.driver.find_element(By.ID, el_id))
-            select.select_by_index(index)
+            select_el = self.driver.find_element(By.ID, el_id)
+            select = Select(select_el)
+            try:
+                select.select_by_index(index)
+            except WebDriverException:
+                val = select.options[index].get_attribute("value")
+                self.driver.execute_script("arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', {bubbles: true}));", select_el, val)
 
     def select_by_text(self, el_id, text):
 
         self.scroll_into_view(el_id)
         try:
-            select = Select(self.driver.find_element(By.ID, el_id))
-            select.select_by_visible_text(text)
-        except:  # noqa: E722
+            select_el = self.driver.find_element(By.ID, el_id)
+            select = Select(select_el)
+            try:
+                select.select_by_visible_text(text)
+            except WebDriverException:
+                found = False
+                for opt in select.options:
+                    if opt.text == text:
+                        self.driver.execute_script("arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', {bubbles: true}));", select_el, opt.get_attribute("value"))
+                        found = True
+                        break
+                if not found:
+                    raise Exception("Option with text '%s' not found" % text)
+        except WebDriverException:
 
             sel2 = self.driver.find_element(By.ID, "select2-%s-container" % el_id)
             sel2.click()
@@ -253,9 +273,20 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
         self.scroll_into_view(el_id)
         try:
-            select = Select(self.driver.find_element(By.ID, el_id))
-            select.select_by_value(val)
-        except:  # noqa: E722
+            select_el = self.driver.find_element(By.ID, el_id)
+            select = Select(select_el)
+            try:
+                select.select_by_value(val)
+            except WebDriverException:
+                found = False
+                for opt in select.options:
+                    if opt.get_attribute("value") == val:
+                        self.driver.execute_script("arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', {bubbles: true}));", select_el, val)
+                        found = True
+                        break
+                if not found:
+                    raise Exception("Option with value '%s' not found" % val)
+        except WebDriverException:
 
             sel2 = self.driver.find_element(By.ID, "select2-%s-container" % el_id)
             sel2.click()

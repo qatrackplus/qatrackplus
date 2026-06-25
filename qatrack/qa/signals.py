@@ -1,3 +1,6 @@
+from django.conf import settings
+from django.contrib.auth.models import Group, User
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.signals import (
@@ -13,6 +16,7 @@ from django_comments.models import Comment
 from django_comments.signals import comment_was_posted
 
 from qatrack.service_log import models as sl_models
+from qatrack.units.models import Unit
 
 from . import models
 
@@ -287,3 +291,48 @@ def check_approved_statuses(*args, **kwargs):
                 f.service_event.datetime_status_changed = timezone.now()
                 f.service_event.user_status_changed_by = None
                 f.service_event.save()
+
+
+@receiver(post_save, sender=models.TestListInstance, dispatch_uid="qa_update_unreviewed_cache_post_save")
+@receiver(post_delete, sender=models.TestListInstance, dispatch_uid="qa_update_unreviewed_cache_post_delete")
+@receiver(post_save, sender=User, dispatch_uid="qa_update_unreviewed_cache_user")
+@receiver(post_save, sender=Group, dispatch_uid="qa_update_unreviewed_cache_group")
+def update_unreviewed_cache(sender, **kwargs):
+    """When a test list is completed invalidate the unreviewed counts"""
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
+    cache.delete(settings.CACHE_RTS_QA_COUNT)
+    cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
+    cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
+
+
+@receiver(pre_save, sender=models.UnitTestCollection, dispatch_uid="qa_stash_old_unit_for_utc_pre_save")
+def stash_old_unit_for_utc(sender, instance, **kwargs):
+    if instance.pk:
+        try:
+            instance._old_unit = models.UnitTestCollection.objects.get(pk=instance.pk).unit
+        except models.UnitTestCollection.DoesNotExist:
+            instance._old_unit = None
+    else:
+        instance._old_unit = None
+
+
+@receiver(post_save, sender=models.UnitTestCollection, dispatch_uid="qa_update_active_unit_test_collections_for_unit_utc_post_save")
+@receiver(post_delete, sender=models.UnitTestCollection, dispatch_uid="qa_update_active_unit_test_collections_for_unit_utc_post_delete")
+def update_active_unit_test_collections_for_unit_utc(sender, instance, **kwargs):
+    unit = instance.unit
+    models.set_active_unit_test_collections_for_unit_cache(unit)
+    old_unit = getattr(instance, '_old_unit', None)
+    if old_unit and old_unit != unit:
+        models.set_active_unit_test_collections_for_unit_cache(old_unit)
+
+
+@receiver(post_save, sender=Unit, dispatch_uid="qa_update_active_unit_test_collections_for_unit_post_save")
+def update_active_unit_test_collections_for_unit_post_save(sender, instance, **kwargs):
+    models.set_active_unit_test_collections_for_unit_cache(instance)
+
+
+@receiver(post_delete, sender=Unit, dispatch_uid="qa_update_active_unit_test_collections_for_unit_post_delete")
+def update_active_unit_test_collections_for_unit_post_delete(sender, instance, **kwargs):
+    cache.delete(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(instance.id))

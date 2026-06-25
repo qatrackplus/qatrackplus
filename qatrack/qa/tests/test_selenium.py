@@ -257,6 +257,7 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text("ADD TEST LIST")
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['TestList']['name'])
+        self.driver.find_element(By.ID, 'id_slug').send_keys(objects['TestList']['name'].lower())
         self.driver.find_element(By.LINK_TEXT, 'Add another Test List Membership').click()
         self.driver.find_element(By.LINK_TEXT, 'Add another Test List Membership').click()
         self.driver.find_element(By.LINK_TEXT, 'Add another Test List Membership').click()
@@ -645,14 +646,13 @@ class TestPerformQC(BaseQATests):
         inputs[0].send_keys(1)
         inputs[1].send_keys(2)
         inputs[1].send_keys(Keys.TAB)
-        time.sleep(0.2)
-
+        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
         self.click_by_css_selector(".choose-date")
-        time.sleep(0.2)
+        self.wait.until(e_c.element_to_be_clickable((By.CSS_SELECTOR, ".open .today")))
         self.click_by_css_selector(".open .today")
 
         self.click_by_css_selector(".choose-datetime")
-        time.sleep(0.2)
+        self.wait.until(e_c.element_to_be_clickable((By.CSS_SELECTOR, ".open .today")))
         self.click_by_css_selector(".open .today")
 
         self.click_by_css_selector("body")
@@ -662,8 +662,7 @@ class TestPerformQC(BaseQATests):
 
         self.driver.find_element(By.CSS_SELECTOR, ".qa-string .qa-input").send_keys("test")
         self.click_by_css_selector("body")
-        time.sleep(0.2)
-
+        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
@@ -674,6 +673,7 @@ class TestPerformQC(BaseQATests):
         assert models.TestListInstance.objects.count() == 0
         self.click("submit-qa")
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
 
         assert models.TestListInstance.objects.count() == 1
         assert models.TestListInstance.objects.latest("pk").include_for_scheduling
@@ -696,7 +696,12 @@ class TestPerformQC(BaseQATests):
         self.group.permissions.clear()
         self.user.is_superuser = False
         self.user.save()
-        self.group.permissions.add(Permission.objects.get(codename="add_testlistinstance"))
+        from django.contrib.contenttypes.models import ContentType
+        ct = ContentType.objects.get_for_model(models.TestListInstance)
+        perm, _ = Permission.objects.get_or_create(
+            codename="add_testlistinstance", content_type=ct, defaults={"name": "Can add test list instance"}
+        )
+        self.group.permissions.add(perm)
         self.fill_testlist()
         inputs = self.driver.find_elements(By.CLASS_NAME, "qa-input")[:3]
 
@@ -704,6 +709,7 @@ class TestPerformQC(BaseQATests):
         assert models.TestListInstance.objects.count() == 0
         self.click("submit-qa")
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
 
         assert models.TestListInstance.objects.count() == 1
         assert models.TestListInstance.objects.latest("pk").include_for_scheduling
