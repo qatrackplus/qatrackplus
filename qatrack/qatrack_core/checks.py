@@ -1,5 +1,6 @@
 import os
 import tempfile
+from pathlib import Path
 
 from django.conf import settings
 from django.core.checks import Error, register
@@ -10,21 +11,30 @@ def check_media_folder_permissions(app_configs, **kwargs):
     errors = []
     media_root = getattr(settings, 'MEDIA_ROOT', None)
     
+    # Check if MEDIA_ROOT is configured and if the directory exists
+    # This check is very likely unnecessary, since Django appears to recreate the folder on manage.py check, but it is here for completeness.
+
     if not media_root:
+        errors.append(Error("The Media folder is not configured"))
         return errors
         
-    if not os.path.exists(media_root):
+    media_root_path = Path(media_root)
+
+    if not media_root_path.exists():
+        errors.append(Error(f"The Media folder '{media_root}' does not exist"))
         return errors
-        
+    # End of redundant check    
+    
     uploads_dirs = [
-        media_root,
-        os.path.join(media_root, 'uploads'),
-        os.path.join(media_root, 'uploads', 'tmp'),
+        media_root_path,
+        media_root_path / 'uploads',
+        media_root_path / 'uploads' / 'tmp',
     ]
     
+
     for directory in uploads_dirs:
-        if os.path.exists(directory):
-            if not os.access(directory, os.W_OK):
+        if directory.exists():
+            if not directory.is_dir() or not os.access(directory, os.W_OK):
                 errors.append(
                     Error(
                         f"The Django server process does not have write permissions to '{directory}'.",
@@ -34,9 +44,9 @@ def check_media_folder_permissions(app_configs, **kwargs):
                 )
             else:
                 try:
-                    fd, temp_path = tempfile.mkstemp(dir=directory)
+                    fd, temp_path = tempfile.mkstemp(dir=str(directory))
                     os.close(fd)
-                    os.remove(temp_path)
+                    Path(temp_path).unlink()
                 except Exception as e:
                     errors.append(
                         Error(
@@ -46,8 +56,8 @@ def check_media_folder_permissions(app_configs, **kwargs):
                         )
                     )
         else:
-            parent = os.path.dirname(directory)
-            if os.path.exists(parent) and not os.access(parent, os.W_OK):
+            parent = directory.parent
+            if parent.exists() and not os.access(parent, os.W_OK):
                 errors.append(
                     Error(
                         f"The Django server process does not have write permissions to '{parent}' to create '{directory}'.",
@@ -55,5 +65,4 @@ def check_media_folder_permissions(app_configs, **kwargs):
                         id='qatrack.E001',
                     )
                 )
-
     return errors
