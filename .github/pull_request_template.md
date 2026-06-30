@@ -11,11 +11,9 @@ _e.g. "Closes #1234", "Refs #1234". Write "None" if not applicable._
 ## Type of Change
 
 - [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that changes existing behaviour)
-- [ ] Modernization / migration (part of the qatrackplus modernization effort)
+- [ ] New feature ( adds functionality, always assumed to be breaking until tested by maintainers)
+- [ ] Breaking change (fix or addition that changes existing behaviour)
 - [ ] Documentation only
-- [ ] Refactor / chore (no functional change)
 
 ## Target Branch
 
@@ -27,18 +25,19 @@ _Confirm which branch this targets (e.g. master)._
 - [ ] AI tools were used:
   - **Tools / where used:** _e.g. GitHub Copilot for boilerplate_
   - [ ] I've reviewed every AI-generated line as if I wrote it myself, and confirm: no PHI shared, no license-incompatible content (Apache-2.0).
+
 ---
 
 ## PR Procedure
 
 ### Coder Tasks
 
-- [ ] Rebased / merged `Dev` branch; no merge conflicts.
+- [ ] Rebased / merged `develop` branch; no merge conflicts.
 - [ ] `uv run pre-commit run --all-files` passes (ruff lint, ruff-format, django-upgrade).
-  - `uv run ruff check . --fix` to help resolve linting errors 
-- [ ] Django migrations generated and committed if models changed.
+  - `uv run ruff check . --fix` to help resolve linting errors
 - [ ] `uv run python -Wd manage.py check` reviewed for new deprecation warnings.
 - [ ] `uv run pytest` full test suite passes.
+- [ ] `uv run python manage.py makemigrations --check --dry-run` if migrations are found, change should be marked Breaking
 - [ ] Docker builds succeed if touched.
 - [ ] Docs updated under `docs/` if behaviour, settings, or APIs changed.
 - [ ] `release_notes.md` updated if user-facing.
