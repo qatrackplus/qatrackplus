@@ -2,6 +2,7 @@
 {% load qa_tags %}
 {% load listable %}
 {% load static %}
+{% load i18n %}
 
 {% block head_title %}{{page_title}}{% endblock %}
 
@@ -34,9 +35,9 @@
                     <i class="fa {{ icon }} fa-fw" aria-hidden="true"></i>
                     <h3 class="box-title">{{page_title}}</h3>
                     {% if action == "perform" %}
-                        <a class="pull-right" href="{% url "choose_unit" %}" title="return to unit selection">&larr; Back to Unit Selection Page</a>
+                        <a class="pull-right" href="{% url "choose_unit" %}" title="{% trans "return to unit selection" %}">&larr; {% trans "Back to Unit Selection Page" %}</a>
                     {% else %}
-                        <a class="pull-right" href="{% url "choose_review_unit" %}" title="return to unit selection">&larr; Back to Unit Review Selection Page</a>
+                        <a class="pull-right" href="{% url "choose_review_unit" %}" title="{% trans "return to unit selection" %}">&larr; {% trans "Back to Unit Review Selection Page" %}</a>
                     {% endif %}
                 </div>
                 <div class="box-body pad">

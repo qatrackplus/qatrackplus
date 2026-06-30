@@ -5,7 +5,7 @@ from django.contrib.contenttypes.management import update_contenttypes
 from django.contrib.auth.management import create_permissions
 from django.db.models import get_app, get_models
 
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 
 
 def get_content_type(orm, app_label, model_name):
@@ -14,7 +14,7 @@ def get_content_type(orm, app_label, model_name):
     # (which is not available in migrations)
     opts = orm['%s.%s' % (app_label, model_name)]._meta.concrete_model._meta
     return orm['contenttypes.ContentType'].objects.get_or_create(app_label=app_label,
-              model=model_name, defaults={'name': smart_text(opts.verbose_name_raw)})
+              model=model_name, defaults={'name': smart_str(opts.verbose_name_raw)})
 
 
 class Migration(DataMigration):

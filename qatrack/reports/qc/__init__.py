@@ -12,3 +12,14 @@ from qatrack.reports.qc.testlistinstance import (
     TestListInstanceDetailsReport,
     TestListInstanceSummaryReport,
 )
+
+__all__ = [
+    "AssignedQCDetailsReport",
+    "AssignedQCReport",
+    "PaperBackupForms",
+    "DueAndOverdueQCReport",
+    "NextDueDatesReport",
+    "TestInstanceDetailsReport",
+    "TestListInstanceDetailsReport",
+    "TestListInstanceSummaryReport",
+]

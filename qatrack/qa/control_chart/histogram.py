@@ -10,9 +10,9 @@ def binwidth(x, maxBins=None):
     N.B. This algorithm assume all events in a sample are independent.
     """
 
-    minBins = 1         # must be not be zero!
+    minBins = 1  # must be not be zero!
     if maxBins is None:
-        maxBins = 50   # must be larger than minBins
+        maxBins = 50  # must be larger than minBins
 
     span = np.max(x) - np.min(x)
 

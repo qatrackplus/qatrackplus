@@ -41,14 +41,9 @@ def on_fault_created(sender, instance, action, **kwargs):
             subject_template="faults/subject.txt",
             text_template="faults/email.txt",
         )
-        logger.info(
-            "Sent Fault Notice for fault id %d at %s" % (fault.id, timezone.now())
-        )
+        logger.info("Sent Fault Notice for fault id %d at %s" % (fault.id, timezone.now()))
     except:  # noqa: E722  # pragma: nocover
-        logger.exception(
-            "Error sending Fault Logged Notice for fault id %d at %s." %
-            (fault.id, timezone.now())
-        )
+        logger.exception("Error sending Fault Logged Notice for fault id %d at %s." % (fault.id, timezone.now()))
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
         if not fail_silently:
@@ -62,7 +57,7 @@ def get_notification_recipients(fault):
     unit = fault.unit
 
     subs = models.FaultNotice.objects.filter(
-        (Q(units=None) | Q(units__units=unit))
+        Q(units=None) | Q(units__units=unit)
     ).select_related("recipients")  # yapf: disable
 
     recipients = set()

@@ -81,20 +81,26 @@ class ServiceEventNoticeAdmin(BaseQATrackAdmin):
             "units__units",
         )
 
+    @admin.display(
+        description=_l("Notification Type"),
+        ordering="notification_type",
+    )
     def get_notification_type(self, obj):
         return "#%s - %s" % (obj.pk, obj.get_notification_type_display())
-    get_notification_type.admin_order_field = "notification_type"
-    get_notification_type.short_description = _l("Notification Type")
 
+    @admin.display(
+        description=_l("Units Group"),
+        ordering="units__name",
+    )
     def get_units(self, obj):
         return obj.units.name if obj.units else ""
-    get_units.admin_order_field = "units__name"
-    get_units.short_description = _l("Units Group")
 
+    @admin.display(
+        description=_l("Recipient Group"),
+        ordering="recipients__name",
+    )
     def get_recipients(self, obj):
         return obj.recipients.name
-    get_recipients.admin_order_field = "recipients__name"
-    get_recipients.short_description = _l("Recipient Group")
 
 
 admin.site.register([models.ServiceEventNotice], ServiceEventNoticeAdmin)

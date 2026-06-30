@@ -155,6 +155,21 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
 
     var $addNote = $("#add-note");
 
+    // Function to toggle PDF-specific fields visibility
+    function togglePdfFields() {
+        var isPdf = $reportFormat.val() === 'pdf';
+        var $includeLogoField = $('#id_root-include_logo').closest('.form-group');
+        var $paperSizeField = $('#id_root-paper_size').closest('.form-group');
+        
+        if (isPdf) {
+            $includeLogoField.show();
+            $paperSizeField.show();
+        } else {
+            $includeLogoField.hide();
+            $paperSizeField.hide();
+        }
+    }
+
     var date_range_locale = {
         "format": siteConfig.DATERANGEPICKER_DATE_FMT,
         "separator": " - ",
@@ -707,6 +722,11 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
             setFilterForm($(this).val());
         });
 
+        /* handle user changing report format */
+        $reportFormat.change(function(e){
+            togglePdfFields();
+        });
+
         /* handle fetching and displaying preview */
         $preview.click(function(e) {
 
@@ -782,6 +802,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
                 "<'row'<'col-sm-12'tr>>" +
                 "<'row'<'col-sm-12 text-center'i>>" +
                 "<'row'<'col-sm-12'p>>",
+            language: window.datatablesLanguage,
             columnDefs: [
                 {
                     targets: [0],
@@ -832,6 +853,7 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         prepareForm();
         setupToolTips();
         loadFromUrl();
+        togglePdfFields(); // Initialize PDF field visibility
     });
 
 

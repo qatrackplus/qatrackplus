@@ -1,8 +1,8 @@
 import datetime
 
+import numpy as np
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-import numpy as np
 
 NP_INT_TYPES = (
     np.int_,
@@ -40,7 +40,7 @@ class QATrackJSONEncoder(DjangoJSONEncoder):
             return int(o)
         elif isinstance(o, NP_FLOAT_TYPES):
             return float(o)
-        elif isinstance(o, (range, zip, set,)):
+        elif isinstance(o, range | zip | set):
             return list(o)
 
         for m in serializing_methods:

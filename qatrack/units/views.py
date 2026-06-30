@@ -1,13 +1,13 @@
+from zoneinfo import ZoneInfo
+
 from braces.views import PermissionRequiredMixin
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.models import Permission
 from django.db.models import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
-import pytz
 
 from qatrack.qatrack_core.dates import format_as_date as fmt_date
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
@@ -44,7 +44,7 @@ class UnitAvailableTimeChange(PermissionRequiredMixin, TemplateView):
     template_name = 'units/unit_available_time_change.html'
 
     def get_context_data(self, **kwargs):
-        context = super(UnitAvailableTimeChange, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['unit_available_time_form'] = forms.UnitAvailableTimeForm()
         context['unit_available_time_edit_form'] = forms.UnitAvailableTimeEditForm()
         context['units'] = u_models.Unit.objects.filter(is_serviceable=True)
@@ -59,14 +59,24 @@ def handle_unit_available_time(request):
 
     units = request.POST.getlist('units[]')
     tz = request.POST.get("tz", settings.TIME_ZONE)
-    tz = pytz.timezone(tz)
+    try:
+        tz = ZoneInfo(tz)
+    except Exception:
+        tz = ZoneInfo(settings.TIME_ZONE)
     day = request.POST.get('day')
     day = timezone.localtime(timezone.datetime.fromtimestamp(int(day) / 1000, tz)).date() if day else None
 
     uats = u_models.UnitAvailableTime.objects.filter(unit__in=units, date_changed=day).select_related('unit')
 
-    hours = {'monday': ['0', '0'], 'tuesday': ['0', '0'], 'wednesday': ['0', '0'], 'thursday': ['0', '0'],
-             'friday': ['0', '0'], 'saturday': ['0', '0'], 'sunday': ['0', '0']}
+    hours = {
+        'monday': ['0', '0'],
+        'tuesday': ['0', '0'],
+        'wednesday': ['0', '0'],
+        'thursday': ['0', '0'],
+        'friday': ['0', '0'],
+        'saturday': ['0', '0'],
+        'sunday': ['0', '0']
+    }
 
     for h in hours:
         hours_min = request.POST.get('hours_' + h).replace('_', '0')
@@ -100,10 +110,24 @@ def handle_unit_available_time(request):
 @csrf_protect
 def handle_unit_available_time_edit(request):
 
+    def safe_date_str(date_obj, tz_name):
+        try:
+            tz = ZoneInfo(tz_name)
+        except Exception:
+            tz = timezone.get_current_timezone()
+
+        return date_obj.astimezone(tz).strftime("%Y-%m-%d")
+
     units = [u_models.Unit.objects.get(id=u_id) for u_id in request.POST.getlist('units[]', [])]
     tz = request.POST.get("tz", settings.TIME_ZONE)
-    tz = pytz.timezone(tz)
-    days = [timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date() for d in request.POST.getlist('days[]', [])]  # noqa: E501
+    try:
+        tz = ZoneInfo(tz)
+    except Exception:
+        tz = ZoneInfo(settings.TIME_ZONE)
+    days = [
+        timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date()
+        for d in request.POST.getlist('days[]', [])
+    ]  # noqa: E501
 
     hours_mins = request.POST.get('hours_mins', None)
     if hours_mins:
@@ -138,21 +162,18 @@ def delete_schedules(request):
 
     unit_ids = request.POST.getlist('units[]', [])
     tz = request.POST.get("tz", settings.TIME_ZONE)
-    tz = pytz.timezone(tz)
+    try:
+        tz = ZoneInfo(tz)
+    except Exception:
+        tz = ZoneInfo(settings.TIME_ZONE)
     days = [
         timezone.localtime(timezone.datetime.fromtimestamp(int(d) / 1000, tz)).date()
         for d in request.POST.getlist('days[]', [])
     ]
 
-    u_models.UnitAvailableTime.objects.filter(
-        unit_id__in=unit_ids,
-        date_changed__in=days
-    ).delete()
+    u_models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed__in=days).delete()
 
-    u_models.UnitAvailableTimeEdit.objects.filter(
-        unit_id__in=unit_ids,
-        date__in=days
-    ).delete()
+    u_models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date__in=days).delete()
 
     return get_unit_available_time_data(request)
 

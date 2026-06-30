@@ -1,25 +1,10 @@
-from django.conf.urls import url
+from django.urls import re_path as url
 
 import qatrack.qa.views.admin
 
 from .views import admin, base, charts, perform, review
 
 urlpatterns = [
-    # CUSTOM ADMIN PAGES
-    # Copy references and tolerances between testlists
-    url(
-        r'^admin/copy_refs_and_tols/$',
-        admin.CopyReferencesAndTolerances(admin.CopyReferencesAndTolerancesForm),
-        name="qa_copy_refs_and_tols"
-    ),
-    url(
-        r'^admin/copy_refs_and_tols/gettestlists/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/$',
-        qatrack.qa.views.admin.testlist_json,
-        name='qa_copy_refs_and_tols_testlist_json'
-    ),
-    url(r'^admin/export_testpack/$', admin.ExportTestPack.as_view(), name="qa_export_testpack"),
-    url(r'^admin/import_testpack/$', admin.ImportTestPack.as_view(), name="qa_import_testpack"),
-    url(r'^admin/recurrences/$', admin.recurrence_examples, name="qa_recurrences"),
     url(r"^$", base.UTCList.as_view(), name="all_lists"),
 
     # view for composite calculations via ajax
@@ -115,4 +100,14 @@ urlpatterns = [
     ),
     url(r"^category/(?P<category>[/\w-]+?)/$", perform.CategoryList.as_view(), name="qa_by_category"),
     url(r"^due-and-overdue/$", perform.DueAndOverdue.as_view(), name="qa_by_overdue"),
+
+    # Legacy standalone admin URLs - TODO: Remove recurrences if not needed
+    url(r'^admin/recurrences/$', admin.recurrence_examples, name="qa_recurrences"),
+
+    # AJAX endpoint for copy refs and tolerances (used by admin interface)
+    url(
+        r'^admin/copy_refs_and_tols/gettestlists/(?P<source_unit>[:|\w]+)/(?P<content_type>[:|\w]+)/$',
+        qatrack.qa.views.admin.testlist_json,
+        name='qa_copy_refs_and_tols_testlist_json'
+    ),
 ]

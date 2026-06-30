@@ -75,40 +75,40 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
     def dispatch(self, request, *args, **kwargs):
         self.user = request.user
-        return super(PartUpdateCreate, self).dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         try:
-            return super(PartUpdateCreate, self).get_object(queryset)
+            return super().get_object(queryset)
         except AttributeError:
             return None
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return super(PartUpdateCreate, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return super(PartUpdateCreate, self).post(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
-        context_data = super(PartUpdateCreate, self).get_context_data(**kwargs)
+        context_data = super().get_context_data(**kwargs)
 
         if self.request.method == 'POST':
 
             context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(
-                self.request.POST,
-                instance=self.object,
-                prefix='supplier'
+                self.request.POST, instance=self.object, prefix='supplier'
             )
             context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(
-                self.request.POST,
-                instance=self.object,
-                prefix='storage'
+                self.request.POST, instance=self.object, prefix='storage'
             )
         else:
-            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(instance=self.object, prefix='supplier')  # noqa: E501
-            context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(instance=self.object, prefix='storage')  # noqa: E501
+            context_data['supplier_formset'] = p_forms.PartSupplierCollectionFormset(
+                instance=self.object, prefix='supplier'
+            )  # noqa: E501
+            context_data['storage_formset'] = p_forms.PartStorageCollectionFormset(
+                instance=self.object, prefix='storage'
+            )  # noqa: E501
 
         context_data['attachments'] = self.object.attachment_set.all() if self.object else []
         return context_data
@@ -181,8 +181,7 @@ class PartUpdateCreate(LoginRequiredMixin, SingleObjectTemplateResponseMixin, Mo
 
                 if isinstance(storage_field, str):
                     psc_instance.storage = p_models.Storage.objects.create(
-                        room=sto_form.cleaned_data['room'],
-                        location=storage_field
+                        room=sto_form.cleaned_data['room'], location=storage_field
                     )
                 else:
                     psc_instance.storage = storage_field
@@ -277,18 +276,18 @@ class PartsList(BaseListableView):
     def get(self, request, *args, **kwargs):
         if self.kwarg_filters is None:
             self.kwarg_filters = kwargs.pop('f', None)
-        return super(PartsList, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = super(PartsList, self).get_queryset()
+        qs = super().get_queryset()
         return qs.order_by("part_number").annotate(attachment_count=Count("attachment"))
 
     def format_col(self, field, obj):
-        col = super(PartsList, self).format_col(field, obj)
+        col = super().format_col(field, obj)
         return col
 
     def get_context_data(self, *args, **kwargs):
-        context = super(PartsList, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()
@@ -403,7 +402,7 @@ class SuppliersList(BaseListableView):
     }
 
     def get_context_data(self, *args, **kwargs):
-        context = super(SuppliersList, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = 'fa-microchip'

@@ -26,7 +26,7 @@ class TestSetReferencesAndTolerancesForm(TransactionTestCase):
         create_user(is_superuser=True, uname='user', pwd='pwd')
         self.client.login(username='user', password='pwd')
 
-        self.url = reverse('qa_copy_refs_and_tols')
+        self.url = reverse('admin:qa_copy_refs_and_tols')
 
         self.tl_1 = qa_utils.create_test_list()
         self.tl_2 = qa_utils.create_test_list()
@@ -71,24 +71,27 @@ class TestSetReferencesAndTolerancesForm(TransactionTestCase):
         uti_source = self.uti_1
         uti_dest = self.uti_2
 
+        # Stage 1: Submit initial form data
         data = {
             'content_type': 'testlist',
             'source_testlist': self.tl_1.id,
             'source_unit': self.u_1.id,
             'dest_unit': self.u_2.id,
-            'confirm': 'Confirm',
-            'stage': 2
+            'stage': '1'
         }
 
         response = self.client.post(self.url, data=data)
-        hash_val = None
-        for c in response.context[0]:
-            if 'hash_value' in c:
-                hash_val = c['hash_value']
+        self.assertEqual(response.status_code, 200)
 
-        data['hash_field'] = 'hash'
-        data['hash'] = hash_val
-        self.client.post(self.url, data=data)
+        # Stage 2: Confirm the operation
+        data.update({'confirm': 'Confirm', 'stage': '2'})
+
+        response = self.client.post(self.url, data=data)
+
+        # Check that the operation was successful (should redirect)
+        self.assertIn(response.status_code, [200, 302])
+
+        # Refresh from database and verify the copy worked
         uti_dest = qa_models.UnitTestInfo.objects.get(id=uti_dest.id)
 
         self.assertEqual(uti_source.reference, uti_dest.reference)
@@ -117,17 +120,24 @@ class TestTestlistjson(TestCase):
         qa_utils.create_unit_test_collection(unit=self.u, test_collection=tlc1)
 
         self.url_tl = reverse(
-            'qa_copy_refs_and_tols_testlist_json', kwargs={
-                'source_unit': self.u.id, 'content_type': qa_models.TestList.__name__.lower()
+            'qa_copy_refs_and_tols_testlist_json',
+            kwargs={
+                'source_unit': self.u.id,
+                'content_type': qa_models.TestList.__name__.lower()
             }
         )
         self.url_tlc = reverse(
-            'qa_copy_refs_and_tols_testlist_json', kwargs={
-                'source_unit': self.u.id, 'content_type': qa_models.TestListCycle.__name__.lower()
-            })
+            'qa_copy_refs_and_tols_testlist_json',
+            kwargs={
+                'source_unit': self.u.id,
+                'content_type': qa_models.TestListCycle.__name__.lower()
+            }
+        )
         self.url_bad = reverse(
-            'qa_copy_refs_and_tols_testlist_json', kwargs={
-                'source_unit': self.u.id, 'content_type': qa_models.Test.__name__.lower()
+            'qa_copy_refs_and_tols_testlist_json',
+            kwargs={
+                'source_unit': self.u.id,
+                'content_type': qa_models.Test.__name__.lower()
             }
         )
 
@@ -138,27 +148,25 @@ class TestTestlistjson(TestCase):
 
         utcs = qa_models.UnitTestCollection.objects.filter(
             unit=self.u, content_type=self.tl_ct
-        ).values_list('object_id', flat=True)
+        ).values_list(
+            'object_id', flat=True
+        )
         tl_to_find = list(qa_models.TestList.objects.filter(pk__in=utcs).values_list('pk', 'name'))
 
         response = self.client.get(self.url_tl)
-        self.assertJSONEqual(
-            json.dumps(tl_to_find),
-            response.json()
-        )
+        self.assertJSONEqual(json.dumps(tl_to_find), response.json())
 
     def test_test_list_cycle(self):
 
         utcs = qa_models.UnitTestCollection.objects.filter(
             unit=self.u, content_type=self.tlc_ct
-        ).values_list('object_id', flat=True)
+        ).values_list(
+            'object_id', flat=True
+        )
         tlc_to_find = list(qa_models.TestListCycle.objects.filter(pk__in=utcs).values_list('pk', 'name'))
 
         response = self.client.get(self.url_tlc)
-        self.assertJSONEqual(
-            json.dumps(tlc_to_find),
-            response.json()
-        )
+        self.assertJSONEqual(json.dumps(tlc_to_find), response.json())
 
     def test_bad_ctype(self):
 
@@ -217,7 +225,8 @@ class TestTestInstanceAdmin(TestCase):
         self.client.login(username='user', password='pwd')
         qa_utils.create_test_instance()
         self.url = reverse(
-            'admin:%s_%s_changelist' % (qa_models.TestInstance._meta.app_label, qa_models.TestInstance._meta.model_name)
+            'admin:%s_%s_changelist' %
+            (qa_models.TestInstance._meta.app_label, qa_models.TestInstance._meta.model_name)
         )
 
     def test_list_page(self):
@@ -240,14 +249,12 @@ class TestTestListInstanceAdmin(TestCase):
         sl_utils.create_return_to_service_qa(add_test_list_instance=self.tli)
 
         self.url_list = reverse(
-            'admin:%s_%s_changelist' % (
-                qa_models.TestListInstance._meta.app_label, qa_models.TestListInstance._meta.model_name
-            )
+            'admin:%s_%s_changelist' %
+            (qa_models.TestListInstance._meta.app_label, qa_models.TestListInstance._meta.model_name)
         )
         self.url_delete = reverse(
-            'admin:%s_%s_delete' % (
-                qa_models.TestListInstance._meta.app_label, qa_models.TestListInstance._meta.model_name
-            ),
+            'admin:%s_%s_delete' %
+            (qa_models.TestListInstance._meta.app_label, qa_models.TestListInstance._meta.model_name),
             args=[self.tli.id]
         )
 
@@ -294,19 +301,16 @@ class TestUnitTestCollectionAdmin(TestCase):
         )
 
         self.url_list = reverse(
-            'admin:%s_%s_changelist' % (
-                qa_models.UnitTestCollection._meta.app_label, qa_models.UnitTestCollection._meta.model_name
-            )
+            'admin:%s_%s_changelist' %
+            (qa_models.UnitTestCollection._meta.app_label, qa_models.UnitTestCollection._meta.model_name)
         )
         self.url_add = reverse(
-            'admin:%s_%s_add' % (
-                qa_models.UnitTestCollection._meta.app_label, qa_models.UnitTestCollection._meta.model_name
-            )
+            'admin:%s_%s_add' %
+            (qa_models.UnitTestCollection._meta.app_label, qa_models.UnitTestCollection._meta.model_name)
         )
         self.url_change = reverse(
-            'admin:%s_%s_change' % (
-                qa_models.UnitTestCollection._meta.app_label, qa_models.UnitTestCollection._meta.model_name
-            ),
+            'admin:%s_%s_change' %
+            (qa_models.UnitTestCollection._meta.app_label, qa_models.UnitTestCollection._meta.model_name),
             args=[self.utc_1.id]
         )
 
@@ -400,9 +404,7 @@ class TestTestAdmin(TestCase):
             test_list_instance=self.tli_1, unit_test_info=qa_utils.create_unit_test_info(test=self.t_1), value=1
         )
 
-        self.url_add = reverse(
-            'admin:%s_%s_add' % (qa_models.Test._meta.app_label, qa_models.Test._meta.model_name)
-        )
+        self.url_add = reverse('admin:%s_%s_add' % (qa_models.Test._meta.app_label, qa_models.Test._meta.model_name))
         self.url_list = reverse(
             'admin:%s_%s_changelist' % (qa_models.Test._meta.app_label, qa_models.Test._meta.model_name)
         )
@@ -457,20 +459,14 @@ class TestTestAdmin(TestCase):
     def test_testlistmembership_filter(self):
         qs = qa_models.Test.objects.annotate(tlcount=Count("testlistmembership"))
         fylter = qa_admin.TestListMembershipFilter(
-            None,
-            {'tlmembership': qa_admin.TestListMembershipFilter.HASMEMBERSHIPS},
-            qa_models.Test,
-            qa_admin.TestAdmin
+            None, {'tlmembership': qa_admin.TestListMembershipFilter.HASMEMBERSHIPS}, qa_models.Test, qa_admin.TestAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.Test.objects.all())
         filtered_2 = qs.filter(tlcount__gt=0)
         self.assertListEqual(list(filtered_2), list(filtered_1))
 
         fylter = qa_admin.TestListMembershipFilter(
-            None,
-            {'tlmembership': qa_admin.TestListMembershipFilter.NOMEMBERSHIPS},
-            qa_models.Test,
-            qa_admin.TestAdmin
+            None, {'tlmembership': qa_admin.TestListMembershipFilter.NOMEMBERSHIPS}, qa_models.Test, qa_admin.TestAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.Test.objects.all())
         filtered_2 = qs.filter(tlcount=0)
@@ -483,9 +479,7 @@ class TestTestAdmin(TestCase):
         data['slug'] = self.t_1.slug
         data['type'] = qa_models.BOOLEAN
 
-        form = modelform_factory(
-            qa_models.Test, form=qa_admin.TestForm, fields='__all__'
-        )(data=data, instance=self.t_1)
+        form = modelform_factory(qa_models.Test, form=qa_admin.TestForm, fields='__all__')(data=data, instance=self.t_1)
 
         self.assertFalse(form.is_valid())
         self.assertTrue('type' in form.errors)
@@ -526,7 +520,6 @@ class TestTestListAdmin(TestCase):
             'javascript': 'alert("subs!")',
             'slug': 'testing_sublists',
             'description': 'description',
-
             'attachment_set-MAX_NUM_FORMS': 10,
             'attachment_set-INITIAL_FORMS': 0,
             'attachment_set-MIN_NUM_FORMS': 0,
@@ -535,7 +528,6 @@ class TestTestListAdmin(TestCase):
             'attachment_set-0-id': '',
             'attachment_set-0-comment': 'Testing',
             'attachment_set-0-attachment': '',
-
             'children-INITIAL_FORMS': 0,
             'children-MIN_NUM_FORMS': 0,
             'children-MAX_NUM_FORMS': 10,
@@ -544,7 +536,6 @@ class TestTestListAdmin(TestCase):
             'children-0-child': self.tl_1.id,
             'children-0-parent': '',
             'children-0-id': '',
-
             'testlistmembership_set-MIN_NUM_FORMS': 0,
             'testlistmembership_set-INITIAL_FORMS': 0,
             'testlistmembership_set-MAX_NUM_FORMS': 10,
@@ -578,34 +569,25 @@ class TestTestListAdmin(TestCase):
 
     def test_active_test_list_filter(self):
         active_tl_ids = qa_models.get_utc_tl_ids(active=True)
-        active_sub_tl_ids = list(qa_models.TestList.objects.filter(
-            id__in=active_tl_ids, children__isnull=False
-        ).values_list('children__child__id', flat=True).distinct())
+        active_sub_tl_ids = list(
+            qa_models.TestList.objects.filter(id__in=active_tl_ids,
+                                              children__isnull=False).values_list('children__child__id',
+                                                                                  flat=True).distinct()
+        )
 
         fylter = qa_admin.ActiveTestListFilter(
-            None,
-            {'activeutcs': qa_admin.ActiveTestListFilter.HASACTIVEUTCS},
-            qa_models.TestList,
+            None, {'activeutcs': qa_admin.ActiveTestListFilter.HASACTIVEUTCS}, qa_models.TestList,
             qa_admin.TestListAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.TestList.objects.all())
-        filtered_2 = qa_models.TestList.objects.filter(
-            Q(id__in=active_tl_ids) |
-            Q(id__in=active_sub_tl_ids)
-        )
+        filtered_2 = qa_models.TestList.objects.filter(Q(id__in=active_tl_ids) | Q(id__in=active_sub_tl_ids))
         self.assertListEqual(list(filtered_2), list(filtered_1))
 
         fylter = qa_admin.ActiveTestListFilter(
-            None,
-            {'activeutcs': qa_admin.ActiveTestListFilter.NOACTIVEUTCS},
-            qa_models.TestList,
-            qa_admin.TestListAdmin
+            None, {'activeutcs': qa_admin.ActiveTestListFilter.NOACTIVEUTCS}, qa_models.TestList, qa_admin.TestListAdmin
         )
         filtered_1 = fylter.queryset(None, qa_models.TestList.objects.all())
-        filtered_2 = qa_models.TestList.objects.exclude(
-            Q(id__in=active_tl_ids) |
-            Q(id__in=active_sub_tl_ids)
-        )
+        filtered_2 = qa_models.TestList.objects.exclude(Q(id__in=active_tl_ids) | Q(id__in=active_sub_tl_ids))
         self.assertListEqual(list(filtered_2), list(filtered_1))
 
     def test_change_page(self):
@@ -647,7 +629,10 @@ class TestTestListAdmin(TestCase):
         data['children-0-child'] = self.sublist.child.id
 
         formset = inlineformset_factory(
-            qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
+            qa_models.TestList,
+            qa_models.Sublist,
+            formset=qa_admin.SublistInlineFormSet,
+            fk_name='parent',
             fields='__all__'
         )(data=data, queryset=qa_models.Sublist.objects.all(), instance=None)
         self.assertTrue(formset.is_valid())
@@ -655,7 +640,10 @@ class TestTestListAdmin(TestCase):
     def test_sublist_formset_own_child(self):
         data = self.data
         formset = inlineformset_factory(
-            qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
+            qa_models.TestList,
+            qa_models.Sublist,
+            formset=qa_admin.SublistInlineFormSet,
+            fk_name='parent',
             fields='__all__'
         )(data=data, queryset=qa_models.Sublist.objects.all(), instance=self.tl_1)
         self.assertFalse(formset.is_valid())
@@ -666,7 +654,10 @@ class TestTestListAdmin(TestCase):
         qa_utils.create_sublist(parent_test_list=self.sublist.child, child_test_list=tl)
         data = self.data
         formset = inlineformset_factory(
-            qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
+            qa_models.TestList,
+            qa_models.Sublist,
+            formset=qa_admin.SublistInlineFormSet,
+            fk_name='parent',
             fields='__all__'
         )(data=data, queryset=qa_models.Sublist.objects.all(), instance=None)
         assert not formset.is_valid()
@@ -697,7 +688,10 @@ class TestTestListAdmin(TestCase):
         data['children-1-id'] = ''
 
         formset = inlineformset_factory(
-            qa_models.TestList, qa_models.Sublist, formset=qa_admin.SublistInlineFormSet, fk_name='parent',
+            qa_models.TestList,
+            qa_models.Sublist,
+            formset=qa_admin.SublistInlineFormSet,
+            fk_name='parent',
             fields='__all__'
         )(data=data, queryset=qa_models.Sublist.objects.all(), instance=None)
         self.assertFalse(formset.is_valid())
@@ -705,7 +699,9 @@ class TestTestListAdmin(TestCase):
     def test_test_valid(self):
         data = self.data
         formset = inlineformset_factory(
-            qa_models.TestList, qa_models.TestListMembership, formset=qa_admin.TestListMembershipInlineFormSet,
+            qa_models.TestList,
+            qa_models.TestListMembership,
+            formset=qa_admin.TestListMembershipInlineFormSet,
             fields='__all__'
         )(data=data, queryset=qa_models.TestListMembership.objects.all(), instance=None)
         self.assertTrue(formset.is_valid())
@@ -720,7 +716,9 @@ class TestTestListAdmin(TestCase):
         data['testlistmembership_set-1-test'] = self.t_1.id
 
         formset = inlineformset_factory(
-            qa_models.TestList, qa_models.TestListMembership, formset=qa_admin.TestListMembershipInlineFormSet,
+            qa_models.TestList,
+            qa_models.TestListMembership,
+            formset=qa_admin.TestListMembershipInlineFormSet,
             fields='__all__'
         )(data=data, queryset=qa_models.TestListMembership.objects.all(), instance=None)
         self.assertFalse(formset.is_valid())
@@ -766,7 +764,8 @@ class TestUnitTestInfoAdmin(TestCase):
         self.uti_360 = qa_utils.create_unit_test_info(unit=self.u_1, test=self.t_360, ref=self.r_1, tol=self.tol_1)
 
         self.url_list = reverse(
-            'admin:%s_%s_changelist' % (qa_models.UnitTestInfo._meta.app_label, qa_models.UnitTestInfo._meta.model_name)
+            'admin:%s_%s_changelist' %
+            (qa_models.UnitTestInfo._meta.app_label, qa_models.UnitTestInfo._meta.model_name)
         )
         self.url_change = reverse(
             'admin:%s_%s_change' % (qa_models.UnitTestInfo._meta.app_label, qa_models.UnitTestInfo._meta.model_name),
@@ -800,21 +799,21 @@ class TestUnitTestInfoAdmin(TestCase):
 
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
-        )(instance=self.uti_2)
-
-        self.assertListEqual(
-            form.fields['reference_value'].widget.choices,
-            [("", "---"), (0, "No"), (1, "Yes")]
+        )(
+            instance=self.uti_2
         )
+
+        self.assertListEqual(form.fields['reference_value'].widget.choices, [("", "---"), (0, "No"), (1, "Yes")])
         self.assertListEqual(
-            list(form.fields['tolerance'].queryset),
-            list(qa_models.Tolerance.objects.filter(type=qa_models.BOOLEAN))
+            list(form.fields['tolerance'].queryset), list(qa_models.Tolerance.objects.filter(type=qa_models.BOOLEAN))
         )
 
     def test_multi(self):
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
-        )(instance=self.uti_3)
+        )(
+            instance=self.uti_3
+        )
 
         self.assertIsInstance(form.fields['reference_value'].widget, HiddenInput)
         self.assertListEqual(
@@ -890,10 +889,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
         self.uti_1.refresh_from_db()
         self.uti_4.refresh_from_db()
-        self.assertListEqual(
-            [self.uti_1.reference.value, self.uti_4.reference.value],
-            [self.r_2.value, self.r_2.value]
-        )
+        self.assertListEqual([self.uti_1.reference.value, self.uti_4.reference.value], [self.r_2.value, self.r_2.value])
 
     def test_save_multiple_boolean(self):
         request = self.client.post(self.url_change).wsgi_request
@@ -916,10 +912,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
         self.uti_2.refresh_from_db()
         self.uti_5.refresh_from_db()
-        self.assertListEqual(
-            [self.uti_2.reference.value, self.uti_5.reference.value],
-            [self.r_3.value, self.r_3.value]
-        )
+        self.assertListEqual([self.uti_2.reference.value, self.uti_5.reference.value], [self.r_3.value, self.r_3.value])
 
     def test_save_multiple_multiple(self):
         request = self.client.post(self.url_change).wsgi_request
@@ -942,10 +935,7 @@ class TestUnitTestInfoAdmin(TestCase):
 
         self.uti_3.refresh_from_db()
         self.uti_6.refresh_from_db()
-        self.assertListEqual(
-            [self.uti_3.reference, self.uti_6.reference],
-            [None, None]
-        )
+        self.assertListEqual([self.uti_3.reference, self.uti_6.reference], [None, None])
 
     def test_save_multiple_new_ref(self):
         request = self.client.post(self.url_change).wsgi_request
@@ -968,17 +958,25 @@ class TestUnitTestInfoAdmin(TestCase):
 
         self.uti_1.refresh_from_db()
         self.uti_4.refresh_from_db()
-        self.assertListEqual(
-            [self.uti_1.reference.value, self.uti_4.reference.value],
-            [2.71828, 2.71828]
-        )
+        self.assertListEqual([self.uti_1.reference.value, self.uti_4.reference.value], [2.71828, 2.71828])
 
     def test_save_multiple_defferent_types(self):
         request = self.client.post(self.url_change).wsgi_request
         request.user = self.user
         admin = qa_admin.UnitTestInfoAdmin(qa_models.UnitTestInfo, self.site)
+        data = {
+            'tolerance': self.tol_1.id,
+            'reference': '1',
+            'post': 'yes',
+            'contenttype': '',
+            'action': 'set_multiple_references_and_tolerances',
+            '_selected_action': [self.uti_1.id, self.uti_2.id],  # Simple and Boolean test types
+            'apply': 'Set tolerances and references'
+        }
+        request.POST = QueryDict('', mutable=True)
+        request.POST.update(data)
         admin.set_multiple_references_and_tolerances(
-            request, qa_models.UnitTestInfo.objects.all()
+            request, qa_models.UnitTestInfo.objects.filter(id__in=[self.uti_1.id, self.uti_2.id])
         )
         messages = get_messages(request)
         self.assertTrue(constants.ERROR in [m.level for m in messages])
@@ -999,7 +997,9 @@ class TestUnitTestInfoAdmin(TestCase):
     def test_bad_percent_tol(self):
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
-        )(instance=self.uti_4)
+        )(
+            instance=self.uti_4
+        )
         data = form.initial
         data['tolerance'] = self.tol_5.id
         data['reference_value'] = 0
@@ -1011,7 +1011,9 @@ class TestUnitTestInfoAdmin(TestCase):
     def test_bad_percent_tol_blank_ref(self):
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
-        )(instance=self.uti_4)
+        )(
+            instance=self.uti_4
+        )
         data = form.initial
         data['tolerance'] = self.tol_5.id
         data['reference_value'] = ''
@@ -1023,7 +1025,9 @@ class TestUnitTestInfoAdmin(TestCase):
     def test_bad_percent_tol_non_numerical_ref(self):
         form = modelform_factory(
             qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
-        )(instance=self.uti_4)
+        )(
+            instance=self.uti_4
+        )
         data = form.initial
         data['tolerance'] = self.tol_5.id
         data['reference_value'] = 'asdf'
@@ -1031,3 +1035,66 @@ class TestUnitTestInfoAdmin(TestCase):
             qa_models.UnitTestInfo, form=qa_admin.UnitTestInfoForm, fields='__all__'
         )(instance=self.uti_4, data=data)
         self.assertFalse(form.is_valid())
+
+    def test_history_records_old_values(self):
+        """Test that UnitTestInfoChange records the correct old values when reference/tolerance are changed"""
+        request = self.factory.get(self.url_change)
+        request.user = self.user
+        admin = qa_admin.UnitTestInfoAdmin(qa_models.UnitTestInfo, self.site)
+
+        # Initial state: uti_1 has r_1 reference and tol_1 tolerance
+        initial_ref = self.uti_1.reference
+        initial_tol = self.uti_1.tolerance
+
+        # First change: update reference and tolerance
+        data = {
+            'unit': self.u_1.id,
+            'test': self.t_1.id,
+            'test_type': self.t_1.type,
+            'reference_value': self.r_2.value,
+            'tolerance': self.tol_2.id,
+            'comment': 'First change',
+            'id': self.uti_1.id
+        }
+
+        form = admin.get_form(request)(instance=self.uti_1, data=data)
+        self.assertTrue(form.is_valid())
+        admin.save_model(request, admin.save_form(request, form, True), form, True)
+
+        # Check first history record
+        changes = qa_models.UnitTestInfoChange.objects.filter(unit_test_info=self.uti_1)
+        self.assertEqual(changes.count(), 1)
+        first_change = changes.first()
+        self.assertEqual(first_change.reference, initial_ref)
+        self.assertEqual(first_change.tolerance, initial_tol)
+        self.assertTrue(first_change.reference_changed)
+        self.assertTrue(first_change.tolerance_changed)
+        self.assertEqual(first_change.comment, 'First change')
+        self.assertEqual(first_change.changed_by, self.user)
+
+        # Second change: update reference again
+        data2 = {
+            'unit': self.u_1.id,
+            'test': self.t_1.id,
+            'test_type': self.t_1.type,
+            'reference_value': '999',
+            'tolerance': self.tol_1.id,
+            'comment': 'Second change',
+            'id': self.uti_1.id
+        }
+
+        form2 = admin.get_form(request)(instance=self.uti_1, data=data2)
+        self.assertTrue(form2.is_valid())
+        admin.save_model(request, admin.save_form(request, form2, True), form2, True)
+
+        # Check that we now have two history records with correct old values
+        changes = qa_models.UnitTestInfoChange.objects.filter(unit_test_info=self.uti_1).order_by('changed')
+        self.assertEqual(changes.count(), 2)
+
+        # First change should have initial values as old values
+        self.assertEqual(changes[0].reference, initial_ref)
+        self.assertEqual(changes[0].tolerance, initial_tol)
+
+        # Second change should have the values from after the first change as old values
+        self.assertEqual(changes[1].reference.value, self.r_2.value)
+        self.assertEqual(changes[1].tolerance, self.tol_2)

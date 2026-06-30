@@ -15,9 +15,7 @@ class ServiceEventReviewNotice(RecurrenceFieldMixin, models.Model):
 
     UNREVIEWED = 0
 
-    NOTIFICATION_TYPES = (
-        (UNREVIEWED, _l("Notify about Service Events awaiting review")),
-    )
+    NOTIFICATION_TYPES = ((UNREVIEWED, _l("Notify about Service Events awaiting review")),)
 
     TIME_CHOICES = [(dt_time(x // 60, x % 60), "%02d:%02d" % (x // 60, x % 60)) for x in range(0, 24 * 60, 15)]
 
@@ -41,9 +39,7 @@ class ServiceEventReviewNotice(RecurrenceFieldMixin, models.Model):
 
     time = models.TimeField(
         verbose_name=_l("Time of day"),
-        help_text=_l(
-            "Set the time of day this notice should be sent (00:00-23:59)."
-        ),
+        help_text=_l("Set the time of day this notice should be sent (00:00-23:59)."),
         choices=TIME_CHOICES,
     )
 
@@ -69,6 +65,7 @@ class ServiceEventReviewNotice(RecurrenceFieldMixin, models.Model):
 
     class Meta:
         verbose_name = _l("Service Event Review Notice")
+        verbose_name_plural = _l("Service Event Review Notices")
 
     @property
     def is_unreviewed(self):

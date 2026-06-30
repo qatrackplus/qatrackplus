@@ -1,4 +1,3 @@
-from qatrack.qa import models
 from qatrack.qa.utils import copy_unit_config
 from qatrack.units import models as umodels
 

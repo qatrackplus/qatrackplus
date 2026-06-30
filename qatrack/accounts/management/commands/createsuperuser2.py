@@ -9,7 +9,7 @@ class Command(createsuperuser.Command):
     help = 'Create a superuser, and allow password to be provided'
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument(
             '--password', dest='password', default=None,
             help='Specifies the password for the superuser.',
@@ -24,7 +24,7 @@ class Command(createsuperuser.Command):
             raise CommandError("--username is required if specifying --password")
 
         try:
-            super(Command, self).handle(*args, **options)
+            super().handle(*args, **options)
         except IntegrityError:
             pass
 

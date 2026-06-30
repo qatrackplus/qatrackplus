@@ -4,12 +4,12 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.utils.text import slugify  # noqa: #402
+from django.utils.text import slugify  # noqa: E402
 
 from qatrack.qa import models
-
 from qatrack.qa.testpack import create_testpack
-from qatrack.qa.utils import get_internal_user  # noqa: #402
+from qatrack.qa.utils import get_internal_user  # noqa: E402
+
 user = get_internal_user()
 
 

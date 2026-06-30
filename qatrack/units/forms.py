@@ -21,9 +21,12 @@ def max_24hr(value):
 
 year_select = forms.ChoiceField(
     required=False,
-    choices=[(y, y) for y in range(timezone.now().year - 20, timezone.now().year + 10)],
+    choices=[(y, y) for y in range(timezone.now().year - 20,
+                                   timezone.now().year + 10)],
     initial=timezone.now().year
-).widget.render('year_select', timezone.now().year, attrs={'id': 'id_year_select'})
+).widget.render(
+    'year_select', timezone.now().year, attrs={'id': 'id_year_select'}
+)
 
 month_select = forms.ChoiceField(
     required=False,
@@ -78,7 +81,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        super(UnitAvailableTimeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for f in self.fields:
             if f == 'date_changed':
@@ -115,7 +118,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         fields = ('date', 'hours', 'name', 'units')
 
     def __init__(self, *args, **kwargs):
-        super(UnitAvailableTimeEditForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for f in self.fields:
             if f == 'date':
@@ -131,7 +134,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
     def clean_date(self):
         cleaned = self.cleaned_data['date']
         if cleaned < self.instance.unit.date_acceptance:
-            raise ValidationError('Unit cannot have available time edit before it\'s date of acceptance.')
+            raise ValidationError(_('Unit cannot have available time edit before it\'s date of acceptance.'))
         return cleaned
 
 
@@ -167,9 +170,7 @@ def unit_site_unit_type_choices(include_empty=False, serviceable_only=False, vis
 def units_visible_to_user(user: User):
     """Return a queryset containing the units which the user can view QC on"""
     units = u_models.Unit.objects.filter(
-        active=True,
-        unittestcollection__active=True,
-        unittestcollection__visible_to__in=user.groups.all()
+        active=True, unittestcollection__active=True, unittestcollection__visible_to__in=user.groups.all()
     ).distinct()
     return units
 

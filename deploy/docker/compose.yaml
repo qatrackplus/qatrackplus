@@ -1,0 +1,66 @@
+name: qatrackplus
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      django:
+        condition: service_healthy
+    volumes:
+      - media-volume:/usr/src/qatrackplus/qatrack/media:ro
+      - static-volume:/usr/src/qatrackplus/qatrack/static:ro
+      - ./user-data/ssl:/etc/nginx/ssl:ro
+
+  django:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/django/Dockerfile
+    restart: always
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - media-volume:/usr/src/qatrackplus/qatrack/media
+      - static-volume:/usr/src/qatrackplus/qatrack/static
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    env_file: .env
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-qatrackplus}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backup:
+    build:
+      context: ./backup
+    init: true
+    restart: always
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backups:/backups
+      - media-volume:/media:ro
+
+volumes:
+  postgres-volume:
+  media-volume:
+  static-volume:

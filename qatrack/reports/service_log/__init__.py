@@ -11,3 +11,13 @@ from qatrack.reports.service_log.personnel import (
 )
 from qatrack.reports.service_log.service_times import ServiceTimesReport
 from qatrack.reports.service_log.summary import ServiceEventSummaryReport
+
+__all__ = [
+    "ScheduledTemplatesReport",
+    "ServiceEventDetailsReport",
+    "DueAndOverdueServiceEventScheduleReport",
+    "NextScheduledServiceEventsDueDatesReport",
+    "ServiceEventPersonnelSummaryReport",
+    "ServiceTimesReport",
+    "ServiceEventSummaryReport",
+]

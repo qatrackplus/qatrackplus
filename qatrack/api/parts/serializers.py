@@ -11,6 +11,7 @@ class SupplierSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class StorageSerializer(serializers.HyperlinkedModelSerializer):
+    room = serializers.PrimaryKeyRelatedField(queryset=models.Room.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = models.Storage

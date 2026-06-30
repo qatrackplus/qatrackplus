@@ -33,7 +33,8 @@ class TestServiceEventStatusAdmin(TestCase):
         self.client.post(self.url_add, data=self.data)
 
         url_change = reverse(
-            'admin:%s_%s_change' % (models.ServiceEventStatus._meta.app_label, models.ServiceEventStatus._meta.model_name),
+            'admin:%s_%s_change' %
+            (models.ServiceEventStatus._meta.app_label, models.ServiceEventStatus._meta.model_name),
             args=[models.ServiceEventStatus.get_default().id]
         )
         self.data['is_default'] = False

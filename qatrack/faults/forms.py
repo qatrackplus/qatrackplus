@@ -1,11 +1,11 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.utils.text import gettext_lazy as _l
-from form_utils.forms import BetterModelForm
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.faults import models
-from qatrack.qatrack_core.forms import MultipleCharField, UserChoiceField
+from qatrack.qatrack_core.forms import BetterModelForm, MultipleCharField, UserChoiceField
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import ServiceEventMultipleField
 from qatrack.units import models as u_models
@@ -105,7 +105,8 @@ class FaultForm(BetterModelForm):
                     self.fields['related_service_events'].widget.attrs.update({'disabled': True})
 
         self.fields['unit'].choices = unit_site_unit_type_choices(
-            include_empty=True, serviceable_only=True, visible_for_user=user)
+            include_empty=True, serviceable_only=True, visible_for_user=user
+        )
 
         for f in self.fields:
             self.fields[f].widget.attrs['class'] = 'form-control'
@@ -146,8 +147,8 @@ class FaultForm(BetterModelForm):
         if unit:
             try:
                 unit = u_models.Unit.objects.get(pk=unit)
-            except u_models.Unit.DoesNotExist:  # pragma: nocover
-                raise ValidationError('Unit with id %s does not exist' % unit)
+            except u_models.Unit.DoesNotExist:
+                raise ValidationError(_('Unit with id %s does not exist') % unit)
         return unit
 
 
@@ -186,4 +187,4 @@ class ReviewFaultForm(BetterModelForm):
 
     class Meta:
         model = models.Fault
-        fields = []
+        fields = ['id']

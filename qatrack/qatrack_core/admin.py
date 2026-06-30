@@ -16,7 +16,7 @@ class SaveUserMixin:
             obj.created = timezone.now()
         obj.modified_by = request.user
 
-        super(SaveUserMixin, self).save_model(request, obj, form, change)
+        super().save_model(request, obj, form, change)
 
 
 class BasicSaveUserAdmin(SaveUserMixin, admin.ModelAdmin):

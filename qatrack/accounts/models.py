@@ -48,3 +48,10 @@ class ActiveDirectoryGroupMap(models.Model):
 class DefaultGroup(models.Model):
 
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _l("Default Group")
+        verbose_name_plural = _l("Default Groups")
+
+    def __str__(self):
+        return str(self.group)

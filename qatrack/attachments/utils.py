@@ -1,10 +1,10 @@
 import io
 import os
 
-from PIL import Image
 import imageio
-from matplotlib.figure import Figure
 import pydicom
+from matplotlib.figure import Figure
+from PIL import Image
 
 
 def imsave(obj, fname):
@@ -12,11 +12,11 @@ def imsave(obj, fname):
     def reseek(obj, data):
         try:
             obj.seek(0)
-        except:
+        except (AttributeError, OSError):
             pass
         try:
             data.seek(0)
-        except:
+        except (AttributeError, OSError):
             pass
 
     fmt = os.path.splitext(fname)[-1].strip('.')
@@ -25,7 +25,7 @@ def imsave(obj, fname):
         imageio.imwrite(data, obj, format=fmt)
         reseek(obj, data)
         return data.read()
-    except:
+    except Exception:
         reseek(obj, data)
 
     try:
@@ -33,7 +33,7 @@ def imsave(obj, fname):
         im.save(data, format=fmt)
         reseek(obj, data)
         return data.read()
-    except:
+    except Exception:
         reseek(obj, data)
 
     try:
@@ -44,7 +44,7 @@ def imsave(obj, fname):
         imageio.imwrite(data, pixels, format=fmt)
         reseek(obj, data)
         return data.read()
-    except:
+    except Exception:
         reseek(obj, data)
 
 
@@ -118,4 +118,4 @@ def to_bytes(obj, fname=None):
     except TypeError:
         pass
 
-    return bytes()
+    return b''

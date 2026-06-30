@@ -10,23 +10,25 @@
 # To use it, pass 'profile=1' as a GET or POST parameter to any HTTP
 # request.
 
-from base64 import b64decode, b64encode
+import functools
 import pickle
-from io import StringIO
-from decimal import Decimal
-import hotshot
-import hotshot.stats
 import sys
 import tempfile
+from base64 import b64decode, b64encode
+from decimal import Decimal
+from io import StringIO
 
+import hotshot
+import hotshot.stats
 from django.conf import settings
 from django.db import connection, reset_queries
 from django.http import HttpResponse
 from django.utils import html
 
 
-class StdoutWrapper(object):
+class StdoutWrapper:
     """Simple wrapper to capture and overload sys.stdout"""
+
     def __init__(self):
         self.stdout = sys.stdout
         self.stream = StringIO()
@@ -68,11 +70,13 @@ def render_queries(queries, sort):
             print(" %8s %s" % (query["time"], query["sql"]), file=output)
         return output
     if sort == 'time':
+
         def sorter(x, y):
-            return cmp(x[1][1], y[1][1])
+            return (x[1][1] > y[1][1]) - (x[1][1] < y[1][1])
     elif sort == 'queries':
+
         def sorter(x, y):
-            return cmp(x[1][0], y[1][0])
+            return (x[1][0] > y[1][0]) - (x[1][0] < y[1][0])
     else:
         raise RuntimeError("Unknown sort: %s" % sort)
     print("  queries     time query", file=output)
@@ -84,11 +88,9 @@ def render_queries(queries, sort):
             result[1] += Decimal(query["time"])
         except KeyError:
             results[query["sql"]] = [1, Decimal(query["time"])]
-    results = sorted(iter(results.items()), cmp=sorter, reverse=True)
+    results = sorted(iter(results.items()), key=functools.cmp_to_key(sorter), reverse=True)
     for result in results:
-        print(" %8d %8.3f %s" % (result[1][0],
-                                           result[1][1],
-                                           result[0]), file=output)
+        print(" %8d %8.3f %s" % (result[1][0], result[1][1], result[0]), file=output)
     return output
 
 
@@ -106,8 +108,9 @@ def unpickle_stats(stats):
     return stats
 
 
-class RadioButton(object):
+class RadioButton:
     """Generate the HTML for a radio button."""
+
     def __init__(self, name, value, description=None, checked=False):
         self.name = name
         self.value = value
@@ -121,26 +124,30 @@ class RadioButton(object):
         checked = ""
         if self.checked:
             checked = "checked='checked'"
-        return ("<input "
-                "type='radio' "
-                "name='%(name)s' "
-                "value='%(value)s' "
-                "%(checked)s>"
-                "%(description)s"
-                "</input><br />" %
-                {'name': self.name,
-                 'value': self.value,
-                 'checked': checked,
-                 'description': self.description})
+        return (
+            "<input "
+            "type='radio' "
+            "name='%(name)s' "
+            "value='%(value)s' "
+            "%(checked)s>"
+            "%(description)s"
+            "</input><br />" % {
+                'name': self.name,
+                'value': self.value,
+                'checked': checked,
+                'description': self.description
+            }
+        )
 
 
-class RadioButtons(object):
+class RadioButtons:
     """Generate the HTML for a list of radio buttons."""
+
     def __init__(self, name, checked, values):
         self.result = []
         for v in values:
             description = None
-            if isinstance(v, (list, tuple)):
+            if isinstance(v, list | tuple):
                 value = v[0]
                 description = v[1]
             else:
@@ -184,14 +191,9 @@ stats_template = """
 </html>
 """
 
-sort_categories = (('time', 'internal time'),
-                   ('cumulative', 'cumulative time'),
-                   ('calls', 'call count'),
-                   ('pcalls', 'primitive call count'),
-                   ('file', 'file name'),
-                   ('nfl', 'name/file/line'),
-                   ('stdname', 'standard name'),
-                   ('name', 'function name'))
+sort_categories = (('time', 'internal time'), ('cumulative', 'cumulative time'), ('calls', 'call count'),
+                   ('pcalls', 'primitive call count'), ('file', 'file name'), ('nfl', 'name/file/line'),
+                   ('stdname', 'standard name'), ('name', 'function name'))
 
 
 def display_stats(request, stats, queries):
@@ -201,29 +203,29 @@ def display_stats(request, stats, queries):
     _stats_ should contain a pstats.Stats of a hotshot session.
     _queries_ should contain a list of SQL queries.
     """
-    sort = [request.REQUEST.get('sort_first', 'time'),
-            request.REQUEST.get('sort_second', 'calls')]
+    sort = [request.REQUEST.get('sort_first', 'time'), request.REQUEST.get('sort_second', 'calls')]
     format = request.REQUEST.get('format', 'print_stats')
-    sort_first_buttons = RadioButtons('sort_first', sort[0],
-                                      sort_categories)
-    sort_second_buttons = RadioButtons('sort_second', sort[1],
-                                       sort_categories)
-    format_buttons = RadioButtons('format', format,
-                                  (('print_stats', 'by function'),
-                                   ('print_callers', 'by callers'),
-                                   ('print_callees', 'by callees')))
+    sort_first_buttons = RadioButtons('sort_first', sort[0], sort_categories)
+    sort_second_buttons = RadioButtons('sort_second', sort[1], sort_categories)
+    format_buttons = RadioButtons(
+        'format', format,
+        (('print_stats', 'by function'), ('print_callers', 'by callers'), ('print_callees', 'by callees'))
+    )
     output = render_stats(stats, sort, format)
     output.reset()
     output = [html.escape(str(line)) for line in output.readlines()]
     response = HttpResponse(content_type='text/html; charset=utf-8')
-    response.content = (stats_template %
-                        {'format_buttons': format_buttons,
-                         'sort_first_buttons': sort_first_buttons,
-                         'sort_second_buttons': sort_second_buttons,
-                         'rawqueries': b64encode(pickle.dumps(queries)),
-                         'rawstats': b64encode(pickle_stats(stats)),
-                         'stats': "".join(output),
-                         'url': request.path})
+    response.content = (
+        stats_template % {
+            'format_buttons': format_buttons,
+            'sort_first_buttons': sort_first_buttons,
+            'sort_second_buttons': sort_second_buttons,
+            'rawqueries': b64encode(pickle.dumps(queries)),
+            'rawstats': b64encode(pickle_stats(stats)),
+            'stats': "".join(output),
+            'url': request.path
+        }
+    )
     return response
 
 
@@ -259,32 +261,32 @@ def display_queries(request, stats, queries):
     _queries_ should contain a list of SQL queries.
     """
     sort = request.REQUEST.get('sort_by', 'time')
-    sort_buttons = RadioButtons('sort_by', sort,
-                                (('order', 'by order'),
-                                 ('time', 'time'),
-                                 ('queries', 'query count')))
+    sort_buttons = RadioButtons('sort_by', sort, (('order', 'by order'), ('time', 'time'), ('queries', 'query count')))
     output = render_queries(queries, sort)
     output.reset()
-    output = [html.escape(str(line))
-              for line in output.readlines()]
+    output = [html.escape(str(line)) for line in output.readlines()]
     response = HttpResponse(content_type='text/html; charset=utf-8')
-    response.content = (queries_template %
-                        {'sort_buttons': sort_buttons,
-                         'num_queries': len(queries),
-                         'queries': "".join(output),
-                         'rawqueries': b64encode(pickle.dumps(queries)),
-                         'rawstats': b64encode(pickle_stats(stats)),
-                         'url': request.path})
+    response.content = (
+        queries_template % {
+            'sort_buttons': sort_buttons,
+            'num_queries': len(queries),
+            'queries': "".join(output),
+            'rawqueries': b64encode(pickle.dumps(queries)),
+            'rawstats': b64encode(pickle_stats(stats)),
+            'url': request.path
+        }
+    )
     return response
 
 
-class ProfileMiddleware(object):
+class ProfileMiddleware:
     """
     Displays hotshot profiling for any view.
     http://yoursite.com/yourview/?profile=1
 
     WARNING: It uses hotshot profiler which is not thread safe.
     """
+
     def process_request(self, request):
         """
     Setup the profiler for a profiling run and clear the SQL query log.
@@ -292,15 +294,15 @@ class ProfileMiddleware(object):
     If this is a resort of an existing profiling run, just return
     the resorted list.
     """
+
         def unpickle(params):
             stats = unpickle_stats(b64decode(params.get('stats', '')))
             queries = pickle.loads(b64decode(params.get('queries', '')))
             return stats, queries
 
         if request.method != 'GET' and \
-           not (request.META.get('HTTP_CONTENT_TYPE',
-                                 request.META.get('CONTENT_TYPE', '')) in
-                ['multipart/form-data', 'application/x-www-form-urlencoded']):
+           request.headers.get('content-type',
+                                 request.headers.get('content-type', '')) not in ['multipart/form-data', 'application/x-www-form-urlencoded']:
             return
         if (request.REQUEST.get('profile', False) and (settings.DEBUG or request.user.is_staff)):
             request.statsfile = tempfile.NamedTemporaryFile()
@@ -309,8 +311,7 @@ class ProfileMiddleware(object):
                 # Instantly re-sort the existing stats data
                 stats, queries = unpickle(params)
                 return display_stats(request, stats, queries)
-            elif (params.get('show_queries', False)
-                  and params.get('show_stats', '1') == '1'):
+            elif (params.get('show_queries', False) and params.get('show_stats', '1') == '1'):
                 stats, queries = unpickle(params)
                 return display_queries(request, stats, queries)
             else:
@@ -330,8 +331,7 @@ class ProfileMiddleware(object):
             request.GET.pop('show_queries', None)
             request.GET.pop('show_stats', None)
             try:
-                return profiler.runcall(view_func,
-                                        request, *view_args, **view_kwargs)
+                return profiler.runcall(view_func, request, *view_args, **view_kwargs)
             finally:
                 request.GET = original_get
 

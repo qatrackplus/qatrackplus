@@ -2,6 +2,7 @@ import random
 import string
 
 from django.utils import timezone
+
 from qatrack.faults import models
 from qatrack.qa.tests import utils as qa_utils
 

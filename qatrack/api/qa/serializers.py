@@ -1,9 +1,9 @@
 import base64
-from collections import defaultdict
 import copy
 import json
-from numbers import Number
 import re
+from collections import defaultdict
+from numbers import Number
 
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
@@ -28,18 +28,21 @@ BASE64_RE = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|
 
 
 class FrequencySerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Frequency
         fields = "__all__"
 
 
 class TestInstanceStatusSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.TestInstanceStatus
         fields = "__all__"
 
 
 class AutoReviewRuleSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.AutoReviewRule
         fields = "__all__"
@@ -53,24 +56,28 @@ class AutoReviewRuleSetSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ReferenceSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Reference
         fields = "__all__"
 
 
 class ToleranceSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Tolerance
         fields = "__all__"
 
 
 class CategorySerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Category
         fields = "__all__"
 
 
 class TestSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.Test
         fields = "__all__"
@@ -91,12 +98,14 @@ class TestListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class UnitTestInfoSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.UnitTestInfo
         fields = "__all__"
 
 
 class TestListMembershipSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.TestListMembership
         fields = "__all__"
@@ -148,6 +157,7 @@ class TestInstanceSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TestInstanceCreator(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.TestInstance
         fields = ["value", "string_value", "date_value", "datetime_value", "skipped", "comment", "macro"]
@@ -298,7 +308,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
     def validate(self, data):
         post_data = copy.deepcopy(data)
 
-        validated_data = super(TestListInstanceCreator, self).validate(data)
+        validated_data = super().validate(data)
 
         if self.instance:
             self.add_data_from_instance(validated_data)
@@ -505,7 +515,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
         """Convert API post data to format suitable for CompositePerformer"""
 
         data = {
-            'tests': {k: v.get("value") for k, v in validated_data['tests'].items()},
+            'tests': {
+                k: v.get("value") for k, v in validated_data['tests'].items()
+            },
             'meta': {
                 'test_list_name': self.tl.name,
                 'unit_number': self.utc.unit.number,
@@ -516,7 +528,9 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
             },
             'test_list_id': self.tl.id,
             'unit_id': self.utc.unit.id,
-            'comments': {k: v.get("comment") for k, v in validated_data['tests'].items()}
+            'comments': {
+                k: v.get("comment") for k, v in validated_data['tests'].items()
+            }
         }
         return data
 
@@ -779,7 +793,7 @@ class TestListInstanceCreator(serializers.HyperlinkedModelSerializer):
                 "attachments": [a.attachment.url for a in ti.attachment_set.all()],
             }
 
-        rep = super(TestListInstanceCreator, self).to_representation(obj)
+        rep = super().to_representation(obj)
 
         if not hasattr(self, "comment"):
             self.comment = ''

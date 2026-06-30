@@ -7,6 +7,7 @@
 
 import datetime
 import os
+import pathlib
 import sys
 
 import matplotlib
@@ -18,9 +19,7 @@ DEBUG = False
 DEBUG_TOOLBAR = False
 
 # Who to email when server errors occur
-ADMINS = (
-    ('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),
-)
+ADMINS = (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),)
 MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = False
 
@@ -29,8 +28,10 @@ SEND_BROKEN_LINK_EMAILS = False
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
-
-VERSION = "3.1.1.3"
+LOCALE_PATHS = [
+    os.path.join(PROJECT_ROOT, 'locale'),
+]
+VERSION = "4.0.0"
 BUG_REPORT_URL = "https://github.com/qatrackplus/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -48,17 +49,20 @@ SITE_NAME = "QATrack+"
 # Database settings
 
 # if you wish to override the database settings below (e.g. for deployment),
-# please do so here or in a local_settings.py file
+# please do so in local_settings.py 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3'
-        'NAME': os.path.join(PROJECT_ROOT, '..', 'db/default.db'),  # db name Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.S
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    }
 }
+
+# -----------------------------------------------------------------------------
+# Backup settings
+# Override these in local_settings.py if you are using the backup_site command.
+BACKUP_DIR = "C:\\deploy\\backups"
+BACKUP_WEEKLY_DAY = 2  # 0 = Monday, 6 = Sunday (2 = Wednesday)
+BACKUP_MONTHLY_DAY = 3
+
+BACKUP_DAYS_TO_KEEP = 7
+BACKUP_WEEKS_TO_KEEP = 5
+BACKUP_MONTHS_TO_KEEP = 12
 
 # ----------------------------------------------------------------------------
 # Default local settings
@@ -74,13 +78,11 @@ TIME_ZONE = 'America/Toronto'
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
-USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
 
 FORMAT_MODULE_PATH = "qatrack.formats"
-
 
 # formats for strptime/strftime
 DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
@@ -98,7 +100,6 @@ DATETIME_FORMAT = "j M Y H:i"
 DATE_FORMAT = "j M Y"
 TIME_FORMAT = "H:i"
 
-
 DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
 
 # Language code for this installation. All choices can be found here:
@@ -108,10 +109,12 @@ LANGUAGE_CODE = 'en-us'
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
-
+# USE_L10N = True # depreciated in Django 4.0+, always on now
+#TODO: Should QATrack+ support localization or internationalization?
+LANGUAGES = [('en', 'English'), ('fr', 'Français')]
 CONSTANT_PRECISION = 8
 DEFAULT_NUMBER_FORMAT = None
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # This is the warning message given to the user when a test result is out of tolerance
 # Override this setting in local_settings.py to a locally relevant warning message
@@ -167,12 +170,12 @@ if not os.path.isfile(SITE_SPECIFIC_CSS_PATH):
     with open(SITE_SPECIFIC_CSS_PATH, 'w') as f:
         f.write("/* You can place any site specific css in this file*/\n")
 
-
 # ------------------------------------------------------------------------------
 # Middleware
 MIDDLEWARE = [
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # 'django.contrib.auth.middleware.RemoteUserMiddleware',
@@ -182,7 +185,7 @@ MIDDLEWARE = [
 ]
 
 # login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*"]
+LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*", r"^i18n/"]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
@@ -196,7 +199,8 @@ TEMPLATES = [
         ],
         'APP_DIRS': True,
         'OPTIONS': {
-            'debug': False,
+            'debug':
+                False,
             'context_processors': [
                 # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
                 # list if you haven't customized them:
@@ -209,6 +213,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 'qatrack.context_processors.site',
+                'qatrack.context_processors.available_languages',
             ],
         },
     },
@@ -224,45 +229,15 @@ FIXTURE_DIRS = (
 
 # ------------------------------------------------------------------------------
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.contenttypes',
-    'django.contrib.auth',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.humanize',
-    'django_extensions',
-    'django_q',
-    'django_comments',
-    'formtools',
-    'django_filters',
-    'rest_framework',
-    'rest_framework_filters',
-    'rest_framework.authtoken',
-    'listable',
-    'genericdropdown',
-    'recurrence',
-    'widget_tweaks',
-    'dynamic_raw_id',
-    'mptt',
-    'django_mptt_admin',
-    'qatrack.cache',
-    'qatrack.accounts',
-    'qatrack.units',
-    'qatrack.qa',
-    'qatrack.qatrack_core',
-    'qatrack.notifications',
-    'qatrack.contacts',
-    'qatrack.issue_tracker',
-    'qatrack.service_log',
-    'qatrack.parts',
-    'qatrack.faults',
-    'qatrack.attachments',
-    'qatrack.reports',
-    'admin_views',
+    'django.contrib.admin', 'django.contrib.contenttypes', 'django.contrib.auth', 'django.contrib.sessions',
+    'django.contrib.sites', 'django.contrib.messages', 'django.contrib.staticfiles', 'django.contrib.humanize',
+    'django_extensions', 'django_q', 'django_comments', 'formtools', 'django_filters', 'rest_framework',
+    'rest_framework_filters', 'rest_framework.authtoken', 'listable', 'qatrack.genericdropdown', 'recurrence',
+    'widget_tweaks', 'dynamic_raw_id', 'mptt', 'django_mptt_admin', 'qatrack.cache', 'qatrack.accounts',
+    'qatrack.units', 'qatrack.qa', 'qatrack.qatrack_core', 'qatrack.notifications', 'qatrack.contacts',
+    'qatrack.issue_tracker', 'qatrack.service_log', 'qatrack.parts', 'qatrack.faults', 'qatrack.attachments',
+    'qatrack.reports', 'qatrack.form_utils'
 ]
-
 
 # ----------------------------------------------------------------------------
 # API settings
@@ -338,7 +313,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 CSRF_COOKIE_NAME = 'csrftoken'
 
-
 # needs to be set to True when running behind reverse proxy (normal deploy)
 # set to False when not running behind reverse proxy
 # Use True for e.g. CherryPy/IIS and False for Apache/mod_wsgi
@@ -362,7 +336,6 @@ EMAIL_HOST_PASSWORD = 'your_password_here'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 
-
 # -----------------------------------------------------------------------------
 # Account settings
 
@@ -374,12 +347,10 @@ AUTHENTICATION_BACKENDS = [
     # 'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend',
 ]
 
-
 ACCOUNT_ACTIVATION_DAYS = 7
 ACCOUNTS_SELF_REGISTER = False
 ACCOUNTS_CLEAN_USERNAME = None
 ACCOUNTS_PASSWORD_RESET = True
-
 
 # active directory settings (not required if only using ModelBackend
 AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
@@ -409,7 +380,6 @@ AD_SEARCH_FIELDS = [AD_LU_MAIL, AD_LU_SURNAME, AD_LU_GIVEN_NAME, AD_LU_ACCOUNT_N
 # same name as the AD group if it doesn't exist.
 AD_MIRROR_GROUPS = False
 
-
 AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
 CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
@@ -417,7 +387,6 @@ CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
 # define a function called AD_CLEAN_USERNAME in local_settings.py if you
 # wish to clean usernames before sending to ldap server
 AD_CLEAN_USERNAME = None
-
 
 # AD FS settings. For more information and other settings, see
 # https://django-auth-adfs.readthedocs.io/en/latest/settings_ref.html
@@ -435,6 +404,7 @@ AUTH_ADFS = {
     "GROUPS_CLAIM": "group",
 }
 
+
 # ------------------------------------------------------------------------------
 # Logging Settings
 # A sample logging configuration. The only tangible logging
@@ -443,10 +413,9 @@ AUTH_ADFS = {
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 def skip_requests(record):  # noqa: E302
-    skip = (
-        record.args[0].startswith("GET /static/") or
-        record.args[0].startswith("GET /accounts/ping/")
-    )
+    if not record.args or not isinstance(record.args[0], str):
+        return True
+    skip = (record.args[0].startswith("GET /static/") or record.args[0].startswith("GET /accounts/ping/"))
     return not skip
 
 
@@ -498,10 +467,10 @@ LOGGING = {
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
-        'django-q': {
+        'django-q2': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
-            'filename': os.path.join(LOG_ROOT, "django-q.log"),
+            'filename': os.path.join(LOG_ROOT, "django-q2.log"),
             'backupCount': 26,  # how many backup file to keep, 10 days
             'formatter': 'verbose',
         },
@@ -555,8 +524,8 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'django-q': {
-            'handlers': ['console', 'django-q'],
+        'django-q2': {
+            'handlers': ['console', 'django-q2'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -659,10 +628,7 @@ DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
 USE_ISSUES = False  # internal development issue tracker
 
-DELETE_REASONS = (
-    ('Duplicate', 'Duplicate'),
-    ('Invalid', 'Invalid')
-)
+DELETE_REASONS = (('Duplicate', 'Duplicate'), ('Invalid', 'Invalid'))
 
 DEFAULT_AVAILABLE_TIMES = {
     'hours_sunday': datetime.timedelta(hours=0, minutes=0),
@@ -695,7 +661,10 @@ EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = ['auth_', 'qa', 'service_log', 'units',
 EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken', 'sessions_']
 EXPLORER_TASKS_ENABLED = False
 EXPLORER_ASYNC_SCHEMA = False
-EXPLORER_SQL_BLACKLIST = ['ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE', 'SCHEMA', 'GRANT', 'OWNER TO']  # noqa: E501
+EXPLORER_SQL_BLACKLIST = [
+    'ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE',
+    'SCHEMA', 'GRANT', 'OWNER TO'
+]  # noqa: E501
 
 
 def EXPLORER_PERMISSION_CHANGE(request):
@@ -705,9 +674,6 @@ def EXPLORER_PERMISSION_CHANGE(request):
 def EXPLORER_PERMISSION_VIEW(request):
     return request.user.has_perm("reports.can_run_sql_reports")
 
-
-if os.path.exists('/root/.is_inside_docker') and 'TRAVIS' not in os.environ:
-    from .docker_settings import *  # NOQA
 
 
 CHROME_PATH = ""
@@ -729,25 +695,50 @@ else:
         "/usr/bin/chromium-browser",
     ]
 
-
 for path in chrome_paths:
     if os.path.exists(path):
         CHROME_PATH = path
-
 
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
-from .local_settings import *  # noqa: F403, F401, E402
+use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+if use_docker:
+    ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
+    SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
+    try:
+        with open(SECRET_FILEPATH) as f:
+            SECRET_KEY = f.read()
+    except OSError:
+        import secrets
+        SECRET_KEY = secrets.token_urlsafe(64)
+        if not os.path.isdir(os.path.dirname(SECRET_FILEPATH)):
+            os.makedirs(os.path.dirname(SECRET_FILEPATH), exist_ok=True)
+        with open(SECRET_FILEPATH, 'w') as f:
+            f.write(SECRET_KEY)
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB', 'qatrackplus'),
+            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
+            'HOST': 'postgres',
+            'PORT': 5432
+        }
+    }
+
+    if 'readonly' not in DATABASES and USE_SQL_REPORTS:
+        DATABASES['readonly'] = DATABASES['default']
+else:
+    from .local_settings import *  # noqa: F403, F401, E402
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
-
 _MAX_FIELDS_PER_TEST = 5  # value, json_value, user_attached, skipped, extra value for bool
 DATA_UPLOAD_MAX_NUMBER_FIELDS = max(MAX_TESTS_PER_TESTLIST * _MAX_FIELDS_PER_TEST, 1000)
-
 
 # ------------------------------------------------------------------------------
 # Directory availability & dependent paths
@@ -760,20 +751,30 @@ UPLOAD_ROOT = os.path.join(MEDIA_ROOT, "uploads")
 TMP_UPLOAD_ROOT = os.path.join(UPLOAD_ROOT, "tmp")
 TMP_REPORT_ROOT = os.path.join(MEDIA_ROOT, "reports")
 
-for d in (MEDIA_ROOT, UPLOAD_ROOT, TMP_UPLOAD_ROOT, LOG_ROOT, TMP_REPORT_ROOT):
-    if not os.path.isdir(d):
-        os.mkdir(d)
+# region: pathlib recreation of path checks and creation.  
+# This is to avoid issues with os.path.exists() returning False for symlinks to directories
+# os.path variables are left in place for backwards compatibility with other code that may use them
+MEDIA_ROOT_PATH = pathlib.Path(MEDIA_ROOT)
+UPLOAD_ROOT_PATH = pathlib.Path(UPLOAD_ROOT)
+TMP_UPLOAD_ROOT_PATH = pathlib.Path(TMP_UPLOAD_ROOT)
+TMP_REPORT_ROOT_PATH = pathlib.Path(TMP_REPORT_ROOT)
+LOG_ROOT_PATH = pathlib.Path(LOG_ROOT)
+TMP_REPORT_ROOT_PATH = pathlib.Path(TMP_REPORT_ROOT)
+
+for d in (MEDIA_ROOT_PATH, UPLOAD_ROOT_PATH, TMP_UPLOAD_ROOT_PATH, LOG_ROOT_PATH, TMP_REPORT_ROOT_PATH):
+    if not d.exists() and not d.is_dir():
+        d.mkdir(parents=True, exist_ok=True)
+# endregion
+
 
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 IS_FILE_CACHE = CACHES['default']['BACKEND'] == 'django.core.cache.backends.filebased.FileBasedCache'
 if IS_FILE_CACHE and not os.path.isdir(CACHE_LOCATION):
     os.mkdir(CACHE_LOCATION)
 
-
 if FORCE_SCRIPT_NAME:
-    # Fix URL for Admin Views if FORCE_SCRIPT_NAME_SET in local_settings
-    ADMIN_VIEWS_URL_PREFIX = FORCE_SCRIPT_NAME + "/admin"
-
+    # Django admin URLs are handled automatically through standard URL routing
+    pass
 
 # no longer using EMAIL_NOTIFICATION_USER/PWD but people may have
 # notification specific settings set.
@@ -783,12 +784,21 @@ if EMAIL_NOTIFICATION_USER and not EMAIL_HOST_USER:
 if EMAIL_NOTIFICATION_PWD and not EMAIL_HOST_PASSWORD:
     EMAIL_HOST_PASSWORD = EMAIL_NOTIFICATION_PWD
 
-
 # ------------------------------------------------------------------------------
 # Testing settings
 
-SELENIUM_USE_CHROME = False  # Set to True to use Chrome instead of FF (requires ChromeDriver)
-SELENIUM_CHROME_PATH = ''  # Set full path of Chromedriver binary if SELENIUM_USE_CHROME == True
+# Selenium Browser Configuration
+# Options: 'firefox', 'chromium'
+# Set to 'firefox' to use Firefox, 'chromium' to use Chromium
+SELENIUM_BROWSER = ''
+
+# Browser Driver Paths (leave empty to use system default)
+SELENIUM_FIREFOX_DRIVER_PATH = ''  # Path to geckodriver
+SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver
+
+# Headless Mode
+# Set to True to run browsers in headless mode (no visible browser window)
+# Set to False to see the browser during test execution
 SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
 
 if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
@@ -799,7 +809,6 @@ if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
-
 USE_ADFS = (
     'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS or
     'django_adfs.backends.AdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS
@@ -807,7 +816,6 @@ USE_ADFS = (
 
 if USE_ADFS:
     INSTALLED_APPS.append('django_auth_adfs')
-
 
 if USE_SQL_REPORTS:
     INSTALLED_APPS += [

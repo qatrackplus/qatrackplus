@@ -1034,14 +1034,16 @@
                     this.$container.addClass('felter-container');
 
                     if (self.options.selectAll) {
-                        var $btn_select_all = $('<div class="select-all-container"><div class="felter-selectall ' + self.options.selectAllClass + '">All</div></div>');
+                        var allText = (window.filterTranslations && window.filterTranslations.all) ? window.filterTranslations.all : 'All';
+                        var $btn_select_all = $('<div class="select-all-container"><div class="felter-selectall ' + self.options.selectAllClass + '">' + allText + '</div></div>');
                         $btn_select_all.click(function() {
                             self.selectAll();
                         });
                         $top_opt_container.append($btn_select_all);
                     }
                     if (self.options.selectNone) {
-                        var $btn_select_none = $('<div class="select-all-container"><div class="felter-selectnone ' + self.options.selectAllClass + '">None</div></div>');
+                        var noneText = (window.filterTranslations && window.filterTranslations.none) ? window.filterTranslations.none : 'None';
+                        var $btn_select_none = $('<div class="select-all-container"><div class="felter-selectnone ' + self.options.selectAllClass + '">' + noneText + '</div></div>');
                         $btn_select_none.click(function() {
                             self.selectNone();
                         });

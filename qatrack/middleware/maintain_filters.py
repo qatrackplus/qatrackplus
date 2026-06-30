@@ -14,7 +14,7 @@ class FilterPersistMiddleware:
         if '/admin/' not in request.path:
             return self.get_response(request)
 
-        if not request.META.get('HTTP_REFERER', ""):
+        if not request.headers.get('referer', ""):
             return self.get_response(request)
 
         popup = 'popup=1' in request.META['QUERY_STRING']
@@ -29,7 +29,7 @@ class FilterPersistMiddleware:
             del session['redirected']
             return self.get_response(request)
 
-        referrer = request.META.get('HTTP_REFERER', "").split('?')[0]
+        referrer = request.headers.get('referer', "").split('?')[0]
         referrer = referrer[referrer.find('/admin'):len(referrer)]
         key = 'key' + path.replace('/', '_')
 

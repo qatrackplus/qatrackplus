@@ -46,6 +46,7 @@ class ServiceEventTemplateSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ServiceEventScheduleSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = models.ServiceEventSchedule
         fields = "__all__"

@@ -135,8 +135,8 @@ class Migration(SchemaMigration):
         # Adding M2M table for field sublists on 'TestList'
         db.create_table('qa_testlist_sublists', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('from_testlist', models.ForeignKey(orm['qa.testlist'], null=False)),
-            ('to_testlist', models.ForeignKey(orm['qa.testlist'], null=False))
+            ('from_testlist', models.ForeignKey(orm['qa.testlist'], on_delete=models.CASCADE, null=False)),
+            ('to_testlist', models.ForeignKey(orm['qa.testlist'], on_delete=models.CASCADE, null=False))
         ))
         db.create_unique('qa_testlist_sublists', ['from_testlist_id', 'to_testlist_id'])
 
@@ -159,8 +159,8 @@ class Migration(SchemaMigration):
         # Adding M2M table for field visible_to on 'UnitTestCollection'
         db.create_table('qa_unittestcollection_visible_to', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('unittestcollection', models.ForeignKey(orm['qa.unittestcollection'], null=False)),
-            ('group', models.ForeignKey(orm['auth.group'], null=False))
+            ('unittestcollection', models.ForeignKey(orm['qa.unittestcollection'], on_delete=models.CASCADE, null=False)),
+            ('group', models.ForeignKey(orm['auth.group'], on_delete=models.CASCADE, null=False))
         ))
         db.create_unique('qa_unittestcollection_visible_to', ['unittestcollection_id', 'group_id'])
 

@@ -1,24 +1,20 @@
 import json
+import os
 from random import Random
 
 from django.conf import settings
-from django.contrib.auth.models import Group, User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
-from django.db.models import ObjectDoesNotExist
-from django.db.models.signals import post_delete, post_save, pre_delete
-from django.dispatch import receiver
 from django.utils.formats import get_format
+from django.utils.translation import get_language_info
 
 from qatrack.faults.models import Fault
-from qatrack.parts.models import PartStorageCollection, PartUsed
-from qatrack.qa.models import TestListInstance, UnitTestCollection, set_active_unit_test_collections_for_unit_cache
+from qatrack.qa.models import TestListInstance
 from qatrack.service_log.models import (
     ReturnToServiceQA,
     ServiceEvent,
     ServiceEventStatus,
 )
-from qatrack.units.models import Unit
 
 cache.delete(settings.CACHE_UNREVIEWED_FAULT_COUNT)
 cache.delete(settings.CACHE_UNREVIEWED_COUNT)
@@ -30,91 +26,6 @@ cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
 cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
 cache.delete(settings.CACHE_SERVICE_STATUS_COLOURS)
 cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
-
-
-@receiver(pre_delete, sender=PartUsed)
-def update_part_storage_quantity(*args, **kwargs):
-    pu = kwargs['instance']
-    part = pu.part
-    storage = pu.from_storage
-    quantity = pu.quantity
-    # Return parts used to storage:
-    if storage:
-        try:
-            psc = PartStorageCollection.objects.get(part=part, storage=storage)
-            psc.quantity += quantity
-            psc.save()
-        except ObjectDoesNotExist:
-            pass
-
-
-@receiver(post_delete, sender=PartStorageCollection)
-def update_part_quantity(*args, **kwargs):
-
-    psc = kwargs['instance']
-    part = psc.part
-    part.set_quantity_current()
-
-
-@receiver(post_save, sender=TestListInstance)
-@receiver(post_delete, sender=TestListInstance)
-@receiver(post_save, sender=User)
-@receiver(post_save, sender=Group)
-def update_unreviewed_cache(*args, **kwargs):
-    """When a test list is completed invalidate the unreviewed counts"""
-    cache.delete(settings.CACHE_UNREVIEWED_COUNT)
-    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
-    cache.delete(settings.CACHE_RTS_QA_COUNT)
-    cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
-    cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
-    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
-
-
-@receiver(post_save, sender=ReturnToServiceQA)
-@receiver(post_delete, sender=ReturnToServiceQA)
-def update_rts_cache(*args, **kwargs):
-    """When a RTS is completed invalidate the unreviewed counts"""
-    cache.delete(settings.CACHE_RTS_QA_COUNT)
-    cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
-    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
-
-
-@receiver(post_save, sender=ServiceEventStatus)
-@receiver(post_delete, sender=ServiceEventStatus)
-@receiver(post_delete, sender=ServiceEvent)
-def update_se_cache(*args, **kwargs):
-    """When a service status is changed invalidate the default and review count"""
-    cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
-    cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
-    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
-
-
-@receiver(post_save, sender=Fault)
-@receiver(post_delete, sender=Fault)
-def update_faults_cache(*args, **kwargs):
-    """When a fault is changed invalidate the default and review count"""
-    cache.delete(settings.CACHE_UNREVIEWED_FAULT_COUNT)
-
-
-@receiver(post_save, sender=UnitTestCollection)
-@receiver(post_delete, sender=UnitTestCollection)
-def update_active_unit_test_collections_for_unit_utc(*args, **kwargs):
-    unit = kwargs['instance'].unit
-    set_active_unit_test_collections_for_unit_cache(unit)
-
-
-@receiver(post_save, sender=Unit)
-@receiver(post_delete, sender=Unit)
-def update_active_unit_test_collections_for_unit(*args, **kwargs):
-    unit = kwargs['instance']
-    set_active_unit_test_collections_for_unit_cache(unit)
-
-
-@receiver(post_save, sender=ServiceEventStatus)
-@receiver(post_delete, sender=ServiceEventStatus)
-def update_colours(*args, **kwargs):
-    service_status_colours = {ses.name: ses.colour for ses in ServiceEventStatus.objects.all()}
-    cache.set(settings.CACHE_SERVICE_STATUS_COLOURS, service_status_colours)
 
 
 def site(request):
@@ -237,3 +148,71 @@ def get_sl_notification_total(request, se_unreviewed, rts_incomplete, rts_unrevi
         ('qa.can_review', rts_unreviewed),
     ]
     return sum(count for perm, count in perms if hasattr(request, 'user') and request.user.has_perm(perm))
+
+
+def available_languages(request):
+    """
+    Context processor to provide available languages for the language switcher dropdown.
+    LANGUAGES setting takes precedence over auto-detection when explicitly set.
+    """
+    languages = []
+    
+    # Check if LANGUAGES is explicitly set in settings
+    languages_explicitly_set = hasattr(settings, 'LANGUAGES') and settings.LANGUAGES
+    
+    # Get languages from Django settings
+    if languages_explicitly_set:
+        for lang_code, lang_name in settings.LANGUAGES:
+            try:
+                # Get detailed language info
+                lang_info = get_language_info(lang_code)
+                languages.append({
+                    'code': lang_code,
+                    'name': lang_info['name_local'],  # Name in the language itself
+                    'name_translated': lang_name,     # Name in current language
+                    'bidi': lang_info['bidi'],       # Right-to-left support
+                })
+            except Exception:
+                # Fallback if language info not available
+                languages.append({
+                    'code': lang_code,
+                    'name': lang_name,
+                    'name_translated': lang_name,
+                    'bidi': False,
+                })
+    
+    # Only scan locale directory if LANGUAGES is NOT explicitly set
+    # This allows auto-detection when no LANGUAGES is specified
+    if not languages_explicitly_set and hasattr(settings, 'LOCALE_PATHS'):
+        for locale_path in settings.LOCALE_PATHS:
+            if os.path.exists(locale_path):
+                try:
+                    for item in os.listdir(locale_path):
+                        item_path = os.path.join(locale_path, item)
+                        if os.path.isdir(item_path) and os.path.exists(os.path.join(item_path, 'LC_MESSAGES')):
+                            # This looks like a valid locale directory
+                            if not any(lang['code'] == item for lang in languages):
+                                try:
+                                    lang_info = get_language_info(item)
+                                    languages.append({
+                                        'code': item,
+                                        'name': lang_info['name_local'],
+                                        'name_translated': lang_info['name'],
+                                        'bidi': lang_info['bidi'],
+                                    })
+                                except Exception:
+                                    # Fallback for unknown languages
+                                    languages.append({
+                                        'code': item,
+                                        'name': item.upper(),
+                                        'name_translated': item.upper(),
+                                        'bidi': False,
+                                    })
+                except (OSError, PermissionError):
+                    # Skip if we can't read the directory
+                    pass
+    
+    # Sort languages by code for consistent ordering
+    languages.sort(key=lambda x: x['code'])
+    
+    return {'available_languages': languages}

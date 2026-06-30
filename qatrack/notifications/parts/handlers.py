@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 from django.db.models import Q
-from django.db.models.signals import m2m_changed, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -42,14 +42,9 @@ def on_part_saved(sender, instance, created, **kwargs):
             subject_template="parts/subject.txt",
             text_template="parts/email.txt",
         )
-        logger.info(
-            "Sent Parts Notice for part %d at %s" % (part.id, timezone.now())
-        )
+        logger.info("Sent Parts Notice for part %d at %s" % (part.id, timezone.now()))
     except:  # noqa: E722  # pragma: nocover
-        logger.exception(
-            "Error sending Part Notice for part %d at %s." %
-            (part.id, timezone.now())
-        )
+        logger.exception("Error sending Part Notice for part %d at %s." % (part.id, timezone.now()))
 
         fail_silently = getattr(settings, "EMAIL_FAIL_SILENTLY", True)
         if not fail_silently:
@@ -61,7 +56,7 @@ def get_notification_recipients(part):
     from qatrack.notifications.parts import models
 
     subs = models.PartNotice.objects.filter(
-        (Q(part_categories=None) | Q(part_categories__part_categories=part.part_category))
+        Q(part_categories=None) | Q(part_categories__part_categories=part.part_category)
     ).select_related("recipients")  # yapf: disable
 
     recipients = set()

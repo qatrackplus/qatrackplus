@@ -55,7 +55,7 @@ def get_notification_recipients(service_event, log_type):
     unit = service_event.unit_service_area.unit
 
     subs = models.ServiceEventNotice.objects.filter(
-        (Q(units=None) | Q(units__units=unit))
+        Q(units=None) | Q(units__units=unit)
     ).select_related("recipients")  # yapf: disable
 
     subs = subs.filter(notification_type__in=[log_type, models.ServiceEventNotice.UPDATED_OR_CREATED])

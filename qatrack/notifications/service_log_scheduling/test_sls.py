@@ -3,18 +3,17 @@ from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
-import recurrence
 
+import qatrack.qa.tests.utils as qa_utils
+import qatrack.service_log.tests.utils as utils
 from qatrack.notifications.models import (
     RecipientGroup,
     ServiceEventSchedulingNotice,
     UnitGroup,
 )
 from qatrack.notifications.service_log_scheduling import admin, tasks
-import qatrack.qa.tests.utils as qa_utils
 from qatrack.qatrack_core.utils import today_start_end
 from qatrack.service_log import models
-import qatrack.service_log.tests.utils as utils
 
 
 class TestServiceEventSchedulingAdmin(TestCase):

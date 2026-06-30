@@ -1,5 +1,5 @@
-from django.contrib import admin
 import django.forms as forms
+from django.contrib import admin
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -30,6 +30,7 @@ class SavedReportForm(forms.ModelForm):
         self.fields['report_type'].choices = report_type_choices()
 
 
+@admin.register(SavedReport)
 class SavedReportAdmin(BaseQATrackAdmin):
 
     list_display = (
@@ -91,6 +92,7 @@ class ReportScheduleForm(forms.ModelForm):
         return cleaned_data
 
 
+@admin.register(ReportSchedule)
 class ReportScheduleAdmin(BasicSaveUserAdmin):
 
     form = ReportScheduleForm
@@ -105,9 +107,7 @@ class ReportScheduleAdmin(BasicSaveUserAdmin):
         'created',
     )
 
-    list_filter = (
-        "report__report_type",
-    )
+    list_filter = ("report__report_type",)
 
     search_fields = [
         "title",
@@ -131,21 +131,23 @@ class ReportScheduleAdmin(BasicSaveUserAdmin):
         qs = super().get_queryset(request).prefetch_related("groups", "users")
         return qs
 
+    @admin.display(
+        description=_l("Report Type"),
+        ordering="report__report_type",
+    )
     def get_report_type(self, obj):
         return obj.report.get_report_type_display()
-    get_report_type.admin_order_field = "report__report_type"
-    get_report_type.short_description = _l("Report Type")
 
+    @admin.display(
+        description=_l("Report Format"),
+        ordering="report__report_format",
+    )
     def get_report_format(self, obj):
         return obj.report.get_report_format_display()
-    get_report_format.admin_order_field = "report__report_format"
-    get_report_format.short_description = _l("Report Format")
 
+    @admin.display(
+        description=_l("Report Title"),
+        ordering="report__report_title",
+    )
     def get_report_title(self, obj):
         return obj.report.title
-    get_report_title.admin_order_field = "report__report_title"
-    get_report_title.short_description = _l("Report Title")
-
-
-admin.site.register([SavedReport], SavedReportAdmin)
-admin.site.register([ReportSchedule], ReportScheduleAdmin)

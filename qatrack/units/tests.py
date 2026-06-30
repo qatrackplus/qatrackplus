@@ -1,3 +1,5 @@
+import datetime
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -50,8 +52,7 @@ class TestUnitType(TestCase):
 
     def test_get_by_nk(self):
         ut = utils.create_unit_type()
-        assert models.UnitType.objects.get_by_natural_key(
-            ut.name, ut.model, vendor_name=ut.vendor.name).pk == ut.pk
+        assert models.UnitType.objects.get_by_natural_key(ut.name, ut.model, vendor_name=ut.vendor.name).pk == ut.pk
 
     def test_nk(self):
         ut = utils.create_unit_type()
@@ -61,7 +62,7 @@ class TestUnitType(TestCase):
 class TestModality:
 
     def test_nk(self):
-        assert models.Modality(name="modality").natural_key() == ("modality", )
+        assert models.Modality(name="modality").natural_key() == ("modality",)
 
     def test_str(self):
         assert str(models.Modality(name="modality")) == "modality"
@@ -130,7 +131,7 @@ class TestUnitAvailableTime(TestCase):
             hours_sunday=init_hours,
         )
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         len_uat_before = len(models.UnitAvailableTime.objects.filter(unit_id__in=unit_ids, date_changed=date))
 
         self.client.post(self.post_url, data=data)
@@ -169,7 +170,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         len_uate_before = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         self.client.post(self.post_url, data=data)
         len_uate_after = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
@@ -195,7 +196,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         self.client.post(self.post_url, data=data)
         len_uate_after = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
         assert len_uate_after == 0
@@ -215,7 +216,7 @@ class TestUnitAvailableTimeEdit(TestCase):
             'tz': "utc",
         }
 
-        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, timezone.utc)).date()
+        date = timezone.localtime(timezone.datetime.fromtimestamp(timestamp / 1000, datetime.UTC)).date()
         len_uate_before = len(models.UnitAvailableTimeEdit.objects.filter(unit_id__in=unit_ids, date=date))
 
         self.client.post(self.post_url, data=data)

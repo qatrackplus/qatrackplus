@@ -1,8 +1,9 @@
-import imghdr
+import gc
 import logging
 import os
 import os.path
 import shutil
+import sys
 import time
 from uuid import uuid4
 
@@ -68,6 +69,11 @@ def move_tmp_file(attach, save=True, force=False, new_name=None):
             os.remove(start_path)
             break
         except PermissionError:
+            # After much hair pulling, it was discovered
+            # that running gc.collect() before os.remove allows Python to delete the file (grrr)
+            if 'win' in sys.platform.lower():
+                gc.collect()
+
             if count == 2:
                 logger.error("Failed to remove %s when moving %s to %s." % (start_path, start_path, new_path))
                 break
@@ -110,6 +116,25 @@ class Attachment(models.Model):
         "fault",
     ]
 
+    class Meta:
+        verbose_name = _l("Attachment")
+        verbose_name_plural = _l("Attachments")
+
+    def __str__(self):
+        return "%s(%s, %s)" % (_("Attachment"), self.owner or _("No Owner"), self.attachment.name)
+
+    def save(self, *args, **kwargs):
+        """Save model and move it to final location if possible"""
+
+        super().save(*args, **kwargs)
+
+        if self.can_finalize:
+            self.move_tmp_file()
+
+    def clean(self):
+        if not self.has_owner:
+            raise ValidationError(_("Attachment must have exactly one owner"))
+
     @property
     def _possible_owners(self):
         return [getattr(self, a) for a in self.OWNER_MODELS]
@@ -141,6 +166,10 @@ class Attachment(models.Model):
     @property
     def is_in_tmp(self):
         """Return bool indicating whether this attachment is currently in staging area"""
+        # A blank file name has no path (Django's FieldFile.path raises for it)
+        # and cannot be a staging file, so treat it as not in tmp.
+        if not self.attachment.name:
+            return False
         return settings.TMP_UPLOAD_ROOT in self.attachment.path
 
     @property
@@ -153,31 +182,21 @@ class Attachment(models.Model):
         """Return bool indicating whether this file is ready to be finalized"""
         return self.has_owner and self.is_in_tmp
 
-    def save(self, *args, **kwargs):
-        """Save model and move it to final location if possible"""
+    @property
+    def file_exists(self):
+        """Return bool indicating whether the backing file still exists in storage.
 
-        super(Attachment, self).save(*args, **kwargs)
-
-        if self.can_finalize:
-            self.move_tmp_file()
-
-    def clean(self):
-        nowners = sum(1 for o in self._possible_owners if o)
-        if nowners > 1:
-            raise ValidationError(_l("An attachment should only have one owner"))
+        A blank/missing file name is treated as not existing rather than raising.
+        """
+        name = self.attachment.name
+        if not name:
+            return False
+        return self.attachment.storage.exists(name)
 
     @property
     def is_image(self):
-
-        try:
-            img = imghdr.what(self.attachment) is not None
-        except FileNotFoundError:
+        if not self.attachment.name:
             return False
-        ext = os.path.splitext(self.attachment.name)[1].strip(".")
+        ext = os.path.splitext(self.attachment.name)[1].strip(".").lower()
         displayable = ["jpg", "jpeg", "png", "svg", "bmp", "gif"]
-        force = ext in displayable
-        is_img = img in displayable
-        return is_img or force
-
-    def __str__(self):
-        return "%s(%s, %s)" % (_("Attachment"), self.owner or _("No Owner"), self.attachment.name)
+        return ext in displayable

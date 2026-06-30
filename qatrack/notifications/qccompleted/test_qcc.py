@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_q.models import Schedule
 
+import qatrack.qa.tests.utils as utils
 from qatrack.accounts.tests.utils import create_user
 from qatrack.notifications.models import (
     QCCompletedNotice,
@@ -14,7 +15,6 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.qccompleted import admin, tasks
 from qatrack.qa import models, signals
-import qatrack.qa.tests.utils as utils
 
 
 class TestQCCompletedNoticeAdmin(TestCase):

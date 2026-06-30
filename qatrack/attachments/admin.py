@@ -11,9 +11,10 @@ from qatrack.service_log import models as sl_models
 
 
 class AjaxModelChoiceField(forms.ModelChoiceField):
+
     def __init__(self, model_class, *args, **kwargs):
         queryset = model_class.objects.none()
-        super(AjaxModelChoiceField, self).__init__(queryset, *args, **kwargs)
+        super().__init__(queryset, *args, **kwargs)
         self.model_class = model_class
 
     def to_python(self, value):
@@ -41,12 +42,7 @@ class AttachmentAdminForm(forms.ModelForm):
         fields = '__all__'
 
     class Media:
-        js = (
-            'admin/js/jquery.init.js',
-            'jquery/js/jquery.min.js',
-            'select2/js/select2.js',
-            'js/attachment_admin.js'
-        )
+        js = ('admin/js/jquery.init.js', 'jquery/js/jquery.min.js', 'select2/js/select2.js', 'js/attachment_admin.js')
         css = {
             'all': (
                 "qatrack_core/css/admin.css",
@@ -54,29 +50,68 @@ class AttachmentAdminForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, initial=None, error_class=ErrorList,
-                 label_suffix=None, empty_permitted=False, instance=None, use_required_attribute=None):
-        super().__init__(data=data, files=files, auto_id=auto_id, prefix=prefix, initial=initial, error_class=error_class,
-                         label_suffix=label_suffix, empty_permitted=empty_permitted, instance=instance, use_required_attribute=use_required_attribute)
+    def __init__(
+        self,
+        data=None,
+        files=None,
+        auto_id='id_%s',
+        prefix=None,
+        initial=None,
+        error_class=ErrorList,
+        label_suffix=None,
+        empty_permitted=False,
+        instance=None,
+        use_required_attribute=None
+    ):
+        super().__init__(
+            data=data,
+            files=files,
+            auto_id=auto_id,
+            prefix=prefix,
+            initial=initial,
+            error_class=error_class,
+            label_suffix=label_suffix,
+            empty_permitted=empty_permitted,
+            instance=instance,
+            use_required_attribute=use_required_attribute
+        )
 
         if self.instance.id:
             if self.instance.test:
-                self.fields['test'].choices = (('', '--------'),) + tuple(((t.id, '(' + str(t.id) + ') ' + t.name) for t in qa_models.Test.objects.filter(pk=self.instance.test_id)))
+                self.fields['test'].choices = (('', '--------'),) + tuple(
+                    (t.id, '(' + str(t.id) + ') ' + t.name)
+                     for t in qa_models.Test.objects.filter(pk=self.instance.test_id)
+                )
                 self.initial['test'] = self.instance.test_id
             if self.instance.testlist:
-                self.fields['testlist'].choices = (('', '--------'),) + tuple(((tl.id, '(' + str(tl.id) + ') ' + tl.name) for tl in qa_models.TestList.objects.filter(pk=self.instance.testlist_id)))
+                self.fields['testlist'].choices = (('', '--------'),) + tuple(
+                    (tl.id, '(' + str(tl.id) + ') ' + tl.name)
+                     for tl in qa_models.TestList.objects.filter(pk=self.instance.testlist_id)
+                )
                 self.initial['testlist'] = self.instance.testlist_id
             if self.instance.testlistcycle:
-                self.fields['testlistcycle'].choices = (('', '--------'),) + tuple(((tlc.id, '(' + str(tlc.id) + ') ' + tlc.name) for tlc in qa_models.TestListCycle.objects.filter(pk=self.instance.testlistcycle_id)))
+                self.fields['testlistcycle'].choices = (('', '--------'),) + tuple(
+                    (tlc.id, '(' + str(tlc.id) + ') ' + tlc.name)
+                     for tlc in qa_models.TestListCycle.objects.filter(pk=self.instance.testlistcycle_id)
+                )
                 self.initial['testlistcycle'] = self.instance.testlistcycle_id
             if self.instance.testinstance:
-                self.fields['testinstance'].choices = (('', '--------'),) + tuple(((ti.id, '(' + str(ti.id) + ') ' + ti.unit_test_info.test.name) for ti in qa_models.TestInstance.objects.filter(pk=self.instance.testinstance_id)))
+                self.fields['testinstance'].choices = (('', '--------'),) + tuple(
+                    (ti.id, '(' + str(ti.id) + ') ' + ti.unit_test_info.test.name)
+                     for ti in qa_models.TestInstance.objects.filter(pk=self.instance.testinstance_id)
+                )
                 self.initial['testinstance'] = self.instance.testinstance_id
             if self.instance.testlistinstance:
-                self.fields['testlistinstance'].choices = (('', '--------'),) + tuple(((tli.id, '(' + str(tli.id) + ') ' + tli.test_list.name) for tli in qa_models.TestListInstance.objects.filter(pk=self.instance.testlistinstance_id)))
+                self.fields['testlistinstance'].choices = (('', '--------'),) + tuple(
+                    (tli.id, '(' + str(tli.id) + ') ' + tli.test_list.name)
+                     for tli in qa_models.TestListInstance.objects.filter(pk=self.instance.testlistinstance_id)
+                )
                 self.initial['testlistinstance'] = self.instance.testlistinstance_id
             if self.instance.serviceevent:
-                self.fields['serviceevent'].choices = (('', '--------'),) + tuple(((se.id, '(' + str(se.id) + ') ' + se.service_status.name) for se in sl_models.ServiceEvent.objects.filter(pk=self.instance.serviceevent_id)))
+                self.fields['serviceevent'].choices = (('', '--------'),) + tuple(
+                    (se.id, '(' + str(se.id) + ') ' + se.service_status.name)
+                     for se in sl_models.ServiceEvent.objects.filter(pk=self.instance.serviceevent_id)
+                )
                 self.initial['serviceevent'] = self.instance.serviceevent_id
 
 
@@ -103,6 +138,7 @@ class TypeFilter(admin.SimpleListFilter):
         return queryset
 
 
+@admin.register(Attachment)
 class AttachmentAdmin(BaseQATrackAdmin):
 
     list_display = (
@@ -121,19 +157,19 @@ class AttachmentAdmin(BaseQATrackAdmin):
         if not obj.pk:
             obj.created_by = request.user
 
-        super(AttachmentAdmin, self).save_model(request, obj, form, change)
+        super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
-        qs = super(AttachmentAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.select_related(*Attachment.OWNER_MODELS)
         return qs
 
+    @admin.display(description=_l("Label"))
     def get_label(self, obj):
         return obj.label or _("Unlabeled")
-    get_label.short_description = _l("Label")
 
 
-class SaveInlineAttachmentUserMixin(object):
+class SaveInlineAttachmentUserMixin:
     """A Mixin to save the user who added attachment in admin
 
     Set editable=False on the created_by and modified_by model you
@@ -142,7 +178,7 @@ class SaveInlineAttachmentUserMixin(object):
 
     def save_formset(self, request, form, formset, change):
         if formset.model._meta.model_name.lower() != "attachment":
-            return super(SaveInlineAttachmentUserMixin, self).save_formset(request, form, formset, change)
+            return super().save_formset(request, form, formset, change)
 
         instances = formset.save(commit=False)
         for instance in instances:
@@ -175,9 +211,6 @@ def get_attachment_inline(model):
     class cls(AttachmentInline):
 
         fields = ["attachment", "comment", model]
-        raw_id_fields = (model, )
+        raw_id_fields = (model,)
 
     return cls
-
-
-admin.site.register([Attachment], AttachmentAdmin)

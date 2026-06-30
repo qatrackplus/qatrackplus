@@ -44,6 +44,44 @@ class TestAttachment(TestCase):
         a = Attachment(attachment=mocka)
         assert not a.is_in_tmp
 
+    def test_file_exists_true(self):
+        mocka = mock.Mock()
+        mocka.name = "uploads/testlist/1/foo.bar"
+        mocka.storage.exists.return_value = True
+        a = Attachment(attachment=mocka)
+        assert a.file_exists
+        mocka.storage.exists.assert_called_once_with("uploads/testlist/1/foo.bar")
+
+    def test_file_exists_false(self):
+        mocka = mock.Mock()
+        mocka.name = "uploads/testlist/1/foo.bar"
+        mocka.storage.exists.return_value = False
+        a = Attachment(attachment=mocka)
+        assert not a.file_exists
+
+    def test_file_exists_blank_name(self):
+        mocka = mock.Mock()
+        mocka.name = ""
+        a = Attachment(attachment=mocka)
+        assert not a.file_exists
+        # storage should not be queried for a blank name
+        mocka.storage.exists.assert_not_called()
+
+    def test_is_in_tmp_blank_name(self):
+        # A blank file name must not raise (FieldFile.path raises for blanks).
+        mocka = mock.Mock()
+        mocka.name = ""
+        a = Attachment(attachment=mocka)
+        assert not a.is_in_tmp
+
+    def test_finalized_blank_name_owned(self):
+        # An owned attachment with a blank file name is finalized (and therefore
+        # auditable) rather than crashing on the is_in_tmp path lookup.
+        mocka = mock.Mock()
+        mocka.name = ""
+        a = Attachment(testlist=qam.TestList(pk=1), attachment=mocka)
+        assert a.finalized
+
     def test_can_finalize_unowned(self):
         assert not Attachment().can_finalize
 

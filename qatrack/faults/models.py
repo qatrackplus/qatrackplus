@@ -51,13 +51,15 @@ class FaultType(models.Model):
 
     class Meta:
         ordering = ("code",)
+        verbose_name = _l("Fault Type")
+        verbose_name_plural = _l("Fault Types")
+
+    def __str__(self):
+        return self.code
 
     def save(self, *args, **kwargs):
         self.slug = unique_slug_generator(self, self.code)
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.code
 
 
 class FaultManager(models.Manager):
@@ -70,7 +72,7 @@ class FaultManager(models.Manager):
 
 
 class Fault(models.Model):
-
+    id = models.AutoField(primary_key=True, verbose_name=_l("ID"))
     unit = models.ForeignKey(
         u_models.Unit,
         verbose_name=_l("unit"),
@@ -134,7 +136,12 @@ class Fault(models.Model):
 
     class Meta:
         ordering = ("-occurred",)
+        verbose_name = _l("Fault")
+        verbose_name_plural = _l("Faults")
         permissions = (("can_review", _l("Can review faults")),)
+
+    def __str__(self):
+        return "Fault ID: %d" % self.pk
 
     def get_absolute_url(self):
         return reverse("fault_details", kwargs={"pk": self.pk})
@@ -181,9 +188,6 @@ class Fault(models.Model):
     def fault_types_display(self):
         return ', '.join(ft.code for ft in self.fault_types.order_by("code"))
 
-    def __str__(self):
-        return "Fault ID: %d" % self.pk
-
 
 class FaultReviewGroup(models.Model):
 
@@ -200,6 +204,10 @@ class FaultReviewGroup(models.Model):
         help_text=_l("Is review by this group required in order to consider a fault reviewed"),
         default=True,
     )
+
+    class Meta:
+        verbose_name = _l("Fault Review Group")
+        verbose_name_plural = _l("Fault Review Groups")
 
 
 class FaultReviewInstance(models.Model):
