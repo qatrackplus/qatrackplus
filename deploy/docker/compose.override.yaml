@@ -1,0 +1,4 @@
+services:
+  django:
+    volumes:
+      - ../../.:/usr/src/qatrackplus

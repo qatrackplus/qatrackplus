@@ -8,3 +8,11 @@ class QATrackAutoSchema(AutoSchema):
         if "/qc/" in path:
             op_id += "_qc"
         return op_id
+
+    def get_filter_parameters(self, path, method):
+        """Override to handle RestFrameworkFilterBackend compatibility"""
+        try:
+            return super().get_filter_parameters(path, method)
+        except AttributeError:
+            # Skip filter parameters if filter backend doesn't support schema generation
+            return []

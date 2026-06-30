@@ -31,19 +31,13 @@ class UnitFormAdmin(ModelForm):
     service_areas = ModelMultipleChoiceField(
         queryset=ServiceArea.objects.all(),
         required=False,
-        widget=FilteredSelectMultiple(
-            verbose_name=_l('Service areas'),
-            is_stacked=False
-        )
+        widget=FilteredSelectMultiple(verbose_name=_l('Service areas'), is_stacked=False)
     )
     modalities = ModelMultipleChoiceField(
         queryset=Modality.objects.all(),
         required=False,
         label=_l('Treatment and Imaging Modalities'),
-        widget=FilteredSelectMultiple(
-            verbose_name=_l('Treatment and Imaging Modalities'),
-            is_stacked=False
-        )
+        widget=FilteredSelectMultiple(verbose_name=_l('Treatment and Imaging Modalities'), is_stacked=False)
     )
 
     class Meta:
@@ -107,11 +101,10 @@ class UnitFormAdmin(ModelForm):
                     )
                     self.data = data_copy
                     self.add_error(
-                        'service_areas',
-                        (
-                            'Cannot remove {} from unit {}. '
+                        'service_areas', (
+                            f'Cannot remove {usa.service_area.name} from unit {unit.name}. '
                             'There exists Service Event(s) with that Unit and Service Area.'
-                        ).format(usa.service_area.name, unit.name)
+                        )
                     )
 
         return service_areas
@@ -142,6 +135,7 @@ class UnitAvailableTimeInline(admin.TabularInline):
     verbose_name_plural = 'Unit Schedule'
 
 
+@admin.register(Unit)
 class UnitAdmin(BaseQATrackAdmin):
 
     form = UnitFormAdmin
@@ -163,9 +157,7 @@ class UnitAdmin(BaseQATrackAdmin):
             'inputmask/js/jquery.inputmask.bundle.min.js',
         )
         css = {
-            'all': (
-                'units/css/admin.css',
-            ),
+            'all': ('units/css/admin.css',),
         }
 
     def get_queryset(self, request):
@@ -183,6 +175,7 @@ class UnitAdmin(BaseQATrackAdmin):
         return formfield
 
 
+@admin.register(UnitType)
 class UnitTypeAdmin(BaseQATrackAdmin):
 
     list_display = ['model_name', 'vendor', 'unit_class', 'collapse']
@@ -190,33 +183,30 @@ class UnitTypeAdmin(BaseQATrackAdmin):
     list_editable = ['unit_class', 'vendor', 'collapse']
 
     def get_queryset(self, request):
-        return super(UnitTypeAdmin, self).get_queryset(request).select_related(
+        return super().get_queryset(request).select_related(
             "vendor",
             "unit_class",
         )
 
     def model_name(self, obj):
-        model = ' - {}'.format(obj.model) if obj.model else ''
-        vendor_name = '{}: '.format(obj.vendor.name) if obj.vendor else ''
-        return "{}{}{}".format(vendor_name, obj.name, model)
+        model = f' - {obj.model}' if obj.model else ''
+        vendor_name = f'{obj.vendor.name}: ' if obj.vendor else ''
+        return f"{vendor_name}{obj.name}{model}"
 
 
+@admin.register(Modality)
 class ModalityAdmin(BaseQATrackAdmin):
 
     list_display = ["name"]
 
 
+@admin.register(Site)
 class SiteAdmin(BaseQATrackAdmin):
     """QC categories admin"""
-    prepopulated_fields = {'slug': ('name',)}
-    list_display = (
-        "name",
-        "slug"
-    )
+    prepopulated_fields = {
+        'slug': ('name',)
+    }
+    list_display = ("name", "slug")
 
 
-admin.site.register(Unit, UnitAdmin)
-admin.site.register(UnitType, UnitTypeAdmin)
-admin.site.register(Modality, ModalityAdmin)
-admin.site.register(Site, SiteAdmin)
 admin.site.register([UnitClass, Vendor], BaseQATrackAdmin)

@@ -22,21 +22,21 @@ from qatrack.service_log.forms import ServiceEventMultipleField
 BOOL_CHOICES = [(0, _l("No")), (1, _l("Yes"))]
 
 
-class UserFormsetMixin(object):
+class UserFormsetMixin:
     """A mixin to add a user object to every form in a formset (and the formset itself)"""
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
-        super(UserFormsetMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _construct_form(self, *args, **kwargs):
         """add user to all children"""
-        form = super(UserFormsetMixin, self)._construct_form(*args, **kwargs)
+        form = super()._construct_form(*args, **kwargs)
         form.user = self.user
         return form
 
 
-class TestInstanceWidgetsMixin(object):
+class TestInstanceWidgetsMixin:
     """
     Mixin to override default TestInstance field widgets and validation
     based on the Test type.
@@ -44,7 +44,7 @@ class TestInstanceWidgetsMixin(object):
 
     def clean(self):
         """do some custom form validation"""
-        cleaned_data = super(TestInstanceWidgetsMixin, self).clean()
+        cleaned_data = super().clean()
 
         if self.in_progress:
             return cleaned_data
@@ -56,12 +56,7 @@ class TestInstanceWidgetsMixin(object):
         date_value = cleaned_data.get("date_value", None)
         datetime_value = cleaned_data.get("datetime_value", None)
 
-        empty = (
-            value is None and
-            string_value in ["", None] and
-            date_value is None and
-            datetime_value is None
-        )
+        empty = (value is None and string_value in ["", None] and date_value is None and datetime_value is None)
 
         if self.unit_test_info.test.skip_required():
             # force user to enter value unless skipping test
@@ -71,8 +66,7 @@ class TestInstanceWidgetsMixin(object):
                 self._errors["value"] = self.error_class([_("Clear value if skipping")])
 
             no_comment_required = (
-                self.user.has_perm("qa.can_skip_without_comment") or
-                self.unit_test_info.test.skip_without_comment
+                self.user.has_perm("qa.can_skip_without_comment") or self.unit_test_info.test.skip_without_comment
             )
             if not no_comment_required and skipped and not comment:
                 self._errors["skipped"] = self.error_class([_("Please add comment when skipping")])
@@ -141,7 +135,10 @@ class TestInstanceWidgetsMixin(object):
 
     def disable_read_only_fields(self):
         """disable some fields for constant and composite tests"""
-        if self.unit_test_info.test.type in (models.CONSTANT, models.COMPOSITE, ):
+        if self.unit_test_info.test.type in (
+            models.CONSTANT,
+            models.COMPOSITE,
+        ):
             self.fields["value"].widget.attrs["readonly"] = "readonly"
         elif self.unit_test_info.test.type in (models.STRING_COMPOSITE,):
             self.fields["string_value"].widget.attrs["readonly"] = "readonly"
@@ -184,7 +181,7 @@ class CreateTestInstanceForm(TestInstanceWidgetsMixin, forms.Form):
     user_attached = forms.CharField(widget=forms.HiddenInput, required=False)
 
     def __init__(self, *args, **kwargs):
-        super(CreateTestInstanceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.in_progress = False
         self.fields["comment"].widget.attrs["rows"] = 2
 
@@ -239,7 +236,7 @@ class CreateTestInstanceFormSet(UserFormsetMixin, BaseTestInstanceFormSet):
 
         kwargs.update(initial=initial)
 
-        super(CreateTestInstanceFormSet, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         prev_cat = None
         for form, uti in zip(self.forms, unit_test_infos):
@@ -268,7 +265,7 @@ class UpdateTestInstanceForm(TestInstanceWidgetsMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
 
-        super(UpdateTestInstanceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.in_progress = self.instance.test_list_instance.in_progress
         self.fields["value"].required = False
         self.unit_test_info = self.instance.unit_test_info
@@ -299,7 +296,7 @@ class UpdateTestInstanceFormSet(UserFormsetMixin, BaseUpdateTestInstanceFormSet)
 
     def __init__(self, *args, **kwargs):
 
-        super(UpdateTestInstanceFormSet, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         prev_cat = None
         for form in self.forms:
@@ -312,7 +309,7 @@ class ReviewTestInstanceForm(forms.ModelForm):
 
     class Meta:
         model = models.TestInstance
-        fields = ("status", )
+        fields = ("status",)
 
 
 BaseReviewTestInstanceFormSet = inlineformset_factory(
@@ -331,10 +328,7 @@ class ReviewTestInstanceFormSet(UserFormsetMixin, BaseReviewTestInstanceFormSet)
 class BaseTestListInstanceForm(forms.ModelForm):
     """parent form for performing or updating a qa test list"""
 
-    status = forms.ModelChoiceField(
-        queryset=models.TestInstanceStatus.objects,
-        required=False
-    )
+    status = forms.ModelChoiceField(queryset=models.TestInstanceStatus.objects, required=False)
 
     work_completed = forms.DateTimeField(required=False)
 
@@ -366,7 +360,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
         self.unit = kwargs.pop('unit', None)
         self.rtsqa_id = kwargs.pop('rtsqa', None)
 
-        super(BaseTestListInstanceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for field in ('work_completed', 'work_started'):
             self.fields[field].widget = forms.widgets.DateTimeInput()
@@ -401,9 +395,12 @@ class BaseTestListInstanceForm(forms.ModelForm):
     def clean(self):
         """validate the work_completed & work_started values"""
 
-        cleaned_data = super(BaseTestListInstanceForm, self).clean()
+        cleaned_data = super().clean()
 
-        for field in ("work_completed", "work_started",):
+        for field in (
+            "work_completed",
+            "work_started",
+        ):
             if field in self.errors:
                 self.errors[field][0] += " %s" % settings.DATETIME_HELP
 
@@ -422,9 +419,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
             if work_completed == work_started:
                 cleaned_data["work_completed"] = work_started + timezone.timedelta(seconds=60)
             elif work_completed < work_started:
-                self._errors["work_started"] = self.error_class(
-                    [_("Work started date/time can not be after work completed date/time")]
-                )
+                self._errors["work_started"] = self.error_class([
+                    _("Work started date/time can not be after work completed date/time")
+                ])
                 del cleaned_data["work_started"]
 
         if work_started:
@@ -443,7 +440,7 @@ class CreateTestListInstanceForm(BaseTestListInstanceForm):
     initiate_service = forms.BooleanField(help_text=_l('Initiate service event'), required=False)
 
     def __init__(self, *args, **kwargs):
-        super(CreateTestListInstanceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         now = timezone.localtime(timezone.now())
         self.fields['work_started'].initial = format_datetime(now)
         self.fields['comment'].widget.attrs['rows'] = '3'
@@ -467,21 +464,22 @@ class UpdateTestListInstanceForm(BaseTestListInstanceForm):
         # as in_progress again.
         instance.in_progress = False
 
-        super(UpdateTestListInstanceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class ReviewTestListInstanceForm(forms.ModelForm):
+
     class Meta:
         model = models.TestListInstance
         fields = ()
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
-        super(ReviewTestListInstanceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
 
-        cleaned_data = super(ReviewTestListInstanceForm, self).clean()
+        cleaned_data = super().clean()
 
         if self.instance.created_by == self.user and not self.user.has_perm('qa.can_review_own_tests'):
             raise ValidationError(_("You do not have the required permission to review your own tests."))

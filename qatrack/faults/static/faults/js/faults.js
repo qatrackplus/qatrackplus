@@ -33,7 +33,7 @@ require(['jquery', 'lodash', 'moment', 'flatpickr', 'select2', 'comments', 'sl_u
                 configureFaults();
             },
             error: function(data){
-                alert("An error occured during initialization. Please reload the page");
+                alert(QATranslations.ERROR_INITIALIZATION);
             }
         });
 

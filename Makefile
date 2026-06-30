@@ -11,6 +11,9 @@ cover-module:
 cover-mo:
 	py.test --reuse-db --cov-report term-missing:skip-covered --cov ./ ${args}
 
+cover-qatrack:
+	py.test --reuse-db --cov-report term-missing --cov qatrack ${args}
+
 test:
 	py.test ${args}
 
@@ -42,20 +45,20 @@ docs:
 	cd docs && make html
 
 docs-autobuild:
-	sphinx-autobuild docs docs/_build/html -p 8009
+	sphinx-autobuild docs docs/_build/html --port 8009
 
-qatrack_daemon.conf:
-	sudo a2enmod headers
-	sudo a2enmod proxy
-	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/apache/apache24_daemon.conf > qatrack.conf
-	sudo mv qatrack.conf /etc/apache2/sites-available/qatrack.conf
-	sudo ln -sf /etc/apache2/sites-available/qatrack.conf /etc/apache2/sites-enabled/qatrack.conf
+nginx.conf:
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/nginx/qatrack.conf > qatrack.conf
+	sudo mv qatrack.conf /etc/nginx/sites-available/qatrack.conf
+	sudo ln -sf /etc/nginx/sites-available/qatrack.conf /etc/nginx/sites-enabled/qatrack.conf
 	sudo usermod -a -G $(USER) www-data
-	sudo service apache2 restart
+	sudo service nginx restart
 
 supervisor.conf:
-	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/django-q.conf > django-q.conf
-	sudo mv django-q.conf /etc/supervisor/conf.d/
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/django-q2.conf > django-q2.conf
+	sudo sed 's/YOURUSERNAMEHERE/$(USER)/g' deploy/supervisor/gunicorn.conf > gunicorn.conf
+	sudo mv django-q2.conf /etc/supervisor/conf.d/
+	sudo mv gunicorn.conf /etc/supervisor/conf.d/
 	sudo supervisorctl reread
 	sudo supervisorctl update
 

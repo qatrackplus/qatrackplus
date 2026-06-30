@@ -4,8 +4,9 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
-from qatrack.faults.models import Fault
 import qatrack.faults.tests.utils as utils
+import qatrack.qa.tests.utils as qa_utils
+from qatrack.faults.models import Fault
 from qatrack.notifications.faults_review import admin, tasks
 from qatrack.notifications.models import (
     FaultsReviewNotice,
@@ -13,7 +14,6 @@ from qatrack.notifications.models import (
     UnitGroup,
 )
 from qatrack.qa import models
-import qatrack.qa.tests.utils as qa_utils
 
 
 class TestFaultsReviewAdmin(TestCase):

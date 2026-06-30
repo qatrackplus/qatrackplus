@@ -45,8 +45,8 @@ class Migration(SchemaMigration):
         # Adding M2M table for field modalities on 'Unit'
         db.create_table('units_unit_modalities', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('unit', models.ForeignKey(orm['units.unit'], null=False)),
-            ('modality', models.ForeignKey(orm['units.modality'], null=False))
+            ('unit', models.ForeignKey(orm['units.unit'], on_delete=models.CASCADE, null=False)),
+            ('modality', models.ForeignKey(orm['units.modality'], on_delete=models.CASCADE, null=False))
         ))
         db.create_unique('units_unit_modalities', ['unit_id', 'modality_id'])
 

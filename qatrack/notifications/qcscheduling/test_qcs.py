@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django_q.models import Schedule
 
+import qatrack.qa.tests.utils as utils
 from qatrack.notifications.models import (
     QCSchedulingNotice,
     RecipientGroup,
@@ -12,7 +13,6 @@ from qatrack.notifications.models import (
 )
 from qatrack.notifications.qcscheduling import admin, tasks
 from qatrack.qa import models
-import qatrack.qa.tests.utils as utils
 from qatrack.qatrack_core.utils import today_start_end
 
 

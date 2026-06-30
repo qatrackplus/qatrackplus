@@ -1,6 +1,12 @@
 Developers Guide
 ================
 
+.. note::
+
+    **Disclaimer**: This guide was developed and tested on Ubuntu Linux. 
+    While the instructions should work on other operating systems, some commands, package names, 
+    or installation steps may differ. If you encounter issues on a different OS, please refer 
+    to the specific documentation for your platform or reach out to the community for assistance.
 
 .. toctree::
    :maxdepth: 3
@@ -21,15 +27,20 @@ there are lots of steps involved which can be intimidating to newcomers
 or have questions about using git or contributing code then please post to the
 :mailinglist:`mailing list <>` so we can help you out!
 
-In order to develop for QATrack+ you first need to make sure you have a few
-requirements installed.
+Prerequisites
+~~~~~~~~~~~~
 
-Python 3.6+
-~~~~~~~~~~~
+QATrack+ is developed using Python 3.12. We recommend using the latest stable
+version of Python 3.12 for the best development experience and compatibility.
 
-QATrack+ is developed using Python 3 (Python 3.6-3.9).  Depending on your
-operating system, Python 3 may already be installed but if not you can find
-instructions for installing the proper version on https://python.org.
+Node.js (Frontend)
+~~~~~~~~~~~~~~~~~~
+
+QATrack+ includes a Vue 3 frontend bundle compiled with Vite. Node.js 22 or newer
+is required to build it locally. The compiled file is **not** committed to the
+repository — release archives include a pre-built copy so deployers have no Node.js
+requirement. If you are developing from a ``git clone`` you must build it yourself
+(see :ref:`building-frontend` below).
 
 Git
 ~~~
@@ -44,52 +55,105 @@ installed it is recommended you go through a git tutorial to learn about git
 branches, commiting code and pull requests. There are many tutorials available
 online including a `tutorial by the Django team
 <https://dont-be-afraid-to-commit.readthedocs.io/en/latest/>`__ as well as
-a tutorial on and `GitHub <https://try.github.io/>`__.
+a tutorial on `GitHub <https://try.github.io/>`__.
 
-
-GitHub
-~~~~~~
+.. _forking-repo:
+GitHub Account
+~~~~~~~~~~~~~~
 
 The QATrack+ project currently uses `GitHub <https://github.com>`__ for
-hosting its source code repository.  In general, to contribute code to QATrack+
+hosting its source code repository. To contribute code to QATrack+
 you will need to create a fork of QATrack+ on GitHub, make your changes,
 then make a pull request to the main QATrack+ project.
-
-Creating a fork of QATrack+
-...........................
 
 Creating a fork of QATrack+ is explained in the `GitHub documentation
 <https://guides.github.com/activities/forking/>`__.
 
-Cloning your fork to your local system
-......................................
+uv Package Manager
+~~~~~~~~~~~~~~~~~~~
 
-Once you have created a fork of QATrack+ on GitHub, you will want to
-download your fork to your local system to work on. This can either be done
-using the command line or one of the graphical git apps that are available.
-This page assumes you are using bash on linux or the Git Bash shell on Windows.
+The QATrack+ project uses `uv <https://docs.astral.sh/uv/>`__, a fast Python
+package manager. uv handles Python version management, virtual environments,
+and dependency management.
 
+Install uv using the official installer (recommended):
+
+.. code-block:: shell
+
+    # On Linux
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+.. code-block:: shell
+
+    # Alternative method using pip
+    pip install uv
+
+For other installation methods or troubleshooting, see the full installation guide at https://docs.astral.sh/uv/getting-started/installation/
 
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to keep your QATrack+ development environment separate from your
-system Python installation, you will want to set up a virtual environment to
-install QATrack+'s Python dependencies in it. Using the command line change to
-the directory where you installed QATrack+, create a new virtual environment,
-and activate the virtual environment:
+First create a :ref:`fork <forking-repo>` of the QATrack+ repository on GitHub.
+
+Then clone your fork to your local machine:
 
 .. code-block:: shell
 
-    cd /path/to/qatrackplus
-    python3 -m venv env
-    source env/bin/activate
+    git clone https://github.com/YOUR_USERNAME/qatrackplus.git
+.. _building-frontend:
 
-Then install the development libraries:
+Building the Frontend
+~~~~~~~~~~~~~~~~~~~~~
+
+The compiled Vue frontend bundle (``qatrack/qatrack_core/static/dist/faults.js``)
+is **not** tracked in version control. Release archives ship with a pre-built copy,
+but developers working from a ``git clone`` must generate it manually.
+
+After cloning (and whenever source files under ``qatrack/faults/static/faults/src/``
+change), run:
 
 .. code-block:: shell
 
-    pip install -r requirements/dev.txt
+    npm ci          # install dependencies (once, or after package.json changes)
+    npm run build   # compile faults.js into qatrack/qatrack_core/static/dist/
+
+.. note::
+
+    The generated ``faults.js`` file is gitignored — do **not** commit it.
+
+Selecting an Editor or IDE
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use a variety of tools to edit and work on the QATrack+ codebase. Some popular options include:
+
+- **VS Code**: A free, open-source editor with Python and Django support.
+- **Cursor**: An AI-powered code editor that integrates with GitHub Copilot and other AI tools.
+- **PyCharm**: A Python IDE with advanced Django support.
+- **Vim/Neovim**: Lightweight, keyboard-driven editors.
+- **Emacs**: Highly customizable editor.
+
+Choose the editor or IDE that best fits your workflow. All you need is a text editor and a terminal to get started!
+
+Creating a Virtual Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have decided on a text editor or IDE, create a virtual environment with Python 3.12 using uv:
+
+.. code-block:: shell
+
+    # Create virtual environment with Python 3.12
+    uv venv --python 3.12
+
+    # Activate the virtual environment:
+    source .venv/bin/activate
+
+Install development dependencies:
+
+.. code-block:: shell
+
+    # Install all development dependencies
+    uv sync --dev
+
 
 
 Creating your development database
@@ -98,18 +162,76 @@ Creating your development database
 Rather than using a full blown database server for development work, You can
 use Sqlite3 which is included with Python.
 
-Once you have the requirements installed, copy the debug `local_settings.py`
-file from the deploy subdirectory and then create your database:
+Once you have the requirements installed, copy the debug `local_settings.py` and `local_test_settings.py`
+files from the deploy subdirectory and then create your database:
 
 .. code-block:: shell
 
     cp deploy/dev/local_settings.dev.py qatrack/local_settings.py
+    cp deploy/dev/local_test_settings.dev.py qatrack/local_test_settings.py
     mkdir db
     python manage.py migrate
     python manage.py createcachetable
 
 
 this will put a database called `default.db` in the `db` subdirectory.
+
+
+Understanding the Settings Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ uses a layered approach to Django settings, with each file serving a specific purpose. Understanding this hierarchy will help you configure your development and testing environment.
+
+**Settings File Hierarchy (Highest to Lowest Precedence):**
+
+1. **`local_test_settings.py`** - Your custom test environment overrides
+   - Contains all essential development and test settings in one place
+   - This is the main file you'll customize for your testing needs
+
+2. **`local_settings.py`** - Your custom development environment overrides
+   - Contains development-specific settings like database configuration
+
+3. **`test_settings.py`** - Default test environment settings
+   - Contains test-specific defaults like password hashers and notification settings
+
+4. **`settings.py`** - Base Django application settings
+   - Contains core Django configuration, installed apps, middleware, etc.
+
+Collect Static Files
+~~~~~~~~~~~~~~~~~~~
+
+Before running the development server, you need to collect all static files to the STATIC_ROOT directory:
+
+.. code-block:: shell
+
+    python manage.py collectstatic --noinput
+
+
+Loading Default Data (Fixtures)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ comes with pre-configured default data that provides a foundation for development and testing. This includes common QA categories, test frequencies, modalities, vendors, and other essential data structures.
+
+To load the default data into your development database:
+
+.. code-block:: shell
+
+    python manage.py loaddata fixtures/defaults/*/*
+
+This command will populate your database all default data.
+
+You can also load specific fixture categories individually if you only need certain data:
+
+.. code-block:: shell
+
+    # Load only QA-related fixtures
+    python manage.py loaddata fixtures/defaults/qa/*
+    
+    # Load only unit-related fixtures
+    python manage.py loaddata fixtures/defaults/units/*
+    
+    # Load only service log fixtures
+    python manage.py loaddata fixtures/defaults/service_log/*
 
 Running the development server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,10 +246,10 @@ and then run the development server:
 
 .. code-block:: shell
 
-    python manage.py runserver
+    python manage.py runserver 
 
 Once the development server is running you should be able to visit
-http://127.0.0.1/ in your browser and log into QATrack+.
+http://127.0.0.1:8000/ in your browser and log into QATrack+.
 
 Next Steps
 ~~~~~~~~~~
@@ -135,7 +257,7 @@ Next Steps
 Now that you have the development server running, you are ready to begin
 modifying the code!  If you have never used Django before it is highly
 recommended that you go through the official `Django tutorial
-<https://docs.djangoproject.com/en/1.11/intro/tutorial01/>`__ which is an
+<https://docs.djangoproject.com/en/4.2/intro/tutorial01/>`__ which is an
 excellent introduction to writing Django applications.
 
 Once you are happy with your modifications, commit them to your source code
@@ -153,118 +275,17 @@ QATrack+.
 Internationalization & Translation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QATrack+ templates and Python code are already marked for translation using
-Django's standard internationalization framework.  Contributors can help by
-creating new language translations or improving existing ones.  For a full
-discussion of how Django handles translation please read the `Django docs on
-translation <https://docs.djangoproject.com/en/stable/topics/i18n/translation/>`__.
+Please mark all strings and templates in QATrack+ for translation. This will
+allow for QATrack+ to be made available in multiple languages. For discussion
+of how to mark templates and strings for translation please read the `Django
+docs on translation
+<https://docs.djangoproject.com/en/stable/topics/i18n/translation/>`__.
 
+**Adding a New Language to QATrack+**
 
-Translation File Structure
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Locale (translation) files live under ``qatrack/locale/`` and follow the
-standard Django layout::
-
-    qatrack/locale/<language_code>/LC_MESSAGES/django.po
-    qatrack/locale/<language_code>/LC_MESSAGES/django.mo
-
-The project's ``LOCALE_PATHS`` setting tells Django to look in
-``qatrack/locale/`` for ``.po`` files, so new language directories should be
-created there.
-
-The ``qatrack/formats/`` directory contains locale-specific date/time format
-overrides.  The file ``qatrack/formats/en/formats.py`` is the reference
-implementation.  To add formats for a new locale, create a corresponding
-directory and ``formats.py`` file following the same pattern, for example
-``qatrack/formats/fr/formats.py``.
-
-
-Extracting Translatable Strings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Run the following command from the project root (the directory containing
-``manage.py``) to create or update the ``.po`` file for a language:
-
-.. code-block:: bash
-
-    django-admin makemessages -l <language_code> --ignore=venv --ignore=node_modules
-
-* Replace ``<language_code>`` with the target language code, e.g. ``fr``,
-  ``de``, or ``es``.
-* The ``-l`` flag specifies the language whose catalogue should be created or
-  updated.
-* The ``--ignore`` flag excludes directories (such as ``venv/`` or
-  ``node_modules/``) that should not be scanned for translatable strings.
-* The command must be run from the project root where ``manage.py`` resides so
-  that Django can discover all installed apps.
-
-
-Editing Translation Files
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A ``.po`` file is a plain-text catalogue of ``msgid``/``msgstr`` pairs:
-
-.. code-block:: po
-
-    # Translator comment
-    #: qatrack/qa/views.py:42
-    #, fuzzy
-    msgid "Test list"
-    msgstr ""
-
-* ``msgid`` is the original (English) string – **do not change this**.
-* ``msgstr`` is where you enter the translated text.
-* Lines beginning with ``#,`` carry flags; the ``fuzzy`` flag means Django will
-  not use the translation until the flag is removed after review.
-* Comments beginning with ``#:`` indicate where in the source the string
-  appears.
-
-Recommended editing tools include any plain-text editor, `Poedit
-<https://poedit.net/>`__, or similar GUI ``.po`` editors.
-
-**Pluralization** is handled with ``ngettext`` entries that include
-``msgid_plural`` and indexed ``msgstr[n]`` entries – preserve these carefully
-when translating.
-
-**Preserve all placeholders** such as ``%(variable)s`` or ``{variable}``
-exactly as they appear in ``msgid``.  Removing or misspelling a placeholder
-will cause a runtime error.
-
-
-Compiling and Testing Translations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-After editing a ``.po`` file, compile it to a binary ``.mo`` file:
-
-.. code-block:: bash
-
-    django-admin compilemessages
-
-To test translations locally, temporarily set ``LANGUAGE_CODE`` in your
-``local_settings.py`` to the target language code:
-
-.. code-block:: python
-
-    LANGUAGE_CODE = 'fr'
-
-If ``LocaleMiddleware`` is enabled (see the *Localization & Language Settings*
-section of the deployment configuration docs) you can also
-test by setting your browser's preferred language and verifying that the
-correct strings appear in the UI.
-
-
-Submitting Translations
-^^^^^^^^^^^^^^^^^^^^^^^
-
-* Submit new or updated ``.po`` files via a pull request to the project
-  repository.
-* **Do not commit** ``.mo`` files – these are generated automatically during
-  deployment.
-* Partial translations are welcome; untranslated strings will fall back to
-  English.
-* For questions, see the "How can I help?" section of the project documentation
-  for contact information.
+For detailed instructions on adding a new language to QATrack+, including step-by-step
+workflows and translation automation, please refer to the :ref:`Add Language Tutorial <add_language>`
+in the tutorials section.
 
 
 Tool Tips And User Hints
@@ -322,6 +343,16 @@ configuration sections is included in the setup.cfg file. To run yapf:
 
     make yapf
 
+Using Make Commands
+~~~~~~~~~~~~~~~~~~
+
+QATrack+ includes a Makefile with convenient shortcuts for common development tasks like running tests, formatting code, and building documentation. You can see all available commands by running:
+
+.. code-block:: shell
+
+    make help
+
+For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
 
 Import Order
 ~~~~~~~~~~~~
@@ -368,11 +399,140 @@ other html files) should use 2 spaces for indentation.  Javascript code should
 use 4 spaces for indentation.
 
 
+Setting Up Selenium Browser Testing
+----------------------------------
+
+QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
+
+**This setup should be completed before running the test suite if you want to see the Selenium tests in action.**
+
+**Browser Requirements**
+
+You will need to have both a browser and its corresponding driver installed on your system:
+
+* Option 1. **Firefox + geckodriver**
+* Option 2. **Chromium + chromedriver**
+
+If you are unsure whether or not you have both a browser and its corresponding driver installed, you can run the following commands to check:
+
+**Finding Browser and Driver Paths:**
+
+.. code-block:: shell
+
+    # Check for Firefox browser
+    which firefox
+    
+    # Check for geckodriver
+    which geckodriver
+    
+    # Check for Chromium browser
+    which chromium
+    
+    # Check for chromedriver
+    which chromedriver
+
+**Example Output:**
+
+.. code-block::
+
+    /usr/bin/firefox
+    /snap/bin/geckodriver
+    /snap/bin/chromium
+    /usr/bin/chromedriver
+
+**Installing Missing Components**
+
+If you do not have both firefox and geckodriver or both chromium and chromedriver,
+you can install either pair using the following commands:
+
+.. code-block:: shell
+
+    # Option 1: Install Firefox and geckodriver
+    sudo apt install firefox geckodriver
+    
+    # Option 2: Install Chromium and chromedriver
+    sudo apt install chromium-browser chromium-chromedriver
+
+**Manual Downloads (Alternative Installation)**
+
+If the package manager installation doesn't work or you need a specific version, you can download the drivers manually:
+
+* **geckodriver**: Download from the `official Mozilla website <https://firefox-source-docs.mozilla.org/testing/geckodriver/>`_
+* **chromedriver**: Download from the `official Chrome releases <https://chromedriver.chromium.org/downloads>`_
+
+After downloading, make the driver executable and verify the path.
+
+
+**Configuring Selenium Tests**
+
+You'll need to configure your browser settings in two files. First, update the Selenium configuration in `qatrack/settings.py`:
+
+.. code-block::
+
+    # Selenium Browser Configuration
+    # Options: 'firefox', 'chromium'
+    SELENIUM_BROWSER = ''
+    
+    # Browser Driver Paths
+    SELENIUM_FIREFOX_DRIVER_PATH = ''  # Path to geckodriver as shown above
+    SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver as shown above
+    
+    # Headless Mode
+    # Set to True to run browsers in headless mode (no visible browser window)
+    # Set to False to see the browser during test execution
+    SELENIUM_VIRTUAL_DISPLAY = True
+
+Then also update `SELENIUM_VIRTUAL_DISPLAY` in `qatrack/test_settings.py`:
+
+.. code-block::
+    
+    # In qatrack/test_settings.py:
+    SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
+
+**Configuration Examples**
+
+**Firefox with visible browser:**
+
+.. code-block::
+
+    # In qatrack/settings.py:
+    SELENIUM_BROWSER = 'firefox'
+    SELENIUM_VIRTUAL_DISPLAY = False
+    SELENIUM_FIREFOX_DRIVER_PATH = '/snap/bin/geckodriver' 
+    
+    # In qatrack/test_settings.py:
+    SELENIUM_VIRTUAL_DISPLAY = False
+
+**Chromium with visible browser:**
+
+.. code-block::
+
+    # In qatrack/settings.py:
+    SELENIUM_BROWSER = 'chromium'
+    SELENIUM_VIRTUAL_DISPLAY = False
+    SELENIUM_CHROMIUM_DRIVER_PATH = '/usr/bin/chromedriver'
+    
+    # In qatrack/test_settings.py:
+    SELENIUM_VIRTUAL_DISPLAY = False
+
+**Headless mode**
+
+.. code-block::
+
+    # In qatrack/settings.py:
+    SELENIUM_BROWSER = ''  # This can either be filled in or left blank
+    SELENIUM_VIRTUAL_DISPLAY = True
+    
+    # In qatrack/test_settings.py:
+    SELENIUM_VIRTUAL_DISPLAY = True
+
+
 Running The Test Suite
 ----------------------
 
-Once you have QATrack+ and its dependencies installed you can run the test
-suite from the root QATrack+ directory using the `py.test` command:
+Once you have QATrack+ and its dependencies installed (and optionally configured
+Selenium browser testing above), you can run the test suite from the root
+QATrack+ directory using the `py.test` command:
 
 
 .. code-block:: sh
@@ -380,10 +540,30 @@ suite from the root QATrack+ directory using the `py.test` command:
     ./qatrackplus> py.test
     Test session starts (platform: linux, Python 3.6.5, pytest 3.5.0, pytest-sugar 0.9.1)
     Django settings: qatrack.settings (from ini file)
-    rootdir: /home/randlet/projects/qatrack/qatrackplus, inifile: pytest.ini
-    plugins: sugar-0.9.1, django-3.1.2, cov-2.5.1
+    rootdir: /home/dev/projects/qatrackplus, inifile: pytest.ini
+    plugins: django-4.5.2, cov-3.0.0
 
     qatrack/accounts/tests.py ✓✓✓
+
+**Running Different Types of Tests**
+
+Run all tests (including Selenium):
+
+.. code-block:: shell
+
+    py.test
+
+Run only Selenium tests:
+
+.. code-block:: shell
+
+    pytest -m selenium
+
+Run only non-Selenium tests (faster):
+
+.. code-block:: shell
+
+    pytest -m "not selenium"
 
 For more information on using py.test, refer to the `py.test documentation
 <https://pytest.org>`__.
@@ -398,6 +578,52 @@ For more information on using py.test, refer to the `py.test documentation
     .. code-block:: shell
 
         make cover
+
+
+Customizing Organization Logos
+-----------------------------
+
+QATrack+ reports include an option to display your organization's logo.
+
+**Adding Your Organization Logo**
+
+1. **Prepare your logo file:**
+   - Use a PNG format for best compatibility
+   - Recommended size: 200x60 pixels or similar aspect ratio
+   - Keep file size reasonable (under 100KB)
+
+2. **Replace the placeholder logo:**
+   - Navigate to ``qatrack/reports/static/reports/img/``
+   - Replace the existing ``logo.png`` file with your own logo
+   - Keep the same filename (``logo.png``) to avoid template changes
+
+3. **Alternative: Use a different filename:**
+   - If you prefer a different filename, edit ``qatrack/reports/templates/reports/_header.html``
+   - Update all references from ``logo.png`` to your preferred filename
+   - Update the alt text and fallback messages as needed
+
+4. **Collect static files:**
+   After making changes, run:
+   
+   .. code-block:: shell
+   
+       python manage.py collectstatic --noinput
+
+**Logo Display Options**
+
+- **HTML Reports:** Logo is displayed using Django's static file handling
+- **PDF Reports:** Logo uses file:// paths for compatibility with PDF generation
+- **Error Handling:** If the logo fails to load, nothing is displayed (no fallback message)
+- **Visibility Control:** Users can toggle logo display on/off in report settings
+
+**Customizing Logo Text**
+
+To change the alt text:
+- Edit ``qatrack/reports/templates/reports/_header.html``
+- Update the translation strings for "Organization Logo"
+- Add translations to your locale files if using multiple languages
+
+**Note:** The logo functionality is designed to be easily customizable without requiring code changes to the core application.
 
 
 Writing Documentation
@@ -430,7 +656,37 @@ browser (at http://127.0.0.1:8008) by running one of the following commands:
 
     make docs-autobuild
     # -or-
-    sphinx-autobuild docs docs/_build/html -p 8008
+    sphinx-autobuild docs docs/_build/html --port 8008
+
+
+Version Naming Convention
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ uses **Eff Ver (Effort Versioning)** for its version naming convention. 
+Eff Ver is a versioning strategy that focuses on the effort required to upgrade 
+rather than semantic meaning. This approach prioritizes the practical impact on 
+users and developers when considering version changes.
+
+For more information about Eff Ver, see the `Eff Ver documentation 
+<https://effver.org>`__.
+
+**Version Number Structure**
+
+The version number follows the format `X.Y.Z` where:
+
+- **X (Major)**: Corresponds to the Django LTS release version
+  - Currently at 4.0.0 (Django 4.2 LTS)
+  - When upgrading to Django 5.2 LTS, version will become 5.0.0
+  - This ensures compatibility and upgrade path alignment with Django
+
+- **Y (Minor)**: Feature releases within the same Django LTS cycle
+- **Z (Patch)**: Bug fixes and minor improvements
+
+**Examples:**
+- 4.0.0: Initial release on Django 4.2 LTS
+- 4.1.0: Major feature release while staying on Django 4.2 LTS
+- 4.1.1: Bug fix release
+- 5.0.0: Upgrade to Django 5.2 LTS
 
 
 Copyright & Licensing
@@ -452,11 +708,12 @@ QATrack+ but still wants to help the project out.  Here are a couple of ways
 that you can contribute to the QATrack+ project without doing any software
 development:
 
-* **Translations:** Starting in QATrack+ v3.1.0 (sorry this didn't happen yet),
-  QATrack+ will have the infrastructure in place to support languages other
-  than English.  We will be making translation files available so that the
-  community can create translation files for their native languages. Please get
-  in touch with randy@multileaf.ca if you are able to help out with this task!
+
+* **Translations:** QATrack+ supports multiple languages through its
+  internationalization infrastructure. We welcome community contributions for
+  translation files in different languages. Use the translation manager script
+  to help automate translations, then refine them manually for accuracy.
+  See the "Internationalization & Translation" section above for detailed commands.
 
 * **Tutorials:** :ref:`Tutorials <tutorials>` are a great way for newcomers to
   learn their way around QATrack+.  If you have an idea for a tutorial, we

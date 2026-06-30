@@ -72,6 +72,7 @@ class QCCompletedNotice(models.Model):
 
     class Meta:
         verbose_name = _l("QC Completed Notice")
+        verbose_name_plural = _l("QC Completed Notices")
 
     def __str__(self):
         return "<QCCompletedNotice(%d, %s)>" % (self.pk, self.get_notification_type_display())

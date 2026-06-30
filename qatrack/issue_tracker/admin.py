@@ -29,7 +29,6 @@ class IssuePriorityStatusAdmin(BaseQATrackAdmin):
             'jquery/js/jquery.min.js',
             'colorpicker/js/bootstrap-colorpicker.min.js',
             'qatrack_core/js/admin_colourpicker.js',
-
         )
         css = {
             'all': (

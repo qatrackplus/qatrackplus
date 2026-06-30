@@ -1,6 +1,5 @@
-from rest_framework import serializers
-
 from django_comments.models import Comment
+from rest_framework import serializers
 
 
 class CommentSerializer(serializers.HyperlinkedModelSerializer):

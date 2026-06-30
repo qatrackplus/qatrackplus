@@ -1,25 +1,18 @@
-
-from django import forms
-from django.core.exceptions import ValidationError, ImproperlyConfigured
-from django.db.models import ObjectDoesNotExist, Q
-from django.utils.encoding import force_text
-from form_utils.forms import BetterModelForm
-
-from qatrack.issue_tracker import models as i_models
+from qatrack.issue_tracker import models
+from qatrack.qatrack_core.forms import BetterModelForm
 
 
 class IssueForm(BetterModelForm):
 
     class Meta:
-        model = i_models.Issue
+        model = models.Issue
+        fields = ['issue_type', 'issue_priority', 'issue_tags', 'description', 'error_screen']
         fieldsets = [
             ('hidden_fields', {
                 'fields': [],
             }),
             ('required_fields', {
-                'fields': [
-                    'issue_type', 'issue_priority', 'issue_tags', 'description', 'error_screen'
-                ],
+                'fields': ['issue_type', 'issue_priority', 'issue_tags', 'description', 'error_screen'],
             }),
             ('optional_fields', {
                 'fields': []
@@ -27,7 +20,7 @@ class IssueForm(BetterModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        super(IssueForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields['issue_type'].label = 'Type'
         self.fields['issue_priority'].label = 'Priority'

@@ -1,12 +1,12 @@
 from itertools import groupby
 
 import dateutil.parser
+import django_filters
 from django import forms
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
-import django_filters
 
 from qatrack.qa import models
 from qatrack.qatrack_core.utils import relative_dates
@@ -36,12 +36,12 @@ class RelativeDateRangeField(forms.fields.CharField):
                 start = '-'.join(explode[:3])
                 end = '-'.join(explode[3:])
             else:
-                start, end = [x.strip() for x in val.split("-")]
+                start, end = (x.strip() for x in val.split("-"))
             tz = timezone.get_current_timezone()
-            start = tz.localize(dateutil.parser.parse(start))
-            end = tz.localize(dateutil.parser.parse(end)).replace(hour=23, minute=59, second=59)
+            start = dateutil.parser.parse(start).replace(tzinfo=tz)
+            end = dateutil.parser.parse(end).replace(hour=23, minute=59, second=59, tzinfo=tz)
         except:  # noqa: E722
-            raise forms.ValidationError("Format must be a range e.g. 01 Jan 2000 - 01 Feb 2000", code="invalid")
+            raise forms.ValidationError(_("Format must be a range e.g. 01 Jan 2000 - 01 Feb 2000"), code="invalid")
 
         return start, end
 
@@ -107,7 +107,9 @@ class TestListInstanceFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
+        ),
     )
 
     unit_test_collection__assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
@@ -169,9 +171,7 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -190,7 +190,9 @@ class UnitTestCollectionFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
+        ),
     )
 
     active = django_filters.filters.BooleanFilter(
@@ -310,9 +312,7 @@ class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -331,7 +331,9 @@ class UnitTestCollectionSchedulingFilter(BaseReportFilterSet):
         label=_l("Frequency"),
         queryset=models.Frequency.objects.all(),
         null_label=_l("Ad Hoc"),
-        help_text=_l("Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more frequencies (leave blank to include all frequencies)"
+        ),
     )
 
     active = django_filters.filters.BooleanFilter(
@@ -457,13 +459,17 @@ class BaseServiceEventFilter(BaseReportFilterSet):
     unit_service_area__service_area = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Area"),
         queryset=sl_models.ServiceArea.objects.order_by("name").all(),
-        help_text=_l("Use this filter to limit report to one or more service areas (leave blank to include all service areas)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more service areas (leave blank to include all service areas)"
+        ),
     )
 
     service_type = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Type"),
         queryset=sl_models.ServiceType.objects.order_by("name").all(),
-        help_text=_l("Use this filter to limit report to one or more service types (leave blank to include all service types)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more service types (leave blank to include all service types)"
+        ),
     )
 
     class Meta:
@@ -498,9 +504,7 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
 
     unit_service_area__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
@@ -518,7 +522,9 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     unit_service_area__service_area = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Service Area"),
         queryset=sl_models.ServiceArea.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more Service Areas (leave blank to include all service areas)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more Service Areas (leave blank to include all service areas)"
+        ),
     )
 
     service_event_template = django_filters.filters.ModelMultipleChoiceFilter(
@@ -543,13 +549,8 @@ class ScheduledServiceEventFilter(BaseReportFilterSet):
     class Meta:
         model = sl_models.ServiceEventSchedule
         fields = [
-            "unit_service_area__unit__site",
-            "unit_service_area__unit",
-            "unit_service_area__service_area",
-            "service_event_template",
-            "frequency",
-            "assigned_to",
-            "active"
+            "unit_service_area__unit__site", "unit_service_area__unit", "unit_service_area__service_area",
+            "service_event_template", "frequency", "assigned_to", "active"
         ]
 
     def __init__(self, *args, **kwargs):
@@ -589,9 +590,7 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
     assigned_to = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Assigned To"),
         queryset=models.Group.objects.order_by("name"),
-        help_text=_l(
-            "Use this filter to limit report to one or more groups (leave blank to include all groups)"
-        ),
+        help_text=_l("Use this filter to limit report to one or more groups (leave blank to include all groups)"),
     )
     unit_service_area__unit__site = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Site"),
@@ -615,9 +614,11 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
         help_text=_l("Select whether you want to include assignments which are Active, Inactive, or Both"),
         initial='2',
     )
+
     class Meta:
         model = sl_models.ServiceEventSchedule
         fields = ["due_date", "assigned_to", "unit_service_area__unit__site", "unit_service_area__unit", "frequency"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.form.fields['due_date'].widget.attrs['class'] = "futuredate"
@@ -627,6 +628,7 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
             ('2', _('Yes')),
             ('3', _('No')),
         )
+
     def filter_queryset(self, queryset):
         """Perform extra active filtering based on Unit active flag in addition to UTC active flag"""
         # don't let the default filtering filter by active since we'll do it
@@ -639,6 +641,7 @@ class ServiceEventSchedulingFilter(BaseReportFilterSet):
         elif active is False:
             qs = qs.filter(Q(active=False) | Q(unit_service_area__unit__active=False))
         return qs
+
 
 class BaseFaultFilter(BaseReportFilterSet):
 
@@ -662,7 +665,9 @@ class BaseFaultFilter(BaseReportFilterSet):
     modality = django_filters.filters.ModelMultipleChoiceFilter(
         label=_l("Modality"),
         queryset=umodels.Modality.objects.all(),
-        help_text=_l("Use this filter to limit report to one or more modalities (leave blank to include all modalities)"),
+        help_text=_l(
+            "Use this filter to limit report to one or more modalities (leave blank to include all modalities)"
+        ),
     )
 
     review_status = django_filters.filters.ChoiceFilter(

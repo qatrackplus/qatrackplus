@@ -18,7 +18,7 @@ After configuration changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Any time you change a setting in local_settings.py, you need to restart the
-QATrack+ application either by restarting Apache  or restarting the CherryPy
+QATrack+ application either by restarting Nginx and Supervisor or restarting the CherryPy
 Windows Service and you also need to restart Django Q.
 
 Restarting QATrack+ on Linux
@@ -26,9 +26,8 @@ Restarting QATrack+ on Linux
 
 .. code-block:: console
 
-    sudo service apache2 restart
-    sudo supervisorctl reread
-    sudo supervisorctl update
+    sudo service nginx restart
+    sudo supervisorctl restart all
 
 
 Restarting QATrack+ on Windows
@@ -38,12 +37,10 @@ Open a PowerShell Window and enter the following commands:
 
 .. code-block:: console
 
-    cd C:\deploy
-    .\venvs\qatrack31\Scripts\Activate.ps1
-    cd qatrackplus
-    python QATrack3CherryPyService.py restart
-    Stop-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
-    Start-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
+    cd C:\deploy\qatrackplus
+    .\.venv\Scripts\Activate.ps1
+    python QATrack40CherryPyService.py restart
+    Restart-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
 
 
 Mandatory Settings
@@ -78,7 +75,7 @@ Allowed Host Setting
 ....................
 
 
-On Linux, set allowed hosts either to your server name or IP address (e.g. for Apache):
+On Linux, set allowed hosts either to your server name or IP address (e.g. for Nginx):
 
 .. code-block:: python
 
@@ -588,7 +585,7 @@ USE_X_FORWARDED_HOST
 
 Set `USE_X_FORWARDED_HOST = True` when running QATrack+ behind a reverse proxy
 and set to False for whenever you are not running behind a reverse proxy e.g.
-Set to True for CherryPy/IIS and False for Apache/mod_wsgi or development work.
+Set to True for CherryPy/IIS and False for Nginx/Gunicorn or development work.
 
 
 SESSION Settings

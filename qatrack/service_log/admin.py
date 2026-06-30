@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.db.models import Count, Max
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -33,7 +34,7 @@ class ServiceEventStatusFormAdmin(forms.ModelForm):
 
         is_default = self.cleaned_data['is_default']
         if not is_default and self.initial.get('is_default', False):
-            raise forms.ValidationError('There must be one default status. Edit another status to be default first.')
+            raise forms.ValidationError(_('There must be one default status. Edit another status to be default first.'))
         elif not ServiceEventStatus.objects.filter(is_default=True).first():
             is_default = True
         return is_default
@@ -44,7 +45,7 @@ class DeleteOnlyFromOwnFormAdmin(BaseQATrackAdmin):
     def has_delete_permission(self, request, obj=None):
         if obj is None:
             return False
-        return super(DeleteOnlyFromOwnFormAdmin, self).has_delete_permission(request, obj)
+        return super().has_delete_permission(request, obj)
 
 
 class UnitServiceAreaFilter(admin.SimpleListFilter):
@@ -64,6 +65,7 @@ class UnitServiceAreaFilter(admin.SimpleListFilter):
         return queryset
 
 
+@admin.register(ServiceEvent)
 class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
 
     list_display = [
@@ -113,8 +115,9 @@ class ServiceEventAdmin(DeleteOnlyFromOwnFormAdmin):
         return qs
 
 
+@admin.register(ServiceEventStatus)
 class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
-    list_display = ['name', 'is_review_required', 'is_default', 'rts_qa_must_be_reviewed', 'order']
+    list_display = ['name', 'is_review_required', 'is_default', 'rts_qa_must_be_reviewed', 'order', 'get_colour']
     list_editable = ['order']
     form = ServiceEventStatusFormAdmin
 
@@ -124,11 +127,9 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
             "jquery/js/jquery.min.js",
             "colorpicker/js/bootstrap-colorpicker.min.js",
             "qatrack_core/js/admin_colourpicker.js",
-
         )
         css = {
             'all': (
-                "bootstrap/css/bootstrap.min.css",
                 "colorpicker/css/bootstrap-colorpicker.min.css",
                 "qatrack_core/css/admin.css",
             ),
@@ -141,16 +142,24 @@ class ServiceEventStatusAdmin(DeleteOnlyFromOwnFormAdmin):
 
         return super().delete_view(request, object_id, extra_context)
 
+    @admin.display(description=_l("Color"))
+    @mark_safe
+    def get_colour(self, obj):
+        return '<div style="display: inline-block; width: 20px; height:20px; background-color: %s;"></div>' % obj.colour
 
+
+@admin.register(ServiceType)
 class ServiceTypeAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name', 'is_review_required', 'is_active']
 
 
+@admin.register(ServiceArea)
 class ServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name']
     filter_horizontal = ("units",)
 
 
+@admin.register(UnitServiceArea)
 class UnitServiceAreaAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['__str__', 'notes']
     list_filter = ['unit', 'service_area']
@@ -183,6 +192,7 @@ class GroupLinkerAdminForm(forms.ModelForm):
         return multiple
 
 
+@admin.register(GroupLinker)
 class GroupLinkerAdmin(DeleteOnlyFromOwnFormAdmin):
     list_display = ['name', 'group', 'required', 'multiple', 'description', 'help_text']
     list_filter = ['group']
@@ -292,10 +302,7 @@ class ServiceEventScheduleAdminForm(forms.ModelForm):
         se_template = self.cleaned_data.get('service_event_template')
         usa = self.cleaned_data.get('unit_service_area')
         mismatched_service_area = (
-            se_template and
-            usa and
-            se_template.service_area and
-            usa.service_area != se_template.service_area
+            se_template and usa and se_template.service_area and usa.service_area != se_template.service_area
         )
         if mismatched_service_area:
             msg = "The template service area (%s) does not match the unit's service area (%s)" % (
@@ -323,6 +330,7 @@ class ServiceEventScheduleAdminForm(forms.ModelForm):
         return data
 
 
+@admin.register(ServiceEventSchedule)
 class ServiceEventScheduleAdmin(BaseQATrackAdmin):
 
     list_filter = [
@@ -333,15 +341,7 @@ class ServiceEventScheduleAdmin(BaseQATrackAdmin):
         q_admin.ActiveFilter,
     ]
 
-    list_display = [
-        'get_name',
-        'get_site',
-        'get_unit',
-        'get_service_area',
-        freq_name,
-        assigned_to_name,
-        "active"
-    ]
+    list_display = ['get_name', 'get_site', 'get_unit', 'get_service_area', freq_name, assigned_to_name, "active"]
 
     search_fields = [
         'service_event_template__name',
@@ -380,27 +380,36 @@ class ServiceEventScheduleAdmin(BaseQATrackAdmin):
             'frequency',
         )
 
+    @admin.display(
+        description=_l('Template Name'),
+        ordering='service_event_template__name',
+    )
     def get_name(self, ses):
         return ses.service_event_template.name
-    get_name.short_description = _l('Template Name')
-    get_name.admin_order_field = 'service_event_template__name'
 
+    @admin.display(
+        description=_l('Site'),
+        ordering='unit_service_area__unit__site',
+    )
     def get_site(self, ses):
         return ses.unit_service_area.unit.site.name if ses.unit_service_area.unit.site else _l("Other")
-    get_site.short_description = _l('Site')
-    get_site.admin_order_field = 'unit_service_area__unit__site'
 
+    @admin.display(
+        description=_l('Unit'),
+        ordering='unit_service_area__unit',
+    )
     def get_unit(self, ses):
         return ses.unit_service_area.unit.name
-    get_unit.short_description = _l('Unit')
-    get_unit.admin_order_field = 'unit_service_area__unit'
 
+    @admin.display(
+        description=_l('Service Area'),
+        ordering='unit_service_area__service_area.name',
+    )
     def get_service_area(self, ses):
         return ses.unit_service_area.service_area.name
-    get_service_area.short_description = _l('Service Area')
-    get_service_area.admin_order_field = 'unit_service_area__service_area.name'
 
 
+@admin.register(ServiceEventTemplate)
 class ServiceEventTemplateAdmin(SaveUserQATrackAdmin):
 
     list_filter = ['service_type']
@@ -450,12 +459,4 @@ class ServiceEventTemplateAdmin(SaveUserQATrackAdmin):
     ]
 
 
-admin.site.register(ServiceArea, ServiceAreaAdmin)
-admin.site.register(ServiceEvent, ServiceEventAdmin)
-admin.site.register(ServiceType, ServiceTypeAdmin)
-admin.site.register(ServiceEventStatus, ServiceEventStatusAdmin)
-admin.site.register(UnitServiceArea, UnitServiceAreaAdmin)
-admin.site.register(GroupLinker, GroupLinkerAdmin)
-admin.site.register(ServiceEventSchedule, ServiceEventScheduleAdmin)
-admin.site.register(ServiceEventTemplate, ServiceEventTemplateAdmin)
 admin.site.register([ThirdParty], BaseQATrackAdmin)

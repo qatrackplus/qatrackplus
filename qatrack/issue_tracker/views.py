@@ -1,13 +1,12 @@
 from braces.views import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse, resolve
 from django.forms.utils import timezone
 from django.http import HttpResponseRedirect
 from django.template.loader import get_template
-from django.views.generic import DetailView, CreateView
-
+from django.urls import resolve, reverse
+from django.utils.translation import gettext as _
+from django.views.generic import CreateView, DetailView
 from listable.views import (
-    BaseListableView,
     DATE_RANGE,
     LAST_MONTH,
     LAST_WEEK,
@@ -16,10 +15,11 @@ from listable.views import (
     TEXT,
     TODAY,
     YESTERDAY,
+    BaseListableView,
 )
 
-from qatrack.issue_tracker import models as i_models
 from qatrack.issue_tracker import forms as i_forms
+from qatrack.issue_tracker import models as i_models
 
 
 class IssueCreate(LoginRequiredMixin, CreateView):
@@ -43,7 +43,7 @@ class IssueCreate(LoginRequiredMixin, CreateView):
         return HttpResponseRedirect(reverse('issue_list'))
 
     def get_context_data(self, **kwargs):
-        context = super(IssueCreate, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         colours = {}
         for c in i_models.IssuePriority.objects.all():
             colours[c.id] = c.colour
@@ -62,7 +62,7 @@ class IssueDetails(LoginRequiredMixin, DetailView):
     template_name = 'issue_tracker/issue_details.html'
 
     def get_context_data(self, **kwargs):
-        context = super(IssueDetails, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['now'] = timezone.now()
         ct = ContentType.objects.get(app_label='issue_tracker', model='issue').id
         context['ct'] = ct
@@ -85,27 +85,20 @@ class IssueList(BaseListableView):
     multi_separator = '<span class="padding-0-10">|</span>'
 
     fields = (
-        'actions',
-        'pk',
-        'issue_type__name',
-        'issue_priority__name',
-        'user_submitted_by__username',
-        'description',
-        'datetime_submitted',
-        'issue_tags__name',
-        'issue_status__name'
+        'actions', 'pk', 'issue_type__name', 'issue_priority__name', 'user_submitted_by__username', 'description',
+        'datetime_submitted', 'issue_tags__name', 'issue_status__name'
     )
 
     headers = {
-        'actions': 'Actions',
-        'pk': 'ID',
-        'issue_type__name': 'Type',
-        'issue_priority__name': 'Priority',
-        'user_submitted_by__username': 'Submitted By',
-        'description': 'Description',
-        'datetime_submitted': 'Submitted',
-        'issue_tags__name': 'Tags',
-        'issue_status__name': 'Status'
+        'actions': _('Actions'),
+        'pk': _('ID'),
+        'issue_type__name': _('Type'),
+        'issue_priority__name': _('Priority'),
+        'user_submitted_by__username': _('Submitted By'),
+        'description': _('Description'),
+        'datetime_submitted': _('Submitted'),
+        'issue_tags__name': _('Tags'),
+        'issue_status__name': _('Status')
     }
 
     widgets = {
@@ -124,26 +117,13 @@ class IssueList(BaseListableView):
         'actions': False,
     }
 
-    order_fields = {
-        'actions': False,
-        'datetime_submitted': 'datetime_submitted',
-        'issue_tags__name': False
-    }
+    order_fields = {'actions': False, 'datetime_submitted': 'datetime_submitted', 'issue_tags__name': False}
 
-    date_ranges = {
-        'datetime_submitted': (TODAY, YESTERDAY, LAST_WEEK, LAST_MONTH)
-    }
+    date_ranges = {'datetime_submitted': (TODAY, YESTERDAY, LAST_WEEK, LAST_MONTH)}
 
-    select_related = (
-        'issue_type',
-        'issue_priority',
-        'user_submitted_by',
-        'issue_status'
-    )
+    select_related = ('issue_type', 'issue_priority', 'user_submitted_by', 'issue_status')
 
-    prefetch_related = (
-        'issue_tags',
-    )
+    prefetch_related = ('issue_tags',)
 
     def get_icon(self):
         return 'fa-bug'
@@ -153,7 +133,7 @@ class IssueList(BaseListableView):
             return 'All Issues'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(IssueList, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         current_url = resolve(self.request.path_info).url_name
         context['view_name'] = current_url
         context['icon'] = self.get_icon()

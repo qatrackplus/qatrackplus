@@ -1,3 +1,4 @@
+import datetime
 import io
 import json
 import time
@@ -16,7 +17,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as e_c
 
 # Create your tests here.
-from qatrack.qa.models import Group, TestInstance, User, UnitTestCollection
+from qatrack.qa.models import Group, TestInstance, UnitTestCollection, User
 from qatrack.qa.tests import utils
 from qatrack.qa.tests.test_selenium import BaseQATests
 from qatrack.reports import (
@@ -30,7 +31,6 @@ from qatrack.reports import (
     views,
 )
 from qatrack.service_log.models import ServiceEventSchedule
-
 from qatrack.service_log.tests import utils as sl_utils
 
 
@@ -501,8 +501,8 @@ class TestFilters(TestCase):
         for test_input in test_inputs:
             start, end = cdf.clean(test_input)
             tz = timezone.get_current_timezone()
-            expected_start = tz.localize(timezone.datetime(2019, 1, 1))
-            expected_end = tz.localize(timezone.datetime(2019, 1, 2, 23, 59, 59))
+            expected_start = timezone.datetime(2019, 1, 1).replace(tzinfo=tz)
+            expected_end = timezone.datetime(2019, 1, 2, 23, 59, 59).replace(tzinfo=tz)
             assert (start, end) == (expected_start, expected_end)
 
     def test_category_choices(self):
@@ -689,20 +689,20 @@ class TestSerializeFormData(TestCase):
         g = Group.objects.create(name="group")
         data = {'groups': Group.objects.all()}
         serialized = forms.serialize_form_data(data)
-        assert json.loads(serialized) == {'groups': [g.pk]}
+        assert serialized == {'groups': [g.pk]}
 
     def test_object(self):
         """Model instance should be serialized as instace pk"""
         g = Group.objects.create(name="group")
         data = {'group': g}
         serialized = forms.serialize_form_data(data)
-        assert json.loads(serialized) == {'group': g.pk}
+        assert serialized == {'group': g.pk}
 
     def test_list(self):
         """iterable of objects without pk attribute should be returned as list"""
         data = {'list': ['a', 'b', 'c']}
         serialized = forms.serialize_form_data(data)
-        assert json.loads(serialized) == data
+        assert serialized == data
 
 
 class TestBaseReport(TestCase):
@@ -782,7 +782,7 @@ class TestBaseReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_utc(self):
-        dt = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=timezone.utc)
+        dt = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=datetime.UTC)
         assert reports.BaseReport().default_detail_value_format(dt) == "01 Jan 2019"
 
     @override_settings(TIME_ZONE="America/Toronto")
@@ -792,8 +792,8 @@ class TestBaseReport(TestCase):
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_range_utc(self):
-        dt1 = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=timezone.utc)
-        dt2 = timezone.datetime(2019, 1, 3, 2, 0, tzinfo=timezone.utc)
+        dt1 = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=datetime.UTC)
+        dt2 = timezone.datetime(2019, 1, 3, 2, 0, tzinfo=datetime.UTC)
         assert reports.BaseReport().default_detail_value_format([dt1, dt2]) == "01 Jan 2019 - 02 Jan 2019"
 
     @override_settings(TIME_ZONE="America/Toronto")
@@ -814,10 +814,10 @@ class TestBaseReport(TestCase):
     def test_to_html(self):
         assert 'class="container-fluid"' in reports.BaseReport().to_html()
 
-    @mock.patch("qatrack.reports.reports.chrometopdf")
-    def test_to_pdf(self, chrometopdf):
+    @mock.patch("qatrack.reports.reports.weasyprint_to_pdf")
+    def test_to_pdf(self, weasyprint_to_pdf):
         reports.BaseReport().to_pdf()
-        assert 'class="container-fluid"' in chrometopdf.call_args[0][0]
+        assert 'class="container-fluid"' in weasyprint_to_pdf.call_args[0][0]
 
     def test_to_csv(self):
         rep = reports.BaseReport()
@@ -857,7 +857,7 @@ class TestReportInterface(BaseQATests):
         self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
         self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
         self.click("preview")
-        self.driver.find_element_by_css_selector('#report .container-fluid')
+        self.driver.find_element(By.CSS_SELECTOR, '#report .container-fluid')
 
     def test_save_report(self):
         """Ensure filling and saving a report results in a SavedReport in the db"""
@@ -922,11 +922,11 @@ class TestReportInterface(BaseQATests):
         self.driver.refresh()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
         self.click('report-id-%s' % sr.pk)
-        wc = self.driver.find_element_by_id('id_work_completed')
+        wc = self.driver.find_element(By.ID, 'id_work_completed')
         assert wc.get_attribute("value") == "02 Jan 1989 - 04 Jan 1990"
-        heading = self.driver.find_element_by_id("id_reportnote_set-0-heading")
+        heading = self.driver.find_element(By.ID, "id_reportnote_set-0-heading")
         assert heading.get_attribute("value") == "heading"
-        content = self.driver.find_element_by_id("id_reportnote_set-0-content")
+        content = self.driver.find_element(By.ID, "id_reportnote_set-0-content")
         assert content.get_attribute("value") == "content"
 
     def test_load_report_edit_note(self):
@@ -950,7 +950,7 @@ class TestReportInterface(BaseQATests):
         self.driver.refresh()
         self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
         self.click('report-id-%s' % sr.pk)
-        heading = self.driver.find_element_by_id("id_reportnote_set-0-heading")
+        heading = self.driver.find_element(By.ID, "id_reportnote_set-0-heading")
         heading.send_keys(" add some new text")
         self.click("save")
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
@@ -1033,10 +1033,10 @@ class TestReportInterface(BaseQATests):
         self.click('report-id-%s-schedule' % sr.pk)
 
         self.select_by_index('id_schedule-time', 1)
-        self.driver.find_element_by_id("id_schedule-emails").send_keys("a@b.com")
+        self.driver.find_element(By.ID, "id_schedule-emails").send_keys("a@b.com")
 
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'add-date')))
-        self.driver.find_element_by_class_name("add-date").click()
+        self.driver.find_element(By.CLASS_NAME, "add-date").click()
 
         self.click("schedule")
 

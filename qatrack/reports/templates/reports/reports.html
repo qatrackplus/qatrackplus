@@ -13,6 +13,19 @@
 </script>
 <script type="text/javascript" src="{% static "recurrence/js/recurrence.js" %}"></script>
 <script type="text/javascript" src="{% static "recurrence/js/recurrence-widget.js" %}"></script>
+
+<script type="text/javascript">
+  // DataTables language configuration
+  window.datatablesLanguage = {
+    search: "{% trans 'Search' %}",
+    emptyTable: "{% trans 'No data available in table' %}",
+    info: "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+    infoEmpty: "{% trans 'Showing 0 to 0 of 0 entries' %}",
+    infoFiltered: "{% trans '(filtered from _MAX_ total entries)' %}",
+    previous: "{% trans 'Previous' %}",
+    next: "{% trans 'Next' %}"
+  };
+</script>
 {% endblock extra_head %}
 
 {% block extra_js %}

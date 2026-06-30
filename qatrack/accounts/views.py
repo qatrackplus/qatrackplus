@@ -32,7 +32,7 @@ class AccountDetails(TemplateView):
 
     def get_context_data(self, **kwargs):
 
-        context = super(AccountDetails, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         all_perms = self.request.user.get_all_permissions()
         permissions = []
         for category, perms in PERMISSIONS:
@@ -89,7 +89,7 @@ class GroupsApp(PermissionRequiredMixin, TemplateView):
     permission_required = "auth.change_group"
 
     def get_context_data(self, **kwargs):
-        context = super(GroupsApp, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context["all_perms"] = json.dumps(PERMISSIONS, cls=DjangoJSONEncoder)
         context["groups"] = Group.objects.all()
         return context

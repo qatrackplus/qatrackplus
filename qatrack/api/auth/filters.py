@@ -1,5 +1,5 @@
-from django.contrib.auth.models import Group, Permission, User
 import rest_framework_filters as filters
+from django.contrib.auth.models import Group, Permission, User
 
 from qatrack.api.contenttypes.views import ContentType, ContentTypeFilter
 from qatrack.api.filters import MaxDateFilter, MinDateFilter

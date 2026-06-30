@@ -99,7 +99,9 @@ class PartSupplierCollectionFilter(filters.FilterSet):
 
 class PartUsedFilter(filters.FilterSet):
 
-    service_event = filters.RelatedFilter(ServiceEventFilter, field_name="service_event", queryset=ServiceEvent.objects.all())
+    service_event = filters.RelatedFilter(
+        ServiceEventFilter, field_name="service_event", queryset=ServiceEvent.objects.all()
+    )
     part = filters.RelatedFilter(PartFilter, field_name="part", queryset=models.Part.objects.all())
     from_storage = filters.RelatedFilter(
         StorageFilter, field_name="from_storage", queryset=models.Storage.objects.all()

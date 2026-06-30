@@ -1,2 +1,0 @@
-# docker
--r requirements/docker.txt

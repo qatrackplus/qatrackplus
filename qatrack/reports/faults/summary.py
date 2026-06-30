@@ -85,9 +85,9 @@ class FaultSummaryReport(FaultReportMixin, BaseReport):
     report_type = "fault_summary"
     name = _l("Fault Summary")
     filter_class = filters.FaultSummaryFilter
-    description = mark_safe(_l(
-        "This report includes a summary of all faults from a given time period for selected units"
-    ))
+    description = mark_safe(
+        _l("This report includes a summary of all faults from a given time period for selected units")
+    )
 
     template = "reports/faults/summary.html"
 

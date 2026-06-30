@@ -1,3 +1,6 @@
+from django.conf import settings
+from django.contrib.auth.models import Group, User
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.signals import (
@@ -13,6 +16,7 @@ from django_comments.models import Comment
 from django_comments.signals import comment_was_posted
 
 from qatrack.service_log import models as sl_models
+from qatrack.units.models import Unit
 
 from . import models
 
@@ -21,15 +25,14 @@ def loaded_from_fixture(kwargs):
     return kwargs.get("raw", False)
 
 
-testlist_complete = Signal(providing_args=["instance", "created"])
+testlist_complete = Signal()
 
 
 def update_last_instances(test_list_instance):
     utc = test_list_instance.unit_test_collection
     try:
-        last_instance = models.TestListInstance.objects.complete().filter(
-            unit_test_collection=utc
-        ).latest("work_completed")
+        last_instance = models.TestListInstance.objects.complete().filter(unit_test_collection=utc
+                                                                          ).latest("work_completed")
     except models.TestListInstance.DoesNotExist:
         last_instance = None
     except models.UnitTestCollection.DoesNotExist:
@@ -159,12 +162,7 @@ def update_unit_test_infos(collection):
         existing_tests = [x.test for x in existing_uti_units]
         missing_utis = [x for x in all_tests if x not in existing_tests]
         for test in missing_utis:
-            get_or_create_unit_test_info(
-                unit=utc.unit,
-                test=test,
-                assigned_to=utc.assigned_to,
-                active=True
-            )
+            get_or_create_unit_test_info(unit=utc.unit, test=test, assigned_to=utc.assigned_to, active=True)
 
 
 @receiver(pre_save, sender=models.Test)
@@ -179,10 +177,14 @@ def on_test_save(*args, **kwargs):
         unit_assignments = models.UnitTestInfo.objects.filter(test=test)
 
         for ua in unit_assignments:
-            if ua.reference and ua.reference.value not in (0., 1.,):
+            if ua.reference and ua.reference.value not in (
+                0.,
+                1.,
+            ):
                 raise ValidationError(
                     "Can't change test type to %s while this test is still assigned to "
-                    "%s with a non-boolean reference" % (test.type, ua.unit.name))
+                    "%s with a non-boolean reference" % (test.type, ua.unit.name)
+                )
 
 
 @receiver(testlist_complete)
@@ -190,10 +192,9 @@ def check_tli_flag(*args, **kwargs):
     """Flag this test list instance if required"""
     tli = kwargs["instance"]
     models.TestListInstance.objects.filter(pk=tli.pk).update(
-        flagged=tli.testinstance_set.filter(
-            Q(value=1, unit_test_info__test__flag_when=True) |
-            Q(value=0, unit_test_info__test__flag_when=False)
-        ).exists()
+        flagged=tli.testinstance_set.
+        filter(Q(value=1, unit_test_info__test__flag_when=True)
+               | Q(value=0, unit_test_info__test__flag_when=False)).exists()
     )
 
 
@@ -290,3 +291,48 @@ def check_approved_statuses(*args, **kwargs):
                 f.service_event.datetime_status_changed = timezone.now()
                 f.service_event.user_status_changed_by = None
                 f.service_event.save()
+
+
+@receiver(post_save, sender=models.TestListInstance, dispatch_uid="qa_update_unreviewed_cache_post_save")
+@receiver(post_delete, sender=models.TestListInstance, dispatch_uid="qa_update_unreviewed_cache_post_delete")
+@receiver(post_save, sender=User, dispatch_uid="qa_update_unreviewed_cache_user")
+@receiver(post_save, sender=Group, dispatch_uid="qa_update_unreviewed_cache_group")
+def update_unreviewed_cache(sender, **kwargs):
+    """When a test list is completed invalidate the unreviewed counts"""
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT)
+    cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
+    cache.delete(settings.CACHE_RTS_QA_COUNT)
+    cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
+    cache.delete(settings.CACHE_IN_PROGRESS_COUNT_USER)
+    cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
+
+
+@receiver(pre_save, sender=models.UnitTestCollection, dispatch_uid="qa_stash_old_unit_for_utc_pre_save")
+def stash_old_unit_for_utc(sender, instance, **kwargs):
+    if instance.pk:
+        try:
+            instance._old_unit = models.UnitTestCollection.objects.get(pk=instance.pk).unit
+        except models.UnitTestCollection.DoesNotExist:
+            instance._old_unit = None
+    else:
+        instance._old_unit = None
+
+
+@receiver(post_save, sender=models.UnitTestCollection, dispatch_uid="qa_update_active_unit_test_collections_for_unit_utc_post_save")
+@receiver(post_delete, sender=models.UnitTestCollection, dispatch_uid="qa_update_active_unit_test_collections_for_unit_utc_post_delete")
+def update_active_unit_test_collections_for_unit_utc(sender, instance, **kwargs):
+    unit = instance.unit
+    models.set_active_unit_test_collections_for_unit_cache(unit)
+    old_unit = getattr(instance, '_old_unit', None)
+    if old_unit and old_unit != unit:
+        models.set_active_unit_test_collections_for_unit_cache(old_unit)
+
+
+@receiver(post_save, sender=Unit, dispatch_uid="qa_update_active_unit_test_collections_for_unit_post_save")
+def update_active_unit_test_collections_for_unit_post_save(sender, instance, **kwargs):
+    models.set_active_unit_test_collections_for_unit_cache(instance)
+
+
+@receiver(post_delete, sender=Unit, dispatch_uid="qa_update_active_unit_test_collections_for_unit_post_delete")
+def update_active_unit_test_collections_for_unit_post_delete(sender, instance, **kwargs):
+    cache.delete(settings.CACHE_ACTIVE_UTCS_FOR_UNIT_.format(instance.id))

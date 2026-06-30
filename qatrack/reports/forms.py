@@ -19,7 +19,9 @@ class ReportForm(forms.ModelForm):
 
     class Meta:
         model = models.SavedReport
-        fields = ("title", "report_type", "report_format", "visible_to", "include_signature")
+        fields = (
+            "title", "report_type", "report_format", "visible_to", "include_signature", "include_logo", "paper_size"
+        )
 
     def __init__(self, *args, **kwargs):
 
@@ -28,6 +30,21 @@ class ReportForm(forms.ModelForm):
         f = self.fields['report_type']
         choices = [('', '------------')] + reports.report_type_choices()
         f.widget = ToolTipSelect(titles=reports.report_descriptions(), choices=choices)
+        self.fields['include_logo'].label = _("Include Logo")
+        self.fields['include_logo'].help_text = _("Include the organization logo in reports?")
+        self.fields['paper_size'].label = _("Paper Size")
+        self.fields['paper_size'].required = False  # Make not required since model has default
+
+        # Set default if no initial value provided
+        if not self.initial.get('paper_size') and not self.data.get('root-paper_size'):
+            self.fields['paper_size'].initial = 'letter'
+
+    def clean_paper_size(self):
+        """Ensure paper_size has a default value if not provided"""
+        paper_size = self.cleaned_data.get('paper_size')
+        if not paper_size:
+            return 'letter'
+        return paper_size
 
 
 ReportNoteFormSet = forms.inlineformset_factory(
@@ -152,7 +169,7 @@ def serialize_form_data(form_data):
 
         data[k] = v
 
-    return json.dumps(data, cls=DjangoJSONEncoder)
+    return json.loads(json.dumps(data, cls=DjangoJSONEncoder))
 
 
 class ReportScheduleForm(forms.ModelForm):

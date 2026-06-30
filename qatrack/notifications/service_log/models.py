@@ -53,3 +53,4 @@ class ServiceEventNotice(models.Model):
 
     class Meta:
         verbose_name = _l("Service Event Notice")
+        verbose_name_plural = _l("Service Event Notices")

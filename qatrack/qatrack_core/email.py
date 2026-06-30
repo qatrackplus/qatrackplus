@@ -1,12 +1,12 @@
 import logging
 from io import BytesIO
 
+import pynliner
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-import pynliner
 
 logger = logging.getLogger('qatrack')
 

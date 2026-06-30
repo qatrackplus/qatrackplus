@@ -19,10 +19,8 @@ class ServiceEventDetailsReport(ServiceEventReportMixin, BaseReport):
     name = _l("Service Event Details")
     filter_class = filters.ServiceEventDetailsFilter
     description = mark_safe(
-        _l(
-            "This report includes details of all Service Events from a given"
-            "time period for selected units"
-        )
+        _l("This report includes details of all Service Events from a given"
+           "time period for selected units")
     )
 
     template = "reports/service_log/details.html"

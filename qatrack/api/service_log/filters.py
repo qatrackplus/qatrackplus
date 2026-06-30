@@ -1,5 +1,5 @@
-from django.contrib.auth.models import Group, User
 import rest_framework_filters as filters
+from django.contrib.auth.models import Group, User
 
 from qatrack.api.auth.filters import GroupFilter, UserFilter
 from qatrack.api.filters import MaxDateFilter, MinDateFilter
@@ -75,12 +75,8 @@ class ServiceEventScheduleFilter(filters.FilterSet):
         queryset=models.UnitServiceArea.objects.select_related("unit", "service_area"),
     )
 
-    frequency = filters.RelatedFilter(
-        FrequencyFilter, field_name="frequency", queryset=Frequency.objects.all()
-    )
-    assigned_to = filters.RelatedFilter(
-        GroupFilter, field_name="assigned_to", queryset=Group.objects.all()
-    )
+    frequency = filters.RelatedFilter(FrequencyFilter, field_name="frequency", queryset=Frequency.objects.all())
+    assigned_to = filters.RelatedFilter(GroupFilter, field_name="assigned_to", queryset=Group.objects.all())
 
     due_date_min = MinDateFilter(field_name="due_date")
     due_date_max = MaxDateFilter(field_name="due_date")
@@ -91,7 +87,6 @@ class ServiceEventScheduleFilter(filters.FilterSet):
             "auto_schedule": ["exact"],
             "active": ["exact"],
         }
-
 
 
 class ServiceEventFilter(filters.FilterSet):
@@ -163,12 +158,8 @@ class ServiceEventTemplateFilter(filters.FilterSet):
         field_name="service_area",
         queryset=models.ServiceArea.objects.all(),
     )
-    created_by = filters.RelatedFilter(
-        UserFilter, field_name="created_by", queryset=User.objects.all()
-    )
-    modified_by = filters.RelatedFilter(
-        UserFilter, field_name="modified_by", queryset=User.objects.all()
-    )
+    created_by = filters.RelatedFilter(UserFilter, field_name="created_by", queryset=User.objects.all())
+    modified_by = filters.RelatedFilter(UserFilter, field_name="modified_by", queryset=User.objects.all())
 
     class Meta:
         model = models.ServiceEventTemplate
@@ -179,7 +170,6 @@ class ServiceEventTemplateFilter(filters.FilterSet):
             "work_description": ["exact", "icontains", "contains", "in"],
             "is_review_required": ["exact"],
         }
-
 
 
 class ThirdPartyFilter(filters.FilterSet):

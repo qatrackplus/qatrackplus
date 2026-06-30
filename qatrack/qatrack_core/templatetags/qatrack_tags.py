@@ -58,9 +58,7 @@ def lookup(d, key):
 @register.simple_tag(name='render_status_tag')
 def render_status_tag(status_name):
     status = sl_models.ServiceEventStatus.objects.get(name=status_name)
-    return '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (
-        status.colour, status_name
-    )
+    return '<span class="label smooth-border" style="border-color: %s;">%s</span>' % (status.colour, status_name)
 
 
 @register.filter(name='get_user_name')

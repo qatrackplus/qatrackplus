@@ -1,16 +1,15 @@
 from django.conf import settings
-from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.templatetags.static import static as static_url
-from django.urls import path
+from django.urls import include, path
+from django.urls import re_path as url
 from django.views.generic.base import RedirectView
 from django.views.i18n import JavaScriptCatalog
 
 from qatrack.qatrack_core import views
 
 admin.autodiscover()
-
 
 favicon_view = RedirectView.as_view(url=static_url("qatrack_core/img/favicon.ico"), permanent=True)
 touch_view = RedirectView.as_view(url=static_url("qatrack_core/img/apple-touch-icon.png"), permanent=True)
@@ -44,23 +43,26 @@ urlpatterns = [
 
     # Uncomment the next line to enable the admin:
     path(r'admin/', admin.site.urls),
+    path('i18n/', include('django.conf.urls.i18n')),
     url(r'^favicon\.ico$', favicon_view),
     url(r'^apple-touch-icon\.png$', touch_view),
 
     # third party
-    url(r'^', include('genericdropdown.urls')),
+    url(r'^', include('qatrack.genericdropdown.urls')),
     url(r'^comments/', include('django_comments.urls')),
     url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
     url(r'^api/', include('qatrack.api.urls')),
 ]
 
 js_info_dict = {
-    'packages': ('recurrence', ),
+    'packages': ('recurrence',),
 }
 urlpatterns += [url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict)]
 
 if settings.USE_SQL_REPORTS:
-    urlpatterns.append(url(r'^sql-reports/', include('explorer.urls')),)
+    urlpatterns.append(
+        url(r'^sql-reports/', include('explorer.urls')),
+    )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
@@ -70,7 +72,7 @@ handler403 = 'qatrack.qatrack_core.views.handle_403'
 handler404 = 'qatrack.qatrack_core.views.handle_404'
 handler500 = 'qatrack.qatrack_core.views.handle_500'
 
-if settings.DEBUG:  # pragma: nocover
+if getattr(settings, 'DEBUG_TOOLBAR', False):  # pragma: nocover
     import debug_toolbar
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),

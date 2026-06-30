@@ -1,7 +1,10 @@
+import unittest
+
 from django.conf import settings
+from django.db import connection, transaction
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase
 from django.utils import timezone
 
 from qatrack.accounts.tests.utils import create_group, create_user
@@ -17,12 +20,14 @@ class TestUnitServiceArea(TestCase):
         self.u = qa_utils.create_unit()
         self.sa = sl_utils.create_service_area()
 
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_unique_together(self):
 
         sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
 
         with self.assertRaises(IntegrityError):
-            sl_models.UnitServiceArea.objects.create(unit=self.u, service_area=self.sa)
+            with transaction.atomic():
+                sl_models.UnitServiceArea.objects.create(unit=self.u, service_area=self.sa)
 
     def test_str(self):
         usa = sl_utils.create_unit_service_area(unit=self.u, service_area=self.sa)
@@ -40,7 +45,8 @@ class TestServiceEventStatus(TestCase):
         ses_01_name = ses_01.name
 
         with self.assertRaises(IntegrityError):
-            sl_models.ServiceEventStatus.objects.create(name=ses_01_name)
+            with transaction.atomic():
+                sl_models.ServiceEventStatus.objects.create(name=ses_01_name)
 
     def test_default(self):
 
@@ -72,6 +78,7 @@ class TestServiceEventStatus(TestCase):
 
 class TestThirdParty(TestCase):
 
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
     def test_unique_together(self):
 
         v_01 = qa_utils.create_vendor()
@@ -80,7 +87,8 @@ class TestThirdParty(TestCase):
         tp_01_last_name = tp_01.last_name
 
         with self.assertRaises(IntegrityError):
-            sl_models.ThirdParty.objects.create(vendor=v_01, first_name=tp_01_first_name, last_name=tp_01_last_name)
+            with transaction.atomic():
+                sl_models.ThirdParty.objects.create(vendor=v_01, first_name=tp_01_first_name, last_name=tp_01_last_name)
 
     def test_get_full_name(self):
         tp = sl_utils.create_third_party()
@@ -88,10 +96,24 @@ class TestThirdParty(TestCase):
         self.assertTrue(tp.vendor.name in tp.get_full_name())
 
 
-class TestServiceEventAndRelated(TransactionTestCase):
+class TestServiceEventAndRelated(TestCase):
 
     def setUp(self):
         self.se = sl_utils.create_service_event()
+
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
+    def test_hours_unique_together(self):
+
+        se = sl_models.ServiceEvent.objects.first()
+        tp = sl_utils.create_third_party()
+
+        sl_utils.create_hours(service_event=se, third_party=tp, user=None)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                sl_models.Hours.objects.create(
+                    service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1)
+                )
 
     def test_third_party_and_hours(self):
 
@@ -100,17 +122,31 @@ class TestServiceEventAndRelated(TransactionTestCase):
 
         h_01 = sl_utils.create_hours(service_event=se, third_party=tp, user=None)
 
-        with self.assertRaises(IntegrityError):
-            sl_models.Hours.objects.create(
-                service_event=se, third_party=tp, user=None, time=timezone.timedelta(hours=1)
-            )
-
         u_02 = create_user(is_superuser=False, uname='user_02')
         h_02 = sl_utils.create_hours(service_event=se, user=u_02)
 
         # Test user_or_third_party
         self.assertEqual((tp.__class__, tp.id), (h_01.user_or_thirdparty().__class__, h_01.user_or_thirdparty().id))
         self.assertEqual((u_02.__class__, u_02.id), (h_02.user_or_thirdparty().__class__, h_02.user_or_thirdparty().id))
+
+    @unittest.skipIf(connection.vendor == 'microsoft', "mssql-django does not raise IntegrityError for FK-only unique_together constraints")
+    def test_group_linkers_unique_together(self):
+
+        se = sl_models.ServiceEvent.objects.first()
+        g_01 = create_group()
+
+        gl_01 = sl_utils.create_group_linker(group=g_01)
+        gl_01_name = gl_01.name
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                sl_models.GroupLinker.objects.create(name=gl_01_name, group=g_01)
+
+        sl_utils.create_group_linker_instance(group_linker=gl_01, service_event=se)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                sl_models.GroupLinkerInstance.objects.create(group_linker=gl_01, service_event=se)
 
     def test_group_linkers(self):
 
@@ -121,15 +157,8 @@ class TestServiceEventAndRelated(TransactionTestCase):
         gl_01 = sl_utils.create_group_linker(group=g_01)
         gl_01_name = gl_01.name
 
-        with self.assertRaises(IntegrityError):
-            sl_models.GroupLinker.objects.create(name=gl_01_name, group=g_01)
-
         gl_02 = sl_utils.create_group_linker(group=g_02)
         sl_utils.create_group_linker_instance(group_linker=gl_01, service_event=se)
-
-        with self.assertRaises(IntegrityError):
-            sl_models.GroupLinkerInstance.objects.create(group_linker=gl_01, service_event=se)
-
         sl_utils.create_group_linker_instance(group_linker=gl_02, service_event=se)
 
         self.assertEqual(2, len(se.grouplinkerinstance_set.all()))
@@ -140,7 +169,7 @@ class TestServiceEventAndRelated(TransactionTestCase):
         self.assertTrue(str(self.se.id) in str(self.se))
 
 
-class TestDeletions(TransactionTestCase):
+class TestDeletions(TestCase):
 
     def test_delete_grouplinkerinstance_variables(self):
 
@@ -155,10 +184,12 @@ class TestDeletions(TransactionTestCase):
         gli_id = gli.id
 
         with self.assertRaises(ProtectedError):
-            u.delete()
+            with transaction.atomic():
+                u.delete()
 
         with self.assertRaises(ProtectedError):
-            gl.delete()
+            with transaction.atomic():
+                gl.delete()
 
         se.delete()
         self.assertFalse(sl_models.GroupLinkerInstance.objects.filter(id=gli_id).exists())
@@ -196,7 +227,8 @@ class TestDeletions(TransactionTestCase):
         rtsqa_id = rtsqa.id
 
         with self.assertRaises(ProtectedError):
-            u.delete()
+            with transaction.atomic():
+                u.delete()
 
         tli.delete()
         rtsqa = sl_models.ReturnToServiceQA.objects.get(id=rtsqa_id)
@@ -217,7 +249,8 @@ class TestDeletions(TransactionTestCase):
         h_id = h.id
 
         with self.assertRaises(ProtectedError):
-            tp.delete()
+            with transaction.atomic():
+                tp.delete()
 
         se.delete()
         self.assertFalse(sl_models.Hours.objects.filter(id=h_id).exists())
@@ -226,7 +259,8 @@ class TestDeletions(TransactionTestCase):
         h = sl_utils.create_hours(user=u)
 
         with self.assertRaises(ProtectedError):
-            u.delete()
+            with transaction.atomic():
+                u.delete()
 
     def test_delete_thirdparty_variables(self):
 
@@ -236,7 +270,8 @@ class TestDeletions(TransactionTestCase):
         v = tp.vendor
 
         with self.assertRaises(ProtectedError):
-            v.delete()
+            with transaction.atomic():
+                v.delete()
 
     def test_delete_serviceevent_variables(self):
 
@@ -264,22 +299,28 @@ class TestDeletions(TransactionTestCase):
         tli = se.test_list_instance_initiated_by
 
         with self.assertRaises(ProtectedError):
-            usa.delete()
+            with transaction.atomic():
+                usa.delete()
 
         with self.assertRaises(ProtectedError):
-            st.delete()
+            with transaction.atomic():
+                st.delete()
 
         with self.assertRaises(ProtectedError):
-            ses.delete()
+            with transaction.atomic():
+                ses.delete()
 
         with self.assertRaises(ProtectedError):
-            u_scb.delete()
+            with transaction.atomic():
+                u_scb.delete()
 
         with self.assertRaises(ProtectedError):
-            u_cb.delete()
+            with transaction.atomic():
+                u_cb.delete()
 
         with self.assertRaises(ProtectedError):
-            u_mb.delete()
+            with transaction.atomic():
+                u_mb.delete()
 
         tli.delete()
         se = sl_models.ServiceEvent.objects.get(id=se_id)

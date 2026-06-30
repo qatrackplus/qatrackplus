@@ -1,6 +1,33 @@
 Release Notes
 =============
 
+.. _release_notes_unreleased:
+
+QATrack+ Unreleased Release Notes
+---------------------------------
+
+Technical Improvements
+~~~~~~~~~~~~~~~~~~~~~~
+
+* **Removed external django-admin-views dependency**: Migrated all admin functionality to Django's built-in admin interface
+
+  * All UnitTestInfo admin operations (individual and bulk reference/tolerance setting) now use Django admin
+  * Export/Import TestPack functionality moved to admin interface  
+  * Removed duplicate URL patterns and consolidated admin views
+  * **Known Issue**: Copy References & Tolerances feature needs to be reimplemented in the new admin interface
+
+Bug Fixes
+~~~~~~~~~
+
+* Fixed tolerance compatibility validation for different test types
+* Fixed reference value type preservation in admin forms
+* Improved error handling for incompatible tolerance/test type combinations
+
+Performance
+~~~~~~~~~~~
+
+* Removed unused external dependency reducing package complexity 
+
 .. _release_notes_311:
 
 QATrack+ v3.1.1.4 Release Notes

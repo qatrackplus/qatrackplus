@@ -1,5 +1,10 @@
-class SchedulingMixin:
+from django.utils import timezone
 
+from qatrack.qa import models as q_models
+from qatrack.qatrack_core import utils
+
+
+class SchedulingMixin:
     """A mixin class to be used when assigning 'tasks' to a unit with a
     frequency object"""
 

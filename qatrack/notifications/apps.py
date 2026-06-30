@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
+from django.utils.translation import gettext_lazy as _l
 
 
 def do_scheduling(sender, **kwargs):
@@ -19,7 +20,7 @@ def do_scheduling(sender, **kwargs):
             "QATrack+ Service Event Review Notices",
         ),
         (
-            "qatrack.notifications.service_log_scheduling.tasks.run_scheduling_notices",
+            "qatrack.notifications.service_log_scheduling.tasks.run_service_event_scheduling_notices",
             "QATrack+ Service Event Scheduling Notices",
         ),
         (
@@ -32,8 +33,8 @@ def do_scheduling(sender, **kwargs):
 
 
 class NotificationsConfig(AppConfig):
-
     name = 'qatrack.notifications'
+    verbose_name = _l("Notifications")
 
     def ready(self):
         post_migrate.connect(do_scheduling, sender=self)

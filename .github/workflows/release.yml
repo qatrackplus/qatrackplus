@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Create release archive
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          ARCHIVE_NAME="qatrackplus-${REF_NAME}.zip"
+          zip -r "$ARCHIVE_NAME" . \
+            --exclude "*.git*" \
+            --exclude "node_modules/*" \
+            --exclude ".github/*" \
+            --exclude "*.env*" \
+            --exclude "deploy/docker/user-data/*"
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@da05d552573ad5aaac26b36e96cf23f58b784932
+        with:
+          files: ${{ env.ARCHIVE_NAME }}
+          generate_release_notes: true

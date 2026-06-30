@@ -1,7 +1,7 @@
 from unittest import mock
 
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -10,7 +10,7 @@ from django_comments.models import Comment
 
 from qatrack.attachments.models import Attachment
 from qatrack.faults import admin, forms, views
-from qatrack.faults.models import Fault, FaultType, FaultReviewGroup, can_review_faults
+from qatrack.faults.models import Fault, FaultReviewGroup, FaultType, can_review_faults
 from qatrack.faults.tests import utils
 from qatrack.qa.tests import utils as qa_utils
 from qatrack.qatrack_core.dates import format_datetime
@@ -19,6 +19,7 @@ from qatrack.units import models as u_models
 
 
 class TestFaultType:
+
     def test_str(self):
         assert str(FaultType(code="code")) == "code"
 
@@ -141,7 +142,8 @@ class TestModalityFilter(TestCase):
         f = utils.create_fault(unit=self.unit, user=self.user, fault_type=self.fault_type)
 
         correct_modality = utils.create_fault(
-            unit=self.unit, user=self.user, fault_type=f.fault_types.first(), modality=self.modality)
+            unit=self.unit, user=self.user, fault_type=f.fault_types.first(), modality=self.modality
+        )
 
         with mock.patch.object(self.mf, "value", return_value=self.modality.id):
             qs = self.mf.queryset(None, Fault.objects.all())
@@ -192,7 +194,9 @@ class TestFaultList(TestCase):
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
         utils.create_fault()
-        resp = self.client.get(self.url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        resp = self.client.get(
+            self.url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'}
+        )
         assert len(resp.json()['aaData']) == 1
 
     def test_get_fields_one_site(self):
@@ -915,12 +919,7 @@ class TestFaultTypeAutocomplete(TestCase):
 
         fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
         results = self.client.get(self.url, {'q': 'ft 2'}).json()['results']
-        expected = [{
-            'id': fts[2].code,
-            'text': "ft 2",
-            'code': fts[2].code,
-            'description': ''
-        }]
+        expected = [{'id': fts[2].code, 'text': "ft 2", 'code': fts[2].code, 'description': ''}]
         assert results == expected
 
     def test_query_exact_case_insensitive_match(self):
@@ -929,12 +928,7 @@ class TestFaultTypeAutocomplete(TestCase):
 
         fts = [FaultType.objects.create(code="ft %d" % i) for i in range(3)]
         results = self.client.get(self.url, {'q': 'FT 2'}).json()['results']
-        expected = [{
-            'id': fts[2].code,
-            'text': "ft 2",
-            'code': fts[2].code,
-            'description': ''
-        }]
+        expected = [{'id': fts[2].code, 'text': "ft 2", 'code': fts[2].code, 'description': ''}]
         assert results == expected
 
     def test_query_exact_match_plus_others(self):
@@ -947,9 +941,24 @@ class TestFaultTypeAutocomplete(TestCase):
 
         results = self.client.get(self.url, {'q': 'ft 21'}).json()['results']
         assert results == [
-            {'id': "ft 21", 'text': "ft 21", 'code': "ft 21", 'description': ''},
-            {'id': "ft 212", 'text': "ft 212: description", 'code': "ft 212", 'description': 'description'},
-            {'id': "ft 213", 'text': "ft 213", 'code': "ft 213", 'description': ''},
+            {
+                'id': "ft 21",
+                'text': "ft 21",
+                'code': "ft 21",
+                'description': ''
+            },
+            {
+                'id': "ft 212",
+                'text': "ft 212: description",
+                'code': "ft 212",
+                'description': 'description'
+            },
+            {
+                'id': "ft 213",
+                'text': "ft 213",
+                'code': "ft 213",
+                'description': ''
+            },
         ]
 
     def test_query_exact_match_with_whitespace_plus_others(self):
@@ -963,9 +972,24 @@ class TestFaultTypeAutocomplete(TestCase):
 
         results = self.client.get(self.url, {'q': ' ft 21 '}).json()['results']
         assert results == [
-            {'id': "ft 21", 'text': "ft 21", 'code': "ft 21", 'description': ''},
-            {'id': "ft 212", 'text': "ft 212: description", 'code': "ft 212", 'description': 'description'},
-            {'id': "ft 213", 'text': "ft 213", 'code': "ft 213", 'description': ''},
+            {
+                'id': "ft 21",
+                'text': "ft 21",
+                'code': "ft 21",
+                'description': ''
+            },
+            {
+                'id': "ft 212",
+                'text': "ft 212: description",
+                'code': "ft 212",
+                'description': 'description'
+            },
+            {
+                'id': "ft 213",
+                'text': "ft 213",
+                'code': "ft 213",
+                'description': ''
+            },
         ]
 
 
@@ -1032,7 +1056,7 @@ class TestFaultsByUnit(TestCase):
         u2 = qa_utils.create_unit()
         utils.create_fault(unit=u2)
         url = reverse("fault_list_by_unit", kwargs={'unit_number': fault1.unit.number})
-        resp = self.client.get(url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        resp = self.client.get(url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'})
         assert len(resp.json()['aaData']) == 1
 
     def test_get_fields(self):
@@ -1068,7 +1092,7 @@ class TestFaultsByUnitFaultType(TestCase):
         utils.create_fault(fault_type=ft)
         kwargs = {'unit_number': fault1.unit.number, 'slug': fault1.fault_types.first().slug}
         url = reverse("fault_list_by_unit_type", kwargs=kwargs)
-        resp = self.client.get(url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        resp = self.client.get(url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'})
         assert len(resp.json()['aaData']) == 1
 
     def test_get_fields(self):
@@ -1098,7 +1122,9 @@ class TestFaultTypeList(TestCase):
     def test_load_result_set(self):
         """Calling via ajax should return a single object in the queryset"""
         utils.create_fault(fault_type=self.fault_type)
-        resp = self.client.get(self.url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        resp = self.client.get(
+            self.url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'}
+        )
         assert len(resp.json()['aaData']) == 1
 
 
@@ -1122,7 +1148,7 @@ class TestFaultTypeDetails(TestCase):
         """Calling via ajax should return a single object in the queryset"""
         fault = utils.create_fault(fault_type=self.fault_type)
         url = reverse("fault_type_details", kwargs={'slug': fault.fault_types.first().slug})
-        resp = self.client.get(url, {}, content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        resp = self.client.get(url, {}, content_type='application/json', headers={"x-requested-with": 'XMLHttpRequest'})
         assert len(resp.json()['aaData']) == 1
 
 

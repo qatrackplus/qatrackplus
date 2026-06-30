@@ -1,5 +1,6 @@
 import calendar
 import collections
+from zoneinfo import ZoneInfo
 
 from braces.views import JSONResponseMixin, PermissionRequiredMixin
 from django.conf import settings
@@ -22,7 +23,6 @@ from django.views.generic import (
     TemplateView,
     View,
 )
-import pytz
 
 from qatrack.qatrack_core.dates import format_datetime
 from qatrack.reports.qc.testlistinstance import TestListInstanceDetailsReport
@@ -34,8 +34,8 @@ from qatrack.service_log.models import (
 )
 from qatrack.units.models import Unit
 
-from . import forms
 from .. import models
+from . import forms
 from .base import (
     BaseEditTestListInstance,
     TestListInstanceMixin,
@@ -110,7 +110,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
     from_se = False
 
     def get_form_kwargs(self):
-        kwargs = super(ReviewTestListInstance, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
@@ -143,9 +143,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         changed_se = review_test_list_instance(test_list_instance, test_instances, statuses, self.request.user)
 
         if len(changed_se) > 0 and self.from_se:
-            msg = _(
-                'Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".'
-            ) % {
+            msg = _('Changed status of service event(s) %(service_event_ids)s to "%(serviceeventstatus_name)s".') % {
                 'service_event_ids': ', '.join(str(x) for x in changed_se),
                 'serviceeventstatus_name': ServiceEventStatus.get_default().name,
             }
@@ -160,7 +158,7 @@ class ReviewTestListInstance(PermissionRequiredMixin, BaseEditTestListInstance):
         return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
-        context = super(ReviewTestListInstance, self).get_context_data(kwargs=kwargs)
+        context = super().get_context_data(kwargs=kwargs)
 
         rtsqas = ReturnToServiceQA.objects.filter(test_list_instance=self.object)
         se = []
@@ -297,7 +295,7 @@ class UTCFrequencyReview(UTCYourReview):
     def get_queryset(self):
         """filter queryset by frequency"""
 
-        qs = super(UTCFrequencyReview, self).get_queryset()
+        qs = super().get_queryset()
 
         freq = self.kwargs["frequency"]
         self.frequencies = models.Frequency.objects.filter(slug__in=self.kwargs["frequency"].split("/"))
@@ -322,7 +320,7 @@ class UTCUnitReview(UTCYourReview):
 
     def get_queryset(self):
         """filter queryset by frequency"""
-        qs = super(UTCUnitReview, self).get_queryset()
+        qs = super().get_queryset()
         self.units = Unit.objects.filter(number__in=self.kwargs["unit_number"].split("/"))
         return qs.filter(unit__in=self.units).order_by("unit__number")
 
@@ -404,7 +402,6 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         "bulk_review_status": False,
         "selected": False,
         "attachments": "attachment_count",
-        "selected": False,
     }
 
     permission_required = "qa.can_review"
@@ -439,15 +436,15 @@ class Unreviewed(PermissionRequiredMixin, TestListInstances):
         })
 
     def selected(self, obj):
-        return '<input type="checkbox" class="test-selected" title="%s"/>' % _(
+        return mark_safe('<input type="checkbox" class="test-selected" title="%s"/>' % _(
             "Check to include this test list instance when bulk setting approval statuses"
-        )
+        ))
 
     def bulk_review_status(self, obj):
         if not hasattr(self, "_bulk_review"):
             self._bulk_review = self._status_select()
 
-        return self._bulk_review.replace(":TLI_ID:", str(obj.pk))
+        return mark_safe(self._bulk_review.replace(":TLI_ID:", str(obj.pk)))
 
     def get_queryset(self):
         qs = models.TestListInstance.objects.unreviewed()
@@ -506,7 +503,7 @@ class UnreviewedByVisibleToGroup(Unreviewed):
     """
 
     def get_queryset(self):
-        qs = super(UnreviewedByVisibleToGroup, self).get_queryset()
+        qs = super().get_queryset()
         return qs.filter(unit_test_collection__visible_to=self.kwargs['group'])
 
     def get_icon(self):
@@ -542,8 +539,7 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     def get_queryset(self):
 
         qs = models.UnitTestCollection.objects.filter(
-            active=True,
-            unit__active=True
+            active=True, unit__active=True
         ).select_related(
             "last_instance",
             "frequency",
@@ -565,22 +561,22 @@ class DueDateOverview(PermissionRequiredMixin, TemplateView):
     def get_context_data(self):
         """Group all active :model:`qa.UnitTestCollection` by due date category"""
 
-        context = super(DueDateOverview, self).get_context_data()
+        context = super().get_context_data()
 
         qs = self.get_queryset()
 
-        tz = pytz.timezone(settings.TIME_ZONE)
+        tz = ZoneInfo(settings.TIME_ZONE)
         now = timezone.now().astimezone(tz)
         today = now.date()
         friday = today + timezone.timedelta(days=(4 - today.weekday()) % 7)
         next_friday = friday + timezone.timedelta(days=7)
-        month_end = tz.localize(timezone.datetime(now.year, now.month, calendar.mdays[now.month])).date()
+        month_end = timezone.datetime(now.year, now.month, calendar.mdays[now.month]).replace(tzinfo=tz).date()
         if calendar.isleap(now.year) and now.month == 2:
             month_end += timezone.timedelta(days=1)
         next_month_start = month_end + timezone.timedelta(days=1)
-        next_month_end = tz.localize(
-            timezone.datetime(next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month])
-        ).date()
+        next_month_end = timezone.datetime(
+            next_month_start.year, next_month_start.month, calendar.mdays[next_month_start.month]
+        ).replace(tzinfo=tz).date()
 
         due = collections.defaultdict(list)
 
@@ -640,7 +636,7 @@ class Overview(PermissionRequiredMixin, TemplateView):
         return False
 
     def get_context_data(self, **kwargs):
-        context = super(Overview, self).get_context_data()
+        context = super().get_context_data()
         context['title'] = _('QC Program Overview')
         context['msg'] = _('Overview of current QC status on all units')
         if '-user' in self.request.path:
@@ -666,7 +662,11 @@ class OverviewObjects(JSONResponseMixin, View):
             "last_instance__testinstance_set",
             "last_instance__testinstance_set__status",
             "last_instance__modified_by",
-        ).order_by("frequency__nominal_interval", "unit__number", "name", )
+        ).order_by(
+            "frequency__nominal_interval",
+            "unit__number",
+            "name",
+        )
 
         if request.GET.get('user') == 'true':
             qs = qs.filter(visible_to__in=request.user.groups.all())
@@ -732,5 +732,5 @@ class UTCInstances(PermissionRequiredMixin, TestListInstances):
             raise Http404
 
     def get_queryset(self):
-        qs = super(UTCInstances, self).get_queryset()
+        qs = super().get_queryset()
         return qs.filter(unit_test_collection__pk=self.kwargs["pk"])

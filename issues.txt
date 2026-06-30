@@ -1,0 +1,571 @@
+TODO: Fix these issues
+
+D:\qatrackplus\.venv\lib\site-packages\django_q\conf.py:8: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+  import pkg_resources
+D:\qatrackplus\.venv\lib\site-packages\pkg_resources\__init__.py:3147: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('mpl_toolkits')`.
+Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+  declare_namespace(pkg)
+D:\qatrackplus\.venv\lib\site-packages\pkg_resources\__init__.py:3147: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+  declare_namespace(pkg)
+D:\qatrackplus\.venv\lib\site-packages\pkg_resources\__init__.py:3147: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('zc')`.
+Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+  declare_namespace(pkg)
+D:\qatrackplus\.venv\lib\site-packages\django\apps\registry.py:91: RemovedInDjango41Warning: 'qatrack.accounts' defines default_app_config = 'qatrack.accounts.apps.AccountsAppConfig'. Django now detects this configuration automatically. You can remove default_app_config.
+  app_config = AppConfig.create(entry)
+D:\qatrackplus\.venv\lib\site-packages\django\apps\registry.py:91: RemovedInDjango41Warning: 'qatrack.qa' defines default_app_config = 'qatrack.qa.apps.QAAppConfig'. Django now detects this configuration automatically. You can remove default_app_config.
+  app_config = AppConfig.create(entry)
+D:\qatrackplus\.venv\lib\site-packages\django\apps\registry.py:91: RemovedInDjango41Warning: 'qatrack.notifications' defines default_app_config = 'qatrack.notifications.apps.NotificationsConfig'. Django now detects this configuration automatically. You can remove default_app_config.
+  app_config = AppConfig.create(entry)
+D:\qatrackplus\.venv\lib\site-packages\django\apps\registry.py:91: RemovedInDjango41Warning: 'qatrack.service_log' defines default_app_config = 'qatrack.service_log.apps.ServiceLogAppConfig'. Django now detects this configuration automatically. You can remove default_app_config.
+  app_config = AppConfig.create(entry)
+D:\qatrackplus\.venv\lib\site-packages\django\apps\registry.py:91: RemovedInDjango41Warning: 'qatrack.reports' defines default_app_config = 'qatrack.reports.apps.ReportsConfig'. Django now detects this configuration automatically. You can remove default_app_config.
+  app_config = AppConfig.create(entry)
+D:\qatrackplus\qatrack\qa\signals.py:24: RemovedInDjango40Warning: The providing_args argument is deprecated. As it is purely documentational, it has no replacement. If you rely on this argument as documentation, you can move the text to a code comment or docstring.
+  testlist_complete = Signal(providing_args=["instance", "created"])
+<frozen importlib._bootstrap>:914: ImportWarning: _SixMetaPathImporter.find_spec() not found; falling back to find_module()
+<frozen importlib._bootstrap>:914: ImportWarning: _SixMetaPathImporter.find_spec() not found; falling back to find_module()
+<frozen importlib._bootstrap>:914: ImportWarning: _SixMetaPathImporter.find_spec() not found; falling back to find_module()
+D:\qatrackplus\qatrack\urls.py:29: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^$', views.homepage, name="home"),
+D:\qatrackplus\qatrack\urls.py:30: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^400/$', views.handle_400, name="400"),
+D:\qatrackplus\qatrack\urls.py:31: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^403/$', views.handle_403, name="403"),
+D:\qatrackplus\qatrack\urls.py:32: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^404/$', views.handle_404, name="404"),
+D:\qatrackplus\qatrack\urls.py:33: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^500/$', views.handle_500, name="500"),
+D:\qatrackplus\qatrack\accounts\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^ping/$', views.ping, name="ping_server"),
+D:\qatrackplus\qatrack\accounts\urls.py:11: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^logout/$', auth_views.LogoutView.as_view(), name="auth_logout"),
+D:\qatrackplus\qatrack\accounts\urls.py:12: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^details/$', views.AccountDetails.as_view(), name="account-details"),
+D:\qatrackplus\qatrack\accounts\urls.py:14: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^groups/$', views.GroupsApp.as_view(), name="groups-app"),
+D:\qatrackplus\qatrack\accounts\urls.py:19: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^password/change/$', views.ChangePasswordView.as_view(), name="account-change-password"),
+D:\qatrackplus\qatrack\accounts\urls.py:20: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\accounts\urls.py:33: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^register/$', handle_404, name="account-register"),
+D:\qatrackplus\qatrack\accounts\urls.py:41: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url('^', include('django.contrib.auth.urls')),
+D:\qatrackplus\qatrack\accounts\urls.py:42: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include('django_registration.backends.one_step.urls')),
+D:\qatrackplus\qatrack\urls.py:34: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^accounts/', include('qatrack.accounts.urls')),
+D:\qatrackplus\qatrack\urls.py:35: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^qa/(?P<terms>.*)$', QAToQC.as_view()),
+<frozen importlib._bootstrap>:914: ImportWarning: _SixMetaPathImporter.find_spec() not found; falling back to find_module()
+<frozen importlib._bootstrap>:914: ImportWarning: _SixMetaPathImporter.find_spec() not found; falling back to find_module()
+<frozen importlib._bootstrap>:914: ImportWarning: _SixMetaPathImporter.find_spec() not found; falling back to find_module()
+D:\qatrackplus\qatrack\qa\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:15: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:20: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^admin/export_testpack/$', admin.ExportTestPack.as_view(), name="qa_export_testpack"),
+D:\qatrackplus\qatrack\qa\urls.py:21: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^admin/import_testpack/$', admin.ImportTestPack.as_view(), name="qa_import_testpack"),
+D:\qatrackplus\qatrack\qa\urls.py:22: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^admin/recurrences/$', admin.recurrence_examples, name="qa_recurrences"),
+D:\qatrackplus\qatrack\qa\urls.py:23: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^$", base.UTCList.as_view(), name="all_lists"),
+D:\qatrackplus\qatrack\qa\urls.py:26: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^composite/$", perform.CompositeCalculation.as_view(), name="composite"),
+D:\qatrackplus\qatrack\qa\urls.py:27: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^autosave/$", perform.autosave, name="autosave"),
+D:\qatrackplus\qatrack\qa\urls.py:28: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^autosave/load/$", perform.autosave_load, name="autosave_load"),
+D:\qatrackplus\qatrack\qa\urls.py:31: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^upload/$", perform.Upload.as_view(), name="upload"),
+D:\qatrackplus\qatrack\qa\urls.py:32: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^charts/$", charts.ChartView.as_view(), name="charts"),
+D:\qatrackplus\qatrack\qa\urls.py:33: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^charts/export/csv/$", charts.ExportCSVView.as_view(), name="charts_export_csv"),
+D:\qatrackplus\qatrack\qa\urls.py:34: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^charts/data/$", charts.BasicChartData.as_view(), name="chart_data"),
+D:\qatrackplus\qatrack\qa\urls.py:35: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^charts/control_chart.png$", charts.ControlChartImage.as_view(), name="control_chart"),
+D:\qatrackplus\qatrack\qa\urls.py:36: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^charts/data/testlists/$", charts.get_test_lists_for_unit_frequencies, name="charts_testlists"),
+D:\qatrackplus\qatrack\qa\urls.py:37: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^charts/data/tests/$", charts.get_tests_for_test_lists, name="charts_tests"),
+D:\qatrackplus\qatrack\qa\urls.py:40: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/$", review.Overview.as_view(), name="overview"),
+D:\qatrackplus\qatrack\qa\urls.py:41: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/overview-user/$", review.Overview.as_view(), name="overview_user"),
+D:\qatrackplus\qatrack\qa\urls.py:42: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/overview-objects/$", review.OverviewObjects.as_view(), name="overview_objects"),
+D:\qatrackplus\qatrack\qa\urls.py:43: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/due-dates/$", review.DueDateOverview.as_view(), name="overview_due_dates"),
+D:\qatrackplus\qatrack\qa\urls.py:44: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/due-dates-user/$", review.DueDateOverviewUser.as_view(), name="overview_due_dates_user"),
+D:\qatrackplus\qatrack\qa\urls.py:47: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/all/$", review.UTCReview.as_view(), name="review_all"),
+D:\qatrackplus\qatrack\qa\urls.py:48: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/yourall/$", review.UTCYourReview.as_view(), name="review_your_all"),
+D:\qatrackplus\qatrack\qa\urls.py:49: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/utc/(?P<pk>\d+)/$", review.UTCInstances.as_view(), name="review_utc"),
+D:\qatrackplus\qatrack\qa\urls.py:50: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/frequency/$", review.ChooseFrequencyForReview.as_view(), name="choose_review_frequency"),
+D:\qatrackplus\qatrack\qa\urls.py:51: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:54: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/unit/$", review.ChooseUnitForReview.as_view(), name="choose_review_unit"),
+D:\qatrackplus\qatrack\qa\urls.py:55: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/unit/(?P<unit_number>[/\d]+)/$", review.UTCUnitReview.as_view(), name="review_by_unit"),
+D:\qatrackplus\qatrack\qa\urls.py:56: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/inactive/$", review.InactiveReview.as_view(), name="review_inactive"),
+D:\qatrackplus\qatrack\qa\urls.py:57: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^review/yourinactive/$", review.YourInactiveReview.as_view(), name="review_your_inactive"),
+D:\qatrackplus\qatrack\qa\urls.py:60: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/details/$", base.TestListInstances.as_view(), name="complete_instances"),
+D:\qatrackplus\qatrack\qa\urls.py:61: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:66: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:71: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:76: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/review/$", review.Unreviewed.as_view(), name="unreviewed-alt"),
+D:\qatrackplus\qatrack\qa\urls.py:77: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:82: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/review/bulk/$", review.bulk_review, name="qa-bulk-review"),
+D:\qatrackplus\qatrack\qa\urls.py:83: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/unreviewed/$", review.Unreviewed.as_view(), name="unreviewed"),
+D:\qatrackplus\qatrack\qa\urls.py:84: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/unreviewed/visible/$", review.UnreviewedVisibleTo.as_view(), name="unreviewed_visible_to"),
+D:\qatrackplus\qatrack\qa\urls.py:85: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/group/$", review.ChooseGroupVisibleTo.as_view(), name="choose_group_visible"),
+D:\qatrackplus\qatrack\qa\urls.py:86: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:91: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/in-progress/$", perform.InProgress.as_view(), name="in_progress"),
+D:\qatrackplus\qatrack\qa\urls.py:92: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/continue/(?P<pk>\d+)/$", perform.ContinueTestListInstance.as_view(), name="continue_tli"),
+D:\qatrackplus\qatrack\qa\urls.py:93: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^session/edit/(?P<pk>\d+)/$", perform.EditTestListInstance.as_view(), name="edit_tli"),
+D:\qatrackplus\qatrack\qa\urls.py:94: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^unit/$", perform.ChooseUnit.as_view(), name="choose_unit"),
+D:\qatrackplus\qatrack\qa\urls.py:95: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^utc/perform(?:/(?P<pk>\d+))?/$", perform.PerformQA.as_view(), name="perform_qa"),
+D:\qatrackplus\qatrack\qa\urls.py:96: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^site/(?P<site>[/\w-]+?)/$", perform.SiteList.as_view(), name="qa_by_site"),
+D:\qatrackplus\qatrack\qa\urls.py:97: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:102: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^unit/(?P<unit_number>[/\d]+)/$", perform.UnitList.as_view(), name="qa_by_unit"),
+D:\qatrackplus\qatrack\qa\urls.py:103: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:108: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^frequency/(?P<frequency>[/\w-]+?)/$", perform.FrequencyList.as_view(), name="qa_by_frequency"),
+D:\qatrackplus\qatrack\qa\urls.py:109: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^tree/category/$", perform.CategoryTree.as_view(), name="qa_category_tree"),
+D:\qatrackplus\qatrack\qa\urls.py:110: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^tree/frequency/$", perform.FrequencyTree.as_view(), name="qa_frequency_tree"),
+D:\qatrackplus\qatrack\qa\urls.py:111: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\qa\urls.py:116: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^category/(?P<category>[/\w-]+?)/$", perform.CategoryList.as_view(), name="qa_by_category"),
+D:\qatrackplus\qatrack\qa\urls.py:117: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^due-and-overdue/$", perform.DueAndOverdue.as_view(), name="qa_by_overdue"),
+D:\qatrackplus\qatrack\urls.py:36: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^qc/', include('qatrack.qa.urls')),
+D:\qatrackplus\qatrack\urls.py:37: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^reports/', include('qatrack.reports.urls')),
+D:\qatrackplus\qatrack\units\urls.py:6: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^unit_available_time(?:/(?P<pk>\d+))?/$", views.UnitAvailableTimeChange.as_view(), name="unit_available_time"),
+D:\qatrackplus\qatrack\units\urls.py:7: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^handle_unit_available_time/$', views.handle_unit_available_time, name='handle_unit_available_time'),
+D:\qatrackplus\qatrack\units\urls.py:8: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^handle_unit_available_time_edit/$', views.handle_unit_available_time_edit, name='handle_unit_available_time_edit'),
+D:\qatrackplus\qatrack\units\urls.py:9: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^delete_schedules/$', views.delete_schedules, name='delete_schedules'),
+D:\qatrackplus\qatrack\units\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^get_unit_available_time_data/$', views.get_unit_available_time_data, name='get_unit_available_time_data'),
+D:\qatrackplus\qatrack\units\urls.py:11: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^get_unit_info/$', views.get_unit_info, name='get_unit_info'),
+D:\qatrackplus\qatrack\urls.py:38: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^units/', include('qatrack.units.urls')),
+D:\qatrackplus\qatrack\qatrack_core\urls.py:6: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^comment/ajax_comment/$", views.ajax_comment, name='ajax_comment'),
+D:\qatrackplus\qatrack\urls.py:39: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^core/', include('qatrack.qatrack_core.urls')),
+D:\qatrackplus\qatrack\service_log\urls.py:6: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^$", views.SLDashboard.as_view(), name="sl_dash"),
+D:\qatrackplus\qatrack\service_log\urls.py:7: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/$', views.ServiceEventsBaseList.as_view(), name="sl_list_all"),
+D:\qatrackplus\qatrack\service_log\urls.py:8: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/create/$', views.CreateServiceEvent.as_view(), name='sl_new'),
+D:\qatrackplus\qatrack\service_log\urls.py:9: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/create/choose-unit/$', views.ChooseUnitForNewSE.as_view(), name="sl_unit_new"),
+D:\qatrackplus\qatrack\service_log\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/edit(?:/(?P<pk>\d+))?/$', views.UpdateServiceEvent.as_view(), name="sl_edit"),
+D:\qatrackplus\qatrack\service_log\urls.py:11: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/details(?:/(?P<pk>\d+))?/$', views.DetailsServiceEvent.as_view(), name="sl_details"),
+D:\qatrackplus\qatrack\service_log\urls.py:12: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/delete(?:/(?P<pk>\d+))?/$', views.DeleteServiceEvent.as_view(), name='se_delete'),
+D:\qatrackplus\qatrack\service_log\urls.py:13: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/review-required/$', views.ServiceEventsReviewRequiredList.as_view(), name="sl_list_review_required"),
+D:\qatrackplus\qatrack\service_log\urls.py:14: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/review/choose-unit/$', views.ChooseUnitForViewSE.as_view(), name="sl_unit_view_se"),
+D:\qatrackplus\qatrack\service_log\urls.py:15: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/unit/(?P<unit_number>\d+)/$', views.ServiceEventsByUnitList.as_view(), name="sl_list_by_unit"),
+D:\qatrackplus\qatrack\service_log\urls.py:16: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/initiated-by/(?P<tli_pk>\d+)/$', views.ServiceEventsInitiatedByList.as_view(), name="sl_list_initiated_by"),
+D:\qatrackplus\qatrack\service_log\urls.py:17: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/return-to-service-for/(?P<tli_pk>\d+)/$', views.ServiceEventsReturnToServiceForList.as_view(), name="sl_list_return_to_service_for"),
+D:\qatrackplus\qatrack\service_log\urls.py:18: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/status/(?P<pk>\d+)/$', views.ServiceEventsByStatusList.as_view(), name="sl_list_by_status"),
+D:\qatrackplus\qatrack\service_log\urls.py:19: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/report/(?P<pk>\d+)/$', views.service_log_report, name="sl_service_event_report"),
+D:\qatrackplus\qatrack\service_log\urls.py:20: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^rtsqa/$', views.ReturnToServiceQABaseList.as_view(), name="rtsqa_list_all"),
+D:\qatrackplus\qatrack\service_log\urls.py:21: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^rtsqa/incomplete/$', views.ReturnToServiceQAIncompleteList.as_view(), name="rtsqa_list_incomplete"),
+D:\qatrackplus\qatrack\service_log\urls.py:22: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^rtsqa/unreviewed/$', views.ReturnToServiceQAUnreviewedList.as_view(), name="rtsqa_list_unreviewed"),
+D:\qatrackplus\qatrack\service_log\urls.py:23: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^rtsqa/event/(?P<se_pk>\d+)$', views.ReturnToServiceQAForEventList.as_view(), name="rtsqa_list_for_event"),
+D:\qatrackplus\qatrack\service_log\urls.py:24: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^se-searcher/$', views.se_searcher, name="se_searcher"),
+D:\qatrackplus\qatrack\service_log\urls.py:25: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^tli-select(?:/(?P<pk>\d+))?(?:/(?P<form>[a-zA-Z0-9-_]+)/)?$', views.TLISelect.as_view(), name="tli_select"),
+D:\qatrackplus\qatrack\service_log\urls.py:26: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^tli-statuses/$', views.tli_statuses, name="tli_statuses"),
+D:\qatrackplus\qatrack\service_log\urls.py:27: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^unit-sa_utc/$', views.unit_sa_utc, name="unit_sa_utc"),
+D:\qatrackplus\qatrack\service_log\urls.py:28: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^err/$', views.ErrorView.as_view(), name='err'),
+D:\qatrackplus\qatrack\service_log\urls.py:29: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^down-time/$', views.ServiceEventDownTimesList.as_view(), name='se_down_time'),
+D:\qatrackplus\qatrack\service_log\urls.py:30: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^handle-unit-down-time/$', views.handle_unit_down_time, name='handle_unit_down_time'),
+D:\qatrackplus\qatrack\service_log\urls.py:31: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^templates/create_ajax/$', views.CreateServiceEventTemplateAjax.as_view(), name='create_se_template'),
+D:\qatrackplus\qatrack\service_log\urls.py:32: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^templates/searcher/$', views.service_event_template_searcher, name='se_template_searcher'),
+D:\qatrackplus\qatrack\service_log\urls.py:33: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/schedule/all/$', views.ServiceEventScheduleList.as_view(), name='se_schedule_list_all'),
+D:\qatrackplus\qatrack\service_log\urls.py:34: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/schedule/due-and-overdue/$', views.DueAndOverdue.as_view(), name='se_schedule_due'),
+D:\qatrackplus\qatrack\service_log\urls.py:35: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/schedule/due-dates/$', views.DueDateOverview.as_view(), name='se_schedule_overview_due_dates'),
+D:\qatrackplus\qatrack\service_log\urls.py:36: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^event/schedule/due-dates-user/$', views.DueDateOverview.as_view(), name='se_schedule_overview_due_dates_user'),
+D:\qatrackplus\qatrack\urls.py:40: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^servicelog/', include('qatrack.service_log.urls')),
+D:\qatrackplus\qatrack\parts\urls.py:6: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^parts_searcher$', views.parts_searcher, name='parts_searcher'),
+D:\qatrackplus\qatrack\parts\urls.py:7: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^parts_storage_searcher$', views.parts_storage_searcher, name='parts_storage_searcher'),
+D:\qatrackplus\qatrack\parts\urls.py:8: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^room_location_searcher$', views.room_location_searcher, name='room_location_searcher'),
+D:\qatrackplus\qatrack\parts\urls.py:9: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^$', views.PartsList.as_view(), name='parts_list'),
+D:\qatrackplus\qatrack\parts\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^low-inventory/$', views.LowInventoryPartsList.as_view(), name='low_inventory_parts_list'),
+D:\qatrackplus\qatrack\parts\urls.py:11: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^new/$', views.PartUpdateCreate.as_view(), name='part_new'),
+D:\qatrackplus\qatrack\parts\urls.py:12: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^edit/(?P<pk>\d+)?/$', views.PartUpdateCreate.as_view(), name='part_edit'),
+D:\qatrackplus\qatrack\parts\urls.py:13: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^details/(?P<pk>\d+)?/$', views.PartDetails.as_view(), name='part_details'),
+D:\qatrackplus\qatrack\parts\urls.py:14: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^suppliers/$', views.SuppliersList.as_view(), name='suppliers_list'),
+D:\qatrackplus\qatrack\parts\urls.py:15: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^suppliers/(?P<pk>[/\d]+)/$", views.SupplierDetails.as_view(), name="supplier_details"),
+D:\qatrackplus\qatrack\urls.py:41: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^parts/', include('qatrack.parts.urls')),
+D:\qatrackplus\qatrack\faults\urls.py:6: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^$', views.FaultList.as_view(), name='fault_list'),
+D:\qatrackplus\qatrack\faults\urls.py:7: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^unreviewed/$', views.UnreviewedFaultList.as_view(), name='fault_list_unreviewed'),
+D:\qatrackplus\qatrack\faults\urls.py:8: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^choose-unit/$', views.ChooseUnitForViewFaults.as_view(), name="fault_choose_unit"),
+D:\qatrackplus\qatrack\faults\urls.py:9: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^unit/(?P<unit_number>[/\d]+)/$', views.FaultsByUnit.as_view(), name='fault_list_by_unit'),
+D:\qatrackplus\qatrack\faults\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(
+D:\qatrackplus\qatrack\faults\urls.py:15: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^(?P<pk>\d+)?/$', views.FaultDetails.as_view(), name='fault_details'),
+D:\qatrackplus\qatrack\faults\urls.py:16: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^delete/(?P<pk>\d+)?/$', views.DeleteFault.as_view(), name='fault_delete'),
+D:\qatrackplus\qatrack\faults\urls.py:17: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^type/$', views.FaultTypeList.as_view(), name='fault_type_list'),
+D:\qatrackplus\qatrack\faults\urls.py:18: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^type/autocomplete.json$', views.fault_type_autocomplete, name="fault_type_autocomplete"),
+D:\qatrackplus\qatrack\faults\urls.py:19: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^type/(?P<slug>[\w-]+)/$', views.FaultTypeDetails.as_view(), name='fault_type_details'),
+D:\qatrackplus\qatrack\faults\urls.py:20: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^review/(?P<pk>\d+)/$', views.review_fault, name='fault_review'),
+D:\qatrackplus\qatrack\faults\urls.py:21: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^review/$', views.bulk_review, name='fault_bulk_review'),
+D:\qatrackplus\qatrack\faults\urls.py:22: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^create/$', views.CreateFault.as_view(), name='fault_create'),
+D:\qatrackplus\qatrack\faults\urls.py:23: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^create/ajax/$', views.fault_create_ajax, name='fault_create_ajax'),
+D:\qatrackplus\qatrack\faults\urls.py:24: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^edit/(?P<pk>\d+)?/$', views.EditFault.as_view(), name='fault_edit'),
+D:\qatrackplus\qatrack\urls.py:42: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^faults/', include('qatrack.faults.urls')),
+D:\qatrackplus\qatrack\issue_tracker\urls.py:5: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^issue/new/$', views.IssueCreate.as_view(), name='issue_new'),
+D:\qatrackplus\qatrack\issue_tracker\urls.py:6: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^issue/details/(?P<pk>\d+)?$', views.IssueDetails.as_view(), name='issue_details'),
+D:\qatrackplus\qatrack\issue_tracker\urls.py:7: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^issues/$', views.IssueList.as_view(), name='issue_list'),
+D:\qatrackplus\qatrack\urls.py:43: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^issues/', include('qatrack.issue_tracker.urls')),
+D:\qatrackplus\.venv\lib\site-packages\admin_views\admin.py:34: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(regex=r'^%s$' % link[1],
+D:\qatrackplus\qatrack\urls.py:47: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^favicon\.ico$', favicon_view),
+D:\qatrackplus\qatrack\urls.py:48: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^apple-touch-icon\.png$', touch_view),
+D:\qatrackplus\qatrack\genericdropdown\urls.py:5: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^updatecombo/(?P<id>\d+)?$', updateCombo, name='updatecombo'),
+D:\qatrackplus\qatrack\urls.py:51: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include('qatrack.genericdropdown.urls')),
+D:\qatrackplus\qatrack\urls.py:52: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^comments/', include('django_comments.urls')),
+D:\qatrackplus\qatrack\urls.py:53: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
+D:\qatrackplus\qatrack\api\urls.py:11: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^$', views.all_api_roots, name="api-root"),
+D:\qatrackplus\qatrack\api\urls.py:12: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^get-token/', auth_views.obtain_auth_token, name="get-token"),
+D:\qatrackplus\qatrack\api\attachments\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:14: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^attachments/', include('qatrack.api.attachments.urls')),
+D:\qatrackplus\qatrack\api\auth\urls.py:11: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:15: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^auth/', include('qatrack.api.auth.urls')),
+D:\qatrackplus\qatrack\api\comments\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:16: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^comments/', include('qatrack.api.comments.urls')),
+D:\qatrackplus\qatrack\api\contenttypes\urls.py:10: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:17: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^contenttypes/', include('qatrack.api.contenttypes.urls')),
+D:\qatrackplus\qatrack\api\faults\urls.py:11: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:18: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^faults/', include('qatrack.api.faults.urls')),
+D:\qatrackplus\qatrack\api\parts\urls.py:16: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:19: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^parts/', include('qatrack.api.parts.urls')),
+D:\qatrackplus\qatrack\api\qa\urls.py:28: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^composite/$", views.CompositeCalculation.as_view(), name="api.composite"),
+D:\qatrackplus\qatrack\api\qa\urls.py:31: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^upload/$", views.Upload.as_view(), name="api.upload"),
+D:\qatrackplus\qatrack\api\qa\urls.py:34: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^searcher/test/$", views.test_searcher, name='test_searcher'),
+D:\qatrackplus\qatrack\api\qa\urls.py:35: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^searcher/test_list/$", views.test_list_searcher, name='test_list_searcher'),
+D:\qatrackplus\qatrack\api\qa\urls.py:36: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^searcher/test_list_cycle/$", views.test_list_cycle_searcher, name='test_list_cycle_searcher'),
+D:\qatrackplus\qatrack\api\qa\urls.py:37: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^searcher/test_instance/$", views.test_instance_searcher, name='test_instance_searcher'),
+D:\qatrackplus\qatrack\api\qa\urls.py:38: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^searcher/test_list_instance/$", views.test_list_instance_searcher, name='test_list_instance_searcher'),
+D:\qatrackplus\qatrack\api\qa\urls.py:39: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:20: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^qa/', include('qatrack.api.qa.urls')),
+D:\qatrackplus\qatrack\api\urls.py:21: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^qc/', include('qatrack.api.qa.urls')),
+D:\qatrackplus\qatrack\api\service_log\urls.py:21: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r"^searcher/service_event/$", views.service_event_searcher, name='service_event_searcher'),
+D:\qatrackplus\qatrack\api\service_log\urls.py:22: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:22: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^servicelog/', include('qatrack.api.service_log.urls')),
+D:\qatrackplus\qatrack\api\units\urls.py:17: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^', include(router.urls)),
+D:\qatrackplus\qatrack\api\urls.py:23: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^units/', include('qatrack.api.units.urls')),
+D:\qatrackplus\qatrack\api\urls.py:24: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^schema/$', schema_view),
+D:\qatrackplus\qatrack\urls.py:54: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  url(r'^api/', include('qatrack.api.urls')),
+D:\qatrackplus\qatrack\urls.py:60: RemovedInDjango40Warning: django.conf.urls.url() is deprecated in favor of django.urls.re_path().
+  urlpatterns += [url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict)]
+<frozen importlib._bootstrap>:914: ImportWarning: _SixMetaPathImporter.find_spec() not found; falling back to find_module()
+System check identified some issues:
+
+WARNINGS:
+accounts.ActiveDirectoryGroupMap: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AccountsAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+accounts.DefaultGroup: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AccountsAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+attachments.Attachment: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AttachmentsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+contacts.Contact: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+faults.Fault: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the FaultsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+faults.FaultReviewGroup: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the FaultsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+faults.FaultReviewInstance: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the FaultsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+faults.FaultType: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the FaultsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+issue_tracker.Issue: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+issue_tracker.IssuePriority: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+issue_tracker.IssueStatus: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+issue_tracker.IssueTag: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+issue_tracker.IssueType: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.FaultNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.FaultsReviewNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.PartCategoryGroup: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.PartNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.QCCompletedNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.QCReviewNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.QCSchedulingNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.RecipientGroup: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.ServiceEventNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.ServiceEventReviewNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.ServiceEventSchedulingNotice: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.TestListGroup: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+notifications.UnitGroup: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the NotificationsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.Contact: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.Part: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.PartCategory: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.PartStorageCollection: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.PartSupplierCollection: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.PartUsed: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.Room: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.Storage: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+parts.Supplier: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.AutoReviewRule: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.AutoReviewRuleSet: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.AutoSave: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.Category: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.Frequency: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.Reference: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.Sublist: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.Test: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.TestInstance: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.TestInstanceStatus: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.TestList: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.TestListCycle: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.TestListCycleMembership: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.TestListInstance: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.TestListMembership: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.Tolerance: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.UnitTestCollection: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.UnitTestInfo: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+qa.UnitTestInfoChange: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the QAAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+recurrence.Date: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+recurrence.Param: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+recurrence.Recurrence: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+recurrence.Rule: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+reports.ReportNote: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ReportsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+reports.ReportSchedule: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ReportsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+reports.SavedReport: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ReportsConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.GroupLinker: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.GroupLinkerInstance: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.Hours: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ReturnToServiceQA: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ServiceArea: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ServiceEvent: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ServiceEventSchedule: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ServiceEventStatus: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ServiceEventTemplate: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ServiceLog: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ServiceType: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.ThirdParty: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+service_log.UnitServiceArea: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the ServiceLogAppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.Modality: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.Site: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.Unit: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.UnitAvailableTime: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.UnitAvailableTimeEdit: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.UnitClass: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.UnitType: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+units.Vendor: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+        HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+
+System check identified 82 issues (0 silenced).

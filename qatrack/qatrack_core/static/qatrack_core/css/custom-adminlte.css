@@ -1,4 +1,3 @@
-
 body {
     -ms-overflow-style: scrollbar;
 }
@@ -330,6 +329,22 @@ div.box {
 }
 aside.main-sidebar {
     box-shadow: 4px 6px 4px rgba(50, 62, 70, .35);
+    height: 100vh !important; /* Set sidebar to viewport height */
+    max-height: 100vh !important; /* Prevent it from growing taller */
+    overflow-y: auto !important; /* Enable internal scrolling */
+}
+
+/* Ensure the sidebar content section also respects the height constraints */
+.main-sidebar .sidebar {
+    height: calc(100vh - 50px) !important; /* Account for header height */
+    overflow-y: auto !important;
+    padding-bottom: 20px;
+}
+
+/* Make sure the sidebar menu can scroll internally */
+.sidebar-menu {
+    max-height: calc(100vh - 100px) !important; /* Leave space for header and user panel */
+    overflow-y: auto !important;
 }
 .sidebar-mini.sidebar-collapse .sidebar-menu > li > a > span {
     border-radius: 0 !important;
@@ -382,4 +397,23 @@ textarea.form-control:not([disabled]):not(.disabled) {
 }
 .unit-btns .btn {
     margin-bottom: 4px;
+}
+
+/* Fix dropdown menu positioning */
+.navbar-nav > .user-menu > .dropdown-menu {
+    margin-top: 0;  /* Remove the gap */
+}
+
+#control-sidebar-btn {
+    padding-top: 15px;  /* Align the username vertically */
+    padding-bottom: 15px;
+    height: auto;  /* Override fixed height */
+    line-height: 20px;  /* Adjust line height for better alignment */
+}
+
+/* Ensure dropdown menu appears immediately below the username */
+.navbar-static-top .dropdown-menu {
+    margin-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }

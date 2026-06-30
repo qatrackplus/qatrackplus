@@ -1,4 +1,4 @@
-require(['jquery', 'sl_utils', 'comments'], function($) {
+require(['jquery', 'sl_utils', 'comments'], function ($) {
     $(document).ready(function () {
 
         //(de)select checkboxes for child tests when user clicks on header checkbox
@@ -37,7 +37,7 @@ require(['jquery', 'sl_utils', 'comments'], function($) {
         });
 
         var $service_events = $('.service-event-btn');
-        $.each($service_events, function(i, v) {
+        $.each($service_events, function (i, v) {
             var $service_event = $(this);
             var colour = $service_event.attr('data-bgcolour');
             $service_event.css('background-color', colour);

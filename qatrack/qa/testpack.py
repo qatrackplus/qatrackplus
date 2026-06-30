@@ -1,18 +1,17 @@
-from collections import Counter, defaultdict
+import datetime
 import json
 import logging
 import time
 import uuid
+from collections import Counter, defaultdict
 
 from django.conf import settings
 from django.core.serializers import get_serializer
 from django.db.transaction import atomic
 from django.utils import timezone
-import pytest
 
 from qatrack.qa.utils import get_internal_user
 
-pytestmark = pytest.mark.skip("This file doesn't actually have tests")
 logger = logging.getLogger('qatrack')
 
 
@@ -68,7 +67,7 @@ def create_testpack(test_lists=None, cycles=None, extra_tests=None, description=
         },
         'meta': {
             'version': settings.VERSION,
-            'datetime': "%s" % (timezone.now().astimezone(timezone.utc)),
+            'datetime': str(timezone.now().astimezone(datetime.UTC)),
             'description': description,
             'contact': testpack_user_string(user),
             'name': name,
@@ -297,6 +296,6 @@ def load_testpack(fp, user=None, test_keys=None, test_list_keys=None, cycle_keys
     """Takes a file like object or path and loads the test pack into the database."""
 
     if isinstance(fp, str):  # pragma: no cover
-        fp = open(fp, 'r', encoding="utf-8")
+        fp = open(fp, encoding="utf-8")
 
     add_testpack(fp.read(), user, test_keys, test_list_keys, cycle_keys)

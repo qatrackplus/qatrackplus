@@ -43,7 +43,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             mainDivClass: 'col-sm-1',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
-            label: 'Sites',
+            label: window.filterTranslations.sites,
             slimscroll: true,
             selectAll: true,
             selectNone: true,
@@ -57,7 +57,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             mainDivClass: 'col-sm-2',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
-            label: 'Units',
+            label: window.filterTranslations.units,
             slimscroll: true,
             selectAll: true,
             selectNone: true,
@@ -66,7 +66,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 showInactiveUnits: {
                     selected: false,
                     run_filter_when_selected: false,   // No, run filter when not selected
-                    label: 'Show Inactive Units',
+                    label: window.filterTranslations.showInactiveUnits,
                     filter: function (obj_data) {
                         return $(obj_data.$option).attr('data-active') === 'True';
                     },
@@ -104,7 +104,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
             slimscroll: true,
-            label: 'Frequencies',
+            label: window.filterTranslations.frequencies,
             selectAll: true,
             selectNone: true,
             initially_displayed: false,
@@ -133,7 +133,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
             slimscroll: true,
-            label: 'Test Lists',
+            label: window.filterTranslations.testLists,
             selectAll: true,
             selectNone: true,
             initially_displayed: false,
@@ -141,7 +141,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
                 showInactiveTestLists: {
                     selected: false,
                     run_filter_when_selected: false,   // No, run filter when not selected
-                    label: 'Show Inactive Test Lists',
+                    label: window.filterTranslations.showInactiveTestLists,
                     filter: function (obj_data) {
                         var show_self = false;
                         $.each($units.val(), function(i, v) {
@@ -236,7 +236,7 @@ require(['jquery', 'lodash', 'd3', 'moment', 'saveSvgAsPng', 'slimscroll', 'qaut
             mainDivClass: 'col-sm-4',
             selectAllClass: 'btn btn-flat btn-xs btn-default',
             height: 350,
-            label: 'Tests',
+            label: window.filterTranslations.tests,
             slimscroll: true,
             selectAll: true,
             selectNone: true,

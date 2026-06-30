@@ -1,5 +1,6 @@
 import os
 import re
+
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -26,9 +27,9 @@ copyright = '2018 QATrack+ Contributors'
 author = 'Randle Taylor, Ryan Bottema & Contributors'
 
 # The short X.Y version
-settingsf = open(os.path.join("..", 'qatrack', 'settings.py'), 'r')
+settingsf = open(os.path.join("..", 'qatrack', 'settings.py'))
 
-version = re.findall("""VERSION\s+=\s+['"]+(.*)['"]""", settingsf.read())[0]
+version = re.findall(r"""VERSION\s+=\s+['"]+(.*)['"]""", settingsf.read())[0]
 
 # The full version, including alpha/beta/rc tags
 release = version
@@ -48,6 +49,8 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+    'sphinx_copybutton',
+    'sphinx_design',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -67,7 +70,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -182,6 +185,9 @@ rst_prolog = """
 
 
 # -- Extension configuration -------------------------------------------------
+
+copybutton_prompt_text = ">>  " ## Note the double space at the end, which is intentional to avoid matching the prompt in the output of some commands
+
 
 # -- Options for todo extension ----------------------------------------------
 
