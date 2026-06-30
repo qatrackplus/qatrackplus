@@ -52,13 +52,15 @@ def setup():
         shutil.copy(orig_path, new_path)
 
 
-class QATrack030Service(win32serviceutil.ServiceFramework):
+class QATrackService(win32serviceutil.ServiceFramework):
 
     """NT Service."""
 
-    _svc_name_ = "QATrack40CherryPyService"
+    _svc_name_ = "QATrackCherryPyService"
 
-    _svc_display_name_ = "QATrack 40 CherryPy Service"
+    _svc_display_name_ = "QATrack 40 CherryPy Service" 
+    
+    # remember to change this when you change the version number in the future, future updates will use the update command for the service name, so if you change the version number in the service name, you will need to uninstall and reinstall the service to update it.
 
     _exe_name_ = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'pythonservice.exe')
 
@@ -99,4 +101,4 @@ class QATrack030Service(win32serviceutil.ServiceFramework):
 if __name__ == '__main__':
 
     setup()
-    win32serviceutil.HandleCommandLine(QATrack030Service)
+    win32serviceutil.HandleCommandLine(QATrackService)
