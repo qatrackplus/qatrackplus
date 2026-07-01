@@ -1,0 +1,537 @@
+.. _release_notes_311:
+
+QATrack+ v3.1.1.4 Release Notes
+-------------------------------
+* Fixed javascript error on service event pages
+
+QATrack+ v3.1.1.3 Release Notes
+-------------------------------
+* Fixed issue with migration from 0.3.x to 3.1.1
+
+
+QATrack+ v3.1.1.2 Release Notes
+-------------------------------
+* Fixed issue with Chromes font rendering in PDF reports
+
+QATrack+ v3.1.1.1 Release Notes
+-------------------------------
+* Fixed a permission check bug for users creating service event templates
+
+
+QATrack+ v3.1.1 Release Notes
+-----------------------------
+
+This is a follow up release to address a few issues that were found in v3.1.0. The following
+issues have been addressed:
+
+QA
+^^^^^
+
+* Added basic multiple choice plotting support
+* Fixed a Test admin bug with the display of "Test item visible in charts"
+* A message warning you about being logged out or your server not being
+  reachable will be shown after 3 consecutive unauthenticated or failed
+  pings.  In order to disable this check set `PING_INTERVAL_S = 0` in your
+  local_settings.py file.
+* The maximum frequency of autosaves has been reduced to once per 4s. This an attempt
+  to work around occasional deadlocks with SQL Server.
+* Pylinac has been updated (TODO: version):
+    * An issue with CatPhan modules CNR calculations return NaN due to the modules not having
+      background ROIs defined has been fixed
+    * A bug with DMLC VMAT tests with valleys in their profiles that fell below 50% of Dmax has
+      been fixed.
+    * A regression in QC3 image detection introduced in the QATrack fork of Pylinac has been
+      remedied.
+* A bug with QA Frequency recurrence rule start dates has been fixed
+* The Assign Test Lists to Units admin page will no longer allow a blank Assigned to Field
+* Sometimes a test which was skipped by default would not get unskipped when a user
+  performed the test.  This has been resolved.
+
+* The confirmation dialogue for reviewing QA was not showing the status
+  correctly.  This has now been resolved.
+
+* Due dates were being calculated incorrectly sometimes when the UTC date and
+  the local date differed.
+
+* Fixed issue with `UTILS.previous_instance` and
+  `UTILS.previous_test_list_instance` would not be fetched if they were
+  completed within the last minute.  
+
+Service Log
+^^^^^^^^^
+
+* Fixed a bug with Return To Service work forms being populated with incorrect data
+* The first Service Event Status created will now automatically be set to the default
+* The Service Type field was being incorrectly when entering a new service
+  event using a Service Log Template without a Service Type set. This has been fixed.
+
+Faults
+^^^^^^
+
+* Fault Type codes are now required to be unique.  A migration has been added
+  to update the code to a unique value for any duplicate fault codes.
+* Fault ID column size has been reduced in the fault list views
+* Fault review users are now shown as full names instead of usernames where possible
+* The ability to create new fault types on the fly when entering faults is
+  now restricted to users with the "Can Add Fault Type" permission
+* Fault type matches are now case insensitive and surrounding whitespace will be stripped
+* Fix fault table ordering and search issues with Description & Review Status columns
+
+
+Parts
+^^^
+
+Parts tables now allow you to sort/filter by room
+
+API
+^^^
+
+* Fixed a file upload API bug where QATrack+ would try to base64 decode a null value
+* The UnitTestCollection API end point should no longer return duplicated results.
+* The AutoReviewRuleSetFilter API end point has been fixed.
+* Fixed the `fault_types` field of the API's FaultSerializer
+* The API schema view will no longer throw a 500 error.
+* Submitting a null or blank comment when performing QA via the API (e.g. with
+  post data like `{..., "comment": ""}`) would previously result in a 400 Bad
+  Request error being returned.  This has been adjusted so that a null or blank
+  comment is now valid (no comment will be created) and will not block the QA
+  Session from being created.
+
+Reports
+^^^^^^
+
+* The Active filter for Service Log Scheduling report filters worked for "Both"
+  but not "Yes" or "No". This has now been fixed.  In addition, the wrong set
+  of filters was being displayed for the Next Due Dates for Scheduled Service
+  Events report.  This has also been addressed.
+
+* Reports now respect the active/inactive status of units as well as the 
+  active/inactive status of test list assignments.
+
+* Units are now displayed correctly in the test instance report filters.
+
+* A Chrome update caused the PDF report generation to fail due to trying to access
+  already opened files. This has been fixed.
+
+* If the "Difference" column is shown when reviewing QA (i.e. `REVIEW_DIFF_COL
+  = True`) then the test list instance details report will now also show the
+  difference column.
+
+* Fixed an issue with scheduled reports failing for some report types
+
+* Fixed an issue with Excel report emails failing
+
+* Add new 3 month, 6 month, 90 days, and 180 days date filters 
+
+
+Miscellaneous
+^^^^^^^^^^^^
+
+* A few documentation typo fixes
+* Fixed a permissions check for deleting faults
+* Reviewing faults now use the term "Acknowledge" instead of "Approve"
+* Admin access will no longer be required to access the page for editing units available times.
+* A permissions check for editing unit available times has been fixed. Anyone with the
+  'Change Unit Available Time' permission should be able to edit available times now.
+
+
+QATrack+ v3.1.0.1 Release Notes
+-------------------------------
+
+.. _release_notes_3101:
+
+* Attempt to fix an issue with Django Q not being able to find report types on Windows
+
+
+QATrack+ v3.1.0 Release Notes
+-----------------------------
+
+.. _release_notes_31:
+
+
+Acknowledgements
+^^^^^^^^^^^^^^^^
+
+Thank you to the many people who suggested new features, contributed bug
+reports, and helped out testing this release. Thank you also to all of you who
+waited patiently and provided words of encouragement in the 2 years since the
+last major QATrack+ release!
+
+Details of the v3.1.0 release
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+New version numbering
+.....................
+
+Given that QATrack+ is now a mature and featureful application, we are
+eliminating the `0.` from the version number and moving from v0.3.0 to v3.1.0.
+
+Moving to GitHub
+................
+
+QATrack+ is migrating from BitBucket to
+[GitHub](https://github.com/qatrackplus/qatrackplus/).  As part of your update
+process you will be instructed to update your `origin` url (`git remote set-url
+origin https://github.com/qatrackplus/qatrackplus.git`).
+
+
+Deprecations & Discontinuations
+...............................
+
+* Python 3.4 & 3.5, 3.6: Python 3.4 & 3.5 are no longer receiving updates and
+  therefore QATrack+ will no longer be supporting those Python versions. It is
+  also recommended that Python 3.7-3.10 be used on Windows as it simplifies
+  the install process.
+
+* The settings `AD_DEBUG` & `AD_DEBUG_FILE` are no longer used.  Instead,
+  information is now logged to an 'auth.log' file.
+
+
+Major Features
+^^^^^^^^^^^^^^
+
+* A new :ref:`Reports <reports>` tool has been added for generating and
+  scheduling PDF & Excel reports.  As part of this move the following
+  features have now been moved to a report rather than a standalone page:
+
+    * Paper Backup Forms
+
+* A new :ref:`Query Tool <reports-query_tool>` has been added for advanced
+  query and reporting.  (You must set :ref:`USE_SQL_REPORTS =
+  True<qatrack-config>` in your local_settings.py file to use this feature).
+
+* :ref:`Notifications <notifications>` have been expanded & improved.
+    * You can now send notifications on test lists being completed.
+    * You can now specify to send notifications to individual users as well as groups.
+    * You can now specify that a given notifications will only be sent for
+      specific units or test lists.
+    * New QC Scheduling & Unreviewed QC Notices.
+    * Service event creation & update notices.
+    * Parts low inventory notices.
+    * Machine faults
+
+* A new :ref:`Autosave <auto_save>` feature has been implemented to
+  automatically save test list instance data temporarily to prevent data loss
+  when a user mistakenly navigates away from the page while entering QC data.
+
+* A new :ref:`Users & Groups Page <auth_users_groups_app>` has been added to simplify
+  the management of Group membership and group permissions.
+
+* A new :ref:`Fault log feature <fault_log>` for recording machine faults.
+
+* You can now create :ref:`Service Event Templates and schedule them
+  <sl_template_schedules>` in a similar manner to scheduling QC work.
+
+
+Non backwards compatible changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Composite Tests will now raise an error if they return anything other than a
+  numerical value, None, or an empty string ("").  Previously it was possible
+  to return e.g. a string which would have resulted in the test being skipped.
+  If you were relying on this behaviour, you need to switch to using a
+  :ref:`String Composite/JSON <qa_string_comp_json>` test type instead.
+
+* The `day` key is now required when performing a Test List Cycle via the API
+
+* Upload tests can not have reference/tolerance values set.  Allowing this originally
+  was an implementation oversight.
+
+* :ref:`EMAIL_NOTIFICATION_SENDER <email_notification_settings>` must be set to 
+  a valid email address, not just a name.
+
+
+Tests & Test Lists
+^^^^^^^^^^^^^^^^^^
+
+* New test types including:
+
+    * :ref:`Date and Date & Time test types <qa_tests>` to allow users to
+      select dates/times with a calendar widget.  These test results will be
+      available in calculation contexts as Python date, and datetime values
+      respectively.
+
+    * :ref:`Wraparound test type <qa_tests>` have been added.  This test type
+      allows you to define a test that "wraps around" at a minimum and maximum
+      value.  This type of test is useful for example if you have a
+      collimator/gantry readout test and want to consider 359.9 deg a 0.1 deg
+      difference from a 0 deg reference.
+
+* A new "Display Name" field has been added to tests.  This is an optional
+  field where you can add text describing how a test should be displayed when
+  performing or reviewing. Having a separate name & display name allows you to
+  create tests with descriptive names that are easy to find in the admin area,
+  but use a more succinct name when performing a Test List. If left blank, the
+  test name will be used.
+
+* A new "Require Comment" option has been added to force users to enter
+  a comment before submitting a test.
+
+* It is now possible to perform a test and not have the due date advanced
+  by de-selecting the "Include for Scheduling" option.
+
+* Calculation procedures are now syntax checked, and automatically formatted
+  using `Black <https://black.readthedocs.io>`_.
+
+* Numerical tests now have an optional :ref:`Formatting <qa_test_formatting>`
+  field to control how their results are displayed.  For example a test with a
+  formatting of "%.2E" will use scientific notation with 2 decimal places (3
+  sig figures).
+
+* Non-calculated test types (e.g. simple numerical, multiple choice, string,
+  etc) may now use the `calculation_procedure` to set :ref:`default initial
+  values <qa_default_values>`.
+
+* Added :ref:`UTILS.set_skip and UTILS.get_skip <composite_tests>` functions for
+  setting/getting skip status of tests.
+
+* Using `UTILS.set_comment` in a calculation will now open the comment box on
+  the front end.
+
+* Setting the `Warning message` field to blank on a `TestList` will now prevent
+  a warning message/banner from being shown when tests are at action level.
+
+* Calculated tests are now included in Paper Backup Forms (now a Report) by default
+
+* Frequency dropdown lists when choosing a unit to perform QC on will now only
+  show *Ad Hoc* if that unit has ad hoc test lists assigned
+
+* There are new :ref:`Tree Views <qa_tree_views>` available (under the Perform QC
+  menu) for viewing/selecting QC assigned to units.  
+
+* There is a new  `MAX_TESTS_PER_TESTLIST` setting (default is 250 tests per
+  test list)
+
+Review & Approval
+^^^^^^^^^^^^^^^^^
+
+* Test.auto_review has been replaced by new AutoReviewRuleSet's that allow you
+  to apply different AutoReviewRules to different tests. For more information
+  see the :ref:`Auto Review page <qa_auto_review>`.
+
+* A new :ref:`Bulk Review <qa_perform_bulk_review>` feature has been added to
+  allow setting review & approval status for multiple test list instances at
+  the same time.
+
+* New management commands `review_all_unreviewed` and `clear_in_progress` have
+  been added. `review_all_unreviewed` updates the status of all unreviewed test
+  list instances, while `clear_in_progress` will delete all in progress test
+  lists.
+
+
+Units & Unit Types
+^^^^^^^^^^^^^^^^^^
+
+* A new :ref:`Collapse <unit_type>` option has been added to the Unit Type model
+  to allow collapsing less frequency used unit types in user interface.
+
+* Unit modalities are now labeled as `Treatment or Imaging Modality`
+
+
+UI Changes
+^^^^^^^^^^
+
+* QA -> QC:  In most places in the UI the initials QA have been replaced by QC.
+  This change was made to reflect that while QATrack+ is a tool for managing
+  the QA program of radiation therapy programs, the data collected in QATrack+
+  is QC data.
+
+* Improved the ordering and organization of unit, frequency, and test lists
+  fields when assigning a test list to a unit. Also improve UnitType dropdown
+  for Unit Admin.
+
+* The Unit admin page now has "Save as New" as an option to make it easier to
+  create new units using an existing unit as a template.  You can also now
+  leave the unit number blank to have it assigned automatically.
+
+* **Staff Status** has been renamed to **Admin Status** to reflect the fact
+  that almost all QATrack+ users are "Staff"!
+
+* Test Instance points with comments associated with them are now highlighed in
+  charts
+
+* Clicking on a chart link beside a tests history will now set the date range
+  for the chart to the larger of a span of 1 year, or span between the first
+  and last history items.  This results in a chart of say the last 5 years of
+  data for an annual QA item rather than just the single point from the most
+  recent year.
+
+* Keyboard entry of dates is now permitted for Work Started & Work Completed dates
+  when performing QC
+
+* New dropdown on Unit selection buttons to allow selecting QC to perform based
+  on Test categories.
+
+* A calculation status icon has been added (spins when calculations are being
+  performed).
+
+* Add test type css class to test rows.  Allows you to target different test
+  types in site.css like:
+
+  .. code-block:: css
+
+        .qa-boolean, .qa-numerical {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+* The *In Progress* label will now only display the count of in progress test lists
+  visible to the users rather than the total count.
+
+* History & Unreviewed listing pages will now show a paperclip icon if the test list instance
+  has at least one attachment.
+
+* ID attributes have been added to many elements on the pages for performing/editing test lists
+  to make them easier to target with JavaScript.
+
+* For installations with Units assigned to multiple 'Sites', a new 'Site'
+  column has been added to many of the views used for selecting TestList
+  assignments and TestListInstances.
+
+Admin Changes
+^^^^^^^^^^^^^
+
+* Inline links to edit and delete foreign key choices have been disabled in all
+  QATrack+ admin models. Editing or deleting a foreign key object here has
+  always been a poor workflow that lead to confusion for users.
+
+* Setting multiple references & tolerances now allows removing tolerances.
+
+* Setting multiple references & tolerances will now include an entry in that
+  UnitTestInfo's change log
+
+
+API Changes
+^^^^^^^^^^^
+
+* A number of bug in the API have been fixed including:
+
+  * a bug which was causing extra information to be returned for list views has
+    been fixed.  This may require you to adjust scripts if you were relying on:
+
+    - permissions or user_set data present in the Groups list view
+    - first_name, last_name, date_joined, permissions in the User List view
+    - Fields other than name, number, or site in the Unit list
+
+  * Bugs with filtering for exact matches of search strings have been resolved.
+
+  * First Name & Last Name have been added to the user-list api view
+
+  * When dependencies of a composite test are skipped and the composite test itself
+    is not skipped, an error letting the user know to skip the composite test
+    explicitly is now shown.
+
+* The UnitTestCollection API results now include "next_day" and "next_test_list"
+  parameters to make it simple to determine which test list is to be performed
+  next in a test list cycle.
+
+* The TestList API results now includes a field "test_lists" which is 
+  a list of all the sublist test lists for that TestList.
+
+* The banner at the top of the browsable API now says "QATrack+ API" rather
+  than Django Rest Framework and now the link directs to the main site rather
+  than DRFs site.
+
+* It is now possible to perform a test and not have the due date advanced by
+  setting `"include_for_scheduling": False,` in your API post data.
+
+* The `day` key is now required when performing a Test List Cycle via the API
+
+
+Service Log & Parts
+^^^^^^^^^^^^^^^^^^^
+
+* The `USE_SERVICE_LOG` and `USE_PARTS` settings have been removed.  Permissions
+  are suitable for hiding the UI elements if you don't want to use service log
+  or parts, but having these settings can complicate some views and testing.
+
+* Added option to :ref:`Group Linkers <sl_linkers>` to make a given Group
+  Linker required when submitting a ServiceEvent.
+
+* There is a new `New or Used` field on Parts to allow you to track new and
+  used inventories of the same part separately.
+
+* A new setting :ref:`setting_sl_allow_blank_service_area` has been added to
+  optionally allow users to submit ServiceEvents without a ServiceArea set
+  explicitly.
+
+* A new setting :ref:`setting_sl_allow_blank_service_type` has been added to
+  optionally allow users to submit ServiceEvents without a ServiceType set
+  explicitly.
+
+* Parts Supplier details have been expanded to include phone numbers, website,
+  address and contact information
+
+* Part supplier details pages have been added to show what parts are available
+  from each supplier as well as company & contact details.
+
+* You may now add attachments & images to Parts.  Images will be shown inline
+  in the parts listing table and parts detail pages.
+
+* :ref:`Service Log Status <sl_statuses>` now have an order field to allow you 
+
+* You can now create :ref:`Service Event Templates and schedule them
+  <sl_template_schedules>` in a similar manner to scheduling QC work.
+
+* There is now an app for :ref:`logging machine faults <fault_log>`.
+
+Authentication
+^^^^^^^^^^^^^^
+
+* The default authentication backend setting is now:
+
+  .. code-block:: python
+
+    AUTHENTICATION_BACKENDS = (
+        'qatrack.accounts.backends.QATrackAccountBackend',
+    )
+
+  the `QATrackAccountBackend` is a simple wrapper around the Django ModelBackend
+  to allow usernames to be transformed prior to authentication.  The transform
+  is controlled by the :ref:`ACCOUNTS_CLEAN_USERNAME <accounts_clean_username>` settings.
+
+* A new :ref:`ACCOUNTS_SELF_REGISTER <accounts_self_register>` setting has been
+  added to control whether users are allowed to register their own accounts.
+
+* A new :ref:`ACCOUNTS_PASSWORD_RESET <accounts_password_reset>` setting has been
+  added to control whether users are allowed to reset or change their own passwords.
+
+* Users can now automatically be added to QATrack+ groups based
+  on their AD group memberships using . :ref:`Active Directory Groups to QATrack+ Group Map <auth_ad_groups>`'s
+
+* The :ref:`AD_MEMBERSHIP_REQ <settings_ad>` was previously not functional and 
+  has now been replaced by :ref:`Qualifying Groups <auth_ad_qualifying_groups>`'s
+
+* When a user logs in through the AD backend, their email address, first name,
+  and lastname will be updated to match the values found in Active Directory.
+
+* The `DEFAULT_GROUP_NAMES` setting has been removed.  Instead, QATrack+ groups
+  now have a :ref:`default group flag <auth_groups>`.  Anytime a user logs into
+  QATrack+, they will automatically be added to any group with this flag set.
+
+Other Minor Features & Bugs Fixed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fixed bug with control charts and null valued / skipped tests. #506
+* Fixed bug with selecting Test List Cycle days from sidebar menu
+
+* QATrack+ by default will now use the database for caching rather than the
+  filesystem.  This should have comparable or better performance and eliminate
+  the occassional 500 errors generated on Windows servers due to file
+  permissions & access issues.
+
+* Some python packages have been updated
+    * pydicom updated to 2.1.2
+    * numpy updated to 1.20.0
+    * matplotlib updated to 3.3.4
+    * scipy updated to 1.5.4
+
+
+What didn't make it into this release?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Translations** Unfortunately there is still quite a bit of work to be done
+  in order to get QATrack+ translated into other languages.  Translations are
+  currently low on the developers priority list so without outside
+  contributions it is hard to say when this will be completed. However,
+  incremental progress is being made in this direction and templates
+  and strings are gradually getting marked for translation.

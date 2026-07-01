@@ -35,6 +35,7 @@ qatrack/wsgi.py
 uv.lock 
 
 # Local Temp files
+.ai
 .eggs
 *.egg-info
 *.db

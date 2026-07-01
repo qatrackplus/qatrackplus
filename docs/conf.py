@@ -173,12 +173,16 @@ texinfo_documents = [
 extlinks = {
     'mailinglist': ("https://groups.google.com/forum/#!forum/qatrack/%s", ''),
     'issues': ("https://github.com/qatrackplus/qatrackplus/issues/%s", ''),
+    'supportemail': ("mailto:medphys@crcrewso.ca%s", ''),
+    'uvreleases': ("https://github.com/astral-sh/uv/releases/%s", ''),
 }
 
 rst_prolog = """
 
 
 .. |maillist| replace:: https://groups.google.com/forum/#!forum/qatrack
+.. |supportemail| replace:: mailto:medphys@crcrewso.ca
+.. |uvreleases| replace:: https://github.com/astral-sh/uv/releases
 
 
 """
