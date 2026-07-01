@@ -50,10 +50,9 @@ Admin Guide Contents
 
    qa/change_site_name
    qa/auth
-   adding_custom_fields
    notifications/guide
    units/guide
    qa/guide
    service_log/guide
    faults/guide
-
+..   adding_custom_fields

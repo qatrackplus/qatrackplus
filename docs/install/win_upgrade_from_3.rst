@@ -145,7 +145,7 @@ Now with a normal PowerShell window, run the following commands to create a new 
 
 .. code-block:: powershell
    >>  cd C:\deploy\qatrackplus
-   >>  uv env create .venv
+   >>  uv venv --python 3.12
    >>  uv sync --extra win --extra mssql
 
 Next, activate your new virtual environment:

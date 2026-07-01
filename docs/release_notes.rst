@@ -74,14 +74,11 @@ Contributors from the project history include:
 
 
 
-.. _`release_notes_31`:
-
 QATrack+ v3.1
 ~~~~~~~~~~~~~
 
 .. include:: release_notes/v3.1.rst
 
-.. _`release_notes_03`:
 
 QATrack+ v0.3.0
 ~~~~~~~~~~~~~~~

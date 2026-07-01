@@ -83,8 +83,8 @@ We're now ready to install all the libraries QATrack+ depends on.
 
    >>  cd qatrackplus
    >>  git fetch origin
-   >>  git checkout release/4.0
-   >>  uv env create .venv
+   >>  git checkout releases/4.0
+   >>  uv venv --python 3.12
    >>  uv sync --extra win --extra mssql
 
 Next, activate your new virtual environment:
@@ -114,9 +114,9 @@ Creating a database with SQL Server
 If you, or your IT department has familiarity with SQL Server, here is a quick summary of the configuration needed.
 
 - a SQL Server instance (either local or remote) with SQL Server Authentication enabled.
-- a database named `qatrackplus`.
-- a database user named `qatrack` with `db_ddladmin`, `db_datawriter`, `db_datareader` and `db_owner` permissions on the `qatrackplus` database.
-- a database user named `qatrack_reports` with `db_datareader` permissions on the `qatrackplus` database.
+- a database named `qatrack`.
+- a database user named `qatrack` with `db_ddladmin`, `db_datawriter`, `db_datareader` and `db_owner` permissions on the `qatrack` database.
+- a database user named `qatrack_reports` with `db_datareader` permissions on the `qatrack` database.
 
 For most of us, the easiest way to set this up is to use SQL Server Management Studio (SSMS) and follow the instructions below.  If you have a different method of setting up your database that meets the above requirements, that will work too.
 

@@ -58,9 +58,9 @@ class QATrackService(win32serviceutil.ServiceFramework):
 
     _svc_name_ = "QATrackCherryPyService"
 
-    _svc_display_name_ = "QATrack+ CherryPy Service" 
+    _svc_display_name_ = "QATrack+ v4.0 CherryPy Service" 
     
-    # remember to change this when you change the version number in the future, future updates will use the update command for the service name, so if you change the version number in the service name, you will need to uninstall and reinstall the service to update it.
+    # display name shows version so that users can troubleshoot if they need to update the service. 
 
     _exe_name_ = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'pythonservice.exe')
 
