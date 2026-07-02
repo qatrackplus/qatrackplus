@@ -29,7 +29,7 @@ Major Changes
 
 * Windows deployment documentation has been refreshed for Server 2022 and SQL Server 2022 scenarios.
 * Dependency and environment management now uses uv workflows for setup and synchronization.
-* CherryPy service and scheduled task naming have been simplified to support future patching and upgrades.
+* Windows service deployment is now fully automated via `install_winsw.ps1`, adopting a centralized WinSW wrapper (`qatrack-service.exe`) and simplifying the service name to `QATrack+ Web Service`.
 * Local settings expectations now explicitly include host and CSRF origin configuration required by current Django versions.
 * Database engine guidance for SQL Server has been updated to current backend conventions.
 
