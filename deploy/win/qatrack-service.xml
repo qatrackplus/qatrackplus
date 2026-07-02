@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+  <id>QATrackPlus</id>
+  <name>QATrack+ Web Service</name>
+  <description>Runs the QATrack+ application</description>
+  
+  <executable>C:\deploy\qatrackplus\.venv\Scripts\python.exe</executable>
+  
+  <!-- Updated to match the actual file in your directory -->
+  <arguments>run_cherrypy.py</arguments>
+  
+  <workingdirectory>C:\deploy\qatrackplus</workingdirectory>
+  
+  <log mode="roll" />
+</service>

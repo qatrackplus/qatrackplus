@@ -20,7 +20,7 @@ There are significant changes to the tooling and dependencies in v4.0.0, please 
 * The Python virtual environment is now managed by the ``uv`` package manager, which will handle a lot of the python heavy lifting for you.
 * The old ``venvs/qatrack31`` directory is no longer needed.
 * Manual installations of Python and pip are no longer required.
-* We are going away from including specific versions in file names for the CherryPy service and scheduled task.  The new service is called *'QATrack+ CherryPy Service'* and the scheduled task is called *'QATrack+ Django Q Cluster'*.  This will make it easier to apply future patches.
+* We are going away from including specific versions in file names for the CherryPy service and scheduled task.  The new service is called *'QATrack+ Web Service'* and the scheduled task is called *'QATrack+ Django Q Cluster'*.  This will make it easier to apply future patches.
 * The Django engine for the database has changed from ``sql_server.pyodbc`` to ``mssql``.
 * **Multiple languages are now supported,** please refer to the default local_settings.py file for guidance on how to configure your installation for multiple languages.
 

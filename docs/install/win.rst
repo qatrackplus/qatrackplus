@@ -272,16 +272,12 @@ service (running on port 8080, see note below if you need to change the port).
 Open a new PowerShell window *with Administrator privileges* (right click on
 PowerShell and click "Run as Administrator") and run the following commands:
 
-.. code-block:: console
+.. code-block:: powershell
 
    >>  cd C:\deploy\qatrackplus
-   >>  .\.venv\Scripts\Activate.ps1
-   >>  cp deploy\win\QATrackCherryPyService.py .
-   >>  python .\.venv\Scripts\pywin32_postinstall.py -install
-   >>  python QATrackCherryPyService.py --startup=auto install
-   >>  python QATrackCherryPyService.py start
+   >>  .\deploy\win\install_winsw.ps1
 
-Open the Windows Services dialog and confirm the `QATrack+ CherryPy Service`
+Open the Windows Services dialog and confirm the `QATrack+ Web Service`
 is installed and has a status of `Running`.
 
 .. figure:: images/service_is_running-cropped.png
@@ -293,13 +289,13 @@ Next open a browser on the server and navigate to http://localhost:8080/ and ens
 Your QATrack+ installation is now installed as a Windows Service running on
 port 8080 (see note below).  You may also wish to configure the service to
 email you in the event of a crash (see the Recovery tab of the
-QATrackCherryPyService configuration dialogue).
+QATrack+ Web Service configuration dialogue).
 
 .. note::
 
    If you need to run QATrack+ on a different port, edit
-   ``C:\\deploy\\qatrackplus\\QATrackCherryPyService.py`` set the PORT
-   variable to a different port (e.g. 8008), and run ``python QATrackCherryPyService.py update`` to update the service.  You will also need to update the URL rewrite rules in IIS to point to the new port.
+   ``C:\\deploy\\qatrackplus\\run_cherrypy.py`` set the ``server.socket_port``
+   variable to a different port (e.g. 8008), and run ``.\qatrack-service.exe restart`` to update the service.  You will also need to update the URL rewrite rules in IIS to point to the new port.
 
 .. _iis_setup:
 
@@ -409,7 +405,7 @@ QATrack+ setup on your Windows Server!
 If you see a "403.14 Forbidden" error, double check you added the URL rewrite
 rules to the top level server, and not the QATrack Static site.
 
-If you see a "502.3 Bad Gateway" error, double check that your QATrack CherryPy
+If you see a "502.3 Bad Gateway" error, double check that your QATrack+ Web
 service was installed correctly and is running.
 
 .. note::
@@ -481,7 +477,7 @@ What Next
 
 * Check the :ref:`the settings page <qatrack-config>` for any available
   customizations you want to add to your QATrack+ installation (don't forget to
-  restart both your QATrack+ CherryPy Service, and Django Q cluster via the task
+  restart both your QATrack+ Web Service, and Django Q cluster via the task
   scheduler after changing any settings!)
 * Set up a Backup Strategy. You must routinely backup your database, the `media` folder, and your `local_settings.py` file. Please consult with your IT department to automate this. More details can be found here: :ref:`backup of your QATrack+ installation <qatrack_backup>`.
 * Read the :ref:`Administration Guide <admin_guide>`, :ref:`User Guide
