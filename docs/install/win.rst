@@ -9,12 +9,10 @@ Installing and Deploying QATrack+ on Windows Server
 
    There are many community members who have successfully installed QATrack+ on Windows Server and can provide guidance and support. You can reach out to the QATrack+ community through the :mailinglist:`QATrack+ Google Group <>` for assistance.
 
-
 .. contents::
    :local:
    :depth: 2
 
-   
 New Installation
 ----------------
 
@@ -43,14 +41,7 @@ The steps we will be undertaking are:
 Prerequisites
 -------------
 
-Managing python dependencies and virtual environments can be a bit tricky on Windows. We have transitioned to using the ``uv`` package manager to handle this for us. To install QATrack+ run the following command in a PowerShell terminal with Administrator privileges:
-
-.. code-block:: powershell
-
-   >>  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-   >>  uv --version # this should print the version of uv installed, e.g. 0.11.20
-
-Before beginning the installation, ensure the following software is installed on your server:
+Before we can begin installing the core site we need to ensure ensure the following software is installed on your server:
 
 * **Google Chrome**: `Required to generate or schedule PDF reports. <https://www.google.com/chrome/index.html>`_
 * **Microsoft Visual C++ Redistributable**: `The ODBC Driver for SQL Server requires this. <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-supported-redistributable-version>`_
@@ -59,14 +50,22 @@ Before beginning the installation, ensure the following software is installed on
 * **Git for Windows**: `Required to check out the QATrack+ source code. <https://git-scm.com/install/windows>`_
 * **IIS** requires the `URL Rewrite 2.1 <https://www.iis.net/downloads/microsoft/url-rewrite>`__ and `Application Request Routing 3.0 <https://www.iis.net/downloads/microsoft/application-request-routing>`__ modules.
 
-For convenience, these installers may be kept in a folder on the server (e.g. C:\\deploy\\installers) for future reference and re-use.
+For convenience, these installers may be kept in a folder on the server (e.g. C:\\deploy\\installers) for future reference and re-use. Most of these installers can be run through traditional double-clicking, the Visual C++ Redistributable and ODBC Driver installers require Administrator privileges to run.
 
 * **SQL Server Express**: May be used if you do not have access to a full SQL Server instance `SQL Server may be installed locally. <https://www.microsoft.com/en-us/sql-server/sql-server-downloads>`_ This option should only be used if local IT resources will not support using a full SQL Server instance. QATrack+ should fit within the licensing limits of SQL Server Express, but it is up to each site to confirm their Microsoft licensing requirements.
+
+Managing python dependencies and virtual environments can be a bit tricky on Windows. We have transitioned to using the ``uv`` package manager to handle this for us. To install QATrack+ run the following command in a PowerShell terminal with Administrator privileges:
+
+.. code-block:: powershell
+
+   >>  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+   >>  uv --version # this should print the version of uv installed, e.g. 0.11.20
+   # Close this PowerShell window we won't need it anymore, and open a new PowerShell window (without Administrator privileges) to continue with the installation.
 
 .. _`install_application_win`:
 
 Setting up the QATrack+ Application
--------------------------------------
+-----------------------------------
 
 Open a Windows PowerShell terminal and then create a directory for QATrack+ and
 check out the source code, use the following commands:
@@ -85,7 +84,7 @@ We're now ready to install all the libraries QATrack+ depends on.
    >>  git fetch origin
    >>  git checkout releases/4.0
    >>  uv venv --python 3.12
-   >>  uv sync --extra win --extra mssql
+   >>  uv sync --exact --extra win --extra mssql
 
 Next, activate your new virtual environment:
 
@@ -95,9 +94,11 @@ Next, activate your new virtual environment:
 
 Your command prompt should now be prefixed with ``(qatrackplus)`` or ``(.venv)``.
 
+.. dropdown:: Side note: ```C:\deploy```
 
+   This folder is a convenient convention for storing the QATrack+ source code, virtual environment, and any other files related to your QATrack+ installation.  You can use a different folder if you prefer, but you will need to adjust the instructions accordingly.
 
-..    If you are going to be using :ref:`Active Directory <active_directory>` for
+.. If you are going to be using :ref:`Active Directory <active_directory>` for
    authenticating your users, you need to install pyldap.  There are binaries
    available on this page:
    https://github.com/cgohlke/python-ldap-build.  Download the
@@ -258,9 +259,13 @@ Now run the following commands to set up your database and load the default conf
    >>  python manage.py collectstatic
    >>  Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
 
+.. dropdown:: Side note: Upgrading from v3.x.y to v4.0.0
+
+   If you are using this guide to upgrade an existing QATrack+ installation from v3.1.y to v4.0.0 on a fresh Windows Server 2022 installation, do not load fixtures, they're not needed and may cause problems.
+
 We now have a database, we have configured QATrack+ to use it, and we've loaded the default configuration data. Next, we should test that everything is working correctly by running the development server with `python manage.py runserver` and navigating to http://localhost:8000/ in a browser on the server. You should see a poor approximation of the QATrack+ login page (it won't look like this once we're finished!). If you see any errors, check the terminal output for details on what went wrong.  If you can log in successfully, then we know our database is configured correctly and we can move on to the next step.
 
-.. _cherry_py_service:
+.. _`cherry_py_service`:
 
 Configuring CherryPy to Serve QATrack+
 --------------------------------------
@@ -297,7 +302,7 @@ QATrack+ Web Service configuration dialogue).
    ``C:\\deploy\\qatrackplus\\run_cherrypy.py`` set the ``server.socket_port``
    variable to a different port (e.g. 8008), and run ``.\qatrack-service.exe restart`` to update the service.  You will also need to update the URL rewrite rules in IIS to point to the new port.
 
-.. _iis_setup:
+.. _`iis_setup`:
 
 Setting up IIS
 --------------
@@ -405,6 +410,8 @@ QATrack+ setup on your Windows Server!
 If you see a "403.14 Forbidden" error, double check you added the URL rewrite
 rules to the top level server, and not the QATrack Static site.
 
+If you see a "403 CSRF" error, double check that you set the `CSRF_TRUSTED_ORIGINS` setting in your `local_settings.py` file to include your server name, url, and IP address. 
+
 If you see a "502.3 Bad Gateway" error, double check that your QATrack+ Web
 service was installed correctly and is running.
 
@@ -414,7 +421,7 @@ service was installed correctly and is running.
    above is simple and works well when QATrack+ is the only web service
    running on a server.
 
-.. _django_q_setup:
+.. _`django_q_setup`:
 
 Setting up Django Q
 -------------------

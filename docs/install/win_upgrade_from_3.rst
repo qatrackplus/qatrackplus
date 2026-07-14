@@ -24,8 +24,6 @@ There are significant changes to the tooling and dependencies in v4.0.0, please 
 * The Django engine for the database has changed from ``sql_server.pyodbc`` to ``mssql``.
 * **Multiple languages are now supported,** please refer to the default local_settings.py file for guidance on how to configure your installation for multiple languages.
 
-
-
 Take a snapshot
 ---------------
 
@@ -86,17 +84,12 @@ To verify that the service has been removed, please open the **Services** applic
 
    >>  sc delete "QATrack31CherryPyService"
 
+Close the CMD window before proceeding.  You may also need to restart your server to ensure that the service has been completely removed.
+
 Prerequisites
 -------------
 
-Managing python dependencies and virtual environments can be a bit tricky on Windows. We have transitioned to using the ``uv`` package manager to handle this for us. To install QATrack+ run the following command in a PowerShell terminal with **Administrator privileges**:
-
-.. code-block:: powershell
-
-   >>  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-   >>  uv --version # this should print the version of uv installed, e.g. 0.11.20
-
-Before beginning the installation, ensure the following software is installed on your server:
+Before beginning the installation, please ensure the following software is installed on your server:
 
 * **Google Chrome**: `Required to generate or schedule PDF reports. <https://www.google.com/chrome/index.html>`_
 * **Microsoft Visual C++ Redistributable**: `The ODBC Driver for SQL Server requires this. <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-supported-redistributable-version>`_
@@ -105,7 +98,7 @@ Before beginning the installation, ensure the following software is installed on
 * **Git for Windows**: `Required to check out the QATrack+ source code. <https://git-scm.com/install/windows>`_
 * **IIS** requires the `URL Rewrite 2.1 <https://www.iis.net/downloads/microsoft/url-rewrite>`__ and `Application Request Routing 3.0 <https://www.iis.net/downloads/microsoft/application-request-routing>`__ modules.
 
-For convenience, these installers may be kept in a folder on the server (e.g. C:\\deploy\\installers) for future reference and re-use.
+For convenience, these installers may be kept in a folder on the server (e.g. C:\\deploy\\installers) for future reference and re-use. Most of these installers run via traditional double-click, but some may require administrative privileges to install. 
 
 Checking out version 4.0.0
 --------------------------
@@ -137,16 +130,17 @@ First, delete the old virtual environment, and uninstall all installed python in
 
 Open a PowerShell window with **Administrator privileges** and run the following commands:
 
-.. code-block:: powershell
+.. code-block::powershell
 
    >>  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 Now with a normal PowerShell window, run the following commands to create a new virtual environment and install the required dependencies:
 
 .. code-block:: powershell
+
    >>  cd C:\deploy\qatrackplus
    >>  uv venv --python 3.12
-   >>  uv sync --extra win --extra mssql
+   >>  uv sync --exact --extra win --extra mssql
 
 Next, activate your new virtual environment:
 
