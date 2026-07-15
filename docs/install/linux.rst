@@ -112,7 +112,7 @@ PostgreSQL locally. Run the following commands:
     sudo apt-get install postgresql libpq-dev postgresql-client postgresql-client-common
 
 After that completes, we can create a new database and Postgres user (db
-name/user/pwd = qatrackplus40/qatrack/qatrackpass) as follows:
+name/user/pwd = qatrackplus/qatrack/qatrackpass) as follows:
 
 .. code-block:: bash
 
@@ -177,7 +177,7 @@ and restart the pg server:
 
 
     Now we can create and configure a user (db name/user/pwd =
-    qatrackplus40/qatrack/qatrackpass) and database for QATrack+:
+    qatrackplus/qatrack/qatrackpass) and database for QATrack+:
 
     .. code-block:: bash
 
@@ -325,7 +325,7 @@ required).
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'qatrackplus40',
+            'NAME': 'qatrackplus',
             'USER': 'qatrack',
             'PASSWORD': 'qatrackpass',
             'HOST': '127.0.0.1',
@@ -333,7 +333,7 @@ required).
         },
         'readonly': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'qatrackplus40',
+            'NAME': 'qatrackplus',
             'USER': 'qatrack_reports',
             'PASSWORD': 'qatrackpass',
             'HOST': '127.0.0.1',
@@ -389,11 +389,11 @@ follows:
 
         # or MySQL if you set a password during install
         sudo mysql -u root -p -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-        sudo mysql -u root -p --database qatrackplus40 < grant_ro_privileges.sql
+        sudo mysql -u root -p --database qatrackplus < grant_ro_privileges.sql
 
         # or MySQL if you did not set a password during install
         sudo mysql -N -B -e "$(cat deploy/mysql/generate_ro_privileges.sql)" > grant_ro_privileges.sql
-        sudo mysql --database qatrackplus40 < grant_ro_privileges.sql
+        sudo mysql --database qatrackplus < grant_ro_privileges.sql
 
 
 You also need to create a super user so you can login and begin configuring
