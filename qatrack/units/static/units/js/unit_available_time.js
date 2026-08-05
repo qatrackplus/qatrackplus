@@ -1,4 +1,4 @@
-require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
+require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'select2', 'slimscroll', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, d3) {
 
     var tz = moment.tz.guess();
 
