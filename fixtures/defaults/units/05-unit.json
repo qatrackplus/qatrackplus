@@ -1,0 +1,19 @@
+[
+{
+    "model": "units.unit",
+    "pk": 1,
+    "fields": {
+        "type": ["Cyberknife", null, "Accuray", "Linac"],
+        "site": null,
+        "number": 1,
+        "name": "Unit 1",
+        "serial_number": null,
+        "location": null,
+        "install_date": null,
+        "date_acceptance": "2020-01-01",
+        "active": true,
+        "is_serviceable": true,
+        "modalities": [["6MV Photon"]]
+    }
+}
+]

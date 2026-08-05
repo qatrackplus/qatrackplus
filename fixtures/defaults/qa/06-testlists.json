@@ -1,0 +1,24 @@
+[
+{
+    "model": "qa.testlist",
+    "fields": {
+        "name": "Daily QA",
+        "slug": "daily-qa",
+        "description": "Daily QA test list",
+        "javascript": null,
+        "warning_message": "",
+        "created": "2020-01-01T00:00:00Z",
+        "modified": "2020-01-01T00:00:00Z",
+        "created_by": ["QATrack+ Internal"],
+        "modified_by": ["QATrack+ Internal"]
+    }
+},
+{
+    "model": "qa.testlistmembership",
+    "fields": {
+        "test_list": ["daily-qa"],
+        "test": ["Daily Output Check"],
+        "order": 0
+    }
+}
+]

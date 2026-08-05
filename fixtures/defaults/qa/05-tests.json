@@ -1,0 +1,26 @@
+[
+{
+    "model": "qa.test",
+    "fields": {
+        "name": "Daily Output Check",
+        "display_name": "",
+        "slug": "daily_output_check",
+        "description": "Daily output check test",
+        "procedure": null,
+        "category": ["Dosimetry"],
+        "chart_visibility": true,
+        "autoreviewruleset": null,
+        "type": "simple",
+        "hidden": false,
+        "skip_without_comment": false,
+        "choices": null,
+        "constant_value": null,
+        "wrap_low": null,
+        "wrap_high": null,
+        "created": "2020-01-01T00:00:00Z",
+        "modified": "2020-01-01T00:00:00Z",
+        "created_by": ["QATrack+ Internal"],
+        "modified_by": ["QATrack+ Internal"]
+    }
+}
+]
