@@ -1,0 +1,53 @@
+[
+{
+    "model": "qa.testlistinstance",
+    "pk": 1,
+    "fields": {
+        "unit_test_collection": 1,
+        "test_list": ["daily-qa"],
+        "work_started": "2020-01-01T09:00:00Z",
+        "work_completed": "2020-01-01T09:05:00Z",
+        "due_date": null,
+        "in_progress": false,
+        "flagged": false,
+        "user_key": null,
+        "include_for_scheduling": true,
+        "reviewed": null,
+        "reviewed_by": null,
+        "all_reviewed": false,
+        "day": 0,
+        "created": "2020-01-01T09:05:00Z",
+        "modified": "2020-01-01T09:05:00Z",
+        "created_by": ["QATrack+ Internal"],
+        "modified_by": ["QATrack+ Internal"]
+    }
+},
+{
+    "model": "qa.testinstance",
+    "pk": 1,
+    "fields": {
+        "status": ["unreviewed"],
+        "review_date": null,
+        "reviewed_by": null,
+        "pass_fail": "no_tol",
+        "value": 100.0,
+        "string_value": null,
+        "date_value": null,
+        "datetime_value": null,
+        "json_value": null,
+        "skipped": false,
+        "comment": null,
+        "reference": null,
+        "tolerance": null,
+        "unit_test_info": 1,
+        "test_list_instance": 1,
+        "work_started": "2020-01-01T09:00:00Z",
+        "work_completed": "2020-01-01T09:05:00Z",
+        "order": 0,
+        "created": "2020-01-01T09:05:00Z",
+        "modified": "2020-01-01T09:05:00Z",
+        "created_by": ["QATrack+ Internal"],
+        "modified_by": ["QATrack+ Internal"]
+    }
+}
+]

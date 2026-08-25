@@ -1,0 +1,31 @@
+[
+{
+    "model": "qa.unittestinfo",
+    "pk": 1,
+    "fields": {
+        "unit": 1,
+        "test": ["Daily Output Check"],
+        "reference": null,
+        "tolerance": ["Absolute(-3.000, -2.000, 2.000, 3.000)"],
+        "active": true,
+        "assigned_to": null
+    }
+},
+{
+    "model": "qa.unittestcollection",
+    "pk": 1,
+    "fields": {
+        "unit": 1,
+        "frequency": ["daily"],
+        "due_date": null,
+        "auto_schedule": true,
+        "assigned_to": null,
+        "visible_to": [],
+        "active": true,
+        "content_type": ["qa", "testlist"],
+        "object_id": 1,
+        "name": "Daily QA",
+        "last_instance": null
+    }
+}
+]

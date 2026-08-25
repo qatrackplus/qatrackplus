@@ -1,5 +1,5 @@
 
-require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, autosize) {
+require(['jquery', 'moment', 'autosize', 'daterangepicker', 'select2', 'slimscroll', 'felter', 'sl_utils', 'inputmask', 'json2'], function ($, moment, autosize) {
 
     var date_range_locale = {
         "format": siteConfig.DATERANGEPICKER_DATE_FMT,
