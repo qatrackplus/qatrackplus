@@ -15,6 +15,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Detect whether any non-documentation files changed so that the expensive
+  # database and Docker jobs can be skipped on documentation-only PRs.
+  changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.check.outputs.code }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check for non-documentation changes
+        id: check
+        run: |
+          # Always run everything for manual dispatches.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Determine the comparison base commit.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            # A base of all zeros means this is the very first push to a new
+            # branch — run everything rather than risk a false negative.
+            if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              echo "code=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # List files changed since the base, excluding documentation paths.
+          # Any hit means real code changed and the full suite should run.
+          CODE_CHANGES=$(git diff --name-only "$BASE" "${{ github.sha }}" \
+            | grep -v '^docs/' \
+            | grep -Ev '\.(md|rst)$' \
+            | head -1)
+
+          if [ -n "$CODE_CHANGES" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
     name: Pre-Commit Test
     runs-on: ubuntu-latest
@@ -56,7 +103,8 @@ jobs:
   linux-tests:
     name: Linux Tests
     runs-on: ubuntu-latest
-    needs: [lint, requirements]
+    needs: [lint, requirements, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -143,7 +191,8 @@ jobs:
   windows-tests:
     name: Windows Tests
     runs-on: windows-latest
-    needs: [lint, requirements]
+    needs: [lint, requirements, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -216,7 +265,8 @@ jobs:
   docker-check:
     name: Docker Build & Run Check
     runs-on: ubuntu-latest
-    needs: [lint, requirements]
+    needs: [lint, requirements, changes]
+    if: needs.changes.outputs.code == 'true'
     
     steps:
       - name: Checkout Code

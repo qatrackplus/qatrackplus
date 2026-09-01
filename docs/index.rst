@@ -151,6 +151,7 @@ email directly:
    api/guide
    developer/guide
    tutorials/index
+   common_issues/index
    screenshots
 
 

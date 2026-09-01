@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Track new releases of core runtime tools only: Python, Node.js, and Django. All other pip packages are intentionally excluded. See README.md for the project's LTS-aware upgrade policy.",
+  "extends": ["config:base"],
+
+  "ignoreDeps": [],
+  "enabledManagers": ["pip_requirements", "github-actions"],
+
+  "packageRules": [
+    {
+      "description": "Ignore all pip packages by default",
+      "matchManagers": ["pip_requirements"],
+      "enabled": false
+    },
+    {
+      "description": "Track Django releases only (LTS-aware). Opens a PR so the change can be reviewed against the project release strategy.",
+      "matchManagers": ["pip_requirements"],
+      "matchPackageNames": ["Django"],
+      "enabled": true,
+      "labels": ["dependencies", "django"],
+      "schedule": ["on the 1st day of the month"],
+      "separateMinorPatch": true,
+      "minimumReleaseAge": "7 days",
+      "commitMessageTopic": "Django"
+    },
+    {
+      "description": "Track GitHub Actions runner versions (ubuntu, python-version, node-version inputs)",
+      "matchManagers": ["github-actions"],
+      "enabled": true,
+      "labels": ["dependencies", "github-actions"],
+      "schedule": ["on the 1st day of the month"],
+      "minimumReleaseAge": "7 days"
+    }
+  ],
+
+  "schedule": ["on the 1st day of the month"],
+  "prCreation": "immediate",
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Renovate Dependency Dashboard — core tools (Django, Python, Node.js)",
+  "dependencyDashboardHeader": "This dashboard tracks new releases of **Django**, **Python**, and **Node.js** only. All other pip packages are intentionally not monitored here.\n\nBefore merging any major-version upgrade, review the project release strategy in [README.md](README.md).",
+
+  "python": {
+    "enabled": true
+  },
+
+  "node": {
+    "enabled": true
+  }
+}

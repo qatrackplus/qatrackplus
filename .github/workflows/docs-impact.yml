@@ -1,0 +1,198 @@
+name: Docs Impact Check
+
+# pull_request_target runs in the context of the base branch, so the
+# GITHUB_TOKEN has write access to post comments even on fork PRs.
+# No code from the PR head is checked out, so there is no code-injection risk.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs-impact:
+    name: Flag Potentially Affected Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check changed files and post documentation impact comment
+        # Pinned to actions/github-script v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const MARKER = '<!-- docs-impact-bot -->';
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const pull_number = context.issue.number;
+
+            // Retrieve all files changed in the PR via the GitHub API (no checkout needed).
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number, per_page: 100 },
+            );
+            const changedFiles = files.map(f => f.filename);
+
+            // ---------------------------------------------------------------
+            // Code-path → documentation mapping.
+            // Keep this in sync with the table in AGENTS.md.
+            // ---------------------------------------------------------------
+            const MAPPINGS = [
+              {
+                prefix: 'qatrack/qa/',
+                docs: ['docs/admin/qa/', 'docs/user/qa/'],
+              },
+              {
+                prefix: 'qatrack/service_log/',
+                docs: [
+                  'docs/admin/service_log/',
+                  'docs/user/service_log/',
+                  'docs/tutorials/service_log/',
+                ],
+              },
+              {
+                prefix: 'qatrack/api/',
+                docs: ['docs/api/'],
+              },
+              {
+                prefix: 'qatrack/notifications/',
+                docs: ['docs/admin/notifications/'],
+              },
+              {
+                prefix: 'qatrack/faults/',
+                docs: ['docs/admin/faults/', 'docs/user/faults/'],
+              },
+              {
+                prefix: 'qatrack/parts/',
+                docs: [
+                  'docs/admin/service_log/parts.rst',
+                  'docs/user/service_log/parts.rst',
+                ],
+              },
+              {
+                prefix: 'qatrack/accounts/',
+                docs: ['docs/admin/qa/auth.rst', 'docs/user/auth/'],
+              },
+              {
+                prefix: 'qatrack/units/',
+                docs: ['docs/admin/units/', 'docs/user/units/'],
+              },
+              {
+                prefix: 'qatrack/reports/',
+                docs: ['docs/user/reports/'],
+              },
+              {
+                prefix: 'qatrack/contacts/',
+                docs: [
+                  'docs/admin/qa/contacts.rst',
+                  'docs/admin/qa/email.rst',
+                ],
+              },
+              {
+                prefix: 'qatrack/settings.py',
+                docs: ['docs/install/config.rst'],
+              },
+              {
+                prefix: 'qatrack/local_settings',
+                docs: ['docs/install/'],
+              },
+              {
+                prefix: 'deploy/',
+                docs: ['docs/install/'],
+              },
+              {
+                prefix: 'qatrack/qatrack_core/',
+                docs: ['docs/developer/'],
+              },
+              // Cross-references: developer workflow ↔ installation guides ↔ AGENTS.md.
+              // These three documents describe overlapping setup information (Python
+              // version, Node.js version, package manager, etc.) and should be kept in
+              // sync with one another whenever any one of them changes.
+              {
+                prefix: 'AGENTS.md',
+                docs: ['docs/developer/', 'docs/install/'],
+              },
+              {
+                prefix: 'docs/developer/',
+                docs: ['docs/install/', 'AGENTS.md'],
+              },
+              {
+                prefix: 'docs/install/',
+                docs: ['docs/developer/', 'AGENTS.md'],
+              },
+            ];
+
+            // Build the deduplicated set of affected doc paths.
+            const affected = new Set();
+            for (const file of changedFiles) {
+              for (const { prefix, docs } of MAPPINGS) {
+                if (file.startsWith(prefix)) {
+                  for (const doc of docs) {
+                    affected.add(doc);
+                  }
+                }
+              }
+            }
+
+            // Find any existing bot comment on this PR.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: pull_number,
+            });
+            const existing = comments.find(c => c.body.includes(MARKER));
+
+            // Nothing affected — remove a stale comment if present, then exit.
+            if (affected.size === 0) {
+              if (existing) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                });
+              }
+              return;
+            }
+
+            // Build the comment body.
+            const base = context.payload.pull_request.base.ref;
+            const docLines = [...affected].sort().map(d => {
+              const url = `https://github.com/${owner}/${repo}/tree/${base}/${d}`;
+              return `- [\`${d}\`](${url})`;
+            }).join('\n');
+
+            const body = [
+              MARKER,
+              '### 📚 Documentation Impact',
+              '',
+              'The files changed in this PR may affect the following documentation:',
+              '',
+              docLines,
+              '',
+              '> **This is a heuristic check** based on which code paths were modified.',
+              '> It flags doc pages that *may* need updating — not a guarantee that they do.',
+              '> Please review the listed pages and update them if any behaviour, settings,',
+              '> or APIs documented there have changed.',
+            ].join('\n');
+
+            // Post a new comment or update the existing one.
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body,
+              });
+            }
