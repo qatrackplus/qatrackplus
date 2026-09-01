@@ -22,7 +22,7 @@ gender identity.
 - Give and receive feedback constructively. Critique the code or idea, not the
   person.
 - Accept that maintainers have limited time and must prioritise. A slow or
-  "no" response is not a slight.
+  absent response is not a slight.
 - Keep discussions on-topic and relevant to QATrack+.
 
 **We will not tolerate:**
