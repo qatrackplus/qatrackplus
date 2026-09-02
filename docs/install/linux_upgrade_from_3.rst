@@ -173,6 +173,15 @@ First, let's gracefully remove Apache and install Nginx:
     sudo apt-get remove apache2 libapache2-mod-wsgi-py3
     sudo apt-get install nginx
 
+Next, update the ownership and permissions of your logs and media directories so that your QATrack+ user has ownership while allowing Nginx (``www-data``) read access:
+
+.. code-block:: bash
+
+    cd ~/web/qatrackplus
+    sudo chown -R $USER:www-data logs qatrack/media
+    sudo find logs qatrack/media -type d -exec chmod 2775 {} +
+    sudo find logs qatrack/media -type f -exec chmod 664 {} +
+
 Now we can generate our new Nginx and Supervisor configurations:
 
 .. code-block:: bash

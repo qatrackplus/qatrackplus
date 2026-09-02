@@ -761,8 +761,11 @@ LOG_ROOT_PATH = pathlib.Path(LOG_ROOT)
 TMP_REPORT_ROOT_PATH = pathlib.Path(TMP_REPORT_ROOT)
 
 for d in (MEDIA_ROOT_PATH, UPLOAD_ROOT_PATH, TMP_UPLOAD_ROOT_PATH, LOG_ROOT_PATH, TMP_REPORT_ROOT_PATH):
-    if not d.exists() and not d.is_dir():
-        d.mkdir(parents=True, exist_ok=True)
+    try:
+        if not d.exists() and not d.is_dir():
+            d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 # endregion
 
 
