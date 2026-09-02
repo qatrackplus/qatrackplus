@@ -849,8 +849,8 @@ class TestPerformQC(BaseQATests):
         title = "Perform %s : day 2" % utc.unit.name
         assert title in [el.text for el in self.driver.find_elements(By.CLASS_NAME, "box-title")]
         assert float(inputs[0].get_attribute("value")) == 1
-        assert self.driver.find_element(By.ID, "id_work_started").get_attribute("value") == "12 May 1980 12:00"
-        assert self.driver.find_element(By.ID, "id_work_completed").get_attribute("value") == "12 May 1980 12:01"
+        assert self.driver.find_element(By.ID, "id_work_started").get_attribute("value") == "1980-05-12 12:00"
+        assert self.driver.find_element(By.ID, "id_work_completed").get_attribute("value") == "1980-05-12 12:01"
         assert self.driver.find_element(By.ID, "id_work_duration").get_attribute("value") == "0hr:01min"
         assert self.driver.find_element(By.ID, "id_form-0-comment").get_attribute("value") == "test comment"
         assert self.driver.find_element(By.ID, "id_comment").get_attribute("value") == "test list instance comment"

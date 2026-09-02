@@ -1036,13 +1036,13 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
                     if (data.meta.work_started){
                         if (override_date)
-                            $("#id_work_started").get(0)._flatpickr.setDate(data.meta.work_started, true);
+                            $("#id_work_started").get(0)._flatpickr.setDate(moment(data.meta.work_started, [siteConfig.MOMENT_DATETIME_FMT, "DD MMM YYYY HH:mm:ss", "D MMM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DD HH:mm:ss", moment.ISO_8601]).toDate(), true);
                         else
                             $("#id_work_started").val(data.meta.work_started);
                     }
                     if (data.meta.work_completed){
                         if (override_date)
-                            $("#id_work_completed").get(0)._flatpickr.setDate(data.meta.work_completed, true);
+                            $("#id_work_completed").get(0)._flatpickr.setDate(moment(data.meta.work_completed, [siteConfig.MOMENT_DATETIME_FMT, "DD MMM YYYY HH:mm:ss", "D MMM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DD HH:mm:ss", moment.ISO_8601]).toDate(), true);
                         else
                             $("#id_work_completed").val(data.meta.work_completed);
                     }
