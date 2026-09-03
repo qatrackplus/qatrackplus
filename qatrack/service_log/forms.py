@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_duration
 from django.utils.encoding import force_str
+from django.utils.formats import get_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -679,8 +680,9 @@ class ServiceEventForm(BetterModelForm):
 
         for f in ['datetime_service']:
             self.fields[f].widget.attrs['class'] = 'daterangepicker-input'
-            self.fields[f].widget.format = settings.DATETIME_INPUT_FORMATS[0]
-            self.fields[f].input_formats = settings.DATETIME_INPUT_FORMATS
+            datetime_input_formats = get_format("DATETIME_INPUT_FORMATS")
+            self.fields[f].widget.format = datetime_input_formats[0]
+            self.fields[f].input_formats = datetime_input_formats
             self.fields[f].widget.attrs['title'] = settings.DATETIME_HELP
             # self.fields[f].help_text = settings.DATETIME_HELP
 

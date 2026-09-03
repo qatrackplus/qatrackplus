@@ -48,11 +48,12 @@ def last_month_dates(dt=None):
     return month_start_and_end(year, month)
 
 
-def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
+def format_datetime(dt, fmt=None):
     """Take a date time and return as string formatted date time after converting to localtime"""
 
     if not dt:
         return ""
+    fmt = fmt or get_format("DATETIME_INPUT_FORMATS")[0]
 
     if isinstance(dt, timezone.datetime) and timezone.is_aware(dt):
         dt = timezone.localtime(dt)
@@ -60,12 +61,14 @@ def format_datetime(dt, fmt=settings.DATETIME_INPUT_FORMATS[0]):
     return dt.strftime(fmt)
 
 
-def format_as_date(dt, fmt=settings.DATE_INPUT_FORMATS[0]):
+def format_as_date(dt, fmt=None):
     """Take a date time and return as string formatted date after converting to localtime"""
+    fmt = fmt or get_format("DATE_INPUT_FORMATS")[0]
     return format_datetime(dt, fmt=fmt)
 
 
-def format_as_time(dt, fmt=settings.TIME_INPUT_FORMATS[0]):
+def format_as_time(dt, fmt=None):
+    fmt = fmt or get_format("TIME_INPUT_FORMATS")[0]
     return format_datetime(dt, fmt=fmt)
 
 
