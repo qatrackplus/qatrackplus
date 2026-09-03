@@ -73,7 +73,11 @@ class TestLocalizedDateFormats(TestCase):
 
     def test_js_format_falls_back_to_english_for_missing_locale_formats(self):
         with override("de"):
-            assert get_js_format("FLATPICKR_DATETIME_FMT") == "d M Y H:i"
+            assert get_js_format("FLATPICKR_DATETIME_FMT") == "Y-m-d H:i"
+
+    def test_english_default_datetime_format_is_unambiguous(self):
+        with override("en"):
+            assert get_js_format("FLATPICKR_DATETIME_FMT") == "Y-m-d H:i"
 
     def test_work_started_widget_uses_primary_datetime_input_format(self):
         form = forms.BaseTestListInstanceForm()
