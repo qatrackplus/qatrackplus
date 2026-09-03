@@ -100,7 +100,7 @@ DATETIME_FORMAT = "j M Y H:i"
 DATE_FORMAT = "j M Y"
 TIME_FORMAT = "H:i"
 
-DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
+DATETIME_HELP = "Format YYYY-MM-DD HH:MM (24h time, e.g. 2012-05-31 14:30)"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
