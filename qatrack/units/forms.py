@@ -4,6 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.utils.formats import get_format
 from django.utils import timezone
 from django.utils.timezone import timedelta
 from django.utils.translation import gettext as _
@@ -86,7 +87,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
         for f in self.fields:
             if f == 'date_changed':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
-                self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
+                self.fields[f].input_formats = get_format("DATE_INPUT_FORMATS")
             elif f in ['year_select', 'month_select']:
                 self.fields[f].widget.attrs['class'] = 'form-control'
             else:
@@ -123,7 +124,7 @@ class UnitAvailableTimeEditForm(forms.ModelForm):
         for f in self.fields:
             if f == 'date':
                 self.fields[f].widget.attrs['class'] = 'form-control vDateField'
-                self.fields[f].input_formats = settings.DATE_INPUT_FORMATS
+                self.fields[f].input_formats = get_format("DATE_INPUT_FORMATS")
             elif f == 'hours':
                 self.fields[f].widget.attrs['class'] = 'form-control duration'
             elif f == 'units':
