@@ -9,6 +9,7 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.utils.formats import get_format
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
@@ -364,9 +365,9 @@ class BaseTestListInstanceForm(forms.ModelForm):
 
         for field in ('work_completed', 'work_started'):
             self.fields[field].widget = forms.widgets.DateTimeInput()
-
-            self.fields[field].widget.format = settings.DATETIME_INPUT_FORMATS[2]
-            self.fields[field].input_formats = settings.DATETIME_INPUT_FORMATS
+            datetime_input_formats = get_format("DATETIME_INPUT_FORMATS")
+            self.fields[field].widget.format = datetime_input_formats[0]
+            self.fields[field].input_formats = datetime_input_formats
             self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
             self.fields[field].widget.attrs['class'] = 'form-control'
             self.fields[field].help_text = settings.DATETIME_HELP

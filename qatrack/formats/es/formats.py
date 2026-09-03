@@ -1,12 +1,10 @@
 DATETIME_FORMAT = "Y-m-d H:i"
 DATE_FORMAT = "Y-m-d"
 TIME_FORMAT = "H:i"
-DATE_INPUT_FORMATS = ["%d %b %Y", "%d/%m/%Y", "%Y-%m-%d"]
+DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
 DATETIME_INPUT_FORMATS = [
     "%d %b %Y %H:%M",
     "%d %b %Y %H:%M:%S",
-    "%d/%m/%Y %H:%M",
-    "%d/%m/%Y %H:%M:%S",
     "%Y-%m-%d %H:%M",
     "%Y-%m-%d %H:%M:%S",
     "%Y-%m-%d %H:%M:%S.%f",
