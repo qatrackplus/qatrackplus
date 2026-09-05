@@ -8,9 +8,9 @@ of technical experience. Some contributors are here for their first open-source
 experience. Some users are posting in their second or third language.
 
 We pledge to make participation in this project and community a welcoming
-experience for everyone, regardless of age, background, disability, ethnicity,
-level of experience, nationality, personal appearance, race, religion, or
-gender identity.
+experience for everyone, regardless of age, disability, ethnicity, gender
+identity and expression, level of experience, nationality, personal
+appearance, race, religion, or sexual orientation.
 
 ## Our Standards
 
@@ -23,7 +23,7 @@ gender identity.
   person.
 - Accept that maintainers have limited time and must prioritise. A slow or
   absent response is not a slight.
-- Keep discussions on-topic and relevant to QATrack+.
+- Keep discussions on-topic and relevant to QATrack+ or Medical Physics QA/QC/QM.
 
 **We will not tolerate:**
 
@@ -52,9 +52,8 @@ Reports are handled confidentially. The maintainer will review the situation
 and respond as promptly as possible. Consequences may range from a private
 reminder to a temporary or permanent ban, depending on the severity.
 
-If your report concerns the maintainer directly, please reach out to another
-long-standing contributor listed in
-[CONTRIBUTORS.txt](CONTRIBUTORS.txt).
+If your report concerns the maintainer directly, please reach out to
+[@nsmela](https://github.com/nsmela) instead.
 
 ## Attribution
 

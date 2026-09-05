@@ -9,11 +9,20 @@ from typo fixes to new features.
 Many people who contribute here have only ever worked on one open-source project,
 and for some this is their first exposure to open source at all. Please assume
 that everyone is acting in good faith and from a desire to help, and extend the
-same patience and respect you'd want in return. Everyone should feel welcome here.
+same patience and respect you'd want in return — including with contributors
+writing in a second language, whose phrasing may read more bluntly than they
+intend. Everyone should feel welcome here. (See the [Code of
+Conduct](CODE_OF_CONDUCT.md) for the full version of this.)
 
 This guide gets you from a clone to a merged pull request with as little
 guesswork as possible. If anything here is unclear or out of date, that itself is
 worth an issue or PR.
+
+If you're using an AI coding tool (Copilot, Claude Code, Cursor, etc.), see
+[AGENTS.md](AGENTS.md)'s **AI policy** section for the project's stance on
+AI-assisted contributions — in short, AI-generated PRs are welcome, but only
+when a human has read, understood, and tested the change. 
+Reviewers and maintainers are held to this same standard. 
 
 ## Ways to contribute
 
@@ -26,8 +35,6 @@ You don't need to write code to help:
   for translation, and localization is an active area of work.
 - **Answer questions** and share your experience in
   [GitHub Discussions](https://github.com/qatrackplus/qatrackplus/discussions).
-- **Share known issues and solutions** in the
-  [Common Issues & Solutions](docs/common_issues/) documentation section.
 
 If you want to contribute code, read on.
 
@@ -44,7 +51,7 @@ community guides. For anything not covered by those channels, email
 
 1. Check the [existing issues](https://github.com/qatrackplus/qatrackplus/issues)
    first — your bug may already be reported.
-2. Open a new issue and fill in the bug report template. Include:
+2. Open a new issue and include:
    - QATrack+ version (`Admin › About`)
    - Operating system and Python version
    - Steps to reproduce the problem
@@ -53,9 +60,9 @@ community guides. For anything not covered by those channels, email
 
 ## Suggesting features
 
-Open an issue and use the feature request template. Describe the use case you
-need to solve, not just the solution you have in mind. This makes it easier to
-find the right approach together.
+Open an issue describing the use case you need to solve, not just the
+solution you have in mind. This makes it easier to find the right approach
+together.
 
 ## Contributing to the documentation
 
@@ -67,96 +74,90 @@ The documentation lives in `docs/` and is built with
 To build the docs locally:
 
 ```bash
-pip install -r requirements/docs.txt   # or: pip install sphinx
+uv sync --dev   # Sphinx and its extensions are part of the dev group
 cd docs
-make html
+uv run make html
 # open _build/html/index.html in your browser
 ```
-
-### Contributing to the Common Issues & Solutions section
-
-The [Common Issues & Solutions](docs/common_issues/) section collects problems
-that users encounter repeatedly along with their solutions. Community members
-are strongly encouraged to contribute here — you don't need to be a developer.
-
-**To add a new issue/solution:**
-
-1. Fork the repository and create a branch:
-   ```bash
-   git checkout -b docs/my-issue-fix
-   ```
-2. Copy an existing entry from `docs/common_issues/` as a template.
-3. Give your file a short, descriptive name, for example
-   `email_not_sending.rst` or `missing_migrations.rst`.
-4. Follow the format used by other files in that folder:
-   - **Symptom** — what the user sees
-   - **Cause** — why it happens (keep this brief if you're unsure)
-   - **Solution** — step-by-step fix
-   - **See also** — links to related docs, issues, or discussion threads
-5. Add your new file to the `toctree` in `docs/common_issues/index.rst`.
-6. Build the docs locally to confirm there are no warnings.
-7. Open a pull request. The bar for these contributions is intentionally low —
-   accuracy matters, style does not.
 
 ## Contributing code
 
 ### Setting up a development environment
 
 1. **Fork & clone** the repository.
-2. Create a virtual environment and install dependencies:
+2. Install dependencies with [uv](https://docs.astral.sh/uv/) (uv creates and
+   manages the virtual environment for you — pip + a manually-activated venv
+   is only used for production Windows/MS SQL Server deployments that cannot rely on uv):
    ```bash
-   python -m venv venv
-   source venv/bin/activate          # Windows: venv\Scripts\activate
-   pip install -r requirements/dev.txt
+   uv sync --dev
    ```
-3. Copy the example settings and configure your local database:
+3. Install the pre-commit hooks, so lint and correctness checks run automatically
+   on each commit:
+   ```bash
+   uv run pre-commit install
+   ```
+4. Copy the example settings and configure your local database:
    ```bash
    cp qatrack/local_settings.example.py qatrack/local_settings.py
    # edit qatrack/local_settings.py
    ```
-4. Apply migrations and load fixture data:
+5. Apply migrations and load fixture data:
    ```bash
-   python manage.py migrate
-   python manage.py loaddata fixtures/demo_data.json
+   uv run python manage.py migrate
+   uv run python manage.py loaddata fixtures/defaults/*/*.json   
    ```
-5. Start the development server:
+6. Start the development server:
    ```bash
-   python manage.py runserver
+   uv run python manage.py runserver
    ```
 
 ### Coding guidelines
 
-- Follow existing code style. The project uses
-  [flake8](https://flake8.pycqa.org/) for linting and
-  [isort](https://pycqa.github.io/isort/) for import ordering.
-- Write or update tests for every functional change. Tests live alongside the
-  application code in `tests/` subdirectories.
-- Keep commits focused. One logical change per commit makes review easier and
-  history cleaner.
-- Use clear commit messages: start with a short imperative summary
-  (`Fix email notification when recipients list is empty`), then add a blank
-  line and more detail if needed.
+Please attempt your best effort at these guidelines, but don't be afraid if you miss something. You are human, so are we, and it's the maintainers' responsibility to bring your valued contributions to the community as a whole. 
+
 - Aim for **engaging, approachable prose** in comments, docstrings, and
   documentation. QATrack+ is used by clinicians as well as developers — write
   as if you are guiding a knowledgeable colleague, not drafting a specification.
   Explain the *why* alongside the *what*, and favour plain language over
   unnecessary jargon.
+- Follow existing code style. The project uses [ruff](https://docs.astral.sh/ruff/)
+  for linting, formatting, and import ordering:
+  ```bash
+  uv run ruff check .    # lint
+  uv run ruff format .   # auto-format
+  ```
+- Write or update tests for every functional change. Tests live alongside the
+  application code in `tests/` subdirectories. If you feel that your changes require testing you are unsure of how to implement, reach out. We are here to help
+- Keep commits focused. One logical change per commit makes review easier and history cleaner. PRs aggressively squash commits so lean towards being too clear. 
+- Try to use clear commit messages: start with a short imperative summary
+  (`Fix email notification when recipients list is empty`), then add a blank
+  line and more detail if needed.
 
 ### Running the tests
 
 ```bash
-python manage.py test
-# or use the helper script:
-bash runtests.sh
+uv run pytest -m "not selenium"
+```
+
+This excludes the GUI (Selenium/browser) tests, which aren't yet set up to
+run headless. `runtests.sh` and `python manage.py test` use Django's own
+test runner, not pytest, and don't support marker filtering — prefer `pytest`
+directly. See [AGENTS.md](AGENTS.md#running-the-tests) for more detail.
+
+Before opening a PR, it's also worth running the full pre-commit suite
+against the whole codebase, not just your changed files:
+
+```bash
+uv run pre-commit run --all-files
 ```
 
 ### Opening a pull request
 
 1. Push your branch to your fork.
-2. Open a PR against the `Dev` branch (not `master`).
+2. Open a PR against the `develop` branch (not `master`).
 3. Fill in the pull request template completely.
 4. Expect review feedback — don't be discouraged if changes are requested.
-   This is normal and how the project stays healthy.
+   This is normal and how any project stays healthy.
 
 PRs that include tests, documentation updates, and a clear description of *why*
 the change is needed are merged fastest.
