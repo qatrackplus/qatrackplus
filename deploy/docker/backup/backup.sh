@@ -11,7 +11,8 @@ RETENTION_DAYS=7
 echo "Starting backup at $DATE"
 
 # Dump database
-pg_dump -h postgres -U postgres -d qatrackplus -F c -f "$BACKUP_DIR/db_$DATE.dump"
+export PGPASSWORD="$POSTGRES_PASSWORD"
+pg_dump -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F c -f "$BACKUP_DIR/db_$DATE.dump"
 
 # Tar media
 tar -czf "$BACKUP_DIR/media_$DATE.tar.gz" -C / media/
