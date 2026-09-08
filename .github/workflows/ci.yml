@@ -267,6 +267,32 @@ jobs:
             exit 1
           fi
 
+      - name: Verify backup produces a valid dump
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          docker compose -f compose.yaml exec -T backup sh -eu -c '
+            rm -f /backups/db_*.dump /backups/media_*.tar.gz 2>/dev/null || true
+
+            # Run the backup exactly as the nightly cron job does.
+            bash /backup.sh
+
+            dump=$(ls -1t /backups/db_*.dump 2>/dev/null | head -1 || true)
+            [ -n "$dump" ] || { echo "FAIL: no db dump produced"; exit 1; }
+
+            size=$(stat -c %s "$dump")
+            echo "dump=$dump size=$size"
+            [ "$size" -gt 0 ] || { echo "FAIL: db dump is 0 bytes (auth failed)"; exit 1; }
+
+            # Prove it is a real pg_dump archive, not just non-empty.
+            pg_restore --list "$dump" >/dev/null || { echo "FAIL: not a valid archive"; exit 1; }
+
+            # Media archive must also be produced.
+            ls -1 /backups/media_*.tar.gz >/dev/null || { echo "FAIL: media archive missing"; exit 1; }
+
+            echo "PASS: valid db dump + media archive produced"
+          '
+
       - name: Tear Down
         if: always()
         working-directory: deploy/docker
