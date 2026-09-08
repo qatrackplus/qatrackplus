@@ -28,6 +28,7 @@ function listableStatic(Listable, moment){
         bServerSide: false,
         bStateSave: Listable.stateSave,
         iDisplayLength: Listable.displayLength,
+        oLanguage: window.datatablesLanguage || {},
         sCookiePrefix: Listable.cookiePrefix,
         sDom: Listable.DOM,
         sPaginationType: Listable.paginationType
