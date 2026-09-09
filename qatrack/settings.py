@@ -105,6 +105,9 @@ DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en'
+# Duration of the language cookie 
+# TODO: add nice documentation to the local_settings defaults so deployment is clear. 
+LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60 # 1 year
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
