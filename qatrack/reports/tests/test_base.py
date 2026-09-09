@@ -1129,6 +1129,28 @@ class TestReportModels(TestCase):
     def test_savedreport_str(self):
         assert str(self.report) == "#%d. title - Test List Instance Summary - PDF" % self.report.pk
 
+    def test_reportschedule_str(self):
+        schedule = models.ReportSchedule.objects.create(
+            report=self.report,
+            time="00:00",
+            schedule="RRULE:FREQ=DAILY",
+            created_by=self.user,
+            modified_by=self.user,
+        )
+        assert str(schedule) == "#%d. %s @ 00:00" % (schedule.pk, self.report.title)
+
+    def test_reportnote_str(self):
+        note = models.ReportNote.objects.create(
+            report=self.report,
+            heading="Test Heading",
+            content="Test Content",
+        )
+        assert str(note) == "#%d. %s - %s" % (note.pk, self.report.title, note.heading)
+
+    def test_javascript_catalog_url(self):
+        from django.urls import reverse
+        assert reverse("javascript-catalog") == "/jsi18n/"
+
 
 class TestReportTasks(TestCase):
 

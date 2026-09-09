@@ -140,12 +140,10 @@ class ReportNote(models.Model):
         verbose_name_plural = _l("Report Notes")
 
     def __str__(self):
-        return "#%d. %s - %s - %s" % (
-            self.pk,
-            self.report.title,
-            self.schedule.rrule.to_text(),
-            self.time,
-        )
+        report_title = self.report.title if hasattr(self, "report") and self.report else ""
+        if self.pk:
+            return "#%d. %s - %s" % (self.pk, report_title, self.heading)
+        return "%s - %s" % (report_title, self.heading)
 
 
 class ReportSchedule(RecurrenceFieldMixin, models.Model):
@@ -219,12 +217,16 @@ class ReportSchedule(RecurrenceFieldMixin, models.Model):
         verbose_name_plural = _l("Report Schedules")
 
     def __str__(self):
-        return "#%d. %s - %s - %s" % (
-            self.pk,
-            self.report.title,
-            self.schedule.rrule.to_text(),
-            self.time,
-        )
+        if self.time is None:
+            time_str = ""
+        elif hasattr(self.time, "strftime"):
+            time_str = self.time.strftime("%H:%M")
+        else:
+            time_str = str(self.time)[:5]
+        report_title = self.report.title if hasattr(self, "report") and self.report else ""
+        if self.pk:
+            return "#%d. %s @ %s" % (self.pk, report_title, time_str)
+        return "%s @ %s" % (report_title, time_str)
 
     def recipients(self):
         """Gather recipients that are supposed to recieve this report"""

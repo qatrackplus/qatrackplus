@@ -3,8 +3,19 @@
 {% load i18n %}
 
 {% block extra_head %}
+<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 <script type="text/javascript">
-  window.pgettext = function(context, string){ return string;};
+  if (!window.interpolate) {
+    window.interpolate = function(fmt, d, named) {
+      if (named) {
+        return fmt.replace(/%\(\w+\)s/g, function(match) { return String(d[match.slice(2, -2)]) });
+      }
+      return fmt.replace(/%s/g, function(match) { return String(d.shift()) });
+    };
+  }
+  if (!window.pgettext) {
+    window.pgettext = function(context, string) { return string; };
+  }
 </script>
 <script type="text/javascript" src="{% static "recurrence/js/recurrence.js" %}"></script>
 <script type="text/javascript" src="{% static "recurrence/js/recurrence-widget.js" %}"></script>
