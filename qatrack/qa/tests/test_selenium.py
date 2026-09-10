@@ -663,6 +663,7 @@ class TestPerformQC(BaseQATests):
         self.driver.find_element(By.CSS_SELECTOR, ".qa-string .qa-input").send_keys("test")
         self.click_by_css_selector("body")
         self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
+
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
