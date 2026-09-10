@@ -1,14 +1,24 @@
-.git
-.venv
+# Ignore everything that starts with a dot: .env, .git, etc.
+.*
+
 __pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
 env/
 venv/
 ENV/
-.env
 db.sqlite3
 qatrackplus31
 qatrack/local_settings.py
+fixtures
+docs
+logs
+
+# Everything under deploy with exceptions
+deploy/*
+!deploy/docker/
+deploy/docker/*
+!deploy/docker/user-requirements/
+!deploy/docker/user-requirements/**
+
+# media and static files
+qatrack/media/
+qatrack/static/

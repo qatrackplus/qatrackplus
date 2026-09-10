@@ -1,4 +1,7 @@
 services:
   django:
+    environment:
+      DEBUG: "true"
+      DEBUG_TOOLBAR: "true"
     volumes:
-      - ../../.:/usr/src/qatrackplus
+      - ../../.:/app

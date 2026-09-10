@@ -1,0 +1,10 @@
+# Copy this file to requirements.txt to include your own packages in the main
+# qatrack app virtual environment.
+#
+# ** Note that the packages specified must be compatible with qatrack's own 
+# core dependencies. If they are not, the build will fail. **
+#
+# requirements.txt is ignored by Git but included in the Docker build
+# context.
+ 
+my-package==1.0

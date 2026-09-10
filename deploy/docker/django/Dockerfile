@@ -1,50 +1,146 @@
-# Builder stage
-FROM python:3.12-bookworm AS builder
+# syntax=docker/dockerfile:1.9
 
-RUN apt-get update && apt-get install -y \
+# Note:
+# Inspired from https://hynek.me/articles/docker-uv/
+# and https://github.com/astral-sh/uv-docker-example/blob/main/multistage.Dockerfile
+
+ARG BUILDER_BASE_IMAGE="ghcr.io/astral-sh/uv:0.12-python3.12-trixie-slim"
+ARG RUNTIME_BASE_IMAGE="python:3.12-slim-trixie"
+# It is important to use the image that matches the uv builder image below,
+# as the path to the Python executable must be the same, e.g.,
+# using `python:3.11-slim-trixie` will fail if uv:python3.12-trixie-slim is used.
+#
+# If you need to, you can override the base images by setting the
+# BUILDER_BASE_IMAGE and RUNTIME_BASE_IMAGE env vars in the .env file.
+
+# Builder stage
+FROM ${BUILDER_BASE_IMAGE} AS builder
+
+SHELL ["sh", "-exc"]
+
+# - Silence uv complaining about not being able to use hard links.
+# - Tell uv to byte-compile packages for faster application startups.
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+# Omit development dependencies
+ENV UV_NO_DEV=1
+
+# Disable Python downloads, because we want to use the system interpreter
+# across both images. If using a managed Python version, it needs to be
+# copied from the build image into the final image; see `standalone.Dockerfile`
+# for an example.
+ENV UV_PYTHON_DOWNLOADS=0
+
+# Ensure apt-get doesn't open a menu on you.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y &&\
+    apt-get upgrade -y &&\
+    apt-get install -y \
+    -o APT::Install-Recommends=false \
+    -o APT::Install-Suggests=false \
     build-essential \
+    ldap-utils \
+    libldap2-dev \
+    libsasl2-dev \
     libpq-dev \
-    python3-dev \
-    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src/qatrackplus
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Define virtual env directory
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
-COPY pyproject.toml README.md ./
-COPY qatrack ./qatrack
-# Install dependencies
-RUN pip install ".[docker,postgres]" django-extensions
+# Synchronize DEPENDENCIES without the application itself.
+# This layer is cached until uv.lock or pyproject.toml change, which are
+# only temporarily mounted into the build container since we don't need
+# them in the production one.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project --extra docker --extra postgres
 
-# Runtime stage
-FROM python:3.12-slim-bookworm
+# Copy QATrack+ source
+WORKDIR /app
+COPY . .
 
-RUN apt-get update && apt-get install -y \
+# Install QATrack+ itself in editable mode, with the source under /app
+# This layer's cache is busted each time the source of the app changes.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --extra docker --extra postgres
+
+# Install user-specified dependencies, if any.
+# First, we export all core dependencies to a constraint file.
+RUN uv export \
+    --locked \
+    --extra docker \
+    --extra postgres \
+    --format requirements-txt \
+    --output-file /tmp/core-constraints.txt
+
+# Second, we install the user dependencies, if any, respecting the core qatrack
+# dependency version constraints.
+COPY deploy/docker/user-requirements/ /tmp/user-requirements/
+RUN if [ -f /tmp/user-requirements/requirements.txt ]; then \
+    echo "Installing user requirements..." \
+    && /opt/venv/bin/pip install \
+    --constraint /tmp/core-constraints.txt \
+    --requirement /tmp/user-dependencies/requirements.txt; \
+    fi
+
+# Runtime stage without uv installed
+FROM ${RUNTIME_BASE_IMAGE}
+
+# Setup a non-root user
+RUN groupadd --system --gid 1000 qatuser \
+ && useradd --system --gid 1000 --uid 1000 --create-home qatuser
+
+# Ensure apt-get doesn't open a menu on you.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y &&\
+    apt-get upgrade -y &&\
+    apt-get install -y \
+    -o APT::Install-Recommends=false \
+    -o APT::Install-Suggests=false \
     postgresql-client \
-    cifs-utils \
     chromium \
     libpq5 \
     curl \
     dos2unix \
+    libldap2 \
+    libsasl2-2 \
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/venv /opt/venv
+
+# Activate venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-WORKDIR /usr/src/qatrackplus
-# Cache bust 2
-COPY . .
+# Keeps Python from buffering stdout and stderr to avoid situations where
+# the application crashes without emitting any logs due to buffering.
+ENV PYTHONUNBUFFERED=1
 
-# Ensure necessary directories exist
-RUN mkdir -p logs qatrack/media qatrack/static
+WORKDIR /app
 
-# Make entrypoint executable and move it out of the volume mount
-RUN cp deploy/docker/django/entrypoint.sh /entrypoint.sh && \
-    dos2unix /entrypoint.sh && \
-    chmod +x /entrypoint.sh
+# Copy
+COPY --chown=qatuser:qatuser . .
 
+# Move entrypoint to /, change its ownership to root
+COPY --chown=root:root deploy/docker/django/entrypoint.sh /entrypoint.sh
+
+# Ensure necessary directories exist: ./logs, ./qatrack/media and ./qatrack/static
+# Make entrypoint executable
+RUN dos2unix /entrypoint.sh \
+    && chmod 755 /entrypoint.sh \
+    && mkdir -p ./logs \
+                ./qatrack/media \
+                ./qatrack/static \
+                ./deploy/docker/user-data \
+    && chown -R qatuser:qatuser ./logs \
+                                ./qatrack/media \
+                                ./qatrack/static \
+                                ./deploy/docker/user-data
+
+USER qatuser
 
 EXPOSE 8000
+
 CMD ["/entrypoint.sh"]
-# Cache bust 1

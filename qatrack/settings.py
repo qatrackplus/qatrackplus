@@ -6,10 +6,12 @@
 """
 
 import datetime
+import json
 import os
 import pathlib
 import sys
 
+from django.utils.translation import gettext_lazy as _l
 import matplotlib
 
 matplotlib.use("Agg")
@@ -20,7 +22,6 @@ DEBUG_TOOLBAR = False
 
 # Who to email when server errors occur
 ADMINS = (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),)
-MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = False
 
 # -----------------------------------------------------------------------------
@@ -109,7 +110,7 @@ LANGUAGE_CODE = 'en'
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
-# USE_L10N = True # depreciated in Django 4.0+, always on now
+# USE_L10N = True # deprecated in Django 4.0+, always on now
 LANGUAGES = [('en', 'English'), ('fr', 'Français'), ('fr-ca', 'Français (Canada)'), ('es', 'Español')]
 CONSTANT_PRECISION = 8
 DEFAULT_NUMBER_FORMAT = None
@@ -117,7 +118,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # This is the warning message given to the user when a test result is out of tolerance
 # Override this setting in local_settings.py to a locally relevant warning message
-DEFAULT_WARNING_MESSAGE = "Do not treat"
+DEFAULT_WARNING_MESSAGE = _l("Do not treat")
 
 # ----------------------------------------------------------------------------
 # static media settings
@@ -185,7 +186,6 @@ MIDDLEWARE = [
 
 # login required middleware settings
 LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*", r"^i18n/"]
-ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
 
@@ -351,12 +351,17 @@ ACCOUNTS_SELF_REGISTER = False
 ACCOUNTS_CLEAN_USERNAME = None
 ACCOUNTS_PASSWORD_RESET = True
 
-# active directory settings (not required if only using ModelBackend
+# Active Directory settings (not required if only using QATrackAccountBackend)
 AD_DNS_NAME = ''  # e.g. ad.civic1.ottawahospital.on.ca
 
 # If using non-SSL use these
 AD_LDAP_PORT = 389
-AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
+AD_LDAP_PROTOCOL = "ldap"
+
+# If using SSL use these:
+# AD_LDAP_PORT = 636
+# AD_LDAP_PROTOCOL = "ldaps"
+
 AD_LDAP_USER = ''  # only used for WindowsIntegratedAuthenticationBackend
 AD_LDAP_PW = ''  # only used for WindowsIntegratedAuthenticationBackend
 
@@ -365,10 +370,6 @@ AD_LU_MAIL = "mail"
 AD_LU_SURNAME = "sn"
 AD_LU_GIVEN_NAME = "givenName"
 AD_LU_MEMBER_OF = "memberOf"
-
-# If using SSL use these:
-# AD_LDAP_PORT=636
-# AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
 
 AD_SEARCH_DN = ""  # eg "dc=ottawahospital,dc=on,dc=ca"
 AD_NT4_DOMAIN = ""  # Network domain that AD server is part of
@@ -383,9 +384,18 @@ AD_CERT_FILE = ''  # AD_CERT_FILE = '/path/to/your/cert.txt'
 
 CLEAN_USERNAME_STRING = AD_CLEAN_USERNAME_STRING = ''
 
-# define a function called AD_CLEAN_USERNAME in local_settings.py if you
-# wish to clean usernames before sending to ldap server
+# Define a function called AD_CLEAN_USERNAME in local_settings.py if you
+# wish to clean usernames before sending to ldap server.
 AD_CLEAN_USERNAME = None
+
+# For docker deployment, since we can't define a python function for AD_CLEAN_USERNAME,
+# choose one of the predefined cleaning options using the AD_USERNAME_CLEANING setting:
+#   "none"              : no cleaning, just use the username as-is
+#   "lower"             : user username in lower-case characters
+#   "strip_domain"      : strip the domain, keep username after "\\"
+#   "strip_upn"         : keep username before "@"
+#   "lower_strip_domain": combines lower and strip_domain
+#   "lower_strip_upn"   : combines lower and strip_upn
 
 # AD FS settings. For more information and other settings, see
 # https://django-auth-adfs.readthedocs.io/en/latest/settings_ref.html
@@ -587,24 +597,24 @@ REVIEW_BULK = True
 
 # default display settings for test statuses
 TEST_STATUS_DISPLAY = {
-    'fail': "Fail",
-    'not_done': "Not Done",
-    'done': "Done",
-    'ok': "OK",
-    'tolerance': "Tolerance",
-    'action': "Action",
-    'no_tol': "No Tol Set",
+    'fail': _l("Fail"),
+    'not_done': _l("Not Done"),
+    'done': _l("Done"),
+    'ok': _l("OK"),
+    'tolerance': _l("Tolerance"),
+    'action': _l("Action"),
+    'no_tol': _l("No Tol Set"),
 }
 
 # default short display settings for test statuses
 TEST_STATUS_DISPLAY_SHORT = {
-    'fail': "Fail",
-    'not_done': "Not Done",
-    'done': "Done",
-    'ok': "OK",
-    'tolerance': "TOL",
-    'action': "ACT",
-    'no_tol': "NO TOL",
+    'fail': _l("Fail"),
+    'not_done': _l("Not Done"),
+    'done': _l("Done"),
+    'ok': _l("OK"),
+    'tolerance': _l("TOL"),
+    'action': _l("ACT"),
+    'no_tol': _l("NO TOL"),
 }
 
 DEFAULT_COLOURS = [
@@ -627,7 +637,7 @@ DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
 USE_ISSUES = False  # internal development issue tracker
 
-DELETE_REASONS = (('Duplicate', 'Duplicate'), ('Invalid', 'Invalid'))
+DELETE_REASONS = ((_l('Duplicate'), _l('Duplicate')), (_l('Invalid'), _l('Invalid')))
 
 DEFAULT_AVAILABLE_TIMES = {
     'hours_sunday': datetime.timedelta(hours=0, minutes=0),
@@ -650,8 +660,8 @@ COMPOSITE_MAX_LINE_LENGTH = 88
 AUTOSAVE_DAYS_TO_KEEP = 30
 
 MAX_TESTS_PER_TESTLIST = 250
-# SQL Explorer Settings
 
+# SQL Explorer Settings
 USE_SQL_REPORTS = False
 
 EXPLORER_CONNECTIONS = {'Default': 'readonly'}
@@ -661,7 +671,7 @@ EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = ['authtoken', 'sessions_']
 EXPLORER_TASKS_ENABLED = False
 EXPLORER_ASYNC_SCHEMA = False
 EXPLORER_SQL_BLACKLIST = [
-    'ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'ALTER', 'CREATE TABLE',
+    'ALTER', 'RENAME ', 'DROP', 'TRUNCATE', 'INSERT INTO', 'UPDATE', 'REPLACE', 'DELETE', 'CREATE TABLE',
     'SCHEMA', 'GRANT', 'OWNER TO'
 ]  # noqa: E501
 
@@ -672,7 +682,6 @@ def EXPLORER_PERMISSION_CHANGE(request):
 
 def EXPLORER_PERMISSION_VIEW(request):
     return request.user.has_perm("reports.can_run_sql_reports")
-
 
 
 CHROME_PATH = ""
@@ -698,39 +707,274 @@ for path in chrome_paths:
     if os.path.exists(path):
         CHROME_PATH = path
 
+
+def env_bool(value):
+    """Converts an env value to bool."""
+    normalized = value.strip().lower()
+
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+
+    raise ValueError(f"Invalid Boolean environment value: '{value}'")
+
+
+def env_json(value):
+    """Loads an env variable JSON value."""
+    return json.loads(value)
+
+
+def env_csv(value, value_type=str):
+    """Converts a comma-separated list of values to a list."""
+    return [value_type(_.strip()) for _ in value.split(",") if _.strip()]
+
+
+def required_env(name):
+    """
+    Checks that a required env variable is provided  and non-empty.
+    If so, returns the value.
+    
+    Strips whitespace.
+    """
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        raise ValueError(f"Required environment variable is missing, or has empty value: {name}")
+    return value.strip()
+
+
+def override_from_env(setting_name, converter=str):
+    """
+    Override or set a Django setting from an env variable.
+    
+    Strips whitespace.
+    """
+    if setting_name not in os.environ:
+        return
+
+    value = os.environ[setting_name].strip()
+
+    try:
+        converted = converter(value)
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"Invalid value for environment setting {setting_name}"
+        ) from exc
+
+    globals()[setting_name] = converted
+
+
 # ------------------------------------------------------------------------------
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
-
-use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+#
+# If USE_DOCKER is set, all local settings are taken from env variables.
+# If not, the local_settings module is imported.
+use_docker = env_bool(os.getenv('USE_DOCKER', '0'))
 if use_docker:
-    ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+    ALLOWED_HOSTS = env_csv(required_env("ALLOWED_HOSTS"))
 
-    SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
-    try:
-        with open(SECRET_FILEPATH) as f:
-            SECRET_KEY = f.read()
-    except OSError:
-        import secrets
-        SECRET_KEY = secrets.token_urlsafe(64)
-        if not os.path.isdir(os.path.dirname(SECRET_FILEPATH)):
-            os.makedirs(os.path.dirname(SECRET_FILEPATH), exist_ok=True)
-        with open(SECRET_FILEPATH, 'w') as f:
-            f.write(SECRET_KEY)
+    secret_filepath = pathlib.Path(PROJECT_ROOT, "..", "deploy", "docker", "user-data", "secret_key.txt")
+
+    # Allow SECRET_KEY to be specified with env var
+    secret_key_from_env = os.getenv("SECRET_KEY")
+    if secret_key_from_env:
+        SECRET_KEY = secret_key_from_env.strip()
+    else:
+        # If not specified in env var, try to read it from secret_key.txt
+        try:
+            with open(secret_filepath, encoding="utf-8") as f:
+                SECRET_KEY = f.read().strip()
+
+            if not SECRET_KEY:
+                raise ValueError(
+                    f"Secret key file is empty: {secret_filepath}"
+                )
+        except FileNotFoundError:
+            # Fall back to generating it automatically.
+            # It will be persisted in the user-data-volume.
+            import secrets
+            secret_filepath.parent.mkdir(parents=True, exist_ok=True)
+            SECRET_KEY = secrets.token_urlsafe(64)
+            with open(secret_filepath, 'w', encoding="utf-8") as f:
+                f.write(SECRET_KEY)
+            secret_filepath.chmod(0o600)
+
+    # Database settings
+    POSTGRES_DB = required_env("POSTGRES_DB")
+    POSTGRES_USER = required_env("POSTGRES_USER")
+    POSTGRES_PASSWORD = required_env("POSTGRES_PASSWORD")
 
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'qatrackplus'),
-            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-            'HOST': 'postgres',
-            'PORT': 5432
+            'NAME': POSTGRES_DB,
+            'USER': POSTGRES_USER,
+            'PASSWORD': POSTGRES_PASSWORD,
+            'HOST': os.getenv("POSTGRES_HOST", "postgres"),
+            'PORT': int(os.getenv("POSTGRES_PORT", "5432"))
         }
     }
 
+    override_from_env("USE_SQL_REPORTS", converter=env_bool)
     if 'readonly' not in DATABASES and USE_SQL_REPORTS:
         DATABASES['readonly'] = DATABASES['default']
+
+    # Backup settings
+    override_from_env("BACKUP_DIR")
+    override_from_env("BACKUP_WEEKLY_DAY", converter=int)
+    override_from_env("BACKUP_MONTHLY_DAY", converter=int)
+    override_from_env("BACKUP_DAYS_TO_KEEP", converter=int)
+    override_from_env("BACKUP_WEEKS_TO_KEEP", converter=int)
+    override_from_env("BACKUP_MONTHS_TO_KEEP", converter=int)
+
+    # General Django settings
+    override_from_env("ADMINS", converter=env_json)  # JSON format: [["Admin Name", "admin@example.com"]]
+    override_from_env("SEND_BROKEN_LINK_EMAILS", converter=env_bool)
+    override_from_env("SITE_NAME")
+    override_from_env("TIME_ZONE")
+    override_from_env("USE_TZ", converter=env_bool)
+    override_from_env("USE_I18N", converter=env_bool)
+    override_from_env("LANGUAGE_CODE")
+
+    # QATrack settings
+    override_from_env("DEFAULT_WARNING_MESSAGE")
+    override_from_env("ICON_SETTINGS", converter=env_json)  # JSON format: {"SHOW_DUE_ICONS": true, ...}
+    override_from_env("NHIST", converter=int)
+    override_from_env("PING_INTERVAL_S", converter=int)
+    override_from_env("CATEGORY_FIRST_OF_GROUP_ONLY", converter=env_bool)
+    override_from_env("CHOOSE_UNIT_CATEGORY_DROPDOWN", converter=env_bool)
+    override_from_env("ORDER_UNITS_BY")
+    override_from_env("REVIEW_DIFF_COL", converter=env_bool)
+    override_from_env("REVIEW_BULK", converter=env_bool)
+    override_from_env("TEST_STATUS_DISPLAY", converter=env_json)  # JSON format: {"no_tol": "No Tol Set", ...}
+    override_from_env("TEST_STATUS_DISPLAY_SHORT", converter=env_json)  # JSON format: {"no_tol": "NO TOL", ...}
+    DEFAULT_AVAILABLE_TIMES = {
+        'hours_sunday': datetime.timedelta(hours=int(os.getenv("DEFAULT_AVAILABLE_HOURS_SUNDAY") or 0), minutes=0),
+        'hours_monday': datetime.timedelta(hours=int(os.getenv("DEFAULT_AVAILABLE_HOURS_MONDAY") or 8), minutes=0),
+        'hours_tuesday': datetime.timedelta(hours=int(os.getenv("DEFAULT_AVAILABLE_HOURS_TUESDAY") or 8), minutes=0),
+        'hours_wednesday': datetime.timedelta(hours=int(os.getenv("DEFAULT_AVAILABLE_HOURS_WEDNESDAY") or 8), minutes=0),
+        'hours_thursday': datetime.timedelta(hours=int(os.getenv("DEFAULT_AVAILABLE_HOURS_THURSDAY") or 8), minutes=0),
+        'hours_friday': datetime.timedelta(hours=int(os.getenv("DEFAULT_AVAILABLE_HOURS_FRIDAY") or 8), minutes=0),
+        'hours_saturday': datetime.timedelta(hours=int(os.getenv("DEFAULT_AVAILABLE_HOURS_SATURDAY") or 0), minutes=0),
+    }
+
+    # Session settings
+    override_from_env("SESSION_COOKIE_AGE", converter=int)
+    override_from_env("SESSION_SAVE_EVERY_REQUEST", converter=env_bool)
+    override_from_env("SESSION_EXPIRE_AT_BROWSER_CLOSE", converter=env_bool)
+    override_from_env("SESSION_COOKIE_SECURE", converter=env_bool)
+
+    override_from_env("CSRF_TRUSTED_ORIGINS", converter=env_csv)
+    override_from_env("CSRF_COOKIE_NAME")
+    override_from_env("CSRF_COOKIE_SECURE", converter=env_bool)
+
+    override_from_env("USE_X_FORWARDED_HOST", converter=env_bool)  # Already at False by default
+    override_from_env("SECURE_SSL_REDIRECT", converter=env_bool)
+
+    override_from_env("HTTP_OR_HTTPS")  # QATrack setting. Must be 'http' or 'https'
+    if HTTP_OR_HTTPS not in ("http", "https"):
+        raise ValueError("HTTP_OR_HTTPS must be either 'http' or 'https'")
+
+    SECURE_PROXY_SSL_HEADER = None
+    if HTTP_OR_HTTPS == "https":
+        SECURE_PROXY_SSL_HEADER = (
+            "HTTP_X_FORWARDED_PROTO",
+            "https",
+        )
+
+    # Email settings
+    override_from_env("EMAIL_NOTIFICATION_USER")
+    override_from_env("EMAIL_NOTIFICATION_PWD")
+    override_from_env("EMAIL_NOTIFICATION_TEMPLATE")
+    override_from_env("EMAIL_NOTIFICATION_SUBJECT")
+    override_from_env("EMAIL_NOTIFICATION_SUBJECT_TEMPLATE")
+    override_from_env("EMAIL_NOTIFICATION_SENDER")
+    override_from_env("EMAIL_FAIL_SILENTLY", converter=env_bool)
+    override_from_env("EMAIL_HOST")
+    override_from_env("EMAIL_HOST_USER")
+    override_from_env("EMAIL_HOST_PASSWORD")
+    override_from_env("EMAIL_USE_TLS", converter=env_bool)
+    override_from_env("EMAIL_PORT", converter=int)
+
+    # Debug settings
+    override_from_env("DEBUG", converter=env_bool)
+    override_from_env("DEBUG_TOOLBAR", converter=env_bool)
+
+    # Auth
+    override_from_env("AUTHENTICATION_BACKENDS", converter=env_csv)
+
+    override_from_env("ACCOUNTS_SELF_REGISTER", converter=env_bool)
+    override_from_env("ACCOUNTS_PASSWORD_RESET", converter=env_bool)
+    override_from_env("ACCOUNT_ACTIVATION_DAYS", converter=int)
+
+    override_from_env("AD_DNS_NAME")
+    override_from_env("AD_LDAP_PROTOCOL")
+    override_from_env("AD_LDAP_PORT", converter=int)
+
+    override_from_env("AD_LDAP_USER")
+    override_from_env("AD_LDAP_PW")
+    override_from_env("AD_MIRROR_GROUPS", converter=env_bool)
+
+    override_from_env("AD_LU_ACCOUNT_NAME")
+    override_from_env("AD_LU_MAIL")
+    override_from_env("AD_LU_SURNAME")
+    override_from_env("AD_LU_GIVEN_NAME")
+    override_from_env("AD_LU_MEMBER_OF")
+    AD_SEARCH_FIELDS = [
+        AD_LU_MAIL,
+        AD_LU_SURNAME,
+        AD_LU_GIVEN_NAME,
+        AD_LU_ACCOUNT_NAME,
+        AD_LU_MEMBER_OF,
+    ]
+
+    override_from_env("AD_SEARCH_DN")
+    override_from_env("AD_NT4_DOMAIN")
+
+    override_from_env("AD_CERT_FILE")
+
+    override_from_env("CLEAN_USERNAME_STRING")
+    override_from_env("AD_CLEAN_USERNAME_STRING")
+
+    ad_username_cleaning = os.getenv("AD_USERNAME_CLEANING")
+
+    def clean_username(username):
+        """
+        For docker deployment, since we won't pass in python functions
+        with env vars, we define a set of common username cleaning options.
+        """
+        if ad_username_cleaning is None or not ad_username_cleaning:
+            return username
+
+        strategy = ad_username_cleaning.strip().lower()
+
+        if strategy == "none":
+            return username
+
+        if strategy == "lower":
+            return username.lower()
+
+        if strategy == "strip_domain":
+            return username.split("\\")[-1]
+
+        if strategy == "lower_strip_domain":
+            return username.lower().split("\\")[-1]
+
+        if strategy == "strip_upn":
+            return username.split("@")[0]
+
+        if strategy == "lower_strip_upn":
+            return username.lower().split("@")[0]
+
+        raise ValueError(
+            f"Unknown AD_USERNAME_CLEANING strategy: {strategy}"
+        )
+
+    AD_CLEAN_USERNAME = clean_username
+
+    override_from_env("AUTH_ADFS", converter=env_json)  # JSON format: {"SERVER": "some.adfs.server.com", ...}
 else:
     from .local_settings import *  # noqa: F403, F401, E402
 
@@ -758,7 +1002,6 @@ UPLOAD_ROOT_PATH = pathlib.Path(UPLOAD_ROOT)
 TMP_UPLOAD_ROOT_PATH = pathlib.Path(TMP_UPLOAD_ROOT)
 TMP_REPORT_ROOT_PATH = pathlib.Path(TMP_REPORT_ROOT)
 LOG_ROOT_PATH = pathlib.Path(LOG_ROOT)
-TMP_REPORT_ROOT_PATH = pathlib.Path(TMP_REPORT_ROOT)
 
 for d in (MEDIA_ROOT_PATH, UPLOAD_ROOT_PATH, TMP_UPLOAD_ROOT_PATH, LOG_ROOT_PATH, TMP_REPORT_ROOT_PATH):
     if not d.exists() and not d.is_dir():
@@ -769,7 +1012,7 @@ for d in (MEDIA_ROOT_PATH, UPLOAD_ROOT_PATH, TMP_UPLOAD_ROOT_PATH, LOG_ROOT_PATH
 CACHE_LOCATION = os.path.join(PROJECT_ROOT, "cache", "cache_data")
 IS_FILE_CACHE = CACHES['default']['BACKEND'] == 'django.core.cache.backends.filebased.FileBasedCache'
 if IS_FILE_CACHE and not os.path.isdir(CACHE_LOCATION):
-    os.mkdir(CACHE_LOCATION)
+    pathlib.Path(CACHE_LOCATION).mkdir(parents=True, exist_ok=True)
 
 if FORCE_SCRIPT_NAME:
     # Django admin URLs are handled automatically through standard URL routing
@@ -800,13 +1043,26 @@ SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver
 # Set to False to see the browser during test execution
 SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
 
-if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
+if any(('py.test' in v or 'pytest' in v) for v in sys.argv):
     DATABASES.pop('readonly', None)
     from .test_settings import *  # noqa
 
 if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
+# Set MANAGERS after ADMINS has taken on its final value (after local_settings
+# is imported or the use_docker branch is executed).
+MANAGERS = ADMINS
+
+# LDAP URL is composed from previously-defined settings.
+# Set it here, after local_settings is imported or the use_docker branch
+# has been executed if USE_DOCKER is set.
+if AD_LDAP_PROTOCOL not in ("ldap", "ldaps"):
+    raise ValueError(
+        f"Invalid LDAP protocol: {AD_LDAP_PROTOCOL}, must be one of 'ldap', 'ldaps'"
+    )
+AD_LDAP_URL = '%s://%s:%s' % (AD_LDAP_PROTOCOL, AD_DNS_NAME, AD_LDAP_PORT)
 
 USE_ADFS = (
     'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS or

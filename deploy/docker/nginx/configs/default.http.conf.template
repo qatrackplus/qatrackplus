@@ -1,0 +1,9 @@
+# configs/default.http.conf.template
+server {
+    listen 80 default_server;
+    server_name ${NGINX_SERVER_NAME};
+    client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};
+    charset utf-8;
+
+    include /etc/nginx/snippets/qatrackplus-locations.conf;
+}

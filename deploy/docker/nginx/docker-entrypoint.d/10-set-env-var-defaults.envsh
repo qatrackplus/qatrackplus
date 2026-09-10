@@ -1,0 +1,9 @@
+#!/bin/sh
+#/docker-entrypoint.d/10-set-env-var-defaults.envsh
+
+# This file, because it has the extension .envsh, will be sourced,
+# and the env vars exported here will be accessible in later scripts
+# found in docker-entrypoint.d.
+
+export NGINX_SERVER_NAME="${NGINX_SERVER_NAME:-_}"
+export NGINX_CLIENT_MAX_BODY_SIZE="${NGINX_CLIENT_MAX_BODY_SIZE:-100m}"
