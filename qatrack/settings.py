@@ -22,6 +22,7 @@ DEBUG_TOOLBAR = False
 
 # Who to email when server errors occur
 ADMINS = (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),)
+
 SEND_BROKEN_LINK_EMAILS = False
 
 # -----------------------------------------------------------------------------
@@ -106,6 +107,9 @@ DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en'
+# Duration of the language cookie 
+# TODO: add nice documentation to the local_settings defaults so deployment is clear. 
+LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60 # 1 year
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -867,6 +871,14 @@ if use_docker:
     override_from_env("SESSION_COOKIE_SECURE", converter=env_bool)
 
     override_from_env("CSRF_TRUSTED_ORIGINS", converter=env_csv)
+    if not CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = [
+            scheme + host
+            for host in ALLOWED_HOSTS
+            for scheme in ('http://', 'https://')
+            if host != '*'
+        ]
+
     override_from_env("CSRF_COOKIE_NAME")
     override_from_env("CSRF_COOKIE_SECURE", converter=env_bool)
 

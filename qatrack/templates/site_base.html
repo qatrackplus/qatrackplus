@@ -122,6 +122,27 @@
             NO_DESCRIPTION_AVAILABLE: "{% trans 'No description available' %}"
         };
 
+        // DataTables language configuration (bundled DataTables is 1.9.x, which uses
+        // the "Hungarian" oLanguage keys). Provided globally so every listable table
+        // picks up translated strings via the Listable.language bridge below.
+        window.datatablesLanguage = {
+            sProcessing: "{% trans 'Processing...' %}",
+            sLengthMenu: "{% trans '_MENU_ entries per page' %}",
+            sZeroRecords: "{% trans 'No data available in table' %}",
+            sEmptyTable: "{% trans 'No data available in table' %}",
+            sInfo: "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+            sInfoEmpty: "{% trans 'Showing 0 to 0 of 0 entries' %}",
+            sInfoFiltered: "{% trans '(filtered from _MAX_ total entries)' %}",
+            sSearch: "{% trans 'Search:' %}",
+            sLoadingRecords: "{% trans 'Loading...' %}",
+            oPaginate: {
+                sFirst: "{% trans 'First' %}",
+                sPrevious: "{% trans 'Previous' %}",
+                sNext: "{% trans 'Next' %}",
+                sLast: "{% trans 'Last' %}"
+            }
+        };
+
         var ICON_SETTINGS = {{ICON_SETTINGS_JSON|safe}};
 
         var TEST_STATUS_SHORT = {{TEST_STATUS_SHORT_JSON|safe}};
@@ -136,6 +157,16 @@
         });
     </script>
     {% block extra_js %}{% endblock extra_js %}
+
+    <script type="text/javascript">
+        // The listable/DataTables config object (Listable) is emitted synchronously by the
+        // {% templatetag openblock %} listable {% templatetag closeblock %} tag in the block
+        // above, while require(['listable']) runs later from an async callback. Copy the
+        // translated language strings onto it here so the table initializes localized.
+        if (typeof Listable !== "undefined" && window.datatablesLanguage) {
+            Listable.language = window.datatablesLanguage;
+        }
+    </script>
 
     {# some packages use extra_head some use head_extra :p #}
     {% block extra_head %}{% endblock extra_head %}
