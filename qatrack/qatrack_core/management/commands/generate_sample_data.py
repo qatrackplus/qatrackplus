@@ -9,13 +9,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--size",
-            type=str,
-            default="small",
-            choices=["small", "medium", "large"],
-            help="Size and profile of the radiation oncology center to generate (default: small).",
-        )
-        parser.add_argument(
             "--days",
             type=int,
             default=90,
@@ -33,20 +26,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        size = options["size"]
         days = options["days"]
         clear = options["clear"]
         no_input = options["no_input"]
 
-        generators = {
-            "small": SmallCenterGenerator,
-        }
+        if days < 0:
+            raise CommandError(f"--days must be zero or greater (got {days}).")
 
-        if size not in generators:
-            raise CommandError(f"Center size '{size}' is not implemented yet. Available sizes: {', '.join(generators.keys())}")
-
-        generator_class = generators[size]
-        generator = generator_class(days=days, stdout=self.stdout, stderr=self.stderr)
+        generator = SmallCenterGenerator(days=days, stdout=self.stdout, stderr=self.stderr)
 
         if clear:
             if not no_input:
@@ -57,6 +44,6 @@ class Command(BaseCommand):
 
             generator.clear_database()
 
-        self.stdout.write(self.style.MIGRATE_HEADING(f"Generating '{size}' center with {days} days of history..."))
+        self.stdout.write(self.style.MIGRATE_HEADING(f"Generating sample data with {days} days of history..."))
         generator.generate()
-        self.stdout.write(self.style.SUCCESS(f"Successfully generated sample data for '{size}' center!"))
+        self.stdout.write(self.style.SUCCESS("Successfully generated sample data!"))

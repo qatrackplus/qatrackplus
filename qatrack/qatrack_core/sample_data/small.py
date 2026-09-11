@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.db.models import Max
 from django_comments.models import Comment
 
 from qatrack.faults.models import Fault, FaultType
@@ -200,12 +201,12 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         )
 
         # Units
-        self.unit_tb1, _ = Unit.objects.get_or_create(
+        self.unit_tb1 = self._get_or_create_unit(
             name="TB-1 (TrueBeam)",
+            number=1,
             defaults={
                 "type": ut_truebeam,
                 "site": self.clinical_site,
-                "number": 1,
                 "serial_number": "TB-4521",
                 "location": "Vault 1",
                 "install_date": (self.now - timedelta(days=365*3)).date(),
@@ -220,12 +221,12 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             self.modalities["OBI"], self.modalities["PortalVision"], self.modalities["CBCT"]
         ])
 
-        self.unit_versa, _ = Unit.objects.get_or_create(
+        self.unit_versa = self._get_or_create_unit(
             name="Versa-HD",
+            number=2,
             defaults={
                 "type": ut_versa,
                 "site": self.clinical_site,
-                "number": 2,
                 "serial_number": "V-154082",
                 "location": "Vault 2",
                 "install_date": (self.now - timedelta(days=365*2)).date(),
@@ -240,12 +241,12 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             self.modalities["XVI"], self.modalities["iViewGT"]
         ])
 
-        self.unit_ct, _ = Unit.objects.get_or_create(
+        self.unit_ct = self._get_or_create_unit(
             name="CT-Sim (SOMATOM)",
+            number=3,
             defaults={
                 "type": ut_somatom,
                 "site": self.clinical_site,
-                "number": 3,
                 "serial_number": "CT-99120",
                 "location": "CT Room 1",
                 "install_date": (self.now - timedelta(days=365*4)).date(),
@@ -273,6 +274,22 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                     "hours_saturday": timedelta(0),
                 }
             )
+
+    def _get_or_create_unit(self, name, number, defaults):
+        """Fetch or create a sample Unit.
+
+        Unit.number is unique, so when the requested number is already taken by
+        a pre-existing unit (i.e. the command was run without --clear) fall back
+        to the next free number rather than raising an IntegrityError.
+        """
+        unit = Unit.objects.filter(name=name).first()
+        if unit:
+            return unit
+
+        if Unit.objects.filter(number=number).exists():
+            number = (Unit.objects.aggregate(Max("number"))["number__max"] or 0) + 1
+
+        return Unit.objects.create(name=name, number=number, **defaults)
 
     def create_qa_protocols(self):
         self.log("Configuring QA Categories, Tolerances, Tests, and Test Lists...", lambda s: s)
@@ -317,7 +334,10 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         # Frequencies
         self.freq_daily = Frequency.objects.get(slug="daily")
         self.freq_monthly = Frequency.objects.get(slug="monthly")
-        self.freq_adhoc = Frequency.objects.filter(slug="ad-hoc").first() or Frequency.objects.filter(nominal_interval=0).first()
+        # Ad-hoc QC is represented by a null frequency in QATrack+. Return to
+        # service test lists must not be scheduled, so never fall back to a
+        # real frequency here.
+        self.freq_adhoc = Frequency.objects.filter(slug="ad-hoc").first()
 
         # Helper for creating tests
         def create_test(name, slug, category, test_type=SIMPLE, calc_proc=None, formatting="", display_name=""):
@@ -465,7 +485,7 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 object_id=test_list.id,
                 defaults={
                     "assigned_to": assigned_to_group,
-                    "auto_schedule": True,
+                    "auto_schedule": freq is not None,
                     "active": True,
                 }
             )
