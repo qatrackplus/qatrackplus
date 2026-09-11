@@ -1,4 +1,4 @@
-# configs/default.https.conf.template
+# configs/https.conf.template
 server {
     listen 80 default_server;
     server_name _;
@@ -22,5 +22,5 @@ server {
     ssl_certificate /etc/nginx/ssl/${NGINX_SSL_CERTIFICATE_FILE};
     ssl_certificate_key /etc/nginx/ssl/${NGINX_SSL_CERTIFICATE_KEY_FILE};
 
-    include /etc/nginx/snippets/qatrackplus-locations.conf;
+    include /etc/nginx/snippets/${NGINX_LOCATIONS_FILE};
 }

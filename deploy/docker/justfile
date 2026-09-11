@@ -1,0 +1,20 @@
+# Load variables set in ./.envs/.versions file
+set dotenv-path := ".env"
+
+set shell := ["bash", "-uc"]
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+
+# Run docker
+docker *args:
+    @docker {{args}}
+
+# Run docker compose.
+# Whether to use the compose.override.yaml file is decided by setting or
+# unsetting the QATDEV env variable in the .env file.
+[linux]
+docker-compose *args:
+    @if [ -v QATDEV ]; then docker compose {{args}}; else docker compose -f compose.yaml {{args}}; fi
+
+[windows]
+docker-compose *args:
+    @if ($env:QATDEV) { docker compose {{args}} } else { docker compose -f compose.yaml {{args}} }
