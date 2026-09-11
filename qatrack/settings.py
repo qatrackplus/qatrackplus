@@ -109,7 +109,7 @@ DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14
 LANGUAGE_CODE = 'en'
 # Duration of the language cookie 
 # TODO: add nice documentation to the local_settings defaults so deployment is clear. 
-LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60 # 1 year
+LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60  # 1 year
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -767,6 +767,7 @@ def override_from_env(setting_name, converter=str):
         ) from exc
 
     globals()[setting_name] = converted
+    return converted
 
 
 # ------------------------------------------------------------------------------
@@ -779,7 +780,7 @@ use_docker = env_bool(os.getenv('USE_DOCKER', '0'))
 if use_docker:
     ALLOWED_HOSTS = env_csv(required_env("ALLOWED_HOSTS"))
 
-    secret_filepath = pathlib.Path(PROJECT_ROOT, "..", "deploy", "docker", "user-data", "secret_key.txt")
+    secret_filepath = pathlib.Path(PROJECT_ROOT, "secrets", "secret_key.txt")
 
     # Allow SECRET_KEY to be specified with env var
     secret_key_from_env = os.getenv("SECRET_KEY")
@@ -825,14 +826,6 @@ if use_docker:
     if 'readonly' not in DATABASES and USE_SQL_REPORTS:
         DATABASES['readonly'] = DATABASES['default']
 
-    # Backup settings
-    override_from_env("BACKUP_DIR")
-    override_from_env("BACKUP_WEEKLY_DAY", converter=int)
-    override_from_env("BACKUP_MONTHLY_DAY", converter=int)
-    override_from_env("BACKUP_DAYS_TO_KEEP", converter=int)
-    override_from_env("BACKUP_WEEKS_TO_KEEP", converter=int)
-    override_from_env("BACKUP_MONTHS_TO_KEEP", converter=int)
-
     # General Django settings
     override_from_env("ADMINS", converter=env_json)  # JSON format: [["Admin Name", "admin@example.com"]]
     override_from_env("SEND_BROKEN_LINK_EMAILS", converter=env_bool)
@@ -841,6 +834,8 @@ if use_docker:
     override_from_env("USE_TZ", converter=env_bool)
     override_from_env("USE_I18N", converter=env_bool)
     override_from_env("LANGUAGE_CODE")
+    override_from_env("MEDIA_ROOT")
+    override_from_env("STATIC_ROOT")
 
     # QATrack settings
     override_from_env("DEFAULT_WARNING_MESSAGE")
@@ -870,7 +865,7 @@ if use_docker:
     override_from_env("SESSION_EXPIRE_AT_BROWSER_CLOSE", converter=env_bool)
     override_from_env("SESSION_COOKIE_SECURE", converter=env_bool)
 
-    override_from_env("CSRF_TRUSTED_ORIGINS", converter=env_csv)
+    CSRF_TRUSTED_ORIGINS = override_from_env("CSRF_TRUSTED_ORIGINS", converter=env_csv)
     if not CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS = [
             scheme + host

@@ -29,5 +29,12 @@ python manage.py migrate --noinput
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Starting Gunicorn..."
-exec gunicorn qatrack.wsgi:application -w 2 -b 0.0.0.0:8000
+echo "Starting application..."
+
+if [ "${DEBUG:-false}" = "true" ]; then
+  echo "Development mode, starting Django development server"
+  exec python manage.py runserver 0.0.0.0:8000
+else
+  echo "Production mode, starting Gunicorn..."
+  exec gunicorn qatrack.wsgi:application -w 2 -b 0.0.0.0:8000
+fi

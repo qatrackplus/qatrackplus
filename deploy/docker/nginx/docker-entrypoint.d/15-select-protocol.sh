@@ -7,28 +7,28 @@ set -eu
 
 # If https is selected, it will verify if the certificate files are readable.
 
-certificate_file="${NGINX_SSL_CERTIFICATE_FILE:-}"
-private_key_file="${NGINX_SSL_CERTIFICATE_KEY_FILE:-}"
-
-if [ -z "$certificate_file" ]; then
-    echo "NGINX_SSL_CERTIFICATE_FILE is required in HTTPS mode" >&2
-    exit 1
-fi
-
-if [ -z "$private_key_file" ]; then
-    echo "NGINX_SSL_CERTIFICATE_KEY_FILE is required in HTTPS mode" >&2
-    exit 1
-fi
-
 protocol="${HTTP_OR_HTTPS:-http}"
 
 case "$protocol" in
     http)
-        source_file="/etc/nginx/configs/default.http.conf.template"
+        source_file="/etc/nginx/configs/http.conf.template"
         ;;
 
     https)
-        source_file="/etc/nginx/configs/default.https.conf.template"
+        source_file="/etc/nginx/configs/https.conf.template"
+
+        certificate_file="${NGINX_SSL_CERTIFICATE_FILE:-}"
+        private_key_file="${NGINX_SSL_CERTIFICATE_KEY_FILE:-}"
+
+        if [ -z "$certificate_file" ]; then
+            echo "NGINX_SSL_CERTIFICATE_FILE is required in HTTPS mode" >&2
+            exit 1
+        fi
+
+        if [ -z "$private_key_file" ]; then
+            echo "NGINX_SSL_CERTIFICATE_KEY_FILE is required in HTTPS mode" >&2
+            exit 1
+        fi
 
         certificate="/etc/nginx/ssl/$certificate_file"
         private_key="/etc/nginx/ssl/$private_key_file"
@@ -52,4 +52,5 @@ esac
 
 echo "Selecting nginx configuration for $protocol"
 echo "Will copy $source_file to /etc/nginx/templates/default.conf.template"
+mkdir -p /etc/nginx/templates
 cp "$source_file" /etc/nginx/templates/default.conf.template

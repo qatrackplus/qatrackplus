@@ -18,12 +18,13 @@ FROM ${BUILDER_BASE_IMAGE} AS builder
 
 SHELL ["sh", "-exc"]
 
+# By default, omit development dependencies
+ARG UV_NO_DEV=1
+ENV UV_NO_DEV=${UV_NO_DEV}
+
 # - Silence uv complaining about not being able to use hard links.
 # - Tell uv to byte-compile packages for faster application startups.
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
-
-# Omit development dependencies
-ENV UV_NO_DEV=1
 
 # Disable Python downloads, because we want to use the system interpreter
 # across both images. If using a managed Python version, it needs to be
@@ -33,7 +34,8 @@ ENV UV_PYTHON_DOWNLOADS=0
 
 # Ensure apt-get doesn't open a menu on you.
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -y &&\
+RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
+    apt-get update -y &&\
     apt-get upgrade -y &&\
     apt-get install -y \
     -o APT::Install-Recommends=false \
@@ -48,7 +50,13 @@ RUN apt-get update -y &&\
 # Define virtual env directory
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
-# Synchronize DEPENDENCIES without the application itself.
+# Make sure the created venv includes pip.
+# We later use pip to install user requirements.
+# Some user requirements might not be packaged as wheels -- thus uv pip might not
+# be able to install them.
+RUN uv venv --seed ${UV_PROJECT_ENVIRONMENT}
+
+# Synchronize dependencies without the application itself.
 # This layer is cached until uv.lock or pyproject.toml change, which are
 # only temporarily mounted into the build container since we don't need
 # them in the production one.
@@ -70,15 +78,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # First, we export all core dependencies to a constraint file.
 RUN uv export \
     --locked \
+    --no-emit-project \
     --extra docker \
     --extra postgres \
     --format requirements-txt \
     --output-file /tmp/core-constraints.txt
 
-# Second, we install the user dependencies, if any, respecting the core qatrack
-# dependency version constraints.
-COPY deploy/docker/user-requirements/ /tmp/user-requirements/
-RUN if [ -f /tmp/user-requirements/requirements.txt ]; then \
+# Second, we install the user dependencies using pip, if any, respecting the
+# core qatrack dependency version constraints.
+COPY ./deploy/docker/user-requirements/ /tmp/user-requirements/
+RUN if [ -s /tmp/user-requirements/requirements.txt ]; then \
     echo "Installing user requirements..." \
     && /opt/venv/bin/pip install \
     --constraint /tmp/core-constraints.txt \
@@ -88,13 +97,17 @@ RUN if [ -f /tmp/user-requirements/requirements.txt ]; then \
 # Runtime stage without uv installed
 FROM ${RUNTIME_BASE_IMAGE}
 
+ARG HOST_UID=999
+ARG HOST_GID=999
+
 # Setup a non-root user
-RUN groupadd --system --gid 1000 qatuser \
- && useradd --system --gid 1000 --uid 1000 --create-home qatuser
+RUN groupadd --system --gid ${HOST_GID} qatuser \
+ && useradd --system --gid ${HOST_GID} --uid ${HOST_UID} --create-home qatuser
 
 # Ensure apt-get doesn't open a menu on you.
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -y &&\
+RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
+    apt-get update -y &&\
     apt-get upgrade -y &&\
     apt-get install -y \
     -o APT::Install-Recommends=false \
@@ -118,25 +131,30 @@ ENV PATH="/opt/venv/bin:$PATH"
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
+# Set MPLCONFIGDIR to stop matplotlib from complaining
+ENV MPLCONFIGDIR=/home/qatuser/.config/matplotlib
+
 WORKDIR /app
 
 # Copy
 COPY --chown=qatuser:qatuser . .
 
 # Move entrypoint to /, change its ownership to root
-COPY --chown=root:root deploy/docker/django/entrypoint.sh /entrypoint.sh
+COPY --chown=root:root ./deploy/docker/django/entrypoint.sh /entrypoint.sh
 
 # Ensure necessary directories exist: ./logs, ./qatrack/media and ./qatrack/static
 # Make entrypoint executable
 RUN dos2unix /entrypoint.sh \
     && chmod 755 /entrypoint.sh \
-    && mkdir -p ./logs \
-                ./qatrack/media \
-                ./qatrack/static \
+    && mkdir -p /home/qatuser/.config/matplotlib \
+                ./logs \
+                /app_data/media \
+                /app_data/static \
                 ./deploy/docker/user-data \
-    && chown -R qatuser:qatuser ./logs \
-                                ./qatrack/media \
-                                ./qatrack/static \
+    && chown -R qatuser:qatuser /home/qatuser/.config/matplotlib \
+                                ./logs \
+                                /app_data/media \
+                                /app_data/static \
                                 ./deploy/docker/user-data
 
 USER qatuser

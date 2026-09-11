@@ -8,16 +8,14 @@ ENV/
 db.sqlite3
 qatrackplus31
 qatrack/local_settings.py
-fixtures
-docs
-logs
+fixtures/
+docs/
+logs/
 
 # Everything under deploy with exceptions
 deploy/*
 !deploy/docker/
-deploy/docker/*
-!deploy/docker/user-requirements/
-!deploy/docker/user-requirements/**
+deploy/docker/.env
 
 # media and static files
 qatrack/media/

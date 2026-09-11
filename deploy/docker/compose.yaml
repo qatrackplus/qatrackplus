@@ -12,8 +12,8 @@ services:
       django:
         condition: service_healthy
     volumes:
-      - ${MEDIA_DIR:-media-volume}:/app/qatrack/media:ro
-      - static-volume:/app/qatrack/static:ro
+      - ${MEDIA_DIR:-media-volume}:/app_data/media:ro,z
+      - static-volume:/app_data/static:ro,z
       - ${SSL_DIR:-./user-data/ssl}:/etc/nginx/ssl:ro  # To customize SSL location, set SSL_DIR, else the default ./user-data/ssl will be used.
 
   django:
@@ -28,19 +28,21 @@ services:
     env_file: .env
     environment:
       USE_DOCKER: "true"
+      MEDIA_ROOT: "/app_data/media"
+      STATIC_ROOT: "/app_data/static"
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - ${MEDIA_DIR:-media-volume}:/app/qatrack/media
-      - static-volume:/app/qatrack/static
+      - ${MEDIA_DIR:-media-volume}:/app_data/media:z
+      - static-volume:/app_data/static:z
       - ${USER_DATA_DIR:-user-data-volume}:/app/deploy/docker/user-data
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   django-q:
     image: qatrackplus-django
@@ -57,7 +59,7 @@ services:
       django:
         condition: service_healthy
     volumes:
-    - ${MEDIA_DIR:-media-volume}:/app/qatrack/media
+    - ${MEDIA_DIR:-media-volume}:/app_data/media:z
 
   postgres:
     image: postgres:15-alpine
@@ -83,7 +85,7 @@ services:
         condition: service_healthy
     volumes:
       - ${BACKUPS_DIR:-backups-volume}:/backups
-      - ${MEDIA_DIR:-media-volume}:/media:ro
+      - ${MEDIA_DIR:-media-volume}:/app_data/media:ro,z
 
 volumes:
   postgres-volume: # Persists database in a docker volume. To use a bind mount instead, set POSTGRES_DATA_DIR.
