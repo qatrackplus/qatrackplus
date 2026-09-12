@@ -41,6 +41,8 @@ Technical Improvements
 * Reduced package complexity by removing an unnecessary external dependency from the stack.
 * Improved consistency of installation and upgrade command sequences.
 * Updated time handling to use timezone-aware datetimes throughout the codebase.
+* Added a `generate_sample_data` management command for development and testing. It fills a database with a small radiation oncology centre: two linacs and a CT simulator, TG-142 style daily and monthly QA protocols with references and tolerances, rolling QA history including an unreviewed backlog, service events with return to service QA, faults, a parts inventory, and saved reports with schedules. Re-running it extends the data rather than duplicating it, and the `--clear` option (which empties those tables for the whole database) asks for confirmation first. See the developers guide for the command's options and the sample logins.
+* The development local settings template now enables `DEBUG` and sets `ALLOWED_HOSTS` for local addresses, and default fixture loading no longer depends on the current working directory.
 
 Bug Fixes
 ^^^^^^^^^
