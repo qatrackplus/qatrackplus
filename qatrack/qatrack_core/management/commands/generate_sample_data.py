@@ -1,5 +1,6 @@
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from qatrack.qatrack_core.sample_data import SmallCenterGenerator
 
@@ -35,15 +36,19 @@ class Command(BaseCommand):
 
         generator = SmallCenterGenerator(days=days, stdout=self.stdout, stderr=self.stderr)
 
-        if clear:
-            if not no_input:
-                confirm = input("This will DELETE existing units, QA records, service events, faults, parts, and reports. Continue? [y/N]: ")
-                if confirm.lower() != "y":
-                    self.stdout.write(self.style.WARNING("Aborted by user."))
-                    return
+        if clear and not no_input:
+            confirm = input("This will DELETE existing units, QA records, service events, faults, parts, and reports. Continue? [y/N]: ")
+            if confirm.lower() != "y":
+                self.stdout.write(self.style.WARNING("Aborted by user."))
+                return
 
-            generator.clear_database()
+        # Clearing and generating share a transaction: a failure part way
+        # through generation must not leave the database wiped.
+        with transaction.atomic():
+            if clear:
+                generator.clear_database()
 
-        self.stdout.write(self.style.MIGRATE_HEADING(f"Generating sample data with {days} days of history..."))
-        generator.generate()
+            self.stdout.write(self.style.MIGRATE_HEADING(f"Generating sample data with {days} days of history..."))
+            generator.generate()
+
         self.stdout.write(self.style.SUCCESS("Successfully generated sample data!"))

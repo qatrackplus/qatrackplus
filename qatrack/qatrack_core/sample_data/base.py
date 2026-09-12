@@ -1,8 +1,10 @@
+import os
 from datetime import time, timedelta
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -40,24 +42,50 @@ class BaseSampleDataGenerator:
         return site
 
     def ensure_default_fixtures(self):
-        """Load default fixtures if database is missing categories/frequencies/tolerances."""
-        from qatrack.qa.models import Category, Frequency, Tolerance
-        from qatrack.service_log.models import ServiceArea, ServiceEventStatus, ServiceType
-        from qatrack.units.models import UnitClass, Vendor
+        """Load each default fixture the generators need, if its table is empty.
 
-        missing = (
-            Category.objects.count() == 0 or
-            Frequency.objects.count() == 0 or
-            Tolerance.objects.count() == 0 or
-            UnitClass.objects.count() == 0 or
-            Vendor.objects.count() == 0 or
-            ServiceArea.objects.count() == 0 or
-            ServiceEventStatus.objects.count() == 0 or
-            ServiceType.objects.count() == 0
-        )
+        The default fixtures carry no primary keys, so loading the full set on
+        a database that already holds some of them fails on the unique name
+        constraints (e.g. the "Dosimetry" Category). Load them one table at a
+        time, and only where there is nothing to clash with.
+
+        Only the rows a generator looks up by name are listed: categories,
+        tolerances, vendors, unit classes, unit types and modalities are all
+        created by the generator itself. None of these fixtures reference
+        another model, so they can be loaded in any combination.
+        """
+        from qatrack.qa.models import Frequency, TestInstanceStatus
+        from qatrack.service_log.models import ServiceArea, ServiceEventStatus, ServiceType
+
+        defaults = [
+            (Frequency, ('qa', 'frequencies.json')),
+            (TestInstanceStatus, ('qa', 'statuses.json')),
+            (ServiceArea, ('service_log', 'serviceareas.json')),
+            (ServiceEventStatus, ('service_log', 'serviceeventstatus.json')),
+            (ServiceType, ('service_log', 'servicetypes.json')),
+        ]
+
+        base_dir = getattr(settings, 'BASE_DIR', os.path.abspath(os.path.join(settings.PROJECT_ROOT, '..')))
+        fixtures_root = os.path.join(base_dir, 'fixtures', 'defaults')
+
+        missing = [
+            os.path.join(fixtures_root, *fixture) for model, fixture in defaults if not model.objects.exists()
+        ]
         if missing:
-            self.log("Loading core default fixtures...", lambda s: s)
-            call_command('installfixtures')
+            self.log("Loading %d missing core default fixture(s)..." % len(missing), lambda s: s)
+            call_command('loaddata', *missing)
+
+    def require_default(self, model, **lookup):
+        """Fetch a row the generator expects the default fixtures to provide."""
+        try:
+            return model.objects.get(**lookup)
+        except model.DoesNotExist:
+            described = ", ".join("%s=%r" % (k, v) for k, v in lookup.items())
+            raise CommandError(
+                "Could not find the default %s (%s) that the sample data depends on. "
+                "Restore it, or run `python manage.py installfixtures` on a database "
+                "without the default fixtures, then try again." % (model._meta.verbose_name, described)
+            )
 
     def clear_database(self):
         """Cleans existing user data in a safe order."""

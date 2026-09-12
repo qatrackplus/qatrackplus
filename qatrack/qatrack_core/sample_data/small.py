@@ -5,7 +5,6 @@ from decimal import Decimal
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.db.models import Max
 from django_comments.models import Comment
 
 from qatrack.faults.models import Fault, FaultType
@@ -129,15 +128,33 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
 
         # Users
         def create_user(username, email, first, last, groups, is_staff=True, is_superuser=False):
-            user, created = User.objects.get_or_create(
+            """Create a sample account, or top up an existing one.
+
+            A username we did not create may belong to a real person (a site's
+            own `admin` superuser), or it may be an externally linked account
+            with no local password. Give it the sample password only in the
+            latter case, where it would otherwise be unusable for local
+            testing, and add the sample groups rather than replacing whatever
+            memberships it already has.
+            """
+            user = User.objects.filter(username=username).first()
+            if user:
+                if not user.has_usable_password():
+                    self.log("  Existing user '%s' has no usable password, setting the sample one." % username, lambda s: s)
+                    user.set_password("password123")
+                    user.save()
+                else:
+                    self.log("  Existing user '%s' keeps its own password." % username, lambda s: s)
+                user.groups.add(*groups)
+                return user
+
+            user = User.objects.create(
                 username=username,
-                defaults={
-                    'email': email,
-                    'first_name': first,
-                    'last_name': last,
-                    'is_staff': is_staff,
-                    'is_superuser': is_superuser,
-                }
+                email=email,
+                first_name=first,
+                last_name=last,
+                is_staff=is_staff,
+                is_superuser=is_superuser,
             )
             user.set_password("password123")
             user.save()
@@ -201,7 +218,7 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         )
 
         # Units
-        self.unit_tb1 = self._get_or_create_unit(
+        self.unit_tb1, tb1_created = self._get_or_create_unit(
             name="TB-1 (TrueBeam)",
             number=1,
             defaults={
@@ -215,13 +232,14 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 "is_serviceable": True,
             }
         )
-        self.unit_tb1.modalities.set([
-            self.modalities["6MV"], self.modalities["10MV"], self.modalities["6FFF"], self.modalities["10FFF"],
-            self.modalities["6MeV"], self.modalities["9MeV"], self.modalities["12MeV"], self.modalities["15MeV"], self.modalities["18MeV"],
-            self.modalities["OBI"], self.modalities["PortalVision"], self.modalities["CBCT"]
-        ])
+        if tb1_created:
+            self.unit_tb1.modalities.set([
+                self.modalities["6MV"], self.modalities["10MV"], self.modalities["6FFF"], self.modalities["10FFF"],
+                self.modalities["6MeV"], self.modalities["9MeV"], self.modalities["12MeV"], self.modalities["15MeV"], self.modalities["18MeV"],
+                self.modalities["OBI"], self.modalities["PortalVision"], self.modalities["CBCT"]
+            ])
 
-        self.unit_versa = self._get_or_create_unit(
+        self.unit_versa, versa_created = self._get_or_create_unit(
             name="Versa-HD",
             number=2,
             defaults={
@@ -235,13 +253,14 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 "is_serviceable": True,
             }
         )
-        self.unit_versa.modalities.set([
-            self.modalities["6MV"], self.modalities["10MV"], self.modalities["15MV"],
-            self.modalities["6MeV"], self.modalities["9MeV"], self.modalities["12MeV"],
-            self.modalities["XVI"], self.modalities["iViewGT"]
-        ])
+        if versa_created:
+            self.unit_versa.modalities.set([
+                self.modalities["6MV"], self.modalities["10MV"], self.modalities["15MV"],
+                self.modalities["6MeV"], self.modalities["9MeV"], self.modalities["12MeV"],
+                self.modalities["XVI"], self.modalities["iViewGT"]
+            ])
 
-        self.unit_ct = self._get_or_create_unit(
+        self.unit_ct, ct_created = self._get_or_create_unit(
             name="CT-Sim (SOMATOM)",
             number=3,
             defaults={
@@ -255,9 +274,10 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 "is_serviceable": True,
             }
         )
-        self.unit_ct.modalities.set([
-            self.modalities["CT"], self.modalities["4D-CT"], self.modalities["LAP Lasers"]
-        ])
+        if ct_created:
+            self.unit_ct.modalities.set([
+                self.modalities["CT"], self.modalities["4D-CT"], self.modalities["LAP Lasers"]
+            ])
 
         # Available time schedules (11 hrs Mon-Fri)
         for unit in [self.unit_tb1, self.unit_versa, self.unit_ct]:
@@ -276,20 +296,21 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             )
 
     def _get_or_create_unit(self, name, number, defaults):
-        """Fetch or create a sample Unit.
+        """Fetch or create a sample Unit, returning (unit, created).
 
         Unit.number is unique, so when the requested number is already taken by
-        a pre-existing unit (i.e. the command was run without --clear) fall back
-        to the next free number rather than raising an IntegrityError.
+        a pre-existing unit (i.e. the command was run without --clear) leave it
+        blank: Unit.save() then assigns the next free number itself, rather
+        than raising an IntegrityError.
         """
         unit = Unit.objects.filter(name=name).first()
         if unit:
-            return unit
+            return unit, False
 
         if Unit.objects.filter(number=number).exists():
-            number = (Unit.objects.aggregate(Max("number"))["number__max"] or 0) + 1
+            number = None
 
-        return Unit.objects.create(name=name, number=number, **defaults)
+        return Unit.objects.create(name=name, number=number, **defaults), True
 
     def create_qa_protocols(self):
         self.log("Configuring QA Categories, Tolerances, Tests, and Test Lists...", lambda s: s)
@@ -332,8 +353,8 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         self.tol_bool = get_or_create_tol(BOOLEAN, bool_warning=False)
 
         # Frequencies
-        self.freq_daily = Frequency.objects.get(slug="daily")
-        self.freq_monthly = Frequency.objects.get(slug="monthly")
+        self.freq_daily = self.require_default(Frequency, slug="daily")
+        self.freq_monthly = self.require_default(Frequency, slug="monthly")
         # Ad-hoc QC is represented by a null frequency in QATrack+. Return to
         # service test lists must not be scheduled, so never fall back to a
         # real frequency here.
@@ -474,11 +495,10 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         )
 
         # --- UnitTestCollections & UnitTestInfo references ---
-        self.utcs = {}
         tl_content_type = ContentType.objects.get_for_model(TestList)
 
         def assign_tl(unit, test_list, freq, assigned_to_group):
-            utc, _ = UnitTestCollection.objects.get_or_create(
+            utc, created = UnitTestCollection.objects.get_or_create(
                 unit=unit,
                 frequency=freq,
                 content_type=tl_content_type,
@@ -489,8 +509,8 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                     "active": True,
                 }
             )
-            utc.visible_to.set([self.grp_rtts, self.grp_physics, self.grp_admins])
-            self.utcs[(unit.id, test_list.id)] = utc
+            if created:
+                utc.visible_to.set([self.grp_rtts, self.grp_physics, self.grp_admins])
             return utc
 
         # Assign to Linacs
@@ -567,7 +587,7 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 }
             )
 
-        uti, _ = UnitTestInfo.objects.get_or_create(
+        uti, created = UnitTestInfo.objects.get_or_create(
             unit=unit,
             test=test,
             defaults={
@@ -576,9 +596,13 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 "active": True,
             }
         )
-        if ref or tol:
-            uti.reference = ref
-            uti.tolerance = tol
+        # A UnitTestInfo we did not just create may carry a site's own
+        # reference and tolerance; only fill in what is still unset.
+        if not created and (ref or tol):
+            if ref and uti.reference_id is None:
+                uti.reference = ref
+            if tol and uti.tolerance_id is None:
+                uti.tolerance = tol
             uti.save()
         self.utis[(unit.id, test.id)] = uti
         return uti
@@ -587,10 +611,10 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         self.log("Setting up service areas, parts catalog, suppliers, and storage...", lambda s: s)
 
         # Service Areas
-        sa_accel = ServiceArea.objects.get(name="Accelerator")
-        sa_lasers = ServiceArea.objects.get(name="Lasers")
-        sa_ctsim = ServiceArea.objects.get(name="CTSim")
-        sa_table = ServiceArea.objects.get(name="Treatment Table")
+        sa_accel = self.require_default(ServiceArea, name="Accelerator")
+        sa_lasers = self.require_default(ServiceArea, name="Lasers")
+        sa_ctsim = self.require_default(ServiceArea, name="CTSim")
+        sa_table = self.require_default(ServiceArea, name="Treatment Table")
 
         self.usa_tb1, _ = UnitServiceArea.objects.get_or_create(unit=self.unit_tb1, service_area=sa_accel)
         self.usa_tb1_lasers, _ = UnitServiceArea.objects.get_or_create(unit=self.unit_tb1, service_area=sa_lasers)
@@ -599,14 +623,14 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         self.usa_ct, _ = UnitServiceArea.objects.get_or_create(unit=self.unit_ct, service_area=sa_ctsim)
 
         # Service Event Statuses
-        self.stat_pending = ServiceEventStatus.objects.get(name="Service Pending")
-        self.stat_complete = ServiceEventStatus.objects.get(name="Service Complete")
-        self.stat_approved = ServiceEventStatus.objects.get(name="Approved")
+        self.stat_pending = self.require_default(ServiceEventStatus, name="Service Pending")
+        self.stat_complete = self.require_default(ServiceEventStatus, name="Service Complete")
+        self.stat_approved = self.require_default(ServiceEventStatus, name="Approved")
 
         # Service Types
-        self.st_preventive = ServiceType.objects.get(name="Preventive")
-        self.st_minor = ServiceType.objects.get(name="Minor")
-        self.st_extensive = ServiceType.objects.get(name="Extensive")
+        self.st_preventive = self.require_default(ServiceType, name="Preventive")
+        self.st_minor = self.require_default(ServiceType, name="Minor")
+        self.st_extensive = self.require_default(ServiceType, name="Extensive")
 
         # Fault Types
         self.ft_mlc, _ = FaultType.objects.get_or_create(code="MLC-01", defaults={"description": "MLC Leaf Drive Motor / Encoder Stall Interlock"})
@@ -745,8 +769,8 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
     def generate_qa_history(self):
         self.log(f"Generating {self.days} days of rolling QA execution history...", lambda s: s)
 
-        status_approved = TestInstanceStatus.objects.get(slug="Approved")
-        status_unreviewed = TestInstanceStatus.objects.get(slug="unreviewed")
+        status_approved = self.require_default(TestInstanceStatus, slug="Approved")
+        status_unreviewed = self.require_default(TestInstanceStatus, slug="unreviewed")
 
         # Generate weekday runs
         for day_idx in range(self.days, -1, -1):
@@ -777,6 +801,9 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 self._generate_ct_monthly_instance(self.unit_ct, self.tl_ct_monthly, self.utc_ct_monthly, dt_monthly + timedelta(hours=2), status_approved, self.user_jane)
 
         # Generate 1 in-progress test list instance for today on Linac 2 to test resuming sessions
+        if TestListInstance.objects.filter(unit_test_collection=self.utc_versa_daily, in_progress=True).exists():
+            return
+
         dt_today = self.rel_dt(0, hour=8, minute=30)
         tli_inprog = TestListInstance.objects.create(
             unit_test_collection=self.utc_versa_daily,
@@ -808,7 +835,18 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             ti.calculate_pass_fail()
             ti.save()
 
+    def _already_performed(self, utc, work_completed):
+        """Has this sample QA session already been generated?
+
+        Re-running without --clear should extend the history rather than
+        record every session a second time.
+        """
+        return TestListInstance.objects.filter(unit_test_collection=utc, work_completed=work_completed).exists()
+
     def _generate_linac_daily_instance(self, unit, tl, utc, dt_completed, status, reviewer, day_idx):
+        if self._already_performed(utc, dt_completed):
+            return
+
         tli = TestListInstance.objects.create(
             unit_test_collection=utc,
             test_list=tl,
@@ -899,6 +937,9 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             )
 
     def _generate_ct_daily_instance(self, unit, tl, utc, dt_completed, status, reviewer, day_idx):
+        if self._already_performed(utc, dt_completed):
+            return
+
         tli = TestListInstance.objects.create(
             unit_test_collection=utc,
             test_list=tl,
@@ -944,6 +985,9 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         add_ti("ct_water_hu", val=water_hu, comment=cmt)
 
     def _generate_linac_monthly_instance(self, unit, tl, utc, dt_completed, status, reviewer):
+        if self._already_performed(utc, dt_completed):
+            return
+
         tli = TestListInstance.objects.create(
             unit_test_collection=utc,
             test_list=tl,
@@ -987,6 +1031,9 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         add_ti("cbct_align", round(random.gauss(0, 0.15), 2))
 
     def _generate_ct_monthly_instance(self, unit, tl, utc, dt_completed, status, reviewer):
+        if self._already_performed(utc, dt_completed):
+            return
+
         tli = TestListInstance.objects.create(
             unit_test_collection=utc,
             test_list=tl,
@@ -1031,23 +1078,33 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
     def generate_service_and_fault_history(self):
         self.log("Creating realistic service events, maintenance history, faults, and RTS records...", lambda s: s)
 
+        status_approved = self.require_default(TestInstanceStatus, slug="Approved")
+
         # Event 1: Linac 1 Quarterly PM (Day 40)
         dt_pm = self.rel_dt(40, hour=18, minute=0)
-        se_pm = ServiceEvent.objects.create(
+        se_pm, se_pm_created = ServiceEvent.objects.get_or_create(
             unit_service_area=self.usa_tb1,
-            service_type=self.st_preventive,
-            service_status=self.stat_approved,
-            datetime_created=dt_pm - timedelta(hours=8),
             datetime_service=dt_pm,
-            problem_description="Scheduled 100-hour Quarterly Preventative Maintenance.",
-            work_description="Cleaned waveguide window, checked chiller cooling lines, lubricated gantry bearings, verified beam interlocks and safety switches.",
-            safety_precautions="Lock-out tag-out applied during interior cabinet cleaning.",
-            duration_service_time=timedelta(hours=6, minutes=30),
-            duration_lost_time=timedelta(hours=2),
-            user_created_by=self.user_dave,
-            is_review_required=True,
-            is_active=True,
+            defaults={
+                "service_type": self.st_preventive,
+                "service_status": self.stat_approved,
+                "datetime_created": dt_pm - timedelta(hours=8),
+                "problem_description": "Scheduled 100-hour Quarterly Preventative Maintenance.",
+                "work_description": "Cleaned waveguide window, checked chiller cooling lines, lubricated gantry bearings, verified beam interlocks and safety switches.",
+                "safety_precautions": "Lock-out tag-out applied during interior cabinet cleaning.",
+                "duration_service_time": timedelta(hours=6, minutes=30),
+                "duration_lost_time": timedelta(hours=2),
+                "user_created_by": self.user_dave,
+                "is_review_required": True,
+                "is_active": True,
+            }
         )
+        if not se_pm_created:
+            # The whole block below hangs off this event; it was generated on
+            # an earlier run for these same dates, so leave it alone.
+            self.log("  Service and fault history already generated for these dates, skipping.", lambda s: s)
+            return
+
         Hours.objects.create(service_event=se_pm, user=self.user_dave, time=timedelta(hours=6, minutes=30))
 
         # RTS QA for PM
@@ -1071,7 +1128,7 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 test_list_instance=rts_tli_pm,
                 created_by=self.user_mark,
                 modified_by=self.user_mark,
-                status=TestInstanceStatus.objects.get(slug="Approved"),
+                status=status_approved,
                 value=1.0 if t.is_boolean() else (100.1 if "output" in t.slug else 0.1),
                 reference=uti.reference,
                 tolerance=uti.tolerance,
@@ -1140,7 +1197,7 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 test_list_instance=rts_tli_mlc,
                 created_by=self.user_jane,
                 modified_by=self.user_jane,
-                status=TestInstanceStatus.objects.get(slug="Approved"),
+                status=status_approved,
                 value=1.0 if t.is_boolean() else (99.9 if "output" in t.slug else 0.0),
                 reference=uti.reference,
                 tolerance=uti.tolerance,
@@ -1203,9 +1260,33 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
     def create_reports_and_schedules(self):
         self.log("Configuring Saved Reports, clinical report notes, and email schedules...", lambda s: s)
 
+        def create_report(title, visible_to, **fields):
+            """Create a saved report, or return the one an earlier run made."""
+            report, created = SavedReport.objects.get_or_create(title=title, defaults=fields)
+            if created:
+                report.visible_to.set(visible_to)
+            return report, created
+
+        def create_schedule(report, schedule, at, user, groups):
+            # ReportSchedule.report is one to one, and the model normalises the
+            # recurrence string it is given, so key the lookup on the report.
+            sched, created = ReportSchedule.objects.get_or_create(
+                report=report,
+                defaults={
+                    "schedule": schedule,
+                    "time": at,
+                    "created_by": user,
+                    "modified_by": user,
+                }
+            )
+            if created:
+                sched.groups.set(groups)
+            return sched
+
         # 1. Weekly Daily QA Compliance Report
-        rep_weekly = SavedReport.objects.create(
-            title="Weekly Daily QA Compliance & Sign-off",
+        rep_weekly, weekly_created = create_report(
+            "Weekly Daily QA Compliance & Sign-off",
+            [self.grp_physics, self.grp_rtts, self.grp_admins],
             report_type="testlistinstance_summary",
             report_format="pdf",
             paper_size="letter",
@@ -1215,17 +1296,17 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             created_by=self.user_jane,
             modified_by=self.user_jane,
         )
-        rep_weekly.visible_to.set([self.grp_physics, self.grp_rtts, self.grp_admins])
-
-        ReportNote.objects.create(
-            report=rep_weekly,
-            heading="Department QA Sign-off Protocol",
-            content="This report summarizes daily machine checks in accordance with AAPM TG-142 compliance guidelines. All flagged tolerances must have written physicist commentary."
-        )
+        if weekly_created:
+            ReportNote.objects.create(
+                report=rep_weekly,
+                heading="Department QA Sign-off Protocol",
+                content="This report summarizes daily machine checks in accordance with AAPM TG-142 compliance guidelines. All flagged tolerances must have written physicist commentary."
+            )
 
         # 2. Output Constancy 90-Day Trending
-        rep_trend = SavedReport.objects.create(
-            title="Linac Photon & Electron Output 90-Day Constancy",
+        create_report(
+            "Linac Photon & Electron Output 90-Day Constancy",
+            [self.grp_physics, self.grp_admins],
             report_type="testinstance_details",
             report_format="xlsx",
             paper_size="letter",
@@ -1235,11 +1316,11 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             created_by=self.user_jane,
             modified_by=self.user_jane,
         )
-        rep_trend.visible_to.set([self.grp_physics, self.grp_admins])
 
         # 3. Machine Downtime & Service Hours
-        rep_service = SavedReport.objects.create(
-            title="Monthly Equipment Downtime & Service Hours",
+        rep_service, _ = create_report(
+            "Monthly Equipment Downtime & Service Hours",
+            [self.grp_engineers, self.grp_physics, self.grp_admins],
             report_type="service-times",
             report_format="pdf",
             paper_size="letter",
@@ -1249,11 +1330,11 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             created_by=self.user_dave,
             modified_by=self.user_dave,
         )
-        rep_service.visible_to.set([self.grp_engineers, self.grp_physics, self.grp_admins])
 
         # 4. Machine Faults & Subsystem Reliability Report
-        rep_faults = SavedReport.objects.create(
-            title="Machine Fault Log & Interlock Reliability",
+        create_report(
+            "Machine Fault Log & Interlock Reliability",
+            [self.grp_physics, self.grp_engineers, self.grp_admins],
             report_type="fault_summary",
             report_format="pdf",
             paper_size="letter",
@@ -1263,23 +1344,22 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             created_by=self.user_jane,
             modified_by=self.user_jane,
         )
-        rep_faults.visible_to.set([self.grp_physics, self.grp_engineers, self.grp_admins])
 
         # 5. Schedules
         # Schedule Weekly Compliance Report every Monday at 07:00 AM
-        ReportSchedule.objects.create(
-            report=rep_weekly,
-            schedule="DTSTART:20240101T070000Z\nRRULE:FREQ=WEEKLY;BYDAY=MO",
-            time=time(7, 0),
-            created_by=self.user_jane,
-            modified_by=self.user_jane,
-        ).groups.set([self.grp_physics])
+        create_schedule(
+            rep_weekly,
+            "DTSTART:20240101T070000Z\nRRULE:FREQ=WEEKLY;BYDAY=MO",
+            time(7, 0),
+            self.user_jane,
+            [self.grp_physics],
+        )
 
         # Schedule Monthly Service Report on the 1st of every month at 08:00 AM
-        ReportSchedule.objects.create(
-            report=rep_service,
-            schedule="DTSTART:20240101T080000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=1",
-            time=time(8, 0),
-            created_by=self.user_dave,
-            modified_by=self.user_dave,
-        ).groups.set([self.grp_engineers, self.grp_physics])
+        create_schedule(
+            rep_service,
+            "DTSTART:20240101T080000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=1",
+            time(8, 0),
+            self.user_dave,
+            [self.grp_engineers, self.grp_physics],
+        )
