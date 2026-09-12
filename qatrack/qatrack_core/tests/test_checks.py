@@ -120,6 +120,45 @@ class TestCheckMediaFolderPermissions(SimpleTestCase):
                         for e in errors
                     )
 
+    def test_hint_quotes_media_root_containing_spaces(self):
+        """A MEDIA_ROOT with a space must stay a single shell argument in the hint.
+
+        Unquoted, `find /srv/QATrack media -type d ...` splits into two paths and the
+        remediation the operator pastes silently does the wrong thing.
+        """
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            media_path = Path(temp_dir) / 'QATrack media'
+            media_path.mkdir()
+            with override_settings(MEDIA_ROOT=str(media_path)):
+                with patch('os.access', return_value=False):
+                    errors = check_media_folder_permissions(None)
+                    hint = errors[0].hint
+                    assert f"'{media_path}'" in hint
+                    assert f' {media_path} ' not in hint
+
+    def test_root_hint_uses_non_expandable_placeholder(self):
+        """The root fallback must not be a shell-expandable variable.
+
+        `$USER` expands to `root` in a root shell, so pasting the hint would chown the
+        media tree to root and make the original failure worse.
+        """
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            media_path = Path(temp_dir)
+            with override_settings(MEDIA_ROOT=str(media_path)):
+                with (
+                    patch('os.geteuid', return_value=0, create=True),
+                    patch('os.access', return_value=False),
+                ):
+                    errors = check_media_folder_permissions(None)
+                    hints = [e.hint for e in errors if e.id == 'qatrack.E001']
+                    assert hints
+                    assert all('<qatrack-os-user>:www-data' in h for h in hints)
+                    assert not any('$USER' in h for h in hints)
+
     def test_file_creation_error(self):
         import tempfile
 

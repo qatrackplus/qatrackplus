@@ -6,6 +6,7 @@
 """
 
 import datetime
+import logging
 import os
 import pathlib
 import sys
@@ -765,7 +766,13 @@ for d in (MEDIA_ROOT_PATH, UPLOAD_ROOT_PATH, TMP_UPLOAD_ROOT_PATH, LOG_ROOT_PATH
         if not d.exists() and not d.is_dir():
             d.mkdir(parents=True, exist_ok=True)
     except OSError:
-        pass
+        # Don't abort startup: raising here kills Django during settings import, before
+        # the check framework can run, so `manage.py check` could never report the
+        # qatrack.E001 permission error that explains how to fix this. Log instead so the
+        # failure is not silent. LOGGING is not configured yet at settings-import time,
+        # so this goes to logging's last-resort handler on stderr, which both Supervisor
+        # (redirect_stderr) and Docker capture. Run `manage.py check` for the diagnosis.
+        logging.getLogger(__name__).warning('Could not create directory %s', d, exc_info=True)
 # endregion
 
 

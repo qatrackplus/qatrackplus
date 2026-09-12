@@ -173,7 +173,7 @@ First, let's gracefully remove Apache and install Nginx:
     sudo apt-get remove apache2 libapache2-mod-wsgi-py3
     sudo apt-get install nginx
 
-Next, update the ownership and permissions of your logs and media directories so that your QATrack+ user has ownership while allowing Nginx (``www-data``) read access:
+Next, update the ownership and permissions of your logs and media directories so that the local OS user for QATrack+ services has ownership while allowing Nginx (``www-data``) read access:
 
 .. code-block:: bash
 

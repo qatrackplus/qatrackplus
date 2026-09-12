@@ -1,5 +1,6 @@
 import getpass
 import os
+import shlex
 import tempfile
 from pathlib import Path
 
@@ -44,12 +45,18 @@ def check_media_folder_permissions(app_configs, **kwargs):
         app_user = getpass.getuser()
 
     if app_user == 'root':
-        app_user = '$USER'
+        # Deliberately not `$USER`: a root operator pasting the hint would expand it to
+        # `root` and chown the media tree to root, making the failure worse. W001 tells
+        # them to re-run as the service user; this placeholder cannot be expanded.
+        app_user = '<qatrack-os-user>'
+
+    # Quote the path so the commands survive a MEDIA_ROOT containing spaces.
+    quoted_root = shlex.quote(str(media_root))
 
     perm_hint = (
-        f'Check folder permissions. You may need to run `sudo chown -R {app_user}:www-data {media_root}`, '
-        f'`sudo find {media_root} -type d -exec chmod 2775 {{}} +`, and '
-        f'`sudo find {media_root} -type f -exec chmod 664 {{}} +`.'
+        f'Check folder permissions. You may need to run `sudo chown -R {app_user}:www-data {quoted_root}`, '
+        f'`sudo find {quoted_root} -type d -exec chmod 2775 {{}} +`, and '
+        f'`sudo find {quoted_root} -type f -exec chmod 664 {{}} +`.'
     )
 
     uploads_dirs = [
