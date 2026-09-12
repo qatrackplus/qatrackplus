@@ -134,9 +134,10 @@ class TestCheckMediaFolderPermissions(SimpleTestCase):
             with override_settings(MEDIA_ROOT=str(media_path)):
                 with patch('os.access', return_value=False):
                     errors = check_media_folder_permissions(None)
-                    hint = errors[0].hint
-                    assert f"'{media_path}'" in hint
-                    assert f' {media_path} ' not in hint
+                    hints = [e.hint for e in errors if e.id == 'qatrack.E001']
+                    assert hints
+                    assert all(f"'{media_path}'" in h for h in hints)
+                    assert not any(f' {media_path} ' in h for h in hints)
 
     def test_root_hint_uses_non_expandable_placeholder(self):
         """The root fallback must not be a shell-expandable variable.
