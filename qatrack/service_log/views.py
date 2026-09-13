@@ -1628,6 +1628,19 @@ class CreateServiceEventTemplateAjax(JSONResponseMixin, PermissionRequiredMixin,
 
 
 def service_event_template_searcher(request):
+    """Return the :model:`service_log.ServiceEventTemplate`'s which are
+    applicable to the unit (and optional service type/service area) requested.
+
+    A template matches when its service area is either not set, or is one of the
+    service areas assigned to the requested unit.  Every matching template is
+    returned along with a `return_to_service_utcs` list holding the
+    :model:`qa.UnitTestCollection` id's which are *both* listed as return to
+    service QC on the template *and* actively assigned to the requested unit.
+
+    A template whose return to service QC is assigned to other units only is
+    still returned, with an empty `return_to_service_utcs` list, so that a
+    single template can be shared by units with differing QC (see issue #829).
+    """
 
     qs = sl_models.ServiceEventTemplate.objects.prefetch_related(
         "return_to_service_test_lists",

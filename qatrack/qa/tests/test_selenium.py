@@ -807,7 +807,8 @@ class TestPerformQC(BaseQATests):
         assert models.AutoSave.objects.count() == 1
 
     def test_load_autosave(self):
-        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        """Ensure an autosave is restored with its test values, comments and
+        work started/completed times displayed in the sites datetime format"""
 
         tl2 = utils.create_test_list(name="day 2")
         utils.create_test_list_membership(tl2, test=self.tnum_1)

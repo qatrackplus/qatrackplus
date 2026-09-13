@@ -16,6 +16,32 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
         return decodeURIComponent(results[2].replace(/\+/g, ' '));
     }
 
+    /* Datetimes in the autosave payload are serialized server side by
+     * QATrackJSONEncoder using the second DATETIME_INPUT_FORMATS entry, which
+     * depends on the active locale and may be overridden in a site's
+     * local_settings.py.  The work started/completed inputs on the other hand
+     * are rendered by Flatpickr using FLATPICKR_DATETIME_FMT, so handing the
+     * raw payload string to setDate() only works when the two happen to agree.
+     * Parse the string here instead and let Flatpickr format the resulting
+     * Date, so the picker shows the correct time whatever formats a site uses. */
+    function autosave_datetime_fmts(){
+        return [
+            siteConfig.MOMENT_DATETIME_FMT,
+            "DD MMM YYYY HH:mm:ss",
+            "D MMM YYYY HH:mm:ss",
+            "DD/MM/YYYY HH:mm:ss",
+            "YYYY-MM-DD HH:mm:ss",
+            moment.ISO_8601
+        ];
+    }
+
+    /* Parse an autosaved datetime string, returning null if none of the known
+     * formats match rather than an Invalid Date which Flatpickr would choke on. */
+    function parse_autosave_datetime(value){
+        var parsed = moment(value, autosave_datetime_fmts());
+        return parsed.isValid() ? parsed.toDate() : null;
+    }
+
     var $calcStatus = $(".qa-calc-status");
     var $calcStatusSpinners = $calcStatus.find("i");
     var $calcStatusContent = $calcStatus.find("span");
@@ -1035,14 +1061,16 @@ require(['jquery', 'lodash', 'moment', 'dropzone', 'autosize', 'cheekycheck', 'i
 
 
                     if (data.meta.work_started){
-                        if (override_date)
-                            $("#id_work_started").get(0)._flatpickr.setDate(moment(data.meta.work_started, [siteConfig.MOMENT_DATETIME_FMT, "DD MMM YYYY HH:mm:ss", "D MMM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DD HH:mm:ss", moment.ISO_8601]).toDate(), true);
+                        var work_started = override_date ? parse_autosave_datetime(data.meta.work_started) : null;
+                        if (work_started)
+                            $("#id_work_started").get(0)._flatpickr.setDate(work_started, true);
                         else
                             $("#id_work_started").val(data.meta.work_started);
                     }
                     if (data.meta.work_completed){
-                        if (override_date)
-                            $("#id_work_completed").get(0)._flatpickr.setDate(moment(data.meta.work_completed, [siteConfig.MOMENT_DATETIME_FMT, "DD MMM YYYY HH:mm:ss", "D MMM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DD HH:mm:ss", moment.ISO_8601]).toDate(), true);
+                        var work_completed = override_date ? parse_autosave_datetime(data.meta.work_completed) : null;
+                        if (work_completed)
+                            $("#id_work_completed").get(0)._flatpickr.setDate(work_completed, true);
                         else
                             $("#id_work_completed").val(data.meta.work_completed);
                     }
