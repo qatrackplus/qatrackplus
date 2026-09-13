@@ -144,6 +144,10 @@ class TestCheckMediaFolderPermissions(SimpleTestCase):
 
         `$USER` expands to `root` in a root shell, so pasting the hint would chown the
         media tree to root and make the original failure worse.
+
+        Both user-resolution paths are pinned to `root`: `pwd` is unavailable on
+        Windows, where the check falls back to `getpass.getuser()` and never reads
+        the patched `os.geteuid`.
         """
         import tempfile
 
@@ -152,6 +156,7 @@ class TestCheckMediaFolderPermissions(SimpleTestCase):
             with override_settings(MEDIA_ROOT=str(media_path)):
                 with (
                     patch('os.geteuid', return_value=0, create=True),
+                    patch('getpass.getuser', return_value='root'),
                     patch('os.access', return_value=False),
                 ):
                     errors = check_media_folder_permissions(None)
