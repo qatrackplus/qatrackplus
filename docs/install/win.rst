@@ -307,8 +307,6 @@ QATrack+ Web Service configuration dialogue).
    ``C:\\deploy\\qatrackplus\\run_cherrypy.py`` set the ``server.socket_port``
    variable to a different port (e.g. 8008), and run ``.\qatrack-service.exe restart`` to update the service.  You will also need to update the URL rewrite rules in IIS to point to the new port.
 
-.. _`iis_setup`:
-
 Setting up IIS
 --------------
 
@@ -425,8 +423,6 @@ service was installed correctly and is running.
    There are many different ways to configure IIS.  The method I've used
    above is simple and works well when QATrack+ is the only web service
    running on a server.
-
-.. _`django_q_setup`:
 
 Setting up Django Q
 -------------------
