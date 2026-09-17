@@ -772,12 +772,48 @@ for path in chrome_paths:
 
 use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', 'yes', 'on'}
 if use_docker:
-    ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+    # Docker configuration LAYERS on top of local_settings.py rather than
+    # replacing it.
+    #
+    # It used to replace it: this branch never imported local_settings.py at
+    # all, so a Docker deployer who edited that file saw no effect and no
+    # error. Since it is the file every other deployment method uses, and the
+    # one all our documentation talks about, that was a reliable way to lose
+    # an afternoon.
+    #
+    # Now: local_settings.py is imported first if it exists, then anything
+    # provided through the environment overrides it. Environment wins, because
+    # that is what an operator can change without rebuilding an image.
+    # Deployments with no local_settings.py - the normal Docker case - behave
+    # exactly as before.
+    try:
+        from .local_settings import *  # noqa: F403, F401, E402
+    except ModuleNotFoundError as e:
+        # Only swallow local_settings itself being absent; a local_settings.py
+        # that exists but fails to import something else must still raise.
+        if e.name != 'qatrack.local_settings':
+            raise
+
+    _env_hosts = os.environ.get('ALLOWED_HOSTS', '').strip()
+    if _env_hosts:
+        ALLOWED_HOSTS = [h.strip() for h in _env_hosts.split(',') if h.strip()]
+    elif not globals().get('ALLOWED_HOSTS'):
+        # Neither the environment nor local_settings.py said anything.
+        # globals().get rather than a bare name: settings.py defines no
+        # module-level default for these two, so referencing them directly
+        # is a NameError when local_settings.py did not set them either.
+        ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+    _env_tz = os.environ.get('TIME_ZONE', '').strip()
+    if _env_tz:
+        TIME_ZONE = _env_tz
+    # else keep whatever local_settings.py set, or settings.py's placeholder,
+    # which raises on its own and says what to do about it.
 
     _csrf_trusted_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '').strip()
     if _csrf_trusted_env:
         CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted_env.split(',') if o.strip()]
-    else:
+    elif not globals().get('CSRF_TRUSTED_ORIGINS'):
         CSRF_TRUSTED_ORIGINS = [
             scheme + host
             for host in ALLOWED_HOSTS
@@ -797,16 +833,22 @@ if use_docker:
         with open(SECRET_FILEPATH, 'w') as f:
             f.write(SECRET_KEY)
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'qatrackplus'),
-            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-            'HOST': 'postgres',
-            'PORT': 5432
+    # Only take over DATABASES when the environment actually describes one.
+    # docker-compose always supplies these (see deploy/docker/.env.example), so
+    # a real Docker deployment is unaffected - but this leaves room for a
+    # local_settings.py to configure a database the compose file does not
+    # provide, instead of having it silently overwritten.
+    if any(os.environ.get(k) for k in ('POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD')):
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('POSTGRES_DB', 'qatrackplus'),
+                'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+                'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
+                'HOST': 'postgres',
+                'PORT': 5432
+            }
         }
-    }
 
     if 'readonly' not in DATABASES and USE_SQL_REPORTS:
         DATABASES['readonly'] = DATABASES['default']
