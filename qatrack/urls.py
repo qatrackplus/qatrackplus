@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.http import HttpResponse
 from django.templatetags.static import static as static_url
 from django.urls import include, path
 from django.urls import re_path as url
@@ -22,6 +23,10 @@ class QAToQC(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         return "%s/qc/%s" % (settings.FORCE_SCRIPT_NAME or "", kwargs['terms'])
+
+
+def healthcheck(request):
+    return HttpResponse("OK")
 
 
 urlpatterns = [
@@ -52,6 +57,9 @@ urlpatterns = [
     url(r'^comments/', include('django_comments.urls')),
     url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
     url(r'^api/', include('qatrack.api.urls')),
+
+    # Django healthcheck
+    path("djangohealthcheck/", healthcheck),
 ]
 
 js_info_dict = {

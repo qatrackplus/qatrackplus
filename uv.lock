@@ -2,8 +2,8 @@ version = 1
 revision = 3
 requires-python = ">=3.12, <=3.13"
 resolution-markers = [
-    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version >= '3.13'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version < '3.13' and sys_platform != 'win32'",
 ]
 
@@ -2485,12 +2485,10 @@ dependencies = [
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "pandas" },
-    { name = "pillow" },
     { name = "pydicom" },
     { name = "pylinac" },
     { name = "pynliner" },
     { name = "python-dateutil" },
-    { name = "reportlab" },
     { name = "requests" },
     { name = "scipy" },
     { name = "uritemplate" },
@@ -2504,6 +2502,10 @@ dependencies = [
 [package.optional-dependencies]
 docker = [
     { name = "gunicorn" },
+]
+ldap = [
+    { name = "python-ldap", version = "3.4.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' or sys_platform != 'win32'" },
+    { name = "python-ldap", version = "3.4.5", source = { url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl" }, marker = "python_full_version < '3.13' and sys_platform == 'win32'" },
 ]
 mssql = [
     { name = "django-auth-ldap" },
@@ -2600,7 +2602,6 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.21.0,<2.0" },
     { name = "openpyxl", specifier = ">=3.0.6,<4.0" },
     { name = "pandas", specifier = ">=1.3.0,<3.0" },
-    { name = "pillow", specifier = ">=9.0.0,<11.0" },
     { name = "polib", marker = "extra == 'translations'", specifier = ">=1.2.0" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'" },
     { name = "pydicom", specifier = ">=2.1.2,<4.0" },
@@ -2608,10 +2609,11 @@ requires-dist = [
     { name = "pynliner", specifier = ">=0.8.0,<1.0" },
     { name = "pyreadline", marker = "sys_platform == 'win32' and extra == 'win'" },
     { name = "python-dateutil", specifier = ">=2.8.1,<3.0" },
+    { name = "python-ldap", marker = "python_full_version == '3.12.*' and sys_platform == 'win32' and extra == 'ldap'", url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl" },
     { name = "python-ldap", marker = "python_full_version == '3.12.*' and sys_platform == 'win32' and extra == 'mssql'", url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl" },
+    { name = "python-ldap", marker = "(python_full_version != '3.12.*' and extra == 'ldap') or (sys_platform != 'win32' and extra == 'ldap')" },
     { name = "python-ldap", marker = "(python_full_version != '3.12.*' and extra == 'mssql') or (sys_platform != 'win32' and extra == 'mssql')" },
     { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'win'", specifier = ">=300" },
-    { name = "reportlab", specifier = ">=4.0.0,<5.0" },
     { name = "requests", specifier = ">=2.25.0,<3.0" },
     { name = "scipy", specifier = ">=1.7.0,<2.0" },
     { name = "uritemplate", specifier = ">=4.0.0,<5.0" },
@@ -2621,7 +2623,7 @@ requires-dist = [
     { name = "xlrd", specifier = ">=2.0.1,<3.0" },
     { name = "xlsxwriter", specifier = ">=1.3.7,<4.0" },
 ]
-provides-extras = ["mysql", "mssql", "postgres", "win", "docker", "translations"]
+provides-extras = ["mysql", "mssql", "postgres", "win", "ldap", "docker", "translations"]
 
 [package.metadata.requires-dev]
 dev = [

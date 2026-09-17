@@ -1,22 +1,19 @@
-# Ignore everything that starts with a dot: .env, .git, etc.
-.*
+# Ignore everything
+**
 
-__pycache__
-env/
-venv/
-ENV/
-db.sqlite3
-qatrackplus31
-qatrack/local_settings.py
-fixtures/
-docs/
-logs/
+# Re-include only what is needed for an editable install of the package
+# Nothing else is needed in the image.
 
-# Everything under deploy with exceptions
-deploy/*
+!pyproject.toml
+!uv.lock
+!README.md
+
+!qatrack/
+!qatrack/**
+
+!manage.py
+
+!deploy/
 !deploy/docker/
+# Make sure .env is not included in image
 deploy/docker/.env
-
-# media and static files
-qatrack/media/
-qatrack/static/

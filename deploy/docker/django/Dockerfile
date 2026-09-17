@@ -23,8 +23,8 @@ ARG UV_NO_DEV=1
 ENV UV_NO_DEV=${UV_NO_DEV}
 
 # - Silence uv complaining about not being able to use hard links.
-# - Tell uv to byte-compile packages for faster application startups.
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+# - Tell uv NOT to byte-compile packages. Slightly longer startup, but reduced image size.
+ENV UV_COMPILE_BYTECODE=0 UV_LINK_MODE=copy
 
 # Disable Python downloads, because we want to use the system interpreter
 # across both images. If using a managed Python version, it needs to be
@@ -50,6 +50,7 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
 # Define virtual env directory
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
+# Create venv.
 # Make sure the created venv includes pip.
 # We later use pip to install user requirements.
 # Some user requirements might not be packaged as wheels -- thus uv pip might not
@@ -63,7 +64,7 @@ RUN uv venv --seed ${UV_PROJECT_ENVIRONMENT}
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --extra docker --extra postgres
+    uv sync --frozen --no-install-project --extra docker --extra postgres --extra ldap
 
 # Copy QATrack+ source
 WORKDIR /app
@@ -72,12 +73,12 @@ COPY . .
 # Install QATrack+ itself in editable mode, with the source under /app
 # This layer's cache is busted each time the source of the app changes.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --extra docker --extra postgres
+    uv sync --frozen --extra docker --extra postgres --extra ldap
 
 # Install user-specified dependencies, if any.
 # First, we export all core dependencies to a constraint file.
 RUN uv export \
-    --locked \
+    --frozen \
     --no-emit-project \
     --extra docker \
     --extra postgres \
@@ -91,7 +92,7 @@ RUN if [ -s /tmp/user-requirements/requirements.txt ]; then \
     echo "Installing user requirements..." \
     && /opt/venv/bin/pip install \
     --constraint /tmp/core-constraints.txt \
-    --requirement /tmp/user-dependencies/requirements.txt; \
+    --requirement /tmp/user-requirements/requirements.txt; \
     fi
 
 # Runtime stage without uv installed
@@ -112,13 +113,20 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     apt-get install -y \
     -o APT::Install-Recommends=false \
     -o APT::Install-Suggests=false \
-    postgresql-client \
-    chromium \
+    # postgres connectivity
     libpq5 \
+    # for healthcheck
     curl \
+    # for converting files written on Windows
     dos2unix \
+    # for LDAP support
     libldap2 \
     libsasl2-2 \
+    # weasyprint dependencies - for converting HTML to PDF
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libharfbuzz-subset0 \
+    # For debugging in the container
     nano \
     && rm -rf /var/lib/apt/lists/*
 

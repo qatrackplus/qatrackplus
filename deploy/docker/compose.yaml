@@ -5,6 +5,12 @@ services:
     build:
       context: ./nginx
     restart: always
+    env_file: .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
     ports:
       - "80:80"
       - "443:443"
@@ -15,9 +21,24 @@ services:
       - ${MEDIA_DIR:-media-volume}:/app_data/media:ro,z
       - static-volume:/app_data/static:ro,z
       - ${SSL_DIR:-./user-data/ssl}:/etc/nginx/ssl:ro  # To customize SSL location, set SSL_DIR, else the default ./user-data/ssl will be used.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >
+          nginx -t &&
+          curl -fsS http://localhost/healthcheck >/dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   django:
     image: qatrackplus-django
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
     build:
       context: ../../
       dockerfile: deploy/docker/django/Dockerfile
@@ -28,8 +49,6 @@ services:
     env_file: .env
     environment:
       USE_DOCKER: "true"
-      MEDIA_ROOT: "/app_data/media"
-      STATIC_ROOT: "/app_data/static"
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,13 +58,18 @@ services:
       - ${USER_DATA_DIR:-user-data-volume}:/app/deploy/docker/user-data
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
-      interval: 30s
+      interval: 15s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 30s
 
   django-q:
     image: qatrackplus-django
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
     init: true
     restart: always
     env_file: .env
@@ -60,18 +84,38 @@ services:
         condition: service_healthy
     volumes:
     - ${MEDIA_DIR:-media-volume}:/app_data/media:z
+    healthcheck:
+      # Check that the qcluster process exists and that DB access is working
+      test:
+        - CMD-SHELL
+        - >
+          pgrep -f "manage.py qcluster" >/dev/null &&
+          python manage.py shell -c
+          "from django_q.models import Schedule;
+          Schedule.objects.exists()"
+          >/dev/null 2>&1
+      interval: 15s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
 
   postgres:
     image: postgres:15-alpine
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
     restart: always
     env_file: .env
     volumes:
       - ${POSTGRES_DATA_DIR:-postgres-volume}:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-qatrackplus}" ]
-      interval: 10s
-      timeout: 5s
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-change_me} -d $${POSTGRES_DB:-qatrackplus}" ]
+      interval: 5s
+      timeout: 3s
       retries: 5
+      start_period: 5s
 
   backup:
     build:
@@ -86,6 +130,31 @@ services:
     volumes:
       - ${BACKUPS_DIR:-backups-volume}:/backups
       - ${MEDIA_DIR:-media-volume}:/app_data/media:ro,z
+    healthcheck:
+      # Test that cron is still running and that the backup dir/volume is writable
+      test:
+        - CMD-SHELL
+        - >
+          pgrep crond >/dev/null &&
+          test -w /backups
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+
+  adminer:
+    image: adminer
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: mvt
 
 volumes:
   postgres-volume: # Persists database in a docker volume. To use a bind mount instead, set POSTGRES_DATA_DIR.

@@ -834,8 +834,10 @@ if use_docker:
     override_from_env("USE_TZ", converter=env_bool)
     override_from_env("USE_I18N", converter=env_bool)
     override_from_env("LANGUAGE_CODE")
-    override_from_env("MEDIA_ROOT")
-    override_from_env("STATIC_ROOT")
+
+    # Hard-coded roots to conform with Dockerfile and conpose file
+    MEDIA_ROOT = "/app_data/media"
+    STATIC_ROOT = "/app_data/static"
 
     # QATrack settings
     override_from_env("DEFAULT_WARNING_MESSAGE")
@@ -863,22 +865,10 @@ if use_docker:
     override_from_env("SESSION_COOKIE_AGE", converter=int)
     override_from_env("SESSION_SAVE_EVERY_REQUEST", converter=env_bool)
     override_from_env("SESSION_EXPIRE_AT_BROWSER_CLOSE", converter=env_bool)
-    override_from_env("SESSION_COOKIE_SECURE", converter=env_bool)
-
-    CSRF_TRUSTED_ORIGINS = override_from_env("CSRF_TRUSTED_ORIGINS", converter=env_csv)
-    if not CSRF_TRUSTED_ORIGINS:
-        CSRF_TRUSTED_ORIGINS = [
-            scheme + host
-            for host in ALLOWED_HOSTS
-            for scheme in ('http://', 'https://')
-            if host != '*'
-        ]
 
     override_from_env("CSRF_COOKIE_NAME")
-    override_from_env("CSRF_COOKIE_SECURE", converter=env_bool)
 
     override_from_env("USE_X_FORWARDED_HOST", converter=env_bool)  # Already at False by default
-    override_from_env("SECURE_SSL_REDIRECT", converter=env_bool)
 
     override_from_env("HTTP_OR_HTTPS")  # QATrack setting. Must be 'http' or 'https'
     if HTTP_OR_HTTPS not in ("http", "https"):
@@ -890,10 +880,25 @@ if use_docker:
             "HTTP_X_FORWARDED_PROTO",
             "https",
         )
+        SESSION_COOKIE_SECURE = True
+        CSRF_COOKIE_SECURE = True
+    else:
+        SESSION_COOKIE_SECURE = False
+        CSRF_COOKIE_SECURE = False
+
+    CSRF_TRUSTED_ORIGINS = override_from_env("CSRF_TRUSTED_ORIGINS", converter=env_csv)
+    if not CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = [
+            scheme + host
+            for host in ALLOWED_HOSTS
+            for scheme in ('http://', 'https://')  # TODO: limit this to protocol set in HTTP_OR_HTTPS?
+            if host != '*'
+        ]
+
+    override_from_env("SESSION_COOKIE_SECURE", converter=env_bool)
+    override_from_env("CSRF_COOKIE_SECURE", converter=env_bool)
 
     # Email settings
-    override_from_env("EMAIL_NOTIFICATION_USER")
-    override_from_env("EMAIL_NOTIFICATION_PWD")
     override_from_env("EMAIL_NOTIFICATION_TEMPLATE")
     override_from_env("EMAIL_NOTIFICATION_SUBJECT")
     override_from_env("EMAIL_NOTIFICATION_SUBJECT_TEMPLATE")
@@ -929,6 +934,8 @@ if use_docker:
     override_from_env("AD_LU_SURNAME")
     override_from_env("AD_LU_GIVEN_NAME")
     override_from_env("AD_LU_MEMBER_OF")
+
+    # Regenerate AD_SEARCH_FIELDS from values overriden above
     AD_SEARCH_FIELDS = [
         AD_LU_MAIL,
         AD_LU_SURNAME,
@@ -936,6 +943,8 @@ if use_docker:
         AD_LU_ACCOUNT_NAME,
         AD_LU_MEMBER_OF,
     ]
+    # Or, if user specifies directly AD_SEARCH_FIELDS, weoverride its value below
+    override_from_env("AD_SEARCH_FIELDS", converter=env_csv)
 
     override_from_env("AD_SEARCH_DN")
     override_from_env("AD_NT4_DOMAIN")
@@ -982,6 +991,13 @@ if use_docker:
     AD_CLEAN_USERNAME = clean_username
 
     override_from_env("AUTH_ADFS", converter=env_json)  # JSON format: {"SERVER": "some.adfs.server.com", ...}
+
+    # For advanced users who want to customize settings of the REST API
+    # You can specify keys of REST_FRAMEWORK which will then be merged with the
+    # default configuration.
+    REST_FRAMEWORK_DEFAULTS = REST_FRAMEWORK.copy()
+    REST_FRAMEWORK_OVERRIDE = override_from_env("REST_FRAMEWORK", converter=env_json) or {}
+    REST_FRAMEWORK = REST_FRAMEWORK_DEFAULTS | REST_FRAMEWORK_OVERRIDE
 else:
     from .local_settings import *  # noqa: F403, F401, E402
 

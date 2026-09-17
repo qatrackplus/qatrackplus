@@ -3,7 +3,15 @@ server {
     listen 80 default_server;
     server_name _;
 
-    return 301 https://$host$request_uri;
+    location = /healthcheck {
+        access_log off;
+        return 200 "OK\n";
+        add_header Content-Type text/plain;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
 
 server {

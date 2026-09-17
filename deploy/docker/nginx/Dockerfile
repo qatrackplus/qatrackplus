@@ -3,6 +3,9 @@ FROM nginx:alpine
 ARG HOST_UID=999
 ARG HOST_GID=999
 
+# Install curl for health check
+RUN apk add --no-cache curl
+
 # Remove default config
 RUN rm -rf /etc/nginx/nginx.conf
 

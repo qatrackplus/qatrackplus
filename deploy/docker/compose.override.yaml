@@ -14,26 +14,28 @@ services:
         HOST_UID: ${HOST_UID:-999}
         HOST_GID: ${HOST_GID:-999}
     environment:
+      # prevent nginx from serving static files. For local dev, we let django's
+      # development server do this.
       DEV: "true"
 
   django:
     build:
       args:
-        UV_NO_DEV: 0
+        UV_NO_DEV: 0  # do install dev dependencies for local development
         HOST_UID: ${HOST_UID:-999}
         HOST_GID: ${HOST_GID:-999}
     environment:
       DEBUG: "true"
       DEBUG_TOOLBAR: "true"
     volumes:
-      - ../../.:/app
+      - ../../.:/app  # bind mount source code in container
 
   django-q:
     environment:
       DEBUG: "true"
       DEBUG_TOOLBAR: "true"
     volumes:
-      - ../../.:/app
+      - ../../.:/app # bind mount source code in container
 
   backup:
     build:
