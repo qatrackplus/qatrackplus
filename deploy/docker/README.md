@@ -18,7 +18,17 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
    ```
 2. Set your PostgreSQL credentials in the `.env` file. 
 3. Set `ALLOWED_HOSTS` in your `.env` file to include the IP address or hostname you will use to access the server (e.g. `ALLOWED_HOSTS=localhost,127.0.0.1,ubuntu-test`). To allow all hosts temporarily, use `ALLOWED_HOSTS=*`.
-4. **CRITICAL:** Ensure `USE_DOCKER=true` is present in your `.env` file. This tells Django to use the built-in Docker configuration instead of falling back to your local SQLite configuration (`local_settings.py`).
+4. Set a unique value for `SECRET_KEY`
+5. Set QATDEV=1 if you are developing locally, or set it to QATDEV=0 for production.
+6. Install just.
+   ```bash
+   # Windows
+   winget install --id Casey.Just --exact
+   ```
+   ```bash
+   # Windows
+   winget install --id Casey.Just --exact
+   ```
 
 ### 2. Development
 By default, Docker Compose will read both `compose.yaml` and `compose.override.yaml`. The override file maps your local source code into the container for live reloading.

@@ -25,10 +25,6 @@ class QAToQC(RedirectView):
         return "%s/qc/%s" % (settings.FORCE_SCRIPT_NAME or "", kwargs['terms'])
 
 
-def healthcheck(request):
-    return HttpResponse("OK")
-
-
 urlpatterns = [
     url(r'^$', views.homepage, name="home"),
     url(r'^400/$', views.handle_400, name="400"),
@@ -57,9 +53,6 @@ urlpatterns = [
     url(r'^comments/', include('django_comments.urls')),
     url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
     url(r'^api/', include('qatrack.api.urls')),
-
-    # Django healthcheck
-    path("djangohealthcheck/", healthcheck),
 ]
 
 js_info_dict = {
