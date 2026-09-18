@@ -14,17 +14,17 @@ docker *args:
 # Run docker compose. Use of compose.override.yaml file is decided by setting/unsetting the QATDEV env variable.
 [linux]
 compose *args:
-    @if [ -v QATDEV ]; then HOST_GID="${HOST_GID:-$(id -g)}" HOST_UID="${HOST_UID:-$(id -u)}" docker compose {{args}}; else docker compose -f compose.yaml {{args}}; fi
+    @if [ "${QATDEV:-0}" = "1" ]; then HOST_GID="${HOST_GID:-$(id -g)}" HOST_UID="${HOST_UID:-$(id -u)}" docker compose {{args}}; else docker compose -f compose.yaml {{args}}; fi
 
 [windows]
 compose *args:
-    @if ($env:QATDEV) { docker compose {{args}} } else { docker compose -f compose.yaml {{args}} }
+    @if ($env:QATDEV -eq '1') { docker compose {{args}} } else { docker compose -f compose.yaml {{args}} }
 
 # Run django management commands in the running container.
 [linux]
 manage *args:
-    @if [ -v QATDEV ]; then docker compose exec django python manage.py {{args}}; else docker compose -f compose.yaml exec django python manage.py {{args}}; fi
+    @if [ "${QATDEV:-0}" = "1" ]; then docker compose exec django python manage.py {{args}}; else docker compose -f compose.yaml exec django python manage.py {{args}}; fi
 
 [windows]
 manage *args:
-    @if ($env:QATDEV) { docker compose exec django python manage.py {{args}} } else { docker compose -f compose.yaml exec django python manage.py {{args}} }
+    @if ($env:QATDEV -eq '1') { docker compose exec django python manage.py {{args}} } else { docker compose -f compose.yaml exec django python manage.py {{args}} }

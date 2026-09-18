@@ -3,7 +3,7 @@ FROM alpine:3.19
 ARG HOST_UID=999
 ARG HOST_GID=999
 
-RUN apk add --no-cache postgresql-client bash tar dcron dos2unix
+RUN apk add --no-cache postgresql-client bash tar dcron dos2unix procps
 
 COPY backup.sh /backup.sh
 RUN dos2unix /backup.sh && chmod +x /backup.sh

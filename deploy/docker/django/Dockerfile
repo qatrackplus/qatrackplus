@@ -76,10 +76,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --extra docker --extra postgres --extra ldap
 
 # Install user-specified dependencies, if any.
+#
 # First, we export all core dependencies to a constraint file.
+# For this purpose, we do not emit hashes, as if we do so, pip will require
+# hashes for the user-requirements/requirements.txt file.
 RUN uv export \
     --frozen \
     --no-emit-project \
+    --no-hashes \
     --extra docker \
     --extra postgres \
     --format requirements-txt \
@@ -102,8 +106,8 @@ ARG HOST_UID=999
 ARG HOST_GID=999
 
 # Setup a non-root user
-RUN groupadd --system --gid ${HOST_GID} qatuser \
- && useradd --system --gid ${HOST_GID} --uid ${HOST_UID} --create-home qatuser
+RUN groupadd --system --gid ${HOST_GID} user \
+ && useradd --system --gid ${HOST_GID} --uid ${HOST_UID} --create-home user
 
 # Ensure apt-get doesn't open a menu on you.
 ENV DEBIAN_FRONTEND=noninteractive
@@ -117,6 +121,7 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     libpq5 \
     # for healthcheck
     curl \
+    procps \
     # for converting files written on Windows
     dos2unix \
     # for LDAP support
@@ -140,12 +145,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Set MPLCONFIGDIR to stop matplotlib from complaining
-ENV MPLCONFIGDIR=/home/qatuser/.config/matplotlib
+ENV MPLCONFIGDIR=/home/user/.config/matplotlib
 
 WORKDIR /app
 
 # Copy
-COPY --chown=qatuser:qatuser . .
+COPY --chown=user:user . .
 
 # Move entrypoint to /, change its ownership to root
 COPY --chown=root:root ./deploy/docker/django/entrypoint.sh /entrypoint.sh
@@ -154,18 +159,18 @@ COPY --chown=root:root ./deploy/docker/django/entrypoint.sh /entrypoint.sh
 # Make entrypoint executable
 RUN dos2unix /entrypoint.sh \
     && chmod 755 /entrypoint.sh \
-    && mkdir -p /home/qatuser/.config/matplotlib \
+    && mkdir -p /home/user/.config/matplotlib \
                 ./logs \
                 /app_data/media \
                 /app_data/static \
                 ./deploy/docker/user-data \
-    && chown -R qatuser:qatuser /home/qatuser/.config/matplotlib \
+    && chown -R user:user /home/user/.config/matplotlib \
                                 ./logs \
                                 /app_data/media \
                                 /app_data/static \
                                 ./deploy/docker/user-data
 
-USER qatuser
+USER user
 
 EXPOSE 8000
 
