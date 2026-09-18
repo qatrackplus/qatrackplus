@@ -895,6 +895,13 @@ class TestPerformQC(BaseQATests):
         time.sleep(0.2)
 
         self.click("submit-qa")
+        # click() returns as soon as the click is dispatched, not when the
+        # POST it triggers has been handled - so without this the assertion
+        # below raced the submission. It failed roughly two runs in three on
+        # Chromium, and the failure screenshot showed the submit button still
+        # reading "Submitting...". Every other submit-qa test in this file
+        # already waits for the success alert; this one was the exception.
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
         assert models.AutoSave.objects.filter(pk=auto.pk).count() == 0
 
