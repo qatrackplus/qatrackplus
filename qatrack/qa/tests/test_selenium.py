@@ -152,7 +152,19 @@ class BaseQATests(SeleniumTests, TransactionTestCase):
         self.send_keys("id_password", self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        # Wait for proof that the login POST was handled and the redirect has
+        # rendered. The logout link is inside {% if user.is_authenticated %}
+        # in site_base.html, so its presence means both.
+        #
+        # This used to wait for "head > title", which every page has -
+        # including the login page still on screen. It was satisfied
+        # immediately, before the POST had even been sent, so a slow round
+        # trip left the test unauthenticated. It then failed later, somewhere
+        # else, as a timeout waiting for an element that only exists when
+        # logged in - which looks like an unrelated flake.
+        self.wait.until(
+            e_c.presence_of_element_located((By.CSS_SELECTOR, 'a[href*="logout"]'))
+        )
 
     def load_main(self):
         self.login()
