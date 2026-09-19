@@ -2067,7 +2067,7 @@ class TestInstance(models.Model):
     work_started = models.DateTimeField(verbose_name=_l("Work Started"), editable=False, db_index=True)
 
     # when was the work actually performed
-    work_completed = models.DateTimeField(verbose_name=_l("Work Completed"), default=timezone.now, help_text=settings.DATETIME_HELP, db_index=True)
+    work_completed = models.DateTimeField(verbose_name=_l("Work Completed"), default=timezone.now, db_index=True)  # help_text is set by the form; see faults.models.Fault.occurred
 
     order = models.PositiveIntegerField(verbose_name=_l("Order"), default=0)
 
