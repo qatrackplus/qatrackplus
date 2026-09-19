@@ -106,3 +106,39 @@ EMAIL_HOST_USER = ''  # e.g. "randle.taylor@gmail.com"
 EMAIL_HOST_PASSWORD = 'your_password_here'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
+
+
+# ------------------------------------------------------------------------------
+# Dates and times
+#
+# By default QATrack+ shows dates as YYYY-MM-DD HH:MM, in every language, and
+# the date pickers write that same format into the field. ISO order is the
+# default because it sorts correctly and cannot be misread - 03/04 is the 3rd
+# of April to half the world and the 4th of March to the other half.
+#
+# To change it, set the format you want here. Everything follows from it: what
+# is displayed, what the date pickers produce, and the help text under each
+# date field. Use Python strptime syntax (%Y year, %m month, %d day, %H hour,
+# %M minute).
+#
+# QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"   # 31 May 2012 14:30
+# QATRACK_DATE_FORMAT = "%d %b %Y"             # 31 May 2012
+# QATRACK_TIME_FORMAT = "%H:%M"
+#
+# Typing a date is separate from displaying one. QATrack+ always accepts the
+# format above, plus the ones listed below. Adding to this list lets people
+# enter dates whichever way they are used to without changing what anybody
+# sees - it only affects what is understood on the way in.
+#
+# QATRACK_EXTRA_DATETIME_INPUT_FORMATS = [
+#     "%d %b %Y %H:%M",     # 31 May 2012 14:30
+#     "%d/%m/%Y %H:%M",     # 31/05/2012 14:30
+# ]
+# QATRACK_EXTRA_DATE_INPUT_FORMATS = [
+#     "%d %b %Y",
+#     "%d/%m/%Y",
+# ]
+#
+# Note the JSON API is deliberately unaffected by all of this - its date
+# format is fixed so that changing your display preference cannot break an
+# integration that parses it.

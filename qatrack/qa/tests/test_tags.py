@@ -164,7 +164,7 @@ class TestAsQCWindow:
         utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=datetime.UTC)  # 28th in EST
         utc.frequency = self.wed
         window = qa_tags.as_qc_window(utc)
-        assert window == "27 Nov 2018 - 29 Nov 2018"
+        assert window == "2018-11-27 - 2018-11-29"
 
     def test_no_start(self):
         """No window_start so window should show as due date to overdue date"""
@@ -172,7 +172,7 @@ class TestAsQCWindow:
         utc.due_date = timezone.datetime(2018, 11, 29, 2, 0, tzinfo=datetime.UTC)  # 28th in EST
         utc.frequency = utils.create_frequency(name="w", slug="w", interval=7, window_end=4, save=False)
         window = qa_tags.as_qc_window(utc)
-        assert window == "28 Nov 2018 - 02 Dec 2018"
+        assert window == "2018-11-28 - 2018-12-02"
 
     def test_no_due_date(self):
         """No due date so no window available"""
