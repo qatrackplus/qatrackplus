@@ -156,6 +156,15 @@ EMAIL_PORT = 587
 #     "%d/%m/%Y",
 # ]
 #
+# One caution when mixing the two numeric orders. 03/05/2026 is the 3rd of May
+# to most of the world and March 5th in the United States, and nothing in the
+# string says which. If you accept both, QATrack+ resolves it using your
+# display format, so what you type and what you see back agree - but a date
+# pasted in from somewhere that uses the other order will be read as a
+# different day, silently. If your site handles data from both conventions,
+# it is safer to leave the default ISO format in place, where there is
+# nothing to guess.
+#
 # Note the JSON API is deliberately unaffected by all of this - its date
 # format is fixed so that changing your display preference cannot break an
 # integration that parses it.

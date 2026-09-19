@@ -18,6 +18,19 @@ from qatrack.qatrack_core import dateformats
 
 ISO = "%Y-%m-%d %H:%M"
 
+# Formats a real site might plausibly choose. Any of these has to work end to
+# end, not just the default - that is the whole point of making it a setting.
+REALISTIC = [
+    ("%Y-%m-%d %H:%M", "2026-03-05 09:07"),       # ISO 8601, the default
+    ("%m/%d/%Y %H:%M", "03/05/2026 09:07"),       # United States
+    ("%d/%m/%Y %H:%M", "05/03/2026 09:07"),       # most of the rest of the world
+    ("%d.%m.%Y %H:%M", "05.03.2026 09:07"),       # German / Nordic
+    ("%d %b %Y %H:%M", "05 Mar 2026 09:07"),      # the pre-4.1 QATrack+ format
+    ("%b %d %Y %H:%M", "Mar 05 2026 09:07"),      # month name first
+    ("%d %B %Y %H:%M", "05 March 2026 09:07"),    # full month name
+    ("%Y-%m-%d %I:%M %p", "2026-03-05 09:07 AM"),  # 12 hour
+]
+
 
 class TestFormatConversion(TestCase):
     """The strptime -> other dialect translations."""
@@ -40,6 +53,52 @@ class TestFormatConversion(TestCase):
         assert dateformats.to_django(fmt) == "d M Y H:i"
         assert dateformats.to_flatpickr(fmt) == "d M Y H:i"
         assert dateformats.to_moment(fmt) == "DD MMM YYYY HH:mm"
+
+    def test_month_day_year(self):
+        """United States order."""
+        fmt = "%m/%d/%Y %H:%M"
+        assert dateformats.to_django(fmt) == "m/d/Y H:i"
+        assert dateformats.to_flatpickr(fmt) == "m/d/Y H:i"
+        assert dateformats.to_moment(fmt) == "MM/DD/YYYY HH:mm"
+
+    def test_month_name_first(self):
+        fmt = "%b %d %Y"
+        assert dateformats.to_django(fmt) == "M d Y"
+        assert dateformats.to_moment(fmt) == "MMM DD YYYY"
+
+    def test_full_month_name(self):
+        fmt = "%d %B %Y"
+        assert dateformats.to_django(fmt) == "d F Y"
+        assert dateformats.to_moment(fmt) == "DD MMMM YYYY"
+
+    def test_twelve_hour_clock(self):
+        fmt = "%I:%M %p"
+        assert dateformats.to_django(fmt) == "h:i A"
+        assert dateformats.to_flatpickr(fmt) == "h:i K"
+        assert dateformats.to_moment(fmt) == "hh:mm A"
+
+    def test_every_realistic_format_renders_the_same_in_python_and_django(self):
+        """The property that matters: the server and the browser agree.
+
+        Django is the only one of the three target dialects that can be
+        rendered from Python, so this is as close as a unit test gets to
+        checking that a converted format still describes the same instant.
+        """
+        moment = datetime.datetime(2026, 3, 5, 9, 7)
+        for fmt, expected in REALISTIC:
+            assert moment.strftime(fmt) == expected, fmt
+            assert dj_format(moment, dateformats.to_django(fmt)) == expected, fmt
+
+    def test_every_realistic_format_round_trips(self):
+        """Rendered, then read back, gives the instant you started with."""
+        moment = datetime.datetime(2026, 3, 5, 9, 7)
+        for fmt, _ in REALISTIC:
+            assert datetime.datetime.strptime(moment.strftime(fmt), fmt) == moment, fmt
+
+    def test_every_realistic_format_converts_without_error(self):
+        for fmt, _ in REALISTIC:
+            for convert in (dateformats.to_django, dateformats.to_flatpickr, dateformats.to_moment):
+                assert convert(fmt), fmt
 
     def test_date_only(self):
         assert dateformats.to_django("%Y-%m-%d") == "Y-m-d"
@@ -214,6 +273,31 @@ class TestDeployerCanOverride(TestCase):
         assert get_format('MOMENT_DATETIME_FMT') == "DD/MM/YYYY HH:mm"
         assert get_format('DATETIME_INPUT_FORMATS')[0] == "%d/%m/%Y %H:%M"
         assert "DD/MM/YYYY" in get_format('DATETIME_HELP')
+
+    @override_settings(QATRACK_DATE_FORMAT="%m/%d/%Y", QATRACK_EXTRA_DATE_INPUT_FORMATS=["%d/%m/%Y"])
+    def test_us_order_wins_when_it_is_the_display_format(self):
+        """03/05/2026 is genuinely ambiguous, so the tie has to break somewhere.
+
+        A site that displays US order and also accepts European order has no
+        way to tell 3rd of May from March 5th. It resolves to the display
+        format, because that is first in the input list - which is the only
+        answer that makes what you type and what you see agree.
+        """
+        self._reload()
+        assert DateField().clean("03/05/2026") == datetime.date(2026, 3, 5)
+
+    @override_settings(QATRACK_DATE_FORMAT="%d/%m/%Y", QATRACK_EXTRA_DATE_INPUT_FORMATS=["%m/%d/%Y"])
+    def test_european_order_wins_when_it_is_the_display_format(self):
+        """The same input, the same two formats accepted, the other answer."""
+        self._reload()
+        assert DateField().clean("03/05/2026") == datetime.date(2026, 5, 3)
+
+    @override_settings(QATRACK_DATE_FORMAT="%b %d %Y")
+    def test_a_month_name_format_works_end_to_end(self):
+        self._reload()
+        assert get_format('DATE_FORMAT') == "M d Y"
+        assert get_format('MOMENT_DATE_FMT') == "MMM DD YYYY"
+        assert DateField().clean("Mar 05 2026") == datetime.date(2026, 3, 5)
 
     @override_settings(QATRACK_EXTRA_DATETIME_INPUT_FORMATS=["%d.%m.%Y %H:%M"])
     def test_extra_input_formats_are_additive_and_do_not_change_display(self):
