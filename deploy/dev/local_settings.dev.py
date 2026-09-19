@@ -63,9 +63,14 @@ DATABASES['readonly'] = DATABASES['default']
 # date field. Use Python strptime syntax (%Y year, %m month, %d day, %H hour,
 # %M minute).
 #
+# QATRACK_DATETIME_FORMAT = "%Y/%m/%d %H:%M"   # 2012/05/31 14:30
+# QATRACK_DATE_FORMAT = "%Y/%m/%d"             # 2012/05/31
+# QATRACK_TIME_FORMAT = "%H:%M"
+#
+# ...or with a month name, also unambiguous:
+#
 # QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"   # 31 May 2012 14:30
 # QATRACK_DATE_FORMAT = "%d %b %Y"             # 31 May 2012
-# QATRACK_TIME_FORMAT = "%H:%M"
 #
 # Typing a date is separate from displaying one. QATrack+ always accepts the
 # format above, plus the ones listed below. Adding to this list lets people
@@ -77,18 +82,27 @@ DATABASES['readonly'] = DATABASES['default']
 #     "%d/%m/%Y %H:%M",     # 31/05/2012 14:30
 # ]
 # QATRACK_EXTRA_DATE_INPUT_FORMATS = [
-#     "%d %b %Y",
-#     "%d/%m/%Y",
+#     "%Y/%m/%d",           # 2012/05/31
+#     "%d %b %Y",           # 31 May 2012
 # ]
 #
-# One caution when mixing the two numeric orders. 03/05/2026 is the 3rd of May
-# to most of the world and March 5th in the United States, and nothing in the
-# string says which. If you accept both, QATrack+ resolves it using your
-# display format, so what you type and what you see back agree - but a date
-# pasted in from somewhere that uses the other order will be read as a
-# different day, silently. If your site handles data from both conventions,
-# it is safer to leave the default ISO format in place, where there is
-# nothing to guess.
+# On DD/MM/YYYY and MM/DD/YYYY: deliberately not suggested here.
+#
+# 03/05/2026 is the 3rd of May to most of the world and March 5th in the
+# United States. Nothing in the string says which, and because the US
+# convention is entrenched, both readings turn up in the same datasets. In
+# most software that is an annoyance. In a QC record it is the date a machine
+# was or was not verified - read later by colleagues trained in a different
+# convention, and by people who were not there. Medical physics writes dates
+# unambiguously for that reason, and QATrack+ follows suit rather than making
+# it your problem.
+#
+# So the defaults are ISO, and YYYY/MM/DD and month-name formats are the
+# alternatives offered: none of them can be read two ways. Neither numeric
+# day/month order is blocked - it is your deployment - but configuring one
+# raises a warning at startup (qatrack.W004), and configuring *both* raises a
+# stronger one, because at that point the same text typed by two people means
+# two different days.
 #
 # Note the JSON API is deliberately unaffected by all of this - its date
 # format is fixed so that changing your display preference cannot break an

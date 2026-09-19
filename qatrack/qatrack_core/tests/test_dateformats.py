@@ -14,7 +14,7 @@ from django.test import TestCase, override_settings
 from django.utils.dateformat import format as dj_format
 from django.utils.formats import get_format
 
-from qatrack.qatrack_core import dateformats
+from qatrack.qatrack_core import checks, dateformats
 
 ISO = "%Y-%m-%d %H:%M"
 
@@ -307,3 +307,51 @@ class TestDeployerCanOverride(TestCase):
         assert formats[0] == "%Y-%m-%d %H:%M", "the default must stay first"
         assert get_format('DATETIME_FORMAT') == "Y-m-d H:i", "display must be unchanged"
         DateTimeField().clean("25.03.2026 14:30")
+
+
+class TestAmbiguousFormatCheck(TestCase):
+    """The system check that says out loud what is and is not supported."""
+
+    def test_iso_is_not_ambiguous(self):
+        """Year first settles it - nothing writes year-day-month."""
+        for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%Y-%m-%d %H:%M"]:
+            assert not checks.order_is_ambiguous(fmt), fmt
+
+    def test_a_named_month_is_not_ambiguous(self):
+        for fmt in ["%d %b %Y", "%b %d %Y", "%d %B %Y"]:
+            assert not checks.order_is_ambiguous(fmt), fmt
+
+    def test_all_numeric_day_month_orders_are_ambiguous(self):
+        """Both orders, not just the non-US one - neither is self describing."""
+        for fmt in ["%d/%m/%Y", "%m/%d/%Y", "%d-%m-%Y", "%d.%m.%Y"]:
+            assert checks.order_is_ambiguous(fmt), fmt
+
+    def test_the_default_configuration_is_silent(self):
+        """Shipping defaults must not warn, or the warning gets ignored."""
+        assert checks.check_ambiguous_date_formats(None) == []
+
+    @override_settings(QATRACK_DATE_FORMAT="%d/%m/%Y")
+    def test_an_ambiguous_display_format_warns(self):
+        warnings = checks.check_ambiguous_date_formats(None)
+        assert len(warnings) == 1
+        assert warnings[0].id == 'qatrack.W004'
+        assert "QATRACK_DATE_FORMAT" in warnings[0].msg
+
+    @override_settings(QATRACK_EXTRA_DATETIME_INPUT_FORMATS=["%d/%m/%Y %H:%M"])
+    def test_an_ambiguous_extra_input_format_warns(self):
+        """Accepting one on input is enough - it does not have to be displayed."""
+        warnings = checks.check_ambiguous_date_formats(None)
+        assert len(warnings) == 1
+        assert "QATRACK_EXTRA_DATETIME_INPUT_FORMATS" in warnings[0].msg
+
+    @override_settings(QATRACK_DATE_FORMAT="%m/%d/%Y", QATRACK_EXTRA_DATE_INPUT_FORMATS=["%d/%m/%Y"])
+    def test_accepting_both_orders_warns_differently(self):
+        """The worst case gets its own message: one string, two meanings."""
+        warnings = checks.check_ambiguous_date_formats(None)
+        assert len(warnings) == 1
+        assert "two different days" in warnings[0].msg
+
+    @override_settings(QATRACK_DATE_FORMAT="%d %b %Y", QATRACK_EXTRA_DATE_INPUT_FORMATS=["%Y-%m-%d"])
+    def test_unambiguous_alternatives_do_not_warn(self):
+        """Changing away from ISO is fine, as long as it stays readable."""
+        assert checks.check_ambiguous_date_formats(None) == []
