@@ -680,10 +680,9 @@ class ServiceEventForm(BetterModelForm):
 
         for f in ['datetime_service']:
             self.fields[f].widget.attrs['class'] = 'daterangepicker-input'
-            datetime_input_formats = get_format("DATETIME_INPUT_FORMATS")
-            self.fields[f].widget.format = datetime_input_formats[0]
-            self.fields[f].input_formats = datetime_input_formats
-            self.fields[f].widget.attrs['title'] = settings.DATETIME_HELP
+            self.fields[f].widget.format = get_format('DATETIME_INPUT_FORMATS')[0]
+            self.fields[f].input_formats = get_format('DATETIME_INPUT_FORMATS')
+            self.fields[f].widget.attrs['title'] = get_format('DATETIME_HELP')
             # self.fields[f].help_text = settings.DATETIME_HELP
 
         for f in ['duration_service_time', 'duration_lost_time']:

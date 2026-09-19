@@ -49,7 +49,14 @@ def last_month_dates(dt=None):
 
 
 def format_datetime(dt, fmt=None):
-    """Take a date time and return as string formatted date time after converting to localtime"""
+    """Take a date time and return as string formatted date time after converting to localtime
+
+    fmt defaults to the configured display format, resolved when called
+    rather than at import. A default argument would be bound before
+    local_settings.py has been read, so a deployer who changed the format
+    would see it everywhere except here.
+    """
+    fmt = fmt or get_format('DATETIME_INPUT_FORMATS')[0]
 
     if not dt:
         return ""
@@ -63,13 +70,11 @@ def format_datetime(dt, fmt=None):
 
 def format_as_date(dt, fmt=None):
     """Take a date time and return as string formatted date after converting to localtime"""
-    fmt = fmt or get_format("DATE_INPUT_FORMATS")[0]
-    return format_datetime(dt, fmt=fmt)
+    return format_datetime(dt, fmt=fmt or get_format('DATE_INPUT_FORMATS')[0])
 
 
 def format_as_time(dt, fmt=None):
-    fmt = fmt or get_format("TIME_INPUT_FORMATS")[0]
-    return format_datetime(dt, fmt=fmt)
+    return format_datetime(dt, fmt=fmt or get_format('TIME_INPUT_FORMATS')[0])
 
 
 def format_timedelta(td):

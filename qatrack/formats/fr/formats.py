@@ -1,23 +1,6 @@
-DATETIME_FORMAT = "Y-m-d H:i"
-DATE_FORMAT = "Y-m-d"
-TIME_FORMAT = "H:i"
-DATE_INPUT_FORMATS = ["%d %b %Y", "%d/%m/%Y", "%Y-%m-%d"]
-DATETIME_INPUT_FORMATS = [
-    "%d %b %Y %H:%M",
-    "%d %b %Y %H:%M:%S",
-    "%d/%m/%Y %H:%M",
-    "%d/%m/%Y %H:%M:%S",
-    "%Y-%m-%d %H:%M",
-    "%Y-%m-%d %H:%M:%S",
-    "%Y-%m-%d %H:%M:%S.%f",
-    "%Y-%m-%dT%H:%M:%S.%fZ",
-]
-TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
-
-# JavaScript formats
-MOMENT_DATE_DATA_FMT = "DD-MM-YYYY"
-MOMENT_DATE_FMT = "DD MMM YYYY"
-MOMENT_DATETIME_FMT = 'DD MMM YYYY HH:mm'
-FLATPICKR_DATE_FMT = 'd M Y'
-FLATPICKR_DATETIME_FMT = 'd M Y H:i'
-DATERANGEPICKER_DATE_FMT = 'DD MMM YYYY'
+# Every language deliberately gets the same date formats: a date should not
+# change meaning because someone switched the interface language. The formats
+# themselves are configurable - see the QATRACK_*_FORMAT settings - and are
+# derived in one place so that the parser, the display, the date pickers and
+# the help text cannot disagree.
+from qatrack.formats.base import *  # noqa: F401,F403
