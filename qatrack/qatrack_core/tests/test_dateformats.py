@@ -11,6 +11,7 @@ import datetime
 
 from django.forms.fields import DateField, DateTimeField, TimeField
 from django.test import TestCase, override_settings
+from django.utils.dateformat import format as dj_format
 from django.utils.formats import get_format
 
 from qatrack.qatrack_core import dateformats
@@ -53,6 +54,30 @@ class TestFormatConversion(TestCase):
         fmt = "%H:%M:%S"
         assert dateformats.to_django(fmt) == "H:i:s"
         assert dateformats.to_flatpickr(fmt) == "H:i:S"
+
+    def test_single_digit_values_are_zero_padded(self):
+        """Y-m-d has to mean YYYY-MM-DD, not YYYY-M-D.
+
+        Django's unpadded variants are one character away from the padded ones
+        - n, j and G rather than m, d and H - so a slip in the mapping would
+        render 2026-3-5, which still looks plausible enough to ship. moment
+        and flatpickr have the same trap.
+        """
+        dt = datetime.datetime(2026, 3, 5, 9, 7)
+
+        assert dt.strftime(ISO) == "2026-03-05 09:07"
+        assert dj_format(dt, dateformats.to_django(ISO)) == "2026-03-05 09:07"
+
+        # The picker dialects cannot be rendered from Python, so assert the
+        # tokens - m/d/H/i and MM/DD/HH/mm are the zero padded ones.
+        assert dateformats.to_flatpickr(ISO) == "Y-m-d H:i"
+        assert dateformats.to_moment(ISO) == "YYYY-MM-DD HH:mm"
+
+    def test_padded_output_parses_back(self):
+        """What is displayed must be re-readable, padding and all."""
+        dt = datetime.datetime(2026, 3, 5, 9, 7)
+        rendered = dj_format(dt, dateformats.to_django(ISO))
+        assert datetime.datetime.strptime(rendered, ISO) == dt
 
     def test_literal_letters_are_escaped(self):
         """A literal 'T' must not become a format specifier."""
