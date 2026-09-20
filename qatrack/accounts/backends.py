@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
+from django.utils.translation import gettext as _
 from django_auth_adfs.backend import AdfsAuthCodeBackend
 
 from qatrack.accounts.models import ActiveDirectoryGroupMap, DefaultGroup
@@ -74,7 +75,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
 
         try:
             if len(password) == 0:
-                self.logger.info("Failed to authenticate user. No password provided.")
+                self.logger.info(_("Failed to authenticate user. No password provided."))
                 return None
 
             self.logger.debug("Initializing with ldap url=%s" % settings.AD_LDAP_URL)
@@ -165,7 +166,7 @@ class ActiveDirectoryGroupMembershipSSLBackend:
                 user.save()
                 self.logger.info("Created user with username: %s" % username)
             except Exception:
-                self.logger.info("Creation of user failed")
+                self.logger.info(_("Creation of user failed"))
                 return None
 
         self.update_user_attributes(user, user_attrs)

@@ -276,7 +276,7 @@ class BaseReport(metaclass=ReportMeta):
             # WeasyPrint not available, fall back to Chrome
             import logging
             logger = logging.getLogger(__name__)
-            logger.warning("WeasyPrint not available, falling back to Chrome")
+            logger.warning(_("WeasyPrint not available, falling back to Chrome"))
             return chrometopdf(content, name=fname, paper_size=paper_size)
         except Exception as e:
             # WeasyPrint failed for some other reason, fall back to Chrome
