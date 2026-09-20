@@ -71,6 +71,11 @@ def find_untranslated():
 
     for path in sorted(QATRACK.rglob('*.py')):
         relative = path.relative_to(REPO_ROOT)
+        # as_posix(), not str(): the baseline is a checked-in file read on
+        # every platform, and str() would write it with backslashes on
+        # Windows. Every entry would then miss, the remaining debt would read
+        # as new findings, and the suite would be red on Windows only.
+        key = relative.as_posix()
         parts = relative.parts
         # Migrations carry a frozen copy of old field definitions; tests are
         # not user facing.
@@ -90,7 +95,7 @@ def find_untranslated():
                 if keyword.arg in USER_FACING_KWARGS and not _is_translated(keyword.value):
                     text = _literal_string(keyword.value)
                     if text:
-                        found.add((str(relative), keyword.arg, text))
+                        found.add((key, keyword.arg, text))
 
             name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, 'id', '')
             if name in USER_FACING_CALLS:
@@ -98,7 +103,7 @@ def find_untranslated():
                     if not _is_translated(argument):
                         text = _literal_string(argument)
                         if text:
-                            found.add((str(relative), name, text))
+                            found.add((key, name, text))
 
     return found
 
@@ -155,4 +160,20 @@ def test_baseline_has_no_stale_entries():
         "translated, moved or deleted. Remove them from %s:\n\n%s"
         % (len(stale), BASELINE_PATH.name,
            '\n'.join('  %s\n    %s=%r' % (p, k, t) for p, k, t in stale))
+    )
+
+
+def test_baseline_paths_are_posix():
+    """The baseline is one file, read on every platform.
+
+    ``find_untranslated`` keys on ``Path.as_posix()``, so an entry written
+    with backslashes can never match - which is invisible on Linux and turns
+    the whole remaining debt into "new findings" on Windows. Regenerating the
+    baseline on a Windows checkout is the way that happens.
+    """
+    backslashed = sorted(path for path, _, _ in _load_baseline() if '\\' in path)
+    assert not backslashed, (
+        "%d baseline path(s) use backslashes. Rewrite them with forward "
+        "slashes in %s:\n\n%s"
+        % (len(backslashed), BASELINE_PATH.name, '\n'.join('  %s' % p for p in backslashed))
     )
