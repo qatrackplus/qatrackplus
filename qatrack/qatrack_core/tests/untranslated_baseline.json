@@ -1,35 +1,5 @@
 [
   [
-    "qatrack/accounts/backends.py",
-    "info",
-    "Creation of user failed"
-  ],
-  [
-    "qatrack/accounts/backends.py",
-    "info",
-    "Failed to authenticate user. No password provided."
-  ],
-  [
-    "qatrack/api/qa/serializers.py",
-    "ValidationError",
-    "No test instance status available"
-  ],
-  [
-    "qatrack/api/qa/serializers.py",
-    "ValidationError",
-    "The 'day' key must be an integer"
-  ],
-  [
-    "qatrack/api/qa/serializers.py",
-    "ValidationError",
-    "You must include the 'day' key when performing a Test List Cycle"
-  ],
-  [
-    "qatrack/api/qa/serializers.py",
-    "ValidationError",
-    "base64 encoding requested but content does not appear to be base64"
-  ],
-  [
     "qatrack/issue_tracker/models.py",
     "help_text",
     "Any error screen details. (Note the ability to click \"Switch to copy-and-paste view\" to copy Traceback)"
@@ -45,138 +15,13 @@
     "If desired, add multiple tags to this issue"
   ],
   [
-    "qatrack/parts/forms.py",
-    "ValidationError",
-    "Incorrect Storage value"
-  ],
-  [
-    "qatrack/parts/forms.py",
-    "ValidationError",
-    "Invalid location"
-  ],
-  [
-    "qatrack/parts/forms.py",
-    "ValidationError",
-    "This field is required"
-  ],
-  [
     "qatrack/qa/views/admin.py",
     "error",
     "Error copying references and tolerances: %s"
   ],
   [
-    "qatrack/qa/views/forms.py",
-    "ValidationError",
-    "This test requires a comment before submission."
-  ],
-  [
-    "qatrack/reports/reports.py",
-    "warning",
-    "WeasyPrint not available, falling back to Chrome"
-  ],
-  [
-    "qatrack/service_log/admin.py",
-    "ValidationError",
-    "You can not disable \"multiple\" for since there are Service Eventswith multiple Group Linker Instances referring to this Group Linker"
-  ],
-  [
-    "qatrack/service_log/forms.py",
-    "ValidationError",
-    "Cannot select status: Return to service QC must be performed and reviewed."
-  ],
-  [
     "qatrack/service_log/forms.py",
     "help_text",
     "hh:mm"
-  ],
-  [
-    "qatrack/service_log/forms.py",
-    "label",
-    "Unit"
-  ],
-  [
-    "qatrack/service_log/forms.py",
-    "label",
-    "User or third party"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available on fridays (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available on mondays (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available on saturdays (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available on sundays (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available on thursdays (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available on tuesdays (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "help_text",
-    "Hours available on wednesdays (hh:mm)"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Friday"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Hours"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Monday"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Saturday"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Sunday"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Thursday"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Tuesday"
-  ],
-  [
-    "qatrack/units/forms.py",
-    "label",
-    "Wednesday"
   ]
 ]
