@@ -136,7 +136,12 @@ norecursedirs = [
     ".venv",
     "venv"
 ]
-python_files = ["test_*.py", "*_test.py"]
+# "tests.py" is here because leaving it out has silently hidden real tests
+# twice: qatrack/units/tests.py and qatrack/faults/tests/tests.py, 76 tests in
+# the latter, neither of which errored or skipped - they simply never ran.
+# test_collection.py below enforces that nothing else slips through the same
+# way.
+python_files = ["test_*.py", "*_test.py", "tests.py"]
 addopts = "-ra -q"
 django_find_project = true
 DJANGO_SETTINGS_MODULE = "qatrack.settings"
