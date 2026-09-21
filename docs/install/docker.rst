@@ -28,7 +28,7 @@ In general, you can use one backend or the other. At the time of writing, Docker
 is recommending the WSL 2 backend.
 
 Docker for Windows, and Git
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To install Docker Desktop and Git run the following within an administrative
 command prompt:
@@ -48,10 +48,10 @@ prompt:
     docker run hello-world
 
 Linux
-~~~~~
+^^^^^
 
-Follow your distribution's documentation to install docker, or refer to Docker's
-`official installation docs`(https://docs.docker.com/engine/install/). 
+Follow your distribution's documentation to install docker, or refer to the
+`official installation docs <https://docs.docker.com/engine/install/>`_.
 
 
 Make docker work without sudo on Linux
@@ -64,11 +64,11 @@ sudo:
 
 After completing these post install tasks please reset your computer.
 
-Before continuing please verify that you can run `docker run hello-world` in a
+Before continuing please verify that you can run ``docker run hello-world`` in a
 terminal.
 
 Git
-~~~
+^^^
 
 To retrieve files from GitHub you will need git installed. Use the installation
 method provided by your distribution. For example, for Ubuntu:
@@ -88,13 +88,13 @@ This part is OS independent. The language used will be tuned for a Windows
 user, but equivalent steps can be followed on Linux.
 
 Changing to the directory where all server files will be stored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Open a command prompt with just user priveleges and change your directory to
 the directory where all of the QATrack+ server files will be stored.
 
 Lets say, for example, all our files are going to be located within the
-`D:` drive at `D:\QATrack+` then we would want to do the following:
+``D:`` drive at ``D:\QATrack+`` then we would want to do the following:
 
 .. code-block:: console
 
@@ -102,7 +102,7 @@ Lets say, for example, all our files are going to be located within the
     cd QATrack+
 
 Downloading
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 At this point QATrack+ files need to be pulled from the git repository.  Do
 the following:
@@ -135,7 +135,7 @@ How to Run
 ----------
 
 Environment Setup
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 1. Copy the provided ``.env.example`` to ``.env``.
 
@@ -151,14 +151,13 @@ Environment Setup
 4. Set a unique value for ``SECRET_KEY``.
 5. Set ``QATDEV=1`` if you are developing locally, or set it to ``QATDEV=0``
    for production.
-6. **Install the ``just`` command runner** (see
-   https://github.com/casey/just#installation).
+6. **Install the ``just`` command runner** (see https://github.com/casey/just#installation).
 
    This will simplify the commands needed to use the docker deployment by having
    complicated command lines reduced to commands that are easy to type and remember.
 
 Development
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 By default, Docker Compose will read both ``compose.yaml`` and
 ``compose.override.yaml``. The override file maps your local source code into
@@ -174,7 +173,7 @@ To build the images and run the services:
    just compose up --build
 
 Production
-~~~~~~~~~~
+^^^^^^^^^^
 
 1. Configure strong, secure passwords in your ``.env`` file.
 2. On your host, place the certificate file and certificate key file in a
@@ -191,11 +190,13 @@ Production
    .. code-block:: bash
 
       just compose up --build
-    
-    When ``QATDEV=0``, ``just compose`` only uses ``compose.yaml``.
+
+   .. note::
+
+      When ``QATDEV=0``, ``just compose`` only uses ``compose.yaml``.
 
 First Run Setup
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 When booting a fresh database for the first time, you must create a superuser
 (admin) account.
@@ -210,7 +211,7 @@ Advanced usage tips
 -------------------
 
 Building the images with extra python packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you'd like to be able to use in your composite tests python packages that
 do not already come installed with QATrack+, you can create a
@@ -220,7 +221,7 @@ Specify each of your custom requirements, as described in
 https://pip.pypa.io/en/stable/reference/requirements-file-format/.
 
 Overriding the base Docker images used to build the django image
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you need to, you can override which docker images serve as base images
 for the builder and runtime targets of the Dockerfile.
@@ -241,14 +242,13 @@ designed to run on python 3.12.
 
 
 Accessing the linux shell on the running containers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can log into the shell on running containers. This can be useful to debug
 various issues, such as bind mounts write permissions, or to inspect the
 files or directories on the container.
 
-django container
-^^^^^^^^^^^^^^^^
+**django container**:
 
 .. code-block:: console
 
@@ -262,22 +262,19 @@ environment, you can use:
     just compose exec -it django bash
     user@host: pip list
 
-django-q container
-^^^^^^^^^^^^^^^^^^
+**django-q container**:
 
 .. code-block:: console
 
     just compose exec -it django-q bash
 
-backups container
-^^^^^^^^^^^^^^^^^
+**backups container**:
 
 .. code-block:: console
 
     just compose exec -it backup sh
 
-nginx container
-^^^^^^^^^^^^^^^
+**nginx container**:
 
 .. code-block:: console
 
@@ -285,7 +282,7 @@ nginx container
 
 
 Running Django management commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can pass any argument you would pass to ``manage.py`` to ``just manage``:
 
@@ -296,8 +293,7 @@ You can pass any argument you would pass to ``manage.py`` to ``just manage``:
 
 This requires that the django container is already running.
 
-Accessing the Django shell
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Accessing the Django shell**
 
 In particular, if you need to access the Django shell run the following:
 
@@ -307,7 +303,7 @@ In particular, if you need to access the Django shell run the following:
 
 
 Making QATrack+ start on boot and run in the background
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To have QATrack+ start on boot  add the `-d` flag to the up command to detach
 the process:
@@ -317,7 +313,7 @@ the process:
     just compose up -d
 
 Shutdown the server
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 To shutdown the server run:
 
@@ -329,7 +325,7 @@ You can also single press `Ctrl + C` within the server terminal that you ran
 `just compose up` to gracefully shutdown the server.
 
 Shutdown the server, remove the containers and docker volumes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 WARNING: if you store your database data in a docker volume, *this will delete
 your database*. The next time you start the containers, a fresh empty database
@@ -342,7 +338,7 @@ To shutdown the server, remove the containers and the docker volumes, run:
     just compose down -v
 
 Update server
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 First, review the release notes of the new version.
 Second, make sure you have backups of your DB that you can restore successfully.
@@ -364,7 +360,7 @@ Once any files have changed in the qatrackplus directory you need to run the fol
     just compose up  # or just compose up -d
 
 Delete docker data
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 If for some reason you need to, the following commands will delete all docker
 data from all docker projects (**WARNING: IRREVERSIBLE, erases volumes**):
