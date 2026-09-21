@@ -189,6 +189,7 @@ dev = [
     "sphinx-copybutton>=0.5.2",
     "sphinx-design>=0.6.0",
     "pytest-xdist>=3.0,<4.0",
+    "pygraphviz>=2.0.2",
 ]
 
 [tool.ruff]
@@ -221,3 +222,785 @@ ignore = [
 
 [tool.ruff.format]
 quote-style = "single"
+
+# poethepoet task definitions - see https://poethepoet.natn.io/
+#
+# This mirrors the Makefile's dev/test commands and is meant to run
+# *alongside* it, not replace it, while the project figures out whether to
+# move off Make (every Makefile target here is .PHONY - there's no real
+# file-dependency graph, so Make's core feature isn't actually in use, and
+# it has no native Windows story despite this project supporting Windows
+# deployments). `poe` itself isn't a project dependency - install it once,
+# globally, via `uv tool install poethepoet`, then run any task below with
+# `poe <task>` from inside the repo. `poe` auto-detects this project's
+# `.venv` the same way `uv run` does, so tasks below call `pytest`/`python`
+# directly rather than re-prefixing with `uv run`.
+#
+# ---------------------------------------------------------------------------
+# If Make is retired and poe becomes the only task runner, these need doing
+# first. None of them matter while the Makefile is still the primary runner
+# and poe only mirrors it.
+#
+# 1. Windows. This is the sharp one, because Windows support is the main
+#    argument for replacing Make - and these tasks do not currently deliver
+#    it. Seven of them (dev-quickstart, _test-engine, test-integration,
+#    dumpdata, docs, nginx-conf, supervisor-conf) use POSIX-only shell:
+#    `cp -n`, `mkdir -p`, `[ -f ... ]`, `mv -f`, `rm -f`, `$?`, `$(date ...)`,
+#    `sudo`. poe defaults `shell` tasks to bash/posix and, on Windows with no
+#    other interpreter configured, fails with "Installing Git Bash or using
+#    WSL should fix this" - which is the same "no native Windows story" the
+#    Makefile is criticised for above. Fix before relying on it: set
+#    `interpreter = "python"` on those tasks and port the logic to stdlib
+#    (shutil.copy/os.makedirs/pathlib), which is genuinely cross-platform;
+#    `interpreter = ["pwsh", "bash"]` is also supported if a PowerShell
+#    rewrite is preferred. nginx-conf/supervisor-conf are Ubuntu-and-sudo
+#    only by nature and should just be marked as such rather than ported.
+#
+# 2. Extra pytest args. `make test args="-k foo"` has no equivalent here for
+#    any task declaring a named arg - poe silently drops `--`-separated
+#    dash-prefixed tokens (see the note on _test-engine below). Retiring Make
+#    would make that a real regression rather than a documented gap. The way
+#    out is to drop the named `--engine` arg and define the five engine tasks
+#    independently, so nothing on the path declares a named arg.
+#
+# 3. VERSION is currently written in three places: `VERSION` in the Makefile,
+#    `version` under [project] above, and VERSION in [tool.poe.env] below.
+#    The release checklist already flags the first two drifting apart. If
+#    Make goes, do not keep a third copy - read it at task time from the
+#    installed package metadata
+#    (`python -c "import importlib.metadata as m; print(m.version(\'qatrackplus\'))"`)
+#    or from [project] directly, and drop [tool.poe.env] VERSION.
+#
+# 4. Make poe a real dependency. It is deliberately not one today (install
+#    once with `uv tool install poethepoet`), which is fine for an optional
+#    mirror of the Makefile. As the only runner it becomes required to build
+#    and test the project, so it belongs in the dev dependency group, where
+#    `uv sync --dev` provides it and uv.lock pins it - matching how every
+#    other tool in CI is now pinned.
+#
+# 5. Consider `[tool.poe.executor] locked = true`. poe runs tasks through
+#    `uv run` already, and its uv executor accepts locked/frozen/no-sync/
+#    exact. It is deliberately left unset here so poe behaves exactly like
+#    the Makefile; that reason disappears with the Makefile. If CI ever
+#    invokes poe directly, `locked = true` gives it the same lockfile
+#    guarantee the workflow's `uv sync --locked` steps have.
+#
+# 6. `test_simple` exists only for Make muscle memory and is identical to
+#    `test`. Drop it.
+# ---------------------------------------------------------------------------
+[tool.poe.env]
+VERSION = "4.0.0"
+
+# ==========================================================================
+# Development environment
+# ==========================================================================
+
+
+# dev-init refuses to touch an environment that already exists, rather than
+# copying what it can and failing partway through on `That username is already
+# taken`. Half a setup and a confusing error is the worst of the options. If
+# you want the old one gone, say so explicitly with dev-reset.
+[tool.poe.tasks.dev-init]
+help = "Create a fresh sqlite dev environment - refuses if one already exists"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+TEMPLATES = [
+    ('deploy/dev/local_settings.dev.py', 'qatrack/local_settings.py'),
+    ('deploy/dev/local_test_settings.sqlite.py', 'qatrack/local_test_settings.py'),
+    ('deploy/dev/local_test_settings.memory.py', 'qatrack/local_test_settings.memory.py'),
+]
+DB = pathlib.Path('db/default.db')
+
+# Check everything before doing anything.
+existing = [dst for _, dst in TEMPLATES if pathlib.Path(dst).exists()]
+if DB.exists():
+    existing.append(str(DB))
+
+if existing:
+    print('This already looks like a set up dev environment:')
+    for path in existing:
+        print(f'  {path}')
+    print()
+    print('dev-init will not write over any of it. Either remove what you do not')
+    print('want and run this again, or use `poe dev-reset` to discard all of it')
+    print('and start over.')
+    sys.exit(1)
+
+for src, dst in TEMPLATES:
+    shutil.copyfile(src, dst)
+    print(f'created {dst} from {src}')
+
+pathlib.Path('db').mkdir(exist_ok=True)
+
+def run(*args, env=None):
+    result = subprocess.call([sys.executable, 'manage.py', *args],
+                             env={**os.environ, **(env or {})})
+    if result != 0:
+        sys.exit(result)
+
+run('migrate')
+run('createcachetable')
+run('createsuperuser', '--noinput', env={
+    'DJANGO_SUPERUSER_USERNAME': 'superuser',
+    'DJANGO_SUPERUSER_PASSWORD': 'superuser',
+    'DJANGO_SUPERUSER_EMAIL': 'superuser@example.com',
+})
+print('dev environment ready - log in as superuser / superuser')
+"""
+
+
+[tool.poe.tasks.dev-clean]
+help = "Remove the dev settings files and sqlite database, leaving nothing behind"
+interpreter = "python"
+shell = """
+import pathlib
+
+for path in [
+    'qatrack/local_settings.py',
+    'qatrack/local_test_settings.py',
+    'qatrack/local_test_settings.memory.py',
+    'db/default.db',
+]:
+    target = pathlib.Path(path)
+    if target.exists():
+        target.unlink()
+        print(f'removed {path}')
+"""
+
+
+[tool.poe.tasks.dev-reset]
+help = "DESTRUCTIVE: delete your dev settings and sqlite database, then set up a fresh one"
+sequence = ["dev-clean", "dev-init"]
+
+
+[tool.poe.tasks.run]
+help = "Run the dev server"
+cmd = "python ./manage.py runserver"
+
+# ==========================================================================
+# Tests
+# ==========================================================================
+
+
+[tool.poe.tasks.test]
+help = "Run the suite (GUI/Selenium tests skipped by default - pass --run-selenium to include them)"
+cmd = "pytest"
+
+
+[[tool.poe.tasks.test-engine.args]]
+name = "engine"
+positional = true
+required = true
+help = "sqlite, memory, postgres, mysql or mssql"
+
+
+[tool.poe.tasks.test-engine]
+help = "Run the suite against one engine, restoring your settings afterwards"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+# poe passes declared task args to a `shell` task as environment
+# variables. `${engine}` is NOT substituted inside a python-interpreter
+# body - it arrives literally - so read it from the environment.
+engine = os.environ['engine']
+src = pathlib.Path(f'qatrack/local_test_settings.{engine}.py')
+live = pathlib.Path('qatrack/local_test_settings.py')
+backup = pathlib.Path('qatrack/local_test_settings.py.bak')
+
+if not src.exists():
+    print(f'error: {src} not found.')
+    print(f'Create it first - see deploy/dev/local_test_settings.{engine}.py '
+          'for a starting template.')
+    sys.exit(1)
+
+# try/finally rather than the shell version's fall-through restore. The
+# Makefile/`_test-engine` form only restores if the pytest line completes;
+# interrupt it (Ctrl-C) and your real local_test_settings.py is left
+# swapped out. This restores on any exit, including KeyboardInterrupt.
+had_existing = live.exists()
+if had_existing:
+    shutil.copyfile(live, backup)
+shutil.copyfile(src, live)
+try:
+    status = subprocess.call([sys.executable, '-m', 'pytest'])
+finally:
+    if had_existing:
+        shutil.move(str(backup), str(live))
+    else:
+        live.unlink(missing_ok=True)
+sys.exit(status)
+"""
+
+
+[tool.poe.tasks.test-integration]
+help = "Provision a fresh sqlite db like a real deployment, then run the suite against it"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+DB = pathlib.Path('db/default.db')
+DB_BAK = pathlib.Path('db/default.db.bak')
+KEPT = pathlib.Path('db/pytest_default.db')
+LIVE = pathlib.Path('qatrack/local_test_settings.py')
+LIVE_BAK = pathlib.Path('qatrack/local_test_settings.py.bak')
+
+pathlib.Path('db').mkdir(exist_ok=True)
+
+
+def manage(*args, env=None):
+    code = subprocess.call([sys.executable, 'manage.py', *args],
+                           env={**os.environ, **(env or {})})
+    if code != 0:
+        raise SystemExit(code)
+
+
+# Move the developer's real database and settings aside. The shell version
+# of this task does the same, but restores by falling through to its last
+# few lines - so if provisioning fails, or the run is interrupted, the
+# developer is left with their dev database sitting at db/default.db.bak
+# and no db/default.db at all. Everything below is wrapped so the restore
+# happens on any exit.
+had_db = DB.exists()
+had_live = LIVE.exists()
+if had_db:
+    shutil.move(str(DB), str(DB_BAK))
+if had_live:
+    shutil.copyfile(LIVE, LIVE_BAK)
+shutil.copyfile('deploy/dev/local_test_settings.sqlite.py', LIVE)
+
+status = 1
+try:
+    # Provision exactly the way a fresh deployment would, so the whole
+    # sequence is exercised for real and not just a disposable test db.
+    manage('migrate')
+    manage('createcachetable')
+    manage('collectstatic', '--noinput')
+    manage('createsuperuser', '--noinput', env={
+        'DJANGO_SUPERUSER_USERNAME': 'superuser',
+        'DJANGO_SUPERUSER_PASSWORD': 'superuser',
+        'DJANGO_SUPERUSER_EMAIL': 'superuser@example.com',
+    })
+    status = subprocess.call([sys.executable, '-m', 'pytest', '--reuse-db'])
+finally:
+    # Keep the provisioned db for inspection, but only if it exists - the
+    # shell version runs its `mv` unconditionally and errors when
+    # provisioning failed before the database was created.
+    if DB.exists():
+        KEPT.unlink(missing_ok=True)
+        shutil.move(str(DB), str(KEPT))
+        print(f'provisioned database kept at {KEPT}')
+    if had_live:
+        shutil.move(str(LIVE_BAK), str(LIVE))
+    else:
+        LIVE.unlink(missing_ok=True)
+    if had_db:
+        shutil.move(str(DB_BAK), str(DB))
+        print(f'restored your {DB}')
+
+sys.exit(status)
+"""
+
+# ==========================================================================
+# Tests - browser / GUI
+# ==========================================================================
+
+
+# GUI/Selenium only. Both axes - browser and window - are named in full on
+# every task, because neither has a "real" option and a deviation: Chromium
+# finds timing races Firefox does not, and a visible window is how you debug
+# them. Naming one combination shorter than the others would imply a pecking
+# order that does not exist.
+#
+# `test-gui` is not a fifth combination - it deliberately sets nothing, so it
+# runs whatever your own settings configure.
+#
+# Plain tasks rather than one with a --browser argument: poe stops forwarding
+# dash-prefixed tokens as soon as a task declares a named arg (see the note on
+# _test-engine below), and `-k`, `-x` and `--pdb` are exactly what you reach
+# for on a failing browser test.
+#
+# The env tables are the reason these exist - `SELENIUM_BROWSER=chromium
+# pytest ...` is not something you can type in cmd or PowerShell, and Windows
+# is a large share of real deployments.
+#
+# Note these set environment variables, and qatrack/local_test_settings.py is
+# imported after settings.py has read them. If you uncomment SELENIUM_BROWSER
+# or SELENIUM_HEADLESS there, your file wins and these tasks stop having any
+# effect - which looks exactly like the task being broken.
+
+[tool.poe.tasks.test-gui]
+help = "Run ONLY the GUI/Selenium tests, using whatever your settings configure"
+cmd = "pytest -m selenium"
+
+
+[tool.poe.tasks.test-gui-firefox-headless]
+help = "Run ONLY the GUI/Selenium tests: firefox, no window (no display needed)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "True" }
+
+
+[tool.poe.tasks.test-gui-firefox-visible]
+help = "Run ONLY the GUI/Selenium tests: firefox, visible window (needs a display)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "False" }
+
+
+[tool.poe.tasks.test-gui-chromium-headless]
+help = "Run ONLY the GUI/Selenium tests: chromium, no window (no display needed)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "True" }
+
+
+[tool.poe.tasks.test-gui-chromium-visible]
+help = "Run ONLY the GUI/Selenium tests: chromium, visible window (needs a display)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "False" }
+
+# ==========================================================================
+# Coverage
+# ==========================================================================
+
+
+[tool.poe.tasks.cover]
+help = "Run the full suite with coverage (--reuse-db)"
+cmd = "pytest --reuse-db --cov-report term-missing --cov ./"
+
+
+[tool.poe.tasks.cover-qatrack]
+help = "Like cover, but scoped to the qatrack package only"
+cmd = "pytest --reuse-db --cov-report term-missing --cov qatrack"
+
+
+[[tool.poe.tasks.cover-module.args]]
+name = "module"
+positional = true
+required = true
+# A path, not a dotted module. The command interpolates it into both
+# `--cov ./${module}` and pytest's target, and pytest takes paths - given
+# qatrack.qa it collects nothing, reports no coverage and exits 4, which
+# looks far too much like a module with no tests.
+help = "qatrack/qa, qatrack/units, or any path under qatrack/"
+
+
+[tool.poe.tasks.cover-module]
+help = "Run coverage for a single module, e.g. `poe cover-module qatrack/qa`"
+cmd = "pytest --cov-report term-missing --cov ./${module} ${module}"
+
+# ==========================================================================
+# Documentation
+# ==========================================================================
+
+
+# ===========================================================================
+# `next-*` tasks - the cross-platform successors
+# ===========================================================================
+#
+# Everything above this point mirrors a Makefile target one-for-one, and is
+# meant to keep doing so while Make is still the primary runner. Do not
+# change those to gain portability; changing them breaks the mirror, which
+# is the only thing making the two runners comparable.
+#
+# These `next-*` tasks are the replacements, written the way the tasks would
+# have to be written if Make were retired. The prefix is deliberate: it
+# marks them as the intended future, not an alternative flavour. When Make
+# goes, these lose the prefix and replace their mirrored counterparts; until
+# then both exist side by side and the `next-` name says which one is going
+# to win.
+#
+# They have no Makefile counterpart on purpose. The point of them is to work
+# where Make does not - a Windows host with no `make` at all - so mirroring
+# them back into the Makefile would defeat the exercise.
+#
+# Why Python rather than PowerShell, having tried both: poe runs `pwsh`
+# tasks as `pwsh -NoLogo -Command -`, piping the body in on stdin (see
+# poethepoet/task/shell.py). Verified against pwsh 7.6.6: that invocation
+# runs flat multi-line scripts and single-line brace blocks, but a
+# *multi-line* brace block - any real `if`, `foreach` or `try` - silently
+# executes nothing at all and exits 0. The same script via `pwsh -File`
+# runs fine, but poe does not use -File. Every task below needs a
+# conditional or a loop, so a PowerShell body would have to be written as
+# single-line-with-semicolons to work, which is not reviewable. Python is
+# also one body instead of two, with no platform switch to keep in sync.
+#
+# Shell support: bash on Linux/macOS, pwsh on Windows. cmd.exe is
+# deliberately NOT supported - a project decision, not an oversight. Tasks
+# that genuinely need a shell therefore declare an explicit `interpreter`
+# and may assume ordinary shell syntax.
+#
+# Current shell situation, so it stays honest as tasks are added:
+#
+#   * `cmd` tasks (no shell at all): test, test_simple, cover*, run,
+#     clearct, flushdb, schema, cleardb, next-docs.
+#   * `interpreter = "python"`: every other next-* task.
+#   * POSIX-shell-only, each of which HAS a next-* successor:
+#     dev-quickstart, _test-engine, test-integration, dumpdata, docs.
+#   * POSIX-shell-only and deliberately so: nginx-conf, supervisor-conf.
+#     They shell out to sudo to install nginx/supervisor configs, so there
+#     is no meaningful Windows equivalent to write.
+#
+# In other words, every task that cannot run on Windows today either has a
+# next-* replacement or is Ubuntu-only by nature. If you add a task that
+# needs a shell, give it an explicit interpreter or a next-* counterpart.
+#
+# NOTE: verified on Linux only. The Python bodies use nothing
+# platform-specific (pathlib, shutil, subprocess, sys.executable), but
+# nobody has run these on Windows yet - that is the remaining task before
+# anyone relies on them.
+
+[tool.poe.tasks.docs]
+help = "Build the Sphinx docs (output under docs/_build/html)"
+# `docs` above runs `cd docs && make html`, which needs Make on the host -
+# precisely what a Windows contributor does not have. Calling sphinx-build
+# directly needs neither Make nor docs/make.bat.
+cmd = "sphinx-build -b html docs docs/_build/html"
+
+
+[[tool.poe.tasks.docs-autobuild.args]]
+name = "port"
+options = ["--port"]
+default = "8008"
+
+
+[tool.poe.tasks.docs-autobuild]
+help = "Serve the docs locally with live-reload, default port 8008 (poe docs-autobuild --port 8010 to override)"
+cmd = "sphinx-autobuild docs docs/_build/html --port ${port}"
+
+
+[tool.poe.tasks.schema]
+help = "Regenerate the database schema diagram (see docs/developer/schema.rst)"
+interpreter = "python"
+shell = '''
+import os, pathlib, subprocess, sys, tempfile
+
+OUT = pathlib.Path('docs/developer/images/qatrack_schema_%s.svg' % os.environ['VERSION'])
+
+# Render to a temporary file and only move it into place if it worked.
+#
+# This is not defensive padding - the previous form wrote straight to OUT and
+# could empty it. django-extensions falls back to pydotplus when pygraphviz is
+# not importable, and pydotplus fails by writing a zero-byte file and exiting
+# 0. Running `make schema` on a machine without pygraphviz therefore destroyed
+# the committed 838 KB diagram and reported success. RELEASE_CHECKLIST.md tells
+# the releaser to regenerate this, so that was a live trap.
+#
+# --pygraphviz is passed explicitly rather than letting django-extensions pick
+# whichever binding happens to be importable, so a missing dependency fails
+# loudly instead of silently selecting the broken path. pygraphviz wheels bundle
+# their own Graphviz (14.1.5 at the time of writing), which also sidesteps the
+# system Graphviz: Ubuntu 24.04 ships 2.42, and -g (--group-models, which draws
+# each Django app as a cluster) hits a "trouble in init_rank" bug there.
+with tempfile.TemporaryDirectory() as tmp:
+    staged = pathlib.Path(tmp) / OUT.name
+    code = subprocess.call([
+        sys.executable, './manage.py', 'graph_models', '-a', '-g', '--pygraphviz',
+        '-X', 'Issue,IssueStatus,IssueType,IssuePriority,IssueTag',
+        '-o', str(staged),
+    ])
+    if code != 0:
+        sys.exit('error: graph_models failed (exit %d); %s left untouched' % (code, OUT))
+    if not staged.exists() or staged.stat().st_size == 0:
+        print('error: graph_models produced an empty diagram; %s left untouched.' % OUT, file=sys.stderr)
+        sys.exit('Is pygraphviz installed? `uv sync --dev` should provide it.')
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    staged.replace(OUT)
+
+print('wrote %s (%d bytes)' % (OUT, OUT.stat().st_size))
+'''
+
+[tool.poe.tasks.i18n-status]
+help = "How complete each translation catalogue is"
+interpreter = "python"
+shell = """
+import pathlib, re, subprocess, sys
+
+rows = []
+for po in sorted(pathlib.Path('qatrack/locale').glob('*/LC_MESSAGES/django.po')):
+    locale = po.parent.parent.name
+    # msgfmt reports its statistics on stderr, in prose.
+    out = subprocess.run(['msgfmt', '--statistics', '-o', '/dev/null', str(po)],
+                         capture_output=True, text=True).stderr
+    def count(word):
+        found = re.search(r'(\\d+) ' + word, out)
+        return int(found.group(1)) if found else 0
+    done, fuzzy, missing = count('translated'), count('fuzzy'), count('untranslated')
+    total = done + fuzzy + missing
+    pct = (100 * done / total) if total else 0
+    rows.append((locale, done, fuzzy, missing, pct))
+
+if not rows:
+    sys.exit('no catalogues found under qatrack/locale/')
+
+print('%-8s %10s %8s %14s %8s' % ('locale', 'translated', 'fuzzy', 'untranslated', 'done'))
+for locale, done, fuzzy, missing, pct in rows:
+    print('%-8s %10d %8d %14d %7.1f%%' % (locale, done, fuzzy, missing, pct))
+print()
+print('fuzzy entries have a translation that needs a human to confirm it;')
+print('untranslated ones have none at all.')
+"""
+
+# ==========================================================================
+# Data
+# ==========================================================================
+
+
+[tool.poe.tasks.dumpdata]
+help = "Dump the full DB to a timestamped JSON fixture"
+interpreter = "python"
+shell = """
+import datetime, subprocess, sys
+
+stamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+out = f'qatrack-dump-{stamp}.json'
+print(f'writing {out}')
+sys.exit(subprocess.call([
+    sys.executable, 'manage.py', 'dumpdata', '-v1', '--indent=2',
+    '--natural-foreign', '--natural-primary', '--output', out,
+]))
+"""
+
+
+[tool.poe.tasks.delete-qc-records]
+help = "DESTRUCTIVE: delete test list instances, unit test collections and content types"
+# Same treatment as clearct/flushdb: a `cmd` task, so no shell is needed and
+# the quoted -c payload survives poe's argument splitting intact.
+#
+# RENAMED from the Makefile's `__cleardb__`, and this is the one place the
+# task names deliberately do not mirror. poe refuses to run any task whose
+# name starts with an underscore ("Tasks prefixed with `_` cannot be
+# executed directly") and omits it from `poe --help` entirely, so the
+# mirrored `__cleardb__` entry was unreachable dead config from the day it
+# was written - `poe __cleardb__` has never worked. `make __cleardb__` is
+# unaffected and still works.
+cmd = 'python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"'
+
+
+[tool.poe.tasks.delete-users-and-types]
+help = "DESTRUCTIVE: delete all users, tolerances and content types"
+# A `cmd` task, so poe runs it directly with no shell involved at all -
+# nothing here needs one, and avoiding it sidesteps the whole question of
+# which shell exists on the host. Verified that the quoted -c payload
+# survives poe's argument splitting intact.
+cmd = 'python manage.py shell -c "from qatrack.qa.models import *; [m.objects.all().delete() for m in [ContentType, Tolerance, User]]"'
+
+
+[tool.poe.tasks.delete-all-data]
+help = "DESTRUCTIVE: empty every table (manage.py flush) - schema and migrations stay"
+# This is the one place the poe tasks deliberately DIVERGE from the
+# Makefile, rather than mirroring it. `make flushdb` runs
+#
+#     python manage.py sqlflush | python manage.py dbshell
+#
+# which is broken in practice: `dbshell` execs the database's own client
+# binary, so on sqlite it needs the `sqlite3` CLI on PATH. Without it the
+# pipeline dies, and - because the failure happens in the *consumer* - what
+# the developer sees is a BrokenPipeError traceback out of the producer,
+# not Django's actual "You appear not to have the 'sqlite3' program
+# installed" message. Confirmed on this machine, where sqlite3 is absent.
+#
+# `manage.py flush` is Django's own built-in for this and needs no external
+# binary, so it works on every backend and every platform, with no pipe and
+# therefore no shell. Behaviour differs slightly and for the better: flush
+# also resets sequences and re-runs post-migrate handlers.
+cmd = "python manage.py flush --noinput"
+
+# ==========================================================================
+# Deployment helpers
+# ==========================================================================
+
+
+# These four are for a *deployment*, not a development checkout. The templates
+# under deploy/ hardcode /home/YOURUSERNAMEHERE/web/qatrackplus and substitute
+# only the username, so running them anywhere else installs config that points
+# at a directory which does not exist - valid nginx syntax serving nothing, and
+# supervisor programs whose interpreter is not there.
+#
+# Verified here as far as is possible without root: the templates carry the
+# placeholder (2, 3 and 4 occurrences), the substitution leaves none behind,
+# and the paths resolve to what the install docs prescribe. The sudo steps
+# themselves are unverified, which is what the WIP- marks.
+[tool.poe.tasks."nginx-conf"]
+help = "WIP- Ubuntu only: install the nginx site config (runs sudo); unverified here"
+shell = '''
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/nginx/qatrack.conf > qatrack.conf
+sudo mv qatrack.conf /etc/nginx/sites-available/qatrack.conf
+sudo ln -sf /etc/nginx/sites-available/qatrack.conf /etc/nginx/sites-enabled/qatrack.conf
+sudo usermod -a -G $USER www-data
+sudo service nginx restart
+'''
+
+
+[tool.poe.tasks."supervisor-conf"]
+help = "WIP- Ubuntu only: install supervisor configs for django-q2/gunicorn (runs sudo); unverified here"
+shell = '''
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/supervisor/django-q2.conf > django-q2.conf
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/supervisor/gunicorn.conf > gunicorn.conf
+sudo mv django-q2.conf /etc/supervisor/conf.d/
+sudo mv gunicorn.conf /etc/supervisor/conf.d/
+sudo supervisorctl reread
+sudo supervisorctl update
+'''
+
+[tool.poe.tasks."nginx-conf-remove"]
+help = "WIP- Undo nginx-conf: remove the site config and restart nginx; unverified here"
+# Deliberately does not undo `usermod -a -G $USER www-data`. Taking a group
+# membership away again can break anything else that came to rely on it, and
+# an uninstall that quietly changes account permissions is worse than one that
+# leaves a harmless group in place. Remove it by hand if you want it gone:
+#   sudo gpasswd -d www-data $USER
+shell = """
+sudo rm -f /etc/nginx/sites-enabled/qatrack.conf
+sudo rm -f /etc/nginx/sites-available/qatrack.conf
+sudo service nginx restart
+"""
+
+[tool.poe.tasks."supervisor-conf-remove"]
+help = "WIP- Undo supervisor-conf: stop the processes, remove the configs, reload; unverified here"
+shell = """
+sudo supervisorctl stop django-q2 gunicorn
+sudo rm -f /etc/supervisor/conf.d/django-q2.conf
+sudo rm -f /etc/supervisor/conf.d/gunicorn.conf
+sudo supervisorctl reread
+sudo supervisorctl update
+"""
+
+# ==========================================================================
+# Makefile analogs - kept so existing habits keep working
+#
+# These exist only so that someone who types `make <target>` out of habit finds
+# the same thing under poe. They are duplication on purpose, and they have an
+# end: when the Makefile is retired, this whole block goes with it in the same
+# change. Nothing new should be added here - a new task belongs in one of the
+# groups above, and gets a Makefile target only if the Makefile still exists.
+# ==========================================================================
+
+[tool.poe.tasks.make-dev-quickstart]
+help = "Makefile analog of `dev-init` - shell based, relies on cp -n"
+shell = '''
+cp -n deploy/dev/local_settings.dev.py qatrack/local_settings.py
+cp -n deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
+cp -n deploy/dev/local_test_settings.memory.py qatrack/local_test_settings.memory.py
+mkdir -p db
+python manage.py migrate
+python manage.py createcachetable
+DJANGO_SUPERUSER_USERNAME=superuser DJANGO_SUPERUSER_PASSWORD=superuser DJANGO_SUPERUSER_EMAIL=superuser@example.com python manage.py createsuperuser --noinput
+'''
+
+
+[tool.poe.tasks.make-docs]
+help = "Makefile analog of `docs` - runs `cd docs && make html`, so needs make"
+shell = '''
+cd docs && make html
+'''
+
+
+[tool.poe.tasks.make-dumpdata]
+help = "Makefile analog of `dumpdata` - shell based"
+shell = '''
+python manage.py dumpdata -v1 --indent=2 --natural-foreign --natural-primary --output qatrack-dump-$(date '+%Y-%m-%d_%H-%M-%S').json
+'''
+
+
+[tool.poe.tasks.make-test-sqlite]
+help = "Makefile analog of `test-engine sqlite` - shell based"
+ref = "_test-engine --engine sqlite"
+
+
+[tool.poe.tasks.make-test-memory]
+help = "Makefile analog of `test-engine memory` - shell based"
+ref = "_test-engine --engine memory"
+
+
+[tool.poe.tasks.make-test-postgres]
+help = "WIP- Makefile analog of `test-engine postgres` - needs a postgres server; unverified here"
+ref = "_test-engine --engine postgres"
+
+
+[tool.poe.tasks.make-test-mysql]
+help = "WIP- Makefile analog of `test-engine mysql` - needs a mysql server; unverified here"
+ref = "_test-engine --engine mysql"
+
+
+[tool.poe.tasks.make-test-mssql]
+help = "WIP- Makefile analog of `test-engine mssql` - needs a SQL Server; unverified here"
+ref = "_test-engine --engine mssql"
+
+
+[tool.poe.tasks.make-test-integration]
+help = "Makefile analog of `test-integration` - shell based"
+shell = '''
+mkdir -p db
+if [ -f db/default.db ]; then
+  mv -f db/default.db db/default.db.bak
+fi
+if [ -f qatrack/local_test_settings.py ]; then
+  cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak
+fi
+cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
+python manage.py migrate
+python manage.py createcachetable
+python manage.py collectstatic --noinput
+DJANGO_SUPERUSER_USERNAME=superuser DJANGO_SUPERUSER_PASSWORD=superuser DJANGO_SUPERUSER_EMAIL=superuser@example.com python manage.py createsuperuser --noinput
+pytest --reuse-db
+STATUS=$?
+mv -f db/default.db db/pytest_default.db
+if [ -f qatrack/local_test_settings.py.bak ]; then
+  mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py
+else
+  rm -f qatrack/local_test_settings.py
+fi
+if [ -f db/default.db.bak ]; then
+  mv -f db/default.db.bak db/default.db
+fi
+exit $STATUS
+'''
+
+# ==========================================================================
+# Internal
+# ==========================================================================
+
+
+# Shared engine-swap implementation for test-sqlite/memory/postgres/mysql/
+# mssql below. Requires qatrack/local_test_settings.<engine>.py to already
+# exist (gitignored, yours to create from the matching
+# deploy/dev/local_test_settings.<engine>.py template). Backs up your
+# current qatrack/local_test_settings.py (if any), swaps the requested
+# engine's file in for the run, then restores it afterward regardless of
+# whether the tests passed. Underscore-prefixed tasks can't be run directly
+# (poe enforces this) - always go through one of the five wrapper tasks
+# below.
+#
+# Note: unlike `make test-<engine> args="-k foo"`, these tasks don't accept
+# extra pytest flags - confirmed by testing that poe silently drops
+# `--`-separated dash-prefixed tokens once a task declares any named arg
+# (here, --engine), rather than forwarding them. For a filtered run against
+# a specific engine, swap qatrack/local_test_settings.py by hand and run
+# `poe test` (or `pytest`) directly instead.
+[[tool.poe.tasks._test-engine.args]]
+name = "engine"
+options = ["--engine"]
+required = true
+
+
+[tool.poe.tasks._test-engine]
+shell = '''
+if [ ! -f "qatrack/local_test_settings.${engine}.py" ]; then
+  echo "error: qatrack/local_test_settings.${engine}.py not found."
+  echo "Create it first - see deploy/dev/local_test_settings.${engine}.py for a starting template."
+  exit 1
+fi
+if [ -f qatrack/local_test_settings.py ]; then
+  cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak
+fi
+cp "qatrack/local_test_settings.${engine}.py" qatrack/local_test_settings.py
+pytest
+STATUS=$?
+if [ -f qatrack/local_test_settings.py.bak ]; then
+  mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py
+else
+  rm -f qatrack/local_test_settings.py
+fi
+exit $STATUS
+'''

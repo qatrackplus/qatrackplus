@@ -147,10 +147,28 @@ supervisor.conf:
 	sudo supervisorctl reread
 	sudo supervisorctl update
 
+# Renders to a temp file and only replaces the committed diagram if it
+# worked. The previous form wrote straight to the output path, and
+# django-extensions falls back to pydotplus when pygraphviz is missing -
+# pydotplus fails by writing a zero-byte file and exiting 0, so this target
+# used to destroy the committed 838KB diagram and report success.
+# --pygraphviz is explicit so a missing dependency fails loudly instead of
+# silently taking the broken path; its wheels also bundle a current Graphviz,
+# avoiding the "trouble in init_rank" bug in the 2.42 Ubuntu 24.04 ships.
 schema:
-	python ./manage.py graph_models -a -g \
+	@out=docs/developer/images/qatrack_schema_$(VERSION).svg; \
+	tmp=$$(mktemp -t qatrack-schema-XXXXXX.svg); \
+	if uv run python ./manage.py graph_models -a -g --pygraphviz \
 		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
-		-o docs/developer/images/qatrack_schema_$(VERSION).svg
+		-o $$tmp && test -s $$tmp; then \
+		mv -f $$tmp $$out; \
+		echo "wrote $$out ($$(wc -c < $$out) bytes)"; \
+	else \
+		rm -f $$tmp; \
+		echo "error: schema generation failed; $$out left untouched." >&2; \
+		echo "Is pygraphviz installed? \`uv sync --dev\` should provide it." >&2; \
+		exit 1; \
+	fi
 
 run:
 	python ./manage.py runserver
