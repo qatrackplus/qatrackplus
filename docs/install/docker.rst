@@ -134,31 +134,31 @@ Layout under deploy\\docker
 How to Run
 ----------
 
-1. Environment Setup
-~~~~~~~~~~~~~~~~~~~~
+Environment Setup
+~~~~~~~~~~~~~~~~~
 
-#. Copy the provided ``.env.example`` to ``.env``.
+1. Copy the provided ``.env.example`` to ``.env``.
 
    .. code-block:: bash
 
       cp .env.example .env
 
-#. Set your PostgreSQL credentials in the ``.env`` file.
-#. Set ``ALLOWED_HOSTS`` in your ``.env`` file to include the IP address or
+2. Set your PostgreSQL credentials in the ``.env`` file.
+3. Set ``ALLOWED_HOSTS`` in your ``.env`` file to include the IP address or
    hostname you will use to access the server (e.g.
    ``ALLOWED_HOSTS=localhost,127.0.0.1,ubuntu-test``). To allow all hosts
    temporarily, use ``ALLOWED_HOSTS=*``.
-#. Set a unique value for ``SECRET_KEY``.
-#. Set ``QATDEV=1`` if you are developing locally, or set it to ``QATDEV=0``
+4. Set a unique value for ``SECRET_KEY``.
+5. Set ``QATDEV=1`` if you are developing locally, or set it to ``QATDEV=0``
    for production.
-#. **Install the ``just`` command runner** (see
+6. **Install the ``just`` command runner** (see
    https://github.com/casey/just#installation).
 
    This will simplify the commands needed to use the docker deployment by having
    complicated command lines reduced to commands that are easy to type and remember.
 
-2. Development
-~~~~~~~~~~~~~~
+Development
+~~~~~~~~~~~
 
 By default, Docker Compose will read both ``compose.yaml`` and
 ``compose.override.yaml``. The override file maps your local source code into
@@ -173,26 +173,26 @@ To build the images and run the services:
 
    just compose up --build
 
-3. Production
-~~~~~~~~~~~~~
+Production
+~~~~~~~~~~
 
-#. Configure strong, secure passwords in your ``.env`` file.
-#. On your host, place the certificate file and certificate key file in a
+1. Configure strong, secure passwords in your ``.env`` file.
+2. On your host, place the certificate file and certificate key file in a
    directory. Set ``SSL_DIR`` to be this directory in ``.env``. Similarly, set
    ``NGINX_SSL_CERTIFICATE_FILE`` and
    ``NGINX_SSL_CERTIFICATE_KEY_FILE`` in ``.env`` to be the file names of the
    certificate and certificate key.
-#. Set a value for ``BACKUPS_DIR`` in ``.env``. Make sure it points to a
+3. Set a value for ``BACKUPS_DIR`` in ``.env``. Make sure it points to a
    directory that will be writable by the user.
-#. Set ``QATDEV=0`` in ``.env``.
-#. Build and start the containers using **only** the production file
+4. Set ``QATDEV=0`` in ``.env``.
+5. Build and start the containers using **only** the production file
    (ignoring the local code bind-mounts):
 
    .. code-block:: bash
 
       just compose up --build
     
-    When QATDEV=0, ``just compose`` only uses ``compose.yaml``.
+    When ``QATDEV=0``, ``just compose`` only uses ``compose.yaml``.
 
 First Run Setup
 ~~~~~~~~~~~~~~~
