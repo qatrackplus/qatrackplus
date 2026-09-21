@@ -16,14 +16,9 @@ We're genuinely glad to have AI in the toolbox here — explore the codebase,
 draft a migration or a test, hunt for bugs, sketch out documentation. The
 maintainer reaches for these tools constantly, and so should you.
 
-Here's the one line we hold firm on: **every pull request needs a human
-owner who understands it, and can explain it.** You already know why — this
-project sits between quality control and patient care, and "I don't fully
-understand what I shipped" isn't a position anyone here wants to be in. AI is
-a great way to get to a first draft faster — we can't let it become a
-substitute for someone standing behind the change, that part's still on us.
 
-Concretely, that person must:
+Every pull request requires a human owner to understand and explain the 
+included code fully. Concretely, that person must:
 
 1. **Have read and understood the diff** — not just the AI's summary of it,
    the actual lines changed.
