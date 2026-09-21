@@ -11,8 +11,8 @@ import os
 import pathlib
 import sys
 
-from django.utils.translation import gettext_lazy as _l
 import matplotlib
+from django.utils.translation import gettext_lazy as _l
 
 matplotlib.use("Agg")
 
