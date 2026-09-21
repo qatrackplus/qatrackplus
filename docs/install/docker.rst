@@ -283,16 +283,28 @@ nginx container
 
     just compose exec -it nginx sh
 
-Accessing the Django shell
-~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you need to access the Django shell run the following in another terminal:
+Running Django management commands
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can pass any argument you would pass to ``manage.py`` to ``just manage``:
+
+.. code-block:: console
+
+    just manage shell command [options] args
+
+
+This requires that the django container is already running.
+
+Accessing the Django shell
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In particular, if you need to access the Django shell run the following:
 
 .. code-block:: console
 
     just manage shell
 
-This requires that the django container is already running.
 
 Making QATrack+ start on boot and run in the background
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
