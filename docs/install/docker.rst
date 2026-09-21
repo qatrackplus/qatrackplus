@@ -209,6 +209,80 @@ the services are started.
 Advanced usage tips
 -------------------
 
+Building the images with extra python packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you'd like to be able to use in your composite tests python packages that
+do not already come installed with QATrack+, you can create a
+``user-requirements.txt`` file under ``deploy/docker/user-requirements/``.
+
+Specify each of your custom requirements, as described in
+https://pip.pypa.io/en/stable/reference/requirements-file-format/.
+
+Overriding the base Docker images used to build the django image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you need to, you can override which docker images serve as base images
+for the builder and runtime targets of the Dockerfile.
+
+To do so, set the ``BUILDER_BASE_IMAGE`` and the ``RUNTIME_BASE_IMAGE`` env
+variables.
+
+They respectively default to:
+
+* ``ghcr.io/astral-sh/uv:0.12-python3.12-trixie-slim``
+* ``python:3.12-slim-trixie``
+
+This can be useful, for example, if your custom user requirements need some extra
+librairies installed, or you need images that have certain SSL certificates installed.
+
+Just make sure to **use python 3.12-based docker images**, as QATrack+ is currently
+designed to run on python 3.12.
+
+
+Accessing the linux shell on the running containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can log into the shell on running containers. This can be useful to debug
+various issues, such as bind mounts write permissions, or to inspect the
+files or directories on the container.
+
+django container
+^^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+    just compose exec -it django bash
+
+In particular, to inspect the installed python packages in QATrack's virtual
+environment, you can use:
+
+.. code-block:: console
+
+    just compose exec -it django bash
+    user@host: pip list
+
+django-q container
+^^^^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+    just compose exec -it django-q bash
+
+backups container
+^^^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+    just compose exec -it backup sh
+
+nginx container
+^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+    just compose exec -it nginx sh
+
 Accessing the Django shell
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -218,7 +292,7 @@ If you need to access the Django shell run the following in another terminal:
 
     just manage shell
 
-This requires that the containers are already running.
+This requires that the django container is already running.
 
 Making QATrack+ start on boot and run in the background
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
