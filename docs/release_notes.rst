@@ -10,6 +10,25 @@ Release Notes
 QATrack+ v4.0
 ~~~~~~~~~~~~~
 
+v4.0.1
+------
+
+Bug Fixes
+^^^^^^^^^
+
+* Fixed PDF reports being truncated part way through. Any report containing a
+  forced page break silently lost everything after it, which affected the
+  service log and fault reports, paper QC backup forms, and test list instance
+  details. The on screen preview was unaffected, so the download appeared to be
+  at fault rather than the report itself.
+* Fixed the organisation logo wrapping onto a second line below the report
+  heading instead of sitting in the top right corner.
+* Fixed the signature and date fields being placed on different lines when a
+  report is generated on A4 paper.
+* Fixed the report paper size being ignored when PDFs are generated with
+  Chrome. Reports set to A4 were produced at Letter size regardless of the
+  paper size chosen for the report.
+
 v4.0.0
 ------
 
