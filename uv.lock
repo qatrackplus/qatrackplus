@@ -2453,7 +2453,6 @@ name = "qatrackplus"
 version = "4.0.0"
 source = { editable = "." }
 dependencies = [
-    { name = "beautifulsoup4" },
     { name = "black" },
     { name = "blessed" },
     { name = "concurrent-log-handler" },
@@ -2562,7 +2561,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "beautifulsoup4", specifier = "==4.9.3" },
     { name = "black", specifier = ">=23.1.0" },
     { name = "blessed", specifier = ">=1.20.0" },
     { name = "cherrypy", marker = "sys_platform == 'win32' and extra == 'win'", specifier = ">=18.8.0" },

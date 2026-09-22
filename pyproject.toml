@@ -42,7 +42,6 @@ package-mode = false
 dependencies = [
     "Django>=4.2,<4.3",
     "django-q2>=1.8.0",
-    "beautifulsoup4==4.9.3",
     "concurrent-log-handler==0.9.19",
     "django-auth-adfs>=1.7.0",
     "django-braces>=1.17,<1.18",
