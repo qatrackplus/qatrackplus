@@ -40,7 +40,7 @@ classifiers = [
 package-mode = false
 
 dependencies = [
-    "Django==4.2",
+    "Django<4.3",
     "django-q2>=1.8.0",
     "beautifulsoup4==4.9.3",
     "concurrent-log-handler==0.9.19",
