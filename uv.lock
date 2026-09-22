@@ -2567,7 +2567,7 @@ requires-dist = [
     { name = "blessed", specifier = ">=1.20.0" },
     { name = "cherrypy", marker = "sys_platform == 'win32' and extra == 'win'", specifier = ">=18.8.0" },
     { name = "concurrent-log-handler", specifier = "==0.9.19" },
-    { name = "django", specifier = "<4.3" },
+    { name = "django", specifier = ">=4.2,<4.3" },
     { name = "django-auth-adfs", specifier = ">=1.7.0" },
     { name = "django-auth-ldap", marker = "extra == 'mssql'", specifier = "<4.9" },
     { name = "django-braces", specifier = ">=1.17,<1.18" },
