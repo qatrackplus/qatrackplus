@@ -72,7 +72,6 @@ dependencies = [
     "pylinac>=3.20,<4.0",
     "pynliner>=0.8.0,<1.0",
     "python-dateutil>=2.8.1,<3.0",
-    "reportlab>=4.0.0,<5.0",
     "requests>=2.25.0,<3.0",
     "scipy>=1.7.0,<2.0",
     "urllib3>=1.25.11,<3.0",
