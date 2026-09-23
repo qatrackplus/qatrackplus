@@ -1,14 +1,19 @@
-.git
-.venv
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-ENV/
-.env
-db.sqlite3
-qatrackplus31
-qatrack/local_settings.py
+# Ignore everything
+**
+
+# Re-include only what is needed for an editable install of the package
+# Nothing else is needed in the image.
+
+!pyproject.toml
+!uv.lock
+!README.md
+
+!qatrack/
+!qatrack/**
+
+!manage.py
+
+!deploy/
+!deploy/docker/
+# Make sure .env is not included in image
+deploy/docker/.env

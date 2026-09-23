@@ -5,13 +5,17 @@ venv/
 src/
 
 # Local Settings, administrator controlled
-    # developers may have multiple local settings files, but they should not be committed to the repo 
+# developers may have multiple local settings files, but they should not be committed to the repo 
 qatrack/local_*.py 
 logs/
 db/
 tmp/
 deploy/docker/user-data
+deploy/docker/user-requirements/requirements.txt
 deployLocal.py
+
+# Same as above for local .env for docker deployment, should not be commited to repo
+deploy/docker/.env
 
 # Local resources
 /qatrack*.conf
@@ -73,4 +77,3 @@ questions_*
 src/*.egg-info
 tmp/
 ./generate_ro_privileges.sql
-

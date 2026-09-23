@@ -1234,7 +1234,7 @@ If using a non-SSL connection use these
 .. code-block:: python
 
     AD_LDAP_PORT = 389
-    AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
+    AD_LDAP_PROTOCOL = 'ldap'
     AD_LDAP_USER = ''
     AD_LDAP_PW = ''
 
@@ -1248,7 +1248,7 @@ If using SSL use these:
 .. code-block:: python
 
     AD_LDAP_PORT = 636
-    AD_LDAP_URL = 'ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
+    AD_LDAP_PROTOCOL = 'ldaps'
     AD_LDAP_USER = ''
     AD_LDAP_PW = ''
 

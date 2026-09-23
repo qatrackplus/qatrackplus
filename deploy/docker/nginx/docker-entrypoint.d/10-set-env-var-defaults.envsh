@@ -1,0 +1,23 @@
+#!/bin/sh
+#/docker-entrypoint.d/10-set-env-var-defaults.envsh
+
+# This file, because it has the extension .envsh, will be sourced,
+# and the env vars exported here will be accessible in later scripts
+# found in docker-entrypoint.d.
+
+# This creates an env var based on the value of the DEV env var.
+# It allows to select the correct locations to be served by nginx.
+# In DEV mode, we don't want static files served by nginx. Rather, we let
+# django server them with its development server.
+if [ "${DEV:-false}" = "true" ]; then
+    export NGINX_LOCATIONS_FILE=qatrackplus-locations-dev.conf
+else
+    export NGINX_LOCATIONS_FILE=qatrackplus-locations-prod.conf
+fi
+echo "NGINX_LOCATIONS_FILE=$NGINX_LOCATIONS_FILE"
+
+export NGINX_SERVER_NAME="${NGINX_SERVER_NAME:-_}"
+echo "NGINX_SERVER_NAME=$NGINX_SERVER_NAME"
+
+export NGINX_CLIENT_MAX_BODY_SIZE="${NGINX_CLIENT_MAX_BODY_SIZE:-100m}"
+echo "NGINX_CLIENT_MAX_BODY_SIZE=$NGINX_CLIENT_MAX_BODY_SIZE"
