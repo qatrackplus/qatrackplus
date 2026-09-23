@@ -1,0 +1,67 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Data
+# ==========================================================================
+
+
+[tasks.dumpdata]
+help = "Dump the full DB to a timestamped JSON fixture"
+interpreter = "python"
+shell = """
+import datetime, subprocess, sys
+
+stamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+out = f'qatrack-dump-{stamp}.json'
+print(f'writing {out}')
+sys.exit(subprocess.call([
+    sys.executable, 'manage.py', 'dumpdata', '-v1', '--indent=2',
+    '--natural-foreign', '--natural-primary', '--output', out,
+]))
+"""
+
+
+[tasks.delete-qc-records]
+help = "DESTRUCTIVE: delete test list instances, unit test collections and content types"
+# Same treatment as clearct/flushdb: a `cmd` task, so no shell is needed and
+# the quoted -c payload survives poe's argument splitting intact.
+#
+# RENAMED from the Makefile's `__cleardb__`, and this is the one place the
+# task names deliberately do not mirror. poe refuses to run any task whose
+# name starts with an underscore ("Tasks prefixed with `_` cannot be
+# executed directly") and omits it from `poe --help` entirely, so the
+# mirrored `__cleardb__` entry was unreachable dead config from the day it
+# was written - `poe __cleardb__` has never worked. `make __cleardb__` is
+# unaffected and still works.
+cmd = 'python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"'
+
+
+[tasks.delete-users-and-types]
+help = "DESTRUCTIVE: delete all users, tolerances and content types"
+# A `cmd` task, so poe runs it directly with no shell involved at all -
+# nothing here needs one, and avoiding it sidesteps the whole question of
+# which shell exists on the host. Verified that the quoted -c payload
+# survives poe's argument splitting intact.
+cmd = 'python manage.py shell -c "from qatrack.qa.models import *; [m.objects.all().delete() for m in [ContentType, Tolerance, User]]"'
+
+
+[tasks.delete-all-data]
+help = "DESTRUCTIVE: empty every table (manage.py flush) - schema and migrations stay"
+# This is the one place the poe tasks deliberately DIVERGE from the
+# Makefile, rather than mirroring it. `make flushdb` runs
+#
+#     python manage.py sqlflush | python manage.py dbshell
+#
+# which is broken in practice: `dbshell` execs the database's own client
+# binary, so on sqlite it needs the `sqlite3` CLI on PATH. Without it the
+# pipeline dies, and - because the failure happens in the *consumer* - what
+# the developer sees is a BrokenPipeError traceback out of the producer,
+# not Django's actual "You appear not to have the 'sqlite3' program
+# installed" message. Confirmed on this machine, where sqlite3 is absent.
+#
+# `manage.py flush` is Django's own built-in for this and needs no external
+# binary, so it works on every backend and every platform, with no pipe and
+# therefore no shell. Behaviour differs slightly and for the better: flush
+# also resets sequences and re-runs post-migrate handlers.
+cmd = "python manage.py flush --noinput"

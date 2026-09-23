@@ -1,0 +1,141 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Makefile analogs - kept so existing habits keep working
+#
+# These exist only so that someone who types `make <target>` out of habit finds
+# the same thing under poe. They are duplication on purpose, and they have an
+# end: when the Makefile is retired, this whole block goes with it in the same
+# change. Nothing new should be added here - a new task belongs in one of the
+# groups above, and gets a Makefile target only if the Makefile still exists.
+# ==========================================================================
+
+[tasks.make-dev-quickstart]
+help = "Makefile analog of `dev-init` - shell based, relies on cp -n"
+shell = '''
+cp -n deploy/dev/local_settings.dev.py qatrack/local_settings.py
+cp -n deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
+cp -n deploy/dev/local_test_settings.memory.py qatrack/local_test_settings.memory.py
+mkdir -p db
+python manage.py migrate
+python manage.py createcachetable
+DJANGO_SUPERUSER_USERNAME=superuser DJANGO_SUPERUSER_PASSWORD=superuser DJANGO_SUPERUSER_EMAIL=superuser@example.com python manage.py createsuperuser --noinput
+'''
+
+
+[tasks.make-docs]
+help = "Makefile analog of `docs` - runs `cd docs && make html`, so needs make"
+shell = '''
+cd docs && make html
+'''
+
+
+[tasks.make-dumpdata]
+help = "Makefile analog of `dumpdata` - shell based"
+shell = '''
+python manage.py dumpdata -v1 --indent=2 --natural-foreign --natural-primary --output qatrack-dump-$(date '+%Y-%m-%d_%H-%M-%S').json
+'''
+
+
+[tasks.make-test-sqlite]
+help = "Makefile analog of `test-engine sqlite` - shell based"
+ref = "_test-engine --engine sqlite"
+
+
+[tasks.make-test-memory]
+help = "Makefile analog of `test-engine memory` - shell based"
+ref = "_test-engine --engine memory"
+
+
+[tasks.make-test-postgres]
+help = "WIP- Makefile analog of `test-engine postgres` - needs a postgres server; unverified here"
+ref = "_test-engine --engine postgres"
+
+
+[tasks.make-test-mysql]
+help = "WIP- Makefile analog of `test-engine mysql` - needs a mysql server; unverified here"
+ref = "_test-engine --engine mysql"
+
+
+[tasks.make-test-mssql]
+help = "WIP- Makefile analog of `test-engine mssql` - needs a SQL Server; unverified here"
+ref = "_test-engine --engine mssql"
+
+
+[tasks.make-test-integration]
+help = "Makefile analog of `test-integration` - shell based"
+shell = '''
+mkdir -p db
+if [ -f db/default.db ]; then
+  mv -f db/default.db db/default.db.bak
+fi
+if [ -f qatrack/local_test_settings.py ]; then
+  cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak
+fi
+cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
+python manage.py migrate
+python manage.py createcachetable
+python manage.py collectstatic --noinput
+DJANGO_SUPERUSER_USERNAME=superuser DJANGO_SUPERUSER_PASSWORD=superuser DJANGO_SUPERUSER_EMAIL=superuser@example.com python manage.py createsuperuser --noinput
+pytest --reuse-db
+STATUS=$?
+mv -f db/default.db db/pytest_default.db
+if [ -f qatrack/local_test_settings.py.bak ]; then
+  mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py
+else
+  rm -f qatrack/local_test_settings.py
+fi
+if [ -f db/default.db.bak ]; then
+  mv -f db/default.db.bak db/default.db
+fi
+exit $STATUS
+'''
+
+# ==========================================================================
+# Internal
+# ==========================================================================
+
+
+# Shared engine-swap implementation for the make-test-sqlite/memory/postgres/
+# mysql/mssql tasks above. Requires qatrack/local_test_settings.<engine>.py
+# to already exist (gitignored, yours to create from the matching
+# deploy/dev/local_test_settings.<engine>.py template). Backs up your
+# current qatrack/local_test_settings.py (if any), swaps the requested
+# engine's file in for the run, then restores it afterward regardless of
+# whether the tests passed. Underscore-prefixed tasks can't be run directly
+# (poe enforces this) - always go through one of the five wrapper tasks
+# above.
+#
+# Note: unlike `make test-<engine> args="-k foo"`, these tasks don't accept
+# extra pytest flags - confirmed by testing that poe silently drops
+# `--`-separated dash-prefixed tokens once a task declares any named arg
+# (here, --engine), rather than forwarding them. For a filtered run against
+# a specific engine, swap qatrack/local_test_settings.py by hand and run
+# `poe test` (or `pytest`) directly instead.
+[[tasks._test-engine.args]]
+name = "engine"
+options = ["--engine"]
+required = true
+
+
+[tasks._test-engine]
+shell = '''
+if [ ! -f "qatrack/local_test_settings.${engine}.py" ]; then
+  echo "error: qatrack/local_test_settings.${engine}.py not found."
+  echo "Create it first - see deploy/dev/local_test_settings.${engine}.py for a starting template."
+  exit 1
+fi
+if [ -f qatrack/local_test_settings.py ]; then
+  cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak
+fi
+cp "qatrack/local_test_settings.${engine}.py" qatrack/local_test_settings.py
+pytest
+STATUS=$?
+if [ -f qatrack/local_test_settings.py.bak ]; then
+  mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py
+else
+  rm -f qatrack/local_test_settings.py
+fi
+exit $STATUS
+'''

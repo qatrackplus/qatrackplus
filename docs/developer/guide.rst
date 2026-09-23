@@ -91,6 +91,125 @@ Install uv using the official installer (recommended):
 
 For other installation methods or troubleshooting, see the full installation guide at https://docs.astral.sh/uv/getting-started/installation/
 
+.. note::
+
+    **Draft**: this section hasn't been reviewed yet - if something below
+    doesn't work for you, please report it on the :mailinglist:`mailing list <>`.
+
+Shell Autocomplete for uv and poe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tab completion for both tools is optional, but worth setting up if you use
+them often.
+
+**Requirements:**
+
+- ``uv`` itself (already required above).
+- ``poe`` (`poethepoet <https://poethepoet.natn.io/>`__), only if you also
+  want to use ``poe <task>`` as a cross-platform alternative to the
+  project's ``Makefile`` targets - see ``poe_tasks/*.toml`` (pulled in via
+  ``[tool.poe] include`` in ``pyproject.toml``) for the available tasks.
+  It isn't a project dependency; install it once, globally, with
+  ``uv tool install poethepoet``.
+- A shell ``uv``/``poe`` recognize: bash, zsh, fish, PowerShell, elvish
+  (``uv``) or nushell (``poe``, in addition to the previous four).
+
+**Enabling completion:**
+
+Both tools generate their own completion script - there is nothing to
+install from PyPI or npm. Add the appropriate line to your shell's profile
+(``~/.bashrc``, ``~/.zshrc``, ``~/.config/fish/config.fish``, or
+PowerShell's ``$PROFILE``), then restart your shell or ``source`` the
+profile:
+
+.. code-block:: powershell
+
+    # PowerShell ($PROFILE)
+    uv generate-shell-completion powershell | Out-String | Invoke-Expression
+    poe _powershell_completion | Out-String | Invoke-Expression
+
+.. code-block:: shell
+
+    # bash (~/.bashrc)
+    eval "$(uv generate-shell-completion bash)"
+    eval "$(poe _bash_completion)"
+
+    # zsh (~/.zshrc)
+    eval "$(uv generate-shell-completion zsh)"
+    eval "$(poe _zsh_completion)"
+
+    # fish (~/.config/fish/config.fish)
+    uv generate-shell-completion fish | source
+    poe _fish_completion | source
+
+.. note::
+
+    ``uv``'s completion is static - it completes ``uv``'s own subcommands
+    and flag names (e.g. ``uv sync --e<TAB>`` -> ``--extra``), but it does
+    not read this project's ``pyproject.toml``, so it will not suggest the
+    actual extra names (``mysql``, ``mssql``, ``postgres``, ``win``,
+    ``docker``, ``translations``) after ``--extra``. There's currently no
+    way to get that from ``uv`` itself.
+
+    ``poe``'s completion, in contrast, reads ``pyproject.toml`` each time it
+    runs, so ``poe <TAB>`` lists this project's actual task names. It can
+    also complete a task argument's allowed values, but only for arguments
+    that declare a ``choices`` list in ``pyproject.toml`` - none of this
+    project's task arguments do that yet.
+
+.. _adding-a-poe-task:
+
+Adding a new poe task
+~~~~~~~~~~~~~~~~~~~~~
+
+Task definitions live under ``poe_tasks/``, one file per theme, rather than
+directly in ``pyproject.toml``: ``dev.toml`` (dev environment setup),
+``tests.toml`` (running the suite, GUI/Selenium variants), ``coverage.toml``,
+``docs.toml`` (Sphinx, schema diagram, translation status), ``data.toml``
+(fixtures and destructive data commands) and ``deploy.toml`` (Ubuntu/sudo
+deployment helpers). ``pyproject.toml`` itself only lists them, via
+``[tool.poe] include``; it never grew a ``[tool.poe.tasks.*]`` table of its
+own. This split exists purely to stop ``pyproject.toml`` growing without
+bound as tasks are added - it changes nothing about how a task runs, or how
+``poe <task>``/``poe --help`` behave.
+
+``poe_tasks/make_compat.toml`` is different in kind, not just location: it
+holds the ``make-*`` tasks that deliberately mirror a ``Makefile`` target
+one-for-one (see the comment above ``[tool.poe] include`` in
+``pyproject.toml``), plus the shared ``_test-engine`` implementation they
+``ref``. Nothing new should be added there - a new task belongs in one of
+the theme files above, and only gets a ``make-*`` mirror if the ``Makefile``
+target it mirrors still exists.
+
+When adding a task:
+
+1. Pick the theme file that matches, or add a new ``poe_tasks/<theme>.toml``
+   and list it in ``pyproject.toml``'s ``[tool.poe] include`` if none fit.
+2. Included files use bare ``[tasks.<name>]`` headers, **not**
+   ``[tool.poe.tasks.<name>]`` - poe treats a non-``pyproject.toml`` file
+   with no ``tool.poe`` table of its own as if its entire contents sat under
+   ``tool.poe``. Copy the header style already used in that file.
+3. Make it work on Windows: prefer a plain ``cmd`` task, or
+   ``interpreter = "python"`` with stdlib (``pathlib``/``shutil``/
+   ``subprocess``) if it needs any logic at all. Avoid a bare ``shell``
+   task (defaults to bash/POSIX, which fails outright on a Windows host
+   with no Git Bash or WSL) unless the task is genuinely Ubuntu/sudo-only
+   by nature (see ``deploy.toml``) - in that case, say so in the task's
+   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do.
+4. If the task declares a named argument (``options = [...]``), poe will
+   silently drop any extra dash-prefixed tokens passed after it rather than
+   forwarding them - see the note on ``_test-engine`` in
+   ``poe_tasks/make_compat.toml`` for the reasoning. Prefer a positional
+   argument, or no argument at all, unless you specifically need the
+   ``--flag`` form.
+5. A task's argument can declare ``choices = [...]`` to get real tab
+   completion of its allowed values (see `Shell Autocomplete for uv and poe`_
+   above) - worth adding for anything with a small, fixed set of valid
+   values (an engine name, a browser name, and so on).
+6. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
+   prints the resolved command/script - it does not catch a task that
+   parses fine but fails or misbehaves once actually invoked).
+
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
