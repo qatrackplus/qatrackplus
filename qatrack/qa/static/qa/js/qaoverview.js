@@ -1,4 +1,4 @@
-require(['jquery', 'moment', 'lodash', 'felter'], function ($, moment, _) {
+require(['jquery', 'moment', 'lodash', 'slimscroll', 'felter'], function ($, moment, _) {
     function unit_container_id(option) {
         return $(option).val();
     }
