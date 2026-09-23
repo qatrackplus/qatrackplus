@@ -198,8 +198,8 @@ one of the templates available to perform on that unit.
 
    Selecting a service event template
 
-This will auto populate any fields that have been configured in the template
-including the Return To Service QC.
+This will auto populate any fields that have been configured in the template,
+including any Return To Service QC applicable to the selected unit.
 
 .. _service_log_scheduled_template:
 

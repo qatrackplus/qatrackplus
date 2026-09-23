@@ -34,12 +34,14 @@ On the `Add service event template page` give your template a name (e.g. Annual
 PM) and then fill out the fields below to indicate how the Service Event fields
 should be populated when a user selects this template. 
 
-All of the fields are optional, however special attention should be payed to
-the `Service Area` and `Return to Service Test Lists (Cycles)` fields.  A
-Service Event Template may only be applied to a unit when that unit has a
-matching service area and the selected return to service test lists/cycles
-assigned to it. If you need to create a more generic template that can be
-applied to a variety of unit types you may want to leave those fields blank.
+All of the fields are optional. Note that a Service Event Template will only
+appear for a unit if the unit matches the template's selected `Service Area`
+(or if the Service Area is left blank). When a template is applied to a unit,
+any configured `Return to Service Test Lists (Cycles)` that are actively assigned
+to that unit will be automatically populated on the Service Event form (any
+selected test lists not assigned to the unit will simply be omitted). This
+allows you to create generic, multi-unit templates that reference unit-specific
+return to service test lists.
 
 Once you have filled out the fields, click `Save`.
 

@@ -819,7 +819,8 @@ class TestPerformQC(BaseQATests):
         assert models.AutoSave.objects.count() == 1
 
     def test_load_autosave(self):
-        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        """Ensure an autosave is restored with its test values, comments and
+        work started/completed times displayed in the sites datetime format"""
 
         tl2 = utils.create_test_list(name="day 2")
         utils.create_test_list_membership(tl2, test=self.tnum_1)
@@ -861,8 +862,8 @@ class TestPerformQC(BaseQATests):
         title = "Perform %s : day 2" % utc.unit.name
         assert title in [el.text for el in self.driver.find_elements(By.CLASS_NAME, "box-title")]
         assert float(inputs[0].get_attribute("value")) == 1
-        assert self.driver.find_element(By.ID, "id_work_started").get_attribute("value") == "12 May 1980 12:00"
-        assert self.driver.find_element(By.ID, "id_work_completed").get_attribute("value") == "12 May 1980 12:01"
+        assert self.driver.find_element(By.ID, "id_work_started").get_attribute("value") == "1980-05-12 12:00"
+        assert self.driver.find_element(By.ID, "id_work_completed").get_attribute("value") == "1980-05-12 12:01"
         assert self.driver.find_element(By.ID, "id_work_duration").get_attribute("value") == "0hr:01min"
         assert self.driver.find_element(By.ID, "id_form-0-comment").get_attribute("value") == "test comment"
         assert self.driver.find_element(By.ID, "id_comment").get_attribute("value") == "test list instance comment"

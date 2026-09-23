@@ -1628,6 +1628,19 @@ class CreateServiceEventTemplateAjax(JSONResponseMixin, PermissionRequiredMixin,
 
 
 def service_event_template_searcher(request):
+    """Return the :model:`service_log.ServiceEventTemplate`'s which are
+    applicable to the unit (and optional service type/service area) requested.
+
+    A template matches when its service area is either not set, or is one of the
+    service areas assigned to the requested unit.  Every matching template is
+    returned along with a `return_to_service_utcs` list holding the
+    :model:`qa.UnitTestCollection` id's which are *both* listed as return to
+    service QC on the template *and* actively assigned to the requested unit.
+
+    A template whose return to service QC is assigned to other units only is
+    still returned, with an empty `return_to_service_utcs` list, so that a
+    single template can be shared by units with differing QC (see issue #829).
+    """
 
     qs = sl_models.ServiceEventTemplate.objects.prefetch_related(
         "return_to_service_test_lists",
@@ -1658,31 +1671,26 @@ def service_event_template_searcher(request):
     unit_tls = set(qa_models.get_utc_tl_ids(units=[unit], active=True, include_cycles=False))
     unit_tlcs = set(qa_models.get_utc_tlc_ids(units=[unit], active=True))
 
-    # now find all templates which either have no return to service QC
-    # or who's RTS QC is a subset of the QC assigned to the unit
-    # Probably there is a way to express this in a single SQL query...
+    # match any return to service test lists and cycles that are assigned to this unit
     sts = qs.values_list("pk", "return_to_service_test_lists", "return_to_service_cycles")
-    matching_templates = []
     rts_utcs = {}
     for template_id, rts_qc_ids in groupby(sts, lambda x: x[0]):
 
         # get return to service test lists and test list cycles for this template
-        rts_tl_ids = set(x[1] for x in rts_qc_ids if x[1] is not None)
-        rts_tlc_ids = set(x[2] for x in rts_qc_ids if x[2] is not None)
+        rts_tl_ids = set()
+        rts_tlc_ids = set()
+        for t_id, tl_id, tlc_id in rts_qc_ids:
+            if tl_id is not None:
+                rts_tl_ids.add(tl_id)
+            if tlc_id is not None:
+                rts_tlc_ids.add(tlc_id)
 
-        # check if there is no RTS QC for this template
-        no_rts = len(rts_tl_ids) + len(rts_tlc_ids) == 0
+        # get active UTC ids assigned to this unit that match the template RTS QC
+        matching_tl_ids = rts_tl_ids & unit_tls
+        matching_tlc_ids = rts_tlc_ids & unit_tlcs
 
-        # check if template RTS QC is subset of QC assigned to this unit
-        is_subset = (len(rts_tl_ids - unit_tls) == 0 and len(rts_tlc_ids - unit_tlcs) == 0)
-
-        if is_subset or no_rts:
-            matching_templates.append(template_id)
-            # get UTC id for RTS test lists and test list cycles
-            rts_utcs[template_id] = [utcs[(tl_ct.id, tl_id)] for tl_id in rts_tl_ids if tl_id is not None]
-            rts_utcs[template_id] += [utcs[(tlc_ct.id, tlc_id)] for tlc_id in rts_tlc_ids if tlc_id is not None]
-
-    qs = qs.filter(pk__in=matching_templates)
+        rts_utcs[template_id] = [utcs[(tl_ct.id, tl_id)] for tl_id in matching_tl_ids]
+        rts_utcs[template_id] += [utcs[(tlc_ct.id, tlc_id)] for tlc_id in matching_tlc_ids]
 
     results = [{
         'id': st.id,
@@ -1692,7 +1700,7 @@ def service_event_template_searcher(request):
         'work_description': st.work_description,
         'is_review_required': st.is_review_required,
         'name': st.name,
-        'return_to_service_utcs': rts_utcs[st.id],
+        'return_to_service_utcs': rts_utcs.get(st.id, []),
     } for st in qs]
 
     return JsonResponse(results, encoder=QATrackJSONEncoder, safe=False)
