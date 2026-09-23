@@ -233,6 +233,71 @@ You can also load specific fixture categories individually if you only need cert
     # Load only service log fixtures
     python manage.py loaddata fixtures/defaults/service_log/*
 
+.. _generating-sample-data:
+
+Generating Sample Data
+~~~~~~~~~~~~~~~~~~~~~~
+
+The default fixtures give you an empty, correctly configured QATrack+. To get a
+database that actually *looks* like a working clinic — useful when developing a
+feature or reviewing someone else's pull request — use the
+``generate_sample_data`` command:
+
+.. code-block:: shell
+
+    python manage.py generate_sample_data
+
+This creates a small radiation oncology centre: two linacs and a CT simulator,
+TG-142 style daily and monthly test lists with per unit references and
+tolerances, 90 days of rolling QA history (including an unreviewed backlog and
+one in-progress session to resume), service events with return to service QA,
+faults, a parts inventory with a low stock item, and saved reports with email
+schedules.
+
+Options:
+
+``--days N``
+    How many days of rolling QA history to generate (default 90). Must be zero
+    or greater. The service and fault records are placed at fixed offsets and
+    are created regardless of this value.
+
+``--clear``
+    Delete the existing units, QA, service log, fault, parts and report data
+    before generating. You are asked to confirm first.
+
+``--no-input``
+    Skip that confirmation, for scripted use.
+
+.. warning::
+
+    ``--clear`` deletes **all** of that data in the database, not just rows a
+    previous run created. Only use it on a development database.
+
+The generator creates the following accounts to attribute the data to, all with
+the password ``password123``:
+
+=====================  =====================================
+Username               Groups
+=====================  =====================================
+``admin``              QA Administrators (superuser)
+``jane.physicist``     Medical Physicists, QA Administrators
+``mark.physicist``     Medical Physicists
+``alex.resident``      Medical Physicists
+``sarah.therapist``    Radiation Therapists
+``dave.engineer``      Service Engineers
+=====================  =====================================
+
+If one of those usernames already exists it is reused rather than replaced: the
+account keeps its own password (unless it has no usable one, in which case it
+is given the sample password so you can log in) and its existing groups, to
+which the groups above are added. ``--clear`` does not delete user accounts.
+
+Running the command again without ``--clear`` extends the sample data rather
+than duplicating it — QA sessions, service events and reports that are already
+there are left alone. Any default fixtures the generator depends on are loaded
+automatically if their tables are empty, so a fresh database needs nothing but
+``migrate``.
+
 Running the development server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
