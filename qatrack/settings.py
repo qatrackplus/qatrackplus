@@ -187,7 +187,12 @@ MIDDLEWARE = [
 ]
 
 # login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*", r"^i18n/"]
+# jsi18n is listed separately from i18n: the URL is /jsi18n/, which "^i18n/"
+# does not match. site_base.html loads the catalog with a <script> tag on
+# every page, so without this the tag 302s to the login page for anonymous
+# visitors, the browser parses HTML as JavaScript, and the client-side
+# translation catalogue silently never loads.
+LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*", r"^i18n/", r"^jsi18n/"]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
