@@ -769,6 +769,20 @@ SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver
 # file doesn't exist" - it's a sandboxing symptom, not a Selenium bug.
 SELENIUM_CHROMIUM_BINARY_PATH = ''
 
+# Firefox Browser Binary Path - leave empty (the default) to let Selenium
+# find whatever Firefox is on the system as usual. Set this if another
+# Firefox-based browser is also installed and gets found first - confirmed
+# on Windows with Zen Browser (a Firefox fork) installed alongside real
+# Firefox: geckodriver's own discovery resolved to Zen's binary instead,
+# silently testing against the wrong browser (its first-run profile setup
+# wizard opening real, visible windows was the tell). Point this at the
+# real Firefox executable to force it, e.g. on Windows:
+#
+#     SELENIUM_FIREFOX_BINARY_PATH = (
+#         r'C:\Program Files\Mozilla Firefox\firefox.exe'
+#     )
+SELENIUM_FIREFOX_BINARY_PATH = ''
+
 # Headless Mode
 # True (the default) uses the browser's own native headless mode, so no
 # display server is needed and it behaves the same on a workstation, a CI
