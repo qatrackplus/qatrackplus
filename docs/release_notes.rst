@@ -10,8 +10,28 @@ Release Notes
 QATrack+ v4.0
 ~~~~~~~~~~~~~
 
+.. _`release_notes_401`:
+
 v4.0.1
 ------
+
+Bug Fixes
+^^^^^^^^^
+
+* Forms no longer record the wrong date and time. Where a date field arrives
+  already filled in - the fault form's *Date & Time fault occurred*, a QC
+  session's *Work Completed*, a service event's date - the server wrote that
+  value in one format and the date picker read it back in another. The picker
+  then replaced it with an unrelated date, usually months away and at
+  midnight, before anyone had touched the page.
+
+  Nothing indicated it had happened: the replacement was a well-formed date in
+  the expected format, sitting in a field the user had not edited. A record
+  saved without changing that field carried a time that was simply wrong.
+
+  Date and time formats are now derived from a single setting, so the value
+  written to a form and the value read back from it cannot disagree
+  (:issues:`826`).
 
 Other Changes
 ^^^^^^^^^^^^^
