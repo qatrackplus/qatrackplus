@@ -30,3 +30,43 @@ class TestJavaScriptCatalogIsAnonymous(TestCase):
         body = Client().get(reverse('javascript-catalog')).content.decode('utf8')
         assert not body.lstrip().startswith('<'), "catalogue returned markup, not JavaScript"
         assert 'django' in body
+
+
+class TestLoginExemptUrlsAreRegexesNotGlobs(TestCase):
+    """LOGIN_EXEMPT_URLS entries are regexes, matched with re.match().
+
+    Written as globs they quietly exempt more than intended: "api/*" reads as
+    "api" followed by zero or more slashes, so it matched apifoo and
+    api_secret as well as api/. Nothing exploitable followed from it - no
+    route outside the DRF API starts with those letters, and the API answers
+    anonymous requests with 401 on its own - but the next route added with an
+    "api"-ish name would have become login-exempt silently.
+    """
+
+    def _exempt(self, path):
+        from re import compile as re_compile
+
+        from django.conf import settings
+
+        patterns = [re_compile(e) for e in settings.LOGIN_EXEMPT_URLS]
+        return any(p.match(path.lstrip("/")) for p in patterns)
+
+    def test_intended_prefixes_are_still_exempt(self):
+        for path in ["api", "api/", "api/qa/testlistinstances/", "oauth2/callback",
+                     "i18n/setlang/", "jsi18n/", "accounts/login/", "favicon.ico"]:
+            assert self._exempt(path), "%s should be exempt" % path
+
+    def test_lookalike_prefixes_are_not_exempt(self):
+        for path in ["apifoo", "api_secret", "apiary", "oauth2xyz", "faviconXico"]:
+            assert not self._exempt(path), "%s should NOT be exempt" % path
+
+    def test_application_paths_are_not_exempt(self):
+        for path in ["qa/", "servicelog/", "admin/", "units/", "reports/"]:
+            assert not self._exempt(path), "%s should NOT be exempt" % path
+
+    def test_every_entry_is_anchored(self):
+        """re.match anchors anyway; saying so keeps the intent readable."""
+        from django.conf import settings
+
+        unanchored = [e for e in settings.LOGIN_EXEMPT_URLS if not e.startswith("^")]
+        assert not unanchored, "unanchored entries read as if they could match mid-path: %s" % unanchored
