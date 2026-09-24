@@ -152,7 +152,19 @@ class BaseQATests(SeleniumTests, TransactionTestCase):
         self.send_keys("id_password", self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        # Wait for proof that the login POST was handled and the redirect has
+        # rendered. The logout link is inside {% if user.is_authenticated %}
+        # in site_base.html, so its presence means both.
+        #
+        # This used to wait for "head > title", which every page has -
+        # including the login page still on screen. It was satisfied
+        # immediately, before the POST had even been sent, so a slow round
+        # trip left the test unauthenticated. It then failed later, somewhere
+        # else, as a timeout waiting for an element that only exists when
+        # logged in - which looks like an unrelated flake.
+        self.wait.until(
+            e_c.presence_of_element_located((By.CSS_SELECTOR, 'a[href*="logout"]'))
+        )
 
     def load_main(self):
         self.login()
@@ -663,6 +675,7 @@ class TestPerformQC(BaseQATests):
         self.driver.find_element(By.CSS_SELECTOR, ".qa-string .qa-input").send_keys("test")
         self.click_by_css_selector("body")
         self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
+
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
@@ -895,6 +908,13 @@ class TestPerformQC(BaseQATests):
         time.sleep(0.2)
 
         self.click("submit-qa")
+        # click() returns as soon as the click is dispatched, not when the
+        # POST it triggers has been handled - so without this the assertion
+        # below raced the submission. It failed roughly two runs in three on
+        # Chromium, and the failure screenshot showed the submit button still
+        # reading "Submitting...". Every other submit-qa test in this file
+        # already waits for the success alert; this one was the exception.
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
         assert models.AutoSave.objects.filter(pk=auto.pk).count() == 0
 
