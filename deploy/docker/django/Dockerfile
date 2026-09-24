@@ -92,12 +92,16 @@ RUN uv export \
 # Second, we install the user dependencies using pip, if any, respecting the
 # core qatrack dependency version constraints.
 COPY ./deploy/docker/user-requirements/ /tmp/user-requirements/
-RUN if [ -s /tmp/user-requirements/requirements.txt ]; then \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    if [ -s /tmp/user-requirements/requirements.txt ]; then \
     echo "Installing user requirements..." \
     && /opt/venv/bin/pip install \
     --constraint /tmp/core-constraints.txt \
     --requirement /tmp/user-requirements/requirements.txt; \
     fi
+
+# Make sure weasyprint is uninstalled. If it's installed, then it will be used instead of chromium for HTML-to-PDF conversion.
+RUN /opt/venv/bin/pip uninstall -y weasyprint || true
 
 # Runtime stage without uv installed
 FROM ${RUNTIME_BASE_IMAGE}
@@ -127,10 +131,8 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     # for LDAP support
     libldap2 \
     libsasl2-2 \
-    # weasyprint dependencies - for converting HTML to PDF
-    libpango-1.0-0 \
-    libpangoft2-1.0-0 \
-    libharfbuzz-subset0 \
+    # for converting HTML to PDF
+    chromium \
     # For debugging in the container
     nano \
     && rm -rf /var/lib/apt/lists/*
@@ -160,17 +162,23 @@ COPY --chown=root:root ./deploy/docker/django/entrypoint.sh /entrypoint.sh
 RUN dos2unix /entrypoint.sh \
     && chmod 755 /entrypoint.sh \
     && mkdir -p /home/user/.config/matplotlib \
+                /home/user/.cache \
                 ./logs \
                 /app_data/media \
                 /app_data/static \
                 ./deploy/docker/user-data \
-    && chown -R user:user /home/user/.config/matplotlib \
+    && chown -R user:user /home/user \
                                 ./logs \
                                 /app_data/media \
                                 /app_data/static \
                                 ./deploy/docker/user-data
 
 USER user
+
+# Set some XDG variables for chromium
+ENV XDG_RUNTIME_DIR=/tmp/xdg-runtime-user
+ENV XDG_CONFIG_HOME=/home/user/.config
+ENV XDG_CACHE_HOME=/home/user/.cache
 
 EXPOSE 8000
 

@@ -36,6 +36,7 @@ services:
   django:
     image: qatrackplus-django
     hostname: qat-django
+    shm_size: 256m  # increased from the default 64m for chromium HTML-to-PDF conversion
     logging:
       driver: "json-file"
       options:
@@ -68,6 +69,7 @@ services:
   django-q:
     image: qatrackplus-django
     hostname: qat-django-q
+    shm_size: 256m  # increased from the default 64m for chromium HTML-to-PDF conversion
     logging:
       driver: "json-file"
       options:

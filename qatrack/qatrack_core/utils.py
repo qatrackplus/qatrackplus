@@ -1,5 +1,6 @@
 import os
 import subprocess
+import tempfile
 import uuid
 
 from dateutil import relativedelta as rdelta
@@ -198,16 +199,20 @@ def chrometopdf(html, name="", paper_size="letter"):
         # Set paper size for Chrome PDF generation
         paper_format = "Letter" if paper_size == "letter" else "A4"
 
-        command = [
-            settings.CHROME_PATH,
-            '--headless',
-            '--disable-gpu',
-            '--no-sandbox',
-            '--print-to-pdf=%s' % out_path,
-            '--print-to-pdf-no-header',
-            '--print-to-pdf-paper-format=%s' % paper_format,
-            "file://%s" % tmp_html.name,
-        ]
+        with tempfile.TemporaryDirectory() as profiledir:
+            # Run chromium in temporary dir, as concurrent chromium processes could occur.
+            command = [
+                settings.CHROME_PATH,
+                '--headless',
+                '--disable-gpu',
+                '--no-sandbox',
+                '--print-to-pdf=%s' % out_path,
+                '--print-to-pdf-no-header',
+                '--print-to-pdf-paper-format=%s' % paper_format,
+                '--user-data-dir=%s' % profiledir,
+                '--disable-crash-reporter',
+                "file://%s" % tmp_html.name,
+            ]
 
         if os.name.lower() == "nt":
             command = ' '.join(command)
