@@ -33,13 +33,15 @@ Prerequisites
 QATrack+ is developed using Python 3.12. We recommend using the latest stable
 version of Python 3.12 for the best development experience and compatibility.
 
-Node.js (Frontend)
-~~~~~~~~~~~~~~~~~~
+Node.js (not currently required)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QATrack+ includes a Vue 3 frontend bundle compiled with Vite. Node.js 22 or newer
-is required to build it locally. The compiled file is **not** committed to the
-repository — release archives include a pre-built copy so deployers have no Node.js
-requirement. If you are developing from a ``git clone`` you must build it yourself
+QATrack+ had a Vue 3 frontend bundle compiled with Vite. The faults UI now uses
+server-rendered HTMX with jQuery, and ``package.json`` was removed along with the
+bundle, so **Node.js is not a prerequisite for anything today**.
+
+A frontend build is expected to return no earlier than 4.1. Until then there is
+nothing to build, and ``npm`` commands will fail for want of a manifest
 (see :ref:`building-frontend` below).
 
 Git
@@ -105,21 +107,15 @@ Then clone your fork to your local machine:
 Building the Frontend
 ~~~~~~~~~~~~~~~~~~~~~
 
-The compiled Vue frontend bundle (``qatrack/qatrack_core/static/dist/faults.js``)
-is **not** tracked in version control. Release archives ship with a pre-built copy,
-but developers working from a ``git clone`` must generate it manually.
+There is nothing to build at present.
 
-After cloning (and whenever source files under ``qatrack/faults/static/faults/src/``
-change), run:
+The Vue/Vite bundle was retired when the faults UI moved to server-rendered
+HTMX, and ``package.json`` went with it, so ``npm ci`` has no manifest to read.
+A replacement is expected no earlier than 4.1.
 
-.. code-block:: shell
-
-    npm ci          # install dependencies (once, or after package.json changes)
-    npm run build   # compile faults.js into qatrack/qatrack_core/static/dist/
-
-.. note::
-
-    The generated ``faults.js`` file is gitignored — do **not** commit it.
+The release workflow builds the frontend only when a ``package.json`` is
+present, so it will resume on its own once one is - nothing here needs changing
+at that point.
 
 Selecting an Editor or IDE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

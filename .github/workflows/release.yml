@@ -17,16 +17,36 @@ jobs:
         with:
           persist-credentials: false
 
+      # Guarded on package.json existing, because right now it does not.
+      # The Vue/Vite bundle was retired when the faults UI moved to
+      # server-rendered HTMX and jQuery (#810 deleted package.json), and it
+      # is expected back no earlier than 4.1.
+      #
+      # Unguarded, these three steps fail every release: `npm ci` has no
+      # manifest to read, and setup-node's npm cache errors out before that
+      # when it cannot find a lockfile. Tagging a release would stop here.
+      #
+      # A condition rather than a deletion, so that when the frontend
+      # returns the steps start working again on their own - the build is
+      # driven by whether there is something to build, which is the honest
+      # signal, and nobody has to remember this file.
+      - name: Check for a frontend to build
+        id: frontend
+        run: echo "present=${{ hashFiles('package.json') != '' }}" >> "$GITHUB_OUTPUT"
+
       - name: Set up Node.js
+        if: steps.frontend.outputs.present == 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
           cache: "npm"
 
       - name: Install frontend dependencies
+        if: steps.frontend.outputs.present == 'true'
         run: npm ci
 
       - name: Build frontend assets
+        if: steps.frontend.outputs.present == 'true'
         run: npm run build
 
       - name: Create release archive
