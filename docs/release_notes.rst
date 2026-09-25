@@ -10,6 +10,16 @@ Release Notes
 QATrack+ v4.0
 ~~~~~~~~~~~~~
 
+v4.0.1
+------
+
+Other Changes
+^^^^^^^^^^^^^
+
+* An optional cross-platform task runner is available as an alternative to the
+  ``Makefile``. ``poe`` is not a project dependency and nothing requires it;
+  see the developer guide if you want it.
+
 v4.0.0
 ------
 

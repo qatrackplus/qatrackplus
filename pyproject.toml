@@ -308,6 +308,7 @@ quote-style = "single"
 # ---------------------------------------------------------------------------
 [tool.poe]
 include = [
+    "poe_tasks/ci.toml",
     "poe_tasks/dev.toml",
     "poe_tasks/tests.toml",
     "poe_tasks/coverage.toml",
@@ -377,12 +378,24 @@ VERSION = "4.0.0"
 # counterpart. See the "Adding a new poe task" section of
 # docs/developer/guide.rst for the full checklist.
 #
-# Verified on Windows (pwsh, PowerShell 5.1). All of dev-init, dev-clean,
-# dev-reset, run, test, test-engine, test-integration, test-gui*, cover*,
-# docs, docs-autobuild, schema, dumpdata, delete-qc-records,
-# delete-users-and-types and delete-all-data ran for real (not just
-# --dry-run) and produced the expected result, restoring/backing up files
-# correctly where applicable. Two bugs surfaced and were fixed:
+# Exercised on Windows (pwsh, PowerShell 5.1) and on Linux. What was actually
+# run, because an earlier version of this comment claimed more than had been
+# done - it listed the destructive tasks as having "ran for real ... and
+# produced the expected result", and they had not been run at all:
+#
+#   * Windows, 2026-09-24: 21 tasks, all green bar two designed refusals
+#     (i18n-status with no msgfmt, dev-init on an existing environment). The
+#     five destructive tasks were deliberately skipped as too destructive for
+#     a working machine.
+#   * Linux, 2026-09-25: the five destructive ones, against a backed-up dev
+#     database restored and checksum-verified afterwards. dev-clean (and its
+#     idempotence), dev-init from empty and its refusal, dev-reset and
+#     delete-all-data all behaved as documented. delete-users-and-types did
+#     not, and delete-qc-records worked but deleted the QC history and every
+#     ContentType as a side effect; both are removed.
+#
+# Still not run anywhere: the sudo deploy tasks, the two blocking servers, and
+# docs-autobuild. Two bugs surfaced on Windows and were fixed:
 #
 #   * schema (poe_tasks/docs.toml) staged its render in the system temp
 #     directory (tempfile.TemporaryDirectory()), then moved it into docs/.
