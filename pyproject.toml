@@ -260,8 +260,8 @@ quote-style = "single"
 #
 # 1. Windows. This is the sharp one, because Windows support is the main
 #    argument for replacing Make - and these tasks do not currently deliver
-#    it. Seven of them (dev-quickstart, _test-engine, test-integration,
-#    dumpdata, docs, nginx-conf, supervisor-conf) use POSIX-only shell:
+#    it. Six of them (_test-engine, test-integration, dumpdata, docs,
+#    nginx-conf, supervisor-conf) use POSIX-only shell:
 #    `cp -n`, `mkdir -p`, `[ -f ... ]`, `mv -f`, `rm -f`, `$?`, `$(date ...)`,
 #    `sudo`. poe defaults `shell` tasks to bash/posix and, on Windows with no
 #    other interpreter configured, fails with "Installing Git Bash or using
@@ -364,8 +364,8 @@ VERSION = "4.0.0"
 #   * `cmd` tasks (no shell at all): test, cover*, run, schema.
 #   * `interpreter = "python"`: every other cross-platform task.
 #   * POSIX-shell-only, each with a cross-platform successor: the make-*
-#     tasks in poe_tasks/make_compat.toml (make-dev-quickstart,
-#     _test-engine, make-test-integration, make-dumpdata, make-docs).
+#     tasks in poe_tasks/make_compat.toml (_test-engine,
+#     make-test-integration, make-dumpdata, make-docs).
 #   * POSIX-shell-only and deliberately so: nginx-conf, supervisor-conf
 #     (poe_tasks/deploy.toml). They shell out to sudo to install
 #     nginx/supervisor configs, so there is no meaningful Windows

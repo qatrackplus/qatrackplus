@@ -11,19 +11,6 @@
 # groups above, and gets a Makefile target only if the Makefile still exists.
 # ==========================================================================
 
-[tasks.make-dev-quickstart]
-help = "Makefile analog of `dev-init` - shell based, relies on cp -n"
-shell = '''
-cp -n deploy/dev/local_settings.dev.py qatrack/local_settings.py
-cp -n deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
-cp -n deploy/dev/local_test_settings.memory.py qatrack/local_test_settings.memory.py
-mkdir -p db
-python manage.py migrate
-python manage.py createcachetable
-DJANGO_SUPERUSER_USERNAME=superuser DJANGO_SUPERUSER_PASSWORD=superuser DJANGO_SUPERUSER_EMAIL=superuser@example.com python manage.py createsuperuser --noinput
-'''
-
-
 [tasks.make-docs]
 help = "Makefile analog of `docs` - runs `cd docs && make html`, so needs make"
 shell = '''
