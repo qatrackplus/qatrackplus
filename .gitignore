@@ -89,3 +89,14 @@ django-q2.conf
 gunicorn.conf
 # Screenshots captured when a Selenium test fails (see conftest.py)
 selenium-screenshots/
+
+# The distributed database schema diagram is a RELEASE artifact, not something
+# a feature branch should carry. `poe schema` / `make schema` regenerate it,
+# and without this a developer who runs either one - to look at the diagram,
+# or because a task list told them to - ends up with it staged in an unrelated
+# PR. The two historical diagrams (0.3.0, 3.1.0) and any already-committed one
+# are tracked, and .gitignore does not apply to tracked files, so a release
+# regeneration still shows up as a normal modification.
+#
+# Adding the diagram for a NEW minor line is deliberate: `git add -f`.
+docs/developer/images/qatrack_schema_*.svg

@@ -155,6 +155,9 @@ supervisor.conf:
 # --pygraphviz is explicit so a missing dependency fails loudly instead of
 # silently taking the broken path; its wheels also bundle a current Graphviz,
 # avoiding the "trouble in init_rank" bug in the 2.42 Ubuntu 24.04 ships.
+# RELEASE TARGET - see the note on the poe `schema` task. The diagram is
+# distributed documentation regenerated at release time; its output path is
+# gitignored so an ordinary PR does not pick it up.
 schema:
 	@out=docs/developer/images/qatrack_schema_$(VERSION).svg; \
 	tmp=$$(mktemp -t qatrack-schema-XXXXXX.svg); \

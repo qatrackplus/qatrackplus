@@ -37,8 +37,32 @@ help = "DESTRUCTIVE: delete test list instances, unit test collections and conte
 cmd = 'python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"'
 
 
+# INHERITED AND BROKEN - kept as a faithful mirror on purpose, unlike
+# delete-all-data below. Measured 2026-09-25 against a populated sqlite dev
+# database, and reproduced identically with `make clearct` on develop, so this
+# is not something the poe port introduced.
+#
+# Every model in the list is the target of a PROTECT foreign key, so the list
+# comprehension raises before deleting anything at all:
+#
+#   ContentType  <- UnitTestCollection.content_type
+#   User         <- Tolerance.created_by, Test.created_by, TestList.created_by,
+#                   TestInstance.created_by, TestListInstance.created_by, and
+#                   the matching modified_by on each
+#
+# Running `delete-qc-records` first does not rescue it either - that clears
+# TestListInstance, UnitTestCollection and ContentType, but Test and TestList
+# still hold User. Measured: still exits 1, users and tolerances untouched.
+# In other words it succeeds only against a database that is already empty.
+#
+# NOT repaired here, deliberately. Making it work means deleting Test,
+# TestList and everything else that references a user, which is a much larger
+# blast radius than the name promises - and quietly widening what a
+# DESTRUCTIVE task destroys is the wrong way to fix it. delete-all-data below
+# already does the "empty everything" job properly via `manage.py flush`.
+# Whether to repair, re-scope or retire this one is a maintainer's call.
 [tasks.delete-users-and-types]
-help = "DESTRUCTIVE: delete all users, tolerances and content types"
+help = "DESTRUCTIVE: delete all users, tolerances and content types (BROKEN: see comment)"
 # A `cmd` task, so poe runs it directly with no shell involved at all -
 # nothing here needs one, and avoiding it sidesteps the whole question of
 # which shell exists on the host. Verified that the quoted -c payload
