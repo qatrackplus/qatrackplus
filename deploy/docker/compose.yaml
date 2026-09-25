@@ -58,7 +58,7 @@ services:
     volumes:
       - ${MEDIA_DIR:-media-volume}:/app_data/media:z
       - static-volume:/app_data/static:z
-      - ${USER_DATA_DIR:-user-data-volume}:/app/deploy/docker/user-data
+      - ${USER_DATA_DIR:-user-data-volume}:/user-data
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 15s

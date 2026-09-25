@@ -166,12 +166,12 @@ RUN dos2unix /entrypoint.sh \
                 ./logs \
                 /app_data/media \
                 /app_data/static \
-                ./deploy/docker/user-data \
+                /user_data \
     && chown -R user:user /home/user \
                                 ./logs \
                                 /app_data/media \
                                 /app_data/static \
-                                ./deploy/docker/user-data
+                                /user_data
 
 USER user
 

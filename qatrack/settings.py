@@ -780,7 +780,7 @@ use_docker = env_bool(os.getenv('USE_DOCKER', '0'))
 if use_docker:
     ALLOWED_HOSTS = env_csv(required_env("ALLOWED_HOSTS"))
 
-    secret_filepath = pathlib.Path(PROJECT_ROOT, "secrets", "secret_key.txt")
+    secret_filepath = pathlib.Path("/user-data", "secrets", "secret_key.txt")
 
     # Allow SECRET_KEY to be specified with env var
     secret_key_from_env = os.getenv("SECRET_KEY")
@@ -798,7 +798,7 @@ if use_docker:
                 )
         except FileNotFoundError:
             # Fall back to generating it automatically.
-            # It will be persisted in the user-data-volume.
+            # It will be persisted in the user-data-volume or user-data bind mount.
             import secrets
             secret_filepath.parent.mkdir(parents=True, exist_ok=True)
             SECRET_KEY = secrets.token_urlsafe(64)
