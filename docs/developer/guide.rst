@@ -540,6 +540,17 @@ Once you have QATrack+ and its dependencies installed (and optionally configured
 Selenium browser testing above), you can run the test suite from the root
 QATrack+ directory using the `py.test` command:
 
+.. important::
+
+    Run the test suite as a regular, non-elevated user. Do not run it with
+    ``sudo`` or from the ``root`` account.
+
+    The ``root`` user bypasses filesystem permission checks, so tests covering
+    directory ownership and permissions — such as those for
+    ``check_media_folder_permissions`` — can pass under ``root`` while the same
+    code fails for the account that actually runs Gunicorn and Django-Q2. Running
+    as ``root`` also leaves root-owned files in ``logs/`` and ``qatrack/media/``,
+    which the application user is then unable to write to.
 
 .. code-block:: sh
 

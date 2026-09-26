@@ -53,7 +53,7 @@ this deployment. Install install them as follows:
 
 .. code-block:: bash
 
-    sudo apt install make build-essential python3-dev python3-tk curl
+    sudo apt install make build-essential python3-dev python3-tk curl gettext
 
 You will also need the Chrome browser installed for generating PDF reports:
 
@@ -126,10 +126,10 @@ And then create a readonly user for the SQL query tool:
     sudo -u postgres psql < deploy/postgres/create_ro_role.sql
 
 
-Now edit /etc/postgresql/18/main/pg_hba.conf (use your favourite editor, e.g.
-`sudo nano /etc/postgresql/18/main/pg_hba.conf` (note, if you have a different
-version of Postgres installed, then you would need to change the 18 in that
-path e.g. /etc/postgresql/16/main/pg_hba.conf) and scroll down to the bottom
+Now edit /etc/postgresql/16/main/pg_hba.conf (use your favourite editor, e.g.
+`sudo nano /etc/postgresql/16/main/pg_hba.conf` (note, if you have a different
+version of Postgres installed, then you would need to change the 16 in that
+path e.g. /etc/postgresql/14/main/pg_hba.conf) and scroll down to the bottom
 and change `peer` to `md5` for the `local all all` entry so it looks like:
 
 .. code-block:: bash
@@ -371,6 +371,7 @@ our database and install the default data:
 .. code-block:: bash
 
     python manage.py migrate
+    python manage.py createcachetable
     python manage.py loaddata fixtures/defaults/*/*
 
 
@@ -403,12 +404,6 @@ your Test Lists:
 .. code-block:: bash
 
     python manage.py createsuperuser
-
-and to create a cachetable in the database:
-
-.. code-block:: bash
-
-    python manage.py createcachetable
 
 and finally we need to collect all our static media files in one location for
 Nginx to serve:
@@ -447,12 +442,11 @@ In order for Django Q to run properly and for Nginx to serve uploaded files, we 
 
 .. code-block:: bash
 
-    sudo usermod -a -G www-data $USER
-    exec sg www-data newgrp `id -gn` # this refreshes users group memberships without needing to log off/on
     mkdir -p logs qatrack/media
     touch logs/{migrate,debug,django-q2,auth}.log
-    sudo chown -R www-data:www-data logs qatrack/media
-    sudo chmod ug+rwxs logs qatrack/media
+    sudo chown -R $USER:www-data logs qatrack/media
+    sudo find logs qatrack/media -type d -exec chmod 2775 {} +
+    sudo find logs qatrack/media -type f -exec chmod 664 {} +
 
 
 and then set up the Django Q configuration:
