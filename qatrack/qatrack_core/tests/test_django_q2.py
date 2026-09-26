@@ -99,6 +99,31 @@ class TestDjangoQ2Integration(TestCase):
         # Verify it executed without errors (logs something)
         mock_logger.info.assert_called()
 
+    @patch('qatrack.qatrack_core.tasks.logger')
+    def test_run_periodic_scheduler_midnight_crossing(self, mock_logger):
+        """Test that run_periodic_scheduler detects items scheduled at 00:00 when running before midnight"""
+        from qatrack.notifications.models import QCSchedulingNotice, RecipientGroup
+
+        recipients = RecipientGroup.objects.create(name="Midnight Group")
+        notice = QCSchedulingNotice.objects.create(
+            recipients=recipients,
+            notification_type=QCSchedulingNotice.DUE,
+            time="00:00",
+            recurrences="RRULE:FREQ=DAILY"
+        )
+
+        scheduled_items = []
+        def handler(instance, send_time):
+            scheduled_items.append((instance, send_time))
+
+        fake_now = timezone.localtime(timezone.now()).replace(hour=23, minute=55, second=0, microsecond=0)
+        with patch('qatrack.qatrack_core.tasks.timezone.localtime', return_value=fake_now), \
+             patch('qatrack.qatrack_core.utils.timezone.localtime', return_value=fake_now):
+            run_periodic_scheduler(QCSchedulingNotice, "test_midnight", handler, time_field="time", recurrence_field="recurrences")
+
+        self.assertGreater(len(scheduled_items), 0)
+        self.assertTrue(any(item[0].id == notice.id for item in scheduled_items))
+
     def test_notification_scheduling(self):
         """Test that notification schedules are created correctly"""
         from qatrack.notifications.models import QCSchedulingNotice, RecipientGroup
