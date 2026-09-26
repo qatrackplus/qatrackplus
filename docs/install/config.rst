@@ -507,6 +507,25 @@ indefinitely.
     SESSION_SAVE_EVERY_REQUEST = True
 
 
+Language Settings
+~~~~~~~~~~~~~~~~~
+
+``LANGUAGE_CODE`` sets the default language for your site, and
+``LANGUAGE_COOKIE_AGE`` controls how long (in seconds) a user's own language
+choice is remembered in their browser. QATrack+ defaults to one year, so a
+user who switches language is not silently reset back to the site default a
+fortnight later:
+
+.. code-block:: python
+
+    LANGUAGE_CODE = 'en'
+    LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60  # 1 year
+
+Set ``LANGUAGE_COOKIE_AGE = None`` to make the language choice last only for
+the browser session. For adding or configuring the available languages
+themselves, see :doc:`/tutorials/internationalization/index`.
+
+
 .. _config_email:
 
 Configuring Email for QATrack+

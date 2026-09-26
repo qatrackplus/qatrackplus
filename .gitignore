@@ -87,3 +87,5 @@ qatrack-dump-*.json
 # were simply missed.
 django-q2.conf
 gunicorn.conf
+# Screenshots captured when a Selenium test fails (see conftest.py)
+selenium-screenshots/
