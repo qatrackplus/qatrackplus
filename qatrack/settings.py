@@ -186,8 +186,28 @@ MIDDLEWARE = [
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
-# login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*", r"^i18n/"]
+# Paths exempt from LoginRequiredMiddleware. These are *regular expressions*,
+# applied with re.match() against the path with its leading slash stripped, so
+# every one is anchored at the start whether or not it says "^".
+#
+# Write them as regexes, not globs. "api/*" is not "anything under api/" - in a
+# regex it reads as "api" followed by zero or more slashes, so it also exempted
+# apifoo, api_secret and anything else merely starting with those three
+# letters. "(/|$)" says what was meant: the segment ends there.
+#
+# jsi18n is listed separately from i18n because the URL is /jsi18n/, which
+# "^i18n/" does not match. site_base.html loads the catalogue with a <script>
+# tag on every page, so without this the tag 302s to the login page for
+# anonymous visitors, the browser parses HTML as JavaScript, and the
+# client-side translation catalogue silently never loads.
+LOGIN_EXEMPT_URLS = [
+    r"^favicon\.ico$",
+    r"^accounts/",
+    r"^api(/|$)",
+    r"^oauth2(/|$)",
+    r"^i18n/",
+    r"^jsi18n/",
+]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
