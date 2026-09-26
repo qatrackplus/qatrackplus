@@ -12,9 +12,56 @@
     padding: 0;
   }
 
+  /* Neither a flex container nor a float can be fragmented across pages by
+   * WeasyPrint -- content past the first page is simply dropped.  Bootstrap
+   * floats every grid column, and a `.row` has at times been made `display:
+   * flex` by the PDF engine, so pin both back to plain blocks for print.  A
+   * full width column lays out identically either way, so this costs nothing
+   * and keeps the stylesheet correct on its own.  The narrower columns
+   * (header, filter details, signature) hold a few lines each and must keep
+   * floating to stay side by side. */
+  .row {
+    display: block;
+  }
+
+  .col-xs-12 {
+    float: none;
+    width: 100%;
+  }
+
+  /* With the columns back to floats, a row whose widths total exactly 100%
+   * wraps its last column onto a second line: WeasyPrint's sub-pixel rounding
+   * pushes the sum a hair over the row width.  That put the logo under the
+   * report heading, and on A4 dropped the signature date below the signature
+   * line.  Shaving a fraction off each width costs well under a pixel at any
+   * page size and keeps every row on one line.  Flexbox would also fix it,
+   * but a flex container can not be fragmented across pages -- that is the
+   * bug this stylesheet exists to work around, so keep these in normal flow. */
+  .col-xs-2 {
+    width: 16.6%;
+  }
+  .col-xs-4 {
+    width: 33.3%;
+  }
+  .col-xs-6 {
+    width: 49.9%;
+  }
+  .col-xs-8 {
+    width: 66.6%;
+  }
+
   .page {
     page-break-after: always;
     page-break-inside: avoid;
+  }
+
+  /* `.page` is also applied to table rows (service log & fault reports) where
+   * it was only ever meant to keep a row from being split.  The rule dates
+   * from 2020, when browsers ignored forced breaks on table rows; current
+   * engines honour them, so every row lands on a page of its own -- measured
+   * on both WeasyPrint 65.1 and Chromium 141.  Keep the "don't split" half. */
+  tr.page {
+    page-break-after: auto;
   }
 
   .table-striped > tbody > tr:nth-of-type(odd) {

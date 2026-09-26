@@ -315,6 +315,18 @@ Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. 
     # - or -
     CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
 
+.. note::
+
+    PDF reports are normally rendered by WeasyPrint; Chrome is used as a
+    fallback when WeasyPrint is unavailable or fails, so `CHROME_PATH` only
+    needs to be valid for that fallback to work.
+
+    The paper size of a generated PDF follows the paper size selected for the
+    report itself. It is applied through the report stylesheet rather than a
+    Chrome command line switch, so it is honoured by both renderers. Before
+    v4.0.1, reports rendered through Chrome were always produced at Letter
+    size regardless of the size chosen for the report.
+
 
 
 CATEGORY_FIRST_OF_GROUP_ONLY
