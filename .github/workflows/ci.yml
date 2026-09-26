@@ -167,7 +167,16 @@ jobs:
 
       - name: Setup Database configuration (SQLite)
         if: matrix.db == 'sqlite'
-        run: cp deploy/sqlite/local_settings.py qatrack/local_settings.py
+        run: |
+          cp deploy/sqlite/local_settings.py qatrack/local_settings.py
+          # local_test_settings.py too, not just local_settings.py:
+          # test_settings.py replaces DATABASES with in-memory SQLite whenever
+          # that file is missing, so without it this row silently tests nothing.
+          # Importing only DATABASES leaves every test-specific setting to
+          # test_settings.py, where they already are - copying a
+          # deploy/dev/local_test_settings.*.py template instead would bring its
+          # DEBUG = True along and override them.
+          echo 'from qatrack.local_settings import DATABASES  # noqa: F401' > qatrack/local_test_settings.py
 
       - name: Setup Database configuration (Postgres)
         if: matrix.db == 'postgres'
@@ -175,6 +184,7 @@ jobs:
           cp deploy/postgres/local_settings.py qatrack/local_settings.py
           sed -i "s/'HOST': ''/'HOST': '127.0.0.1'/g" qatrack/local_settings.py
           # User qatrack is already created with full privileges by the service container
+          echo 'from qatrack.local_settings import DATABASES  # noqa: F401' > qatrack/local_test_settings.py
 
       - name: Setup Database configuration (MySQL)
         if: matrix.db == 'mysql'
@@ -184,8 +194,19 @@ jobs:
           # Setup mysql users and privileges for MySQL 8 compat
           docker exec -i ${{ job.services.mysql.id }} mysql -u root -proot -e "CREATE USER 'qatrack'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE USER 'qatrack_reports'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE DATABASE qatrackplus CHARACTER SET utf8mb4; GRANT ALL ON qatrackplus.* TO 'qatrack'@'%'; GRANT ALL ON test_qatrackplus.* TO 'qatrack'@'%'; GRANT SELECT ON qatrackplus.* TO 'qatrack_reports'@'%'; FLUSH PRIVILEGES;"
           docker exec -i ${{ job.services.mysql.id }} sh -c "mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -proot mysql"
+          echo 'from qatrack.local_settings import DATABASES  # noqa: F401' > qatrack/local_test_settings.py
 
+      # Declared, not inferred: conftest.py aborts the session unless the
+      # connection it actually got matches. Without this, a row that loses its
+      # database configuration reports a pass - which is how the Postgres, MySQL
+      # and SQL Server rows came to run on in-memory SQLite.
       - name: Run Tests
+        env:
+          QATRACK_EXPECTED_DB_VENDOR: >-
+            ${{ matrix.db == 'postgres' && 'postgresql'
+             || matrix.db == 'mysql'    && 'mysql'
+             || matrix.db == 'mssql'    && 'microsoft'
+             || 'sqlite' }}
         run: pytest -x
 
   windows-tests:
@@ -219,7 +240,11 @@ jobs:
         
       - name: Setup Database configuration (SQLite)
         if: matrix.db == 'sqlite'
-        run: copy deploy\sqlite\local_settings.py qatrack\local_settings.py
+        run: |
+          copy deploy\sqlite\local_settings.py qatrack\local_settings.py
+          # See the Linux rows: without local_test_settings.py, test_settings.py
+          # swaps DATABASES for in-memory SQLite and this row tests nothing.
+          'from qatrack.local_settings import DATABASES  # noqa: F401' | Out-File -FilePath qatrack\local_test_settings.py -Encoding utf8
         
       - name: Setup Database configuration (MSSQL)
         if: matrix.db == 'mssql'
@@ -256,10 +281,19 @@ jobs:
               f.write('DEBUG = False\n')
               f.write('DATABASES = { "default": ' + repr(db_settings) + ' }\n')
               f.write('DATABASES["readonly"] = DATABASES["default"]\n')
+          # And local_test_settings.py, or test_settings.py discards all of the
+          # above for in-memory SQLite and the row tests nothing.
+          with open('qatrack/local_test_settings.py', 'w', encoding='utf8') as f:
+              f.write('from qatrack.local_settings import DATABASES  # noqa: F401\n')
           "@
           $code | Out-File -FilePath generate_settings.py -Encoding utf8
           python generate_settings.py
+      # As on Linux: the row declares which database it is for, and
+      # conftest.py refuses the session if that is not what it got.
       - name: Run Tests
+        env:
+          QATRACK_EXPECTED_DB_VENDOR: >-
+            ${{ matrix.db == 'mssql' && 'microsoft' || 'sqlite' }}
         run: uv run pytest -x
 
   docker-check:

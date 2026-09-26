@@ -36,6 +36,51 @@ def pytest_configure(config):
         )
 
 
+def pytest_sessionstart(session):
+    """Refuse the run if it is not on the database it was told to be on.
+
+    Deliberately `pytest_sessionstart` and not `pytest_report_header`: the
+    header hook does not run when pytest is quiet, and `addopts = "-ra -q"`
+    makes every run quiet. A guard that silently does not execute is worse than
+    no guard, because it reads as a pass.
+
+    Set QATRACK_EXPECTED_DB_VENDOR to the vendor a run is supposed to use -
+    'postgresql', 'mysql', 'microsoft' or 'sqlite' - and the session aborts
+    unless that is what it got.
+
+    This exists because CI spent an unknown number of runs testing nothing. The
+    database jobs write `qatrack/local_settings.py` and nothing else, while
+    `qatrack/test_settings.py` replaces DATABASES with in-memory SQLite whenever
+    `qatrack/local_test_settings.py` is absent. Every Postgres, MySQL and SQL
+    Server row therefore ran on in-memory SQLite and passed, and the only trace
+    was one RuntimeWarning in a summary nobody reads.
+
+    A green tick that means "we did not test this" is worse than a red one, so
+    the intent is now declared by the caller and checked here rather than
+    inferred. `vendor` is Django's own name for the backend, which is why the SQL
+    Server value is 'microsoft'.
+    """
+    import os as _os
+
+    from django.db import connection
+
+    vendor = connection.vendor
+    name = connection.settings_dict.get('NAME')
+    expected = _os.environ.get('QATRACK_EXPECTED_DB_VENDOR')
+
+    if expected:
+        if vendor != expected:
+            raise pytest.UsageError(
+                'QATRACK_EXPECTED_DB_VENDOR=%s but this run is on %r (NAME=%r).\n'
+                'Nothing was tested against %s. The usual cause is a missing '
+                'qatrack/local_test_settings.py: test_settings.py then falls back '
+                'to in-memory SQLite and discards whatever local_settings.py '
+                'configured.' % (expected, vendor, name, expected)
+            )
+        print('database: vendor=%s name=%s (expected %s) - ok'
+              % (vendor, name, expected))
+
+
 SCREENSHOT_DIR = pathlib.Path(__file__).parent / 'selenium-screenshots'
 
 
