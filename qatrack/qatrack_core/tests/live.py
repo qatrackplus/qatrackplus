@@ -1,5 +1,6 @@
 import os
 import time
+import warnings
 from contextlib import contextmanager
 from functools import wraps
 
@@ -221,28 +222,27 @@ class SeleniumTests(StaticLiveServerTestCase):
         # date and the test expects another. On a UTC-6 workstation against a
         # Toronto server that is 22:00-00:00 local, every night.
         #
-        # TZ is read by both browsers at launch, so passing it through the
-        # driver's Service environment fixes the class of failure rather than
-        # the three tests that happened to expose it.
+        # TZ in the driver's Service environment is NOT what makes this work -
+        # see set_browser_timezone() below, which is. It is passed anyway
+        # because it costs nothing and covers anything in the browser process
+        # that reads the environment before the BiDi override is applied.
         #
-        # THIS LOOKS REDUNDANT ON LINUX AND IS NOT. Django's Settings.__init__
-        # already does `os.environ["TZ"] = self.TIME_ZONE; time.tzset()` - but
-        # only `if hasattr(time, "tzset")`, which is POSIX-only. Windows has no
-        # tzset, so there Django leaves TZ alone and a browser launched from
-        # `{**os.environ}` inherits the workstation's zone while the server
-        # keeps computing in settings.TIME_ZONE.
+        # What TZ does and does not do, measured rather than assumed:
         #
-        # That is the whole reason the three date tests fail on Windows and have
-        # never failed on a Linux developer machine, and it means the effect of
-        # this line cannot be observed on Linux at all: deleting it changes
-        # nothing here, because Django has already set the variable. Verified by
-        # doing exactly that - with an ambient TZ of Pacific/Kiritimati, a run
-        # with this line and a run without it both passed, and
-        # test_browser_timezone_matches_server passed in both, because the
-        # browser was on Toronto either way.
+        #   POSIX  Django's Settings.__init__ already does
+        #          `os.environ["TZ"] = self.TIME_ZONE; time.tzset()`, so this is
+        #          redundant. Confirmed: with an ambient TZ of
+        #          Pacific/Kiritimati, runs with and without this line both
+        #          passed, because Django had overwritten it either way.
+        #   Windows  `hasattr(time, "tzset")` is False, so Django leaves TZ
+        #          alone - and **neither browser reads it**. Measured on a
+        #          Windows workstation: both reported America/Regina, the OS
+        #          zone, in every headless and visible run while the harness
+        #          passed America/Toronto, and the check below failed 24 runs
+        #          out of 24.
         #
-        # So: do not remove this because a Linux run says it makes no
-        # difference. It is load-bearing on Windows and inert here.
+        # So the environment variable is not a mechanism for this on either
+        # platform. It is kept as a cheap belt-and-braces, not as the fix.
         browser_env = {**os.environ, 'TZ': settings.TIME_ZONE}
 
         if browser_setting == 'chromium':
@@ -250,6 +250,11 @@ class SeleniumTests(StaticLiveServerTestCase):
             from selenium.webdriver.chrome.service import Service as ChromeService
 
             chrome_options = ChromeOptions()
+
+            # Enables the WebDriver BiDi session, as the Firefox branch does.
+            # Needed for the time zone override below; Chromium's viewport
+            # override still goes through CDP.
+            chrome_options.web_socket_url = True
 
             # The Chromium equivalent of the Firefox preference below.
             chrome_options.add_argument('--force-device-scale-factor=1')
@@ -344,6 +349,8 @@ class SeleniumTests(StaticLiveServerTestCase):
         # immediately rather than blocking for the full timeout.
         cls.driver.implicitly_wait(0)
 
+        cls.set_browser_timezone()
+
         cls.driver.set_window_position(0, 0)
         cls.driver.set_window_size(1920, 1080)
 
@@ -363,6 +370,50 @@ class SeleniumTests(StaticLiveServerTestCase):
         cls.wait = WebDriverWait(cls.driver, cls.timeout)
 
         super().setUpClass()
+
+    @classmethod
+    def set_browser_timezone(cls):
+        """Put the browser's clock in settings.TIME_ZONE, and say so if it fails.
+
+        The assertions in this suite compare against
+        `timezone.localtime(timezone.now())` on the server, while the values
+        under test come from the browser - a date picker's idea of today, the
+        recurrence widget's `date_today()`. When the two clocks disagree the
+        tests fail for the hours that fall on different sides of midnight in one
+        zone but not the other, every night, and the failure looks like a flake.
+
+        `TZ` in the driver's environment does not achieve this. On POSIX Django
+        has already set it, so passing it changes nothing; on Windows neither
+        browser reads it at all - measured, both reported the OS zone while the
+        harness passed another. This is the mechanism that works:
+        `emulation.setTimezoneOverride` is a WebDriver BiDi command implemented
+        browser-side, so it does not depend on the platform's environment
+        handling. Verified against both browsers.
+
+        Both browsers reject the command unless a context is named, so the
+        window handle is passed explicitly rather than relying on a default.
+
+        A failure here is not fatal. It is reported, and
+        test_browser_timezone_matches_server exists to fail with the two zones
+        named - which is more use than an error in setUpClass that takes the
+        whole class down and says nothing about why.
+        """
+        try:
+            cls.driver.emulation.set_timezone_override(
+                timezone=settings.TIME_ZONE,
+                contexts=[cls.driver.current_window_handle],
+            )
+        except Exception as exc:
+            # Deliberately broad: an unsupported command, a browser without a
+            # BiDi session and a transport error all reach here, and none of
+            # them should stop the suite running.
+            warnings.warn(
+                "could not set the browser's time zone to %s (%s: %s). "
+                "Date-dependent tests will fail for the hours where the "
+                "browser's zone and the server's are on different dates."
+                % (settings.TIME_ZONE, type(exc).__name__, exc),
+                stacklevel=2,
+            )
 
     @classmethod
     def set_viewport_size(cls, width, height):
