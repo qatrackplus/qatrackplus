@@ -17,7 +17,7 @@ version = "4.0.0"
 description = "QATrack+ is an open source application for managing QC data in radiotherapy and diagnostic imaging clinics"
 readme = "README.md"
 requires-python = ">=3.12, <=3.13"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 authors = [
     {name = "QATrack+ contributors", email = "randy@multileaf.ca"},
 ]
@@ -28,7 +28,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Healthcare Industry", 
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python",
@@ -162,8 +162,11 @@ dev = [
     "coverage>=6.0,<8.0",
     "django-coverage>=1.2.4,<2.0",
     "freezegun>=1.0.0,<3.0",
-    "selenium>=4.0.0,<5.0",
-    "PyVirtualDisplay==2.0",
+    # >=4.10 for Selenium Manager (auto driver resolution) and the
+    # Service/Options-based webdriver constructors the Selenium tests rely
+    # on - no PyVirtualDisplay/Xvfb dependency needed, headless mode uses
+    # each browser's own native support instead.
+    "selenium>=4.10,<5.0",
     "django-debug-toolbar>=4.0,<5.0",
     "django-upgrade>=1.25.0",
     "pre-commit>=4.2.0",
@@ -185,6 +188,7 @@ dev = [
     "sphinxcontrib-websupport==1.2.4",
     "sphinx-copybutton>=0.5.2",
     "sphinx-design>=0.6.0",
+    "pytest-xdist>=3.0,<4.0",
 ]
 
 [tool.ruff]
