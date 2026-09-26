@@ -1,0 +1,27 @@
+[
+  [
+    "qatrack/issue_tracker/models.py",
+    "help_text",
+    "Any error screen details. (Note the ability to click \"Switch to copy-and-paste view\" to copy Traceback)"
+  ],
+  [
+    "qatrack/issue_tracker/models.py",
+    "help_text",
+    "Current status of this issue"
+  ],
+  [
+    "qatrack/issue_tracker/models.py",
+    "help_text",
+    "If desired, add multiple tags to this issue"
+  ],
+  [
+    "qatrack/qa/views/admin.py",
+    "error",
+    "Error copying references and tolerances: %s"
+  ],
+  [
+    "qatrack/service_log/forms.py",
+    "help_text",
+    "hh:mm"
+  ]
+]

@@ -93,7 +93,7 @@ class UserModelMultipleChoiceField(forms.ModelMultipleChoiceField):
 
 class HoursForm(forms.ModelForm):
 
-    user_or_thirdparty = forms.ChoiceField(label='User or third party')
+    user_or_thirdparty = forms.ChoiceField(label=_l('User or third party'))
     time = HoursMinDurationField(help_text='hh:mm')
 
     class Meta:
@@ -341,7 +341,7 @@ class ModelSelectWithOptionTitles(forms.Select):
 class ServiceEventForm(BetterModelForm):
 
     serviceable_units = models.Unit.objects.filter(is_serviceable=True)
-    unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label='Unit', required=True)
+    unit_field_fake = forms.ModelChoiceField(queryset=serviceable_units, label=_l('Unit'), required=True)
     unit_field = forms.ModelChoiceField(queryset=models.Unit.objects.all())
     service_area_field = forms.ModelChoiceField(queryset=models.ServiceArea.objects.all(), required=True)
     service_area_field_fake = forms.ModelChoiceField(
@@ -855,7 +855,7 @@ class ServiceEventForm(BetterModelForm):
 
             if raize:
                 self._errors['service_status'] = ValidationError(
-                    'Cannot select status: Return to service QC must be performed and reviewed.'
+                    _('Cannot select status: Return to service QC must be performed and reviewed.')
                 )
 
         # If unit field was disabled due to initiated by or rtsqa existing for already saved service event,
