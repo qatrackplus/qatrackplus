@@ -850,54 +850,75 @@ class TestReportInterface(BaseQATests):
         super().setUp()
         self.login()
         self.open(reverse("reports"))
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'select2-id_root-report_type-container')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'select2-id_root-report_type-container')),
+            "the report type select2 widget to initialise",
+        )
 
     def test_report_preview(self):
         """Select report and make sure it previews"""
         self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')), "the report form to render")
         self.click("preview")
         self.driver.find_element(By.CSS_SELECTOR, '#report .container-fluid')
 
     def test_save_report(self):
         """Ensure filling and saving a report results in a SavedReport in the db"""
         self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')), "the report form to render")
         assert models.SavedReport.objects.count() == 0
         self.click("save")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')),
+            "the success message after the save",
+        )
         assert models.SavedReport.objects.count() == 1
         sr = models.SavedReport.objects.first()
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)),
+            "the saved report to appear in the report list",
+        )
 
     def test_save_report_with_note(self):
         """Ensure adding notes to saved reports works"""
         self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')), "the report form to render")
         self.click("add-note")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_reportnote_set-0-heading')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_reportnote_set-0-heading')),
+            "the report's first note field to render",
+        )
         self.send_keys("id_reportnote_set-0-heading", "heading")
         self.send_keys("id_reportnote_set-0-content", "content")
 
         assert models.ReportNote.objects.count() == 0
         self.click("save")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')),
+            "the success message after the save",
+        )
         expected_notes = [{"heading": "heading", "content": "content"}]
         assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
 
     def test_save_report_with_note_repeated_saves(self):
         """Ensure repeated saves only create one note"""
         self.select_by_text('id_root-report_type', qc.TestListInstanceSummaryReport.name)
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_work_completed')), "the report form to render")
         self.click("add-note")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_reportnote_set-0-heading')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_reportnote_set-0-heading')),
+            "the report's first note field to render",
+        )
         self.send_keys("id_reportnote_set-0-heading", "heading")
         self.send_keys("id_reportnote_set-0-content", "content")
 
         assert models.ReportNote.objects.count() == 0
         for i in range(3):
             self.click("save")
-            self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+            self.wait.until(
+                e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')),
+                "the success message after the save",
+            )
         expected_notes = [{"heading": "heading", "content": "content"}]
         assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
 
@@ -920,7 +941,10 @@ class TestReportInterface(BaseQATests):
 
         # need to reload page to get report table
         self.driver.refresh()
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)),
+            "the saved report to appear in the report list",
+        )
         self.click('report-id-%s' % sr.pk)
         wc = self.driver.find_element(By.ID, 'id_work_completed')
         assert wc.get_attribute("value") == "02 Jan 1989 - 04 Jan 1990"
@@ -948,12 +972,18 @@ class TestReportInterface(BaseQATests):
 
         # need to reload page to get report table
         self.driver.refresh()
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)),
+            "the saved report to appear in the report list",
+        )
         self.click('report-id-%s' % sr.pk)
         heading = self.driver.find_element(By.ID, "id_reportnote_set-0-heading")
         heading.send_keys(" add some new text")
         self.click("save")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')),
+            "the success message after the save",
+        )
         expected_notes = [{"heading": "heading add some new text", "content": "content"}]
         assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
 
@@ -976,11 +1006,17 @@ class TestReportInterface(BaseQATests):
 
         # need to reload page to get report table
         self.driver.refresh()
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)),
+            "the saved report to appear in the report list",
+        )
         self.click('report-id-%s' % sr.pk)
         self.click("id_reportnote_set-remove-0")
         self.click("save")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')),
+            "the success message after the save",
+        )
         assert models.ReportNote.objects.count() == 0
 
     def test_load_report_add_new_note_delete_old_note(self):
@@ -1002,15 +1038,24 @@ class TestReportInterface(BaseQATests):
 
         # need to reload page to get report table
         self.driver.refresh()
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)),
+            "the saved report to appear in the report list",
+        )
         self.click('report-id-%s' % sr.pk)
         self.click("add-note")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_reportnote_set-1-heading')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_reportnote_set-1-heading')),
+            "the report's second note field to render",
+        )
         self.send_keys("id_reportnote_set-1-heading", "heading new")
         self.send_keys("id_reportnote_set-1-content", "content new")
         self.click("id_reportnote_set-remove-0")
         self.click("save")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'success-message')),
+            "the success message after the save",
+        )
         expected_notes = [{"heading": "heading new", "content": "content new"}]
         assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
 
@@ -1035,12 +1080,18 @@ class TestReportInterface(BaseQATests):
         self.select_by_index('id_schedule-time', 1)
         self.driver.find_element(By.ID, "id_schedule-emails").send_keys("a@b.com")
 
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'add-date')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'add-date')),
+            "the recurrence widget's add-date control to render",
+        )
         self.driver.find_element(By.CLASS_NAME, "add-date").click()
 
         self.click("schedule")
 
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
         sched = str(models.ReportSchedule.objects.first().schedule)
         assert timezone.localtime(timezone.now()).strftime("%Y%m%d") in sched
 
@@ -1066,13 +1117,19 @@ class TestReportInterface(BaseQATests):
 
         # need to reload page to get report table
         self.driver.refresh()
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)),
+            "the saved report to appear in the report list",
+        )
 
         self.click("report-id-%s-schedule" % sr.pk)
         time.sleep(1)
 
         self.click("clear-schedule")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
         assert models.ReportSchedule.objects.count() == 0
 
 

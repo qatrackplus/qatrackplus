@@ -163,7 +163,8 @@ class BaseQATests(SeleniumTests, TransactionTestCase):
         # else, as a timeout waiting for an element that only exists when
         # logged in - which looks like an unrelated flake.
         self.wait.until(
-            e_c.presence_of_element_located((By.CSS_SELECTOR, 'a[href*="logout"]'))
+            e_c.presence_of_element_located((By.CSS_SELECTOR, 'a[href*="logout"]')),
+            "the logged-in navbar (a logout link) after submitting the login form",
         )
 
     def load_main(self):
@@ -176,7 +177,10 @@ class BaseQATests(SeleniumTests, TransactionTestCase):
         self.send_keys("id_password", self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")),
+            "the admin page's <title> to render",
+        )
 
 
 @pytest.mark.selenium
@@ -191,7 +195,7 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.driver.find_element(By.XPATH, '//a[@href="/admin/qa/category/"]').click()
         self.click_by_link_text("ADD CATEGORY")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')), "the category admin form to render")
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Category']['name'])
         self.driver.find_element(By.ID, 'id_slug').send_keys(objects['Category']['slug'])
         self.driver.find_element(By.ID, 'id_description').send_keys(objects['Category']['description'])
@@ -211,7 +215,7 @@ class LiveQATests(BaseQATests):
 
         self.driver.find_element(By.LINK_TEXT, 'Tests').click()
         self.click_by_link_text("ADD TEST")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')), "the test admin form to render")
         # for i in range(len(objects['Tests'])):
 
         for i in range(len(objects['Tests'])):
@@ -267,7 +271,7 @@ class LiveQATests(BaseQATests):
 
         self.click_by_link_text("Test Lists")
         self.click_by_link_text("ADD TEST LIST")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')), "the test list admin form to render")
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['TestList']['name'])
         self.driver.find_element(By.ID, 'id_slug').send_keys(objects['TestList']['name'].lower())
         self.driver.find_element(By.LINK_TEXT, 'Add another Test List Membership').click()
@@ -283,7 +287,7 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.click_by_link_text("Treatment and Imaging Modalities")
         self.click_by_link_text("ADD TREATMENT AND IMAGING MODALITY")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')), "the modality admin form to render")
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Modality']['name'])
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
@@ -293,7 +297,7 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.click_by_link_text("Unit Types")
         self.click_by_link_text("ADD UNIT TYPE")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')), "the unit type admin form to render")
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['UnitType']['name'])
         self.driver.find_element(By.ID, 'id_vendor').send_keys(objects['UnitType']['vendor'])
         self.driver.find_element(By.NAME, '_save').click()
@@ -314,7 +318,7 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.click_by_link_text("Units")
         self.click_by_link_text("ADD UNIT")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')), "the unit admin form to render")
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Unit']['name'])
         self.driver.find_element(By.ID, 'id_number').send_keys(objects['Unit']['number'])
         self.driver.find_element(By.ID, 'id_date_acceptance').send_keys(objects['Unit']['date_acceptance'])
@@ -336,7 +340,7 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.click_by_link_text("Frequencies")
         self.click_by_link_text("ADD FREQUENCY")
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')), "the frequency admin form to render")
         self.driver.find_element(By.ID, 'id_name').send_keys(objects['Frequency']['name'])
         self.driver.find_element(By.CLASS_NAME, "recurrence-label").click()
         self.driver.find_elements(By.CSS_SELECTOR, ".weekly td")[0].click()
@@ -364,7 +368,10 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.click_by_link_text("Assign Test Lists to Units")
         self.click_by_link_text('ADD UNIT TEST COLLECTION')
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_unit')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_unit')),
+            "the unit test collection admin form to render",
+        )
 
         self.select_by_index("id_unit", -1)
         time.sleep(0.5)
@@ -387,7 +394,7 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.click_by_link_text('Tolerances')
         self.click_by_link_text('ADD TOLERANCE')
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')), "the tolerance admin form to render")
         self.select_by_index("id_type", 1)
         self.driver.find_element(By.ID, 'id_act_low').send_keys(objects['absoluteTolerance']['act_low'])
         self.driver.find_element(By.ID, 'id_tol_low').send_keys(objects['absoluteTolerance']['tol_low'])
@@ -397,7 +404,7 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
         # Add percentage tolerance
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')), "the tolerance admin form to render")
         self.select_by_index("id_type", 1)
         self.driver.find_element(By.ID, 'id_act_low').send_keys(objects['percentTolerance']['act_low'])
         self.driver.find_element(By.ID, 'id_tol_low').send_keys(objects['percentTolerance']['tol_low'])
@@ -407,7 +414,7 @@ class LiveQATests(BaseQATests):
         self.wait_for_success()
 
         # Add multi tolerance
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')))
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_type')), "the tolerance admin form to render")
         self.select_by_index("id_type", 3)
         self.driver.find_element(By.ID,
                                  'id_mc_pass_choices').send_keys(objects['multiChoiceTolerance']['mc_pass_choices'])
@@ -447,7 +454,10 @@ class LiveQATests(BaseQATests):
         self.load_admin()
         self.click_by_link_text('Set References & Tolerances')
         self.click_by_link_text(mult_test.name)
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_tolerance')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_tolerance')),
+            "the reference/tolerance admin form to render",
+        )
         self.select_by_index("id_tolerance", 1)
         self.driver.find_element(By.NAME, '_save').click()
         self.wait_for_success()
@@ -467,16 +477,25 @@ class LiveQATests(BaseQATests):
     def test_admin_statuses(self):
 
         self.load_admin()
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'testinstancestatus')]")))
+        self.wait.until(
+            e_c.presence_of_element_located((By.XPATH, "//a[contains(@href,'testinstancestatus')]")),
+            "the test instance status changelist link on the admin index",
+        )
         self.driver.find_element(By.XPATH, "//a[contains(@href,'testinstancestatus')]").click()
         self.click_by_link_text('ADD TEST INSTANCE STATUS')
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_name')),
+            "the test instance status admin form to render",
+        )
         self.driver.find_element(By.ID, 'id_name').send_keys('testStatus')
         self.driver.find_element(By.ID, 'id_is_default').click()
         self.driver.find_element(By.NAME, '_addanother').click()
         self.wait_for_success()
 
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_name')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_name')),
+            "the test instance status admin form to render",
+        )
         self.driver.find_element(By.ID, 'id_name').send_keys('testApprovalStatus')
         self.driver.find_element(By.ID, 'id_requires_review').click()
         self.driver.find_element(By.NAME, '_save').click()
@@ -490,7 +509,10 @@ class LiveQATests(BaseQATests):
         self.click_by_link_text('TestUnit')
         self.click_by_link_text('Perform')
 
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_form-0-value')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_form-0-value')),
+            "the QC form's first value input to render",
+        )
         basic = self.driver.find_element(By.ID, 'id_form-0-value')
         boolean = self.driver.find_element(By.NAME, 'form-1-value')
         basic.send_keys('3')
@@ -498,7 +520,8 @@ class LiveQATests(BaseQATests):
         self.wait.until(
             e_c.presence_of_element_located(
                 (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "ACT(3.00)")]')
-            )
+            ),
+            "the QC table row to show its calculated value",
         )
 
         basic.send_keys(Keys.BACKSPACE, '2')
@@ -506,7 +529,8 @@ class LiveQATests(BaseQATests):
         self.wait.until(
             e_c.presence_of_element_located(
                 (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "TOL(2.00)")]')
-            )
+            ),
+            "the QC table row to show its calculated value",
         )
 
         basic.send_keys(Keys.BACKSPACE, '1')
@@ -514,13 +538,15 @@ class LiveQATests(BaseQATests):
         self.wait.until(
             e_c.presence_of_element_located(
                 (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[1]/td[5][contains(text(), "OK(1.00)")]')
-            )
+            ),
+            "the QC table row to show its calculated value",
         )
 
         self.wait.until(
             e_c.presence_of_element_located(
                 (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "OK(0.0%)")]')
-            )
+            ),
+            "the QC table row to show its calculated value",
         )
 
         basic.send_keys(Keys.BACKSPACE, '1.06')
@@ -528,7 +554,8 @@ class LiveQATests(BaseQATests):
         self.wait.until(
             e_c.presence_of_element_located(
                 (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "ACT(6.0%)")]')
-            )
+            ),
+            "the QC table row to show its calculated value",
         )
 
         basic.send_keys(Keys.BACKSPACE, '5')
@@ -536,7 +563,8 @@ class LiveQATests(BaseQATests):
         self.wait.until(
             e_c.presence_of_element_located(
                 (By.XPATH, '//*[@id="perform-qa-table"]/tbody/tr[13]/td[5][contains(text(), "TOL(5.0%)")]')
-            )
+            ),
+            "the QC table row to show its calculated value",
         )
 
         basic.send_keys(Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE)
@@ -563,26 +591,34 @@ class LiveQATests(BaseQATests):
         self.driver.find_element(By.ID, 'id_form-5-string_value').send_keys('a string')
         boolean.click()
         self.wait.until(
-            e_c.text_to_be_present_in_element_value((By.ID, 'id_form-6-string_value'), 'a string composite')
+            e_c.text_to_be_present_in_element_value((By.ID, 'id_form-6-string_value'), 'a string composite'),
+            "the string composite test to be recalculated",
         )
 
         self.driver.find_element(By.ID, 'id_form-7-skipped').click()
 
         self.driver.find_element(By.ID, 'submit-qa').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.XPATH, '//div[contains(text(), "Showing 1 to 1")]')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.XPATH, '//div[contains(text(), "Showing 1 to 1")]')),
+            "the unreviewed listing to show exactly one row",
+        )
         self.driver.find_element(By.PARTIAL_LINK_TEXT, 'Review Data').click()
         self.driver.find_element(By.PARTIAL_LINK_TEXT, 'Unreviewed Visible To Your Groups').click()
         self.click_by_link_text('Review')
 
-        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_testinstance_set-0-status')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.ID, 'id_testinstance_set-0-status')),
+            "the review form to render",
+        )
         self.driver.find_element(By.ID, 'bulk-status').click()
         self.driver.find_element(By.ID, 'bulk-status').send_keys(Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER)
 
         self.driver.find_element(By.XPATH, '//button[@type = "submit"]').click()
 
         self.wait.until(
-            e_c.presence_of_element_located((By.XPATH, '//td[contains(text(), "No data available in table")]'))
+            e_c.presence_of_element_located((By.XPATH, '//td[contains(text(), "No data available in table")]')),
+            "the unreviewed listing to empty after the review",
         )
 
 
@@ -658,13 +694,22 @@ class TestPerformQC(BaseQATests):
         inputs[0].send_keys(1)
         inputs[1].send_keys(2)
         inputs[1].send_keys(Keys.TAB)
-        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
+        self.wait.until(
+            lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"),
+            "outstanding jQuery AJAX requests to finish",
+        )
         self.click_by_css_selector(".choose-date")
-        self.wait.until(e_c.element_to_be_clickable((By.CSS_SELECTOR, ".open .today")))
+        self.wait.until(
+            e_c.element_to_be_clickable((By.CSS_SELECTOR, ".open .today")),
+            "the open date picker's 'today' cell to become clickable",
+        )
         self.click_by_css_selector(".open .today")
 
         self.click_by_css_selector(".choose-datetime")
-        self.wait.until(e_c.element_to_be_clickable((By.CSS_SELECTOR, ".open .today")))
+        self.wait.until(
+            e_c.element_to_be_clickable((By.CSS_SELECTOR, ".open .today")),
+            "the open date picker's 'today' cell to become clickable",
+        )
         self.click_by_css_selector(".open .today")
 
         self.click_by_css_selector("body")
@@ -674,7 +719,10 @@ class TestPerformQC(BaseQATests):
 
         self.driver.find_element(By.CSS_SELECTOR, ".qa-string .qa-input").send_keys("test")
         self.click_by_css_selector("body")
-        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
+        self.wait.until(
+            lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"),
+            "outstanding jQuery AJAX requests to finish",
+        )
     def test_perform_ok(self):
         """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
 
@@ -684,8 +732,14 @@ class TestPerformQC(BaseQATests):
         assert int(float(inputs[2].get_attribute("value"))) == 5
         assert models.TestListInstance.objects.count() == 0
         self.click("submit-qa")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
-        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
+        self.wait.until(
+            lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"),
+            "outstanding jQuery AJAX requests to finish",
+        )
 
         assert models.TestListInstance.objects.count() == 1
         assert models.TestListInstance.objects.latest("pk").include_for_scheduling
@@ -720,8 +774,14 @@ class TestPerformQC(BaseQATests):
         assert int(float(inputs[2].get_attribute("value"))) == 5
         assert models.TestListInstance.objects.count() == 0
         self.click("submit-qa")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
-        self.wait.until(lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
+        self.wait.until(
+            lambda d: d.execute_script("return typeof jQuery !== 'undefined' ? jQuery.active == 0 : true"),
+            "outstanding jQuery AJAX requests to finish",
+        )
 
         assert models.TestListInstance.objects.count() == 1
         assert models.TestListInstance.objects.latest("pk").include_for_scheduling
@@ -746,7 +806,10 @@ class TestPerformQC(BaseQATests):
         self.driver.find_elements(By.CSS_SELECTOR, ".revealcomment")[0].click()
 
         self.click("submit-qa")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
         assert models.TestInstance.objects.filter(comment="testticomment").count() == 1
 
     def test_set_in_progress(self):
@@ -755,7 +818,10 @@ class TestPerformQC(BaseQATests):
 
         self.click("in-progress-container")
         self.click("submit-qa")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
         assert models.TestListInstance.objects.in_progress().count() == 1
 
     def test_perform_and_review(self):
@@ -764,7 +830,10 @@ class TestPerformQC(BaseQATests):
         utils.create_status(name="reviewed", slug="reviewed", is_default=False, requires_review=False)
         self.fill_testlist()
         self.click("submit-qa")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
 
         self.open("/qc/session/unreviewed/")
         time.sleep(0.2)
@@ -779,7 +848,10 @@ class TestPerformQC(BaseQATests):
 
         assert models.TestListInstance.objects.unreviewed().count() == 1
         self.click("submit-review")
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
         assert models.TestListInstance.objects.unreviewed().count() == 0
 
     def test_perform_and_initiate_se(self):
@@ -789,7 +861,10 @@ class TestPerformQC(BaseQATests):
         self.click("init-se-container")
         self.click("submit-qa")
 
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
 
         time.sleep(0.2)
         self.driver.execute_script("$('#id_datetime_service').focus()")
@@ -914,7 +989,10 @@ class TestPerformQC(BaseQATests):
         # Chromium, and the failure screenshot showed the submit button still
         # reading "Submitting...". Every other submit-qa test in this file
         # already waits for the success alert; this one was the exception.
-        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+        self.wait.until(
+            e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+            "the success alert after the save",
+        )
 
         assert models.AutoSave.objects.filter(pk=auto.pk).count() == 0
 
@@ -945,5 +1023,8 @@ class TestReviewQC(BaseQATests):
             assert models.TestListInstance.objects.unreviewed().count() == 1
 
             self.click("confirm-update")
-            self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
+            self.wait.until(
+                e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')),
+                "the success alert after the save",
+            )
             assert models.TestListInstance.objects.unreviewed().count() == 0
