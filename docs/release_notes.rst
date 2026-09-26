@@ -10,6 +10,36 @@ Release Notes
 QATrack+ v4.0
 ~~~~~~~~~~~~~
 
+.. _`release_notes_401`:
+
+v4.0.1
+------
+
+Bug Fixes
+^^^^^^^^^
+
+* Forms no longer record the wrong date and time. Where a date field arrives
+  already filled in - the fault form's *Date & Time fault occurred*, a QC
+  session's *Work Completed*, a service event's date - the server wrote that
+  value in one format and the date picker read it back in another. The picker
+  then replaced it with an unrelated date, usually months away and at
+  midnight, before anyone had touched the page.
+
+  Nothing indicated it had happened: the replacement was a well-formed date in
+  the expected format, sitting in a field the user had not edited. A record
+  saved without changing that field carried a time that was simply wrong.
+
+  Date and time formats are now derived from a single setting, so the value
+  written to a form and the value read back from it cannot disagree
+  (:issues:`826`).
+
+Other Changes
+^^^^^^^^^^^^^
+
+* An optional cross-platform task runner is available as an alternative to the
+  ``Makefile``. ``poe`` is not a project dependency and nothing requires it;
+  see the developer guide if you want it.
+
 v4.0.0
 ------
 
@@ -45,7 +75,7 @@ Technical Improvements
 Bug Fixes
 ^^^^^^^^^
 
-* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issue:`829`).
+* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issues:`829`).
 * Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
 * Fixed tolerance compatibility validation across different test types.
 * Fixed reference value type preservation in admin forms.

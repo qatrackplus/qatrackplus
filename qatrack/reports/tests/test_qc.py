@@ -50,7 +50,7 @@ class TestTestListInstanceSummaryReport(TestCase):
         work_completed = timezone.datetime(2019, 1, 1, 12).replace(tzinfo=tz)
         tli = utils.create_test_list_instance(work_completed=work_completed)
         wc = rep.get_work_completed(tli)
-        assert "01 Jan 2019" in wc
+        assert "2019-01-01" in wc
         assert "href" in wc
 
     @override_settings(TIME_ZONE="America/Toronto")
@@ -61,7 +61,7 @@ class TestTestListInstanceSummaryReport(TestCase):
         work_completed = timezone.datetime(2019, 1, 1, 12).replace(tzinfo=tz)
         tli = utils.create_test_list_instance(work_completed=work_completed)
         wc = rep.get_work_completed(tli)
-        assert "01 Jan 2019" in wc
+        assert "2019-01-01" in wc
         assert "href" not in wc
 
     @override_settings(TIME_ZONE="America/Toronto")

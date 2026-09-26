@@ -5,10 +5,10 @@ from random import Random
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
-from django.utils.formats import get_format
 from django.utils.translation import get_language_info
 
 from qatrack.faults.models import Fault
+from qatrack.formats.utils import get_js_format
 from qatrack.qa.models import TestListInstance
 from qatrack.service_log.models import (
     ReturnToServiceQA,
@@ -49,12 +49,12 @@ def site(request):
         'PING_INTERVAL_S': settings.PING_INTERVAL_S,
 
         # JavaScript Date Formats
-        'MOMENT_DATE_DATA_FMT': get_format("MOMENT_DATE_DATA_FMT"),
-        'MOMENT_DATE_FMT': get_format("MOMENT_DATE_FMT"),
-        'MOMENT_DATETIME_FMT': get_format("MOMENT_DATETIME_FMT"),
-        'FLATPICKR_DATE_FMT': get_format("FLATPICKR_DATE_FMT"),
-        'FLATPICKR_DATETIME_FMT': get_format("FLATPICKR_DATETIME_FMT"),
-        'DATERANGEPICKER_DATE_FMT': get_format("DATERANGEPICKER_DATE_FMT"),
+        'MOMENT_DATE_DATA_FMT': get_js_format("MOMENT_DATE_DATA_FMT"),
+        'MOMENT_DATE_FMT': get_js_format("MOMENT_DATE_FMT"),
+        'MOMENT_DATETIME_FMT': get_js_format("MOMENT_DATETIME_FMT"),
+        'FLATPICKR_DATE_FMT': get_js_format("FLATPICKR_DATE_FMT"),
+        'FLATPICKR_DATETIME_FMT': get_js_format("FLATPICKR_DATETIME_FMT"),
+        'DATERANGEPICKER_DATE_FMT': get_js_format("DATERANGEPICKER_DATE_FMT"),
     }
     cur_site = get_current_site(request)
     context.update({'SITE_NAME': cur_site.name, 'SITE_URL': cur_site.domain})

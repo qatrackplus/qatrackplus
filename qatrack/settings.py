@@ -12,6 +12,8 @@ import sys
 
 import matplotlib
 
+from qatrack.qatrack_core import dateformats
+
 matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
@@ -84,30 +86,92 @@ USE_TZ = True
 
 FORMAT_MODULE_PATH = "qatrack.formats"
 
-# formats for strptime/strftime
-DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
-DATETIME_INPUT_FORMATS = [
-    "%d %b %Y %H:%M",
+# ------------------------------------------------------------------------------
+# Dates and times
+#
+# Two questions, answered separately:
+#
+#   1. What does QATrack+ *show* you, and what do the date pickers write into a
+#      field? That is QATRACK_DATETIME_FORMAT / QATRACK_DATE_FORMAT /
+#      QATRACK_TIME_FORMAT below - one format each, used everywhere.
+#
+#   2. What will QATrack+ *accept* when you type a date yourself? That is the
+#      default from question 1, plus anything listed in the
+#      QATRACK_EXTRA_*_INPUT_FORMATS settings.
+#
+# Keeping them separate is deliberate. Accepting more ways of typing a date
+# costs nothing and helps whoever is entering data; displaying dates two
+# different ways in two parts of the application does not help anyone. So
+# extra input formats are a list, and the display format is a single value.
+#
+# Write these in Python's strptime syntax (%Y, %m, %d, %H, %M ...). Everything
+# else is derived from them - the Django display format, the flatpickr format
+# the date pickers use, the moment.js format the browser uses, and the help
+# text under each field - so there is one place to change and nothing can
+# drift out of step with anything else. See qatrack/formats/base.py.
+#
+# The default is ISO 8601 (YYYY-MM-DD HH:MM) in every language. It sorts
+# correctly, it is unambiguous - 03/04 is the 3rd of April to half the world
+# and the 4th of March to the other half - and it does not change meaning when
+# a site switches language.
+
+QATRACK_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
+QATRACK_DATE_FORMAT = "%Y-%m-%d"
+QATRACK_TIME_FORMAT = "%H:%M"
+
+# Additional formats accepted when parsing, on top of the three above. These
+# only affect what can be typed in; they never change what is displayed.
+QATRACK_EXTRA_DATETIME_INPUT_FORMATS = [
+    "%d %b %Y %H:%M",       # 31 May 2012 14:30 - the pre-4.1 QATrack+ format
     "%d %b %Y %H:%M:%S",
-    "%Y-%m-%d %H:%M",
     "%Y-%m-%d %H:%M:%S",
     "%Y-%m-%d %H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S.%fZ",
 ]
-TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
+QATRACK_EXTRA_DATE_INPUT_FORMATS = [
+    "%d %b %Y",             # 31 May 2012
+]
+QATRACK_EXTRA_TIME_INPUT_FORMATS = [
+    "%H:%M:%S",
+    "%H:%M:%S.%f",
+]
 
-DATETIME_FORMAT = "j M Y H:i"
-DATE_FORMAT = "j M Y"
-TIME_FORMAT = "H:i"
+# The values below are what Django itself reads. They are derived from the
+# settings above in qatrack/formats/base.py, which is what FORMAT_MODULE_PATH
+# points at, and are repeated here only so that anything reading them before
+# the format modules load sees the same thing. Override the QATRACK_* settings
+# above rather than these - Django resolves formats through the format modules
+# first, so setting DATETIME_INPUT_FORMATS directly has no effect.
+DATE_INPUT_FORMATS = [QATRACK_DATE_FORMAT] + QATRACK_EXTRA_DATE_INPUT_FORMATS
+DATETIME_INPUT_FORMATS = [QATRACK_DATETIME_FORMAT] + QATRACK_EXTRA_DATETIME_INPUT_FORMATS
+TIME_INPUT_FORMATS = [QATRACK_TIME_FORMAT] + QATRACK_EXTRA_TIME_INPUT_FORMATS
 
-DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
+DATETIME_FORMAT = dateformats.to_django(QATRACK_DATETIME_FORMAT)
+DATE_FORMAT = dateformats.to_django(QATRACK_DATE_FORMAT)
+TIME_FORMAT = dateformats.to_django(QATRACK_TIME_FORMAT)
+
+DATETIME_HELP = "Format %s (24h time)" % dateformats.describe(QATRACK_DATETIME_FORMAT)
+
+# What the JSON API writes. Deliberately *not* derived from the settings above:
+# changing how QATrack+ displays a date should not change the wire format that
+# somebody's integration is parsing. These keep the values the API has always
+# emitted.
+#
+# They used to be read as DATETIME_INPUT_FORMATS[1] and DATE_INPUT_FORMATS[0] -
+# positions in a list a deployer is invited to add to - so adding an accepted
+# input format silently changed the API's output.
+QATRACK_API_DATETIME_FORMAT = "%d %b %Y %H:%M:%S"
+QATRACK_API_DATE_FORMAT = "%d %b %Y"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en'
-# Duration of the language cookie 
-# TODO: add nice documentation to the local_settings defaults so deployment is clear. 
-LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60 # 1 year
+# How long a user's own language choice is remembered in their browser.
+# Documented for deployers under "Language Settings" in
+# docs/install/config.rst. TODO: still needs a commented, discoverable
+# example in the deploy/*/local_settings.py templates themselves, so it is
+# visible when setting a site up rather than only in the docs.
+LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60  # 1 year
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -702,6 +766,125 @@ for path in chrome_paths:
         CHROME_PATH = path
 
 # ------------------------------------------------------------------------------
+# Testing settings
+#
+# Read by the Selenium test harness. Defined above the local_settings import
+# below, so qatrack/local_settings.py and qatrack/local_test_settings.py can
+# both override them - previously these were assigned after that import and
+# anything a settings file set here was silently discarded.
+
+# Selenium Browser Configuration
+# Options: 'firefox' (default) or 'chromium'. Override for a single run from
+# the environment rather than editing a settings file:
+#
+#     SELENIUM_BROWSER=chromium pytest --run-selenium           # bash/zsh
+#     $env:SELENIUM_BROWSER='chromium'; pytest --run-selenium   # PowerShell
+#
+SELENIUM_BROWSER = os.environ.get('SELENIUM_BROWSER', 'firefox')
+
+# Browser Driver Paths - leave empty (the default) and Selenium Manager
+# (Selenium 4.6+) locates the installed browser and fetches a driver to match,
+# so most hosts need nothing installed by hand.
+#
+# The exception is a driver already on PATH that does not match the browser.
+# Selenium Manager prints an incompatibility warning and uses it anyway. How
+# much of a gap survives, measured against Chrome 153.0.8010.53:
+#
+#     chromedriver 153  same major   session starts
+#     chromedriver 152  one behind   session starts, warning only
+#     chromedriver 151  two behind   untested
+#     chromedriver 150  three behind SessionNotCreatedException
+#
+# So the warning is not always fatal, and it is not always harmless either.
+# Treat it as the thing to act on rather than working out where your own line
+# is: set the matching path below, or take the stale driver off PATH.
+SELENIUM_FIREFOX_DRIVER_PATH = ''  # Path to geckodriver
+SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver
+
+# Chromium Browser Binary Path - leave empty (the default) to let Selenium
+# find whatever Chrome/Chromium is on the system. Set it only when Chrome is
+# not discoverable that way.
+#
+# Everything below here is Linux/Flatpak only - skip it on Windows or macOS.
+# A Flatpak install (`com.google.Chrome`, `org.chromium.Chromium`) has no
+# plain `google-chrome`/`chromium` on PATH for Selenium Manager to find:
+#
+#     SELENIUM_CHROMIUM_BINARY_PATH = (
+#         '/var/lib/flatpak/exports/bin/com.google.Chrome'  # system-wide install
+#     )
+#     # or, for a per-user install:
+#     # SELENIUM_CHROMIUM_BINARY_PATH = (
+#     #     os.path.expanduser('~/.local/share/flatpak/exports/bin/com.google.Chrome')
+#     # )
+#
+# A Flatpak browser also needs its actual profile directory redirected
+# somewhere its sandbox can write - it can't see chromedriver's default
+# temp directory - by pointing TMPDIR (before starting the test run) at a
+# directory already inside the Flatpak's permitted filesystem list (check
+# with `flatpak info --show-permissions <app-id>`; XDG user directories
+# like ~/Downloads are usually granted, arbitrary /tmp paths are not):
+#
+#     TMPDIR=~/Downloads/selenium-chrome-tmp pytest --run-selenium
+#
+# Otherwise Chrome fails to start with "session not created: DevToolsActivePort
+# file doesn't exist" - it's a sandboxing symptom, not a Selenium bug.
+SELENIUM_CHROMIUM_BINARY_PATH = ''
+
+# Firefox Browser Binary Path - leave empty (the default) to let Selenium
+# find whatever Firefox is on the system as usual. Set this if another
+# Firefox-based browser is also installed and gets found first - confirmed
+# on Windows with Zen Browser (a Firefox fork) installed alongside real
+# Firefox: geckodriver's own discovery resolved to Zen's binary instead,
+# silently testing against the wrong browser (its first-run profile setup
+# wizard opening real, visible windows was the tell). Point this at the
+# real Firefox executable to force it, e.g. on Windows:
+#
+#     SELENIUM_FIREFOX_BINARY_PATH = (
+#         r'C:\Program Files\Mozilla Firefox\firefox.exe'
+#     )
+SELENIUM_FIREFOX_BINARY_PATH = ''
+
+# Headless Mode
+# True (the default) uses the browser's own native headless mode, so no
+# display server is needed and it behaves the same on a workstation, a CI
+# runner or a sandbox. False needs a real display, and lets you watch a run:
+#
+#     SELENIUM_HEADLESS=False pytest --run-selenium           # bash/zsh
+#     $env:SELENIUM_HEADLESS='False'; pytest --run-selenium   # PowerShell
+#
+# Only the literal 'false', any case, turns it off, so a typo stays headless
+# rather than opening a browser on an unattended run. bool() is not used: it
+# treats the string 'False' as true.
+SELENIUM_HEADLESS = os.environ.get('SELENIUM_HEADLESS', 'True').strip().lower() != 'false'
+
+# ------------------------------------------------------------------------------
+def _is_pytest_run():
+    """True when this interpreter belongs to a pytest run, worker or not.
+
+    Two checks, because neither covers the other:
+
+    `sys.argv` catches the normal case. This runs at import time, before
+    Django or pytest has set up anything else that would answer the question.
+
+    `PYTEST_XDIST_WORKER` catches the case sys.argv cannot. A pytest-xdist
+    worker is a *fresh interpreter* whose argv is `['-c']`, so the argv check
+    is false in every worker. Without this the worker skips the
+    `test_settings` import below and silently runs the suite against the
+    developer's real settings - PBKDF2 password hashing instead of the fast
+    test hasher, and `db/default.db` instead of an in-memory database. The
+    Windows validation measured the cost: 673s of per-test time at `-n 4`
+    against 202s serially, which is what real password hashing looks like.
+
+    xdist sets the variable before it builds the worker's config, so it is
+    already present when this module is imported. conftest.py keys its
+    per-worker MEDIA_ROOT off the same variable; this just makes settings.py
+    agree with it.
+    """
+    if any(('py.test' in v or 'pytest' in v) for v in sys.argv):
+        return True
+    return 'PYTEST_XDIST_WORKER' in os.environ
+
+
 # local_settings contains anything that should be overridden
 # based on site specific requirements (e.g. deployment, development etc)
 
@@ -719,7 +902,7 @@ if use_docker:
             for scheme in ('http://', 'https://')
             if host != '*'
         ]
-    
+
     SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
     try:
         with open(SECRET_FILEPATH) as f:
@@ -746,7 +929,35 @@ if use_docker:
     if 'readonly' not in DATABASES and USE_SQL_REPORTS:
         DATABASES['readonly'] = DATABASES['default']
 else:
-    from .local_settings import *  # noqa: F403, F401, E402
+    # sys.argv, because this is import time - neither Django nor pytest has
+    # set anything up yet that would answer the question. It gates only the
+    # missing-local_settings.py fallback below.
+    _running_pytest = _is_pytest_run()
+    try:
+        from .local_settings import *  # noqa: F403, F401, E402
+    except ImportError:
+        if not _running_pytest:
+            raise ImportError(
+                "qatrack/local_settings.py is missing. Create it before running "
+                "QATrack+ - for local development:\n\n"
+                "    cp deploy/dev/local_settings.dev.py qatrack/local_settings.py\n\n"
+                "For a real deployment, copy the template matching your database "
+                "instead: deploy/sqlite, deploy/postgres, deploy/mysql or "
+                "deploy/win (MS SQL Server). See the 'local_settings.py "
+                "templates' table in docs/developer/guide.rst, and "
+                "docs/install/ for full deployment instructions."
+            ) from None
+        # A bare `pytest` run gets a disposable in-memory database rather
+        # than needing the setup a real deployment does. Reached only when
+        # local_settings.py is absent; when it exists it configures the run.
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': ':memory:',
+            }
+        }
+        DATABASES['readonly'] = DATABASES['default']
+        ALLOWED_HOSTS = ['*']
 
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
@@ -797,24 +1008,8 @@ if EMAIL_NOTIFICATION_USER and not EMAIL_HOST_USER:
 if EMAIL_NOTIFICATION_PWD and not EMAIL_HOST_PASSWORD:
     EMAIL_HOST_PASSWORD = EMAIL_NOTIFICATION_PWD
 
-# ------------------------------------------------------------------------------
-# Testing settings
 
-# Selenium Browser Configuration
-# Options: 'firefox', 'chromium'
-# Set to 'firefox' to use Firefox, 'chromium' to use Chromium
-SELENIUM_BROWSER = ''
-
-# Browser Driver Paths (leave empty to use system default)
-SELENIUM_FIREFOX_DRIVER_PATH = ''  # Path to geckodriver
-SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver
-
-# Headless Mode
-# Set to True to run browsers in headless mode (no visible browser window)
-# Set to False to see the browser during test execution
-SELENIUM_VIRTUAL_DISPLAY = False  # Set to True to use headless browser for testing (requires xvfb)
-
-if any([('py.test' in v or 'pytest' in v) for v in sys.argv]):
+if _is_pytest_run():
     DATABASES.pop('readonly', None)
     from .test_settings import *  # noqa
 
@@ -837,7 +1032,7 @@ if USE_SQL_REPORTS:
     ]
 
     # use default database when testing
-    if any(('py.test' in arg or 'pytest' in arg) for arg in sys.argv):
+    if _is_pytest_run():
         EXPLORER_CONNECTIONS = {'Default': 'default'}
         EXPLORER_DEFAULT_CONNECTION = 'default'
     elif 'readonly' not in DATABASES:

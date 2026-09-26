@@ -1,0 +1,127 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Documentation
+# ==========================================================================
+
+
+[tasks.docs]
+help = "Build the Sphinx docs (output under docs/_build/html)"
+# `docs` above runs `cd docs && make html`, which needs Make on the host -
+# precisely what a Windows contributor does not have. Calling sphinx-build
+# directly needs neither Make nor docs/make.bat.
+cmd = "sphinx-build -b html docs docs/_build/html"
+
+
+[[tasks.docs-autobuild.args]]
+name = "port"
+options = ["--port"]
+default = "8008"
+
+
+[tasks.docs-autobuild]
+help = "Serve the docs locally with live-reload, default port 8008 (poe docs-autobuild --port 8010 to override)"
+cmd = "sphinx-autobuild docs docs/_build/html --port ${port}"
+
+
+# RELEASE TASK. The schema diagram is distributed documentation, regenerated
+# as part of a release check - not something an ordinary PR should update. The
+# output path is gitignored so that running this to *look* at the schema does
+# not quietly stage a 6000-line SVG into an unrelated branch; adding one for a
+# new minor line is a deliberate `git add -f`.
+[tasks.schema]
+help = "RELEASE: regenerate the distributed schema diagram (see docs/developer/schema.rst)"
+interpreter = "python"
+shell = '''
+import os, pathlib, subprocess, sys, tempfile
+
+OUT = pathlib.Path('docs/developer/images/qatrack_schema_%s.svg' % os.environ['VERSION'])
+
+# Render to a temporary file and only move it into place if it worked.
+#
+# This is not defensive padding - the previous form wrote straight to OUT and
+# could empty it. django-extensions falls back to pydotplus when pygraphviz is
+# not importable, and pydotplus fails by writing a zero-byte file and exiting
+# 0. Running `make schema` on a machine without pygraphviz therefore destroyed
+# the committed 838 KB diagram and reported success. RELEASE_CHECKLIST.md tells
+# the releaser to regenerate this, so that was a live trap.
+#
+# --pygraphviz is passed explicitly rather than letting django-extensions pick
+# whichever binding happens to be importable, so a missing dependency fails
+# loudly instead of silently selecting the broken path. pygraphviz wheels bundle
+# their own Graphviz (14.1.5 at the time of writing), which also sidesteps the
+# system Graphviz: Ubuntu 24.04 ships 2.42, and -g (--group-models, which draws
+# each Django app as a cluster) hits a "trouble in init_rank" bug there.
+#
+# The staged file is created *inside* OUT.parent rather than in the system
+# temp directory. Verified on Windows: tempfile.TemporaryDirectory() lands on
+# whatever drive holds %TEMP% (typically C:), and Path.replace() across
+# drives raises `OSError: [WinError 17] The system cannot move the file to a
+# different disk drive` when the repo checkout lives elsewhere (e.g. D:) -
+# staging next to OUT keeps the rename on one filesystem everywhere.
+OUT.parent.mkdir(parents=True, exist_ok=True)
+fd, tmp_name = tempfile.mkstemp(prefix='.qatrack_schema-', suffix='.svg', dir=OUT.parent)
+os.close(fd)
+staged = pathlib.Path(tmp_name)
+try:
+    code = subprocess.call([
+        sys.executable, './manage.py', 'graph_models', '-a', '-g', '--pygraphviz',
+        '-X', 'Issue,IssueStatus,IssueType,IssuePriority,IssueTag',
+        '-o', str(staged),
+    ])
+    if code != 0:
+        sys.exit('error: graph_models failed (exit %d); %s left untouched' % (code, OUT))
+    if not staged.exists() or staged.stat().st_size == 0:
+        print('error: graph_models produced an empty diagram; %s left untouched.' % OUT, file=sys.stderr)
+        sys.exit('Is pygraphviz installed? `uv sync --dev` should provide it.')
+    staged.replace(OUT)
+finally:
+    staged.unlink(missing_ok=True)
+
+print('wrote %s (%d bytes)' % (OUT, OUT.stat().st_size))
+'''
+
+[tasks.i18n-status]
+help = "How complete each translation catalogue is"
+interpreter = "python"
+shell = """
+import os, pathlib, re, shutil, subprocess, sys
+
+# Verified on Windows: msgfmt is a gettext tool and is not on PATH by
+# default (install gettext - e.g. via MSYS2 or the gettext-tools installer -
+# and confirm `msgfmt --version` works, then re-run). Checking with
+# shutil.which() up front turns a raw FileNotFoundError traceback into an
+# actionable message; the hardcoded '/dev/null' below would also fail on
+# Windows even with msgfmt installed, so os.devnull replaces it.
+if shutil.which('msgfmt') is None:
+    sys.exit(
+        'error: msgfmt not found on PATH. It ships with gettext - install it '
+        '(e.g. via MSYS2 or the gettext-tools installer on Windows, or your '
+        'package manager on Linux/macOS) and try again.'
+    )
+
+rows = []
+for po in sorted(pathlib.Path('qatrack/locale').glob('*/LC_MESSAGES/django.po')):
+    locale = po.parent.parent.name
+    # msgfmt reports its statistics on stderr, in prose.
+    out = subprocess.run(['msgfmt', '--statistics', '-o', os.devnull, str(po)],
+                         capture_output=True, text=True).stderr
+    def count(word):
+        found = re.search(r'(\\d+) ' + word, out)
+        return int(found.group(1)) if found else 0
+    done, fuzzy, missing = count('translated'), count('fuzzy'), count('untranslated')
+    total = done + fuzzy + missing
+    pct = (100 * done / total) if total else 0
+    rows.append((locale, done, fuzzy, missing, pct))
+
+if not rows:
+    sys.exit('no catalogues found under qatrack/locale/')
+
+print('%-8s %10s %8s %14s %8s' % ('locale', 'translated', 'fuzzy', 'untranslated', 'done'))
+for locale, done, fuzzy, missing, pct in rows:
+    print('%-8s %10d %8d %14d %7.1f%%' % (locale, done, fuzzy, missing, pct))
+print()
+print('fuzzy entries have a translation that needs a human to confirm it;')
+print('untranslated ones have none at all.')
+"""

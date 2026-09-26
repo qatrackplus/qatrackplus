@@ -25,6 +25,7 @@ from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import register
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import get_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import CreateView, TemplateView, View
@@ -1759,10 +1760,24 @@ def autosave_load(request):
     autosave_id = request.GET.get("autosave_id")
     auto = get_object_or_404(models.AutoSave, pk=autosave_id)
 
+    # work_started/work_completed are consumed client side by flatpickr's
+    # strict `.setDate()` (qa.js load_autosave()), which parses using
+    # siteConfig.FLATPICKR_DATETIME_FMT. They must be pre-formatted to exactly
+    # that format here rather than left as datetime objects for
+    # QATrackJSONEncoder to serialize, because the encoder writes the API's
+    # wire format, which flatpickr's parser mis-parses silently rather than
+    # erroring on - a date typed as 12 May 1980 comes back as 1980-11-30.
+    #
+    # DATETIME_INPUT_FORMATS[0] is the configured display format, which is
+    # what FLATPICKR_DATETIME_FMT is derived from, so the two cannot drift.
+    # Resolved through get_format rather than settings so that a format set in
+    # local_settings.py is honoured, and taken by position 0 by construction
+    # rather than by a magic index into a list deployers may extend.
+    fp_fmt = get_format('DATETIME_INPUT_FORMATS')[0]
     data = {
         'meta': {
-            'work_started': timezone.localtime(auto.work_started) if auto.work_started else None,
-            'work_completed': timezone.localtime(auto.work_completed) if auto.work_completed else None,
+            'work_started': format_datetime(auto.work_started, fmt=fp_fmt) or None,
+            'work_completed': format_datetime(auto.work_completed, fmt=fp_fmt) or None,
         },
         'data': auto.data,
     }
