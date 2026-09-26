@@ -1,0 +1,32 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Coverage
+# ==========================================================================
+
+
+[tasks.cover]
+help = "Run the full suite with coverage (--reuse-db)"
+cmd = "pytest --reuse-db --cov-report term-missing --cov ./"
+
+
+[tasks.cover-qatrack]
+help = "Like cover, but scoped to the qatrack package only"
+cmd = "pytest --reuse-db --cov-report term-missing --cov qatrack"
+
+
+[[tasks.cover-module.args]]
+name = "module"
+positional = true
+required = true
+# A path, not a dotted module. The command interpolates it into both
+# `--cov ./${module}` and pytest's target, and pytest takes paths - given
+# qatrack.qa it collects nothing, reports no coverage and exits 4, which
+# looks far too much like a module with no tests.
+help = "qatrack/qa, qatrack/units, or any path under qatrack/"
+
+
+[tasks.cover-module]
+help = "Run coverage for a single module, e.g. `poe cover-module qatrack/qa`"
+cmd = "pytest --cov-report term-missing --cov ./${module} ${module}"

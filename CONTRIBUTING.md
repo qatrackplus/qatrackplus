@@ -78,15 +78,24 @@ The documentation lives in `docs/` and is built with
 To build the docs locally:
 
 ```bash
-uv sync --dev   # Sphinx and its extensions are part of the dev group
-cd docs
-uv run make html
-# open _build/html/index.html in your browser
+uv sync --dev          # Sphinx and its extensions are part of the dev group
+uv run make docs       # from the repository root
+# open docs/_build/html/index.html in your browser
 ```
+
+While writing, `uv run make docs-autobuild` serves the docs at
+<http://127.0.0.1:8008> and rebuilds them as you save (add
+`port=8010` to use a different port).
 
 ## Contributing code
 
 ### Setting up a development environment
+
+The steps below are the short version. [`uv-setup.md`](uv-setup.md) is a
+copy-paste quickstart of the same sequence, and the *Developers Guide*
+([`docs/developer/guide.rst`](docs/developer/guide.rst)) is the canonical,
+fuller treatment — including Windows, the per-engine test settings, and the
+Selenium setup.
 
 1. **Fork & clone** the repository.
 2. Install dependencies with [uv](https://docs.astral.sh/uv/) (uv creates and
@@ -103,9 +112,13 @@ uv run make html
 4. Copy the example settings and configure your local database:
    ```bash
    cp deploy/dev/local_settings.dev.py qatrack/local_settings.py
-   cp deploy/dev/local_test_settings.dev.py qatrack/local_test_settings.py
+   cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
    # edit qatrack/local_settings.py
    ```
+   `deploy/dev/` has a template per engine (`memory`, `postgres`, `mysql`,
+   `mssql`) if you'd rather test against something else - the developer
+   guide's *`local_test_settings.py` templates* table says what each one
+   needs.
 5. Apply migrations and load fixture data:
    ```bash
    mkdir db
@@ -114,10 +127,18 @@ uv run make html
    uv run python manage.py loaddata fixtures/defaults/*/*.json
    uv run python manage.py collectstatic --noinput
    ```
+   If you also want the in-memory database available (it is the fastest way
+   to run the suite), copy that template alongside the first:
+   ```bash
+   cp deploy/dev/local_test_settings.memory.py qatrack/local_test_settings.memory.py
+   ```
 6. Start the development server:
    ```bash
    uv run python manage.py runserver
    ```
+There is no frontend build step at the moment, and Node.js is not needed —
+see the note in [AGENTS.md](AGENTS.md#getting-started). One is expected back
+no earlier than 4.1.
 
 ### Coding guidelines
 
@@ -131,9 +152,12 @@ Please attempt your best effort at these guidelines, but don't be afraid if you 
 - Follow existing code style. The project uses [ruff](https://docs.astral.sh/ruff/)
   for linting, formatting, and import ordering:
   ```bash
-  uv run ruff check .    # lint
-  uv run ruff format .   # auto-format
+  uv run ruff check .                 # lint
+  uv run ruff format <files you changed>   # auto-format
   ```
+  Repo-wide `ruff format` hasn't been applied yet, so don't run it across the
+  whole codebase — that would surface a large, unrelated reformatting diff.
+  Scope it to the files you actually touched.
 - Write or update tests for every functional change. Tests live alongside the
   application code in `tests/` subdirectories. If you feel that your changes require testing you are unsure of how to implement, reach out. We are here to help
 - Keep commits focused. One logical change per commit makes review easier and history cleaner. PRs aggressively squash commits so lean towards being too clear. 
@@ -144,13 +168,23 @@ Please attempt your best effort at these guidelines, but don't be afraid if you 
 ### Running the tests
 
 ```bash
-uv run pytest -m "not selenium"
+uv run pytest
 ```
 
-This excludes the GUI (Selenium/browser) tests, which aren't yet set up to
-run headless. `runtests.sh` and `python manage.py test` use Django's own
-test runner, not pytest, and don't support marker filtering — prefer `pytest`
-directly. See [AGENTS.md](AGENTS.md#running-the-tests) for more detail.
+GUI (Selenium/browser) tests are skipped by default, since they need a real
+Chromium or Firefox on the host. Add `--run-selenium` to also run them.
+`python manage.py test` uses Django's own test runner, not pytest, and
+doesn't support marker filtering or `--run-selenium` — prefer `pytest`
+directly. See
+[AGENTS.md](AGENTS.md#running-the-tests) for more detail.
+
+To test against a specific database engine without touching your usual
+`qatrack/local_test_settings.py`, use `make test-sqlite`/`test-memory`/
+`test-postgres`/`test-mysql`/`test-mssql` (create
+`qatrack/local_test_settings.<engine>.py` first from the matching
+`deploy/dev/` template). `make test-integration` provisions a brand-new
+sqlite database the way a real deployment would and runs the suite against
+it directly.
 
 Before opening a PR, it's also worth running the full pre-commit suite
 against the whole codebase, not just your changed files:

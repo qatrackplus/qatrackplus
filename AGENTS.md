@@ -64,8 +64,9 @@ accountability this whole policy is about.
 | **Framework** | Django 4.2 (LTS) |
 | **Database** | PostgreSQL, MS SQL Server, or MySQL (existing support maintained; not a target for new development) |
 | **Package manager** | [uv](https://docs.astral.sh/uv/) — pip is only used for production Windows/MS SQL Server deployments, not local development |
+| **Frontend** | Server-rendered Django templates with HTMX and jQuery. No build step, no Node.js — a Vue/Vite bundle was retired and is expected back no earlier than 4.1 |
 | **Linter / formatter** | [ruff](https://docs.astral.sh/ruff/) |
-| **Test runner** | pytest (`uv run pytest -m "not selenium"` — see [Running the tests](#running-the-tests)) |
+| **Test runner** | pytest (`uv run pytest` — GUI tests are skipped by default, see [Running the tests](#running-the-tests)) |
 | **Docs** | Sphinx — `uv run make docs` from repo root |
 | **Target branch** | `develop` (not `master`) |
 
@@ -101,7 +102,6 @@ qatrack/                 # Django project root; most application code lives here
 docs/           # Sphinx documentation (reStructuredText)
 fixtures/       # Demo / seed data
 requirements/   # Pinned pip requirements (dev.txt) — see TODO below
-runtests.sh     # Convenience test runner (see Running the tests)
 ```
 
 > **TODO:** `requirements/dev.txt` is generated from the `dev` dependency
@@ -111,6 +111,12 @@ runtests.sh     # Convenience test runner (see Running the tests)
 > the `win` + `mssql` extras, not `dev`. Reconciling the file's contents
 > (and likely its name) with that purpose is tracked for a follow-up PR;
 > until then, treat this file as stale for deployment purposes.
+>
+> Concretely, it is stale for tooling too: it still pins `flake8`, `isort`,
+> `yapf` and `pep8`, none of which are in the `dev` dependency group any
+> more — ruff replaced all of them (see *Code style* below, and
+> `docs/developer/guide.rst`). Do not take that file as evidence those
+> tools are still in use; they are not.
 
 > **A note for AI agents:** `.po` files under `locale/` are the editable
 > source for translations — the paired `.mo` files are compiled binaries
@@ -129,7 +135,7 @@ uv sync --dev
 
 # 2. Provide local settings (database credentials, etc.)
 cp deploy/dev/local_settings.dev.py qatrack/local_settings.py
-cp deploy/dev/local_test_settings.dev.py qatrack/local_test_settings.py
+cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
 # edit qatrack/local_settings.py as needed
 
 # 3. Apply migrations and load demo data
@@ -142,6 +148,25 @@ uv run python manage.py collectstatic --noinput
 # 4. Run the development server
 uv run python manage.py runserver
 ```
+
+> **There is no frontend build step at present.** QATrack+ had a Vue 3 +
+> Vite bundle, and the faults UI now uses server-rendered HTMX with jQuery
+> instead; `package.json` went with it. Node.js is **not** a prerequisite for
+> anything today — `npm ci` would fail, because there is no manifest to read.
+>
+> A frontend build is expected to return no earlier than 4.1. The release
+> workflow already tests for `package.json` and runs the Node steps only if
+> it is there, so nothing needs changing here when it comes back.
+
+`local_test_settings.sqlite.py` is one of five ready-made templates under
+`deploy/dev/` (`sqlite`, `memory`, `postgres`, `mysql`, `mssql`) - copy a
+different one instead to run the suite against a different engine. The
+developer guide's *`local_test_settings.py` templates* table says what each
+one requires (a reachable server and credentials, for the three that need
+them). Copying `local_test_settings.memory.py` to
+`qatrack/local_test_settings.memory.py` as well makes `make test-memory` work
+with no further setup. See [Running the tests](#running-the-tests) for
+`make test-<engine>`.
 
 > **A note for AI agents:** the commands throughout this file are prefixed
 > with `uv run` rather than assuming an activated virtual environment. Many
@@ -177,23 +202,50 @@ uv run pre-commit run --all-files
 
 ## Running the tests
 
-The primary, agent-safe way to run the suite is `pytest`, excluding the GUI
-(Selenium/browser) tests — these are not yet configured to run headless, so
-they will fail or hang in most agent and CI environments:
-
-```bash
-uv run pytest -m "not selenium"
-```
-
-To run the full suite, including GUI tests (requires a real browser/display):
+The primary, agent-safe way to run the suite is plain `pytest` — GUI
+(Selenium/browser) tests are skipped automatically, since they need a real
+browser (Chromium or Firefox) on the host, which most agent sandboxes won't
+have available (this project's own CI does - see `.github/workflows/ci.yml`'s
+dedicated `selenium-tests`/`selenium-tests-windows` jobs, which run on
+GitHub-hosted runners that come with Chrome/Chromium/Firefox pre-installed):
 
 ```bash
 uv run pytest
 ```
 
-`runtests.sh` and `python manage.py test` invoke Django's own test runner,
-not pytest — they don't understand the `selenium` marker or `-m` filtering,
-and will attempt to run the GUI tests too. Prefer `pytest` directly.
+To also run the GUI tests (requires Chromium or Firefox installed -
+headless mode needs no display; see `SELENIUM_BROWSER` and
+`SELENIUM_HEADLESS` in `qatrack/settings.py`):
+
+```bash
+uv run pytest --run-selenium
+```
+
+`-m selenium` also still works to run *only* the GUI tests - it bypasses
+the automatic skip the same way `--run-selenium` does.
+
+`-m "not selenium"` also still works to exclude them explicitly, but is
+**deprecated**: it needs quoting on every shell for no benefit now that
+plain `pytest` does the same thing with nothing to type at all. It emits a
+`PytestDeprecationWarning` and will be removed in QATrack+ 4.2 - use plain
+`pytest` instead.
+
+`python manage.py test` invokes Django's own test runner, not pytest — it
+doesn't understand the `selenium` marker, `-m` filtering, or
+`--run-selenium`, and will attempt to run the GUI tests too. Prefer
+`pytest` directly.
+
+`make test-<engine>` (`sqlite`, `memory`, `postgres`, `mysql`, `mssql`) runs
+the suite against a specific database engine without disturbing whatever
+`qatrack/local_test_settings.py` you normally use day to day - it swaps in
+`qatrack/local_test_settings.<engine>.py` (create it first from the matching
+`deploy/dev/local_test_settings.<engine>.py` template) for the run, then
+restores your previous file afterward regardless of whether the tests
+passed. `make test-integration` goes a step further: provisions a brand-new
+sqlite database exactly the way a fresh deployment would (migrate,
+createcachetable, collectstatic, createsuperuser) and runs the suite with
+`--reuse-db` directly against it, so the whole deployment sequence is
+exercised for real, not just a disposable test database.
 
 Tests live next to the application code in `tests/` subdirectories inside each
 Django app. Write or update tests for every functional change. Do not remove or
@@ -303,10 +355,14 @@ PR:
   at once.
 
 The table also covers **cross-references between documentation files**: the
-developer workflow (`docs/developer/`, `AGENTS.md`) and the installation guides
-(`docs/install/`) overlap on topics such as Python version, Node.js version, and
-the package manager. Whenever any one of these is updated, the others should be
-reviewed for consistency.
+developer workflow (`docs/developer/`, `AGENTS.md`, `CONTRIBUTING.md`,
+`uv-setup.md`) and the installation guides (`docs/install/`) overlap on topics
+such as Python version, Node.js version, the package manager, how to activate
+(or skip activating) the virtual environment, how to run the tests, and how to
+build the docs. Whenever any one of these is updated, the others should be
+reviewed for consistency. The four developer-facing files in particular say
+much the same thing in four places, so a change to any one of them is very
+likely to need a matching change in the others.
 
 | Changed path | Documentation to check |
 |---|---|
@@ -323,9 +379,13 @@ reviewed for consistency.
 | `qatrack/settings.py` | `docs/install/config.rst` |
 | `qatrack/local_settings*`, `deploy/` | `docs/install/` |
 | `qatrack/qatrack_core/` | `docs/developer/` |
-| `AGENTS.md` | `docs/developer/`, `docs/install/` |
-| `docs/developer/` | `docs/install/`, `AGENTS.md` |
+| `AGENTS.md` | `docs/developer/`, `docs/install/`, `CONTRIBUTING.md`, `uv-setup.md` |
+| `docs/developer/` | `docs/install/`, `AGENTS.md`, `CONTRIBUTING.md`, `uv-setup.md` |
 | `docs/install/` | `docs/developer/`, `AGENTS.md` |
+| `CONTRIBUTING.md` | `AGENTS.md`, `docs/developer/`, `uv-setup.md` |
+| `uv-setup.md` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/` |
+| `Makefile` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/guide.rst` |
+| `conftest.py` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/guide.rst` |
 
 When reviewing or authoring a PR as an AI agent, look specifically for:
 

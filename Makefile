@@ -17,8 +17,93 @@ cover-qatrack:
 test:
 	py.test ${args}
 
+# GUI (Selenium/browser) tests are skipped by default now (see conftest.py),
+# so this is identical to `test` - kept only so existing scripts and muscle
+# memory using `make test_simple` keep working. Use `test` directly, or
+# `py.test --run-selenium` to also run the GUI tests.
 test_simple:
-	py.test -m "not selenium" ${args}
+	py.test ${args}
+
+# Run the suite against a specific engine's local_test_settings.py, without
+# disturbing whatever you already have set up as your day-to-day one.
+# Requires qatrack/local_test_settings.<engine>.py to already exist -
+# these are gitignored and yours to create/customize (with real
+# credentials for postgres/mysql/mssql), starting from the matching
+# deploy/dev/local_test_settings.<engine>.py template. Backs up your
+# current qatrack/local_test_settings.py (if any), swaps the requested
+# engine's file in for the run, then restores it afterward regardless of
+# whether the tests passed.
+test-sqlite:
+	@$(MAKE) --no-print-directory _test-engine ENGINE=sqlite
+
+test-memory:
+	@$(MAKE) --no-print-directory _test-engine ENGINE=memory
+
+test-postgres:
+	@$(MAKE) --no-print-directory _test-engine ENGINE=postgres
+
+test-mysql:
+	@$(MAKE) --no-print-directory _test-engine ENGINE=mysql
+
+test-mssql:
+	@$(MAKE) --no-print-directory _test-engine ENGINE=mssql
+
+_test-engine:
+	@test -f qatrack/local_test_settings.$(ENGINE).py || { \
+		echo "error: qatrack/local_test_settings.$(ENGINE).py not found."; \
+		echo "Create it first - see deploy/dev/local_test_settings.$(ENGINE).py for a starting template."; \
+		exit 1; \
+	}
+	@if [ -f qatrack/local_test_settings.py ]; then \
+		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
+	fi
+	cp qatrack/local_test_settings.$(ENGINE).py qatrack/local_test_settings.py
+	@uv run pytest ${args}; \
+	STATUS=$$?; \
+	if [ -f qatrack/local_test_settings.py.bak ]; then \
+		mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
+	else \
+		rm -f qatrack/local_test_settings.py; \
+	fi; \
+	exit $$STATUS
+
+# Integration-level test: provisions a brand-new sqlite db exactly the way
+# a fresh deployment would (migrate, createcachetable, collectstatic,
+# createsuperuser), then runs the suite with --reuse-db (pytest-django's
+# equivalent of Django's own --keepdb) directly against that same db,
+# rather than a disposable one - so migrations, cache table creation,
+# static collection, and the initial superuser are all exercised for real
+# before the tests run, not just a fresh empty test db. Backs up any
+# existing db/default.db and qatrack/local_test_settings.py first and
+# restores both afterward regardless of whether the tests passed; the
+# freshly-provisioned db is kept, renamed with a `pytest_` prefix
+# (overwriting the previous integration run), for inspection.
+test-integration:
+	@mkdir -p db
+	@if [ -f db/default.db ]; then \
+		mv -f db/default.db db/default.db.bak; \
+	fi
+	@if [ -f qatrack/local_test_settings.py ]; then \
+		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
+	fi
+	cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py
+	uv run python manage.py migrate
+	uv run python manage.py createcachetable
+	uv run python manage.py collectstatic --noinput
+	DJANGO_SUPERUSER_USERNAME=superuser DJANGO_SUPERUSER_PASSWORD=superuser DJANGO_SUPERUSER_EMAIL=superuser@example.com \
+		uv run python manage.py createsuperuser --noinput
+	@uv run pytest --reuse-db ${args}; \
+	STATUS=$$?; \
+	mv -f db/default.db db/pytest_default.db; \
+	if [ -f qatrack/local_test_settings.py.bak ]; then \
+		mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
+	else \
+		rm -f qatrack/local_test_settings.py; \
+	fi; \
+	if [ -f db/default.db.bak ]; then \
+		mv -f db/default.db.bak db/default.db; \
+	fi; \
+	exit $$STATUS
 
 dumpdata:
 	python manage.py dumpdata \
@@ -62,10 +147,31 @@ supervisor.conf:
 	sudo supervisorctl reread
 	sudo supervisorctl update
 
+# Renders to a temp file and only replaces the committed diagram if it
+# worked. The previous form wrote straight to the output path, and
+# django-extensions falls back to pydotplus when pygraphviz is missing -
+# pydotplus fails by writing a zero-byte file and exiting 0, so this target
+# used to destroy the committed 838KB diagram and report success.
+# --pygraphviz is explicit so a missing dependency fails loudly instead of
+# silently taking the broken path; its wheels also bundle a current Graphviz,
+# avoiding the "trouble in init_rank" bug in the 2.42 Ubuntu 24.04 ships.
+# RELEASE TARGET - see the note on the poe `schema` task. The diagram is
+# distributed documentation regenerated at release time; its output path is
+# gitignored so an ordinary PR does not pick it up.
 schema:
-	python ./manage.py graph_models -a -g \
+	@out=docs/developer/images/qatrack_schema_$(VERSION).svg; \
+	tmp=$$(mktemp -t qatrack-schema-XXXXXX.svg); \
+	if uv run python ./manage.py graph_models -a -g --pygraphviz \
 		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
-		-o docs/developer/images/qatrack_schema_$(VERSION).svg
+		-o $$tmp && test -s $$tmp; then \
+		mv -f $$tmp $$out; \
+		echo "wrote $$out ($$(wc -c < $$out) bytes)"; \
+	else \
+		rm -f $$tmp; \
+		echo "error: schema generation failed; $$out left untouched." >&2; \
+		echo "Is pygraphviz installed? \`uv sync --dev\` should provide it." >&2; \
+		exit 1; \
+	fi
 
 run:
 	python ./manage.py runserver
@@ -74,4 +180,6 @@ __cleardb__:
 	python manage.py shell -c "from qatrack.qa.models import *; TestListInstance.objects.all().delete(); UnitTestCollection.objects.all().delete(); ContentType.objects.all().delete()"
 
 .PHONY: test test_simple yapf flake8 help docs-autobuild docs \
-	qatrack_daemon.conf supervisor.conf schema run __cleardb__ mysql-ro-rights
+	qatrack_daemon.conf supervisor.conf schema run __cleardb__ mysql-ro-rights \
+	_test-engine test-integration test-memory test-mssql test-mysql \
+	test-postgres test-sqlite
