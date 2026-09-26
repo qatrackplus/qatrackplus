@@ -8,15 +8,15 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
+from qatrack.qatrack_core.utils import site_base_url
+
 logger = logging.getLogger('qatrack')
 
 
 def email_context(context):
     context = context or {}
     site = Site.objects.get_current()
-    domain = site.domain
-    if not domain.startswith("http"):
-        domain = "%s://%s" % (settings.HTTP_OR_HTTPS, domain)
+    domain = site_base_url()
     context.update({
         "domain": domain,
         "site_obj": site,

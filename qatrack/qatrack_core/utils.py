@@ -8,6 +8,27 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
+def site_base_url():
+    """The Site's absolute base URL, with exactly one scheme on the front.
+
+    A Site domain is documented as a bare host ("example.com"), but setting it
+    to a full URL ("https://example.com") is common and this codebase already
+    accommodates it - see qatrack_core.email.base_email_context. Prepending
+    settings.HTTP_OR_HTTPS unconditionally turns that into
+    "http://https://example.com", which browsers read as host "https" with the
+    real host pushed into the path, so the link does not resolve.
+
+    Callers get the base with no trailing slash, so joining a path that starts
+    with "/" needs no special casing.
+    """
+    from django.contrib.sites.models import Site
+
+    domain = Site.objects.get_current().domain.strip().rstrip("/")
+    if domain.startswith(("http://", "https://")):
+        return domain
+    return "%s://%s" % (settings.HTTP_OR_HTTPS, domain)
+
+
 def weasyprint_to_pdf(html, name="", paper_size="letter"):
     """Convert HTML to PDF using WeasyPrint with proper paper size support
     
