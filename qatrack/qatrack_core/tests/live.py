@@ -369,7 +369,57 @@ class SeleniumTests(StaticLiveServerTestCase):
 
         cls.wait = WebDriverWait(cls.driver, cls.timeout)
 
+        # After super(), not before: the live server is what provides
+        # cls.live_server_url, and there is nothing to warm up until it exists.
         super().setUpClass()
+
+        cls.warm_up_browser()
+
+    @classmethod
+    def warm_up_browser(cls):
+        """Do one throwaway navigation before the first test of the class runs.
+
+        **This is a mitigation, not a diagnosis.** A browser is created per test
+        class, and Chromium fails the *first* test of a class far more often than
+        any other: measured over 20 full-suite runs on the Windows workstation,
+        10 of 60 first-in-class executions (17%) against 2 of 330 for everything
+        else (0.6%). Firefox, over the same 390 executions, failed none.
+
+        What it is **not**: the first test being slower. Firefox's first-in-class
+        penalty is +3.2s median against Chromium's +0.5s, and Firefox never
+        fails - so duration does not discriminate and a fix aimed at slowness
+        would be aimed at nothing.
+
+        Nor, on the evidence so far, is it a cold HTTP cache. chromedriver does
+        give each session a fresh profile, and the very first document in a class
+        does fetch its assets (measured: 0 of 1 cached, 78ms). But by the time an
+        authenticated page renders, 16 of 17 assets are already cached on the
+        first test as much as on the second - so there is little left for the
+        cache to explain.
+
+        What remains is whatever else is cold in a freshly launched Chromium on
+        its first navigation - connection setup, compositor and V8 warm-up - none
+        of which has been isolated. This moves that first navigation out of a
+        test, which is the cheapest thing that could help and cannot make the
+        suite report a failure it would not otherwise have had.
+
+        **How to tell whether it worked:** the 17% first-in-class rate above is
+        the baseline. It is a rate, so one green run says nothing; it takes
+        another 10-run pass per browser to move it. Until then this is an
+        unvalidated mitigation and should be described as one.
+
+        Failures are swallowed deliberately. A warm-up that cannot reach the
+        server is not a reason to fail every test in the class - the tests
+        themselves will say so, with better messages.
+        """
+        try:
+            cls.driver.get('%s/accounts/login/' % cls.live_server_url)
+            WebDriverWait(cls.driver, cls.timeout).until(
+                lambda d: d.execute_script('return document.readyState') == 'complete',
+                "the warm-up page to finish loading",
+            )
+        except WebDriverException:
+            pass
 
     @classmethod
     def set_browser_timezone(cls):
@@ -425,19 +475,49 @@ class SeleniumTests(StaticLiveServerTestCase):
         given, with no window manager involved) and callable per-test to
         check layout at a range of sizes, not just at class setup.
 
-        Never requests a viewport *larger* than the real window's
-        current size: under a tiling WM sharing screen space with other
-        windows, that real area can be well under a requested size
-        (confirmed as small as ~760x900 on a 4K/tiled display), and
-        asking the browser to lay out at a size regardless of that makes
-        it paint content assuming screen space that doesn't exist - the
-        right-hand (and/or bottom) portion of the page ends up genuinely
-        past the real window's edge, not just visually cropped, but
-        truly offscreen and unclickable/unfocusable there. Capping to
-        whatever's really available keeps every pixel the layout thinks
-        it has actually reachable, at the cost of a narrower layout on a
-        cramped tile - a real, visible constraint rather than a hidden
-        one.
+        Never requests a viewport *larger* than the real window's current
+        size: under a tiling WM sharing screen space with other windows,
+        that real area can be well under a requested size (confirmed as
+        small as ~760x900 on a 4K/tiled display), so asking for more than
+        the window has risks laying out content past its edge.
+
+        **What the cap compares, and what it does not guarantee.** It uses
+        `get_window_size()`, the *outer* OS window, against a requested
+        *layout viewport*. Those are different quantities, and the gap
+        between them differs by mode:
+
+            headless   no window frame, so innerWidth == outer width
+            visible    a frame, so innerWidth == outer width - frame
+                       (16px measured on the Windows workstation)
+
+        Vertically the gap is always large - browser chrome is 86px in
+        Firefox and 143px in Chromium here - so a requested height is
+        routinely above the pre-override content height.
+
+        Three quantities that are easy to conflate, measured here at a
+        1720-wide window:
+
+            window.innerWidth              1720   includes the scrollbar
+            documentElement.clientWidth    1705   excludes it
+            window.visualViewport.width    1705   excludes it
+
+        So `innerWidth` is not "the paintable width", and a scrollbar does
+        not explain a 1704 reading - a window frame does.
+
+        The override itself is not bounded by any of them:
+        `Emulation.setDeviceMetricsOverride` and BiDi `setViewport` set the
+        layout viewport directly and achieve the requested size exactly
+        even when it exceeds the content area - verified in both browsers
+        at 1920x1080 in a window whose content area was 1920x937.
+
+        **Left as-is deliberately.** Capping against the content area
+        instead would clamp a requested 1080 to 937 and break the one
+        thing this is relied on for. The Windows workstation flagged that
+        at a 1720 visible window the page is laid out 16px wider than the
+        frame leaves paintable; whether anything in that strip is actually
+        unreachable is **untested** - a headless check here found the last
+        16px clickable, but headless has no frame, so it does not settle
+        the visible case.
         """
         real_size = cls.driver.get_window_size()
         width = min(width, real_size['width'])
