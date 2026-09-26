@@ -2,8 +2,8 @@ version = 1
 revision = 3
 requires-python = ">=3.12, <=3.13"
 resolution-markers = [
-    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version >= '3.13'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version < '3.13' and sys_platform != 'win32'",
 ]
 
@@ -610,16 +610,16 @@ wheels = [
 
 [[package]]
 name = "django"
-version = "4.2"
+version = "4.2.30"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
     { name = "sqlparse" },
     { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9a/bb/48aa3e0850923096dff2766d21a6004d6e1a3317f0bd400ba81f586754e1/Django-4.2.tar.gz", hash = "sha256:c36e2ab12824e2ac36afa8b2515a70c53c7742f0d6eaefa7311ec379558db997", size = 10415665, upload-time = "2023-04-03T08:36:16.829Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/b5/f1a53dc68da6429d6e0345bb848161e2381a2e9f02700148911e8582c2b3/django-4.2.30.tar.gz", hash = "sha256:4ebc7a434e3819db6cf4b399fb5b3f536310a30e8486f08b66886840be84b37c", size = 10468707, upload-time = "2026-04-07T14:05:45.57Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/40/6012f98b14b64b4d3dc47b0c2f116fccbd0795ab35515d0c40dac73b81b8/Django-4.2-py3-none-any.whl", hash = "sha256:ad33ed68db9398f5dfb33282704925bce044bef4261cd4fb59e4e7f9ae505a78", size = 7988617, upload-time = "2023-04-03T08:36:11.797Z" },
+    { url = "https://files.pythonhosted.org/packages/39/b7/a7c96f239cf91313a6589233fed55111c7063b26683b226802732c455dbc/django-4.2.30-py3-none-any.whl", hash = "sha256:4d07aaf1c62f9984842b67c2874ebbf7056a17be253860299b93ae1881faad65", size = 7997231, upload-time = "2026-04-07T14:05:38.241Z" },
 ]
 
 [[package]]
@@ -2453,7 +2453,6 @@ name = "qatrackplus"
 version = "4.0.0"
 source = { editable = "." }
 dependencies = [
-    { name = "beautifulsoup4" },
     { name = "black" },
     { name = "blessed" },
     { name = "concurrent-log-handler" },
@@ -2485,12 +2484,10 @@ dependencies = [
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "pandas" },
-    { name = "pillow" },
     { name = "pydicom" },
     { name = "pylinac" },
     { name = "pynliner" },
     { name = "python-dateutil" },
-    { name = "reportlab" },
     { name = "requests" },
     { name = "scipy" },
     { name = "uritemplate" },
@@ -2562,12 +2559,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "beautifulsoup4", specifier = "==4.9.3" },
     { name = "black", specifier = ">=23.1.0" },
     { name = "blessed", specifier = ">=1.20.0" },
     { name = "cherrypy", marker = "sys_platform == 'win32' and extra == 'win'", specifier = ">=18.8.0" },
     { name = "concurrent-log-handler", specifier = "==0.9.19" },
-    { name = "django", specifier = "==4.2" },
+    { name = "django", specifier = ">=4.2,<4.3" },
     { name = "django-auth-adfs", specifier = ">=1.7.0" },
     { name = "django-auth-ldap", marker = "extra == 'mssql'", specifier = "<4.9" },
     { name = "django-braces", specifier = ">=1.17,<1.18" },
@@ -2600,7 +2596,6 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.21.0,<2.0" },
     { name = "openpyxl", specifier = ">=3.0.6,<4.0" },
     { name = "pandas", specifier = ">=1.3.0,<3.0" },
-    { name = "pillow", specifier = ">=9.0.0,<11.0" },
     { name = "polib", marker = "extra == 'translations'", specifier = ">=1.2.0" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'" },
     { name = "pydicom", specifier = ">=2.1.2,<4.0" },
@@ -2611,7 +2606,6 @@ requires-dist = [
     { name = "python-ldap", marker = "python_full_version == '3.12.*' and sys_platform == 'win32' and extra == 'mssql'", url = "https://github.com/cgohlke/python-ldap-build/releases/download/v3.4.5/python_ldap-3.4.5-cp312-cp312-win_amd64.whl" },
     { name = "python-ldap", marker = "(python_full_version != '3.12.*' and extra == 'mssql') or (sys_platform != 'win32' and extra == 'mssql')" },
     { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'win'", specifier = ">=300" },
-    { name = "reportlab", specifier = ">=4.0.0,<5.0" },
     { name = "requests", specifier = ">=2.25.0,<3.0" },
     { name = "scipy", specifier = ">=1.7.0,<2.0" },
     { name = "uritemplate", specifier = ">=4.0.0,<5.0" },
