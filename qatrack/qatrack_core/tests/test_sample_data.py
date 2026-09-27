@@ -1,6 +1,6 @@
+from glob import glob
 from io import StringIO
 from unittest import mock
-from glob import glob
 
 from django.contrib.auth.models import Group, User
 from django.core.management import call_command
