@@ -10,10 +10,15 @@ from qatrack.units.models import Site, Unit, UnitClass
 class BaseTree:
 
     def __init__(self, visible_to):
+        # None means "no narrowing" - see qa.models.visible_groups_for
         self.groups = visible_to
         self.setup_qs()
         self.setup_units()
         self.setup_frequencies()
+
+    def visibility_filter(self):
+        """kwargs narrowing to self.groups, or {} when self.groups is None."""
+        return {} if self.groups is None else {"visible_to__in": self.groups}
 
     def setup_units(self):
         self.units = dict(Unit.objects.filter(active=True).values_list("number", "name"))
@@ -92,7 +97,7 @@ class BootstrapCategoryTree(BaseTree):
         self.qs = UnitTestCollection.objects.filter(
             unit__active=True,
             active=True,
-            visible_to__in=self.groups,
+            **self.visibility_filter(),
         ).annotate(
             cat_tree_id=Case(
                 When(
@@ -282,9 +287,9 @@ class BootstrapFrequencyTree(BaseTree):
         # note because we are using distinct, all order_by fields
         # must appear in values_list (see issue #492)
         self.qs = UnitTestCollection.objects.filter(
-            visible_to__in=self.groups,
             unit__active=True,
             active=True,
+            **self.visibility_filter(),
         ).order_by(
             "unit__site__name",
             "unit__type__unit_class__name",
