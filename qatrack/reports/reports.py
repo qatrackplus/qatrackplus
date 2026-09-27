@@ -1,6 +1,7 @@
 import csv
 import datetime
 import json
+import logging
 from io import BytesIO, StringIO
 from urllib.parse import quote_plus
 
@@ -18,6 +19,8 @@ from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.qatrack_core.utils import chrometopdf, relative_dates, weasyprint_to_pdf
+
+logger = logging.getLogger(__name__)
 
 CSV = "csv"
 XLS = "xlsx"
@@ -274,15 +277,13 @@ class BaseReport(metaclass=ReportMeta):
             return weasyprint_to_pdf(content, name=fname, paper_size=paper_size)
         except ImportError:
             # WeasyPrint not available, fall back to Chrome
-            import logging
-            logger = logging.getLogger(__name__)
             logger.warning("WeasyPrint not available, falling back to Chrome")
             return chrometopdf(content, name=fname, paper_size=paper_size)
-        except Exception as e:
-            # WeasyPrint failed for some other reason, fall back to Chrome
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"WeasyPrint failed, falling back to Chrome: {e}")
+        except Exception:
+            # WeasyPrint failed for some other reason, fall back to Chrome.
+            # Log the traceback: falling back silently makes a broken report
+            # look like a rendering bug rather than a PDF engine failure.
+            logger.exception("WeasyPrint failed, falling back to Chrome")
             return chrometopdf(content, name=fname, paper_size=paper_size)
 
     def to_csv(self):

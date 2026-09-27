@@ -1,5 +1,6 @@
 from io import StringIO
 from unittest import mock
+from glob import glob
 
 from django.contrib.auth.models import Group, User
 from django.core.management import call_command
@@ -172,7 +173,12 @@ class TestSampleDataGenerator(TestCase):
         over rows that are already there fails on their unique names.
         """
 
-        call_command("installfixtures", stdout=StringIO())
+        # #877 removed the installfixtures command; load the same fixtures
+        # directly.  sorted() matters: the numeric prefixes under
+        # fixtures/defaults/units encode a load order, because
+        # 04-unittypes.json has FKs onto 01-vendors and 03-unitclass.
+        for fixture in sorted(glob("fixtures/defaults/*/*.json")):
+            call_command("loaddata", fixture, stdout=StringIO())
         # a default the generator looks up by name, and two it does not
         ServiceType.objects.all().delete()
         Tolerance.objects.all().delete()

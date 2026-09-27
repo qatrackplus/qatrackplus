@@ -83,8 +83,9 @@ class BaseSampleDataGenerator:
             described = ", ".join("%s=%r" % (k, v) for k, v in lookup.items())
             raise CommandError(
                 "Could not find the default %s (%s) that the sample data depends on. "
-                "Restore it, or run `python manage.py installfixtures` on a database "
-                "without the default fixtures, then try again." % (model._meta.verbose_name, described)
+                "Restore it, or load the defaults with "
+                "`python manage.py loaddata fixtures/defaults/*/*.json` on a database "
+                "without them, then try again." % (model._meta.verbose_name, described)
             )
 
     def clear_database(self):
