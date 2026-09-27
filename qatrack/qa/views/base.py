@@ -29,6 +29,7 @@ from listable.views import (
 
 from qatrack.attachments.views import listable_attachment_tags
 from qatrack.qa import models
+from qatrack.qa.models import visible_groups_for
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Unit
 
@@ -311,9 +312,9 @@ class UTCList(BaseListableView):
         qs = super().get_queryset().order_by("pk")
 
         if self.visible_only:
-            qs = qs.filter(
-                visible_to__in=self.request.user.groups.all(),
-            ).distinct()
+            groups = visible_groups_for(self.request.user)
+            if groups is not None:
+                qs = qs.filter(visible_to__in=groups).distinct()
 
         if self.active_only:
             qs = qs.filter(active=True, unit__active=True)
