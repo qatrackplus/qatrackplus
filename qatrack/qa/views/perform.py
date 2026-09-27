@@ -907,7 +907,7 @@ class ChooseUnit(TemplateView):
 
         context = super().get_context_data(*args, **kwargs)
 
-        groups = self.request.user.groups.all()
+        groups = models.visible_groups_for(self.request.user)
         q = models.UnitTestCollection.objects.by_visibility(groups)
 
         if self.active_only:
@@ -1055,10 +1055,7 @@ class PerformQA(PermissionRequiredMixin, CreateView):
                 "unit",
                 "frequency",
                 "last_instance",
-            ).filter(
-                active=True,
-                visible_to__in=self.request.user.groups.all(),
-            ).distinct(),
+            ).filter(active=True),
             pk=self.kwargs["pk"]
         )
 
@@ -1419,6 +1416,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     @staticmethod
     @register.filter
     def visible_utc(user, unit_test_collection):
+        if models.sees_all_collections(user):
+            return True
         return unit_test_collection.visible_to.all().intersection(user.groups.all()).exists()
 
 
@@ -1812,7 +1811,7 @@ class FrequencyTree(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
 
         context = super().get_context_data(*args, **kwargs)
-        context['tree'] = BootstrapFrequencyTree(self.request.user.groups.all()).generate()
+        context['tree'] = BootstrapFrequencyTree(models.visible_groups_for(self.request.user)).generate()
         return context
 
 
@@ -1867,7 +1866,7 @@ class CategoryTree(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
 
         context = super().get_context_data(*args, **kwargs)
-        context['tree'] = BootstrapCategoryTree(self.request.user.groups.all()).generate()
+        context['tree'] = BootstrapCategoryTree(models.visible_groups_for(self.request.user)).generate()
         return context
 
 
