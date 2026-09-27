@@ -28,6 +28,23 @@ Bug Fixes
 * Fixed the report paper size being ignored when PDFs are generated with
   Chrome. Reports set to A4 were produced at Letter size regardless of the
   paper size chosen for the report.
+Other Changes
+^^^^^^^^^^^^^
+
+* **Three ``Makefile`` targets that emptied application data have been
+  removed:** ``clearct``, ``flushdb`` and ``__cleardb__``. Each acted on
+  whichever database ``local_settings.py`` configured - which, in an
+  installation made by ``git clone``, is the live one - and ``__cleardb__``
+  deleted every test list instance, meaning the QC history. Two of the three
+  never worked at all. Nothing in QATrack+ referenced any of them. Use
+  ``python manage.py flush`` if you need Django's own equivalent.
+
+  While in the file, two dead targets went with them - ``yapf`` and ``flake8``,
+  neither installed nor declared as a dependency since ruff replaced both - and
+  ``make help`` was added, listing the targets that are safe to use. The
+  developer guide had described ``make help`` for some time without the target
+  existing, so the command silently did nothing; a bare ``make`` now prints it
+  as well.
 
 v4.0.0
 ------
@@ -64,6 +81,8 @@ Technical Improvements
 Bug Fixes
 ^^^^^^^^^
 
+* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issue:`829`).
+* Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
 * Fixed tolerance compatibility validation across different test types.
 * Fixed reference value type preservation in admin forms.
 * Improved handling and messaging for incompatible tolerance and test-type combinations.
