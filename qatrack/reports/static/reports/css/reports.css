@@ -95,11 +95,47 @@ div.recurrence-widget a.recurrence-label {
     padding-left: 1em;
 }
 
-div.recurrence-widget .remove,
-div.recurrence-widget .remove:link,
-div.recurrence-widget .remove:visited {
-    padding: 0em .5em;
-    font-weight: normal;
+/*
+ * The reports page does not support a dark colour scheme, and this rule is how
+ * it says so.
+ *
+ * `color-scheme: light` would not do it: that declaration only changes how the
+ * browser paints its own widgets, and `prefers-color-scheme` keeps reporting
+ * the *user's* setting regardless of what the page declares. There is no way to
+ * stop the query matching, so the only way to opt out is to overrule what it
+ * turns on.
+ *
+ * django-recurrence's stylesheet contains exactly one such rule:
+ *
+ *     @media (prefers-color-scheme: dark) {
+ *       div.recurrence-widget a.recurrence-label { color: white; }
+ *     }
+ *
+ * That is the whole of dark mode on this page - QATrack+ ships no
+ * prefers-color-scheme rules of its own, and nothing here changes background
+ * with the preference. So the schedule dialog stayed white while its rule text
+ * turned white with it, and the Schedule box appeared empty apart from its
+ * close button.
+ *
+ * The leading `body` is what makes this win: it is the same selector as
+ * recurrence.css's otherwise, and reports.html loads that file second, so equal
+ * specificity loses. One more element raises it, and the fix no longer depends
+ * on the order the two stylesheets are linked in.
+ *
+ * Confined to this file on purpose. Django's admin has its own dark theme,
+ * which works and is meant to; admin pages never load reports.css. And the rule
+ * is inside the dark-mode query on purpose, so that in light mode nothing extra
+ * applies at all and the appearance is untouched for users who never had the
+ * bug. `black` is what recurrence.css itself renders in light mode, so the two
+ * now match.
+ *
+ * Reported in #837, which was closed by #841. #841 fixed the rrule error and
+ * the missing interpolate, not this.
+ */
+@media (prefers-color-scheme: dark) {
+    body div.recurrence-widget a.recurrence-label {
+        color: black;
+    }
 }
 
 div.recurrence-widget .checkbox {
