@@ -1050,14 +1050,17 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     def set_unit_test_collection(self):
         """Set the requested :model:`qa.UnitTestCollection` to be performed."""
 
-        self.unit_test_col = get_object_or_404(
-            models.UnitTestCollection.objects.select_related(
-                "unit",
-                "frequency",
-                "last_instance",
-            ).filter(active=True),
-            pk=self.kwargs["pk"]
-        )
+        qs = models.UnitTestCollection.objects.select_related(
+            "unit",
+            "frequency",
+            "last_instance",
+        ).filter(active=True)
+
+        groups = models.visible_groups_for(self.request.user)
+        if groups is not None:
+            qs = qs.filter(visible_to__in=groups).distinct()
+
+        self.unit_test_col = get_object_or_404(qs, pk=self.kwargs["pk"])
 
     def set_last_day(self):
         """Set the last day performed for the current :model:`UnitTestCollection`"""
