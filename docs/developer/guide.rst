@@ -270,6 +270,206 @@ files from the deploy subdirectory and then create your database:
 
 
 this will put a database called `default.db` in the `db` subdirectory.
+``deploy/dev/`` has a template per engine if you would rather test against
+something other than sqlite - see :ref:`local_test_settings_templates` below,
+and ``make test-<engine>`` under `Running The Test Suite`_ for running against
+one without touching your usual ``local_test_settings.py``.
+
+.. _local_settings_templates:
+
+``local_settings.py`` templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``deploy/dev/local_settings.dev.py`` above is the right starting point for
+development work. The remaining ``local_settings.py`` templates under
+``deploy/`` target real deployments rather than development, and are the
+ones referred to by the error QATrack+ raises when ``qatrack/local_settings.py``
+is missing:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Template
+     - Use it for
+   * - ``deploy/dev/local_settings.dev.py``
+     - Local development (sqlite, ``DEBUG`` on). Start here.
+   * - ``deploy/sqlite/local_settings.py``
+     - A file-backed sqlite deployment.
+   * - ``deploy/postgres/local_settings.py``
+     - A PostgreSQL deployment (see also the ``.sql`` role/database setup
+       scripts alongside it).
+   * - ``deploy/mysql/local_settings.py``
+     - A MySQL/MariaDB deployment (likewise with ``.sql`` setup scripts).
+   * - ``deploy/win/local_settings.py``
+     - A Windows/MS SQL Server deployment.
+
+Copy whichever one matches your target to ``qatrack/local_settings.py`` and
+edit it from there. For full deployment instructions see the
+:doc:`installation guides </install/install>`, not this page.
+
+
+.. _local_test_settings_templates:
+
+``local_test_settings.py`` templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These configure the database the *test suite* runs against, which is separate
+from the one the development server uses. There is one per supported engine:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 66
+
+   * - Template
+     - Use it for
+   * - ``deploy/dev/local_test_settings.sqlite.py``
+     - File-backed sqlite at ``db/default.db``. The default. Needs
+       nothing beyond Python.
+   * - ``deploy/dev/local_test_settings.memory.py``
+     - In-memory sqlite. The fastest option and leaves nothing on disk, so
+       it is the one to reach for when iterating. Copy it to
+       ``qatrack/local_test_settings.memory.py`` and ``make test-memory``
+       works against it.
+   * - ``deploy/dev/local_test_settings.postgres.py``
+     - PostgreSQL. Needs a reachable server and a ``qatrackplus_test``
+       database; edit the placeholder user, password and host first.
+   * - ``deploy/dev/local_test_settings.mysql.py``
+     - MySQL/MariaDB. Same again, against a ``qatrackplus_test`` database.
+   * - ``deploy/dev/local_test_settings.mssql.py``
+     - MS SQL Server. Needs the ODBC driver named in the template, and a
+       login with ``dbcreator`` rights so the suite can create its own test
+       database - which is why the template sets no database name. It also
+       shows the ``Trusted_Connection`` form if you would rather use
+       Windows-integrated authentication.
+
+Copy one to ``qatrack/local_test_settings.py`` to make it your everyday
+choice. To run against an engine *without* disturbing that file, copy it to
+``qatrack/local_test_settings.<engine>.py`` instead and use
+``make test-<engine>`` - see `Running The Test Suite`_.
+
+The two sqlite variants are not interchangeable for testing purposes: they
+exercise different code paths, and CI deliberately runs both.
+
+
+.. _test_databases:
+
+Getting a database to test against
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The sqlite variants need nothing installed. The other three need a running
+server *and* a database driver, neither of which arrives with
+``uv sync --dev``.
+
+Throwaway servers for all three::
+
+    cp deploy/dev/.env.test-databases.example deploy/dev/.env
+    poe test-databases-up
+
+They keep nothing - every service runs on tmpfs with no volume - so
+``poe test-databases-down`` leaves no trace and the next ``up`` is a clean
+slate. ``up`` waits until each server actually answers rather than returning
+while SQL Server is still starting, which otherwise fails the first run for
+reasons unrelated to the code.
+
+Then install the driver for the engine you want and run it::
+
+    uv sync --dev --extra postgres
+    cp deploy/dev/local_test_settings.postgres.py qatrack/local_test_settings.postgres.py
+    poe test-engine postgres
+
+The templates read their connection details from the same variables the
+compose file publishes, so the two cannot disagree - a hardcoded port in one
+and a different one in the other is a failure whose only symptom is a port
+that never comes up.
+
+Each engine needs a different amount installed on the host:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 14 20 66
+
+   * - Engine
+     - uv extra
+     - Also needs
+   * - ``postgres``
+     - ``--extra postgres``
+     - Nothing. ``psycopg[binary]`` is a self-contained wheel.
+   * - ``mysql``
+     - ``--extra mysql``
+     - ``default-libmysqlclient-dev`` and ``pkg-config``: ``mysqlclient`` is
+       pinned to a version that builds from source.
+   * - ``mssql``
+     - ``--extra mssql``
+     - ``unixodbc-dev`` and Microsoft's ``msodbcsql18``, plus
+       ``libldap2-dev`` and ``libsasl2-dev`` - the ``mssql`` extra also pulls
+       ``python-ldap``, which is why ``poe deps`` does not use
+       ``--all-extras``.
+
+Running a different version
+"""""""""""""""""""""""""""
+
+The defaults track the versions :doc:`the installation guides </install/install>`
+commit to, so a plain ``poe test-engine postgres`` exercises what the project
+promises rather than whatever is newest.
+
+To test something else, change one value in ``deploy/dev/.env`` and bring the
+servers back up::
+
+    QATRACK_TEST_POSTGRES_VERSION=14
+    QATRACK_TEST_POSTGRES_PORT=5433
+
+Ports are variables for the same reason versions are: two versions of the
+same engine can then run side by side, and a port already taken by a locally
+installed server can be moved without editing the compose file.
+
+Understanding the Settings Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ uses a layered approach to Django settings, with each file serving a specific purpose. Understanding this hierarchy will help you configure your development and testing environment.
+
+Every file below is imported with ``from ... import *``, so the *last* one
+loaded wins for any given setting. Under a test run the chain is
+``settings.py`` -> ``local_settings.py`` -> ``test_settings.py`` ->
+``local_test_settings.py``, giving this order:
+
+**Settings File Hierarchy (Highest to Lowest Precedence):**
+
+1. ``local_test_settings.py`` - Your custom test environment overrides
+
+   - Contains all essential development and test settings in one place
+   - This is the main file you'll customize for your testing needs
+
+2. ``test_settings.py`` - Default test environment settings
+
+   - Contains test-specific defaults like password hashers and notification
+     settings
+   - Note that ``test_settings.py`` re-imports ``local_settings.py`` and
+     *then* applies its own values, so under a test run it overrides
+     anything you set in ``local_settings.py``. If you set, say,
+     ``LANGUAGE_CODE`` or ``NOTIFICATIONS_ON`` in ``local_settings.py`` and
+     wonder why the tests don't see it, this is why - put test-only values
+     in ``local_test_settings.py`` instead.
+
+3. ``local_settings.py`` - Your custom development environment overrides
+
+   - Contains development-specific settings like database configuration
+   - This is the file the development server and management commands use;
+     outside of a test run it is the highest-precedence file.
+
+4. ``settings.py`` - Base Django application settings
+
+   - Contains core Django configuration, installed apps, middleware, etc.
+
+Collect Static Files
+~~~~~~~~~~~~~~~~~~~~
+
+Before running the development server, you need to collect all static files to the STATIC_ROOT directory:
+
+.. code-block:: shell
+
+    python manage.py collectstatic --noinput
+
 
 Loading Default Data (Fixtures)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
