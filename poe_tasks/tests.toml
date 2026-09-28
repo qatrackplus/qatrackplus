@@ -1,0 +1,182 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Tests
+# ==========================================================================
+
+
+[tasks.test]
+help = "Run the suite (GUI/Selenium tests skipped by default - pass --run-selenium to include them)"
+cmd = "pytest"
+
+
+[[tasks.test-engine.args]]
+name = "engine"
+positional = true
+required = true
+help = "sqlite, memory, postgres, mysql or mssql"
+
+
+[tasks.test-engine]
+help = "Run the suite against one engine, restoring your settings afterwards"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+# poe passes declared task args to a `shell` task as environment
+# variables. `${engine}` is NOT substituted inside a python-interpreter
+# body - it arrives literally - so read it from the environment.
+engine = os.environ['engine']
+src = pathlib.Path(f'qatrack/local_test_settings.{engine}.py')
+live = pathlib.Path('qatrack/local_test_settings.py')
+backup = pathlib.Path('qatrack/local_test_settings.py.bak')
+
+if not src.exists():
+    print(f'error: {src} not found.')
+    print(f'Create it first - see deploy/dev/local_test_settings.{engine}.py '
+          'for a starting template.')
+    sys.exit(1)
+
+# try/finally rather than the shell version's fall-through restore. The
+# Makefile/`_test-engine` form only restores if the pytest line completes;
+# interrupt it (Ctrl-C) and your real local_test_settings.py is left
+# swapped out. This restores on any exit, including KeyboardInterrupt.
+had_existing = live.exists()
+if had_existing:
+    shutil.copyfile(live, backup)
+shutil.copyfile(src, live)
+try:
+    status = subprocess.call([sys.executable, '-m', 'pytest'])
+finally:
+    if had_existing:
+        shutil.move(str(backup), str(live))
+    else:
+        live.unlink(missing_ok=True)
+sys.exit(status)
+"""
+
+
+[tasks.test-integration]
+help = "Provision a fresh sqlite db like a real deployment, then run the suite against it"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+DB = pathlib.Path('db/default.db')
+DB_BAK = pathlib.Path('db/default.db.bak')
+KEPT = pathlib.Path('db/pytest_default.db')
+LIVE = pathlib.Path('qatrack/local_test_settings.py')
+LIVE_BAK = pathlib.Path('qatrack/local_test_settings.py.bak')
+
+pathlib.Path('db').mkdir(exist_ok=True)
+
+
+def manage(*args, env=None):
+    code = subprocess.call([sys.executable, 'manage.py', *args],
+                           env={**os.environ, **(env or {})})
+    if code != 0:
+        raise SystemExit(code)
+
+
+# Move the developer's real database and settings aside. The shell version
+# of this task does the same, but restores by falling through to its last
+# few lines - so if provisioning fails, or the run is interrupted, the
+# developer is left with their dev database sitting at db/default.db.bak
+# and no db/default.db at all. Everything below is wrapped so the restore
+# happens on any exit.
+had_db = DB.exists()
+had_live = LIVE.exists()
+if had_db:
+    shutil.move(str(DB), str(DB_BAK))
+if had_live:
+    shutil.copyfile(LIVE, LIVE_BAK)
+shutil.copyfile('deploy/dev/local_test_settings.sqlite.py', LIVE)
+
+status = 1
+try:
+    # Provision exactly the way a fresh deployment would, so the whole
+    # sequence is exercised for real and not just a disposable test db.
+    manage('migrate')
+    manage('createcachetable')
+    manage('collectstatic', '--noinput')
+    manage('createsuperuser', '--noinput', env={
+        'DJANGO_SUPERUSER_USERNAME': 'superuser',
+        'DJANGO_SUPERUSER_PASSWORD': 'superuser',
+        'DJANGO_SUPERUSER_EMAIL': 'superuser@example.com',
+    })
+    status = subprocess.call([sys.executable, '-m', 'pytest', '--reuse-db'])
+finally:
+    # Keep the provisioned db for inspection, but only if it exists - the
+    # shell version runs its `mv` unconditionally and errors when
+    # provisioning failed before the database was created.
+    if DB.exists():
+        KEPT.unlink(missing_ok=True)
+        shutil.move(str(DB), str(KEPT))
+        print(f'provisioned database kept at {KEPT}')
+    if had_live:
+        shutil.move(str(LIVE_BAK), str(LIVE))
+    else:
+        LIVE.unlink(missing_ok=True)
+    if had_db:
+        shutil.move(str(DB_BAK), str(DB))
+        print(f'restored your {DB}')
+
+sys.exit(status)
+"""
+
+# ==========================================================================
+# Tests - browser / GUI
+# ==========================================================================
+
+
+# GUI/Selenium only. Both axes - browser and window - are named in full on
+# every task, because neither has a "real" option and a deviation: Chromium
+# finds timing races Firefox does not, and a visible window is how you debug
+# them. Naming one combination shorter than the others would imply a pecking
+# order that does not exist.
+#
+# `test-gui` is not a fifth combination - it deliberately sets nothing, so it
+# runs whatever your own settings configure.
+#
+# Plain tasks rather than one with a --browser argument: poe stops forwarding
+# dash-prefixed tokens as soon as a task declares a named arg (see the note on
+# _test-engine in poe_tasks/make_compat.toml), and `-k`, `-x` and `--pdb` are
+# exactly what you reach for on a failing browser test.
+#
+# The env tables are the reason these exist - `SELENIUM_BROWSER=chromium
+# pytest ...` is not something you can type in cmd or PowerShell, and Windows
+# is a large share of real deployments.
+#
+# Note these set environment variables, and qatrack/local_test_settings.py is
+# imported after settings.py has read them. If you uncomment SELENIUM_BROWSER
+# or SELENIUM_HEADLESS there, your file wins and these tasks stop having any
+# effect - which looks exactly like the task being broken.
+
+[tasks.test-gui]
+help = "Run ONLY the GUI/Selenium tests, using whatever your settings configure"
+cmd = "pytest -m selenium"
+
+
+[tasks.test-gui-firefox-headless]
+help = "Run ONLY the GUI/Selenium tests: firefox, no window (no display needed)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "True" }
+
+
+[tasks.test-gui-firefox-visible]
+help = "Run ONLY the GUI/Selenium tests: firefox, visible window (needs a display)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "False" }
+
+
+[tasks.test-gui-chromium-headless]
+help = "Run ONLY the GUI/Selenium tests: chromium, no window (no display needed)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "True" }
+
+
+[tasks.test-gui-chromium-visible]
+help = "Run ONLY the GUI/Selenium tests: chromium, visible window (needs a display)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "False" }
