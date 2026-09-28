@@ -1,5 +1,19 @@
 # Test-specific settings for QATrack+ - PostgreSQL variant
-# Copy this file to qatrack/local_test_settings.py and customize as needed
+#
+# Copy to qatrack/local_test_settings.postgres.py and run
+# `poe test-engine postgres`, or to qatrack/local_test_settings.py to make it
+# your everyday choice.
+#
+# The connection details come from the environment, with defaults matching
+# deploy/dev/compose.test-databases.yaml - so `poe test-databases-up` and this
+# file agree without either being edited. Point them somewhere else by
+# exporting the variables, or by editing deploy/dev/.env.
+#
+# Reading the port from the same variable the compose file publishes is
+# deliberate: a hardcoded port here and a different one in the container is a
+# failure whose only symptom is a port that never comes up.
+
+import os
 
 DEBUG = True
 TEMPLATE_DBG = True
@@ -7,14 +21,18 @@ TEMPLATE_DBG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
+        # Django creates test_<NAME> itself, so the user needs CREATE
+        # DATABASE. NAME need not exist beforehand.
         'NAME': 'qatrackplus_test',
-        'USER': 'your_postgres_user',
-        'PASSWORD': 'your_postgres_password',
-        'HOST': 'hostname',
-        'PORT': '5432',  # PostgreSQL default
+        'USER': os.environ.get('QATRACK_TEST_POSTGRES_USER', 'qatrack'),
+        'PASSWORD': os.environ.get('QATRACK_TEST_POSTGRES_PASSWORD', 'qatrack-test-only'),
+        'HOST': os.environ.get('QATRACK_TEST_POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('QATRACK_TEST_POSTGRES_PORT', '5432'),
     }
 }
 DATABASES['readonly'] = DATABASES['default']
+
+# Everything below is unchanged from the other templates in this directory.
 
 # Test-specific settings
 NOTIFICATIONS_ON = False
@@ -35,5 +53,3 @@ TIME_ZONE = 'America/Toronto'
 # SELENIUM_HEADLESS = False       # watch it run; needs a real display
 
 AUTHENTICATION_BACKENDS = ['qatrack.accounts.backends.QATrackAccountBackend']
-
-# Customize any of the above settings as needed for your test environment
