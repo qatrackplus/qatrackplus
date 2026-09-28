@@ -1,0 +1,62 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Deployment helpers
+# ==========================================================================
+
+
+# These four are for a *deployment*, not a development checkout. The templates
+# under deploy/ hardcode /home/YOURUSERNAMEHERE/web/qatrackplus and substitute
+# only the username, so running them anywhere else installs config that points
+# at a directory which does not exist - valid nginx syntax serving nothing, and
+# supervisor programs whose interpreter is not there.
+#
+# Verified here as far as is possible without root: the templates carry the
+# placeholder (2, 3 and 4 occurrences), the substitution leaves none behind,
+# and the paths resolve to what the install docs prescribe. The sudo steps
+# themselves are unverified, which is what the WIP- marks.
+[tasks."nginx-conf"]
+help = "WIP- Ubuntu only: install the nginx site config (runs sudo); unverified here"
+shell = '''
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/nginx/qatrack.conf > qatrack.conf
+sudo mv qatrack.conf /etc/nginx/sites-available/qatrack.conf
+sudo ln -sf /etc/nginx/sites-available/qatrack.conf /etc/nginx/sites-enabled/qatrack.conf
+sudo usermod -a -G $USER www-data
+sudo service nginx restart
+'''
+
+
+[tasks."supervisor-conf"]
+help = "WIP- Ubuntu only: install supervisor configs for django-q2/gunicorn (runs sudo); unverified here"
+shell = '''
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/supervisor/django-q2.conf > django-q2.conf
+sudo sed "s/YOURUSERNAMEHERE/$USER/g" deploy/supervisor/gunicorn.conf > gunicorn.conf
+sudo mv django-q2.conf /etc/supervisor/conf.d/
+sudo mv gunicorn.conf /etc/supervisor/conf.d/
+sudo supervisorctl reread
+sudo supervisorctl update
+'''
+
+[tasks."nginx-conf-remove"]
+help = "WIP- Undo nginx-conf: remove the site config and restart nginx; unverified here"
+# Deliberately does not undo `usermod -a -G $USER www-data`. Taking a group
+# membership away again can break anything else that came to rely on it, and
+# an uninstall that quietly changes account permissions is worse than one that
+# leaves a harmless group in place. Remove it by hand if you want it gone:
+#   sudo gpasswd -d www-data $USER
+shell = """
+sudo rm -f /etc/nginx/sites-enabled/qatrack.conf
+sudo rm -f /etc/nginx/sites-available/qatrack.conf
+sudo service nginx restart
+"""
+
+[tasks."supervisor-conf-remove"]
+help = "WIP- Undo supervisor-conf: stop the processes, remove the configs, reload; unverified here"
+shell = """
+sudo supervisorctl stop django-q2 gunicorn
+sudo rm -f /etc/supervisor/conf.d/django-q2.conf
+sudo rm -f /etc/supervisor/conf.d/gunicorn.conf
+sudo supervisorctl reread
+sudo supervisorctl update
+"""
