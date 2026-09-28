@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load qatrack_tags %}
 {% load static %}
 {% load reports_tags %}
 
@@ -24,14 +25,14 @@
   <div class="col-xs-4 text-right">
     {% if include_logo %}
       {% if for_pdf %}
-        <!-- For PDF generation, use file:// path that Chrome can access -->
-        <img src="file://{{ STATIC_ROOT }}/reports/img/logo.png" alt="{% trans 'Organization Logo' %}" class="logo logo-visible"/>
+        <!-- For PDF generation, a file:// URI both engines can fetch -->
+        <img src="{{ STATIC_ROOT|file_uri }}/reports/img/logo.png" alt="{% trans 'Organization Logo' %}" class="logo logo-visible"/>
       {% else %}
         <!-- For HTML rendering, use normal static path -->
         <img src="{% static 'reports/img/logo.png' %}" alt="{% trans 'Organization Logo' %}" class="logo logo-visible"/>
       {% endif %}
     {% else %}
-      <img src="{% if for_pdf %}file://{{ STATIC_ROOT }}/reports/img/logo.png{% else %}{% static 'reports/img/logo.png' %}{% endif %}" alt="{% trans 'Organization Logo' %}" class="logo logo-hidden"/>
+      <img src="{% if for_pdf %}{{ STATIC_ROOT|file_uri }}/reports/img/logo.png{% else %}{% static 'reports/img/logo.png' %}{% endif %}" alt="{% trans 'Organization Logo' %}" class="logo logo-hidden"/>
     {% endif %}
   </div>
 </div>
