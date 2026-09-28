@@ -57,7 +57,7 @@ class ServiceArea(models.Model):
         verbose_name_plural = _l('service areas')
 
     def __str__(self):
-        return str(_l('service area'))
+        return self.name
 
     def natural_key(self):
         return (self.name,)
