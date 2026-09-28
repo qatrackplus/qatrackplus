@@ -24,8 +24,8 @@ MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = False
 
 # -----------------------------------------------------------------------------
-# misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, ".."))
 
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 LOCALE_PATHS = [
