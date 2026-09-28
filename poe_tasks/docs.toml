@@ -34,9 +34,23 @@ cmd = "sphinx-autobuild docs docs/_build/html --port ${port}"
 help = "RELEASE: regenerate the distributed schema diagram (see docs/developer/schema.rst)"
 interpreter = "python"
 shell = '''
-import os, pathlib, subprocess, sys, tempfile
+import importlib.metadata, os, pathlib, subprocess, sys, tempfile
 
-OUT = pathlib.Path('docs/developer/images/qatrack_schema_%s.svg' % os.environ['VERSION'])
+# Named for the MINOR line, not the patch. The schema is identical across every
+# 4.0.z - a patch release that changed it would need a migration, which makes it
+# a minor release - so one diagram per x.y is what is actually being described,
+# and a per-patch name would add a near-identical 838 KB SVG to the repository
+# on every release.
+#
+# Read from the installed package metadata rather than written down here. It used
+# to come from $VERSION, which existed in three places: [tool.poe.env] said
+# 4.0.0, the Makefile said 3.1.0, and [project] said 4.0.0. So `poe schema` and
+# `make schema` wrote *different files*, and the Makefile's wrote over the
+# committed 3.1.0 diagram - the Makefile carried a WARNING about exactly that
+# rather than fixing it. There is now one source, and it is the one that is
+# already correct by construction because the package is built from it.
+MINOR_LINE = '.'.join(importlib.metadata.version('qatrackplus').split('.')[:2])
+OUT = pathlib.Path('docs/developer/images/qatrack_schema_%s.svg' % MINOR_LINE)
 
 # Render to a temporary file and only move it into place if it worked.
 #
