@@ -9,7 +9,8 @@
 ## Manditory settings:
 ### You must set at least the DATABASES setting here. 
 
-DEBUG = False # Set to True to enable debug mode (not safe for regular use!)
+DEBUG = True  # Set to False to disable debug mode
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 TEMPLATE_DBG = True
 
 DATABASES = {
