@@ -1,0 +1,56 @@
+# ==========================================================================
+# CI checks
+# ==========================================================================
+#
+# `ci` exists so that "will CI pass?" has an answer you can get before
+# pushing. It is deliberately not all of CI: the workflow also runs the suite
+# against postgres/mysql/mssql, on Windows, against a built Docker stack, and
+# through Selenium on two browsers. Those need services, another operating
+# system or a browser, so they stay where they are and get their own tasks
+# (test-engine, test-integration, test-gui-*). What is left - lint, the
+# dependency check and the suite on the default database - is the part that
+# catches most red runs, and it runs anywhere.
+#
+# Keep the three steps in this order. It is CI's order, and it is also
+# cheapest-first: lint fails in seconds, the dependency check in one, and only
+# then do you wait on the suite.
+
+[tasks.ci]
+help = "Run the CI checks that work on a dev machine: lint, deps, then the suite"
+sequence = ["lint", "deps", "test", "_ci-reminder"]
+
+
+# CI pins this to pre-commit 4.6.0 via `uvx pre-commit@4.6.0`; here it is
+# whatever the dev group resolved, which uv.lock also holds at 4.6.0. If the
+# two ever disagree, the lockfile is the one to change - pinning a tool in two
+# places is how they drift.
+[tasks.lint]
+help = "Run the pre-commit suite over every file (ruff, yaml/toml, django checks)"
+cmd = "pre-commit run --all-files"
+
+
+# CI's Requirements Test does `uv sync --all-extras --locked` and then
+# `uv pip check`. The sync is left out on purpose: it would rewrite the venv
+# you are working in, and --all-extras pulls python-ldap, which wants
+# libldap2-dev and libsasl2-dev on the machine. `uv lock --check` answers the
+# question the sync was really asking - is the lockfile still current for this
+# pyproject.toml - without touching anything.
+[tasks.deps]
+help = "Check the lockfile is current and the installed packages agree"
+sequence = [
+    { cmd = "uv lock --check" },
+    { cmd = "uv pip check" },
+]
+
+
+[tasks._ci-reminder]
+help = "(internal) printed after a green `poe ci`"
+interpreter = "python"
+shell = """
+print()
+print('Locally green. Still only run by CI:')
+print('  - the suite on postgres / mysql / mssql   (poe test-engine <engine>)')
+print('  - the suite on Windows                     (no local equivalent)')
+print('  - the Selenium suite, firefox and chromium (poe test-gui-*)')
+print('  - the Docker build-and-run check           (deploy/docker)')
+"""
