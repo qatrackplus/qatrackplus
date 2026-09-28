@@ -12,6 +12,7 @@ the next one, so the number can only go down.
 
 import ast
 import pathlib
+import textwrap
 
 QATRACK = pathlib.Path(__file__).resolve().parents[2]
 REPO_ROOT = QATRACK.parent
@@ -33,6 +34,13 @@ USER_FACING_CALLS = {
     'success', 'error', 'info', 'warning', 'debug', 'add_message',
 }
 
+# `messages.warning(request, "...")` is user facing. `logger.warning("...")` is
+# not: a log line is read by an administrator in the server's log, and
+# translating it would make it unsearchable and locale-dependent. The names above
+# are matched on the method alone, so without this the scanner demands that every
+# logging call in the project be translated.
+LOGGING_RECEIVERS = {'logger', 'log', 'logging', 'LOGGER', '_logger'}
+
 # Strings that are deliberately not translated. Add to this only with a reason.
 #
 # 'ID' is the verbose_name Django generates for an automatic primary key.
@@ -51,6 +59,19 @@ def _is_translated(node):
     if isinstance(func, ast.Attribute):
         return func.attr in TRANSLATORS
     return False
+
+
+def _receiver(func):
+    """What a method is called on: 'logger' in `logger.warning(...)`.
+
+    Handles `self.logger.warning(...)` too, by taking the last attribute name.
+    """
+    value = getattr(func, 'value', None)
+    if isinstance(value, ast.Name):
+        return value.id
+    if isinstance(value, ast.Attribute):
+        return value.attr
+    return ''
 
 
 def _literal_string(node):
@@ -98,7 +119,7 @@ def find_untranslated():
                         found.add((key, keyword.arg, text))
 
             name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, 'id', '')
-            if name in USER_FACING_CALLS:
+            if name in USER_FACING_CALLS and _receiver(node.func) not in LOGGING_RECEIVERS:
                 for argument in node.args:
                     if not _is_translated(argument):
                         text = _literal_string(argument)
@@ -177,3 +198,43 @@ def test_baseline_paths_are_posix():
         "slashes in %s:\n\n%s"
         % (len(backslashed), BASELINE_PATH.name, '\n'.join('  %s' % p for p in backslashed))
     )
+
+
+def test_logging_calls_are_not_user_facing():
+    """`logger.warning(...)` must not be demanded for translation.
+
+    The names in ``USER_FACING_CALLS`` - warning, error, info, debug - exist for
+    ``django.contrib.messages``, and were matched on the method name alone. That
+    also matches every logging call in the project, so the scanner asked for log
+    lines to be translated. A log line is read by an administrator in the
+    server's log; translating it makes it locale-dependent and unsearchable.
+
+    Asserted against parsed source rather than the tree, so it states the rule
+    instead of depending on which calls happen to exist today.
+    """
+    source = textwrap.dedent(
+        '''
+        from django.contrib import messages
+        logger = logging.getLogger(__name__)
+
+        def f(request):
+            logger.warning("a log line")
+            logger.error("another %s", x)
+            logging.info("a third")
+            self.logger.debug("a fourth")
+            messages.warning(request, "a message to a person")
+        '''
+    )
+    tree = ast.parse(source)
+    flagged = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, 'id', '')
+        if name in USER_FACING_CALLS and _receiver(node.func) not in LOGGING_RECEIVERS:
+            for argument in node.args:
+                text = _literal_string(argument)
+                if text:
+                    flagged.add(text)
+
+    assert flagged == {"a message to a person"}, flagged
