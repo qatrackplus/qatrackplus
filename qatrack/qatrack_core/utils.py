@@ -66,10 +66,96 @@ def file_uri(path):
     return Path(path).absolute().as_uri()
 
 
+def chrome_available():
+    """Whether a Chrome/Chromium executable is configured and present."""
+    return bool(settings.CHROME_PATH) and os.path.exists(settings.CHROME_PATH)
+
+
+#: What to do about a WeasyPrint that will not load. Both branches below need it,
 #: and the Windows half is not guessable from the failure: the missing pieces are
 #: the same system libraries, but there they surface as a GLib load error that no
 #: amount of installing the Python package fixes.
+WEASYPRINT_INSTALL_HINT = (
+    "WeasyPrint needs Pango, cairo and harfbuzz installed as system packages, not "
+    "just the Python package. On Windows that means a GTK runtime (MSYS2's UCRT64 "
+    "packages, for instance) and the WEASYPRINT_DLL_DIRECTORIES environment "
+    "variable pointing at its bin directory."
+)
 
+
+def weasyprint_import_error():
+    """The exception importing WeasyPrint raises here, or None if it imports.
+
+    Catches OSError as well as ImportError: WeasyPrint is a cffi wrapper
+    around Pango, cairo and harfbuzz, which are system packages rather than
+    Python ones. Where they are absent - python:*-slim images, most notably -
+    the import fails with OSError, not ImportError.
+
+    The exception itself is returned rather than discarded because it is the
+    only thing that says which library is missing. On Windows the failure is
+    "cannot load library 'libgobject-2.0-0'", which names GLib and not any of
+    the three packages a bare "cannot load" message would send you after.
+    """
+    try:
+        import weasyprint  # noqa: F401
+    except (ImportError, OSError) as e:
+        return e
+    return None
+
+
+def weasyprint_available():
+    """Whether WeasyPrint can actually render here."""
+    return weasyprint_import_error() is None
+
+
+def html_to_pdf(html, name="", paper_size="letter"):
+    """Render html to PDF with whichever engine is configured and usable.
+
+    settings.PDF_ENGINE selects:
+
+      "auto"        Chrome if available, otherwise WeasyPrint (default)
+      "chrome"      Chrome only
+      "weasyprint"  WeasyPrint only
+
+    Chrome leads in "auto" because it is what the install documentation has
+    always required, what deployments already have, and what the report
+    stylesheets were tuned against - so an upgrade does not silently change
+    how every report looks. WeasyPrint needs no browser, which is what makes
+    it the right answer for a deployment that cannot install one (#835).
+
+    Neither engine available is an error rather than a silent fallback: a
+    report that cannot be produced should say so, not arrive wrong.
+    """
+    engine = getattr(settings, "PDF_ENGINE", "auto")
+
+    if engine == "chrome":
+        return chrometopdf(html, name=name, paper_size=paper_size)
+
+    if engine == "weasyprint":
+        why = weasyprint_import_error()
+        if why is not None:
+            raise PdfGenerationError(
+                "PDF_ENGINE is 'weasyprint' but WeasyPrint cannot load: %s. %s"
+                % (why, WEASYPRINT_INSTALL_HINT)
+            )
+        return weasyprint_to_pdf(html, name=name, paper_size=paper_size)
+
+    if engine != "auto":
+        raise PdfGenerationError(
+            "Unknown PDF_ENGINE %r - expected 'auto', 'chrome' or 'weasyprint'." % engine
+        )
+
+    if chrome_available():
+        return chrometopdf(html, name=name, paper_size=paper_size)
+
+    if weasyprint_available():
+        return weasyprint_to_pdf(html, name=name, paper_size=paper_size)
+
+    raise PdfGenerationError(
+        "No PDF engine is available. Either set CHROME_PATH to a browser, or make "
+        "WeasyPrint loadable - it fails here with: %s. %s PDF_ENGINE can pin a "
+        "specific engine." % (weasyprint_import_error(), WEASYPRINT_INSTALL_HINT)
+    )
 
 def site_base_url(site=None):
     """The Site's absolute base URL, with exactly one scheme on the front.
@@ -109,25 +195,23 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         paper_size: Paper size for PDF ('letter' or 'a4')
     """
     try:
-        from weasyprint import CSS, HTML
+        from weasyprint import HTML
     except ImportError:
         raise ImportError("WeasyPrint not installed. Install with: uv pip install weasyprint")
 
     # The report templates link the real bootstrap/adminlte print stylesheets
-    # and include reports/pdf.css themselves, so the only thing we need to add
-    # here is the page geometry.  Do *not* re-implement the Bootstrap grid: a
-    # flexbox `.row` stops WeasyPrint from fragmenting its contents across
-    # pages, which silently truncates any report containing a forced page
-    # break (see reports/pdf.css).
-    paper_css = """
-    @page {
-        size: %s;
-        margin: 20px 20px 20px 30px;
-    }
-    """ % paper_size.lower()
-
+    # and include reports/pdf.css themselves, so the only thing to add here is
+    # the page size - and it is added the same way Chrome gets it, through
+    # set_paper_size(), so there is one mechanism rather than one per engine.
+    # Margins come from reports/pdf.css for both engines; declaring them here
+    # as well meant two sources that had to be kept in step by hand.
+    #
+    # Do *not* re-implement the Bootstrap grid here: a flexbox `.row` stops
+    # WeasyPrint from fragmenting its contents across pages, which silently
+    # truncates any report containing a forced page break (see
+    # reports/pdf.css).
     pdf = BytesIO()
-    HTML(string=html).write_pdf(pdf, stylesheets=[CSS(string=paper_css)])
+    HTML(string=set_paper_size(html, paper_size)).write_pdf(pdf)
     return pdf.getvalue()
 
 

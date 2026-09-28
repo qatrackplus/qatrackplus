@@ -56,13 +56,13 @@ class TestLogoInReports(TestCase):
         )
         rep.report_format = "pdf"  # Set report_format before calling to_pdf()
 
-        # Mock the PDF generation to avoid WeasyPrint dependency and capture HTML content
-        with mock.patch('qatrack.reports.reports.weasyprint_to_pdf') as mock_weasyprint:
-            mock_weasyprint.return_value = b'fake pdf content'
+        # Mock the renderer to avoid any engine dependency and capture the HTML
+        with mock.patch('qatrack.reports.reports.html_to_pdf') as mock_render:
+            mock_render.return_value = b'fake pdf content'
             rep.to_pdf()
 
-            # Get the HTML content that would be sent to WeasyPrint
-            html_content = mock_weasyprint.call_args[0][0]
+            # Get the HTML content that would be sent to the renderer
+            html_content = mock_render.call_args[0][0]
 
         # Should contain the visible logo image with file:// path for PDF
         self.assertIn('alt="Organization Logo"', html_content, "Logo image should be present")
@@ -80,13 +80,13 @@ class TestLogoInReports(TestCase):
         )
         rep.report_format = "pdf"  # Set report_format before calling to_pdf()
 
-        # Mock the PDF generation to avoid WeasyPrint dependency and capture HTML content
-        with mock.patch('qatrack.reports.reports.weasyprint_to_pdf') as mock_weasyprint:
-            mock_weasyprint.return_value = b'fake pdf content'
+        # Mock the renderer to avoid any engine dependency and capture the HTML
+        with mock.patch('qatrack.reports.reports.html_to_pdf') as mock_render:
+            mock_render.return_value = b'fake pdf content'
             rep.to_pdf()
 
-            # Get the HTML content that would be sent to WeasyPrint
-            html_content = mock_weasyprint.call_args[0][0]
+            # Get the HTML content that would be sent to the renderer
+            html_content = mock_render.call_args[0][0]
 
         # Should contain the hidden logo image
         self.assertIn('alt="Organization Logo"', html_content, "Logo image should be present")
@@ -102,12 +102,12 @@ class TestLogoInReports(TestCase):
         rep.report_format = "pdf"  # Set report_format before calling to_pdf()
 
         # Mock the PDF generation to capture HTML content
-        with mock.patch('qatrack.reports.reports.weasyprint_to_pdf') as mock_weasyprint:
-            mock_weasyprint.return_value = b'fake pdf content'
+        with mock.patch('qatrack.reports.reports.html_to_pdf') as mock_render:
+            mock_render.return_value = b'fake pdf content'
             rep.to_pdf()
 
-            # Get the HTML content that would be sent to WeasyPrint
-            html_content = mock_weasyprint.call_args[0][0]
+            # Get the HTML content that would be sent to the renderer
+            html_content = mock_render.call_args[0][0]
 
         # Should contain the logo image
         self.assertIn(

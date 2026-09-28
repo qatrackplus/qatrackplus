@@ -698,6 +698,19 @@ def EXPLORER_PERMISSION_VIEW(request):
 
 
 
+# Which engine renders report PDFs.
+#
+#   "auto"        Chrome/Chromium if CHROME_PATH points at one, else WeasyPrint
+#   "chrome"      Chrome/Chromium only
+#   "weasyprint"  WeasyPrint only - needs no browser, but does need Pango,
+#                 cairo and harfbuzz installed as *system* packages
+#
+# Chrome leads in "auto" because it is what the install guides have always
+# required and what the report stylesheets were tuned against, so upgrading
+# does not quietly change how every report looks. Set "weasyprint" if you
+# cannot install a browser on the server.
+PDF_ENGINE = "auto"
+
 CHROME_PATH = ""
 if os.name.lower() == "nt":
     user = os.getlogin()

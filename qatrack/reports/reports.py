@@ -18,12 +18,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
-from qatrack.qatrack_core.utils import (
-    chrometopdf,
-    relative_dates,
-    site_base_url,
-    weasyprint_to_pdf,
-)
+from qatrack.qatrack_core.utils import html_to_pdf, relative_dates, site_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -272,20 +267,13 @@ class BaseReport(metaclass=ReportMeta):
         template = self.get_template(using=None)
         content = template.render(context)
         paper_size = context.get('paper_size', 'letter')
-        
-        # Use WeasyPrint for paper size support
-        try:
-            return weasyprint_to_pdf(content, name=fname, paper_size=paper_size)
-        except ImportError:
-            # WeasyPrint not available, fall back to Chrome
-            logger.warning("WeasyPrint not available, falling back to Chrome")
-            return chrometopdf(content, name=fname, paper_size=paper_size)
-        except Exception:
-            # WeasyPrint failed for some other reason, fall back to Chrome.
-            # Log the traceback: falling back silently makes a broken report
-            # look like a rendering bug rather than a PDF engine failure.
-            logger.exception("WeasyPrint failed, falling back to Chrome")
-            return chrometopdf(content, name=fname, paper_size=paper_size)
+
+        # Engine choice lives in html_to_pdf (settings.PDF_ENGINE). It used to
+        # be decided here by exception: try WeasyPrint, and on *any* exception
+        # fall back to Chrome. That turned a WeasyPrint failure into a
+        # different-looking report rather than an error, and on a host with no
+        # browser it turned it into Chrome's error instead of WeasyPrint's.
+        return html_to_pdf(content, name=fname, paper_size=paper_size)
 
     def to_csv(self):
         context = self.get_context()

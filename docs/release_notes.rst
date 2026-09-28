@@ -28,6 +28,12 @@ Bug Fixes
 * Fixed the report paper size being ignored when PDFs are generated with
   Chrome. Reports set to A4 were produced at Letter size regardless of the
   paper size chosen for the report.
+* **Reports are now rendered with Chrome where it is available.** Before this
+  release WeasyPrint was tried first and Chrome used only as a fallback, so an
+  installation with both may see reports paginate and lay out differently. Set
+  ``PDF_ENGINE = "weasyprint"`` in ``qatrack/local_settings.py`` to keep the
+  previous renderer, or ``PDF_ENGINE = "chrome"`` to require Chrome; the default
+  is ``"auto"``.
 * Report PDFs generated without a browser load their stylesheets and logo
   again on Windows. The links were built by joining ``file://`` to a filesystem
   path, which on Windows turns the drive letter into a hostname, so none of the

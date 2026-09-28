@@ -3,8 +3,12 @@
    * so we push them off the page by setting smaller than default margin */
 
   @page {
+    /* The single source of page margins, for both PDF engines. The page
+       *size* is not set here: it is chosen per report and injected after this
+       stylesheet by qatrack_core.utils.set_paper_size(), which both Chrome
+       and WeasyPrint go through. Declaring size here as well would win or
+       lose the cascade depending on engine. */
     margin: 20px 20px 20px 30px;
-    /* size removed */
   }
 
   body {
