@@ -12,6 +12,8 @@ import sys
 
 import matplotlib
 
+from qatrack.qatrack_core import dateformats
+
 matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
@@ -84,23 +86,82 @@ USE_TZ = True
 
 FORMAT_MODULE_PATH = "qatrack.formats"
 
-# formats for strptime/strftime
-DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
-DATETIME_INPUT_FORMATS = [
-    "%d %b %Y %H:%M",
+# ------------------------------------------------------------------------------
+# Dates and times
+#
+# Two questions, answered separately:
+#
+#   1. What does QATrack+ *show* you, and what do the date pickers write into a
+#      field? That is QATRACK_DATETIME_FORMAT / QATRACK_DATE_FORMAT /
+#      QATRACK_TIME_FORMAT below - one format each, used everywhere.
+#
+#   2. What will QATrack+ *accept* when you type a date yourself? That is the
+#      default from question 1, plus anything listed in the
+#      QATRACK_EXTRA_*_INPUT_FORMATS settings.
+#
+# Keeping them separate is deliberate. Accepting more ways of typing a date
+# costs nothing and helps whoever is entering data; displaying dates two
+# different ways in two parts of the application does not help anyone. So
+# extra input formats are a list, and the display format is a single value.
+#
+# Write these in Python's strptime syntax (%Y, %m, %d, %H, %M ...). Everything
+# else is derived from them - the Django display format, the flatpickr format
+# the date pickers use, the moment.js format the browser uses, and the help
+# text under each field - so there is one place to change and nothing can
+# drift out of step with anything else. See qatrack/formats/base.py.
+#
+# The default is ISO 8601 (YYYY-MM-DD HH:MM) in every language. It sorts
+# correctly, it is unambiguous - 03/04 is the 3rd of April to half the world
+# and the 4th of March to the other half - and it does not change meaning when
+# a site switches language.
+
+QATRACK_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
+QATRACK_DATE_FORMAT = "%Y-%m-%d"
+QATRACK_TIME_FORMAT = "%H:%M"
+
+# Additional formats accepted when parsing, on top of the three above. These
+# only affect what can be typed in; they never change what is displayed.
+QATRACK_EXTRA_DATETIME_INPUT_FORMATS = [
+    "%d %b %Y %H:%M",       # 31 May 2012 14:30 - the pre-4.1 QATrack+ format
     "%d %b %Y %H:%M:%S",
-    "%Y-%m-%d %H:%M",
     "%Y-%m-%d %H:%M:%S",
     "%Y-%m-%d %H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S.%fZ",
 ]
-TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
+QATRACK_EXTRA_DATE_INPUT_FORMATS = [
+    "%d %b %Y",             # 31 May 2012
+]
+QATRACK_EXTRA_TIME_INPUT_FORMATS = [
+    "%H:%M:%S",
+    "%H:%M:%S.%f",
+]
 
-DATETIME_FORMAT = "j M Y H:i"
-DATE_FORMAT = "j M Y"
-TIME_FORMAT = "H:i"
+# The values below are what Django itself reads. They are derived from the
+# settings above in qatrack/formats/base.py, which is what FORMAT_MODULE_PATH
+# points at, and are repeated here only so that anything reading them before
+# the format modules load sees the same thing. Override the QATRACK_* settings
+# above rather than these - Django resolves formats through the format modules
+# first, so setting DATETIME_INPUT_FORMATS directly has no effect.
+DATE_INPUT_FORMATS = [QATRACK_DATE_FORMAT] + QATRACK_EXTRA_DATE_INPUT_FORMATS
+DATETIME_INPUT_FORMATS = [QATRACK_DATETIME_FORMAT] + QATRACK_EXTRA_DATETIME_INPUT_FORMATS
+TIME_INPUT_FORMATS = [QATRACK_TIME_FORMAT] + QATRACK_EXTRA_TIME_INPUT_FORMATS
 
-DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
+DATETIME_FORMAT = dateformats.to_django(QATRACK_DATETIME_FORMAT)
+DATE_FORMAT = dateformats.to_django(QATRACK_DATE_FORMAT)
+TIME_FORMAT = dateformats.to_django(QATRACK_TIME_FORMAT)
+
+DATETIME_HELP = "Format %s (24h time)" % dateformats.describe(QATRACK_DATETIME_FORMAT)
+
+# What the JSON API writes. Deliberately *not* derived from the settings above:
+# changing how QATrack+ displays a date should not change the wire format that
+# somebody's integration is parsing. These keep the values the API has always
+# emitted.
+#
+# They used to be read as DATETIME_INPUT_FORMATS[1] and DATE_INPUT_FORMATS[0] -
+# positions in a list a deployer is invited to add to - so adding an accepted
+# input format silently changed the API's output.
+QATRACK_API_DATETIME_FORMAT = "%d %b %Y %H:%M:%S"
+QATRACK_API_DATE_FORMAT = "%d %b %Y"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
