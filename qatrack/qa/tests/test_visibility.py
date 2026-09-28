@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group, Permission, User
 from django.test import TestCase
 from django.urls import reverse
 
-from qatrack.qa import models
+from qatrack.qa import models, trees
 from qatrack.qa.tests import utils
 
 
@@ -118,3 +118,70 @@ class TestPerformQARespectsVisibility(TestCase):
 
         for utc in (self.mine, self.theirs, self.nobodys):
             assert self.client.get(self.url_for(utc)).status_code == 200
+
+
+class TestTreesDoNotCollapseCollectionsSharingAName(TestCase):
+    """Two collections with the same name must both appear in the trees.
+
+    The tree queries join through test membership, so a collection appears once
+    per test and the duplicates have to be collapsed. That was done by name -
+    which also collapses two *different* collections that happen to share one,
+    dropping one of them from the tree entirely, with no way to reach its Perform
+    page from there.
+
+    `UnitTestCollection.name` is derived and not unique, so this is ordinary
+    rather than contrived. It became reachable when this branch let a holder of
+    `qa.can_review_non_visible_tli` see every group's collections at once:
+    narrowed to one group, two same-named collections rarely met.
+    """
+
+    def setUp(self):
+        self.unit = utils.create_unit()
+        self.frequency = utils.create_frequency(name="daily-collapse", slug="daily-collapse")
+
+        # each collection needs a test in a category, or the category tree's
+        # query - which joins through test membership - excludes it entirely
+        category = utils.create_category(name="collapse-cat", slug="collapse-cat")
+
+        first_list = utils.create_test_list("collapse list one")
+        utils.create_test_list_membership(
+            test_list=first_list,
+            test=utils.create_test(name="collapse-t1", category=category),
+        )
+        second_list = utils.create_test_list("collapse list two")
+        utils.create_test_list_membership(
+            test_list=second_list,
+            test=utils.create_test(name="collapse-t2", category=category),
+        )
+
+        self.first = utils.create_unit_test_collection(
+            unit=self.unit, frequency=self.frequency, test_collection=first_list)
+        self.second = utils.create_unit_test_collection(
+            unit=self.unit, frequency=self.frequency, test_collection=second_list)
+
+        # the collision: derived, not unique, so two can share one
+        models.UnitTestCollection.objects.filter(
+            pk__in=[self.first.pk, self.second.pk]
+        ).update(name="Daily QC")
+
+    def ids_in(self, tree):
+        """Every UnitTestCollection id the rendered tree links to."""
+        import json
+        import re
+        return set(int(m) for m in re.findall(r'/qc/utc/perform/(\d+)/', json.dumps(tree)))
+
+    def test_the_frequency_tree_shows_both(self):
+        tree = trees.BootstrapFrequencyTree(None).generate()
+        found = self.ids_in(tree)
+        assert {self.first.pk, self.second.pk} <= found, (
+            "only %s reached the frequency tree; a collection sharing a name was "
+            "dropped" % sorted(found)
+        )
+
+    def test_the_category_tree_shows_both(self):
+        tree = trees.BootstrapCategoryTree(None).generate()
+        found = self.ids_in(tree)
+        assert {self.first.pk, self.second.pk} <= found, (
+            "only %s reached the category tree; a collection sharing a name was "
+            "dropped" % sorted(found)
+        )
