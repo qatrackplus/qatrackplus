@@ -50,6 +50,10 @@ Other Changes
   existing, so the command silently did nothing; a bare ``make`` now prints it
   as well.
 
+* An optional cross-platform task runner is available as an alternative to the
+  ``Makefile``. ``poe`` is not a project dependency and nothing requires it;
+  see the developer guide if you want it.
+
 v4.0.0
 ------
 
@@ -87,7 +91,7 @@ Technical Improvements
 Bug Fixes
 ^^^^^^^^^
 
-* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issue:`829`).
+* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issues:`829`).
 * Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
 * Fixed tolerance compatibility validation across different test types.
 * Fixed reference value type preservation in admin forms.

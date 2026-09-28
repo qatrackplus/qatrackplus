@@ -4,7 +4,7 @@ I would like to welcome you to the QATrack+ main repository. Here I feel I need 
 
 To start, I would like to specifically point out two changes as we move this project forward.
 
-- Licensing: starting with version 4.0, this project will switch to [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) ([Wiki](https://en.wikipedia.org/wiki/Apache_License)), aligning with many of the tools QATrack+ relies on. Until then, the current license remains MIT. The license holder remains with the Ottawa Cancer Center. This change will have no impact on deployments or contributors.
+- Licensing: starting with version 4.0, this project has switched to [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) ([Wiki](https://en.wikipedia.org/wiki/Apache_License)), aligning with many of the tools QATrack+ relies on. Releases prior to 4.0 remain MIT-licensed. The license holder remains with the Ottawa Cancer Center. This change will have no impact on deployments or contributors.
 - Releases: The future goal for this project will be for 1 release per year. Django releases Long-Term-Service (LTS) versions approximately every 2 years, so QATrack will attempt to release a matching X.0 release within 6-9 months following the X.2 Django LTS release. This will be followed, about a year later with a feature release (X.1) with additional work that could not be tested in time for the X.0 Release. You should not feel that you have to upgrade to every release, your site will have its own pressures and needs. This project will attempt to support `X.Y -> (X + 3).0` upgrade paths going forward.
 
 With all respect, please grant me as much patience as you can. I welcome all the help you wish to give.
