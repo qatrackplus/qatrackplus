@@ -16,7 +16,7 @@ name = "qatrackplus"
 version = "4.0.0"
 description = "QATrack+ is an open source application for managing QC data in radiotherapy and diagnostic imaging clinics"
 readme = "README.md"
-requires-python = ">=3.12, <=3.13"
+requires-python = ">=3.12,<3.13"
 license = {text = "MIT"}
 authors = [
     {name = "QATrack+ contributors", email = "randy@multileaf.ca"},
