@@ -1,0 +1,42 @@
+# Test-specific settings for QATrack+ - SQLite (file-based) variant
+# Copy this file to qatrack/local_test_settings.py and customize as needed
+
+DEBUG = True
+TEMPLATE_DBG = True
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'db/default.db',
+        # Without this, pytest-django creates and uses `test_db/default.db` and
+        # the file named above is never touched by the suite - so `make
+        # test-integration`, which migrates and provisions `db/default.db`
+        # first, was testing a different database than the one it had just set
+        # up. Naming the test database explicitly is what makes `--reuse-db`
+        # run against the provisioned deployment.
+        'TEST': {'NAME': 'db/default.db'},
+    }
+}
+DATABASES['readonly'] = DATABASES['default']
+
+# Test-specific settings
+NOTIFICATIONS_ON = False
+DEFAULT_NUMBER_FORMAT = None
+AD_CLEAN_USERNAME = None
+HTTP_OR_HTTPS = "http"
+REVIEW_BULK = True
+TIME_ZONE = 'America/Toronto'
+
+# Selenium: which browser, and whether it is visible. Either can come from
+# the environment for a one-off run instead:
+#   SELENIUM_BROWSER=chromium pytest --run-selenium           # bash/zsh
+#   $env:SELENIUM_BROWSER='chromium'; pytest --run-selenium   # PowerShell
+# Selenium Manager resolves the driver itself; settings.py has the variables
+# for pinning a specific binary.
+#
+# SELENIUM_BROWSER = 'chromium'   # 'firefox' is the default
+# SELENIUM_HEADLESS = False       # watch it run; needs a real display
+
+AUTHENTICATION_BACKENDS = ['qatrack.accounts.backends.QATrackAccountBackend']
+
+# Customize any of the above settings as needed for your test environment

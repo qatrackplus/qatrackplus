@@ -170,11 +170,18 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+# The caption is '%s', not '': Sphinx does `title = caption % part` for a usage
+# with no explicit title (sphinx/ext/extlinks.py), so an empty caption raises
+# "TypeError: not all arguments converted during string formatting" and aborts
+# the build. Every pre-existing usage supplied its own title - e.g.
+# :mailinglist:`mailing list <>` - which is why this never fired. The first
+# title-less one, :issues:`829` in the release notes, brought the build down.
+# '%s' renders the part, so :issues:`829` links the text "829".
 extlinks = {
-    'mailinglist': ("https://groups.google.com/forum/#!forum/qatrack/%s", ''),
-    'issues': ("https://github.com/qatrackplus/qatrackplus/issues/%s", ''),
-    'supportemail': ("mailto:medphys@crcrewso.ca%s", ''),
-    'uvreleases': ("https://github.com/astral-sh/uv/releases/%s", ''),
+    'mailinglist': ("https://groups.google.com/forum/#!forum/qatrack/%s", '%s'),
+    'issues': ("https://github.com/qatrackplus/qatrackplus/issues/%s", '%s'),
+    'supportemail': ("mailto:medphys@crcrewso.ca%s", '%s'),
+    'uvreleases': ("https://github.com/astral-sh/uv/releases/%s", '%s'),
 }
 
 rst_prolog = """
