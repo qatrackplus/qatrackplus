@@ -294,13 +294,14 @@ quote-style = "single"
 #    named `--engine` arg and define the five engine tasks independently,
 #    so nothing on the path declares a named arg.
 #
-# 3. VERSION is currently written in three places: `VERSION` in the Makefile,
-#    `version` under [project] above, and VERSION in [tool.poe.env] below.
-#    The release checklist already flags the first two drifting apart. If
-#    Make goes, do not keep a third copy - read it at task time from the
-#    installed package metadata
-#    (`python -c "import importlib.metadata as m; print(m.version(\'qatrackplus\'))"`)
-#    or from [project] directly, and drop [tool.poe.env] VERSION.
+# 3. DONE, and it turned out to be a live bug rather than a tidiness item.
+#    VERSION was written in three places - `VERSION` in the Makefile (3.1.0),
+#    `version` under [project] (4.0.0), and VERSION in [tool.poe.env] (4.0.0) -
+#    so `make schema` and `poe schema` named their output differently and the
+#    Makefile's overwrote the committed 3.1.0 diagram. Both now read
+#    importlib.metadata.version('qatrackplus') at task time and truncate it to
+#    the minor line, [tool.poe.env] is gone, and the Makefile no longer defines
+#    VERSION at all. Nothing else in either file used it.
 #
 # 4. Make poe a real dependency. It is deliberately not one today (install
 #    once with `uv tool install poethepoet`), which is fine for an optional
@@ -331,8 +332,6 @@ include = [
     "poe_tasks/make_compat.toml",
 ]
 
-[tool.poe.env]
-VERSION = "4.0.0"
 
 # ==========================================================================
 # A note on task style: cross-platform tasks and the make-* mirrors

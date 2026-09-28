@@ -4,7 +4,6 @@
 # so a target here can reach a production database. Nothing in it should be a
 # shorter way to do something irreversible than doing it by hand.
 
-VERSION=3.1.0
 DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 
 
@@ -226,12 +225,16 @@ supervisor.conf:
 # silently taking the broken path; its wheels also bundle a current Graphviz,
 # avoiding the "trouble in init_rank" bug in the 2.42 Ubuntu 24.04 ships.
 # RELEASE TARGET - see the note on the poe `schema` task.
-# WARNING: VERSION is 3.1.0 while the project is 4.0.x, so this overwrites the
-# committed 3.1.0 diagram, which is tracked - not gitignored. Check
-# `git status` afterwards and only keep the change if regenerating that
-# release's diagram is what you meant to do.
+# The name comes from the installed package metadata, truncated to the minor
+# line: the schema is the same across every 4.0.z, so one diagram describes the
+# whole line. This used to read a hardcoded VERSION=3.1.0 at the top of this
+# file while [tool.poe.env] said 4.0.0, so `make schema` and `poe schema` wrote
+# different files and this target overwrote the committed 3.1.0 diagram. Both
+# now read the one value the package is built from.
 schema:
-	@out=docs/developer/images/qatrack_schema_$(VERSION).svg; \
+	@ver=$$(uv run python -c "import importlib.metadata as m; print('.'.join(m.version('qatrackplus').split('.')[:2]))"); \
+	test -n "$$ver" || { echo "error: could not read the project version" >&2; exit 1; }; \
+	out=docs/developer/images/qatrack_schema_$$ver.svg; \
 	tmp=$$(mktemp -t qatrack-schema-XXXXXX.svg); \
 	if uv run python ./manage.py graph_models -a -g --pygraphviz \
 		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
