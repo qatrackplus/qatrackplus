@@ -138,7 +138,7 @@ class TestReportPreview(TestCase):
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
-            'work_completed': '01 Jan 2000',
+            'work_completed': '2000-01-01',
             'reportnote_set-INITIAL_FORMS': 0,
             'reportnote_set-TOTAL_FORMS': 0,
         }
@@ -195,7 +195,7 @@ class TestSaveReport(TestCase):
             'root-title': 'Title',
             'root-report_format': 'pdf',
             'root-include_signature': True,
-            'work_completed': '01 Jan 2000',
+            'work_completed': '2000-01-01',
             'reportnote_set-INITIAL_FORMS': 0,
             'reportnote_set-TOTAL_FORMS': 0,
         }
@@ -653,7 +653,8 @@ class TestInstanceToFormFields(TestCase):
         sr = models.SavedReport(report_type=qc.TestListInstanceSummaryReport.report_type)
         sr.filters = {'work_completed': ["1 Jan 2019", "2 Jan 2019"]}
         res = forms.serialize_savedreport(sr)
-        assert res['work_completed'] == ['text', '01 Jan 2019 - 02 Jan 2019']
+        # typed in one format, shown back in the configured default
+        assert res['work_completed'] == ['text', '2019-01-01 - 2019-01-02']
 
 
 class TestReportToFormFields(TestCase):
@@ -665,7 +666,8 @@ class TestReportToFormFields(TestCase):
     def test_daterange(self):
         report = qc.TestListInstanceSummaryReport(report_opts={'work_completed': ["1 Jan 2019", "2 Jan 2019"]})
         res = forms.serialize_report(report)
-        assert res['work_completed'] == ['text', '01 Jan 2019 - 02 Jan 2019']
+        # typed in one format, shown back in the configured default
+        assert res['work_completed'] == ['text', '2019-01-01 - 2019-01-02']
 
     def test_visible_to(self):
         g = Group.objects.create(name="group")
@@ -782,24 +784,24 @@ class TestBaseReport(TestCase):
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_utc(self):
         dt = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=datetime.UTC)
-        assert reports.BaseReport().default_detail_value_format(dt) == "01 Jan 2019"
+        assert reports.BaseReport().default_detail_value_format(dt) == "2019-01-01"
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_naive(self):
         dt = timezone.datetime(2019, 1, 2, 2, 0)
-        assert reports.BaseReport().default_detail_value_format(dt) == "02 Jan 2019"
+        assert reports.BaseReport().default_detail_value_format(dt) == "2019-01-02"
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_range_utc(self):
         dt1 = timezone.datetime(2019, 1, 2, 2, 0, tzinfo=datetime.UTC)
         dt2 = timezone.datetime(2019, 1, 3, 2, 0, tzinfo=datetime.UTC)
-        assert reports.BaseReport().default_detail_value_format([dt1, dt2]) == "01 Jan 2019 - 02 Jan 2019"
+        assert reports.BaseReport().default_detail_value_format([dt1, dt2]) == "2019-01-01 - 2019-01-02"
 
     @override_settings(TIME_ZONE="America/Toronto")
     def test_default_detail_value_format_datetime_range_naive(self):
         dt1 = timezone.datetime(2019, 1, 2, 2, 0)
         dt2 = timezone.datetime(2019, 1, 3, 2, 0)
-        assert reports.BaseReport().default_detail_value_format([dt1, dt2]) == "02 Jan 2019 - 03 Jan 2019"
+        assert reports.BaseReport().default_detail_value_format([dt1, dt2]) == "2019-01-02 - 2019-01-03"
 
     def test_default_detail_value_format_iterable(self):
         assert reports.BaseReport().default_detail_value_format([1, 2]) == "1, 2"
@@ -922,7 +924,8 @@ class TestReportInterface(BaseQATests):
         self.wait.until(e_c.presence_of_element_located((By.ID, 'report-id-%s' % sr.pk)))
         self.click('report-id-%s' % sr.pk)
         wc = self.driver.find_element(By.ID, 'id_work_completed')
-        assert wc.get_attribute("value") == "02 Jan 1989 - 04 Jan 1990"
+        # the range renders in the display format, which is ISO by default
+        assert wc.get_attribute("value") == "1989-01-02 - 1990-01-04"
         heading = self.driver.find_element(By.ID, "id_reportnote_set-0-heading")
         assert heading.get_attribute("value") == "heading"
         content = self.driver.find_element(By.ID, "id_reportnote_set-0-content")
