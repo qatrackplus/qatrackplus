@@ -388,6 +388,78 @@ choice. To run against an engine *without* disturbing that file, copy it to
 The two sqlite variants are not interchangeable for testing purposes: they
 exercise different code paths, and CI deliberately runs both.
 
+
+.. _test_databases:
+
+Getting a database to test against
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The sqlite variants need nothing installed. The other three need a running
+server *and* a database driver, neither of which arrives with
+``uv sync --dev``.
+
+Throwaway servers for all three::
+
+    cp deploy/dev/.env.test-databases.example deploy/dev/.env
+    poe test-databases-up
+
+They keep nothing - every service runs on tmpfs with no volume - so
+``poe test-databases-down`` leaves no trace and the next ``up`` is a clean
+slate. ``up`` waits until each server actually answers rather than returning
+while SQL Server is still starting, which otherwise fails the first run for
+reasons unrelated to the code.
+
+Then install the driver for the engine you want and run it::
+
+    uv sync --dev --extra postgres
+    cp deploy/dev/local_test_settings.postgres.py qatrack/local_test_settings.postgres.py
+    poe test-engine postgres
+
+The templates read their connection details from the same variables the
+compose file publishes, so the two cannot disagree - a hardcoded port in one
+and a different one in the other is a failure whose only symptom is a port
+that never comes up.
+
+Each engine needs a different amount installed on the host:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 14 20 66
+
+   * - Engine
+     - uv extra
+     - Also needs
+   * - ``postgres``
+     - ``--extra postgres``
+     - Nothing. ``psycopg[binary]`` is a self-contained wheel.
+   * - ``mysql``
+     - ``--extra mysql``
+     - ``default-libmysqlclient-dev`` and ``pkg-config``: ``mysqlclient`` is
+       pinned to a version that builds from source.
+   * - ``mssql``
+     - ``--extra mssql``
+     - ``unixodbc-dev`` and Microsoft's ``msodbcsql18``, plus
+       ``libldap2-dev`` and ``libsasl2-dev`` - the ``mssql`` extra also pulls
+       ``python-ldap``, which is why ``poe deps`` does not use
+       ``--all-extras``.
+
+Running a different version
+"""""""""""""""""""""""""""
+
+The defaults track the versions :doc:`the installation guides </install/install>`
+commit to, so a plain ``poe test-engine postgres`` exercises what the project
+promises rather than whatever is newest.
+
+To test something else, change one value in ``deploy/dev/.env`` and bring the
+servers back up::
+
+    QATRACK_TEST_POSTGRES_VERSION=14
+    QATRACK_TEST_POSTGRES_PORT=5433
+
+Ports are variables for the same reason versions are: two versions of the
+same engine can then run side by side, and a port already taken by a locally
+installed server can be moved without editing the compose file.
+
 Understanding the Settings Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
