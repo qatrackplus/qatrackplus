@@ -248,7 +248,7 @@ msgstr "Iniciar sesión falló con el error 403: su cuenta está deshabilitada"
 #: qatrack/accounts/views.py:110
 #, python-brace-format
 msgid "Login Failed with error {status_code}: {phrase}"
-msgstr "Iniciar sesión falló con error __Format_0__: __Format_1__"
+msgstr "Iniciar sesión falló con error {status_code}: {phrase}"
 
 #: qatrack/attachments/admin.py:33 qatrack/attachments/models.py:96
 #: qatrack/qa/models.py:1086 qatrack/qa/models.py:1396
@@ -579,7 +579,7 @@ msgstr "Eventos de servicio relacionados"
 #: qatrack/faults/forms.py:152
 #, python-format
 msgid "Unit with id %s does not exist"
-msgstr "Unidad con ID __Format_0__ no existe"
+msgstr "Unidad con ID %s no existe"
 
 #: qatrack/faults/forms.py:164
 msgid "Select the user from this group who reviewed this fault"
@@ -931,7 +931,7 @@ msgstr "Archivos"
 #: qatrack/faults/templates/faults/fault_actions.html:6
 #, python-format
 msgid "View details of %(fault)s"
-msgstr "Ver detalles de __Format_0__"
+msgstr "Ver detalles de %(fault)s"
 
 #: qatrack/faults/templates/faults/fault_actions.html:9
 #: qatrack/qa/templates/qa/testlistinstance_detail.html:441
@@ -955,7 +955,7 @@ msgstr "Detalles"
 #: qatrack/faults/templates/faults/fault_details.html:65
 #, python-format
 msgid "Edit details of %(fault)s"
-msgstr "Editar detalles de __Format_0__"
+msgstr "Editar detalles de %(fault)s"
 
 #: qatrack/faults/templates/faults/fault_actions.html:19
 #: qatrack/faults/templates/faults/fault_details.html:66
@@ -985,7 +985,7 @@ msgstr "Are you sure you want to permanently this fault?"
 #: qatrack/faults/templates/faults/fault_details.html:9
 #, python-format
 msgid "Fault ID %(fault_id)s"
-msgstr "ID de falla __Format_0__"
+msgstr "ID de falla %(fault_id)s"
 
 #: qatrack/faults/templates/faults/fault_details.html:49
 msgid ""
@@ -1066,7 +1066,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"Otros ocurrencias de tipo de falla __Format_0__"
+"Otros ocurrencias de tipo de falla %(fault_type_code)s"
 
 #: qatrack/faults/templates/faults/fault_form.html:11
 #: qatrack/qa/templates/qa/testlistinstance_form.html:957
@@ -1139,22 +1139,22 @@ msgstr "Confirmar"
 #: qatrack/faults/templates/faults/fault_occurred.html:4
 #, python-format
 msgid "Created by %(created_by)s, Last modified by %(modified_by)s"
-msgstr "Creado por __Format_0__, el último modificado por __Format_1__"
+msgstr "Creado por %(created_by)s, el último modificado por %(modified_by)s"
 
 #: qatrack/faults/templates/faults/fault_review_status.html:8
 #, python-format
 msgid "Reviewed by %(group)s group member %(reviewed_by)s"
-msgstr "Revisado por __Format_0__ Miembro del grupo __Format_1__"
+msgstr "Revisado por %(group)s Miembro del grupo %(reviewed_by)s"
 
 #: qatrack/faults/templates/faults/fault_review_status.html:10
 #, python-format
 msgid "Reviewed by %(reviewed_by)s"
-msgstr "Revisado por __Format_0__"
+msgstr "Revisado por %(reviewed_by)s"
 
 #: qatrack/faults/templates/faults/fault_type_actions.html:6
 #, python-format
 msgid "View details and all occurrences of the %(fault_type)s fault type"
-msgstr "Ver detalles y todas las ocurrencias del tipo de falla __Format_0__"
+msgstr "Ver detalles y todas las ocurrencias del tipo de falla %(fault_type)s"
 
 #: qatrack/faults/templates/faults/fault_type_actions.html:8
 msgid "Details & Occurrences"
@@ -1193,7 +1193,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"Tipo de falla __Format_0__ ocurrencias"
+"Tipo de falla %(fault_type_code)s ocurrencias"
 
 #: qatrack/faults/views.py:51 qatrack/faults/views.py:668
 #: qatrack/issue_tracker/views.py:93 qatrack/parts/views.py:230
@@ -1227,12 +1227,12 @@ msgstr "No revisado"
 #: qatrack/faults/views.py:374
 #, python-brace-format
 msgid "Successfully deleted Fault {fault_id}"
-msgstr "Falta eliminada con éxito __Format_0__"
+msgstr "Falta eliminada con éxito {fault_id}"
 
 #: qatrack/faults/views.py:396
 #, python-format
 msgid "Fault ID %d was created"
-msgstr "ID de falla __Format_0__ se creó"
+msgstr "ID de falla %d se creó"
 
 #: qatrack/faults/views.py:399
 msgid "Please resolve the errors below and submit again"
@@ -1241,7 +1241,7 @@ msgstr "Resuelva los errores a continuación y envíe nuevamente"
 #: qatrack/faults/views.py:574
 #, python-format
 msgid "Successfully acknowledged %(fault)s "
-msgstr "Reconocido con éxito __Format_0__"
+msgstr "Reconocido con éxito %(fault)s"
 
 #: qatrack/faults/views.py:576
 #, python-format
@@ -1258,7 +1258,7 @@ msgstr ""
 #: qatrack/faults/views.py:596
 #, python-format
 msgid "Successfully reviewed %(count)s faults"
-msgstr "Revisado con éxito __format_0__ fallas"
+msgstr "Revisado con éxito %(count)s fallas"
 
 #: qatrack/faults/views.py:618
 msgid "Faults for"
@@ -1267,7 +1267,7 @@ msgstr "Fallas para"
 #: qatrack/faults/views.py:644
 #, python-brace-format
 msgid "{fault_type} faults for: {site_and_unit_name}"
-msgstr "__Format_0__ fallas para: __Format_1__"
+msgstr "{fault_type} fallas para: {site_and_unit_name}"
 
 #: qatrack/faults/views.py:670
 #, fuzzy
@@ -1814,7 +1814,7 @@ msgstr ""
 #, python-format
 msgid "#%(id)d - Follow up notification (after %(num_days)s days)"
 msgstr ""
-"#__ Format_0__ - Notificación de seguimiento (después de __Format_1__ días)"
+"#%(id)d - Notificación de seguimiento (después de %(num_days)s días)"
 
 #: qatrack/notifications/qccompleted/admin.py:139
 #: qatrack/notifications/qcreview/admin.py:117
@@ -1944,7 +1944,7 @@ msgstr ""
 #: qatrack/notifications/service_log_scheduling/admin.py:110
 #, python-format
 msgid " (next %(num_days)s days)"
-msgstr "(Siguiente __Format_0__ días)"
+msgstr "(Siguiente %(num_days)s días)"
 
 #: qatrack/notifications/qcscheduling/models.py:28
 msgid "Notify About All Test Lists Due Dates"
@@ -2202,7 +2202,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"Evento de servicio #__ Format_0__"
+"Evento de servicio #%(service_event_id)s"
 
 #: qatrack/notifications/templates/service_log/email.html:47
 #, fuzzy
@@ -2256,7 +2256,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"Evento de servicio #__ Format_0__"
+"Evento de servicio #%(service_event_id)s"
 
 #: qatrack/notifications/templates/service_log/email.html:98
 msgid "Change Type"
@@ -2327,7 +2327,7 @@ msgid ""
 "  "
 msgstr ""
 "\n"
-"Editar evento de servicio #__ Format_0__"
+"Editar evento de servicio #%(service_event_id)s"
 
 #: qatrack/notifications/templates/service_log_review/email.html:4
 #: qatrack/notifications/templates/service_log_review/email.html:5
@@ -2795,7 +2795,7 @@ msgstr "Detalles de la parte"
 #: qatrack/parts/templates/parts/part_details.html:16
 #, python-format
 msgid "Part %(part_id)s Details"
-msgstr "Parte __Format_0__ Detalles"
+msgstr "Parte %(part_id)s Detalles"
 
 #: qatrack/parts/templates/parts/part_details.html:27
 msgid "Part number"
@@ -2880,7 +2880,7 @@ msgid ""
 "                "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(part_attachments)s"
 
 #: qatrack/parts/templates/parts/part_update.html:313
 msgid "Save Part"
@@ -2961,12 +2961,12 @@ msgstr "Haga clic para editar los detalles de este proveedor"
 #: qatrack/parts/templates/parts/table_context_p_actions.html:7
 #, python-format
 msgid "Edit details of %(part_name)s"
-msgstr "Editar detalles de __Format_0__"
+msgstr "Editar detalles de %(part_name)s"
 
 #: qatrack/parts/templates/parts/table_context_p_actions.html:13
 #, python-format
 msgid "View details of %(part_name)s"
-msgstr "Ver detalles de __Format_0__"
+msgstr "Ver detalles de %(part_name)s"
 
 #: qatrack/parts/views.py:117 qatrack/parts/views.py:141
 #: qatrack/templates/admin/change_list.html:71
@@ -2976,12 +2976,12 @@ msgstr "Corrija los errores a continuación."
 #: qatrack/parts/views.py:146
 #, python-format
 msgid "New part %(description)s added"
-msgstr "Nueva parte __Format_0__ agregada"
+msgstr "Nueva parte %(description)s agregada"
 
 #: qatrack/parts/views.py:148
 #, python-format
 msgid "Part %(description)s updated"
-msgstr "Parte __Format_0__ Actualizado"
+msgstr "Parte %(description)s Actualizado"
 
 #: qatrack/parts/views.py:207
 #, fuzzy
@@ -3077,7 +3077,7 @@ msgstr ""
 msgid ""
 "Reference value must be between %(low)s and %(high)s for wraparound tests"
 msgstr ""
-"El valor de referencia debe estar entre __format_0__ y __format_1__ para "
+"El valor de referencia debe estar entre %(low)s y %(high)s para "
 "pruebas de envoltura"
 
 #: qatrack/qa/admin.py:164
@@ -3181,7 +3181,7 @@ msgstr "Establecer referencias y tolerancias"
 #, python-format
 msgid ""
 "A test list with the slug '%(test_name)s' already exists in the database"
-msgstr "Ya existe una lista de pruebas con la babosa '__format_0__'"
+msgstr "Ya existe una lista de pruebas con la babosa '%(test_name)s'"
 
 #: qatrack/qa/admin.py:565
 #, python-brace-format
@@ -3189,8 +3189,8 @@ msgid ""
 "This test list has {test_count} tests but the maximum number allowed is "
 "{max_tests}."
 msgstr ""
-"Esta lista de pruebas tiene pruebas __Format_0__, pero el número máximo "
-"permitido es __Format_1__."
+"Esta lista de pruebas tiene pruebas {test_count}, pero el número máximo "
+"permitido es {max_tests}."
 
 #: qatrack/qa/admin.py:573
 msgid ""
@@ -3207,7 +3207,7 @@ msgid ""
 "%(sublist_id)d and try again"
 msgstr ""
 "Una lista de pruebas no puede ser su propio hijo.Eliminar la identificación "
-"sublista __Format_0__ e intente nuevamente"
+"sublista %(sublist_id)d e intente nuevamente"
 
 #: qatrack/qa/admin.py:627
 #, python-format
@@ -3217,7 +3217,7 @@ msgid ""
 "as a sublist."
 msgstr ""
 "Las listas de pruebas no pueden anidarse más de 1 nivel.Lista de prueba (s) "
-"__Format_0__ ya tiene (tener) un sublista y, por lo tanto, no se puede usar "
+"%(test_list_names)s ya tiene (tener) un sublista y, por lo tanto, no se puede usar "
 "como sublista."
 
 #: qatrack/qa/admin.py:634
@@ -3226,7 +3226,7 @@ msgid ""
 "This Test List is a Sublist of Test Lists: %(sublist_name)s and therefore "
 "can't have sublists of its own."
 msgstr ""
-"Esta lista de pruebas es un sublista de listas de pruebas: __Format_0__ y, "
+"Esta lista de pruebas es un sublista de listas de pruebas: %(sublist_name)s y, "
 "por lo tanto, no puede tener sublistas propios."
 
 #: qatrack/qa/admin.py:717 qatrack/qa/admin.py:773
@@ -3284,8 +3284,8 @@ msgid ""
 "for a test that has already been performed. Revert to '%(old_test_type)s' "
 "before saving or create a new test with 'Save as New'."
 msgstr ""
-"No puede cambiar el tipo de prueba de __Format_0__ a __Format_1__ para una "
-"prueba que ya se ha realizado.Vuelva a '__Format_2__' antes de guardar o "
+"No puede cambiar el tipo de prueba de %(old_test_type)s a %(new_test_type)s para una "
+"prueba que ya se ha realizado.Vuelva a '%(old_test_type)s' antes de guardar o "
 "crear una nueva prueba con 'Guardar como nuevo'."
 
 #: qatrack/qa/admin.py:1025
@@ -3346,7 +3346,7 @@ msgstr ""
 #: qatrack/qa/admin.py:1173
 #, python-format
 msgid "Created by %(username)s"
-msgstr "Creado por __Format_0__"
+msgstr "Creado por %(username)s"
 
 #: qatrack/qa/admin.py:1183
 #, python-format
@@ -3426,7 +3426,7 @@ msgid ""
 msgstr ""
 "Para prevenir la pérdida de datos, no puede cambiar la unidad, TestList o "
 "TestListCycle de un UnittestCollection después de haber sido creado.El valor "
-"original era: __format_0__"
+"original era: %(object_id)s"
 
 #: qatrack/qa/admin.py:1373
 #, fuzzy
@@ -4262,7 +4262,7 @@ msgid ""
 "You must set at least one %(tolerance_display)s or %(action_display)s level "
 "for this tolerance type"
 msgstr ""
-"Debe establecer al menos un nivel __Format_0__ o __Format_1__ para este tipo "
+"Debe establecer al menos un nivel %(tolerance_display)s o %(action_display)s para este tipo "
 "de tolerancia"
 
 #: qatrack/qa/models.py:861
@@ -4504,13 +4504,13 @@ msgstr "Pruebas"
 #, python-format
 msgid "%(test_type)s value provided, but Test Type is not %(test_type)s"
 msgstr ""
-"Valor __Format_0__ proporcionado, pero el tipo de prueba no es __Format_1__"
+"Valor %(test_type)s proporcionado, pero el tipo de prueba no es %(test_type)s"
 
 #: qatrack/qa/models.py:1165
 #, python-format
 msgid "Test Type is %(test_type)s but no %(test_type)s value provided"
 msgstr ""
-"El tipo de prueba es __Format_0__ pero no se proporciona valor __Format_1__"
+"El tipo de prueba es %(test_type)s pero no se proporciona valor %(test_type)s"
 
 #: qatrack/qa/models.py:1185
 #, python-format
@@ -4519,13 +4519,13 @@ msgid ""
 "%(test_name)s = my_var/another_var*2 or result = my_var/another_var*2)"
 msgstr ""
 "El fragmento debe establecer el nombre de macro en un valor o contener una "
-"línea de resultados (por ejemplo, __Format_0__ = my_var/otro_var*2 o "
+"línea de resultados (por ejemplo, %(test_name)s = my_var/otro_var*2 o "
 "resultado = my_var/other_var*2)"
 
 #: qatrack/qa/models.py:1204
 #, python-format
 msgid "Calculation procedure invalid: %(err)s"
-msgstr "Procedimiento de cálculo Inválido: __Format_0__"
+msgstr "Procedimiento de cálculo Inválido: %(err)s"
 
 #: qatrack/qa/models.py:1211
 msgid "Constant"
@@ -5095,7 +5095,7 @@ msgstr "Ciclos de listas de pruebas"
 #: qatrack/qa/models.py:2824
 #, python-format
 msgid "Day %(day_number)d"
-msgstr "Día __Format_0__"
+msgstr "Día %(day_number)d"
 
 #: qatrack/qa/models.py:2870 qatrack/templates/admin/qa/testpack/export.html:82
 #: qatrack/templates/admin/qa/testpack/import.html:81
@@ -5438,7 +5438,7 @@ msgstr "Sin conjunto de referencia/tol"
 #: qatrack/qa/templates/qa/history.html:9
 #, python-format
 msgid " %(created_by)s on %(created_on)s "
-msgstr "__Format_0__ en __Format_1__"
+msgstr "%(created_by)s en %(created_on)s"
 
 #: qatrack/qa/templates/qa/history.html:33
 #: qatrack/reports/qc/testlistinstance.py:253
@@ -5532,7 +5532,7 @@ msgstr ""
 #, fuzzy, python-format
 #| msgid "Nothing %(display)s"
 msgid "Nothing %(display_name)s"
-msgstr "Nada __Format_0__"
+msgstr "Nada %(display_name)s"
 
 #: qatrack/qa/templates/qa/pass_fail_status.html:28
 #: qatrack/qa/templates/qa/testlistinstance_review_status.html:36
@@ -5595,8 +5595,8 @@ msgid ""
 "                              from %(work_completed)s?\n"
 "                            "
 msgstr ""
-"¿Estás seguro de que quieres eliminar permanentemente __Format_0__ de "
-"__Format_1__?"
+"¿Estás seguro de que quieres eliminar permanentemente %(test_list_name)s de "
+"%(work_completed)s?"
 
 #: qatrack/qa/templates/qa/testlistinstance_detail.html:35
 #, fuzzy
@@ -5788,7 +5788,7 @@ msgstr "Descripción"
 msgid "Click to view this test list instance performed at %(d)s"
 msgstr ""
 "Haga clic para ver esta instancia de la lista de pruebas realizada en "
-"__Format_0__"
+"%(d)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_detail.html:334
 #: qatrack/qa/templates/qa/testlistinstance_review.html:352
@@ -5838,7 +5838,7 @@ msgid ""
 "Test:\n"
 "                                                "
 msgstr ""
-"¿Estás seguro de que quieres eliminar permanentemente __Format_0__ de "
+"¿Estás seguro de que quieres eliminar permanentemente %(test_name)s de "
 "__Format_1__?"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:15
@@ -5914,7 +5914,7 @@ msgid ""
 "                                "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(test_list_name)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:313
 #: qatrack/qa/templates/qa/testlistinstance_form.html:413
@@ -5948,8 +5948,8 @@ msgid ""
 "%(utc_name)s\n"
 "                                            "
 msgstr ""
-"¿Estás seguro de que quieres eliminar permanentemente __Format_0__ de "
-"__Format_1__?"
+"¿Estás seguro de que quieres eliminar permanentemente %(current_day)s de "
+"%(utc_name)s?"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:457
 #, fuzzy
@@ -5961,7 +5961,7 @@ msgstr "Última carrera"
 #, fuzzy, python-format
 #| msgid "Successfully updated %(test_list_name)s"
 msgid "Day %(last_day)s (%(test_list_name)s)"
-msgstr "Actualizado con éxito __Format_0__"
+msgstr "Actualizado con éxito %(last_day)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:457
 #, fuzzy
@@ -6020,7 +6020,7 @@ msgid ""
 "%(tli_attachments)s\n"
 "                                                                "
 msgstr ""
-"¿Estás seguro de que quieres eliminar permanentemente __Format_0__ de "
+"¿Estás seguro de que quieres eliminar permanentemente %(tli_attachments)s de "
 "__Format_1__?"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:626
@@ -6052,7 +6052,7 @@ msgid ""
 "%(test)s Test: \n"
 "                                                                "
 msgstr ""
-"¿Estás seguro de que quieres eliminar permanentemente __Format_0__ de "
+"¿Estás seguro de que quieres eliminar permanentemente %(test)s de "
 "__Format_1__?"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:771
@@ -6089,7 +6089,7 @@ msgstr "Haga clic para editar los detalles de estos contactos"
 #, fuzzy, python-format
 #| msgid "Started %(datetime_started)s by %(created_by)s"
 msgid "Resume session saved by %(created_by)s"
-msgstr "Iniciado __Format_0__ por __Format_1__"
+msgstr "Iniciado %(created_by)s por __Format_1__"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:897
 #, fuzzy
@@ -6101,7 +6101,7 @@ msgstr "Revisado automático"
 #, fuzzy, python-format
 #| msgid "Started %(datetime_started)s by %(created_by)s"
 msgid "Resume session auto-saved for %(modified_by)s on %(modified)s"
-msgstr "Iniciado __Format_0__ por __Format_1__"
+msgstr "Iniciado %(modified_by)s por %(modified)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_form.html:916
 msgid "Click to log a new fault"
@@ -6224,7 +6224,7 @@ msgstr "Sobresalir"
 msgid ""
 "\n"
 "%(dt)s %(test_list_name)s Details\n"
-msgstr "Actualizado con éxito __Format_0__"
+msgstr "Actualizado con éxito %(dt)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:48
 #, fuzzy, python-format
@@ -6238,7 +6238,7 @@ msgid ""
 "              "
 msgstr ""
 "\n"
-"Cargando __Format_0__: __Format_1__"
+"Cargando %(dt)s: %(test_list_name)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:71
 #: qatrack/reports/qc/testinstance.py:129
@@ -6323,8 +6323,8 @@ msgid ""
 "                        "
 msgstr ""
 "\n"
-"title = \"Haga clic para ver otras instancias de __Format_0__ en "
-"__Format_1__\""
+"title = \"Haga clic para ver otras instancias de %(test_list_name)s en "
+"%(unit_name)s\""
 
 #: qatrack/qa/templates/qa/testlistinstance_review.html:558
 #, fuzzy
@@ -6346,7 +6346,7 @@ msgstr "Imágenes para"
 #, fuzzy, python-format
 #| msgid "Started %(datetime_started)s by %(created_by)s"
 msgid "Started %(work_started)s by %(created_by)s"
-msgstr "Iniciado __Format_0__ por __Format_1__"
+msgstr "Iniciado %(work_started)s por %(created_by)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_review_status.html:8
 #, fuzzy
@@ -6358,25 +6358,25 @@ msgstr "Haga clic para ver esta sesión de control de calidad"
 #, fuzzy, python-format
 #| msgid "Reviewed by %(reviewed_by)s"
 msgid "Started by %(modified_by)s"
-msgstr "Revisado por __Format_0__"
+msgstr "Revisado por %(modified_by)s"
 
 #: qatrack/qa/templates/qa/testlistinstance_work_completed.html:10
 #, fuzzy, python-format
 #| msgid "Created by %(created_by)s, Last modified by %(modified_by)s"
 msgid "Completed by %(created_by)s, Last modified by %(modified_by)s"
-msgstr "Creado por __Format_0__, el último modificado por __Format_1__"
+msgstr "Creado por %(created_by)s, el último modificado por %(modified_by)s"
 
 #: qatrack/qa/templates/qa/unittestcollection_actions.html:6
 #, fuzzy, python-format
 #| msgid "Click to view all %(category_name)s QC for Unit %(unit_name)s"
 msgid "Perform %(utcname)s for Unit %(unitname)s"
-msgstr "Haga clic para ver todo __Format_0__ QC para la unidad __Format_1__"
+msgstr "Haga clic para ver todo %(utcname)s QC para la unidad %(unitname)s"
 
 #: qatrack/qa/templates/qa/unittestcollection_actions.html:12
 #, fuzzy, python-format
 #| msgid "Click to view all %(category_name)s QC for Unit %(unit_name)s"
 msgid "Review historical data for %(utcname)s from Unit %(unitname)s"
-msgstr "Haga clic para ver todo __Format_0__ QC para la unidad __Format_1__"
+msgstr "Haga clic para ver todo %(utcname)s QC para la unidad %(unitname)s"
 
 #: qatrack/qa/templates/qa/unittestcollection_backup.html:6
 msgid "Paper Backup Forms"
@@ -6414,12 +6414,12 @@ msgstr "Página de selección de revisión de regreso a la unidad"
 #: qatrack/qa/trees.py:45
 #, python-brace-format
 msgid "Click to browse QC at Site {site}"
-msgstr "Haga clic para explorar QC en el sitio __Format_0__"
+msgstr "Haga clic para explorar QC en el sitio {site}"
 
 #: qatrack/qa/trees.py:52
 #, python-brace-format
 msgid "Click to perform QC on Unit #{unit_number}: {unit}"
-msgstr "Haga clic para realizar QC en la unidad #__ Format_0__: __Format_1__"
+msgstr "Haga clic para realizar QC en la unidad #{unit_number}: {unit}"
 
 #: qatrack/qa/trees.py:57
 msgid "Unclassified"
@@ -6429,12 +6429,12 @@ msgstr "No clasificado"
 #, fuzzy, python-brace-format
 #| msgid "Click to peform {frequency} QC on Unit {unit}"
 msgid "Click to perform {frequency} QC on Unit {unit}"
-msgstr "Haga clic para realizar __Format__ QC en la unidad __Format__"
+msgstr "Haga clic para realizar {frequency} QC en la unidad {unit}"
 
 #: qatrack/qa/trees.py:72
 #, python-brace-format
 msgid "Click to peform {tests_collection} on Unit {unit}"
-msgstr "Haga clic para realizar __Format__ en la unidad __format__"
+msgstr "Haga clic para realizar {tests_collection} en la unidad {unit}"
 
 #: qatrack/qa/trees.py:205
 msgid "QC by Unit, Frequency, & Category"
@@ -6447,7 +6447,7 @@ msgstr "No hay categorías definidas"
 #: qatrack/qa/trees.py:271
 #, python-brace-format
 msgid "Click to peform {category} QC on {unit}"
-msgstr "Haga clic para realizar __Format__ QC en __Format__"
+msgstr "Haga clic para realizar {category} QC en {unit}"
 
 #: qatrack/qa/trees.py:315
 msgid "QC by Unit & Frequency"
@@ -6481,7 +6481,7 @@ msgstr ""
 #, python-format
 msgid "Test Pack import successfully: %(item_counts)s were imported."
 msgstr ""
-"Importación de paquete de prueba correctamente: __Format_0__ fueron "
+"Importación de paquete de prueba correctamente: %(item_counts)s fueron "
 "importados."
 
 #: qatrack/qa/views/admin.py:266
@@ -6537,13 +6537,13 @@ msgstr "Agregue el comentario al omitir"
 #: qatrack/qa/views/forms.py:105
 #, python-format
 msgid "Actual value = %(constant_value)s"
-msgstr "Valor real = __format_0__"
+msgstr "Valor real = %(constant_value)s"
 
 #: qatrack/qa/views/forms.py:164
 #, python-brace-format
 msgid "Value for this test must be in range {low} to {high}"
 msgstr ""
-"El valor para esta prueba debe estar en el rango __Format_0__ a __Format_1__"
+"El valor para esta prueba debe estar en el rango {low} a {high}"
 
 #: qatrack/qa/views/forms.py:179
 msgid "Show or hide comment field"
@@ -6588,19 +6588,19 @@ msgstr "Probar con esa identificación no existe"
 #: qatrack/qa/views/perform.py:392 qatrack/qa/views/perform.py:536
 #, python-format
 msgid "Test: %(test_name)s"
-msgstr "Prueba: __Format_0__"
+msgstr "Prueba: %(test_name)s"
 
 #: qatrack/qa/views/perform.py:393 qatrack/qa/views/perform.py:537
 #: qatrack/qa/views/perform.py:704
 #, python-format
 msgid "Invalid Test Procedure: %(traceback)s"
-msgstr "Procedimiento de prueba no válido: __Format_0__"
+msgstr "Procedimiento de prueba no válido: %(traceback)s"
 
 #: qatrack/qa/views/perform.py:400 qatrack/qa/views/perform.py:544
 #: qatrack/qa/views/perform.py:1291 qatrack/qa/views/perform.py:1555
 #, python-format
 msgid "Uploaded %(current_datetime)s by %(username)s"
-msgstr "Cargado __Format_0__ por __Format_1__"
+msgstr "Cargado %(current_datetime)s por %(username)s"
 
 #: qatrack/qa/views/perform.py:467 qatrack/qa/views/perform.py:630
 msgid "Invalid or missing test_list_id"
@@ -6625,12 +6625,12 @@ msgstr "Dependencia de la prueba cíclica"
 #: qatrack/qa/views/perform.py:671
 #, python-format
 msgid "%(test)s has a result of '%(test_result)s'"
-msgstr "__Format_0__ tiene un resultado de '__Format_1__'"
+msgstr "%(test)s tiene un resultado de '%(test_result)s'"
 
 #: qatrack/qa/views/perform.py:685
 #, python-format
 msgid "%(test)s failed with error: %(error)s."
-msgstr "__Format_0__ falló con error: __Format_1__."
+msgstr "%(test)s falló con error: %(error)s."
 
 #: qatrack/qa/views/perform.py:1141 qatrack/qa/views/perform.py:1165
 msgid ""
@@ -6647,12 +6647,12 @@ msgid ""
 "Changed status of service event(s) %(service_event_ids)s to "
 "\"%(serviceeventstatus_name)s\"."
 msgstr ""
-"Estado cambiado de eventos de servicio __Format_0__ a \"__Format_1__\"."
+"Estado cambiado de eventos de servicio %(service_event_ids)s a \"%(serviceeventstatus_name)s\"."
 
 #: qatrack/qa/views/perform.py:1281
 #, python-format
 msgid "Successfully submitted %(test_list_name)s "
-msgstr "Enviado con éxito __Format_0__"
+msgstr "Enviado con éxito %(test_list_name)s"
 
 #: qatrack/qa/views/perform.py:1314
 msgid ""
@@ -6668,7 +6668,7 @@ msgstr "Error al enviar un correo electrónico de notificación."
 #: qatrack/qa/views/perform.py:1517
 #, python-format
 msgid "Successfully submitted %(test_list_name)s"
-msgstr "Enviado con éxito __Format_0__"
+msgstr "Enviado con éxito %(test_list_name)s"
 
 #: qatrack/qa/views/perform.py:1595
 #, python-format
@@ -6677,7 +6677,7 @@ msgid ""
 "was %(test_instance_value)s"
 msgstr ""
 "Intenté calcular la diferencia porcentual con un valor de referencia cero.El "
-"valor original era __format__"
+"valor original era %(test_instance_value)s"
 
 #: qatrack/qa/views/perform.py:1604
 #, python-format
@@ -6686,7 +6686,7 @@ msgid ""
 "UTI=%(unit_test_info_id)d"
 msgstr ""
 "Intenté calcular la diferencia porcentual con un valor de referencia "
-"cero.Uti = __ format__"
+"cero.Uti = %(unit_test_info_id)d"
 
 #: qatrack/qa/views/perform.py:1608
 #, python-format
@@ -6694,7 +6694,7 @@ msgid ""
 "Please call physics. Test %(test_name)s is configured incorrectly on this "
 "unit. Tried to calculate percent diff with a zero reference value."
 msgstr ""
-"Llame a la física.La prueba __Format_0__ está configurada incorrectamente en "
+"Llame a la física.La prueba %(test_name)s está configurada incorrectamente en "
 "esta unidad.Intenté calcular el porcentaje de DIFF con un valor de "
 "referencia cero."
 
@@ -6709,7 +6709,7 @@ msgstr "A propósito"
 #: qatrack/qa/views/perform.py:1796
 #, python-format
 msgid "%(frequency_names)s Test Lists"
-msgstr "__Format_0__ Listas de pruebas"
+msgstr "%(frequency_names)s Listas de pruebas"
 
 #: qatrack/qa/views/perform.py:1821
 #, fuzzy
@@ -6720,29 +6720,29 @@ msgstr "Debido y vencido"
 #: qatrack/qa/views/perform.py:1898
 #, python-format
 msgid "Test Lists for Categories: %(category_names)s"
-msgstr "Listas de prueba para categorías: __Format_0__"
+msgstr "Listas de prueba para categorías: %(category_names)s"
 
 #: qatrack/qa/views/perform.py:1917
 #, python-format
 msgid "Test Lists for Units: %(unit_names)s and Categories: %(category_names)s"
 msgstr ""
-"Listas de prueba para unidades: __Format_0__ y categorías: __Format_1__"
+"Listas de prueba para unidades: %(unit_names)s y categorías: %(category_names)s"
 
 #: qatrack/qa/views/perform.py:1934
 #, fuzzy, python-format
 #| msgid "%(site_names)s Test Lists"
 msgid "%(unit_names)s Test Lists"
-msgstr "__Format_0__ Listas de pruebas"
+msgstr "%(unit_names)s Listas de pruebas"
 
 #: qatrack/qa/views/perform.py:1960
 #, python-format
 msgid "%(site_names)s Test Lists"
-msgstr "__Format_0__ Listas de pruebas"
+msgstr "%(site_names)s Listas de pruebas"
 
 #: qatrack/qa/views/review.py:156
 #, python-format
 msgid "Successfully updated %(test_list_name)s"
-msgstr "Actualizado con éxito __Format_0__"
+msgstr "Actualizado con éxito %(test_list_name)s"
 
 #: qatrack/qa/views/review.py:273
 msgid "Review Test List Data"
@@ -6755,12 +6755,12 @@ msgstr "Revise los datos de su lista de pruebas"
 #: qatrack/qa/views/review.py:313
 #, python-format
 msgid " Review %(frequency_names)s Test Lists"
-msgstr "Revisar las listas de pruebas __Format_0__"
+msgstr "Revisar las listas de pruebas %(frequency_names)s"
 
 #: qatrack/qa/views/review.py:331
 #, python-format
 msgid " Review %(unit_names)s Test Lists"
-msgstr "Revisar las listas de pruebas __Format_0__"
+msgstr "Revisar las listas de pruebas %(unit_names)s"
 
 #: qatrack/qa/views/review.py:356
 msgid "Review All Inactive Test Lists"
@@ -6796,7 +6796,7 @@ msgstr "Instancias de la lista de pruebas no revisadas"
 #: qatrack/qa/views/review.py:474
 #, python-format
 msgid "Successfully reviewed %(count)s test list instances"
-msgstr "Revisado con éxito __Format_0__ Instancias de la lista de pruebas"
+msgstr "Revisado con éxito %(count)s Instancias de la lista de pruebas"
 
 #: qatrack/qa/views/review.py:489
 msgid "Unreviewed Test List Instances Visible To Your Groups"
@@ -6805,7 +6805,7 @@ msgstr "Instancias de lista de pruebas no revisadas visibles para sus grupos"
 #: qatrack/qa/views/review.py:513
 #, python-format
 msgid "Unreviewed Test List Instances Visible To %(group_name)s"
-msgstr "Instancias de lista de pruebas no revisadas visibles para __Format_0__"
+msgstr "Instancias de lista de pruebas no revisadas visibles para %(group_name)s"
 
 #: qatrack/qa/views/review.py:526 qatrack/service_log/views.py:1880
 #: qatrack/templates/site_base.html:199 qatrack/templates/site_base.html:517
@@ -6845,7 +6845,7 @@ msgstr ""
 #: qatrack/qa/views/review.py:727
 #, python-format
 msgid "History for %(unit_name)s :: %(unit_test_collection_name)s"
-msgstr "Historia para __Format_0__ :: __Format_1__"
+msgstr "Historia para %(unit_name)s :: %(unit_test_collection_name)s"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:81
 #, fuzzy, python-format
@@ -6870,27 +6870,27 @@ msgstr[1] ""
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:186
 #, python-format
 msgid "%s KB"
-msgstr "__Format_0__ KB"
+msgstr "%s KB"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:188
 #, python-format
 msgid "%s MB"
-msgstr "__Format_0__ MB"
+msgstr "%s MB"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:190
 #, python-format
 msgid "%s GB"
-msgstr "__Format_0__ GB"
+msgstr "%s GB"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:192
 #, python-format
 msgid "%s TB"
-msgstr "__Format_0__ TB"
+msgstr "%s TB"
 
 #: qatrack/qatrack_core/templatetags/qatrack_tags.py:194
 #, python-format
 msgid "%s PB"
-msgstr "__Format_0__ PB"
+msgstr "%s PB"
 
 #: qatrack/qatrack_core/views.py:54
 msgid "Missing content_type or object_pk field."
@@ -6899,14 +6899,14 @@ msgstr "Falta del campo content_type u object_pk."
 #: qatrack/qatrack_core/views.py:61
 #, python-format
 msgid "Invalid content_type value: %(content_type)r"
-msgstr "Valor no válido de contenido_type: __Format_0__"
+msgstr "Valor no válido de contenido_type: %(content_type)r"
 
 #: qatrack/qatrack_core/views.py:72
 #, python-format
 msgid ""
 "The given content-type %(content_type)r does not resolve to a valid model."
 msgstr ""
-"El tipo de contenido dado __Format_0__ no se resuelve a un modelo válido."
+"El tipo de contenido dado %(content_type)r no se resuelve a un modelo válido."
 
 #: qatrack/qatrack_core/views.py:84
 #, python-format
@@ -6914,8 +6914,8 @@ msgid ""
 "No object matching content-type %(content_type)r and object PK %(object_id)r "
 "exists."
 msgstr ""
-"No existe un objeto que coincida con contenido __Format_0__ y el objeto PK "
-"__Format_1__."
+"No existe un objeto que coincida con contenido %(content_type)r y el objeto PK "
+"%(object_id)r."
 
 #: qatrack/qatrack_core/views.py:98
 #, python-format
@@ -6933,7 +6933,7 @@ msgstr "La presentación de comentarios falló"
 #: qatrack/qatrack_core/views.py:156
 #, python-format
 msgid "comment_will_be_posted receiver %(receiver_name)r killed the comment"
-msgstr "comment_will_be_posted receptor __format_0__ mató el comentario"
+msgstr "comment_will_be_posted receptor %(receiver_name)r mató el comentario"
 
 #: qatrack/qatrack_core/views.py:196
 msgid "Bad Request"
@@ -7470,8 +7470,8 @@ msgid ""
 "Test List Assignments.  Your filters are including %(num_unit_assignments)d. "
 "Please reduce the number of Sites, Units, Frequencies, or Assigned To Groups."
 msgstr ""
-"Este informe solo se puede generar con __Format_0__ o menos asignaciones de "
-"la lista de pruebas.Sus filtros incluyen __Format_1__.Reduzca el número de "
+"Este informe solo se puede generar con %(max_num_unit_assignments)d o menos asignaciones de "
+"la lista de pruebas.Sus filtros incluyen %(num_unit_assignments)d.Reduzca el número de "
 "sitios, unidades, frecuencias o asignados a grupos."
 
 #: qatrack/reports/qc/assigned_qc.py:265
@@ -7560,8 +7560,8 @@ msgid ""
 "Test Instances.  Your filters are including %(num_test_instances)d. Please "
 "reduce the number of Tests, Sites, Units, or Work Completed time period."
 msgstr ""
-"Este informe solo se puede generar con __Format_0__ o menos instancias de "
-"prueba.Sus filtros incluyen __Format_1__.Reduzca el número de pruebas, "
+"Este informe solo se puede generar con %(max_num_test_instances)d o menos instancias de "
+"prueba.Sus filtros incluyen %(num_test_instances)d.Reduzca el número de pruebas, "
 "sitios, unidades o un período de tiempo de trabajo completado."
 
 #: qatrack/reports/qc/testinstance.py:53
@@ -7574,7 +7574,7 @@ msgid ""
 "Sorry, '{organization}' is not supported for Preview or PDF reports. Switch "
 "to Excel or CSV format, or use 'One Test Instance Per Row'"
 msgstr ""
-"Lo sentimos, '__Format_0__' no es compatible con la vista previa o los "
+"Lo sentimos, '{organization}' no es compatible con la vista previa o los "
 "informes PDF.Cambie a formato de Excel o CSV, o use 'una instancia de prueba "
 "por fila'"
 
@@ -7978,7 +7978,7 @@ msgid ""
 "                    "
 msgstr ""
 "\n"
-"Evento de servicio #__ Format_0__"
+"Evento de servicio #%(service_event_id)s"
 
 #: qatrack/reports/templates/reports/faults/details.html:78
 #: qatrack/reports/templates/reports/service_log/details.html:112
@@ -8151,7 +8151,7 @@ msgstr "Horario de actualización"
 #: qatrack/reports/templates/reports/service_log/details.html:13
 #, python-format
 msgid "Service Event #%(service_event_id)s"
-msgstr "Evento de servicio #__ Format_0__"
+msgstr "Evento de servicio #%(service_event_id)s"
 
 #: qatrack/reports/templates/reports/service_log/details.html:30
 #: qatrack/reports/templates/reports/service_log/summary.html:32
@@ -8287,7 +8287,7 @@ msgid ""
 msgstr ""
 "Para evitar la pérdida de datos, no puede cambiar el área de servicio de la "
 "unidad o la plantilla de evento de servicio de un servicio de servicio de "
-"servicio después de haber sido creado.El valor original era: __format_0__"
+"servicio después de haber sido creado.El valor original era: %(object_id)s"
 
 #: qatrack/service_log/admin.py:455
 #, fuzzy
@@ -8943,8 +8943,8 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"__Format_0__ Cambio de retorno al servicio requerido para el evento de "
-"servicio __Format_1__"
+"%(user)s Cambio de retorno al servicio requerido para el evento de "
+"servicio %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/log_rtsqa.html:19
 msgid "deleted"
@@ -8976,7 +8976,7 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"__Format_0__ Evento de servicio eliminado __Format_1__"
+"%(user)s Evento de servicio eliminado %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/log_service_event_deleted.html:24
 msgid "Reason"
@@ -8990,7 +8990,7 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"__Format_0__ Evento de servicio modificado __Format_1__"
+"%(username)s Evento de servicio modificado %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/log_service_event_modified.html:24
 #: qatrack/service_log/templates/service_log/log_service_event_status.html:30
@@ -9025,7 +9025,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"__Format_0__ Evento de servicio creado __Format_1__"
+"%(user)s Evento de servicio creado %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/log_service_event_status.html:19
 #, python-format
@@ -9036,8 +9036,8 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"__Format_0__ Cambiado de estado del evento de servicio __Format_1__ de "
-"__Format_2__ a __Format_3__"
+"%(user)s Cambiado de estado del evento de servicio %(service_event_id)s de "
+"%(old_status_tag)s a %(new_status_tag)s"
 
 #: qatrack/service_log/templates/service_log/log_service_event_status.html:26
 msgid "Other changes made"
@@ -9076,7 +9076,7 @@ msgstr "Ver qué eventos de servicio programados deben vencer o vencer pronto"
 #: qatrack/service_log/templates/service_log/overview_by_due_date.html:184
 #, python-format
 msgid "Nothing %(display)s"
-msgstr "Nada __Format_0__"
+msgstr "Nada %(display)s"
 
 #: qatrack/service_log/templates/service_log/service_event_delete.html:34
 #, python-format
@@ -9086,7 +9086,7 @@ msgid ""
 "          "
 msgstr ""
 "\n"
-"Eliminar evento de servicio __Format_0__"
+"Eliminar evento de servicio %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:30
 #, python-format
@@ -9096,7 +9096,7 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"Evento de servicio __Format_0__ Detalles"
+"Evento de servicio %(service_event_id)s Detalles"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:46
 #, python-format
@@ -9106,7 +9106,7 @@ msgid ""
 "                "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(username)s"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:60
 #, python-format
@@ -9116,7 +9116,7 @@ msgid ""
 "                  "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(username)s"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:71
 #: qatrack/service_log/templates/service_log/service_event_update.html:123
@@ -9131,7 +9131,7 @@ msgid ""
 "                    "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(username)s"
 
 #: qatrack/service_log/templates/service_log/service_event_detail.html:80
 msgid "by System"
@@ -9246,7 +9246,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"Registro de servicio para el evento de servicio __Format_0__"
+"Registro de servicio para el evento de servicio %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/service_event_down_time.html:41
 msgid "For Service Events Filtered Below..."
@@ -9281,7 +9281,7 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"Editar evento de servicio #__ Format_0__"
+"Editar evento de servicio #%(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:17
 #: qatrack/templates/site_base.html:455
@@ -9300,7 +9300,7 @@ msgid ""
 "              "
 msgstr ""
 "\n"
-"Editar evento de servicio __Format_0__"
+"Editar evento de servicio %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:69
 #, python-format
@@ -9310,7 +9310,7 @@ msgid ""
 "              "
 msgstr ""
 "\n"
-"Crear evento de servicio a partir de la plantilla \"__Format_0__\""
+"Crear evento de servicio a partir de la plantilla \"%(template_name)s\""
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:73
 #: qatrack/service_log/templates/service_log/table_context/table_context_set_actions.html:10
@@ -9325,7 +9325,7 @@ msgid ""
 "                      "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(username)s"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:128
 #, python-format
@@ -9335,7 +9335,7 @@ msgid ""
 "                        "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(username)s"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:132
 msgid "System"
@@ -9397,7 +9397,7 @@ msgid ""
 "                "
 msgstr ""
 "\n"
-"Registro de servicio para el evento de servicio __Format_0__"
+"Registro de servicio para el evento de servicio %(service_event_id)s"
 
 #: qatrack/service_log/templates/service_log/service_event_update.html:764
 msgid "Click to choose the performed return to service test list instance"
@@ -9443,7 +9443,7 @@ msgid ""
 "          "
 msgstr ""
 "\n"
-"Cargando __Format_0__: __Format_1__"
+"Cargando %(unit_name)s: %(test_list_name)s"
 
 #: qatrack/service_log/templates/service_log/table_context/se_schedule_actions.html:8
 msgid "Click to perform this Service Event"
@@ -9476,12 +9476,12 @@ msgstr "Editar esta plantilla"
 #: qatrack/service_log/templates/service_log/table_context/table_context_tli_work_completed.html:4
 #, python-format
 msgid "Started %(datetime_started)s by %(created_by)s"
-msgstr "Iniciado __Format_0__ por __Format_1__"
+msgstr "Iniciado %(datetime_started)s por %(created_by)s"
 
 #: qatrack/service_log/views.py:240
 #, python-format
 msgid "No %(verbose_name)s found matching the query"
-msgstr "No __Format_0__ encontrado coincidiendo con la consulta"
+msgstr "No %(verbose_name)s encontrado coincidiendo con la consulta"
 
 #: qatrack/service_log/views.py:410
 msgid "Please correct the Service Event Details error below."
@@ -9491,8 +9491,8 @@ msgstr "Corrija el error de detalles del evento del servicio a continuación."
 #, python-format
 msgid "Due to changes detected, service event %s status has been reset to %s"
 msgstr ""
-"Debido a los cambios detectados, el estado de servicio __Format_0__ se ha "
-"restablecido a __Format_1__"
+"Debido a los cambios detectados, el estado de servicio %s se ha "
+"restablecido a %s"
 
 #: qatrack/service_log/views.py:451
 msgid "Please correct the Parts error below."
@@ -9666,7 +9666,7 @@ msgstr[1] ""
 #: qatrack/templates/admin/change_list.html:62
 #, python-format
 msgid "Add %(name)s"
-msgstr "Agregar __Format_0__"
+msgstr "Agregar %(name)s"
 
 #: qatrack/templates/admin/change_list.html:97
 msgid "Filter"
@@ -9714,7 +9714,7 @@ msgid ""
 "related objects, but your account doesn't have permission to delete the "
 "following types of objects:"
 msgstr ""
-"Eliminar el __Format_0__ '__Format_1__' resultaría en eliminar objetos "
+"Eliminar el %(object_name)s '%(escaped_object)s' resultaría en eliminar objetos "
 "relacionados, pero su cuenta no tiene permiso para eliminar los siguientes "
 "tipos de objetos:"
 
@@ -9724,7 +9724,7 @@ msgid ""
 "Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
 "following protected related objects:"
 msgstr ""
-"Eliminar el __Format_0__ '__Format_1__' requeriría eliminar los siguientes "
+"Eliminar el %(object_name)s '%(escaped_object)s' requeriría eliminar los siguientes "
 "objetos relacionados protegidos:"
 
 #: qatrack/templates/admin/qa/testlistinstance/delete_confirmation.html:82
@@ -9734,7 +9734,7 @@ msgstr "Yes, I'm sure"
 #: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:117
 #, python-format
 msgid "Add another %(verbose_name)s"
-msgstr "Agregue otro __Format_0__"
+msgstr "Agregue otro %(verbose_name)s"
 
 #: qatrack/templates/admin/qa/testlistmembership/edit_inline/tabular.html:120
 msgid "Remove"
@@ -10043,7 +10043,7 @@ msgid ""
 "                      "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(execution_time)s"
 
 #: qatrack/templates/explorer/preview_pane.html:37
 #, python-format
@@ -10073,7 +10073,7 @@ msgstr "Conjunto de resultados vacío"
 #, fuzzy, python-format
 #| msgid "%(snapshots_length)s Snapshots (oldest first)"
 msgid "%(snapshots_length)s Snapshots <small>(oldest first)</small>"
-msgstr "__Format_0__ Instantáneas (más antigua primero)"
+msgstr "%(snapshots_length)s Instantáneas (más antigua primero)"
 
 #: qatrack/templates/explorer/preview_pane.html:125
 msgid "Export to CSV"
@@ -10109,7 +10109,7 @@ msgid ""
 "              "
 msgstr ""
 "\n"
-"Promedio.Ejecución: __Format__.Consulta creada por __Format__ en __Format__."
+"Promedio.Ejecución: %(query_avg_duration)s.Consulta creada por %(created_by_user_email)s en %(created_time)s."
 
 #: qatrack/templates/explorer/query_confirm_delete.html:10
 #, python-format
@@ -10138,7 +10138,7 @@ msgid ""
 "      "
 msgstr ""
 "\n"
-"Tu __Format_0__ se ejecuta más recientemente"
+"Tu %(recent_queries_length)s se ejecuta más recientemente"
 
 #: qatrack/templates/explorer/query_list.html:26
 #: qatrack/templates/explorer/query_list.html:57
@@ -10169,7 +10169,7 @@ msgid ""
 "                    "
 msgstr ""
 "\n"
-"por __Format_0__"
+"por %(created_by_user)s"
 
 #: qatrack/templates/explorer/querylog_list.html:4
 msgid "SQL Query History"
@@ -10183,7 +10183,7 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"Registros de consultas recientes - Página __Format_0__"
+"Registros de consultas recientes - Página %(page_num)s"
 
 #: qatrack/templates/explorer/querylog_list.html:24
 msgid "Run At"
@@ -10205,7 +10205,7 @@ msgid ""
 "          "
 msgstr ""
 "\n"
-"Página __Format_0__ de __Format_1__."
+"Página %(page_num)s de %(total_pages)s."
 
 #: qatrack/templates/explorer/schema.html:23
 msgid "Schema"
@@ -10262,7 +10262,7 @@ msgstr "Continuar una instancia de lista de pruebas en progreso"
 #: qatrack/templates/homepage.html:40
 #, python-format
 msgid "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress"
-msgstr "Actualmente hay __Format_0__ Sesiones de QC guardadas en progreso"
+msgstr "Actualmente hay %(USERS_IN_PROGRESS)s Sesiones de QC guardadas en progreso"
 
 #: qatrack/templates/homepage.html:51
 msgid "Loading QC Unit & Frequency Tree"
@@ -10320,7 +10320,8 @@ msgid ""
 "There are currently {{ SE_NEEDING_REVIEW_COUNT }} service events needing "
 "review"
 msgstr ""
-"Actualmente hay __format_0__} eventos de servicio que necesitan revisión"
+"Actualmente hay {{ SE_NEEDING_REVIEW_COUNT }} eventos de servicio que "
+"necesitan revisión"
 
 #: qatrack/templates/homepage.html:142
 msgid "View all incomplete RTS QC"
@@ -10336,8 +10337,8 @@ msgid ""
 "There are currently {{ SE_RTS_INCOMPLETE_QA_COUNT }} incomplete return to "
 "service test lists"
 msgstr ""
-"Actualmente hay __Format_0__} de regreso incompleto a las listas de pruebas "
-"de servicio"
+"Actualmente hay {{ SE_RTS_INCOMPLETE_QA_COUNT }} de regreso incompleto a las "
+"listas de pruebas de servicio"
 
 #: qatrack/templates/homepage.html:155
 msgid "View unreviewed RTS QC"
@@ -10352,8 +10353,8 @@ msgid ""
 "There are currently {{ SE_RTS_UNREVIEWED_QA_COUNT }} unreviewed return to "
 "service sessions"
 msgstr ""
-"Actualmente hay __Format_0__} no revisada de retorno a las sesiones de "
-"servicio"
+"Actualmente hay {{ SE_RTS_UNREVIEWED_QA_COUNT }} no revisada de retorno a "
+"las sesiones de servicio"
 
 #: qatrack/templates/registration/_terms.html:5
 #, fuzzy, python-format
@@ -10414,7 +10415,7 @@ msgstr "Nota"
 #: qatrack/templates/registration/registration_form.html:36
 #, python-format
 msgid "you are already logged in as %(user)s."
-msgstr "Ya ha iniciado sesión como __Format_0__."
+msgstr "Ya ha iniciado sesión como %(user)s."
 
 #: qatrack/templates/registration/login.html:48
 msgid "Login Type"
@@ -10547,7 +10548,7 @@ msgid ""
 "user account at %(site_name)s."
 msgstr ""
 "Está recibiendo este correo electrónico porque solicitó un restablecimiento "
-"de contraseña para su cuenta de usuario en __Format_0__."
+"de contraseña para su cuenta de usuario en %(site_name)s."
 
 #: qatrack/templates/registration/password_reset_email.txt:4
 msgid "Please go to the following page and choose a new password:"
@@ -10588,7 +10589,7 @@ msgstr ""
 "contraseña.Haga clic en el enlace a continuación para restablecer su "
 "contraseña.\n"
 "\n"
-"http: // __ format_0____format_1__\n"
+"http: // %(domain)s%(password_reset_url)s\n"
 "\n"
 "¡Gracias por usar nuestro sitio!\n"
 
@@ -10610,9 +10611,9 @@ msgstr ""
 "de contraseña\n"
 "para su cuenta de usuario.\n"
 "\n"
-"Su nueva contraseña es: __Format_0__\n"
+"Su nueva contraseña es: %(new_password)s\n"
 "\n"
-"Su nombre de usuario, en caso de que lo hayas olvidado: __Format_1__\n"
+"Su nombre de usuario, en caso de que lo hayas olvidado: %(username)s\n"
 "\n"
 "Debe iniciar sesión lo antes posible y cambiar su contraseña.\n"
 "\n"
@@ -10660,9 +10661,9 @@ msgid ""
 "within a few minutes, contact us at <a href=\"mailto:"
 "%(CONTACT_EMAIL)s\">%(CONTACT_EMAIL)s</a>."
 msgstr ""
-"Le hemos enviado un correo electrónico a __Format_0__ para su "
+"Le hemos enviado un correo electrónico a %(email)s para su "
 "verificación.Siga el enlace proporcionado para finalizar el proceso de "
-"registro.Si no lo recibe en unos minutos, contáctenos en __Format_1__."
+"registro.Si no lo recibe en unos minutos, contáctenos en %(CONTACT_EMAIL)s."
 
 #: qatrack/templates/registration/verification_sent.html:11
 msgid "Go back"
@@ -10710,7 +10711,7 @@ msgid ""
 "There are currently %(USERS_IN_PROGRESS)s QC Sessions saved in progress for "
 "your groups"
 msgstr ""
-"Actualmente hay __format_0__ sesiones de control de calidad guardadas en "
+"Actualmente hay %(USERS_IN_PROGRESS)s sesiones de control de calidad guardadas en "
 "progreso para sus grupos"
 
 #: qatrack/templates/site_base.html:212
@@ -10740,13 +10741,13 @@ msgstr "Toda la devolución incompleta al servicio"
 #: qatrack/templates/site_base.html:256
 #, python-format
 msgid "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed"
-msgstr "Actualmente hay __Format_0__ Sesiones de QC esperando ser revisadas"
+msgstr "Actualmente hay %(UNREVIEWED)s Sesiones de QC esperando ser revisadas"
 
 #: qatrack/templates/site_base.html:263
 #, python-format
 msgid ""
 "There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed"
-msgstr "Actualmente hay __Format_0__ Sesiones de QC esperando ser revisadas"
+msgstr "Actualmente hay %(USERS_UNREVIEWED)s Sesiones de QC esperando ser revisadas"
 
 #: qatrack/templates/site_base.html:276
 msgid "QA Program Status"
@@ -10796,7 +10797,7 @@ msgstr "Sesiones de CC"
 #: qatrack/templates/site_base.html:320 qatrack/templates/site_base.html:322
 #, python-format
 msgid "There are currently %(UNREVIEWED)s QC Sessions waiting to be reviewed "
-msgstr "Actualmente hay __Format_0__ Sesiones de QC esperando ser revisadas"
+msgstr "Actualmente hay %(UNREVIEWED)s Sesiones de QC esperando ser revisadas"
 
 #: qatrack/templates/site_base.html:325
 msgid "Unreviewed - All Groups"
@@ -10808,7 +10809,7 @@ msgid ""
 "There are currently %(USERS_UNREVIEWED)s QC Sessions waiting to be reviewed "
 "(QC for groups you belong to)"
 msgstr ""
-"Actualmente hay __Format_0__ Sesiones de CC esperando ser revisadas (QC para "
+"Actualmente hay %(USERS_UNREVIEWED)s Sesiones de CC esperando ser revisadas (QC para "
 "grupos a los que pertenece)"
 
 #: qatrack/templates/site_base.html:333
@@ -10817,7 +10818,7 @@ msgid ""
 "There are currently %(USERS_UNREVIEWED)s QC Sessions visible to your groups "
 "waiting to be reviewed"
 msgstr ""
-"Actualmente hay __format_0__ sesiones de control de calidad visibles para "
+"Actualmente hay %(USERS_UNREVIEWED)s sesiones de control de calidad visibles para "
 "sus grupos esperando ser revisados"
 
 #: qatrack/templates/site_base.html:345 qatrack/templates/site_base.html:574
@@ -10826,7 +10827,7 @@ msgid ""
 "There are currently %(SE_RTS_UNREVIEWED_QA_COUNT)s unreviewed return to "
 "service sessions"
 msgstr ""
-"Actualmente hay __Format_0__ Return no revisado a las sesiones de servicio"
+"Actualmente hay %(SE_RTS_UNREVIEWED_QA_COUNT)s Return no revisado a las sesiones de servicio"
 
 #: qatrack/templates/site_base.html:350 qatrack/templates/site_base.html:577
 msgid "Unreviewed Return To Service"
@@ -10889,7 +10890,7 @@ msgstr "Las listas de pruebas inactivas de sus grupos"
 #, python-format
 msgid "There are currently %(SL_NOTIFICATION_TOTAL)s Service Log Action Items "
 msgstr ""
-"Actualmente hay __format_0__ elementos de acción de registro de servicio"
+"Actualmente hay %(SL_NOTIFICATION_TOTAL)s elementos de acción de registro de servicio"
 
 #: qatrack/templates/site_base.html:437
 msgid "Service Log dashboard"
@@ -10918,7 +10919,7 @@ msgstr "Ver todos los eventos de servicio"
 #: qatrack/templates/site_base.html:478
 #, python-format
 msgid "View service events that are %(service_event_status)s"
-msgstr "Ver eventos de servicio que son __Format_0__"
+msgstr "Ver eventos de servicio que son %(service_event_status)s"
 
 #: qatrack/templates/site_base.html:490
 msgid "View service events that require review"
@@ -10929,7 +10930,7 @@ msgstr "Ver eventos de servicio que requieren revisión"
 msgid ""
 "There are currently %(SE_NEEDING_REVIEW_COUNT)s service events needing review"
 msgstr ""
-"Actualmente hay __format_0__ eventos de servicio que necesitan revisión"
+"Actualmente hay %(SE_NEEDING_REVIEW_COUNT)s eventos de servicio que necesitan revisión"
 
 #: qatrack/templates/site_base.html:504 qatrack/templates/site_base.html:512
 msgid "Service Event Schedules"
@@ -10972,7 +10973,7 @@ msgid ""
 "There are currently %(SE_RTS_INCOMPLETE_QA_COUNT)s unreviewed return to "
 "service sessions"
 msgstr ""
-"Actualmente hay __Format_0__ Return no revisado a las sesiones de servicio"
+"Actualmente hay %(SE_RTS_INCOMPLETE_QA_COUNT)s Return no revisado a las sesiones de servicio"
 
 #: qatrack/templates/site_base.html:565
 msgid "View All Incomplete Return To Service"
@@ -11009,7 +11010,7 @@ msgstr "Registro de fallas"
 #: qatrack/templates/site_base.html:639
 #, python-format
 msgid "There are currently %(FAULTS_UNREVIEWED)s Unreviewed Faults"
-msgstr "Actualmente hay __Format_0__ fallas no revisadas"
+msgstr "Actualmente hay %(FAULTS_UNREVIEWED)s fallas no revisadas"
 
 #: qatrack/templates/site_base.html:650 qatrack/templates/site_base.html:656
 msgid "Choose a specfic Unit To View Faults For"
@@ -11027,7 +11028,7 @@ msgstr "Ingrese una nueva falla"
 #, python-format
 msgid ""
 "There are currently %(FAULTS_UNREVIEWED)s faults waiting to be reviewed "
-msgstr "Actualmente hay fallas __Format_0__ esperando ser revisadas"
+msgstr "Actualmente hay fallas %(FAULTS_UNREVIEWED)s esperando ser revisadas"
 
 #: qatrack/templates/site_base.html:693
 msgid "Trends and Analysis"
@@ -11570,7 +11571,7 @@ msgstr ""
 #: qatrack/units/templates/units/unittype_list.html:91
 #, python-format
 msgid "Click to show %(unit_type)s units"
-msgstr "Haga clic para mostrar unidades __Format_0__"
+msgstr "Haga clic para mostrar unidades %(unit_type)s"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:32
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:84
@@ -11583,7 +11584,7 @@ msgstr "Haga clic para mostrar unidades __Format_0__"
 #: qatrack/units/templates/units/unittype_list.html:92
 #, python-format
 msgid "Click to hide %(unit_type)s units"
-msgstr "Haga clic para ocultar unidades __Format_0__"
+msgstr "Haga clic para ocultar unidades %(unit_type)s"
 
 #: qatrack/units/templates/units/unittype_choose_for_faults.html:66
 #: qatrack/units/templates/units/unittype_choose_for_service_event.html:29
@@ -11644,17 +11645,17 @@ msgstr "Haga clic para ver todo el QC en el sitio:"
 #: qatrack/units/templates/units/unittype_list_unit_button.html:16
 #, python-format
 msgid "Choose %(unit_name)s QC by Frequency"
-msgstr "Elija __Format_0__ QC por frecuencia"
+msgstr "Elija %(unit_name)s QC por frecuencia"
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:43
 #, python-format
 msgid "Choose %(unit_name)s QC by Category"
-msgstr "Elija __Format_0__ QC por categoría"
+msgstr "Elija %(unit_name)s QC por categoría"
 
 #: qatrack/units/templates/units/unittype_list_unit_button.html:55
 #, python-format
 msgid "Click to view all %(category_name)s QC for Unit %(unit_name)s"
-msgstr "Haga clic para ver todo __Format_0__ QC para la unidad __Format_1__"
+msgstr "Haga clic para ver todo %(category_name)s QC para la unidad %(unit_name)s"
 
 #, fuzzy, python-format
 #~| msgid "Started %(datetime_started)s by %(created_by)s"

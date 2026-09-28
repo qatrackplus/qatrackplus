@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 
 from django.conf import settings
-from django.core.checks import Error, register
+from django.core.checks import Error, Warning, register
 
 
 @register()
@@ -66,3 +66,32 @@ def check_media_folder_permissions(app_configs, **kwargs):
                     )
                 )
     return errors
+
+
+@register()
+def check_translation_catalogues(app_configs, **kwargs):
+    """Warn when a committed .mo no longer matches the .po beside it.
+
+    A Warning rather than an Error on purpose. System checks run before
+    `migrate` unless --skip-checks is passed, and a site part-way through
+    editing its own translations should not be locked out of its migrations
+    for it.
+    """
+    from qatrack.qatrack_core.translation_catalogues import catalogue_problems
+
+    try:
+        problems = catalogue_problems()
+    except OSError:
+        return []                      # no locale directory here; nothing to check
+
+    return [
+        Warning(
+            problem,
+            hint=(
+                "The .po is what translators edit; the .mo is what Django reads. "
+                "Recompile so the two agree."
+            ),
+            id='qatrack.W010',
+        )
+        for problem in problems
+    ]
