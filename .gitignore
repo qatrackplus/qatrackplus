@@ -104,3 +104,8 @@ selenium-screenshots/
 #
 # Adding the diagram for a NEW minor line is deliberate: `git add -f`.
 docs/developer/images/qatrack_schema_*.svg
+
+# Local test-database credentials, copied from
+# deploy/dev/.env.test-databases.example. Throwaway, but still not committed -
+# the example is the file that belongs in git.
+deploy/dev/.env
