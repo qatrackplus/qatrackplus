@@ -31,7 +31,7 @@ Bug Fixes
 * Scheduled service event notices are sent again. The periodic task was
   registered under a function name that does not exist, so it failed roughly
   every 15 minutes and no notices went out. The failure appeared only in the
-  Django Q cluster log, never in QATrack+ itself (:issues:`852`).
+  Django Q cluster log, never in QATrack+ itself (:issues:`#852 <852>`).
 Other Changes
 ^^^^^^^^^^^^^
 
