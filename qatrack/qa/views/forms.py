@@ -10,6 +10,7 @@ from django.forms.widgets import (
     Select,
 )
 from django.utils import timezone
+from django.utils.formats import get_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -365,11 +366,11 @@ class BaseTestListInstanceForm(forms.ModelForm):
         for field in ('work_completed', 'work_started'):
             self.fields[field].widget = forms.widgets.DateTimeInput()
 
-            self.fields[field].widget.format = settings.DATETIME_INPUT_FORMATS[2]
-            self.fields[field].input_formats = settings.DATETIME_INPUT_FORMATS
-            self.fields[field].widget.attrs["title"] = settings.DATETIME_HELP
+            self.fields[field].widget.format = get_format('DATETIME_INPUT_FORMATS')[0]
+            self.fields[field].input_formats = get_format('DATETIME_INPUT_FORMATS')
+            self.fields[field].widget.attrs["title"] = get_format('DATETIME_HELP')
             self.fields[field].widget.attrs['class'] = 'form-control'
-            self.fields[field].help_text = settings.DATETIME_HELP
+            self.fields[field].help_text = get_format('DATETIME_HELP')
 
         self.fields["status"].widget.attrs["class"] = "form-control select2"
         self.fields["work_completed"].widget.attrs["placeholder"] = "optional"
@@ -402,7 +403,7 @@ class BaseTestListInstanceForm(forms.ModelForm):
             "work_started",
         ):
             if field in self.errors:
-                self.errors[field][0] += " %s" % settings.DATETIME_HELP
+                self.errors[field][0] += " %s" % get_format('DATETIME_HELP')
 
         work_started = cleaned_data.get("work_started")
         work_completed = cleaned_data.get("work_completed")
