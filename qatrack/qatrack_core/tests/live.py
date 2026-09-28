@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 import time
 import warnings
 from contextlib import contextmanager
@@ -259,6 +261,37 @@ class SeleniumTests(StaticLiveServerTestCase):
             # The Chromium equivalent of the Firefox preference below.
             chrome_options.add_argument('--force-device-scale-factor=1')
 
+            # Explicit, unique profile directory - not merely a headless
+            # nicety. Without it, a launch with no other Chrome running
+            # falls back to the caller's own default profile, and if a
+            # real Chrome window using that same profile is already open,
+            # Chrome's single-instance-per-profile behaviour forwards this
+            # session's startup request to that already-running window
+            # instead of launching an independent process - --headless=new
+            # never gets a say, because no new browser process launches.
+            # Confirmed: this is what made "headless" runs pop up a real,
+            # visible window on a machine that already had Chrome open,
+            # while the same run stayed headless with Chrome closed. A
+            # dedicated temp profile removes the dependency on whatever a
+            # given Chrome/chromedriver version does by default, and
+            # applies whether or not this run is headless - the same
+            # collision would otherwise let a "visible" run reuse the
+            # developer's actual browser session (cookies, logins) instead
+            # of a clean one.
+            cls.chrome_profile_dir = tempfile.mkdtemp(prefix='qatrack-selenium-chrome-')
+            chrome_options.add_argument(f'--user-data-dir={cls.chrome_profile_dir}')
+
+            # A fresh profile is also, genuinely, a first run - and unlike
+            # a long-lived developer profile (which cleared this the first
+            # time it was ever opened, long before this suite existed),
+            # every one of these now hits it. Headless doesn't render this
+            # either way, but test-gui-chromium-visible would otherwise
+            # show a real "make Chrome your default browser" infobar on
+            # every single run, which is exactly the kind of thing that
+            # steals focus or covers an element mid-test.
+            chrome_options.add_argument('--no-first-run')
+            chrome_options.add_argument('--no-default-browser-check')
+
             if headless:
                 # The "new" headless mode (Chrome 109+) - the old
                 # `--headless` renders differently enough from a real
@@ -309,6 +342,13 @@ class SeleniumTests(StaticLiveServerTestCase):
             # page looks like.
             ff_options.set_preference('layout.css.devPixelsPerPx', '1.0')
 
+            binary_path = getattr(settings, 'SELENIUM_FIREFOX_BINARY_PATH', '')
+            if binary_path:
+                # Only needed when plain discovery finds the wrong
+                # Firefox-based browser - see the setting's own comment in
+                # settings.py.
+                ff_options.binary_location = binary_path
+
             # An explicit setting or nothing, symmetric with the chromium
             # branch above. This used to fall back to
             # shutil.which('geckodriver'), which read as a convenience and was
@@ -318,7 +358,8 @@ class SeleniumTests(StaticLiveServerTestCase):
             # skipped that check, and geckodriver then picks the browser on its
             # own - which is how a run drove a Firefox-derived fork instead of
             # Firefox and still reported a pass. Set SELENIUM_FIREFOX_DRIVER_PATH
-            # to pin a specific driver.
+            # to pin a specific driver, or SELENIUM_FIREFOX_BINARY_PATH above to
+            # pin the browser.
             # As above: always a Service, so browser_env applies. Selenium
             # Manager resolves geckodriver when executable_path is None.
             driver_path = getattr(settings, 'SELENIUM_FIREFOX_DRIVER_PATH', '') or None
@@ -568,6 +609,9 @@ class SeleniumTests(StaticLiveServerTestCase):
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
+        profile_dir = getattr(cls, 'chrome_profile_dir', None)
+        if profile_dir:
+            shutil.rmtree(profile_dir, ignore_errors=True)
         super().tearDownClass()
 
     def tearDown(self):

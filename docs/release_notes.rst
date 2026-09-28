@@ -50,6 +50,10 @@ Other Changes
   existing, so the command silently did nothing; a bare ``make`` now prints it
   as well.
 
+* An optional cross-platform task runner is available as an alternative to the
+  ``Makefile``. ``poe`` is not a project dependency and nothing requires it;
+  see the developer guide if you want it.
+
 v4.0.0
 ------
 
