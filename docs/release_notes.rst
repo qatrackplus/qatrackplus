@@ -40,12 +40,17 @@ Bug Fixes
   light colour scheme were never affected, which is why it appeared to happen
   "without any changes made on the server" (:issues:`#837 <837>`).
 
-
 * Composite and constant test calculation procedures may now use any Python
   syntax the server runs. Procedures containing a ``match`` statement or a
   ``type`` alias were refused on save with *Calculation procedure invalid:
   Cannot parse for target version Python 3.9*, although QATrack+ requires
   Python 3.12.
+* String and string composite tests can be given a multiple choice tolerance
+  again. Since v4.0.0 the reference and tolerance admin offered only absolute
+  and percentage tolerances for them, so a test upgraded from v3.1 that returned
+  values such as ``PASS`` or ``Incorrect Linac`` could not be assigned the
+  tolerance it had been using. Wraparound tests are again restricted to absolute
+  tolerances (:issues:`#881 <881>`).
 Other Changes
 ^^^^^^^^^^^^^
 

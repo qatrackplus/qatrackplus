@@ -109,9 +109,18 @@ class UnitTestInfoForm(forms.ModelForm):
                 self.fields['reference_value'] = forms.ChoiceField(
                     choices=[("", "---"), (0, "No"), (1, "Yes")], required=False, label=_("New reference value")
                 )
-            elif instance.test.type == models.MULTIPLE_CHOICE:
+            elif instance.test.is_string_type():
+                # STRING and STRING_COMPOSITE as well as MULTIPLE_CHOICE: a string
+                # test is judged by comparing its value against a multiple choice
+                # tolerance's pass and tolerance lists, which is what
+                # TestInstance.string_pass_fail() does for every string type. A
+                # string test has no numerical reference, so the field is hidden.
                 self.fields['tolerance'].queryset = models.Tolerance.objects.filter(type=models.MULTIPLE_CHOICE)
                 self.fields['reference_value'].widget = forms.HiddenInput()
+            elif instance.test.type == models.WRAPAROUND:
+                # A percentage of a wraparound value is not meaningful.
+                self.fields['tolerance'].queryset = models.Tolerance.objects.filter(type=models.ABSOLUTE)
+                self.fields['reference_value'].widget = forms.TextInput()
             else:
                 # For numerical tests, exclude boolean and multiple choice tolerances
                 self.fields['tolerance'].queryset = models.Tolerance.objects.exclude(

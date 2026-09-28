@@ -10,6 +10,7 @@ from django.utils import timezone
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as e_c
+from selenium.webdriver.support.ui import Select
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
@@ -947,3 +948,73 @@ class TestReviewQC(BaseQATests):
             self.click("confirm-update")
             self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
             assert models.TestListInstance.objects.unreviewed().count() == 0
+
+
+@pytest.mark.selenium
+class TestStringToleranceChoices(BaseQATests):
+    """Which tolerances Set References & Tolerances offers, per test type.
+
+    `test_admin_set_ref_tols` above already visits this page, but it covers only
+    multiple choice, simple and composite tests, and it picks
+    `select_by_index("id_tolerance", 1)` without asserting what is in the list. So
+    it could not have caught the regression this class exists for: a string
+    composite was offered absolute and percentage tolerances and nothing that
+    could judge it, because only a multiple choice tolerance can (see
+    `TestInstance.string_pass_fail`). Selecting index 1 would have chosen the
+    wrong one and passed.
+
+    These assert on the *contents* of the dropdown, which is where the defect was.
+    """
+
+    def setUp(self):
+        super().setUp()
+
+        with transaction.atomic():
+            self.mc_tol = utils.create_tolerance(
+                tol_type=models.MULTIPLE_CHOICE,
+                mc_pass_choices="PASS",
+                mc_tol_choices="Incorrect Linac,Incorrect Field",
+            )
+            self.abs_tol = utils.create_tolerance(tol_type=models.ABSOLUTE)
+
+            self.scomposite = utils.create_test(
+                name="string composite tol", test_type=models.STRING_COMPOSITE,
+                procedure="result = 'PASS'",
+            )
+            self.simple = utils.create_test(name="numeric tol", test_type=models.SIMPLE)
+
+            test_list = utils.create_test_list("tolerance choice list")
+            utils.create_test_list_membership(test_list=test_list, test=self.scomposite)
+            utils.create_test_list_membership(test_list=test_list, test=self.simple)
+            utils.create_unit_test_collection(test_collection=test_list)
+
+    def tolerance_options(self, test_name):
+        """The visible text of every option the tolerance dropdown offers."""
+        self.click_by_link_text(test_name)
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_tolerance')))
+        select = Select(self.driver.find_element(By.ID, 'id_tolerance'))
+        return [o.text.strip() for o in select.options if o.text.strip()]
+
+    def test_string_composite_is_offered_a_multiple_choice_tolerance(self):
+        self.load_admin()
+        self.click_by_link_text('Set References & Tolerances')
+
+        options = self.tolerance_options(self.scomposite.name)
+
+        assert str(self.mc_tol) in options, (
+            "a string composite must be offered the multiple choice tolerance; got %r" % options
+        )
+        assert str(self.abs_tol) not in options, (
+            "a string composite has no numerical reference, so an absolute "
+            "tolerance should not be offered; got %r" % options
+        )
+
+    def test_numerical_test_is_not_offered_a_multiple_choice_tolerance(self):
+        """The narrowing must still narrow, or the fix is just a widening."""
+        self.load_admin()
+        self.click_by_link_text('Set References & Tolerances')
+
+        options = self.tolerance_options(self.simple.name)
+
+        assert str(self.abs_tol) in options, options
+        assert str(self.mc_tol) not in options, options
