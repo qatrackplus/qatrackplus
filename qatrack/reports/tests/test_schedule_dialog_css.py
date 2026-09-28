@@ -35,6 +35,17 @@ from django.conf import settings
 
 LABEL_SELECTOR_TAIL = "div.recurrence-widget a.recurrence-label"
 
+
+def repo_path(path):
+    """Project-relative, with forward slashes on every platform.
+
+    `os.path.relpath` gives backslashes on Windows, so comparing its output to a
+    literal is a POSIX-only test - which is how the first revision of this file
+    failed CI on Windows while passing on Linux.
+    """
+
+    return os.path.relpath(path, settings.PROJECT_ROOT).replace(os.sep, "/")
+
 RECURRENCE_CSS = os.path.join(
     os.path.dirname(recurrence.__file__), "static", "recurrence", "css", "recurrence.css",
 )
@@ -131,7 +142,7 @@ class TestScheduleDialogLabelIsReadableInDarkMode:
                 path = os.path.join(root, name)
                 with open(path, encoding="utf-8", errors="replace") as f:
                     if "reports/css/reports.css" in f.read():
-                        loaders.append(os.path.relpath(path, settings.PROJECT_ROOT))
+                        loaders.append(repo_path(path))
 
         assert sorted(loaders) == ["reports/templates/reports/reports.html"], sorted(loaders)
 
@@ -161,6 +172,6 @@ class TestScheduleDialogLabelIsReadableInDarkMode:
                 with open(path, encoding="utf-8", errors="replace") as f:
                     text = f.read()
                 if "prefers-color-scheme" in text and os.path.realpath(path) != os.path.realpath(REPORTS_CSS):
-                    offenders.append(os.path.relpath(path, settings.PROJECT_ROOT))
+                    offenders.append(repo_path(path))
 
         assert sorted(offenders) == [], sorted(offenders)
