@@ -17,6 +17,7 @@ from qatrack.qa.models import (
     UnitTestCollection,
     UnitTestInfo,
 )
+from qatrack.qatrack_core.sample_data.small import DEFAULT_SAMPLE_PASSWORD
 from qatrack.reports.models import ReportSchedule, SavedReport
 from qatrack.service_log.models import (
     ReturnToServiceQA,
@@ -163,7 +164,7 @@ class TestSampleDataGenerator(TestCase):
         call_command("generate_sample_data", days=1, clear=True, no_input=True, stdout=StringIO())
 
         linked.refresh_from_db()
-        self.assertTrue(linked.check_password("password123"))
+        self.assertTrue(linked.check_password(DEFAULT_SAMPLE_PASSWORD))
         self.assertIn("Medical Physicists", set(linked.groups.values_list("name", flat=True)))
 
     def test_partially_loaded_default_fixtures(self):

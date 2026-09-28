@@ -54,6 +54,13 @@ from qatrack.units.models import Site as ClinicalSite
 
 from .base import BaseSampleDataGenerator
 
+# The password every generated account gets. Development data only: these
+# accounts exist so sample records have an author, and the value is
+# deliberately well known rather than secret. It is referenced by the
+# developer guide and asserted on in tests, so keep it here rather than
+# repeating the literal - it was previously written out in four places.
+DEFAULT_SAMPLE_PASSWORD = "password123"  # noqa: S105 - dev fixture, not a secret
+
 
 class SmallCenterGenerator(BaseSampleDataGenerator):
     """Generates realistic sample data for a Small Radiation Oncology Centre:
@@ -127,7 +134,8 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
         self.grp_admins.permissions.set(all_perms)
 
         # Users
-        def create_user(username, email, first, last, groups, is_staff=True, is_superuser=False):
+        def create_user(username, email, first, last, groups, is_staff=True,
+                        is_superuser=False, password=DEFAULT_SAMPLE_PASSWORD):
             """Create a sample account, or top up an existing one.
 
             A username we did not create may belong to a real person (a site's
@@ -141,7 +149,7 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
             if user:
                 if not user.has_usable_password():
                     self.log("  Existing user '%s' has no usable password, setting the sample one." % username, lambda s: s)
-                    user.set_password("password123")
+                    user.set_password(password)
                     user.save()
                 else:
                     self.log("  Existing user '%s' keeps its own password." % username, lambda s: s)
@@ -156,7 +164,7 @@ class SmallCenterGenerator(BaseSampleDataGenerator):
                 is_staff=is_staff,
                 is_superuser=is_superuser,
             )
-            user.set_password("password123")
+            user.set_password(password)
             user.save()
             user.groups.set(groups)
             return user

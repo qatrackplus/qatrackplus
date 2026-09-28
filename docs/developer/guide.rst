@@ -274,7 +274,10 @@ Options:
     previous run created. Only use it on a development database.
 
 The generator creates the following accounts to attribute the data to, all with
-the password ``password123``:
+the same password. It is defined as ``DEFAULT_SAMPLE_PASSWORD`` in
+``qatrack/qatrack_core/sample_data/small.py`` — currently ``password123`` — and is
+deliberately well known: these accounts exist so sample records have an author, and
+they belong only on a development database.
 
 =====================  =====================================
 Username               Groups
