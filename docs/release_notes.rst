@@ -40,12 +40,20 @@ Bug Fixes
   light colour scheme were never affected, which is why it appeared to happen
   "without any changes made on the server" (:issues:`#837 <837>`).
 
-
 * Composite and constant test calculation procedures may now use any Python
   syntax the server runs. Procedures containing a ``match`` statement or a
   ``type`` alias were refused on save with *Calculation procedure invalid:
   Cannot parse for target version Python 3.9*, although QATrack+ requires
   Python 3.12.
+* Fixed fault types whose code is written in a script with no ASCII form -
+  Chinese, Cyrillic, Greek, Arabic - being unusable. The code was reduced to an
+  empty URL identifier, so the fault type's own page returned a server error and
+  the "All Fault Types" table stopped at "Processing..." with no rows and no
+  message. A second such code fared little better, receiving the meaningless
+  address "1". Codes containing any Latin characters, accented or not, were
+  never affected. Existing fault types with an empty identifier are repaired on
+  upgrade; addresses that already worked are left unchanged
+  (:issues:`#677 <677>`).
 Other Changes
 ^^^^^^^^^^^^^
 
