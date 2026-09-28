@@ -7,6 +7,7 @@ including a superuser.  `qa.can_review_non_visible_tli` is the exemption.
 
 from django.contrib.auth.models import Group, Permission, User
 from django.test import TestCase
+from django.urls import reverse
 
 from qatrack.qa import models
 from qatrack.qa.tests import utils
@@ -60,3 +61,60 @@ class TestSeesAllCollections(TestCase):
     def test_by_visibility_none_does_not_narrow(self):
         assert models.UnitTestCollection.objects.by_visibility(None).count() == \
             models.UnitTestCollection.objects.count()
+
+
+class TestPerformQARespectsVisibility(TestCase):
+    """The narrowing must survive at the view, not only in the manager.
+
+    The first version of this change dropped `PerformQA`'s `visible_to` filter
+    outright instead of making it conditional, so any user who could perform QC
+    could open any collection's Perform page by typing its URL.  The listings
+    stayed narrowed, so nothing above caught it; crane found it in a browser on
+    Windows.  These tests pin the view itself.
+    """
+
+    def setUp(self):
+        self.group = Group.objects.create(name="Physics")
+        self.other_group = Group.objects.create(name="Therapy")
+
+        self.mine = utils.create_unit_test_collection()
+        self.mine.visible_to.set([self.group])
+        self.theirs = utils.create_unit_test_collection(unit=self.mine.unit)
+        self.theirs.visible_to.set([self.other_group])
+        self.nobodys = utils.create_unit_test_collection(unit=self.mine.unit)
+        self.nobodys.visible_to.set([])
+
+        self.perform = Permission.objects.get(codename="add_testlistinstance")
+
+    def url_for(self, utc):
+        return reverse("perform_qa", kwargs={"pk": utc.pk})
+
+    def make_user(self, username, groups=(), permissions=()):
+        u = User.objects.create_user(username, "%s@e.com" % username, "pw")
+        u.user_permissions.add(self.perform, *permissions)
+        for g in groups:
+            u.groups.add(g)
+        return User.objects.get(pk=u.pk)      # clear the permission cache
+
+    def test_plain_user_cannot_perform_another_groups_collection(self):
+        self.make_user("physicist", groups=[self.group])
+        self.client.login(username="physicist", password="pw")
+
+        assert self.client.get(self.url_for(self.mine)).status_code == 200
+        assert self.client.get(self.url_for(self.theirs)).status_code == 404
+        assert self.client.get(self.url_for(self.nobodys)).status_code == 404
+
+    def test_user_with_the_permission_can_perform_any_collection(self):
+        self.make_user("holder", permissions=[
+            Permission.objects.get(codename="can_review_non_visible_tli")])
+        self.client.login(username="holder", password="pw")
+
+        for utc in (self.mine, self.theirs, self.nobodys):
+            assert self.client.get(self.url_for(utc)).status_code == 200
+
+    def test_superuser_in_no_groups_can_perform_any_collection(self):
+        User.objects.create_superuser("su", "su@e.com", "pw")
+        self.client.login(username="su", password="pw")
+
+        for utc in (self.mine, self.theirs, self.nobodys):
+            assert self.client.get(self.url_for(utc)).status_code == 200
