@@ -20,7 +20,7 @@ def do_scheduling(sender, **kwargs):
             "QATrack+ Service Event Review Notices",
         ),
         (
-            "qatrack.notifications.service_log_scheduling.tasks.run_service_event_scheduling_notices",
+            "qatrack.notifications.service_log_scheduling.tasks.run_scheduling_notices",
             "QATrack+ Service Event Scheduling Notices",
         ),
         (
