@@ -253,15 +253,21 @@ class BootstrapCategoryTree(BaseTree):
                 # we want to add a new category tree to frequency
                 # note in this case cat_id == root_cat_id
                 seen_trees.add(cat_tree_id)
-                seen_names = set()
+                seen_utcs = set()
 
                 root_id = self.root_cats[cat_tree_id]
                 text = self.unit_category_text(unum, root_id)
                 freq_nodes.append(self.new_node(text, 1))
                 cat_nodes = freq_nodes[-1]['nodes']
 
-            if utc_name not in seen_names:
-                seen_names.add(utc_name)
+            # Keyed on utc_id, not utc_name: the query joins through test
+            # membership, so a collection appears once per test and has to be
+            # collapsed - but two *different* collections may share a name, and
+            # keying on the name drops one of them from the tree entirely. That
+            # is reachable for anyone holding `qa.can_review_non_visible_tli`,
+            # who now sees collections from every group at once.
+            if utc_id not in seen_utcs:
+                seen_utcs.add(utc_id)
                 text = self.utc_text(utc_id, utc_name, uname)
                 cat_nodes.append(self.new_node(text, 1, nodes=False))
 
@@ -315,7 +321,7 @@ class BootstrapFrequencyTree(BaseTree):
         seen_freqs = set()
         seen_sites = set()
         seen_units = set()
-        seen_names = set()
+        seen_utcs = set()
 
         tree = [self.new_node(_("QC by Unit & Frequency"))]
         root_nodes = tree[-1]['nodes']
@@ -344,13 +350,15 @@ class BootstrapFrequencyTree(BaseTree):
 
             if freq_slug not in seen_freqs:
                 seen_freqs.add(freq_slug)
-                seen_names = set()
+                seen_utcs = set()
                 text = self.unit_frequency_text(unum, freq_slug)
                 unit_nodes.append(self.new_node(text))
                 freq_nodes = unit_nodes[-1]['nodes']
 
-            if utc_name not in seen_names:
-                seen_names.add(utc_name)
+            # See the note in the category tree: utc_id, not utc_name, or two
+            # collections sharing a name collapse into one.
+            if utc_id not in seen_utcs:
+                seen_utcs.add(utc_id)
                 text = self.utc_text(utc_id, utc_name, uname)
                 freq_nodes.append(self.new_node(text, 1, nodes=False))
 
