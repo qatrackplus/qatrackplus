@@ -28,12 +28,37 @@ They parse the stylesheets with tinycss2, which arrives with WeasyPrint.
 """
 
 import os
+import re
 
 import recurrence
 import tinycss2
 from django.conf import settings
 
 LABEL_SELECTOR_TAIL = "div.recurrence-widget a.recurrence-label"
+
+
+def read(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def stylesheets_loaded_by_reports_page():
+    """The project stylesheets `reports.html` links, resolved to files on disk.
+
+    Vendored files under STATIC_ROOT are skipped: they are collectstatic output
+    and not ours to police.
+    """
+
+    template = os.path.join(settings.PROJECT_ROOT, "reports", "templates", "reports", "reports.html")
+    hrefs = re.findall(r'{%\s*static\s+"([^"]+\.css)"', read(template))
+
+    found = []
+    for href in hrefs:
+        app = href.split("/", 1)[0]
+        candidate = os.path.join(settings.PROJECT_ROOT, app, "static", href)
+        if os.path.exists(candidate):
+            found.append(candidate)
+    return found
 
 
 def repo_path(path):
@@ -146,32 +171,52 @@ class TestScheduleDialogLabelIsReadableInDarkMode:
 
         assert sorted(loaders) == ["reports/templates/reports/reports.html"], sorted(loaders)
 
-    def test_qatrack_ships_no_other_colour_scheme_rules(self):
+    def test_no_other_stylesheet_this_page_loads_reacts_to_the_preference(self):
         """
-        Why the modal stays light: nothing of ours reacts to the preference, so a
-        dark-mode user gets the light page with one white label on it. If this
-        starts failing, QATrack+ has gained a real dark theme and #837's fix
-        should be revisited rather than extended.
-        """
+        Why the modal stays light: nothing the reports page loads reacts to the
+        preference, so a dark-mode user gets the light page with one white label
+        on it.
 
-        # STATIC_ROOT is collectstatic's output and is full of vendored CSS -
-        # django-recurrence's own file included - so it is skipped. The app
-        # `static/` directories underneath PROJECT_ROOT are ours and are not.
-        collected = os.path.realpath(settings.STATIC_ROOT)
+        Scoped to the stylesheets `reports.html` actually links. An earlier
+        version walked every .css in the project, which coupled this reports test
+        to unrelated files - adding a legitimate dark-mode rule to an admin
+        stylesheet would have failed it while changing nothing about the schedule
+        dialog.
+        """
 
         offenders = []
-        for root, dirs, files in os.walk(settings.PROJECT_ROOT):
-            if os.path.realpath(root).startswith(collected):
-                dirs[:] = []
-                continue
-            dirs[:] = [d for d in dirs if d not in ("node_modules", "__pycache__")]
-            for name in files:
-                if not name.endswith(".css"):
-                    continue
-                path = os.path.join(root, name)
-                with open(path, encoding="utf-8", errors="replace") as f:
-                    text = f.read()
-                if "prefers-color-scheme" in text and os.path.realpath(path) != os.path.realpath(REPORTS_CSS):
-                    offenders.append(repo_path(path))
+        for path in stylesheets_loaded_by_reports_page():
+            with open(path, encoding="utf-8", errors="replace") as f:
+                text = f.read()
+            if "prefers-color-scheme" in text and os.path.realpath(path) != os.path.realpath(REPORTS_CSS):
+                offenders.append(repo_path(path))
 
         assert sorted(offenders) == [], sorted(offenders)
+
+    def test_the_widgets_own_rules_are_not_disturbed(self):
+        """
+        This file was edited by replacing a span of text, and the first attempt
+        deleted the `.remove` rule below the insertion point - half-em padding
+        and normal weight that applied in *both* colour schemes, so the widget's
+        remove controls changed for users who never had the dark-mode bug. The
+        dark-mode tests above could not see it, because they only look at
+        dark-mode rules.
+
+        Anything that edits near the recurrence block should keep failing this
+        until the rules it did not mean to touch are back.
+        """
+
+        text = read(REPORTS_CSS)
+        for selector in (
+            "div.recurrence-widget a.recurrence-label",
+            "div.recurrence-widget .remove",
+            "div.recurrence-widget .remove:link",
+            "div.recurrence-widget .remove:visited",
+            "div.recurrence-widget .checkbox",
+            "div.recurrence-widget .control",
+            "div.recurrence-widget .radio",
+        ):
+            assert selector in text, (
+                "%s is gone from reports.css; an edit removed a rule it did not "
+                "mean to" % selector
+            )

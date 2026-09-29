@@ -95,6 +95,13 @@ div.recurrence-widget a.recurrence-label {
     padding-left: 1em;
 }
 
+div.recurrence-widget .remove,
+div.recurrence-widget .remove:link,
+div.recurrence-widget .remove:visited {
+    padding: 0em .5em;
+    font-weight: normal;
+}
+
 /*
  * The reports page does not support a dark colour scheme, and this rule is how
  * it says so.
