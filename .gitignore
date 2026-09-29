@@ -77,3 +77,24 @@ questions_*
 src/*.egg-info
 tmp/
 ./generate_ro_privileges.sql
+
+# Files the Makefile writes into the working tree and then moves elsewhere, or
+# leaves behind for you to collect. None of them belong in the repository, and
+# a failed `mv` is exactly when you would not notice one sitting there.
+#
+# `make dumpdata` writes a timestamped fixture here.
+qatrack-dump-*.json
+#
+# `make supervisor-conf` renders these from deploy/supervisor/ before moving
+# them into /etc/supervisor/conf.d. `make nginx-conf` does the same with
+# qatrack.conf, which the /qatrack*.conf rule above already covers - these two
+# were simply missed.
+django-q2.conf
+gunicorn.conf
+
+# Selenium failure artefacts. The suite writes a PNG here for each failing GUI
+# test, named after the test, so the directory fills up on any red run and its
+# contents are worthless to anyone else. Two of them reached `develop` in #847
+# because a `git add -A` in a tree with a failed run behind it does not
+# distinguish them from the change being committed.
+selenium-screenshots/

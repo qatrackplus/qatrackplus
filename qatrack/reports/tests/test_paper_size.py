@@ -1,61 +1,46 @@
-import os
-
 from django.contrib.auth.models import User
 from django.test import TestCase
 
+from qatrack.qatrack_core.utils import set_paper_size
 from qatrack.reports.forms import ReportForm
 from qatrack.reports.models import SavedReport
 
 
-def get_chrome_command(html, name, paper_size, chrome_path, tmp_root, log_root):
-    """Helper function to generate Chrome command without executing it."""
-    if not name:
-        name = "test"
-
-    fname = f"{name}_test.html"
-    path = os.path.join(tmp_root, fname)
-    out_path = f"{path}.pdf"
-
-    paper_format = "Letter" if paper_size == "letter" else "A4"
-
-    command = [
-        chrome_path,
-        '--headless',
-        '--disable-gpu',
-        '--no-sandbox',
-        f'--print-to-pdf={out_path}',
-        '--print-to-pdf-no-header',
-        f'--print-to-pdf-paper-format={paper_format}',
-        f"file://{path}",
-    ]
-
-    return command
-
-
-class TestPaperSizeCommandGeneration(TestCase):
-    """Test the generation of Chrome commands for different paper sizes."""
+class TestPaperSizeCss(TestCase):
+    """Chrome has no working paper size switch, so the size has to be set in
+    CSS.  These assert against the real helper rather than a copy of it: the
+    previous version of this module tested a local reimplementation of the
+    command builder, so it kept passing while production silently emitted
+    Letter for every report."""
 
     def setUp(self):
-        self.html = "<html><body>Test</body></html>"
-        self.chrome_path = "/usr/bin/chrome"
-        self.tmp_root = "/tmp"
-        self.log_root = "/tmp"
+        self.html = "<html><head><style>p { color: red; }</style></head><body>Test</body></html>"
 
-    def test_letter_command_generation(self):
-        """Test command generation for Letter paper size."""
-        command = get_chrome_command(
-            self.html, "test", "letter",
-            self.chrome_path, self.tmp_root, self.log_root
-        )
-        self.assertIn('--print-to-pdf-paper-format=Letter', command)
+    def test_letter_rule_added(self):
+        assert "@page { size: letter; }" in set_paper_size(self.html, "letter")
 
-    def test_a4_command_generation(self):
-        """Test command generation for A4 paper size."""
-        command = get_chrome_command(
-            self.html, "test", "a4",
-            self.chrome_path, self.tmp_root, self.log_root
-        )
-        self.assertIn('--print-to-pdf-paper-format=A4', command)
+    def test_a4_rule_added(self):
+        assert "@page { size: a4; }" in set_paper_size(self.html, "a4")
+
+    def test_rule_goes_last_in_head(self):
+        """It has to come after reports/pdf.css to win the cascade."""
+        out = set_paper_size(self.html, "a4")
+        assert out.index("p { color: red; }") < out.index("@page { size: a4; }") < out.index("</head>")
+
+    def test_case_is_normalised(self):
+        assert "@page { size: a4; }" in set_paper_size(self.html, "A4")
+
+    def test_document_body_is_untouched(self):
+        assert "<body>Test</body>" in set_paper_size(self.html, "a4")
+
+    def test_fragment_without_head_still_gets_rule(self):
+        out = set_paper_size("<p>fragment</p>", "a4")
+        assert out.startswith("<style>@page { size: a4; }</style>")
+        assert out.endswith("<p>fragment</p>")
+
+    def test_only_first_head_is_targeted(self):
+        out = set_paper_size("<html><head></head><body></head></body></html>", "letter")
+        assert out.count("@page { size: letter; }") == 1
 
 
 class TestPaperSizeDefaults(TestCase):

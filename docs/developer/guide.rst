@@ -33,13 +33,15 @@ Prerequisites
 QATrack+ is developed using Python 3.12. We recommend using the latest stable
 version of Python 3.12 for the best development experience and compatibility.
 
-Node.js (Frontend)
-~~~~~~~~~~~~~~~~~~
+Node.js (not currently required)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QATrack+ includes a Vue 3 frontend bundle compiled with Vite. Node.js 22 or newer
-is required to build it locally. The compiled file is **not** committed to the
-repository — release archives include a pre-built copy so deployers have no Node.js
-requirement. If you are developing from a ``git clone`` you must build it yourself
+QATrack+ had a Vue 3 frontend bundle compiled with Vite. The faults UI now uses
+server-rendered HTMX with jQuery, and ``package.json`` was removed along with the
+bundle, so **Node.js is not a prerequisite for anything today**.
+
+A frontend build is expected to return no earlier than 4.1. Until then there is
+nothing to build, and ``npm`` commands will fail for want of a manifest
 (see :ref:`building-frontend` below).
 
 Git
@@ -105,21 +107,15 @@ Then clone your fork to your local machine:
 Building the Frontend
 ~~~~~~~~~~~~~~~~~~~~~
 
-The compiled Vue frontend bundle (``qatrack/qatrack_core/static/dist/faults.js``)
-is **not** tracked in version control. Release archives ship with a pre-built copy,
-but developers working from a ``git clone`` must generate it manually.
+There is nothing to build at present.
 
-After cloning (and whenever source files under ``qatrack/faults/static/faults/src/``
-change), run:
+The Vue/Vite bundle was retired when the faults UI moved to server-rendered
+HTMX, and ``package.json`` went with it, so ``npm ci`` has no manifest to read.
+A replacement is expected no earlier than 4.1.
 
-.. code-block:: shell
-
-    npm ci          # install dependencies (once, or after package.json changes)
-    npm run build   # compile faults.js into qatrack/qatrack_core/static/dist/
-
-.. note::
-
-    The generated ``faults.js`` file is gitignored — do **not** commit it.
+The release workflow builds the frontend only when a ``package.json`` is
+present, so it will resume on its own once one is - nothing here needs changing
+at that point.
 
 Selecting an Editor or IDE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -232,6 +228,74 @@ You can also load specific fixture categories individually if you only need cert
     
     # Load only service log fixtures
     python manage.py loaddata fixtures/defaults/service_log/*
+
+.. _generating-sample-data:
+
+Generating Sample Data
+~~~~~~~~~~~~~~~~~~~~~~
+
+The default fixtures give you an empty, correctly configured QATrack+. To get a
+database that actually *looks* like a working clinic — useful when developing a
+feature or reviewing someone else's pull request — use the
+``generate_sample_data`` command:
+
+.. code-block:: shell
+
+    python manage.py generate_sample_data
+
+This creates a small radiation oncology centre: two linacs and a CT simulator,
+TG-142 style daily and monthly test lists with per unit references and
+tolerances, 90 days of rolling QA history (including an unreviewed backlog and
+one in-progress session to resume), service events with return to service QA,
+faults, a parts inventory with a low stock item, and saved reports with email
+schedules.
+
+Options:
+
+``--days N``
+    How many days of rolling QA history to generate (default 90). Must be zero
+    or greater. The service and fault records are placed at fixed offsets and
+    are created regardless of this value.
+
+``--clear``
+    Delete the existing units, QA, service log, fault, parts and report data
+    before generating. You are asked to confirm first.
+
+``--no-input``
+    Skip that confirmation, for scripted use.
+
+.. warning::
+
+    ``--clear`` deletes **all** of that data in the database, not just rows a
+    previous run created. Only use it on a development database.
+
+The generator creates the following accounts to attribute the data to, all with
+the same password. It is defined as ``DEFAULT_SAMPLE_PASSWORD`` in
+``qatrack/qatrack_core/sample_data/small.py`` — currently ``password123`` — and is
+deliberately well known: these accounts exist so sample records have an author, and
+they belong only on a development database.
+
+=====================  =====================================
+Username               Groups
+=====================  =====================================
+``admin``              QA Administrators (superuser)
+``jane.physicist``     Medical Physicists, QA Administrators
+``mark.physicist``     Medical Physicists
+``alex.resident``      Medical Physicists
+``sarah.therapist``    Radiation Therapists
+``dave.engineer``      Service Engineers
+=====================  =====================================
+
+If one of those usernames already exists it is reused rather than replaced: the
+account keeps its own password (unless it has no usable one, in which case it
+is given the sample password so you can log in) and its existing groups, to
+which the groups above are added. ``--clear`` does not delete user accounts.
+
+Running the command again without ``--clear`` extends the sample data rather
+than duplicating it — QA sessions, service events and reports that are already
+there are left alone. Any default fixtures the generator depends on are loaded
+automatically if their tables are empty, so a fresh database needs nothing but
+``migrate``.
 
 Running the development server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

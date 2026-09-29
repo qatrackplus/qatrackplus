@@ -33,7 +33,9 @@ _Confirm which branch this targets (e.g. master)._
 ### Coder Tasks
 
 - [ ] Rebased / merged `develop` branch; no merge conflicts.
-- [ ] `uv run pre-commit run --all-files` passes (ruff lint, ruff-format, django-upgrade).
+- [ ] `uv run pre-commit run --all-files` passes (ruff lint, django-upgrade,
+  django check, plus the yaml/toml/large-file/merge-conflict/debug-statement
+  checks).
   - `uv run ruff check . --fix` to help resolve linting errors
 - [ ] `uv run python -Wd manage.py check` reviewed for new deprecation warnings.
 - [ ] `uv run pytest` full test suite passes.

@@ -1,6 +1,7 @@
 import csv
 import datetime
 import json
+import logging
 from io import BytesIO, StringIO
 from urllib.parse import quote_plus
 
@@ -17,7 +18,14 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
-from qatrack.qatrack_core.utils import chrometopdf, relative_dates, weasyprint_to_pdf
+from qatrack.qatrack_core.utils import (
+    chrometopdf,
+    relative_dates,
+    site_base_url,
+    weasyprint_to_pdf,
+)
+
+logger = logging.getLogger(__name__)
 
 CSV = "csv"
 XLS = "xlsx"
@@ -166,13 +174,9 @@ class BaseReport(metaclass=ReportMeta):
 
     def make_url(self, url, text='', title='', plain=False):
 
-        slash = "/" if not (self.domain.endswith("/") or url.startswith("/")) else ""
-        full_url = "%s://%s%s%s" % (
-            settings.HTTP_OR_HTTPS,
-            self.domain,
-            slash,
-            url[1:] if (self.domain.endswith("/") and url.startswith("/")) else url,
-        )
+        # self.domain is the base URL including scheme (see the domain
+        # property), so only the path needs a leading slash added.
+        full_url = "%s%s" % (self.domain, url if url.startswith("/") else "/" + url)
         if plain or self.plain:
             return full_url
 
@@ -180,8 +184,7 @@ class BaseReport(metaclass=ReportMeta):
 
     def get_report_url(self):
         from qatrack.reports.forms import serialize_report
-        domain = Site.objects.get_current().domain
-        base_url = '%s://%s%s' % (settings.HTTP_OR_HTTPS, domain, reverse("reports"))
+        base_url = '%s%s' % (site_base_url(), reverse("reports"))
 
         if self.base_opts.get('report_id'):
             return "%s?report_id=%s" % (base_url, self.base_opts['report_id'])
@@ -191,8 +194,9 @@ class BaseReport(metaclass=ReportMeta):
 
     @property
     def domain(self):
+        """The site's base URL, scheme included and no trailing slash."""
         if not hasattr(self, "_domain"):
-            self._domain = Site.objects.get_current().domain
+            self._domain = site_base_url()
         return self._domain
 
     def get_report_type_name(self):
@@ -274,15 +278,13 @@ class BaseReport(metaclass=ReportMeta):
             return weasyprint_to_pdf(content, name=fname, paper_size=paper_size)
         except ImportError:
             # WeasyPrint not available, fall back to Chrome
-            import logging
-            logger = logging.getLogger(__name__)
             logger.warning("WeasyPrint not available, falling back to Chrome")
             return chrometopdf(content, name=fname, paper_size=paper_size)
-        except Exception as e:
-            # WeasyPrint failed for some other reason, fall back to Chrome
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"WeasyPrint failed, falling back to Chrome: {e}")
+        except Exception:
+            # WeasyPrint failed for some other reason, fall back to Chrome.
+            # Log the traceback: falling back silently makes a broken report
+            # look like a rendering bug rather than a PDF engine failure.
+            logger.exception("WeasyPrint failed, falling back to Chrome")
             return chrometopdf(content, name=fname, paper_size=paper_size)
 
     def to_csv(self):

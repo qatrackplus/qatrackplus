@@ -10,6 +10,46 @@ Release Notes
 QATrack+ v4.0
 ~~~~~~~~~~~~~
 
+v4.0.1
+------
+
+Bug Fixes
+^^^^^^^^^
+
+* Fixed PDF reports being truncated part way through. Any report containing a
+  forced page break silently lost everything after it, which affected the
+  service log and fault reports, paper QC backup forms, and test list instance
+  details. The on screen preview was unaffected, so the download appeared to be
+  at fault rather than the report itself.
+* Fixed the organisation logo wrapping onto a second line below the report
+  heading instead of sitting in the top right corner.
+* Fixed the signature and date fields being placed on different lines when a
+  report is generated on A4 paper.
+* Fixed the report paper size being ignored when PDFs are generated with
+  Chrome. Reports set to A4 were produced at Letter size regardless of the
+  paper size chosen for the report.
+* Scheduled service event notices are sent again. The periodic task was
+  registered under a function name that does not exist, so it failed roughly
+  every 15 minutes and no notices went out. The failure appeared only in the
+  Django Q cluster log, never in QATrack+ itself (:issues:`#852 <852>`).
+Other Changes
+^^^^^^^^^^^^^
+
+* **Three ``Makefile`` targets that emptied application data have been
+  removed:** ``clearct``, ``flushdb`` and ``__cleardb__``. Each acted on
+  whichever database ``local_settings.py`` configured - which, in an
+  installation made by ``git clone``, is the live one - and ``__cleardb__``
+  deleted every test list instance, meaning the QC history. Two of the three
+  never worked at all. Nothing in QATrack+ referenced any of them. Use
+  ``python manage.py flush`` if you need Django's own equivalent.
+
+  While in the file, two dead targets went with them - ``yapf`` and ``flake8``,
+  neither installed nor declared as a dependency since ruff replaced both - and
+  ``make help`` was added, listing the targets that are safe to use. The
+  developer guide had described ``make help`` for some time without the target
+  existing, so the command silently did nothing; a bare ``make`` now prints it
+  as well.
+
 v4.0.0
 ------
 
@@ -41,10 +81,14 @@ Technical Improvements
 * Reduced package complexity by removing an unnecessary external dependency from the stack.
 * Improved consistency of installation and upgrade command sequences.
 * Updated time handling to use timezone-aware datetimes throughout the codebase.
+* Added a `generate_sample_data` management command for development and testing. It fills a database with a small radiation oncology centre: two linacs and a CT simulator, TG-142 style daily and monthly QA protocols with references and tolerances, rolling QA history including an unreviewed backlog, service events with return to service QA, faults, a parts inventory, and saved reports with schedules. Re-running it extends the data rather than duplicating it, and the `--clear` option (which empties those tables for the whole database) asks for confirmation first. See the developers guide for the command's options and the sample logins.
+* The development local settings template now enables `DEBUG` and sets `ALLOWED_HOSTS` for local addresses, and default fixture loading no longer depends on the current working directory.
 
 Bug Fixes
 ^^^^^^^^^
 
+* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issue:`829`).
+* Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
 * Fixed tolerance compatibility validation across different test types.
 * Fixed reference value type preservation in admin forms.
 * Improved handling and messaging for incompatible tolerance and test-type combinations.

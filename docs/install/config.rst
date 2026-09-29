@@ -315,6 +315,18 @@ Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. 
     # - or -
     CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
 
+.. note::
+
+    PDF reports are normally rendered by WeasyPrint; Chrome is used as a
+    fallback when WeasyPrint is unavailable or fails, so `CHROME_PATH` only
+    needs to be valid for that fallback to work.
+
+    The paper size of a generated PDF follows the paper size selected for the
+    report itself. It is applied through the report stylesheet rather than a
+    Chrome command line switch, so it is honoured by both renderers. Before
+    v4.0.1, reports rendered through Chrome were always produced at Letter
+    size regardless of the size chosen for the report.
+
 
 
 CATEGORY_FIRST_OF_GROUP_ONLY
@@ -371,8 +383,8 @@ warning message that will be shown when a performed test is at action level.
 If `DEFAULT_WARNING_MESSAGE = ""` then the default will be to not show any
 warning message when a test is at action level.
 
-FORCE_SCRIPT_NAME, LOGIN_REDIRECT_URL, LOGIN_URL, STATIC_URL, MEDIA_URL, UPLOADS_URL
-....................................................................................
+FORCE_SCRIPT_NAME, LOGIN_EXEMPT_URLS, LOGIN_REDIRECT_URL, LOGIN_URL, STATIC_URL, MEDIA_URL, UPLOADS_URL
+.........................................................................................................
 
 If you deploy QATrack+ at a non root url (e.g. http://5.5.5.5/qatrack/) then you need to
 set these settings as follows:
@@ -382,6 +394,37 @@ set these settings as follows:
     FORCE_SCRIPT_NAME = '/qatrack'
     LOGIN_REDIRECT_URL = 'qatrack/'
     LOGIN_URL = "/qatrack/accounts/login/"
+
+``LOGIN_EXEMPT_URLS`` does **not** need changing for a non-root deployment, and must
+not be given the prefix. ``LoginRequiredMiddleware`` matches ``request.path_info``,
+which is URLconf-relative: ``FORCE_SCRIPT_NAME`` changes the URLs QATrack+
+*generates*, not the path it *matches*. So the defaults in ``settings.py`` already
+work at a subpath, and a prefixed pattern such as ``^qatrack/accounts/`` matches
+nothing — which would leave even the login page unexempt and send anonymous
+visitors into a redirect loop.
+
+If you do override ``LOGIN_EXEMPT_URLS`` for some other reason, note that setting it
+in ``local_settings.py`` **replaces** the default list rather than adding to it, so
+repeat every entry you still want — omitting one silently makes that URL require a
+login. ``jsi18n`` in particular must stay exempt, or the JavaScript translation
+catalogue is redirected to the login page for anonymous visitors and the
+client-side translations never load:
+
+.. code-block:: python
+
+    LOGIN_EXEMPT_URLS = [
+        r"^favicon\.ico$",
+        r"^accounts/",
+        r"^api(/|$)",
+        r"^oauth2(/|$)",
+        r"^i18n/",
+        r"^jsi18n/",
+    ]
+
+These are regular expressions, matched against the request path with its leading
+slash removed. Write them as regexes, not globs: ``api/*`` means "api followed by
+zero or more slashes", which also matches ``apifoo``, while ``api(/|$)`` means what
+is intended.
 
 If you've also changed the directory IIS is serving static media from, you may need to adjust the static and media
 urls as well:
