@@ -3181,7 +3181,9 @@ msgstr "Establecer referencias y tolerancias"
 #, python-format
 msgid ""
 "A test list with the slug '%(test_name)s' already exists in the database"
-msgstr "Ya existe una lista de pruebas con la babosa '%(test_name)s'"
+msgstr ""
+"Ya existe una lista de pruebas con el slug '%(test_name)s' en la base de "
+"datos"
 
 #: qatrack/qa/admin.py:565
 #, python-brace-format
@@ -11720,3 +11722,10 @@ msgstr "Haga clic para ver todo %(category_name)s QC para la unidad %(unit_name)
 #, python-format
 #~ msgid "Click to hid %(unit_type)s units"
 #~ msgstr "Haga clic en HID unidades __Format_0__"
+
+#: qatrack/templates/homepage.html:149
+#, python-format
+msgid ""
+"There are currently %(SE_RTS_INCOMPLETE_QA_COUNT)s incomplete return to "
+"service test lists"
+msgstr "Actualmente hay %(SE_RTS_INCOMPLETE_QA_COUNT)s listas de pruebas de regreso al servicio incompletas"
