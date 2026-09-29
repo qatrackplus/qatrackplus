@@ -1,0 +1,47 @@
+# ==========================================================================
+# Translation catalogues
+# ==========================================================================
+#
+# Two files per locale per domain: the .po a translator edits, and the .mo
+# Django actually reads. Nothing recompiles the second from the first
+# automatically, and the repository tracks both, so they drift - which is how
+# the Spanish catalogue spent a year serving 150 translations its .po had
+# never contained.
+#
+# `--ignore` matters more than it looks. compilemessages walks the whole tree
+# from the working directory, so without it the command descends into .venv
+# and recompiles every locale of every installed package, then fails on the
+# first one of those with a format error - reporting a problem in a
+# third-party catalogue as though it were ours.
+#
+# `compile-messages` needs msgfmt from gettext on PATH. It is present on a
+# normal Linux or Windows dev machine; it is *not* in the Docker runtime
+# image, which is why the committed .mo has to stay correct.
+
+[tasks.compile-messages]
+help = "Compile every locale's .po into the .mo Django reads"
+cmd = "python manage.py compilemessages --ignore=.venv --ignore=node_modules"
+
+[tasks.extract-messages]
+help = "Re-scan the source for translatable strings and update every .po"
+cmd = """
+python manage.py makemessages
+  --all
+  --ignore=.venv
+  --ignore=node_modules
+  --ignore=docs
+"""
+
+# The .po is the source of truth and the .mo is derived from it, so extract
+# then compile. Run this after adding or changing a translatable string.
+[tasks.messages]
+help = "Re-extract translatable strings, then recompile the catalogues"
+sequence = ["extract-messages", "compile-messages"]
+
+# Answers "are the committed .mo files the ones these .po files produce?"
+# without writing anything - the same comparison `manage.py check` makes
+# through qatrack.W010, and the one CI enforces in
+# qatrack/qatrack_core/tests/test_translation_catalogues.py.
+[tasks.check-messages]
+help = "Report any .mo that no longer matches its .po (writes nothing)"
+cmd = "python manage.py check"
