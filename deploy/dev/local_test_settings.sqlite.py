@@ -8,13 +8,28 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'db/default.db',
-        # Without this, pytest-django creates and uses `test_db/default.db` and
-        # the file named above is never touched by the suite - so `make
-        # test-integration`, which migrates and provisions `db/default.db`
-        # first, was testing a different database than the one it had just set
-        # up. Naming the test database explicitly is what makes `--reuse-db`
-        # run against the provisioned deployment.
-        'TEST': {'NAME': 'db/default.db'},
+        # The test database is named, and named something *other* than the
+        # development one, for two separate reasons.
+        #
+        # Naming it at all is what makes `--reuse-db` run against a provisioned
+        # deployment: `make test-integration` migrates and populates a database
+        # first, and without a `TEST` name the suite would not touch it. (With
+        # no `TEST` name Django 4.2 uses an **in-memory** database for SQLite -
+        # an earlier version of this comment said `test_db/default.db`, which
+        # is not what Django does.)
+        #
+        # Naming it `test_sqlite.db` rather than `db/default.db` is the
+        # important half. For a file-based SQLite test database Django calls
+        # `os.remove` on it before creating it and again at teardown, and
+        # pytest-django is non-interactive so nobody is asked. When the two
+        # names matched, a plain `pytest` **deleted the developer's populated
+        # database** - measured: 1.9 MB and 120 tables, gone after a four-test
+        # run. Distinct names make that impossible rather than unlikely.
+        #
+        # `db/` must exist, since this is a file. AGENTS.md's getting-started
+        # creates it; if it is missing, every database test errors with
+        # `unable to open database file`, which does not mention the folder.
+        'TEST': {'NAME': 'db/test_sqlite.db'},
     }
 }
 DATABASES['readonly'] = DATABASES['default']

@@ -109,6 +109,15 @@ _test-engine:
 # before the tests run, not just a fresh empty test db. Backs up any
 # existing db/default.db and qatrack/local_test_settings.py first and
 # restores both afterward regardless of whether the tests passed; the
+#
+# This target is the only thing that points the test database at
+# db/default.db, and it does so by appending one line to its own copy of
+# the settings file. The shipped template deliberately names a *separate*
+# test database, because Django deletes a file-based test database before
+# creating it and again at teardown - when the two names matched, a plain
+# `pytest` destroyed the developer's populated db/default.db. The backup
+# and restore below predate that discovery and stay as a second line of
+# defence for this target, which really does want the two to be the same;
 # freshly-provisioned db is kept, renamed with a `pytest_` prefix
 # (overwriting the previous integration run), for inspection.
 test-integration:
@@ -130,6 +139,8 @@ test-integration:
 		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
 	fi; \
 	cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py; \
+	printf "\n# test-integration only: test the database this target just\n# provisioned, rather than the template's separate test database.\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\n" \
+		>> qatrack/local_test_settings.py; \
 	uv run python manage.py migrate; \
 	uv run python manage.py createcachetable; \
 	uv run python manage.py collectstatic --noinput; \
