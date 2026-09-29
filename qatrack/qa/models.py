@@ -1,4 +1,5 @@
 import re
+import sys
 
 import black
 from django.apps import apps
@@ -319,6 +320,30 @@ PERMISSIONS += ((
         ),
     ),
 ),)
+
+
+def black_target_versions():
+    """The Python versions to let black parse a calculation procedure as.
+
+    This was pinned to 3.6-3.9, and black refuses to *parse* syntax newer than
+    the newest target it is given. So a composite test whose procedure used a
+    `match` statement (3.10) or a `type` alias (3.12) could not be saved at all -
+    `clean_calculation_procedure()` reported "Calculation procedure invalid:
+    Cannot parse for target version Python 3.9" - although QATrack+ runs on 3.12
+    and would have executed it happily.
+
+    Following the running interpreter keeps the check honest in the other
+    direction too: what black accepts here is what this Python can compile, which
+    is what `perform.py` asks of the procedure later. Simply dropping the pin
+    would accept syntax from any version black knows, moving the failure from a
+    clear message at save time to a traceback while someone is performing QC.
+
+    An empty set is black's own default and means "infer from the source", which
+    is the right fallback if this interpreter is newer than anything the
+    installed black has heard of.
+    """
+    version = getattr(black.TargetVersion, "PY3%d" % sys.version_info.minor, None)
+    return {version} if version is not None else set()
 
 
 def default_autoreviewruleset():
@@ -1190,13 +1215,10 @@ class Test(models.Model, TestPackMixin):
                 errors.append(msg)
 
         try:
-            versions = {
-                black.TargetVersion.PY36,
-                black.TargetVersion.PY37,
-                black.TargetVersion.PY38,
-                black.TargetVersion.PY39,
-            }
-            mode = black.FileMode(target_versions=versions, line_length=settings.COMPOSITE_MAX_LINE_LENGTH)
+            mode = black.FileMode(
+                target_versions=black_target_versions(),
+                line_length=settings.COMPOSITE_MAX_LINE_LENGTH,
+            )
             formatted = black.format_str(self.calculation_procedure, mode=mode)
             if settings.COMPOSITE_AUTO_FORMAT:
                 self.calculation_procedure = formatted
