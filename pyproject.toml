@@ -330,6 +330,7 @@ include = [
     "poe_tasks/data.toml",
     "poe_tasks/deploy.toml",
     "poe_tasks/test_databases.toml",
+    "poe_tasks/translations.toml",
     "poe_tasks/make_compat.toml",
 ]
 
