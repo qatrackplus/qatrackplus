@@ -92,6 +92,14 @@ if had_db:
 if had_live:
     shutil.copyfile(LIVE, LIVE_BAK)
 shutil.copyfile('deploy/dev/local_test_settings.sqlite.py', LIVE)
+# test-integration only: test the database this task just provisioned, rather
+# than the template's separate test database. The template deliberately names a
+# different one, because Django deletes a file-based test database before
+# creating it and again at teardown - when the two names matched, a plain
+# pytest destroyed the developer's populated db/default.db. This task is the
+# one thing that really does want them to be the same. Mirrors the Makefile.
+with LIVE.open('a', encoding='utf-8') as fh:
+    fh.write("\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\n")
 
 status = 1
 try:
