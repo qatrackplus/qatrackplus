@@ -20,6 +20,7 @@ import datetime as dt
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.utils import timezone
+from freezegun import freeze_time
 
 from qatrack.qa import models
 from qatrack.qa.tests import utils
@@ -28,14 +29,49 @@ from qatrack.qatrack_core.dates import end_of_day
 
 
 def at(day_offset, hour, minute=0):
+    """A local datetime `day_offset` days from "today", at a given time.
+
+    Reads the clock, so under `freeze_time` it follows the frozen instant.
+    """
+
     tz = timezone.get_current_timezone()
     day = timezone.localtime(timezone.now()).date() + dt.timedelta(days=day_offset)
     return dt.datetime.combine(day, dt.time(hour, minute), tzinfo=tz)
 
 
+def today_at(hour, minute=0):
+    """Today's real date at a fixed local time.
+
+    The clock is frozen for these tests, because the fixtures and the query each
+    read it independently - a run that crossed local midnight between the two
+    would turn the "tomorrow" records into today's and fail for a reason that has
+    nothing to do with the code.
+
+    The *date* is whichever day the run starts, not a date written down here.
+    Pinning a literal date would freeze the test's relationship to real time and
+    quietly stop exercising anything about "today"; this keeps the question the
+    same every day and only removes the race.
+    """
+
+    tz = timezone.get_current_timezone()
+    today = dt.datetime.now(tz).date()
+    return dt.datetime.combine(today, dt.time(hour, minute), tzinfo=tz)
+
+
 class TestDueAndOverdueIncludesEverythingDueToday(TestCase):
 
+    #: Local time of day to freeze at. Noon is the uneventful case; the
+    #: subclasses below pin the two hours where the day boundary is closest.
+    frozen_hour = (12, 0)
+
     def setUp(self):
+        # Freeze before anything reads the clock, so the fixtures below and the
+        # queryset under test agree about what "today" is.
+        self.frozen_at = today_at(*self.frozen_hour)
+        freezer = freeze_time(self.frozen_at)
+        freezer.start()
+        self.addCleanup(freezer.stop)
+
         # The base queryset narrows by `visible_to__in=user.groups`, so a user in
         # no group sees nothing whatever the due dates are - that is B2/#883, and
         # without this the tests below fail for the wrong reason. The factory adds
@@ -123,3 +159,21 @@ class TestDueAndOverdueIncludesEverythingDueToday(TestCase):
 
         naive = [w for w in caught if 'naive datetime' in str(w.message)]
         assert naive == [], [str(w.message) for w in naive]
+
+
+class TestJustAfterMidnight(TestDueAndOverdueIncludesEverythingDueToday):
+    """
+    00:01, where the old code looked almost right - nearly everything due today
+    is still ahead, so the missing rows are easiest to overlook.
+
+    Only reachable deterministically because the clock is frozen; a live-clock
+    test could exercise this hour once a day at best.
+    """
+
+    frozen_hour = (0, 1)
+
+
+class TestJustBeforeMidnight(TestDueAndOverdueIncludesEverythingDueToday):
+    """23:59, the other end, where "tomorrow" is a minute away."""
+
+    frozen_hour = (23, 59)
