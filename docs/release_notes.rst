@@ -50,7 +50,7 @@ Bug Fixes
   empty URL identifier, so the fault type's own page returned a server error and
   the "All Fault Types" table stopped at "Processing..." with no rows and no
   message. A second such code fared little better, receiving the meaningless
-  address "1". Codes containing any Latin characters, accented or not, were
+  address "1". Codes that already produced a non-empty ASCII identifier were
   never affected. Existing fault types with an empty identifier are repaired on
   upgrade; addresses that already worked are left unchanged
   (:issues:`#677 <677>`).
