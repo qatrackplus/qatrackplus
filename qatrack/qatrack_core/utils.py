@@ -334,12 +334,14 @@ def unique_slug_generator(instance, text, manager=None):
     """Take in a model manager (e.g. Unit.objects) and a text value and generate
     a unique slug based on the text.
 
-    `slugify` keeps only characters that have an ASCII form, so text written
-    wholly in a script that has none - Chinese, Cyrillic, Greek, Arabic - reduces
-    to the empty string. An empty slug is not a usable address: the URL patterns
+    `slugify` keeps only what survives being decomposed and stripped to ASCII, so
+    text that yields nothing reduces to the empty string. Scripts with no ASCII
+    form - Chinese, Cyrillic, Greek, Arabic - are the obvious case, but it is not
+    a Latin/non-Latin boundary: `Ø`, `Ł`, `Đ`, `Œ`, `Æ` and `ß` are Latin letters
+    that do not decompose, and they empty too. What survives is a letter with an
+    ASCII form to fall back to, which is why `Arrêt` gives `arret`. An empty slug is not a usable address: the URL patterns
     that take one require at least one character, so `{% url %}` raises
-    `NoReverseMatch` and the page 500s. Accented Latin is unaffected, since it
-    transliterates (`Arrêt` gives `arret`).
+    `NoReverseMatch` and the page 500s.
 
     When that happens the model's own name is used as the base instead, so the
     record still gets a working, unique, ASCII address. Model names are ASCII by

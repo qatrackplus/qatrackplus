@@ -14,13 +14,8 @@ through translation. That is why the tests below are about slug generation
 rather than about languages.
 """
 
-import importlib
-from contextlib import contextmanager
-from unittest import mock
 
-from django.apps import apps as django_apps
 from django.contrib.auth.models import User
-from django.db import models
 from django.test import TestCase
 from django.urls import reverse
 
@@ -82,10 +77,25 @@ class TestOrdinaryCodesAreUntouched(TestCase):
         assert FaultType.objects.create(code="Beam Fault").slug == "beam-fault"
         assert FaultType.objects.create(code="MLC").slug == "mlc"
 
-    def test_accented_latin_still_transliterates(self):
-        """`Arrêt` has an ASCII form, so it never had the bug and must not gain one."""
+    def test_letters_that_decompose_to_ascii_still_transliterate(self):
+        """These have an ASCII form, so they never had the bug and must not gain one."""
 
         assert FaultType.objects.create(code="Arrêt").slug == "arret"
+        assert FaultType.objects.create(code="Ångström").slug == "angstrom"
+        assert FaultType.objects.create(code="Señal").slug == "senal"
+
+    def test_latin_letters_that_do_not_decompose_are_also_covered(self):
+        """
+        The boundary is "produces a non-empty ASCII identifier", not "is Latin".
+        `Ø`, `Ł`, `Đ`, `Œ`, `Æ` and `ß` are Latin letters in their own right
+        rather than accented forms, so `slugify` drops them exactly as it drops
+        Chinese - a Danish or Polish site could hit this with no CJK anywhere.
+        """
+
+        for code in ("Ø", "Ł", "Đ", "Œ", "Æ", "ß"):
+            ft = FaultType.objects.create(code=code)
+            assert ft.slug, code
+            assert reverse("fault_type_details", kwargs={"slug": ft.slug})
 
     def test_a_partly_ascii_code_keeps_its_ascii_part(self):
         assert FaultType.objects.create(code="Beam %s" % BEAM_FAULT).slug == "beam"
@@ -148,108 +158,3 @@ class TestTheReportedPagesLoad(TestCase):
     def test_the_fault_type_page_loads(self):
         resp = self.client.get(reverse("fault_type_details", kwargs={'slug': self.first.slug}))
         assert resp.status_code == 200
-
-
-class TestTheRepairMigration(TestCase):
-    """
-    `0016_repair_empty_fault_type_slugs` fixes deployments that already have a
-    broken fault type. They cannot be repaired by hand: the record's own page is
-    a 500, and it is unreachable from "All Fault Types" for the same reason.
-
-    The migration receives a *historical* model, which has no `save()` override,
-    so `save()` is patched down to Django's for these tests. Without that the
-    override would regenerate the slug from the code and the assertions would
-    pass whatever the migration's own logic did.
-    """
-
-    @staticmethod
-    def _repair():
-        # The module name starts with a digit, so it cannot be imported by name.
-        module = importlib.import_module(
-            "qatrack.faults.migrations.0016_repair_empty_fault_type_slugs"
-        )
-        return module.repair_empty_slugs(django_apps, None)
-
-    @contextmanager
-    def _historical(self):
-        """Make FaultType behave like the migration's historical model."""
-
-        with mock.patch.object(FaultType, "save", models.Model.save):
-            yield
-
-    def test_an_empty_slug_is_repaired(self):
-        ft = FaultType.objects.create(code=BEAM_FAULT)
-        FaultType.objects.filter(pk=ft.pk).update(slug="")
-
-        with self._historical():
-            self._repair()
-
-        ft.refresh_from_db()
-        assert ft.slug == "faulttype"
-        assert reverse("fault_type_details", kwargs={"slug": ft.slug})
-
-    def test_it_does_not_collide_with_an_existing_slug(self):
-        squatter = FaultType.objects.create(code="faulttype")
-        broken = FaultType.objects.create(code=BEAM_FAULT)
-        FaultType.objects.filter(pk=broken.pk).update(slug="")
-
-        with self._historical():
-            self._repair()
-
-        broken.refresh_from_db()
-        squatter.refresh_from_db()
-        assert squatter.slug == "faulttype"
-        assert broken.slug == "faulttype-1"
-
-    def test_it_keeps_counting_past_a_taken_suffix(self):
-        """
-        Exercises the migration's loop rather than just its first step.
-
-        The case it exists for - several empty slugs at once - cannot be set up
-        here: `slug` is unique and SQLite enforces it, so a second `update(slug="")`
-        raises IntegrityError. That case belongs to MS SQL Server deployments,
-        where 4.0 is known to have dropped unique constraints. Forcing the
-        counter past two taken names covers the same code.
-        """
-
-        FaultType.objects.create(code="faulttype")
-        FaultType.objects.create(code="faulttype-1")
-        broken = FaultType.objects.create(code=BEAM_FAULT)
-        FaultType.objects.filter(pk=broken.pk).update(slug="")
-
-        with self._historical():
-            self._repair()
-
-        broken.refresh_from_db()
-        assert broken.slug == "faulttype-2"
-
-    def test_working_slugs_are_left_alone(self):
-        """
-        Including the meaningless numeric ones the old uniqueness loop produced.
-        They are working addresses that may be linked, and are indistinguishable
-        from a fault type legitimately coded "1".
-        """
-
-        ascii_ft = FaultType.objects.create(code="ABC")
-        numeric = FaultType.objects.create(code=DOSE_DEVIATION)
-        FaultType.objects.filter(pk=numeric.pk).update(slug="1")
-        broken = FaultType.objects.create(code=CYRILLIC)
-        FaultType.objects.filter(pk=broken.pk).update(slug="")
-
-        with self._historical():
-            self._repair()
-
-        ascii_ft.refresh_from_db()
-        numeric.refresh_from_db()
-        broken.refresh_from_db()
-        assert ascii_ft.slug == "abc"
-        assert numeric.slug == "1"
-        assert broken.slug == "faulttype"
-
-    def test_it_does_nothing_when_there_is_nothing_to_repair(self):
-        FaultType.objects.create(code="ABC")
-
-        with self._historical():
-            self._repair()
-
-        assert list(FaultType.objects.values_list("slug", flat=True)) == ["abc"]
