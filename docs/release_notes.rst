@@ -45,6 +45,12 @@ Bug Fixes
   ``type`` alias were refused on save with *Calculation procedure invalid:
   Cannot parse for target version Python 3.9*, although QATrack+ requires
   Python 3.12.
+* String and string composite tests can be given a multiple choice tolerance
+  again. Since v4.0.0 the reference and tolerance admin offered only absolute
+  and percentage tolerances for them, so a test upgraded from v3.1 that returned
+  values such as ``PASS`` or ``Incorrect Linac`` could not be assigned the
+  tolerance it had been using. Wraparound tests are again restricted to absolute
+  tolerances (:issues:`#881 <881>`).
 * Fixed fault types whose code produces no usable URL identifier being unusable.
   The identifier is derived by reducing the code to plain ASCII, and a code that
   leaves nothing behind was given an empty one - so the fault type's own page
