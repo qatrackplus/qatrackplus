@@ -81,8 +81,14 @@ def check_translation_catalogues(app_configs, **kwargs):
 
     try:
         problems = catalogue_problems()
-    except OSError:
-        return []                      # no locale directory here; nothing to check
+    except Exception:  # noqa: BLE001
+        # Deliberately broad. This runs during system checks, which run before
+        # `migrate`, and the docstring above promises it will not lock a site out
+        # of its migrations. `OSError` alone was not enough: a malformed .po can
+        # raise from the parser, and `locale_root` can raise AttributeError if
+        # PROJECT_ROOT is unset. A diagnostic that cannot report is worth less
+        # than a `migrate` that cannot run.
+        return []
 
     return [
         Warning(

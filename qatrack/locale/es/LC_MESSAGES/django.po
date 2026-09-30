@@ -1227,7 +1227,7 @@ msgstr "No revisado"
 #: qatrack/faults/views.py:374
 #, python-brace-format
 msgid "Successfully deleted Fault {fault_id}"
-msgstr "Falta eliminada con éxito {fault_id}"
+msgstr "Falla {fault_id} eliminada con éxito"
 
 #: qatrack/faults/views.py:396
 #, python-format
@@ -3343,7 +3343,7 @@ msgid ""
 "Warning: test procedure links should usually begin with http:// or https://"
 msgstr ""
 "Advertencia: los enlaces de procedimiento de prueba generalmente deben "
-"comenzar con http: // o https: //"
+"comenzar con http:// o https://"
 
 #: qatrack/qa/admin.py:1173
 #, python-format
@@ -10591,7 +10591,7 @@ msgstr ""
 "contraseña.Haga clic en el enlace a continuación para restablecer su "
 "contraseña.\n"
 "\n"
-"http: // %(domain)s%(password_reset_url)s\n"
+"http:// %(domain)s%(password_reset_url)s\n"
 "\n"
 "¡Gracias por usar nuestro sitio!\n"
 

@@ -38,7 +38,10 @@ class TestCatalogueIsCompiledFromItsSource(SimpleTestCase):
     def test_there_is_a_catalogue_to_check(self):
         """A vacuous pass is worse than a failure here."""
         pairs = sorted(locale_root().glob("*/LC_MESSAGES/*.po"))
-        assert len(pairs) >= 6, [str(p) for p in pairs]
+        # >= 1, not >= 6: six is how many locales this repository happens to
+        # ship, and encoding that here makes removing one a test failure. The
+        # point is that the scan found something to check.
+        assert len(pairs) >= 1, [str(p) for p in pairs]
 
 
 class TestNoMaskedFormatSpecifiers(SimpleTestCase):
@@ -122,10 +125,15 @@ class TestNoUninterpolatedVariablesInTransTags(SimpleTestCase):
     caught when it is written.
     """
 
-    TEMPLATE_ROOT = Path(__file__).resolve().parents[3]
+    #: The `qatrack` package, not the repository root. parents[3] was the
+    #: repository, so the scan walked docs/, build/ and any vendored HTML
+    #: outside .venv - slow, and liable to fail on third-party markup that
+    #: legitimately contains a brace inside a trans tag.
+    TEMPLATE_ROOT = Path(__file__).resolve().parents[2]
 
     def test_no_trans_tag_contains_a_template_variable(self):
         offenders = []
+        scanned = 0
         for template in sorted(self.TEMPLATE_ROOT.rglob("*.html")):
             if ".venv" in template.parts or "node_modules" in template.parts:
                 continue
@@ -133,10 +141,18 @@ class TestNoUninterpolatedVariablesInTransTags(SimpleTestCase):
                 text = template.read_text(encoding="utf-8")
             except (OSError, UnicodeDecodeError):
                 continue
+            scanned += 1
             for match in re.finditer(r"\{%\s*trans\s+(\"[^\"]*\"|'[^']*')", text):
                 if "{{" in match.group(1):
                     rel = template.relative_to(self.TEMPLATE_ROOT)
                     offenders.append("%s: %s" % (rel, match.group(0)[:70]))
+
+        # Guards the narrowing direction only: if TEMPLATE_ROOT is pointed
+        # somewhere with few or no templates the test would otherwise pass
+        # vacuously. It cannot catch the root being too *wide* - that scans more,
+        # not less - which is why the root is pinned to the package above rather
+        # than relied on here.
+        assert scanned > 100, "only %d template(s) scanned - is TEMPLATE_ROOT right?" % scanned
 
         assert offenders == [], (
             "%d {%% trans %%} tag(s) contain a template variable, which is never "
