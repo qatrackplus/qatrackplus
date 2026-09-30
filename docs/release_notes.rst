@@ -32,6 +32,15 @@ Bug Fixes
   words "service area" - in the admin, in every dropdown listing them, and
   anywhere a template showed one - so with more than one configured there was no
   way to tell them apart on screen.
+* Report PDFs generated without a browser load their stylesheets and logo
+  again on Windows. The links were built by joining ``file://`` to a filesystem
+  path, which on Windows turns the drive letter into a hostname, so none of the
+  nine stylesheet and image links in a report resolved and the PDF rendered
+  unstyled and without the organisation logo.
+* Report generation no longer leaves a partial PDF behind when the browser
+  fails, and a failure now says whether the browser could not be run or ran and
+  produced nothing, rather than reporting both as a missing executable
+  (:issues:`#835 <835>`).
 * Scheduled service event notices are sent again. The periodic task was
   registered under a function name that does not exist, so it failed roughly
   every 15 minutes and no notices went out. The failure appeared only in the
