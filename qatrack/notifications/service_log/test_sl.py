@@ -9,7 +9,8 @@ from qatrack.notifications.models import (
     ServiceEventNotice,
     UnitGroup,
 )
-from qatrack.notifications.service_log import admin
+from qatrack.notifications.service_log import admin, handlers
+from qatrack.notifications.service_log import handlers as on_serviceevent_saved_module
 from qatrack.qa.tests import utils
 from qatrack.service_log import models
 from qatrack.service_log.tests import utils as sl_utils
@@ -103,3 +104,54 @@ class TestServiceLogAdmin(TestCase):
             recipients=rg,
         )
         assert rg.name in self.admin.get_recipients(n)
+
+
+class TestServiceLogNoticeIsSkippedForFixtures(TestCase):
+    """
+    `loaddata` saves with raw=True, and raw saves still fire post_save. Without a
+    guard, `on_serviceevent_saved` reached through `service_log.service_event` -
+    a database lookup - and then tried to send email, once per ServiceLog row in
+    the fixture.
+
+    It made `loaddata service_log` impossible against a real database: the lookup
+    raised `ServiceEvent.DoesNotExist` and the load aborted with a message naming
+    neither the handler nor notifications. `qatrack.service_log.signals` has
+    guarded its own receiver with `loaded_from_fixture` since it was written; this
+    one was missed.
+    """
+
+    def test_a_raw_save_sends_nothing(self):
+        from django.db.models.signals import post_save
+
+        from qatrack.notifications.service_log.handlers import on_serviceevent_saved
+        from qatrack.service_log.models import ServiceLog
+
+        sent = []
+        original = handlers.send_email_to_users
+
+        def capture(*args, **kwargs):
+            sent.append(args)
+
+        handlers.send_email_to_users = capture
+        try:
+            # post_save as loaddata sends it: raw=True, and an instance whose
+            # related objects are deliberately not reachable.
+            on_serviceevent_saved(
+                sender=ServiceLog, instance=ServiceLog(pk=-1, service_event_id=-1),
+                created=True, raw=True,
+            )
+        finally:
+            handlers.send_email_to_users = original
+
+        assert sent == [], "a raw (fixture) save sent a notification"
+        assert post_save.receivers, "sanity: the receiver is still registered"
+
+    def test_a_normal_save_is_not_skipped(self):
+        """The guard must not disable the handler for ordinary saves."""
+
+        import inspect
+
+        source = inspect.getsource(on_serviceevent_saved_module.on_serviceevent_saved)
+        assert "loaded_from_fixture(kwargs)" in source
+        # the guard returns only for raw; nothing else short-circuits
+        assert source.count("return") >= 1
