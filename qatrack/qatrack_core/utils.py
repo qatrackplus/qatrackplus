@@ -332,17 +332,61 @@ class relative_dates:
 
 def unique_slug_generator(instance, text, manager=None):
     """Take in a model manager (e.g. Unit.objects) and a text value and generate
-    a unique slug based on the text"""
+    a unique slug based on the text.
+
+    `slugify` keeps only what survives being decomposed and stripped to ASCII, so
+    text that yields nothing reduces to the empty string. Scripts with no ASCII
+    form - Chinese, Cyrillic, Greek, Arabic - are the obvious case, but it is not
+    a Latin/non-Latin boundary: `Ø`, `Ł`, `Đ`, `Œ`, `Æ` and `ß` are Latin letters
+    that do not decompose, and they empty too. What survives is a letter with an
+    ASCII form to fall back to, which is why `Arrêt` gives `arret`. An empty slug is not a usable address: the URL patterns
+    that take one require at least one character, so `{% url %}` raises
+    `NoReverseMatch` and the page 500s.
+
+    When that happens the model's own name is used as the base instead, so the
+    record still gets a working, unique, ASCII address. Model names are ASCII by
+    construction, so the fallback cannot itself slugify away.
+
+    That also repairs what the uniqueness loop did with the second such code. It
+    appends its counter to the text and slugifies the result, so a second Chinese
+    code became `slugify("<chinese>-1")` - and since slugify strips the leading
+    dash, that left the bare number `1`. A valid address, meaning nothing, and
+    one that a real code of "1" would want.
+
+    Anything that already slugifies to something keeps exactly the slug it has
+    always had, counter included. See the comment in the loop.
+
+    Fixing this for good means `allow_unicode=True` here and on the field, which
+    would give readable non-Latin addresses. It is not done here because it also
+    changes every accented code's slug on its next save (`Arrêt` becoming `arrêt`
+    rather than `arret`), breaking existing links - a minor-release change.
+    """
 
     klass = instance._meta.model
     manager = manager or klass.objects
 
+    base = slugify(text)
+    fell_back = not base
+    if fell_back:
+        base = slugify(instance._meta.model_name)
+
     append = 0
     while True:
-        append_text = "-%d" % append if append > 0 else ""
-        slug = slugify(text + append_text)
-        if manager.exclude(id=instance.id).filter(slug=slug):
+        if append == 0:
+            slug = base
+        elif fell_back:
+            slug = "%s-%d" % (base, append)
+        else:
+            # Deliberately appending to the text and slugifying the result,
+            # which is what this has always done. Appending to the slug instead
+            # would read better but changes the answer for any text whose slug
+            # ends in "-" or "_", because slugify strips those from the ends:
+            # "Dose_Rate_" would go from "dose_rate_-1" to "dose_rate-1". Only a
+            # collision reaches this line, but a deployment that has one already
+            # has the old slug in its URLs, and save() regenerates on every save.
+            slug = slugify("%s-%d" % (text, append))
+
+        if manager.exclude(id=instance.id).filter(slug=slug).exists():
             append += 1
         else:
-            break
-    return slug
+            return slug
