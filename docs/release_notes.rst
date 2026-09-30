@@ -32,6 +32,14 @@ Bug Fixes
   registered under a function name that does not exist, so it failed roughly
   every 15 minutes and no notices went out. The failure appeared only in the
   Django Q cluster log, never in QATrack+ itself (:issues:`#852 <852>`).
+* Fixed the schedule rule being invisible in the report scheduling dialog for
+  anyone whose operating system or browser is set to a dark colour scheme. The
+  rule's text was rendered white on the dialog's white background, so the
+  Schedule box appeared to be empty apart from its close button, whether the
+  report already had a schedule or a rule had just been added. Users with a
+  light colour scheme were never affected, which is why it appeared to happen
+  "without any changes made on the server" (:issues:`#837 <837>`).
+
 
 * Composite and constant test calculation procedures may now use any Python
   syntax the server runs. Procedures containing a ``match`` statement or a
