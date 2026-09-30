@@ -51,6 +51,20 @@ Bug Fixes
   values such as ``PASS`` or ``Incorrect Linac`` could not be assigned the
   tolerance it had been using. Wraparound tests are again restricted to absolute
   tolerances (:issues:`#881 <881>`).
+* Fixed fault types whose code produces no usable URL identifier being unusable.
+  The identifier is derived by reducing the code to plain ASCII, and a code that
+  leaves nothing behind was given an empty one - so the fault type's own page
+  returned a server error and the "All Fault Types" table stopped at
+  "Processing..." with no rows and no message. A second such code fared little
+  better, receiving the meaningless address "1". This affects any script with no
+  ASCII form, such as Chinese, Cyrillic, Greek or Arabic, and also a handful of
+  Latin letters that are not accented forms of an ASCII letter - ``Ø``, ``Ł``,
+  ``Đ``, ``Œ``, ``Æ`` and ``ß`` among them. Codes that already produced a
+  non-empty ASCII identifier, such as ``Arrêt``, were never affected. **A fault
+  type already carrying an empty identifier is repaired by opening it in the
+  admin and saving it**, which regenerates the identifier; addresses that already
+  worked are left unchanged
+  (:issues:`#677 <677>`).
 Other Changes
 ^^^^^^^^^^^^^
 
