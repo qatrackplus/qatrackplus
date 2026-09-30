@@ -20,6 +20,7 @@ that most needs the check - the Docker image - has no gettext installed.
 import ast
 import gettext
 import re
+import struct
 from pathlib import Path
 
 from django.conf import settings
@@ -55,12 +56,20 @@ def po_entries(path):
     """
 
     entries = []
-    msgid, msgstr, mode, fuzzy, pending_fuzzy, plural = [], [], None, False, False, False
+    msgid, msgstr, msgctxt, mode, fuzzy, pending_fuzzy, plural = [], [], [], None, False, False, False
 
     def flush():
         key = "".join(msgid)
-        if key:
-            entries.append((key, "".join(msgstr), fuzzy, plural))
+        if not key:
+            return
+        context = "".join(msgctxt)
+        if context:
+            # How gettext keys a context-qualified entry, and therefore how it
+            # appears in the .mo: context, US (0x04), msgid. Without this a
+            # `msgctxt` entry would be compared as its bare msgid and report as
+            # both missing from the .mo and extra in it.
+            key = "%s\x04%s" % (context, key)
+        entries.append((key, "".join(msgstr), fuzzy, plural))
 
     for raw_line in Path(path).read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
@@ -70,12 +79,17 @@ def po_entries(path):
             pending_fuzzy = "fuzzy" in line
         elif line.startswith("#"):
             continue
+        elif line.startswith("msgctxt"):
+            flush()
+            msgid, msgstr, msgctxt = [], [], [_unescape(_QUOTED.search(line).group(1))]
+            mode, fuzzy, pending_fuzzy, plural = "msgctxt", pending_fuzzy, False, False
         elif line.startswith("msgid_plural"):
             mode, plural = "plural", True    # shares the msgid already collected
         elif line.startswith("msgid"):
-            flush()
+            if not msgctxt:
+                flush()
             msgid, msgstr = [_unescape(_QUOTED.search(line).group(1))], []
-            mode, fuzzy, pending_fuzzy, plural = "msgid", pending_fuzzy, False, False
+            mode, fuzzy, pending_fuzzy, plural = "msgid", (pending_fuzzy or fuzzy), False, False
         elif line.startswith("msgstr"):
             mode = "msgstr"
             m = _QUOTED.search(line)
@@ -85,11 +99,13 @@ def po_entries(path):
             text = _unescape(_QUOTED.search(line).group(1))
             if mode == "msgid":
                 msgid.append(text)
+            elif mode == "msgctxt":
+                msgctxt.append(text)
             elif mode == "msgstr":
                 msgstr.append(text)
         elif not line:
             flush()
-            msgid, msgstr, mode, fuzzy, plural = [], [], None, False, False
+            msgid, msgstr, msgctxt, mode, fuzzy, plural = [], [], [], None, False, False
     flush()
     return entries
 
@@ -158,7 +174,13 @@ def catalogue_problems(root=None):
 
         try:
             compiled = mo_translations(mo)
-        except Exception as exc:                       # noqa: BLE001 - reported, not raised
+        except (OSError, struct.error, UnicodeDecodeError, ValueError) as exc:
+            # Narrow deliberately: these are what an unreadable or truncated .mo
+            # raises (gettext unpacks it with `struct`). Catching everything here
+            # would turn a bug in this module into a polite "could not be read"
+            # and hide it. The broad catch belongs at the boundary, in
+            # `checks.check_translation_catalogues`, whose job is to make sure a
+            # diagnostic can never block `migrate`.
             problems.append("%s: its .mo could not be read (%s)." % (name, exc))
             continue
 

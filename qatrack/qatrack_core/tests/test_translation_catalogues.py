@@ -280,3 +280,47 @@ class TestCatalogueTextIsDataNotCode(SimpleTestCase):
         out = _unescape(payload)
         assert out == payload, "catalogue text was evaluated as an expression"
         assert len(out) < 200
+
+
+class TestContextQualifiedEntries(SimpleTestCase):
+    """
+    `msgctxt` entries, which `pgettext` and `{% translate ... context %}` produce.
+
+    No shipped catalogue has one today, but `window.pgettext` is shimmed in two JS
+    templates, so the first use will emit them. Parsed wrongly they would report
+    as *both* missing from the .mo and extra in it, because gettext keys them
+    `context\\x04msgid` while a naive parser sees the bare msgid.
+    """
+
+    def _po(self, text):
+        import tempfile
+        from pathlib import Path
+
+        p = Path(tempfile.mkdtemp()) / "django.po"
+        p.write_text(text, encoding="utf-8")
+        return p
+
+    def test_a_context_entry_is_keyed_the_way_gettext_keys_it(self):
+        po = self._po(
+            'msgid ""\nmsgstr "Content-Type: text/plain; charset=UTF-8\\n"\n\n'
+            'msgctxt "month name"\nmsgid "May"\nmsgstr "mai"\n'
+        )
+        assert po_translations(po) == {"month name\x04May": "mai"}
+
+    def test_the_same_msgid_under_two_contexts_stays_two_entries(self):
+        """The whole point of msgctxt - collapsing them would lose one."""
+
+        po = self._po(
+            'msgctxt "month name"\nmsgid "May"\nmsgstr "mai"\n\n'
+            'msgctxt "verb"\nmsgid "May"\nmsgstr "pouvoir"\n'
+        )
+        got = po_translations(po)
+        assert got == {"month name\x04May": "mai", "verb\x04May": "pouvoir"}, got
+
+    def test_an_entry_without_context_is_unchanged(self):
+        po = self._po('msgid "May"\nmsgstr "mai"\n')
+        assert po_translations(po) == {"May": "mai"}
+
+    def test_a_fuzzy_context_entry_is_still_excluded(self):
+        po = self._po('#, fuzzy\nmsgctxt "month name"\nmsgid "May"\nmsgstr "mai"\n')
+        assert po_translations(po) == {}
