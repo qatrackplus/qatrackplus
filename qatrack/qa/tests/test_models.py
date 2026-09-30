@@ -1,14 +1,16 @@
 import datetime
 import inspect
+import sys
 from unittest import mock
 
+import black
 import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from django_comments.models import Comment
 
@@ -378,6 +380,84 @@ result = foo + bar
             except ValidationError:
                 msg = "Failed but should have passed:\n %s" % vcp
             assert len(msg) == 0, msg
+
+    def test_calc_procedure_may_use_syntax_this_python_supports(self):
+        """black's target_versions was pinned to 3.6-3.9, so these were refused.
+
+        black will not *parse* syntax newer than the newest target version it is
+        given, and the pin meant a procedure using `match` (3.10) or a `type`
+        alias (3.12) could not be saved at all - on a QATrack+ that runs on 3.12
+        and would have executed it. The message named the parse failure, not the
+        pin, so it read as though the procedure were invalid.
+        """
+        test = self.create_test(type=models.COMPOSITE)
+
+        # the project requires 3.12, so both of these are syntax this Python has
+        newer_syntax = (
+            "match 1:\n    case 1:\n        result = 1\n",     # 3.10
+            "type Number = float\nresult = 1\n",                # 3.12
+        )
+
+        for cp in newer_syntax:
+            test.calculation_procedure = cp
+            try:
+                test.clean_calculation_procedure()
+            except ValidationError as e:
+                raise AssertionError("refused valid %s syntax: %s" % (sys.version.split()[0], e))
+
+    def test_calc_procedure_syntax_errors_are_still_refused(self):
+        """The narrowing must still narrow - a guard against over-widening.
+
+        Letting black infer the version, rather than following the interpreter,
+        would accept syntax from any Python black knows and defer the failure to
+        `compile()` while someone is performing QC.
+        """
+        test = self.create_test(type=models.COMPOSITE)
+
+        for cp in ("result = (a+b", "result = = 1", "def f(:\n    pass\nresult = 1"):
+            test.calculation_procedure = cp
+            with pytest.raises(ValidationError):
+                test.clean_calculation_procedure()
+
+    def test_black_target_versions_follows_the_interpreter(self):
+        versions = models.black_target_versions()
+        expected = getattr(black.TargetVersion, "PY3%d" % sys.version_info.minor, None)
+        if expected is None:
+            assert versions == set(), "unknown interpreter should mean 'infer'"
+        else:
+            assert versions == {expected}
+
+    def test_the_installed_black_knows_this_interpreter(self):
+        """An empty target set means the black floor is too low, not that the
+        fallback is working.
+
+        `black_target_versions()` returns an empty set when black has no target
+        for the running interpreter, which makes black infer from the source.
+        That fallback exists for a Python *newer* than the installed black - but
+        inference only helps if black's parser understands the syntax, and an
+        older black rejects `type X = int` outright whatever targets it is given.
+
+        Measured: black 23.3.0 has no `PY312` and cannot parse a `type`
+        statement; 23.7.0 is the first that can; 24.10.0 is the first with a
+        target for every interpreter this project allows. The declared floor is
+        24.10.0 for that reason - without this test, installing an older black
+        would silently return to rejecting valid procedures.
+        """
+        versions = models.black_target_versions()
+        assert versions, (
+            "black %s has no TargetVersion for Python %d.%d, so a calculation "
+            "procedure using this version's syntax would be rejected. Raise the "
+            "black floor in pyproject.toml."
+            % (black.__version__, sys.version_info[0], sys.version_info[1])
+        )
+
+    def test_auto_format_still_formats(self):
+        """COMPOSITE_AUTO_FORMAT rewrites the stored procedure, so it must still run."""
+        test = self.create_test(type=models.COMPOSITE)
+        test.calculation_procedure = "result=1+2"
+        with override_settings(COMPOSITE_AUTO_FORMAT=True):
+            test.clean_calculation_procedure()
+        assert test.calculation_procedure == "result = 1 + 2\n"
 
     def test_clean_constant_value(self):
         test = self.create_test(type=models.CONSTANT)

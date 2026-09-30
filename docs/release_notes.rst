@@ -32,6 +32,12 @@ Bug Fixes
   registered under a function name that does not exist, so it failed roughly
   every 15 minutes and no notices went out. The failure appeared only in the
   Django Q cluster log, never in QATrack+ itself (:issues:`#852 <852>`).
+
+* Composite and constant test calculation procedures may now use any Python
+  syntax the server runs. Procedures containing a ``match`` statement or a
+  ``type`` alias were refused on save with *Calculation procedure invalid:
+  Cannot parse for target version Python 3.9*, although QATrack+ requires
+  Python 3.12.
 Other Changes
 ^^^^^^^^^^^^^
 
@@ -87,7 +93,7 @@ Technical Improvements
 Bug Fixes
 ^^^^^^^^^
 
-* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issue:`829`).
+* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issues:`#829 <829>`).
 * Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
 * Fixed tolerance compatibility validation across different test types.
 * Fixed reference value type preservation in admin forms.

@@ -2282,7 +2282,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = "==4.9.3" },
-    { name = "black", specifier = ">=23.1.0" },
+    { name = "black", specifier = ">=24.10.0" },
     { name = "blessed", specifier = ">=1.20.0" },
     { name = "cherrypy", marker = "sys_platform == 'win32' and extra == 'win'", specifier = ">=18.8.0" },
     { name = "concurrent-log-handler", specifier = "==0.9.19" },
