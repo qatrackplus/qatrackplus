@@ -25,7 +25,6 @@ from freezegun import freeze_time
 from qatrack.qa import models
 from qatrack.qa.tests import utils
 from qatrack.qa.views.perform import DueAndOverdue
-from qatrack.qatrack_core.dates import end_of_day
 
 
 def at(day_offset, hour, minute=0):
@@ -136,14 +135,30 @@ class TestDueAndOverdueIncludesEverythingDueToday(TestCase):
 
     def test_the_page_and_the_due_dates_report_now_agree(self):
         """
-        They disagreed, which is what made the bug easy to miss: the same
-        question asked two ways gave two answers.
+        They disagreed, which is what made the bug easy to miss: the same question
+        asked two ways gave two answers.
+
+        This queries `DueAndOverdueQCReport` itself rather than restating its
+        cutoff, so the two really are compared. Restating it would have kept
+        passing if the report later diverged - which is precisely the failure this
+        test exists to catch, and @copilot-pull-request-reviewer was right that the
+        earlier version could not catch it.
+
+        One thing the equality depends on: the page narrows by
+        `visible_to__in=user.groups` and the report does not, so these sets only
+        coincide while every collection is visible to the acting user. The fixture
+        arranges that deliberately - see setUp - and this test is about the *cutoff*
+        agreeing, not about visibility.
         """
 
-        report_qs = models.UnitTestCollection.objects.filter(
-            due_date__lte=end_of_day(timezone.now())
-        ).exclude(due_date=None)
-        assert self.listed() == set(report_qs.values_list('pk', flat=True))
+        from qatrack.reports.qc.due_dates import DueAndOverdueQCReport
+
+        report = DueAndOverdueQCReport(
+            base_opts={"report_id": None, "include_signature": False, "title": "t"},
+            report_opts={},
+            user=self.user,
+        )
+        assert self.listed() == set(report.get_queryset().values_list("pk", flat=True))
 
     def test_no_naive_datetime_warning_is_raised(self):
         """

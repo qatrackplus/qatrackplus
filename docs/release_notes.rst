@@ -65,6 +65,7 @@ Bug Fixes
   so an item that came due this morning did not appear until the following day,
   on the one page whose purpose is to show what is due. The Due Dates report was
   never affected and has always used the end of the day; the page now matches it.
+
 Other Changes
 ^^^^^^^^^^^^^
 
