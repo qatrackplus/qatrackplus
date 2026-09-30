@@ -2,12 +2,160 @@ import os
 import subprocess
 import uuid
 from io import BytesIO
+from pathlib import Path
 
 from dateutil import relativedelta as rdelta
 from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
 
+
+class PdfGenerationError(Exception):
+    """A report PDF could not be produced."""
+
+
+class ChromeNotFound(PdfGenerationError):
+    """No usable Chrome/Chromium executable is configured."""
+
+
+class ChromePdfFailed(PdfGenerationError):
+    """Chrome was runnable but did not produce a PDF."""
+
+
+PAPER_SIZES = ("letter", "a4")
+
+
+def clean_paper_size(paper_size):
+    """Validate a paper size before it is interpolated into a CSS declaration.
+
+    Without this check an unexpected value would not fail - it would be
+    interpolated into the `@page` rule and quietly change the rendered
+    document. The web UI cannot send one (the model field carries `choices`
+    and the form validates against them), but this is reachable from
+    management commands and scheduled reports, and a silently mis-rendered QC
+    record is a poor failure mode, so it raises instead.
+    """
+    cleaned = (paper_size or "letter").strip().lower()
+    if cleaned not in PAPER_SIZES:
+        raise ValueError(
+            "unsupported paper size %r - expected one of %s"
+            % (paper_size, ", ".join(PAPER_SIZES))
+        )
+    return cleaned
+
+
+def file_uri(path):
+    """A `file://` URI for a filesystem path, for the PDF engines' asset fetches.
+
+    Concatenating `"file://" + path` is wrong on Windows. Everything between the
+    two slashes and the next one is the URI's *authority*, so `file://D:\\x\\y`
+    names a host of `D:\\x\\y` with an empty path, and the drive and folders are
+    simply gone. WeasyPrint reports each such link as
+    `URLError: [WinError 3] The system cannot find the path specified` and renders
+    the report with no stylesheets and no logo. Chrome happens to accept the
+    malformed form, which is why this went unnoticed for as long as Chrome was
+    the only engine that could run on Windows at all.
+
+    `Path.as_uri()` gives `file:///D:/x/y` on Windows and `file:///srv/x` on
+    POSIX, and percent-encodes spaces and the like. It requires an absolute
+    path, so a relative STATIC_ROOT is made absolute first - which is what the
+    old concatenation effectively did too, just without saying so.
+    """
+    if not path:
+        return ""
+    return Path(path).absolute().as_uri()
+
+
+def chrome_available():
+    """Whether a Chrome/Chromium executable is configured and present."""
+    return bool(settings.CHROME_PATH) and os.path.exists(settings.CHROME_PATH)
+
+
+#: What to do about a WeasyPrint that will not load. Both branches below need it,
+#: and the Windows half is not guessable from the failure: the missing pieces are
+#: the same system libraries, but there they surface as a GLib load error that no
+#: amount of installing the Python package fixes.
+WEASYPRINT_INSTALL_HINT = (
+    "WeasyPrint needs Pango, cairo and harfbuzz installed as system packages, not "
+    "just the Python package. On Windows that means a GTK runtime (MSYS2's UCRT64 "
+    "packages, for instance) and the WEASYPRINT_DLL_DIRECTORIES environment "
+    "variable pointing at its bin directory."
+)
+
+
+def weasyprint_import_error():
+    """The exception importing WeasyPrint raises here, or None if it imports.
+
+    Catches OSError as well as ImportError: WeasyPrint is a cffi wrapper
+    around Pango, cairo and harfbuzz, which are system packages rather than
+    Python ones. Where they are absent - python:*-slim images, most notably -
+    the import fails with OSError, not ImportError.
+
+    The exception itself is returned rather than discarded because it is the
+    only thing that says which library is missing. On Windows the failure is
+    "cannot load library 'libgobject-2.0-0'", which names GLib and not any of
+    the three packages a bare "cannot load" message would send you after.
+    """
+    try:
+        import weasyprint  # noqa: F401
+    except (ImportError, OSError) as e:
+        return e
+    return None
+
+
+def weasyprint_available():
+    """Whether WeasyPrint can actually render here."""
+    return weasyprint_import_error() is None
+
+
+def html_to_pdf(html, name="", paper_size="letter"):
+    """Render html to PDF with whichever engine is configured and usable.
+
+    settings.PDF_ENGINE selects:
+
+      "auto"        Chrome if available, otherwise WeasyPrint (default)
+      "chrome"      Chrome only
+      "weasyprint"  WeasyPrint only
+
+    Chrome leads in "auto" because it is what the install documentation has
+    always required, what deployments already have, and what the report
+    stylesheets were tuned against - so an upgrade does not silently change
+    how every report looks. WeasyPrint needs no browser, which is what makes
+    it the right answer for a deployment that cannot install one (#835).
+
+    Neither engine available is an error rather than a silent fallback: a
+    report that cannot be produced should say so, not arrive wrong.
+    """
+    engine = getattr(settings, "PDF_ENGINE", "auto")
+
+    if engine == "chrome":
+        return chrometopdf(html, name=name, paper_size=paper_size)
+
+    if engine == "weasyprint":
+        why = weasyprint_import_error()
+        if why is not None:
+            raise PdfGenerationError(
+                "PDF_ENGINE is 'weasyprint' but WeasyPrint cannot load: %s. %s"
+                % (why, WEASYPRINT_INSTALL_HINT)
+            )
+        return weasyprint_to_pdf(html, name=name, paper_size=paper_size)
+
+    if engine != "auto":
+        raise PdfGenerationError(
+            "Unknown PDF_ENGINE %r - expected 'auto', 'chrome' or 'weasyprint'." % engine
+        )
+
+    if chrome_available():
+        return chrometopdf(html, name=name, paper_size=paper_size)
+
+    if weasyprint_available():
+        return weasyprint_to_pdf(html, name=name, paper_size=paper_size)
+
+    raise PdfGenerationError(
+        "No PDF engine is available. Either set CHROME_PATH to a browser, or make "
+        "WeasyPrint loadable - it fails here with: %s. %s PDF_ENGINE can pin a "
+        "specific engine." % (weasyprint_import_error(), WEASYPRINT_INSTALL_HINT)
+    )
 
 def site_base_url(site=None):
     """The Site's absolute base URL, with exactly one scheme on the front.
@@ -47,25 +195,23 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
         paper_size: Paper size for PDF ('letter' or 'a4')
     """
     try:
-        from weasyprint import CSS, HTML
+        from weasyprint import HTML
     except ImportError:
         raise ImportError("WeasyPrint not installed. Install with: uv pip install weasyprint")
 
     # The report templates link the real bootstrap/adminlte print stylesheets
-    # and include reports/pdf.css themselves, so the only thing we need to add
-    # here is the page geometry.  Do *not* re-implement the Bootstrap grid: a
-    # flexbox `.row` stops WeasyPrint from fragmenting its contents across
-    # pages, which silently truncates any report containing a forced page
-    # break (see reports/pdf.css).
-    paper_css = """
-    @page {
-        size: %s;
-        margin: 20px 20px 20px 30px;
-    }
-    """ % paper_size.lower()
-
+    # and include reports/pdf.css themselves, so the only thing to add here is
+    # the page size - and it is added the same way Chrome gets it, through
+    # set_paper_size(), so there is one mechanism rather than one per engine.
+    # Margins come from reports/pdf.css for both engines; declaring them here
+    # as well meant two sources that had to be kept in step by hand.
+    #
+    # Do *not* re-implement the Bootstrap grid here: a flexbox `.row` stops
+    # WeasyPrint from fragmenting its contents across pages, which silently
+    # truncates any report containing a forced page break (see
+    # reports/pdf.css).
     pdf = BytesIO()
-    HTML(string=html).write_pdf(pdf, stylesheets=[CSS(string=paper_css)])
+    HTML(string=set_paper_size(html, paper_size)).write_pdf(pdf)
     return pdf.getvalue()
 
 
@@ -78,7 +224,7 @@ def set_paper_size(html, paper_size="letter"):
     the user picked.  CSS is the only lever that works, and it has to come
     after reports/pdf.css so it wins the cascade against its `@page` block.
     """
-    rule = "<style>@page { size: %s; }</style>" % paper_size.lower()
+    rule = "<style>@page { size: %s; }</style>" % clean_paper_size(paper_size)
     if "</head>" in html:
         return html.replace("</head>", "%s</head>" % rule, 1)
     return rule + html
@@ -95,6 +241,7 @@ def chrometopdf(html, name="", paper_size="letter"):
 
     tmp_html = None
     out_file = None
+    out_path = None      # the finally below cleans by path, so it must always exist
 
     try:
 
@@ -109,6 +256,21 @@ def chrometopdf(html, name="", paper_size="letter"):
         tmp_html.write(set_paper_size(html, paper_size).encode("UTF-8"))
         tmp_html.close()
 
+        if not settings.CHROME_PATH:
+            raise ChromeNotFound(
+                "No Chrome/Chromium executable was found. Set CHROME_PATH in "
+                "qatrack/local_settings.py to the browser to use for PDF generation."
+            )
+
+        # Passed as a sequence on every platform. On Windows this was
+        # collapsed with ' '.join() first, which quotes nothing: every Chrome
+        # location settings.py probes is under "C:\Program Files (x86)", and
+        # TMP_REPORT_ROOT can sit under a profile directory with a space in
+        # it, so both the executable and --print-to-pdf= were split on their
+        # spaces before Chrome saw them. subprocess quotes a sequence itself
+        # with list2cmdline(), which is what it is for. Likely a second cause
+        # of #835 - a service account's temp directory is not the one a
+        # deployer tests from by hand.
         command = [
             settings.CHROME_PATH,
             '--headless',
@@ -119,19 +281,45 @@ def chrometopdf(html, name="", paper_size="letter"):
             "file://%s" % tmp_html.name,
         ]
 
-        if os.name.lower() == "nt":
-            command = ' '.join(command)
-
+        stderr_path = os.path.join(settings.LOG_ROOT, 'report-stderr.txt')
         stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
-        stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
-        subprocess.call(command, stdout=stdout, stderr=stderr)
+        stderr = open(stderr_path, 'a')
+        try:
+            status = subprocess.call(command, stdout=stdout, stderr=stderr)
+        except OSError as e:
+            raise ChromeNotFound(
+                "Could not run '%s': %s. Check CHROME_PATH in "
+                "qatrack/local_settings.py." % (settings.CHROME_PATH, e)
+            )
+        finally:
+            stdout.close()
+            stderr.close()
+
+        # The exit status and the output file are checked separately: they
+        # fail differently, and the difference is what tells a deployer
+        # whether the browser is wrong or its environment is. Neither was
+        # checked before - a browser that ran but produced nothing left
+        # open(out_path) to raise FileNotFoundError, which the handler below
+        # reported as "executable not found", pointing at the one thing that
+        # was demonstrably fine. That is the symptom described in #835.
+        if status != 0:
+            raise ChromePdfFailed(
+                "'%s' exited with status %d without producing a report. Its output "
+                "is in %s." % (settings.CHROME_PATH, status, stderr_path)
+            )
+
+        if not os.path.exists(out_path):
+            raise ChromePdfFailed(
+                "'%s' exited cleanly but wrote no PDF to %s. A browser that does "
+                "not support --print-to-pdf, or cannot write to that directory, "
+                "fails exactly this way. Its output is in %s."
+                % (settings.CHROME_PATH, out_path, stderr_path)
+            )
 
         out_file = open(out_path, 'r+b')
         pdf = out_file.read()
         out_file.close()
 
-    except OSError:
-        raise OSError("chrome '%s' executable not found" % (settings.CHROME_PATH))
     finally:
         if tmp_html and not tmp_html.closed:
             tmp_html.close()
@@ -142,9 +330,12 @@ def chrometopdf(html, name="", paper_size="letter"):
                 os.unlink(tmp_html.name)
         except:  # noqa: E722
             pass
+        # By path, not by `out_file`: that handle is only assigned once both
+        # failure branches above have passed, so a browser that exited non-zero
+        # after writing a partial PDF left the file behind on every run.
         try:
-            if out_file:
-                os.unlink(out_file.name)
+            if out_path:
+                os.unlink(out_path)
         except:  # noqa: E722
             pass
 

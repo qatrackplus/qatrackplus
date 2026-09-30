@@ -317,15 +317,103 @@ Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. 
 
 .. note::
 
-    PDF reports are normally rendered by WeasyPrint; Chrome is used as a
-    fallback when WeasyPrint is unavailable or fails, so `CHROME_PATH` only
-    needs to be valid for that fallback to work.
-
     The paper size of a generated PDF follows the paper size selected for the
     report itself. It is applied through the report stylesheet rather than a
     Chrome command line switch, so it is honoured by both renderers. Before
     v4.0.1, reports rendered through Chrome were always produced at Letter
     size regardless of the size chosen for the report.
+
+    See `PDF_ENGINE`_ for choosing a renderer.
+
+
+.. _PDF_ENGINE:
+
+PDF_ENGINE
+..........
+
+Which renderer produces report PDFs.
+
+.. code-block:: python
+
+    PDF_ENGINE = "auto"        # Chrome if CHROME_PATH is valid, else WeasyPrint
+    PDF_ENGINE = "chrome"      # Chrome/Chromium only
+    PDF_ENGINE = "weasyprint"  # WeasyPrint only - no browser required
+
+The default, ``auto``, prefers Chrome. Chrome is what the installation guides
+have always required, what existing deployments already have, and what the
+report stylesheets were tuned against, so upgrading does not quietly change
+how every report looks.
+
+Set ``weasyprint`` if you cannot install a browser on the server. WeasyPrint
+needs no browser, but it does need **Pango, cairo and harfbuzz installed as
+system packages** - the Python package alone is not enough, and where they are
+missing the import fails with an ``OSError`` rather than an ``ImportError``.
+On Debian/Ubuntu:
+
+.. code-block:: console
+
+    sudo apt install libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libgdk-pixbuf-2.0-0
+
+On Windows the same libraries come from a GTK runtime. WeasyPrint looks in two
+locations by default:
+
+.. code-block:: text
+
+    C:\msys64\mingw64\bin
+    C:\Program Files\GTK3-Runtime Win64\bin
+
+**If your GTK runtime is in either of those, there is nothing else to configure.**
+Installing `GTK3-Runtime Win64 <https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases>`__
+to its default location is the shortest route.
+
+Anywhere else, WeasyPrint has to be told. With MSYS2, install the packages and
+note that the UCRT64 tree is **not** one of the defaults:
+
+.. code-block:: doscon
+
+    pacman -S mingw-w64-ucrt-x86_64-pango mingw-w64-ucrt-x86_64-cairo mingw-w64-ucrt-x86_64-harfbuzz
+
+then point ``WEASYPRINT_DLL_DIRECTORIES`` at the ``bin`` directory - for MSYS2's
+UCRT64 that is ``C:\msys64\ucrt64\bin``. Separate several directories with
+semicolons.
+
+``WEASYPRINT_DLL_DIRECTORIES`` is read by WeasyPrint from the environment, but it
+is read **when WeasyPrint is first imported**, which happens after QATrack+ has
+loaded its settings. So the most reliable place to set it is
+``qatrack/local_settings.py``:
+
+.. code-block:: python
+
+    import os
+    os.environ.setdefault("WEASYPRINT_DLL_DIRECTORIES", r"C:\msys64\ucrt64\bin")
+
+.. important::
+
+    **Prefer that to a system-wide variable, especially when QATrack+ runs as a
+    Windows service.** A service does not inherit the environment of the user who
+    set the variable, so a variable that works from a command prompt can leave the
+    service unable to load WeasyPrint - which is the shape of :issues:`#835 <835>`.
+    Setting it machine-wide (``setx /M``) *would* reach the service, but it
+    requires administrator rights, and ``local_settings.py`` needs none and is
+    already the file you are editing.
+
+.. note::
+
+    Without a usable GTK runtime the import fails with
+    ``cannot load library 'libgobject-2.0-0'``, which names GLib rather than any
+    of Pango, cairo or harfbuzz. Installing the Python package again will not
+    help. The error QATrack+ reports includes this text, so it tells you which
+    library is missing rather than only that something is.
+
+If neither renderer is available, generating a report raises an error naming
+what to install - including the underlying load failure, so you can see which
+library is actually missing - rather than producing a PDF that looks wrong.
+
+.. note::
+
+    When a report will not generate, the browser's own output is written to
+    ``report-stdout.txt`` and ``report-stderr.txt`` in your log directory.
+    That is the first place to look.
 
 
 

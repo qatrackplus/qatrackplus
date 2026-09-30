@@ -28,6 +28,21 @@ Bug Fixes
 * Fixed the report paper size being ignored when PDFs are generated with
   Chrome. Reports set to A4 were produced at Letter size regardless of the
   paper size chosen for the report.
+* **Reports are now rendered with Chrome where it is available.** Before this
+  release WeasyPrint was tried first and Chrome used only as a fallback, so an
+  installation with both may see reports paginate and lay out differently. Set
+  ``PDF_ENGINE = "weasyprint"`` in ``qatrack/local_settings.py`` to keep the
+  previous renderer, or ``PDF_ENGINE = "chrome"`` to require Chrome; the default
+  is ``"auto"``.
+* Report PDFs generated without a browser load their stylesheets and logo
+  again on Windows. The links were built by joining ``file://`` to a filesystem
+  path, which on Windows turns the drive letter into a hostname, so none of the
+  nine stylesheet and image links in a report resolved and the PDF rendered
+  unstyled and without the organisation logo.
+* Report generation no longer leaves a partial PDF behind when the browser
+  fails, and a failure now says whether the browser could not be run or ran and
+  produced nothing, rather than reporting both as a missing executable
+  (:issues:`#835 <835>`).
 * Scheduled service event notices are sent again. The periodic task was
   registered under a function name that does not exist, so it failed roughly
   every 15 minutes and no notices went out. The failure appeared only in the

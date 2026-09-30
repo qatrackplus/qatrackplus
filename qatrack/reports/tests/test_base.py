@@ -814,10 +814,10 @@ class TestBaseReport(TestCase):
     def test_to_html(self):
         assert 'class="container-fluid"' in reports.BaseReport().to_html()
 
-    @mock.patch("qatrack.reports.reports.weasyprint_to_pdf")
-    def test_to_pdf(self, weasyprint_to_pdf):
+    @mock.patch("qatrack.reports.reports.html_to_pdf")
+    def test_to_pdf(self, html_to_pdf):
         reports.BaseReport().to_pdf()
-        assert 'class="container-fluid"' in weasyprint_to_pdf.call_args[0][0]
+        assert 'class="container-fluid"' in html_to_pdf.call_args[0][0]
 
     def test_to_csv(self):
         rep = reports.BaseReport()
