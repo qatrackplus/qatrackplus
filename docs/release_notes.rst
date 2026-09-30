@@ -65,6 +65,13 @@ Bug Fixes
   admin and saving it**, which regenerates the identifier; addresses that already
   worked are left unchanged
   (:issues:`#677 <677>`).
+
+* Fixed the "Due & Overdue QC" page leaving out everything due later the same
+  day. The cutoff was midnight at the start of today rather than the end of it,
+  so an item that came due this morning did not appear until the following day,
+  on the one page whose purpose is to show what is due. The Due Dates report was
+  never affected and has always used the end of the day; the page now matches it.
+
 Other Changes
 ^^^^^^^^^^^^^
 
