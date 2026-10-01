@@ -211,7 +211,7 @@ class PartForm(BetterModelForm):
     def clean_part_number(self):
         pn = self.cleaned_data.get("part_number")
         if not pn and not settings.PARTS_ALLOW_BLANK_PART_NUM:
-            self.add_error('part_number', 'This field is required')
+            self.add_error('part_number', _('This field is required'))
         return pn
 
 
@@ -259,18 +259,18 @@ class StorageField(forms.ChoiceField):
             (field_name, ValidationError):  To raise ValidationError on related field in form.
         """
         if value in [None, '']:
-            return 'room', ValidationError('This field is required')
+            return 'room', ValidationError(_('This field is required'))
         elif '__new__' in value:
             value = value.replace('__new__', '')
             if value.strip() == '':
-                return 'location', ValidationError('Invalid location')
+                return 'location', ValidationError(_('Invalid location'))
             return value
         else:
             try:
                 storage = p_models.Storage.objects.get(pk=value)
                 return storage
             except ObjectDoesNotExist:
-                return 'room', ValidationError("Incorrect Storage value")
+                return 'room', ValidationError(_("Incorrect Storage value"))
 
     def has_changed(self, initial, data, tliib=False):
         if initial is None:

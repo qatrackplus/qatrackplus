@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.timezone import timedelta
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 
 from qatrack.service_log import models as sl_models
 from qatrack.service_log.forms import HoursMinDurationField
@@ -53,25 +54,25 @@ month_select = forms.ChoiceField(
 class UnitAvailableTimeForm(forms.ModelForm):
 
     hours_sunday = HoursMinDurationField(
-        help_text='Hours available on sundays (hh:mm)', label='Sunday', validators=[max_24hr]
+        help_text=_l('Hours available on sundays (hh:mm)'), label=_l('Sunday'), validators=[max_24hr]
     )
     hours_monday = HoursMinDurationField(
-        help_text='Hours available on mondays (hh:mm)', label='Monday', validators=[max_24hr]
+        help_text=_l('Hours available on mondays (hh:mm)'), label=_l('Monday'), validators=[max_24hr]
     )
     hours_tuesday = HoursMinDurationField(
-        help_text='Hours available on tuesdays (hh:mm)', label='Tuesday', validators=[max_24hr]
+        help_text=_l('Hours available on tuesdays (hh:mm)'), label=_l('Tuesday'), validators=[max_24hr]
     )
     hours_wednesday = HoursMinDurationField(
-        help_text='Hours available on wednesdays (hh:mm)', label='Wednesday', validators=[max_24hr]
+        help_text=_l('Hours available on wednesdays (hh:mm)'), label=_l('Wednesday'), validators=[max_24hr]
     )
     hours_thursday = HoursMinDurationField(
-        help_text='Hours available on thursdays (hh:mm)', label='Thursday', validators=[max_24hr]
+        help_text=_l('Hours available on thursdays (hh:mm)'), label=_l('Thursday'), validators=[max_24hr]
     )
     hours_friday = HoursMinDurationField(
-        help_text='Hours available on fridays (hh:mm)', label='Friday', validators=[max_24hr]
+        help_text=_l('Hours available on fridays (hh:mm)'), label=_l('Friday'), validators=[max_24hr]
     )
     hours_saturday = HoursMinDurationField(
-        help_text='Hours available on saturdays (hh:mm)', label='Saturday', validators=[max_24hr]
+        help_text=_l('Hours available on saturdays (hh:mm)'), label=_l('Saturday'), validators=[max_24hr]
     )
 
     unit = forms.ModelChoiceField(widget=forms.HiddenInput(), queryset=u_models.Unit.objects.all())
@@ -111,7 +112,7 @@ class UnitAvailableTimeForm(forms.ModelForm):
 class UnitAvailableTimeEditForm(forms.ModelForm):
 
     units = forms.ModelMultipleChoiceField(queryset=u_models.Unit.objects.all())
-    hours = HoursMinDurationField(help_text='Hours available (hh:mm)', label='Hours', validators=[max_24hr])
+    hours = HoursMinDurationField(help_text=_l('Hours available (hh:mm)'), label=_l('Hours'), validators=[max_24hr])
 
     class Meta:
         model = u_models.UnitAvailableTimeEdit

@@ -186,8 +186,11 @@ class GroupLinkerAdminForm(forms.ModelForm):
             ).aggregate(max_counts=Max("counts"))['max_counts']
             if max_counts and max_counts > 1:
                 raise forms.ValidationError(
-                    'You can not disable "multiple" for since there are Service Events'
-                    'with multiple Group Linker Instances referring to this Group Linker'
+                    _(
+                        'You can not disable "multiple" for since there are Service '
+                        'Events with multiple Group Linker Instances referring to '
+                        'this Group Linker'
+                    )
                 )
         return multiple
 
