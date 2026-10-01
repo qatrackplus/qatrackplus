@@ -20,6 +20,7 @@ be expensive!).
 
    linux
    linux_upgrade_from_3
+   upgrade_from_4_0
 
 
 .. toctree::
@@ -28,6 +29,7 @@ be expensive!).
 
    win
    win_upgrade_from_3
+   upgrade_from_4_0
 
 
 Note there is no official support for the platforms listed below.  That doesn't

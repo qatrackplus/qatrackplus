@@ -101,7 +101,18 @@ following commands:
 
     cd ~/web/qatrackplus
     git fetch origin
-    git checkout v4.0.0
+    git checkout releases/4.0
+
+.. dropdown:: Side note: Alternate Tag
+    :color: warning
+
+    The ``releases/4.0`` branch is the v4.0 series including its patch releases, so
+    upgrading later is ``git fetch`` and ``git pull`` — you never name a version.
+
+    Pinning an exact version with a tag is possible but **not recommended**: a tag is
+    immutable, so ``git pull`` will not bring you patches and each upgrade becomes a
+    fresh checkout. If you must, the available tags are listed on the
+    `releases page <https://github.com/qatrackplus/qatrackplus/releases>`__.
 
 
 Updating our Python environment
