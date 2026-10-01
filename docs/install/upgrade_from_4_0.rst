@@ -3,15 +3,22 @@
 Upgrading from v4.0.0 to v4.0.1
 ===============================
 
-v4.0.1 is a patch release. It contains **no database migrations**, so the upgrade is a
-code update, a dependency sync and a restart:
+v4.0.1 is a patch release containing **no database migrations**. The upgrade is a code
+update, a dependency sync and a restart:
 
-**stop the services → ``git fetch`` → ``git pull`` → ``uv sync`` → ``check`` → restart.**
+1. Stop the background services
+2. ``git fetch`` and ``git pull``
+3. ``uv sync``
+4. ``python manage.py check``
+5. ``python manage.py migrate`` and ``python manage.py collectstatic``
+6. Start the services again
 
-Because the installation guides check out the ``releases/4.0`` *branch* rather than a
-version tag, you never name a version when upgrading within the v4.0 series — the
-branch carries each patch as it is released. **The steps on this page apply to any
-v4.0.x patch**, not only this one; the release-specific notes are in the next section.
+You never name a version. The installation guides check out the ``releases/4.0``
+*branch* rather than a version tag, so the branch carries each patch as it is released
+and step 2 is all that is needed to move between them.
+
+**These steps apply to any v4.0.x patch**, not only this one. What changes between
+patches is the next section.
 
 .. note::
 
@@ -26,17 +33,19 @@ Before you start
 Back up your database, your ``qatrack/media`` folder and your ``local_settings.py``,
 as you would for any upgrade.
 
-.. warning::
+.. dropdown:: On MySQL, check your existing backups contain a database
+    :color: danger
+    :icon: alert
 
-    **If your database is MySQL, check that your existing backups actually contain
-    a database.** Before this release ``manage.py backup_site`` skipped the database
-    on MySQL and on any engine other than PostgreSQL and SQLite, and still reported
-    success — so a backup set could contain media and settings and no database at
-    all. Look inside your most recent backup before relying on it. From v4.0.1 the
-    command says which engine it cannot handle and fails that step instead of
-    passing silently.
+    Before this release ``manage.py backup_site`` skipped the database on MySQL - and
+    on any engine other than PostgreSQL and SQLite - while still reporting success. A
+    backup set could therefore hold media and settings and no database at all.
 
-    For MySQL, use ``mysqldump``.
+    **Look inside your most recent backup before relying on it.** For MySQL, use
+    ``mysqldump``.
+
+    From v4.0.1 the command names the engine it cannot handle and fails that step
+    rather than passing silently.
 
 What needs your attention in this release
 -----------------------------------------
@@ -69,27 +78,39 @@ Changes to ``local_settings.py``
 **Nothing in this release requires a change to** ``local_settings.py``. Your existing
 file keeps working. There is one thing to check and two new settings you may want.
 
-Check ``LOGIN_EXEMPT_URLS`` if you have overridden it
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Remove ``LOGIN_EXEMPT_URLS`` if your ``local_settings.py`` sets it
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. warning::
 
-    This is the one item on this page with a security consequence. If your
-    ``local_settings.py`` sets ``LOGIN_EXEMPT_URLS``, **your copy overrides the
-    corrected list and still has the original fault.**
+    This is the one item on this page with a security consequence. Setting
+    ``LOGIN_EXEMPT_URLS`` **replaces** the shipped list rather than adding to it, so your
+    copy overrides the corrected one and keeps whatever fault it was copied with.
 
-The shipped list previously contained entries written as though they were globs:
+**If the setting appears in your** ``local_settings.py`` **, delete the whole
+assignment** unless you deliberately need entries of your own. The shipped default is
+correct as of v4.0.1, and removing your copy means you also receive any future
+correction.
+
+Two older values are worth recognising, because both are worse than the current default:
 
 .. code-block:: python
 
+    # the commented example the installation templates carried from 2018
+    LOGIN_EXEMPT_URLS = [r"^qatrack/accounts/", r"qatrack/api/*"]
+
+    # the shipped default before v4.0.1
     LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*", r"^i18n/"]
 
-These are *regular expressions*, not globs. ``api/*`` does not mean "anything under
-``api/``" — as a regex it reads as ``api`` followed by zero or more slashes, so it also
-exempted ``apifoo``, ``api_secret`` and any other path merely beginning with those three
-letters. ``^favicon.ico$`` left the ``.`` unescaped, so it matched any single character.
+These are *regular expressions*, not globs. ``api/*`` reads as ``api`` followed by zero
+or more slashes, so it also exempts ``apifoo``, ``api_secret`` and anything else merely
+beginning with those three letters. ``^favicon.ico$`` leaves the ``.`` unescaped, matching
+any character. The 2018 example additionally carries a ``qatrack/`` prefix that no longer
+matches anything, and omits four entries the current default has — so a site using it
+requires a login for its favicon, OAuth2 and both translation catalogues.
 
-The corrected list, which v4.0.1 ships:
+If you do need your own entries, add them to a copy of the current default rather than an
+older one:
 
 .. code-block:: python
 
@@ -100,17 +121,10 @@ The corrected list, which v4.0.1 ships:
         r"^oauth2(/|$)",
         r"^i18n/",
         r"^jsi18n/",
+        # your own entries here
     ]
 
-If you have no ``LOGIN_EXEMPT_URLS`` in ``local_settings.py`` you have the corrected
-list already and need do nothing.
-
-``jsi18n`` is listed separately from ``i18n`` because the URL is ``/jsi18n/``, which
-``^i18n/`` does not match — that omission is why client-side translations never loaded
-for users who were not signed in.
-
-See :ref:`qatrack-config` for the full explanation, including why overriding this
-setting replaces the list rather than adding to it.
+See :ref:`qatrack-config` for the full explanation.
 
 Two new settings, both optional
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -265,18 +279,16 @@ backup script's environment variables changed in this release.
 After upgrading
 ---------------
 
-**Check that your group permissions include the** ``view`` **permissions.** This is
-worth doing once, and it matters most if your groups were created in v3.x.
+**Check your group permissions**, once, if any group was created in v3.x. Under
+*Authentication and Authorization* → *Groups*, confirm that wherever a group has
+*Can change X* it also has *Can view X*.
 
-Django gained a separate ``view`` permission for every model in version 2.1. Groups
-set up before that have ``change`` permissions but were never granted the matching
-``view`` ones, because they did not exist yet. QATrack+'s own admin pages hide this,
-because Django treats ``change`` as implying ``view`` — but some admin widgets check
-for ``view`` alone, and a group without it can find that a field renders blank with
-no error.
+.. dropdown:: Why those groups are missing it
 
-In the admin, under *Authentication and Authorization* → *Groups*, open each group
-and confirm that wherever it has *Can change X* it also has *Can view X*.
+    Django added a separate ``view`` permission per model in version 2.1, so groups set
+    up before that have ``change`` without it. The admin hides this, because Django
+    treats ``change`` as implying ``view`` — but some admin widgets check for ``view``
+    alone, and a group lacking it sees a field render blank with no error.
 
-**Confirm your backups.** If you act on only one thing in this release, make it the
-MySQL backup warning at the top of this page.
+**Confirm your backups** — if you act on one thing in this release, make it the MySQL
+check at the top of this page.
