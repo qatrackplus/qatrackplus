@@ -86,11 +86,11 @@ Copy the following lines to your `local_settings.py` file:
 
     # If using non-SSL use these
     AD_LDAP_PORT = 389
-    AD_LDAP_URL = 'ldap://%s:%s' % (AD_DNS_NAME, AD_LDAP_PORT)
+    AD_LDAP_PROTOCOL = 'ldap'
 
     # If using SSL use these:
     # AD_LDAP_PORT=636
-    # AD_LDAP_URL='ldaps://%s:%s' % (AD_DNS_NAME,AD_LDAP_PORT)
+    # AD_LDAP_PROTOCOL = 'ldaps'
 
     AD_CERT_FILE = None  # AD_CERT_FILE='/path/to/your/cert.txt'
 

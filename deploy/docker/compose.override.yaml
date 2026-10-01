@@ -1,4 +1,44 @@
 services:
+
+  # Note: when running on linux and bind-mounting the qatrack source code
+  # inside the container, it is necessary to use the host's UID and GID to
+  # avoid permission errors. UID and GID are passed as build-time arguments
+  # when building the docker images.
+  #
+  # Furthermore, it's necessary all containers accessing a shared volume use the
+  # same UID/GID.
+
+  nginx:
+    build:
+      args:
+        HOST_UID: ${HOST_UID:-999}
+        HOST_GID: ${HOST_GID:-999}
+    environment:
+      # prevent nginx from serving static files. For local dev, we let django's
+      # development server do this.
+      DEV: "true"
+
   django:
+    build:
+      args:
+        UV_NO_DEV: 0  # do install dev dependencies for local development
+        HOST_UID: ${HOST_UID:-999}
+        HOST_GID: ${HOST_GID:-999}
+    environment:
+      DEBUG: "true"
+      DEBUG_TOOLBAR: "true"
     volumes:
-      - ../../.:/usr/src/qatrackplus
+      - ../../.:/app  # bind mount source code in container
+
+  django-q:
+    environment:
+      DEBUG: "true"
+      DEBUG_TOOLBAR: "true"
+    volumes:
+      - ../../.:/app # bind mount source code in container
+
+  backup:
+    build:
+      args:
+        HOST_UID: ${HOST_UID:-999}
+        HOST_GID: ${HOST_GID:-999}

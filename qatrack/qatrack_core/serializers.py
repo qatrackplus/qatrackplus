@@ -18,12 +18,20 @@ NP_INT_TYPES = (
     np.uint64,
 )
 
-NP_FLOAT_TYPES = (
-    np.float_,
-    np.float16,
-    np.float32,
-    np.float64,
-)
+# Support numpy < 2. numpy.float_ was removed in numpy >= 2.
+try:
+    NP_FLOAT_TYPES = (
+        np.float_,
+        np.float16,
+        np.float32,
+        np.float64,
+    )
+except AttributeError:
+    NP_FLOAT_TYPES = (
+        np.float16,
+        np.float32,
+        np.float64,
+    )
 
 serializing_methods = [
     'tolist',  # np.array,

@@ -4,93 +4,41 @@ Installing & Deploying QATrack+ with Docker
 .. warning::
 
     This is a developmental install method. It is quite simple to get up and
-    running but has not been battle tested in production yet!
-
-.. warning::
-
-    This install method has not yet been updated for version 3.1.X
+    running but has not been battle-tested in production yet!
 
 
 Prerequisites by OS
 -------------------
 
-This has been tested under two setups, Ubuntu 18.04, or Windows 10.  Depending
-on which system you are using there are different ways to install the required
-dependencies. Follow the section that applies to your specific machine.
+Depending on which system you are using there are different ways to install the
+required dependencies. Follow the section that applies to your specific machine.
 
-Windows 10 Professional or Enterprise with Hyper-V
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In general, follow the instructions found at:
 
-The aim of this setup is to have a complete installation of QATrack+ on a
-Windows 10 Professional or Enterprise machine with the backups being scheduled
-to be periodically copied to a OneDrive directory.
+* https://docs.docker.com/desktop/setup/install/windows-install/
+* https://docs.docker.com/desktop/troubleshoot-and-support/troubleshoot/topics/#topics-for-windows
 
-Ensure Virtualisation is enabled
-................................
+Note that Docker Desktop has two backends: WSL 2 and Hyper-V. These require
+certain Windows features to be enabled prior to being able to use Docker Desktop
+on top of virtualisation enabled in the BIOS of your host machine. See
+https://docs.docker.com/desktop/troubleshoot-and-support/troubleshoot/topics/#docker-desktop-fails-due-to-virtualization-not-working
+for more details.
 
-This setup uses Hyper-V. To use Hyper-V you need Windows 10 Professional or
-Enterprise with virtualisation enabled. To verify that virtualisation is
-enabled open the task manager, select `More details`, click on the
-`Performance` tab and verify that in the bottom right it states
-`Virtualisation: Enabled` as in the following screenshot:
-
-.. figure:: https://docs.docker.com/docker-for-windows/images/virtualization-enabled.png
-    :alt: Virtualization enabled
-
-    Virtualisation enabled
-
-If this says disabled then this will need to be enabled within your machines
-BIOS before continuing.
-
-See https://docs.docker.com/docker-for-windows/troubleshoot/#virtualization for
-further troubleshooting if required.
-
-Chocolatey
-..........
-
-To simplify this guide all installation will be done via the chocolatey package
-manager. To install chocoletey run the following in a command prompt with
-administrative privileges.
-
-.. code-block:: console
-
-    @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
-
-For more information on chocolatey see https://chocolatey.org/
+In general, you can use one backend or the other. At the time of writing, Docker
+is recommending the WSL 2 backend.
 
 Docker for Windows, and Git
-...........................
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To install Docker for Windows, Docker Compose and Git run the following within
-and administrative command prompt:
+To install Docker Desktop and Git run the following within an administrative
+command prompt:
 
 .. code-block:: console
 
-    choco install git docker-for-windows -y
+    winget install -e --id Git.Git --source winget
+    winget install -e --id Docker.DockerDesktop
 
 Reboot your machine.
-
-Run the newly created `Docker for Windows` icon that has appeared on the
-desktop. If prompted to approve the request to enable Hyper-V. Thise will once
-again reboot your computer. Depending on your user priveledges you may need to
-add your user account to `docker-users`
-(https://github.com/docker/for-win/issues/868#issuecomment-352279510) at this
-point.
-
-You should not need to click this icon again.
-
-After multiple reboots Docker will begin downloading and setting up its virtual
-machine.  This will take some time and you may notice the PC running slow while
-it is working on this.
-
-Specifically you are waiting until the following popup is displayed:
-
-.. figure:: https://docs.docker.com/docker-for-windows/images/docker-app-welcome.png
-    :alt: Docker Welcome
-
-    Docker Welcome
-
-On my machine this docker initialisation process took a little over 15 minutes.
 
 To test that docker is working as expected run the following in a command
 prompt:
@@ -99,51 +47,12 @@ prompt:
 
     docker run hello-world
 
-Enable shared drives within Docker for Windows
-..............................................
+Linux
+^^^^^
 
-Right click on the whale in the notification panel, then click `Settings`.
-Within settings select `Shared Drives` and then tick all of the drives you wish
-to be able to use within Docker containers. For this guide to work you will at
-least need to share the drive where you will be keeping the QATrack+ server
-files.
+Follow your distribution's documentation to install docker, or refer to the
+`official installation docs <https://docs.docker.com/engine/install/>`_.
 
-Docker for Windows does not support network drives.
-
-Ubuntu 18.04
-~~~~~~~~~~~~
-
-If your PC is running Ubuntu 18.04 follow these steps to install the required
-prerequisites.
-
-Docker and Docker-Compose
-.........................
-
-To run this installation method you will need both docker-ce and docker-compose
-on your system. When running Ubuntu 18.04 do this by running the following
-commands:
-
-.. code-block:: console
-
-    sudo apt update
-    sudo apt upgrade
-    sudo snap install docker
-
-    sudo apt install python3-venv
-    python3 -m venv ~/.docker-compose
-    source ~/.docker-compose/bin/activate
-    pip install --upgrade pip
-    pip install docker-compose
-
-
-Each time before using the `docker-compose` command you will need to repeat the
-above command of `source ~/.docker-compose/bin/activate`.
-
-On other systems you can follow the instructions found at the following
-locations:
-
-* `docker-ce <https://docs.docker.com/install/>`__
-* `docker-compose <https://docs.docker.com/compose/install/#install-compose>`__
 
 Make docker work without sudo on Linux
 ......................................
@@ -151,18 +60,18 @@ Make docker work without sudo on Linux
 You will also need to implement the following to be able to run docker without
 sudo:
 
-* https://docs.docker.com/engine/installation/linux/linux-postinstall/
+* https://docs.docker.com/engine/install/linux-postinstall/
 
 After completing these post install tasks please reset your computer.
 
-Before continuing please verify that you can run `docker run hello-world` in a
+Before continuing please verify that you can run ``docker run hello-world`` in a
 terminal.
 
 Git
-...
+^^^
 
-To retrieve files from github you will need git installed by running the
-following:
+To retrieve files from GitHub you will need git installed. Use the installation
+method provided by your distribution. For example, for Ubuntu:
 
 .. code-block:: console
 
@@ -175,17 +84,17 @@ https://www.atlassian.com/git/tutorials/install-git.
 Installing QATrack+
 -------------------
 
-This part is OS independent. The language used will be tuned for a Windows 10
-user, but equivalent steps can be followed on Ubuntu.
+This part is OS independent. The language used will be tuned for a Windows
+user, but equivalent steps can be followed on Linux.
 
 Changing to the directory where all server files will be stored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Open a command prompt with just user priveledges and change your directory to
+Open a command prompt with just user priveleges and change your directory to
 the directory where all of the QATrack+ server files will be stored.
 
 Lets say, for example, all our files are going to be located within the
-`D:` drive at `D:\QATrack+` then we would want to do the following:
+``D:`` drive at ``D:\QATrack+`` then we would want to do the following:
 
 .. code-block:: console
 
@@ -193,216 +102,269 @@ Lets say, for example, all our files are going to be located within the
     cd QATrack+
 
 Downloading
-~~~~~~~~~~~
+^^^^^^^^^^^
 
-At this point QATrack plus files need to be pulled from the git repository.  Do
+At this point QATrack+ files need to be pulled from the git repository.  Do
 the following:
 
 .. code-block:: console
 
     git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
+    git checkout v4.0.0  # to check out a stable, released version
 
-
-Installation
-~~~~~~~~~~~~
-
-To run any `docker-compose` commands you need to be within the
+To run any `docker compose` commands you need to be within the
 `qatrackplus\\deploy\\docker` directory. So lets change to there now:
 
 .. code-block:: console
 
-    cd deploy\docker
-
-To build and start the server run the following:
-
-.. code-block:: console
-
-    docker-compose build
-    docker-compose up
-
-On initial run this will take quite some time to load.
-
-Wait until you see something like the following within your terminal:
-
-.. code-block:: console
-
-    qatrack-django_1    | [2018-07-07 15:31:44 +0000] [509] [INFO] Starting gunicorn 19.3.0
-    qatrack-django_1    | [2018-07-07 15:31:44 +0000] [509] [INFO] Listening at: http://0.0.0.0:8000 (509)
-    qatrack-django_1    | [2018-07-07 15:31:44 +0000] [509] [INFO] Using worker: sync
-    qatrack-django_1    | [2018-07-07 15:31:44 +0000] [512] [INFO] Booting worker with pid: 512
-    qatrack-django_1    | [2018-07-07 15:31:44 +0000] [514] [INFO] Booting worker with pid: 514
-
-Once the `Listening at: http://0.0.0.0:8000` line is visible go to
-http://localhost in your computer's browser to see the server.
-
-If you go to the website too early you will see the following error. This
-is not an issue, it just means that the QATrack+ server has not yet finished
-initialising. The first time QATrack+ starts up initialisation can take about
-10 minutes depending on your internet connection.
-
-.. figure:: images/502_error.png
-    :alt: Error visible while server is starting up
-
-Default login is username `admin`, password `admin`. Once you have logged in
-as admin go to http://localhost/admin/auth/user/2/password/ to change the admin
-password to something more secure.
+    cd deploy\\docker
 
 
-Setting up copying backups from local machine to remote server on Windows
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Layout under deploy\\docker
+---------------------------
 
-Create the following bat file:
+* ``compose.yaml``: The production-ready defaults.
+* ``compose.override.yaml``: Development overrides (e.g., binding local source code).
+* ``django/``: Multi-stage Dockerfile and entrypoint script for the Django app.
+* ``nginx/``: NGINX configuration and server blocks.
+* ``backup/``: A lightweight Alpine container that automatically runs database
+  and media backups via cron.
 
-.. code-block:: batch
+How to Run
+----------
 
-    NET USE V: "\\pdc\OneDrive$\QATrack+"
+Environment Setup
+^^^^^^^^^^^^^^^^^
 
-    xcopy D:\QATrack+\qatrackplus\deploy\docker\user-data\backup-management\backups V:\backups /E /G /H /D /Y
+1. Copy the provided ``.env.example`` to ``.env``.
 
-Then using Windows Task scheduler to set that bat file to run daily.
+   .. code-block:: bash
+
+      cp .env.example .env
+
+2. Set your PostgreSQL credentials in the ``.env`` file.
+3. Set ``ALLOWED_HOSTS`` in your ``.env`` file to include the IP address or
+   hostname you will use to access the server (e.g.
+   ``ALLOWED_HOSTS=localhost,127.0.0.1,ubuntu-test``). To allow all hosts
+   temporarily, use ``ALLOWED_HOSTS=*``.
+4. Set a unique value for ``SECRET_KEY``.
+5. Set ``QATDEV=1`` if you are developing locally, or set it to ``QATDEV=0``
+   for production.
+6. **Install the ``just`` command runner** (see https://github.com/casey/just#installation).
+
+   This will simplify the commands needed to use the docker deployment by having
+   complicated command lines reduced to commands that are easy to type and remember.
+
+Development
+^^^^^^^^^^^
+
+By default, Docker Compose will read both ``compose.yaml`` and
+``compose.override.yaml``. The override file maps your local source code into
+the container for live reloading.
+
+``just`` will automatically use ``compose.override.yaml`` if ``QATDEV`` is set
+to ``1``. Make sure ``QATDEV=1`` is set in ``.env``.
+
+To build the images and run the services:
+
+.. code-block:: bash
+
+   just compose up --build
+
+Production
+^^^^^^^^^^
+
+1. Configure strong, secure passwords in your ``.env`` file.
+2. On your host, place the certificate file and certificate key file in a
+   directory. Set ``SSL_DIR`` to be this directory in ``.env``. Similarly, set
+   ``NGINX_SSL_CERTIFICATE_FILE`` and
+   ``NGINX_SSL_CERTIFICATE_KEY_FILE`` in ``.env`` to be the file names of the
+   certificate and certificate key.
+3. Set a value for ``BACKUPS_DIR`` in ``.env``. Make sure it points to a
+   directory that will be writable by the user.
+4. Set ``QATDEV=0`` in ``.env``.
+5. Build and start the containers using **only** the production file
+   (ignoring the local code bind-mounts):
+
+   .. code-block:: bash
+
+      just compose up --build
+
+   .. note::
+
+      When ``QATDEV=0``, ``just compose`` only uses ``compose.yaml``.
+
+First Run Setup
+^^^^^^^^^^^^^^^
+
+When booting a fresh database for the first time, you must create a superuser
+(admin) account.
+
+To do so, simply set ``DJANGO_SUPERUSER_USERNAME``,
+``DJANGO_SUPERUSER_PASSWORD`` and optionally
+``DJANGO_SUPERUSER_EMAIL``. These are standard Django environment variables
+that will allow the superuser to be automatically created upon the first time
+the services are started.
 
 Advanced usage tips
 -------------------
 
-Accessing the Django shell
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Building the images with extra python packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you need to access the Django shell run the following in another terminal:
+If you'd like to be able to use in your composite tests python packages that
+do not already come installed with QATrack+, you can create a
+``user-requirements.txt`` file under ``deploy/docker/user-requirements/``.
+
+Specify each of your custom requirements, as described in
+https://pip.pypa.io/en/stable/reference/requirements-file-format/.
+
+Overriding the base Docker images used to build the django image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you need to, you can override which docker images serve as base images
+for the builder and runtime targets of the Dockerfile.
+
+To do so, set the ``BUILDER_BASE_IMAGE`` and the ``RUNTIME_BASE_IMAGE`` env
+variables.
+
+They respectively default to:
+
+* ``ghcr.io/astral-sh/uv:0.12-python3.12-trixie-slim``
+* ``python:3.12-slim-trixie``
+
+This can be useful, for example, if your custom user requirements need some extra
+librairies installed, or you need images that have certain SSL certificates installed.
+
+Just make sure to **use python 3.12-based docker images**, as QATrack+ is currently
+designed to run on python 3.12.
+
+
+Accessing the linux shell on the running containers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can log into the shell on running containers. This can be useful to debug
+various issues, such as bind mounts write permissions, or to inspect the
+files or directories on the container.
+
+**django container**:
 
 .. code-block:: console
 
-    docker exec -ti docker_qatrack-django_1 /bin/bash
-    source deploy/docker/user-data/python-virtualenv/bin/activate
-    python manage.py shell
+    just compose exec -it django bash
 
-This requires that the containers are already running.
+In particular, to inspect the installed python packages in QATrack's virtual
+environment, you can use:
+
+.. code-block:: console
+
+    just compose exec -it django bash
+    user@host: pip list
+
+**django-q container**:
+
+.. code-block:: console
+
+    just compose exec -it django-q bash
+
+**backups container**:
+
+.. code-block:: console
+
+    just compose exec -it backup sh
+
+**nginx container**:
+
+.. code-block:: console
+
+    just compose exec -it nginx sh
+
+
+Running Django management commands
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can pass any argument you would pass to ``manage.py`` to ``just manage``:
+
+.. code-block:: console
+
+    just manage shell command [options] args
+
+
+This requires that the django container is already running.
+
+**Accessing the Django shell**
+
+In particular, if you need to access the Django shell run the following:
+
+.. code-block:: console
+
+    just manage shell
+
 
 Making QATrack+ start on boot and run in the background
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To have QATrack+ start on boot run the following command:
-
-.. code-block:: console
-
-    docker-compose up -d
-
-Setting up SSL
-~~~~~~~~~~~~~~
-
-To set up SSL I highly recommending using CloudFlare's free 'one-click ssl'
-which will set up SSL security between your users and CloudFlare:
-https://www.cloudflare.com/ssl/
-
-To also secure the path between CloudFlare and your server you will need to
-follow the following steps:
-https://support.cloudflare.com/hc/en-us/articles/217471977
-
-The `nginx.conf` file referred to by that guide is contained within this
-directory. Place the certificate files within `user-data/ssl` then they will be
-available at `/root/ssl/your_certificate.pem` and `/root/ssl/your_key.key` on
-the server.
-
-To reset the server and use your updated `nginx.conf` file run:
+To have QATrack+ start on boot  add the `-d` flag to the up command to detach
+the process:
 
 .. code-block:: console
 
-    docker-compose stop
-    docker-compose up
-
-Changing from port 80 to a different port
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The first number of the `ports` item within `docker-compose.yml` can be changed
-to use a port that is different to port 80. For example, if `80:80` was changed
-to `8080:80` then you would need to type http://localhost:8080 within your
-browser to see QATrack+. After editing `docker-compose.yml` you need to rerun
-`docker-compose up`.
-
-Making the backup management store its files on a network share
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Within the docker image all backup data is placed at
-`/usr/src/qatrackplus/deploy/docker/user-data/backup-management`.  If during
-the initial boot of the docker image a network drive is mounted to that
-directory theoretically all backups should be managed on that network drive
-instead. To achieve this, at the start of `init.sh` write the following line:
-
-
-.. code-block:: console
-
-    mount -t cifs -o username=your_user_name -o password=your_password //host_name/share_name /usr/src/qatrackplus/deploy/docker/user-data/backup-management
-
-See `cifs man page
-<https://www.systutorials.com/docs/linux/man/8-mount.cifs/>`__ for more help if
-needed.
-
-This has not been tested yet, please inform Simon Biggs (me@simonbiggs.net) if
-you have issues / if you get it working.
+    just compose up -d
 
 Shutdown the server
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 To shutdown the server run:
 
 .. code-block:: console
 
-    docker-compose stop
+    just compose stop
 
 You can also single press `Ctrl + C` within the server terminal that you ran
-`docker-compose up` to gracefully shutdown the server.
+`just compose up` to gracefully shutdown the server.
+
+Shutdown the server, remove the containers and docker volumes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+WARNING: if you store your database data in a docker volume, *this will delete
+your database*. The next time you start the containers, a fresh empty database
+will be created.
+
+To shutdown the server, remove the containers and the docker volumes, run:
+
+.. code-block:: console
+
+    just compose down -v
 
 Update server
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
+
+First, review the release notes of the new version.
+Second, make sure you have backups of your DB that you can restore successfully.
 
 To update the server from github run:
 
 .. code-block:: console
 
-    docker-compose stop
+    just compose stop
     git pull
+    # Then, checkout whichever git tag you want to update to.
+    git checkout v.4.x.x
 
 Once any files have changed in the qatrackplus directory you need to run the following:
 
 .. code-block:: console
 
-    docker-compose build
-    docker-compose up
-
-Backup management
-~~~~~~~~~~~~~~~~~
-
-Everytime `docker-compose up` is run a timestamped backup zip file of the
-database, uploaded files, and your site specific css is created. These backups
-are stored within
-`qatrackplus/deploy/docker/user-data/backup-management/backups`.  To restore a
-backup zip file copy it to the restore directory found at
-`qatrackplus/deploy/docker/user-data/backup-management/restore`.  The
-restoration will occur next time `docker-compose up` is called. After
-successful restoration the zip file within the restore directory is deleted.
-
-This restore method will also successfully restore backup files created on a
-different machine. However it will only successfully restore a like for like
-QATrack+ version. This cannot be used when upgrading between versions.
+    just compose build
+    just compose up  # or just compose up -d
 
 Delete docker data
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
-If for some reason you need it, the following command will delete all docker
-data from all docker projects (WARNING, IRREVERSABLE):
-
-.. code-block:: console
-
-    docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
-
-And this will delete all of the cache:
+If for some reason you need to, the following commands will delete all docker
+data from all docker projects (**WARNING: IRREVERSIBLE, erases volumes**):
 
 .. code-block:: console
 
-    echo 'y' | docker volume prune
-
-To just delete all postgres database data do the following:
-
-.. code-block:: console
-
-    docker stop docker_qatrack-postgres_1 && docker rm docker_qatrack-postgres_1 && docker volume rm docker_qatrack-postgres-volume
+    docker system prune -f -a --volumes

@@ -1,5 +1,6 @@
 import os
 import subprocess
+import tempfile
 import uuid
 from io import BytesIO
 
@@ -109,15 +110,18 @@ def chrometopdf(html, name="", paper_size="letter"):
         tmp_html.write(set_paper_size(html, paper_size).encode("UTF-8"))
         tmp_html.close()
 
-        command = [
-            settings.CHROME_PATH,
-            '--headless',
-            '--disable-gpu',
-            '--no-sandbox',
-            '--print-to-pdf=%s' % out_path,
-            '--print-to-pdf-no-header',
-            "file://%s" % tmp_html.name,
-        ]
+        with tempfile.TemporaryDirectory() as profiledir:
+            # Run chromium in temporary dir, as concurrent chromium processes could occur.
+            command = [
+                settings.CHROME_PATH,
+                '--headless',
+                '--disable-gpu',
+                '--no-sandbox',
+                '--print-to-pdf=%s' % out_path,
+                '--print-to-pdf-no-header',
+                '--user-data-dir=%s' % profiledir,
+                "file://%s" % tmp_html.name,
+            ]
 
         if os.name.lower() == "nt":
             command = ' '.join(command)
