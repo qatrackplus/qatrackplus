@@ -908,7 +908,7 @@ class ChooseUnit(TemplateView):
 
         context = super().get_context_data(*args, **kwargs)
 
-        groups = self.request.user.groups.all()
+        groups = models.visible_groups_for(self.request.user)
         q = models.UnitTestCollection.objects.by_visibility(groups)
 
         if self.active_only:
@@ -1051,17 +1051,17 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     def set_unit_test_collection(self):
         """Set the requested :model:`qa.UnitTestCollection` to be performed."""
 
-        self.unit_test_col = get_object_or_404(
-            models.UnitTestCollection.objects.select_related(
-                "unit",
-                "frequency",
-                "last_instance",
-            ).filter(
-                active=True,
-                visible_to__in=self.request.user.groups.all(),
-            ).distinct(),
-            pk=self.kwargs["pk"]
-        )
+        qs = models.UnitTestCollection.objects.select_related(
+            "unit",
+            "frequency",
+            "last_instance",
+        ).filter(active=True)
+
+        groups = models.visible_groups_for(self.request.user)
+        if groups is not None:
+            qs = qs.filter(visible_to__in=groups).distinct()
+
+        self.unit_test_col = get_object_or_404(qs, pk=self.kwargs["pk"])
 
     def set_last_day(self):
         """Set the last day performed for the current :model:`UnitTestCollection`"""
@@ -1420,6 +1420,8 @@ class PerformQA(PermissionRequiredMixin, CreateView):
     @staticmethod
     @register.filter
     def visible_utc(user, unit_test_collection):
+        if models.sees_all_collections(user):
+            return True
         return unit_test_collection.visible_to.all().intersection(user.groups.all()).exists()
 
 
@@ -1813,7 +1815,7 @@ class FrequencyTree(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
 
         context = super().get_context_data(*args, **kwargs)
-        context['tree'] = BootstrapFrequencyTree(self.request.user.groups.all()).generate()
+        context['tree'] = BootstrapFrequencyTree(models.visible_groups_for(self.request.user)).generate()
         return context
 
 
@@ -1879,7 +1881,7 @@ class CategoryTree(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
 
         context = super().get_context_data(*args, **kwargs)
-        context['tree'] = BootstrapCategoryTree(self.request.user.groups.all()).generate()
+        context['tree'] = BootstrapCategoryTree(models.visible_groups_for(self.request.user)).generate()
         return context
 
 
