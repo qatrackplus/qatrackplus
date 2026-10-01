@@ -51,6 +51,31 @@ Other Changes
   configuration documentation. Dates typed in other formats are still accepted,
   and the JSON API's format is unchanged.
 
+* **SQL Server installations have their lost unique constraints restored.** On
+  Microsoft SQL Server, ``mssql-django`` drops a unique index when an unrelated field
+  change retypes a table's primary key, and does not put it back - which the 4.0
+  migrations did to every table. The effect was silent: the database stopped enforcing
+  16 of the uniqueness rules QATrack+ declares, so duplicates could be created where
+  the application intends one record, including the key that keeps API submissions
+  unique. This release puts them back.
+
+  No other database engine was ever affected, and on those engines this step does
+  nothing. If your database already contains duplicate rows the affected index is
+  reported and skipped rather than failing the upgrade - run
+  ``python manage.py check_unique_constraints`` to list them, and the new
+  ``qatrack.W011`` system check reports any constraint still unenforced.
+
+* **The outstanding migrations have been recorded.** ``makemigrations`` reported
+  195 pending field-state changes across seven apps on a clean checkout - all
+  metadata, almost all of it ``verbose_name`` labels that the localisation work added
+  to fields which had none, without recording the resulting state.
+  They are now one migration per app. Every operation is a no-op on SQLite,
+  PostgreSQL and SQL Server, so applying them writes a row to
+  ``django_migrations`` and changes no schema and no data. The effect is that
+  ``manage.py makemigrations --check`` is meaningful again, having previously
+  failed on every installation.
+
+
 v4.0.1
 ------
 
