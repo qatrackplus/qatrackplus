@@ -20,7 +20,7 @@ be expensive!).
 
    linux
    linux_upgrade_from_3
-   upgrade_from_4_0
+   linux_upgrade_from_4_0
 
 
 .. toctree::
@@ -29,7 +29,7 @@ be expensive!).
 
    win
    win_upgrade_from_3
-   upgrade_from_4_0
+   win_upgrade_from_4_0
 
 
 Note there is no official support for the platforms listed below.  That doesn't
@@ -41,6 +41,7 @@ run into any issues.  Of course you can always look for help on the
    :maxdepth: 2
 
    docker
+   docker_upgrade_from_4_0
 
 
 Configuring your QATrack+ Instance
