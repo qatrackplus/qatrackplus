@@ -11,13 +11,18 @@
 # dependency check and the suite on the default database - is the part that
 # catches most red runs, and it runs anywhere.
 #
-# Keep the three steps in this order. It is CI's order, and it is also
-# cheapest-first: lint fails in seconds, the dependency check in one, and only
-# then do you wait on the suite.
+# Keep the steps in this order. It is CI's order, and it is also cheapest-first:
+# lint fails in seconds, the dependency check in one, the docs build in a few,
+# and only then do you wait on the suite.
+#
+# `docs` is here because nothing in GitHub Actions builds the documentation -
+# only the Docker image does, and it does not fail on a warning. So a broken
+# cross-reference or a malformed heading reaches a release unless somebody
+# happens to build locally.
 
 [tasks.ci]
-help = "Run the CI checks that work on a dev machine: lint, deps, then the suite"
-sequence = ["lint", "deps", "test", "_ci-reminder"]
+help = "Run the CI checks that work on a dev machine: lint, deps, docs, then the suite"
+sequence = ["lint", "deps", "docs", "test", "_ci-reminder"]
 
 
 # CI pins this to pre-commit 4.6.0 via `uvx pre-commit@4.6.0`; here it is
