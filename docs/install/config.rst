@@ -173,6 +173,52 @@ timezones on Wikipedia
 <http://en.wikipedia.org/wiki/List_of_tz_database_time_zones>`_.
 
 
+Organization Logo
+~~~~~~~~~~~~~~~~~
+
+QATrack+ reports include an option to display your organization's logo.
+
+**Adding Your Organization Logo**
+
+1. **Prepare your logo file:**
+   - Use a PNG format for best compatibility
+   - Recommended size: 200x60 pixels or similar aspect ratio
+   - Keep file size reasonable (under 100KB)
+
+2. **Replace the placeholder logo:**
+   - Navigate to ``qatrack/reports/static/reports/img/``
+   - Replace the existing ``logo.png`` file with your own logo
+   - Keep the same filename (``logo.png``) to avoid template changes
+
+3. **Alternative: Use a different filename:**
+   - If you prefer a different filename, edit ``qatrack/reports/templates/reports/_header.html``
+   - Update all references from ``logo.png`` to your preferred filename
+   - Update the alt text and fallback messages as needed
+
+4. **Collect static files:**
+   After making changes, run:
+   
+   .. code-block:: shell
+   
+       python manage.py collectstatic --noinput
+
+**Logo Display Options**
+
+- **HTML Reports:** Logo is displayed using Django's static file handling
+- **PDF Reports:** Logo uses file:// paths for compatibility with PDF generation
+- **Error Handling:** If the logo fails to load, nothing is displayed (no fallback message)
+- **Visibility Control:** Users can toggle logo display on/off in report settings
+
+**Customizing Logo Text**
+
+To change the alt text:
+- Edit ``qatrack/reports/templates/reports/_header.html``
+- Update the translation strings for "Organization Logo"
+- Add translations to your locale files if using multiple languages
+
+**Note:** The logo functionality is designed to be easily customizable without requiring code changes to the core application.
+
+
 Icon Settings
 ~~~~~~~~~~~~~
 

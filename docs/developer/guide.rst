@@ -15,7 +15,6 @@ Developers Guide
    self
    schema
 
-
 Installing QATrack+ For Development
 -----------------------------------
 
@@ -32,17 +31,6 @@ Prerequisites
 
 QATrack+ is developed using Python 3.12. We recommend using the latest stable
 version of Python 3.12 for the best development experience and compatibility.
-
-Node.js (not currently required)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-QATrack+ had a Vue 3 frontend bundle compiled with Vite. The faults UI now uses
-server-rendered HTMX with jQuery, and ``package.json`` was removed along with the
-bundle, so **Node.js is not a prerequisite for anything today**.
-
-A frontend build is expected to return no earlier than 4.1. Until then there is
-nothing to build, and ``npm`` commands will fail for want of a manifest
-(see :ref:`building-frontend` below).
 
 Git
 ~~~
@@ -103,33 +91,6 @@ Then clone your fork to your local machine:
 .. code-block:: shell
 
     git clone https://github.com/YOUR_USERNAME/qatrackplus.git
-.. _building-frontend:
-
-Building the Frontend
-~~~~~~~~~~~~~~~~~~~~~
-
-There is nothing to build at present.
-
-The Vue/Vite bundle was retired when the faults UI moved to server-rendered
-HTMX, and ``package.json`` went with it, so ``npm ci`` has no manifest to read.
-A replacement is expected no earlier than 4.1.
-
-The release workflow builds the frontend only when a ``package.json`` is
-present, so it will resume on its own once one is - nothing here needs changing
-at that point.
-
-Selecting an Editor or IDE
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can use a variety of tools to edit and work on the QATrack+ codebase. Some popular options include:
-
-- **VS Code**: A free, open-source editor with Python and Django support.
-- **Cursor**: An AI-powered code editor that integrates with GitHub Copilot and other AI tools.
-- **PyCharm**: A Python IDE with advanced Django support.
-- **Vim/Neovim**: Lightweight, keyboard-driven editors.
-- **Emacs**: Highly customizable editor.
-
-Choose the editor or IDE that best fits your workflow. All you need is a text editor and a terminal to get started!
 
 Creating a Virtual Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,29 +112,6 @@ Install development dependencies:
     # Install all development dependencies
     uv sync --dev
 
-
-
-Creating your development database
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Rather than using a full blown database server for development work, You can
-use Sqlite3 which is included with Python.
-
-Once you have the requirements installed, copy the debug `local_settings.py` and `local_test_settings.py`
-files from the deploy subdirectory and then create your database:
-
-.. code-block:: shell
-
-    cp deploy/dev/local_settings.dev.py qatrack/local_settings.py
-    cp deploy/dev/local_test_settings.dev.py qatrack/local_test_settings.py
-    mkdir db
-    python manage.py migrate
-    python manage.py createcachetable
-
-
-this will put a database called `default.db` in the `db` subdirectory.
-
-
 Understanding the Settings Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -194,15 +132,25 @@ QATrack+ uses a layered approach to Django settings, with each file serving a sp
 4. **`settings.py`** - Base Django application settings
    - Contains core Django configuration, installed apps, middleware, etc.
 
-Collect Static Files
-~~~~~~~~~~~~~~~~~~~~
+Creating your development database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before running the development server, you need to collect all static files to the STATIC_ROOT directory:
+Rather than using a full blown database server for development work, You can
+use Sqlite3 which is included with Python.
+
+Once you have the requirements installed, copy the debug `local_settings.py` and `local_test_settings.py`
+files from the deploy subdirectory and then create your database:
 
 .. code-block:: shell
 
-    python manage.py collectstatic --noinput
+    cp deploy/dev/local_settings.dev.py qatrack/local_settings.py
+    cp deploy/dev/local_test_settings.dev.py qatrack/local_test_settings.py
+    mkdir db
+    python manage.py migrate
+    python manage.py createcachetable
 
+
+this will put a database called `default.db` in the `db` subdirectory.
 
 Loading Default Data (Fixtures)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -298,6 +246,15 @@ there are left alone. Any default fixtures the generator depends on are loaded
 automatically if their tables are empty, so a fresh database needs nothing but
 ``migrate``.
 
+Collect Static Files
+~~~~~~~~~~~~~~~~~~~~
+
+Before running the development server, you need to collect all static files to the STATIC_ROOT directory:
+
+.. code-block:: shell
+
+    python manage.py collectstatic --noinput
+
 Running the development server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -316,6 +273,45 @@ and then run the development server:
 Once the development server is running you should be able to visit
 http://127.0.0.1:8000/ in your browser and log into QATrack+.
 
+Selecting an Editor or IDE
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use a variety of tools to edit and work on the QATrack+ codebase. Some popular options include:
+
+- **VS Code**: A free, open-source editor with Python and Django support.
+- **Cursor**: An AI-powered code editor that integrates with GitHub Copilot and other AI tools.
+- **PyCharm**: A Python IDE with advanced Django support.
+- **Vim/Neovim**: Lightweight, keyboard-driven editors.
+- **Emacs**: Highly customizable editor.
+
+Choose the editor or IDE that best fits your workflow. All you need is a text editor and a terminal to get started!
+
+Node.js (not currently required)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ had a Vue 3 frontend bundle compiled with Vite. The faults UI now uses
+server-rendered HTMX with jQuery, and ``package.json`` was removed along with the
+bundle, so **Node.js is not a prerequisite for anything today**.
+
+A frontend build is expected to return no earlier than 4.1. Until then there is
+nothing to build, and ``npm`` commands will fail for want of a manifest
+(see :ref:`building-frontend` below).
+
+.. _building-frontend:
+
+Building the Frontend
+~~~~~~~~~~~~~~~~~~~~~
+
+There is nothing to build at present.
+
+The Vue/Vite bundle was retired when the faults UI moved to server-rendered
+HTMX, and ``package.json`` went with it, so ``npm ci`` has no manifest to read.
+A replacement is expected no earlier than 4.1.
+
+The release workflow builds the frontend only when a ``package.json`` is
+present, so it will resume on its own once one is - nothing here needs changing
+at that point.
+
 Next Steps
 ~~~~~~~~~~
 
@@ -328,7 +324,6 @@ excellent introduction to writing Django applications.
 Once you are happy with your modifications, commit them to your source code
 repository, push your changes back to your online repository and make a pull
 request! If those terms mean nothing to you...read a git tutorial!
-
 
 QATrack+ Development Guidelines
 -------------------------------
@@ -385,13 +380,11 @@ wording is abbreviated for display. For example:
 
     <span title="This X has Y and Z for T">Foo baz qux</span>
 
-
-
 Formatting & Style Guide
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 General formatting
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 In general, any code you write should be `PEP 8 compatible
 <https://www.python.org/dev/peps/pep-0008/>`__ with a few exceptions.  It is
@@ -414,19 +407,8 @@ configuration sections is included in the setup.cfg file. To run yapf:
 
     make yapf
 
-Using Make Commands
-~~~~~~~~~~~~~~~~~~~
-
-QATrack+ includes a Makefile with convenient shortcuts for common development tasks like running tests, formatting code, and building documentation. You can see all available commands by running:
-
-.. code-block:: shell
-
-    make help
-
-For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
-
 Import Order
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 Imports in your Python code should be split in three sections:
 
@@ -463,15 +445,77 @@ automatically ordering your imports and an `isort` configuration is included in
 the setup.cfg file.
 
 Indentation
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 Python code for QATrack+ use 4 spaces for indentation. Django templates (and
 other html files) should use 2 spaces for indentation.  Javascript code should
 use 4 spaces for indentation.
 
+Using Make Commands
+~~~~~~~~~~~~~~~~~~~
+
+QATrack+ includes a Makefile with convenient shortcuts for common development tasks like running tests, formatting code, and building documentation. You can see all available commands by running:
+
+.. code-block:: shell
+
+    make help
+
+For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
+
+Running The Test Suite
+----------------------
+
+Once you have QATrack+ and its dependencies installed (and optionally configured
+Selenium browser testing above), you can run the test suite from the root
+QATrack+ directory using the `py.test` command:
+
+
+.. code-block:: sh
+
+    ./qatrackplus> py.test
+    Test session starts (platform: linux, Python 3.6.5, pytest 3.5.0, pytest-sugar 0.9.1)
+    Django settings: qatrack.settings (from ini file)
+    rootdir: /home/dev/projects/qatrackplus, inifile: pytest.ini
+    plugins: django-4.5.2, cov-3.0.0
+
+    qatrack/accounts/tests.py ✓✓✓
+
+**Running Different Types of Tests**
+
+Run all tests (including Selenium):
+
+.. code-block:: shell
+
+    py.test
+
+Run only Selenium tests:
+
+.. code-block:: shell
+
+    pytest -m selenium
+
+Run only non-Selenium tests (faster):
+
+.. code-block:: shell
+
+    pytest -m "not selenium"
+
+For more information on using py.test, refer to the `py.test documentation
+<https://pytest.org>`__.
+
+.. important::
+
+    All new code you write should have tests written for it.  Any non trivial code
+    you wish to contribute back to QATrack+ will require you to write tests
+    for the code providing as high a code coverage as possible.  You can measure code coverage
+    in the following way:
+
+    .. code-block:: shell
+
+        make cover
 
 Setting Up Selenium Browser Testing
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
 
@@ -597,108 +641,8 @@ Then also update `SELENIUM_VIRTUAL_DISPLAY` in `qatrack/test_settings.py`:
     # In qatrack/test_settings.py:
     SELENIUM_VIRTUAL_DISPLAY = True
 
-
-Running The Test Suite
-----------------------
-
-Once you have QATrack+ and its dependencies installed (and optionally configured
-Selenium browser testing above), you can run the test suite from the root
-QATrack+ directory using the `py.test` command:
-
-
-.. code-block:: sh
-
-    ./qatrackplus> py.test
-    Test session starts (platform: linux, Python 3.6.5, pytest 3.5.0, pytest-sugar 0.9.1)
-    Django settings: qatrack.settings (from ini file)
-    rootdir: /home/dev/projects/qatrackplus, inifile: pytest.ini
-    plugins: django-4.5.2, cov-3.0.0
-
-    qatrack/accounts/tests.py ✓✓✓
-
-**Running Different Types of Tests**
-
-Run all tests (including Selenium):
-
-.. code-block:: shell
-
-    py.test
-
-Run only Selenium tests:
-
-.. code-block:: shell
-
-    pytest -m selenium
-
-Run only non-Selenium tests (faster):
-
-.. code-block:: shell
-
-    pytest -m "not selenium"
-
-For more information on using py.test, refer to the `py.test documentation
-<https://pytest.org>`__.
-
-.. important::
-
-    All new code you write should have tests written for it.  Any non trivial code
-    you wish to contribute back to QATrack+ will require you to write tests
-    for the code providing as high a code coverage as possible.  You can measure code coverage
-    in the following way:
-
-    .. code-block:: shell
-
-        make cover
-
-
-Customizing Organization Logos
-------------------------------
-
-QATrack+ reports include an option to display your organization's logo.
-
-**Adding Your Organization Logo**
-
-1. **Prepare your logo file:**
-   - Use a PNG format for best compatibility
-   - Recommended size: 200x60 pixels or similar aspect ratio
-   - Keep file size reasonable (under 100KB)
-
-2. **Replace the placeholder logo:**
-   - Navigate to ``qatrack/reports/static/reports/img/``
-   - Replace the existing ``logo.png`` file with your own logo
-   - Keep the same filename (``logo.png``) to avoid template changes
-
-3. **Alternative: Use a different filename:**
-   - If you prefer a different filename, edit ``qatrack/reports/templates/reports/_header.html``
-   - Update all references from ``logo.png`` to your preferred filename
-   - Update the alt text and fallback messages as needed
-
-4. **Collect static files:**
-   After making changes, run:
-   
-   .. code-block:: shell
-   
-       python manage.py collectstatic --noinput
-
-**Logo Display Options**
-
-- **HTML Reports:** Logo is displayed using Django's static file handling
-- **PDF Reports:** Logo uses file:// paths for compatibility with PDF generation
-- **Error Handling:** If the logo fails to load, nothing is displayed (no fallback message)
-- **Visibility Control:** Users can toggle logo display on/off in report settings
-
-**Customizing Logo Text**
-
-To change the alt text:
-- Edit ``qatrack/reports/templates/reports/_header.html``
-- Update the translation strings for "Organization Logo"
-- Add translations to your locale files if using multiple languages
-
-**Note:** The logo functionality is designed to be easily customizable without requiring code changes to the core application.
-
-
 Writing Documentation
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 As well as writing tests for your new code, it will be extremely helpful for
 you to include documenation for the features you have built.  The documentation
@@ -729,9 +673,8 @@ browser (at http://127.0.0.1:8008) by running one of the following commands:
     # -or-
     sphinx-autobuild docs docs/_build/html --port 8008
 
-
 Version Naming Convention
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 QATrack+ uses **Eff Ver (Effort Versioning)** for its version naming convention. 
 Eff Ver is a versioning strategy that focuses on the effort required to upgrade 
@@ -760,7 +703,6 @@ The version number follows the format `X.Y.Z` where:
 - 4.1.1: Bug fix release
 - 5.0.0: Upgrade to Django 5.2 LTS
 
-
 Copyright & Licensing
 ---------------------
 
@@ -770,7 +712,6 @@ otherwies, by submitting code to the QATrack+ project you agree to have it
 distributed using the same `MIT license
 <https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ as
 QATrack+ uses.
-
 
 I'm not a developer, how can I help out?
 ----------------------------------------
