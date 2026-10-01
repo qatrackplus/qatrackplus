@@ -7,11 +7,20 @@
 
 
 [tasks.docs]
-help = "Build the Sphinx docs (output under docs/_build/html)"
-# `docs` above runs `cd docs && make html`, which needs Make on the host -
+help = "Build the Sphinx docs, failing on any warning (output under docs/_build/html)"
+# `make-docs` runs `cd docs && make html`, which needs Make on the host -
 # precisely what a Windows contributor does not have. Calling sphinx-build
 # directly needs neither Make nor docs/make.bat.
-cmd = "sphinx-build -b html docs docs/_build/html"
+#
+# -W turns warnings into errors, which is only usable because the tree builds
+# with none; a broken cross-reference or a short title underline now fails
+# instead of scrolling past. --keep-going reports every warning rather than
+# stopping at the first, so one run tells you everything to fix.
+#
+# -a --fresh-env, because an incremental build does not re-report warnings for
+# files it has not reparsed: without them a second run looks clean whether or
+# not it is, which is exactly how these accumulated.
+cmd = "sphinx-build -W --keep-going -a --fresh-env -b html docs docs/_build/html"
 
 
 [[tasks.docs-autobuild.args]]
