@@ -75,7 +75,11 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+# install/_upgrade_4_0_*.rst are fragments shared by the three platform upgrade guides
+# via `.. include::`. An included file that is also read as a document has every label in
+# it reported as a duplicate, so they are excluded here. They carry no title and are not
+# meant to be read on their own.
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'install/_upgrade_4_0_*.rst']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

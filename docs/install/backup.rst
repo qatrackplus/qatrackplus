@@ -24,6 +24,45 @@ you will still have access to your backups.
     installation is backed up correctly**.
 
 
+The ``backup_site`` Management Command
+--------------------------------------
+
+``manage.py backup_site`` writes the database and the uploaded media files to a
+timestamped directory.
+
+.. warning::
+
+    **It can only back up the database on PostgreSQL and SQLite.** On MySQL, or any
+    other engine, it reports that it cannot and that step fails. Earlier versions
+    skipped the database silently and still reported success, so check that the
+    database file is actually present in any backup set produced before 4.0.1. For
+    MySQL, use ``mysqldump``.
+
+Backups in Docker
+-----------------
+
+``deploy/docker/backup/backup.sh`` reads the database connection from the
+environment rather than hard-coding it:
+
+.. code-block:: bash
+
+    POSTGRES_DB        # the database to dump
+    POSTGRES_USER      # the role to connect as
+    POSTGRES_PASSWORD  # that role's password
+
+These are the same variables the ``postgres`` service uses, so a deployment that
+sets them in its Compose environment or ``.env`` file needs no further
+configuration. If they are not set the dump fails rather than silently writing a
+backup of the wrong database.
+
+.. note::
+
+    Before 4.0.1 this script had the database name and user written into it, so a
+    deployment that had changed either was dumping the wrong database, or nothing at
+    all. If you have customised them, confirm your next backup contains what you
+    expect.
+
+
 Using Django to Dump The Database To JSON
 -----------------------------------------
 
