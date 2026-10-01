@@ -244,9 +244,15 @@ initialising. The first time QATrack+ starts up initialisation can take about
 .. figure:: images/502_error.png
     :alt: Error visible while server is starting up
 
-Default login is username `admin`, password `admin`. Once you have logged in
-as admin go to http://localhost/admin/auth/user/2/password/ to change the admin
-password to something more secure.
+No user account is created for you, so create one before your first login.
+The `django` service runs the application, so run `createsuperuser` there and
+answer its prompts:
+
+.. code-block:: console
+
+    docker compose exec django python manage.py createsuperuser
+
+You can then sign in at http://localhost with the credentials you just chose.
 
 
 Setting up copying backups from local machine to remote server on Windows
