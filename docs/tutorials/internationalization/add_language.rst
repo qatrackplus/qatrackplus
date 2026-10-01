@@ -8,14 +8,14 @@ This process involves extracting translatable strings, translating them, compili
 the system to use the new language.
 
 Prerequisites
-------------
+-------------
 
 - QATrack+ development environment set up
 - Python 3.12+ and uv package manager installed
 - Translation tools installed (see below)
 
 Supported Languages
-------------------
+-------------------
 
 QATrack+ supports any language that Django supports. Common language codes include:
 
@@ -210,7 +210,7 @@ translation files, but only displays languages that are explicitly configured in
 to users while still maintaining the ability to detect available translations.
 
 Known Issues
------------
+------------
 
 **String Extraction Coverage**
 

@@ -28,7 +28,7 @@ or have questions about using git or contributing code then please post to the
 :mailinglist:`mailing list <>` so we can help you out!
 
 Prerequisites
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 QATrack+ is developed using Python 3.12. We recommend using the latest stable
 version of Python 3.12 for the best development experience and compatibility.
@@ -60,6 +60,7 @@ online including a `tutorial by the Django team
 a tutorial on `GitHub <https://try.github.io/>`__.
 
 .. _forking-repo:
+
 GitHub Account
 ~~~~~~~~~~~~~~
 
@@ -194,7 +195,7 @@ QATrack+ uses a layered approach to Django settings, with each file serving a sp
    - Contains core Django configuration, installed apps, middleware, etc.
 
 Collect Static Files
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 Before running the development server, you need to collect all static files to the STATIC_ROOT directory:
 
@@ -414,7 +415,7 @@ configuration sections is included in the setup.cfg file. To run yapf:
     make yapf
 
 Using Make Commands
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 QATrack+ includes a Makefile with convenient shortcuts for common development tasks like running tests, formatting code, and building documentation. You can see all available commands by running:
 
@@ -470,7 +471,7 @@ use 4 spaces for indentation.
 
 
 Setting Up Selenium Browser Testing
-----------------------------------
+-----------------------------------
 
 QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
 
@@ -651,7 +652,7 @@ For more information on using py.test, refer to the `py.test documentation
 
 
 Customizing Organization Logos
------------------------------
+------------------------------
 
 QATrack+ reports include an option to display your organization's logo.
 

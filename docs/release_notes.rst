@@ -1,9 +1,14 @@
 Release Notes
 =============
 
-.. current series release notes will appear in this file,
-   older release notes are included from the release_notes directory.
-   when incrementing to a new series, the release notes for that series should be added here, and the release notes for the previous series should be moved to the release_notes directory.
+.. This file holds the notes for the series currently being released, and nothing else.
+   Each earlier major series lives in its own file under release_notes/ and is listed in
+   the toctree at the bottom - not pulled in with `include`, so each is its own page.
+
+   When starting a new series: move this file's sections into
+   release_notes/<series>.rst, give that file a document title at `=` level and a
+   `.. _release_notes_series_<n>:` label, add it to the toctree below, and begin the new
+   series here.
 
 .. _`release_notes_40`:
 
@@ -222,13 +227,16 @@ Contributors from the project history include:
 
 
 
-QATrack+ v3.1
-~~~~~~~~~~~~~
+Earlier Series
+~~~~~~~~~~~~~~
 
-.. include:: release_notes/v3.1.rst
+The notes for each earlier major series are kept as their own page rather than being
+pulled into this one, so that this file only ever holds the series currently being
+released.
 
+.. toctree::
+   :maxdepth: 1
 
-QATrack+ v0.3.0
-~~~~~~~~~~~~~~~
-
-.. include:: release_notes/v0.3.rst
+   release_notes/v3.1
+   release_notes/v0.3
+   release_notes/v0.2
