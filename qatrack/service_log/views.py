@@ -33,6 +33,7 @@ from django.urls import resolve, reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import ngettext
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView
 from django.views.generic.detail import SingleObjectTemplateResponseMixin
 from django.views.generic.edit import (
@@ -94,8 +95,12 @@ def get_time_display(dt):
         raise ValueError('%s is not a valid datetime' % dt)
     if timezone.now() - dt < timezone.timedelta(hours=1):
         ago = timezone.now() - dt
-        # ago = timezone.timedelta(minutes=ago.minute)
-        return str(ago.seconds // 60) + ' minutes ago'
+        minutes = ago.seconds // 60
+        # ngettext, not concatenation: the string was untranslatable and read
+        # "1 minutes ago". qatrack_tags.py already had this form.
+        return ngettext('%(minutes)d minute ago', '%(minutes)d minutes ago', minutes) % {
+            'minutes': minutes,
+        }
     else:
         return format_as_time(dt)
 

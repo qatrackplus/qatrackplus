@@ -28,6 +28,10 @@ Bug Fixes
 * Fixed the report paper size being ignored when PDFs are generated with
   Chrome. Reports set to A4 were produced at Letter size regardless of the
   paper size chosen for the report.
+* Service areas show their own names again. Every service area rendered as the
+  words "service area" - in the admin, in every dropdown listing them, and
+  anywhere a template showed one - so with more than one configured there was no
+  way to tell them apart on screen.
 * Scheduled service event notices are sent again. The periodic task was
   registered under a function name that does not exist, so it failed roughly
   every 15 minutes and no notices went out. The failure appeared only in the

@@ -11141,3 +11141,10 @@ msgstr ""
 
 #~ msgid "(Logo not available in downloaded version)"
 #~ msgstr "(Logo non disponible en version téléchargée)"
+
+#: qatrack/templates/homepage.html:149
+#, python-format
+msgid ""
+"There are currently %(SE_RTS_INCOMPLETE_QA_COUNT)s incomplete return to "
+"service test lists"
+msgstr "Il existe actuellement %(SE_RTS_INCOMPLETE_QA_COUNT)s listes de tests de retour en service incomplètes"

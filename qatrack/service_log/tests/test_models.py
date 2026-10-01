@@ -344,3 +344,33 @@ class TestDeletions(TestCase):
 
         sa.delete()
         self.assertFalse(sl_models.UnitServiceArea.objects.filter(id=usa_id).exists())
+
+
+class TestServiceAreaStr(TestCase):
+    """A ServiceArea must render as its own name.
+
+    `__str__` returned `str(_l('service area'))` - the model's *verbose name* -
+    so every service area rendered identically: in the admin changelist, in every
+    dropdown that lists them, and anywhere a template interpolated one. With more
+    than one area configured there was no way to tell them apart on screen.
+
+    It arrived with `3ed30bf9`, "Additions for Localization", which wrapped
+    strings in `gettext_lazy` throughout; `self.name` was replaced by the verbose
+    name in the process. The neighbouring `UnitServiceArea.__str__` was left
+    correct, which is why this was not obvious from the file.
+    """
+
+    def test_it_renders_its_own_name(self):
+        area = sl_utils.create_service_area(name='Linac Vault 2')
+        assert str(area) == 'Linac Vault 2'
+
+    def test_two_areas_do_not_render_identically(self):
+        """The symptom, stated directly: they were indistinguishable on screen."""
+        first = sl_utils.create_service_area(name='Linac Vault 2')
+        second = sl_utils.create_service_area(name='CT Simulator')
+        assert str(first) != str(second)
+
+    def test_it_is_not_the_verbose_name(self):
+        """Guards the specific regression rather than just 'some string'."""
+        area = sl_utils.create_service_area(name='Linac Vault 2')
+        assert str(area) != str(sl_models.ServiceArea._meta.verbose_name)
