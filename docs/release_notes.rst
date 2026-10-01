@@ -85,6 +85,34 @@ Bug Fixes
   on the one page whose purpose is to show what is due. The Due Dates report was
   never affected and has always used the end of the day; the page now matches it.
 
+* Scheduled report notices can be defined again. Opening the schedule dialog for a
+  report raised an ``AttributeError`` from ``ReportSchedule.__str__``, which read an
+  ``rrule`` attribute that does not exist, so the schedule could not be saved. The
+  translation catalogue is also loaded on the reports and charts pages, which
+  previously fell back to untranslated strings (:issues:`#837 <837>`).
+* Report links no longer double the URL scheme. A Site domain is documented as a bare
+  host, but setting it to a full URL such as ``https://example.com`` is common, and the
+  links in report bodies and the "View on site" header prepended the scheme a second
+  time - producing ``http://https://example.com/...``, which a browser reads as the host
+  ``https`` with the real host pushed into the path. Every such link was broken.
+* The table controls on listing pages are translated again. *Showing x of y*,
+  *Previous*, *Next*, *Search:* and *No data available* always rendered in English
+  whatever language was active, because the tables' translated strings were never
+  passed to DataTables (:issues:`#827 <827>`).
+* Client-side translations work for users who are not logged in. The JavaScript
+  translation catalogue was not exempt from the login requirement, so for anonymous
+  visitors the request redirected to the login page, the browser parsed the HTML as
+  JavaScript, and no client-side string was ever translated.
+* Fixed an intermittent JavaScript error on the QC overview, the parts reporting page
+  and the unit available time page. Each used a scrollbar plugin without declaring it
+  as a dependency, so whether it had loaded in time depended on what else a page
+  happened to pull in first.
+* ``backup_site`` no longer reports success when it has not backed up the database.
+  On MySQL, and on any engine other than PostgreSQL and SQLite, it skipped the database
+  silently and still finished as though it had written one - so a site could hold a set
+  of backups containing no database at all. It now says which engine it cannot handle
+  and fails that step.
+
 Other Changes
 ^^^^^^^^^^^^^
 
@@ -102,6 +130,29 @@ Other Changes
   developer guide had described ``make help`` for some time without the target
   existing, so the command silently did nothing; a bare ``make`` now prints it
   as well.
+
+* The language a user selects now persists. The language cookie had no explicit
+  lifetime, so it expired with the browser session and the interface reverted to the
+  default language on the next visit.
+
+Deployment and Upgrade Notes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Python 3.12 and Django 4.2.30 or newer are now required.** The Django floor was
+  raised to pick up its security fixes, and Python is pinned to 3.12 - the version
+  QATrack+ 4.0 is tested and deployed on.
+* **The Docker backup script now reads its database settings from the environment.**
+  ``deploy/docker/backup/backup.sh`` previously hard-coded the database name and user.
+  It now uses ``POSTGRES_DB``, ``POSTGRES_USER`` and ``POSTGRES_PASSWORD``, so a
+  deployment that sets those in its Compose environment is backed up correctly, and one
+  that does not set them will fail rather than dump the wrong database. Check your
+  ``.env`` before relying on the next backup.
+* **``CSRF_TRUSTED_ORIGINS`` can be set from the environment** for Docker deployments,
+  falling back to ``ALLOWED_HOSTS`` when it is not given. See the notes in
+  ``deploy/docker/.env.example``.
+* **The ``installfixtures`` management command has been removed.** It loaded a fixture
+  set that no longer matched the schema. Use ``manage.py loaddata`` with the fixtures
+  you want.
 
 v4.0.0
 ------
