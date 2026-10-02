@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
 
 from qatrack.qa import models
@@ -104,3 +105,116 @@ class TestListAdminViewsTest(TestCase):
         # Verify the test list and test were imported
         self.assertTrue(models.TestList.objects.filter(slug=self.test_list.slug).exists())
         self.assertTrue(models.Test.objects.filter(slug=self.test.slug).exists())
+
+
+class TestListMembershipLabelTest(TestCase):
+    """The test name shown beside the raw id field in the Test List admin.
+
+    The field itself holds a test's id. Its name is fetched over AJAX from
+    dynamic_raw_id's label view, which QATrack+ mounts under `admin/`.
+
+    Since Django 3.2 the admin site ends its own urlconf with a catch-all
+    (`AdminSite.final_catch_all_view`), so anything under `admin/` that the
+    admin does not recognise raises Http404 there rather than falling through to
+    later patterns. With the mount listed after `admin.site.urls` the label view
+    was unreachable, and a Test List's memberships showed an id and a macro name
+    - which are rendered server-side - with no test name at all.
+    """
+
+    label_url_name = 'dynamic_raw_id:dynamic_raw_id_label'
+
+    def setUp(self):
+        self.user = utils.create_user(is_superuser=True)
+        self.client.force_login(self.user)
+
+    def label_url(self, model_name):
+        return reverse(
+            self.label_url_name, kwargs={'app_name': 'qa', 'model_name': model_name}
+        )
+
+    def test_the_label_url_is_not_shadowed_by_the_admin_catch_all(self):
+        """Asserted on the resolver, because the symptom is a plain 404.
+
+        A 404 from the admin's catch-all and a 404 from a missing object look
+        identical to the caller, so this names which view answered.
+        """
+        match = resolve(self.label_url('test'))
+        self.assertEqual(
+            match.func.__module__,
+            'dynamic_raw_id.views',
+            "%s answered instead - the admin catch-all is shadowing the mount" % (
+                match.func.__module__,
+            ),
+        )
+
+    def test_the_label_view_returns_the_test_name(self):
+        test = utils.create_test(name="Output Constancy")
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Output Constancy")
+        self.assertContains(response, reverse('admin:qa_test_change', args=[test.pk]))
+
+    def test_the_label_view_returns_a_sublists_test_list_name(self):
+        """The Sublist inline uses the same mechanism for its child test list."""
+        test_list = utils.create_test_list(name="Daily Linac QC")
+        response = self.client.get(self.label_url('testlist'), {'id': test_list.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Daily Linac QC")
+
+    def test_the_label_view_still_requires_a_staff_user(self):
+        """Moving the mount out from under `admin/` must not open it up.
+
+        The view brings its own `is_staff` test, so this holds either way - but
+        the admin's position in the urlconf used to be the only reason a request
+        was refused at all, so the refusal is worth attributing. Asserted on the
+        redirect target: the admin sends a non-staff user to its own login page,
+        and the label view sends them to LOGIN_URL.
+        """
+        self.user.is_staff = False
+        self.user.is_superuser = False
+        self.user.save()
+        test = utils.create_test(name="Output Constancy")
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            response.url.startswith(settings.LOGIN_URL),
+            "redirected to %s, so something other than the label view refused it"
+            % response.url,
+        )
+
+
+class TestRawIdWrapperIconTest(TestCase):
+    """The view and change icons beside a raw id field in the admin.
+
+    `RelatedFieldWidgetWrapper` renders them with a `data-href-template` and no
+    `href`, and Django fills the href in from `updateRelatedObjectLinks`, which
+    it wires to `select` elements alone. A dynamic_raw_id field is a text input,
+    so the eye and the pencil appeared beside it and did nothing.
+    """
+
+    def setUp(self):
+        self.user = utils.create_user(is_superuser=True)
+        self.client.force_login(self.user)
+
+    def test_a_raw_id_field_still_renders_the_icons_without_an_href(self):
+        """The premise, asserted rather than assumed.
+
+        If Django ever starts filling these in itself, this fails and the script
+        below can go.
+        """
+        test_list = utils.create_test_list()
+        utils.create_test_list_membership(test_list, utils.create_test())
+        response = self.client.get(
+            reverse('admin:qa_testlist_change', args=[test_list.pk])
+        )
+        self.assertContains(response, 'related-widget-wrapper-link view-related')
+        self.assertContains(response, 'data-href-template')
+
+    def test_the_change_form_asks_django_to_fill_the_icons_in(self):
+        test_list = utils.create_test_list()
+        utils.create_test_list_membership(test_list, utils.create_test())
+        response = self.client.get(
+            reverse('admin:qa_testlist_change', args=[test_list.pk])
+        )
+        self.assertContains(response, 'updateRelatedObjectLinks')
+        self.assertContains(response, 'vForeignKeyRawIdAdminField')
