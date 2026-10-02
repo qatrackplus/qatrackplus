@@ -1,9 +1,10 @@
 import os
+import re
 import tempfile
 from pathlib import Path
 
 from django.conf import settings
-from django.core.checks import Error, Warning, register
+from django.core.checks import Error, Tags, Warning, register
 
 
 @register()
@@ -68,6 +69,111 @@ def check_media_folder_permissions(app_configs, **kwargs):
     return errors
 
 
+def _directives(fmt):
+    """The strptime directives in ``fmt``, in the order they appear."""
+    return re.findall(r'%(.)', fmt)
+
+
+def order_is_ambiguous(fmt):
+    """True if this format's day and month could be read either way round.
+
+    Ambiguity needs two things: a numeric day *and* a numeric month, with
+    neither preceded by the year. ``%d %b %Y`` is safe because the month is a
+    name. ``%Y-%m-%d`` is safe because nothing anywhere writes year-day-month,
+    so seeing the year first settles the rest.
+    """
+    directives = _directives(fmt)
+    if 'd' not in directives or 'm' not in directives:
+        return False
+
+    for directive in directives:
+        if directive in ('Y', 'y'):
+            return False
+        if directive in ('d', 'm'):
+            return True
+    return False
+
+
+def _day_first(fmt):
+    for directive in _directives(fmt):
+        if directive == 'd':
+            return True
+        if directive == 'm':
+            return False
+    return False
+
+
+@register()
+def check_ambiguous_date_formats(app_configs, **kwargs):
+    """Warn about all-numeric date formats that do not lead with the year.
+
+    QATrack+ defaults to ISO 8601 and deliberately does not suggest
+    day/month/year or month/day/year anywhere in its examples. The reason is
+    not tidiness. 03/05/2026 is the 3rd of May to most of the world and March
+    5th in the United States, the string carries nothing that distinguishes
+    them, and the US convention is entrenched enough that both readings turn
+    up in the same datasets.
+
+    In most software that is an annoyance. In a clinical QA record it is a
+    date on which a machine was or was not verified, read by people trained in
+    different conventions and by regulators who were not in the room. The
+    profession's own habit of writing dates unambiguously exists for that
+    reason, and the software should not quietly make it harder.
+
+    So this is a warning rather than an error: a site that has decided it
+    knows its own data can carry on. It should be a decision though, not
+    something discovered later from a record that was read as the wrong day.
+    """
+    settings_to_check = [
+        ('QATRACK_DATE_FORMAT', [getattr(settings, 'QATRACK_DATE_FORMAT', None)]),
+        ('QATRACK_DATETIME_FORMAT', [getattr(settings, 'QATRACK_DATETIME_FORMAT', None)]),
+        ('QATRACK_EXTRA_DATE_INPUT_FORMATS', getattr(settings, 'QATRACK_EXTRA_DATE_INPUT_FORMATS', [])),
+        ('QATRACK_EXTRA_DATETIME_INPUT_FORMATS', getattr(settings, 'QATRACK_EXTRA_DATETIME_INPUT_FORMATS', [])),
+    ]
+
+    ambiguous = []
+    for name, formats in settings_to_check:
+        for fmt in formats or []:
+            if fmt and order_is_ambiguous(fmt):
+                ambiguous.append((name, fmt))
+
+    if not ambiguous:
+        return []
+
+    listed = ', '.join('%s in %s' % (fmt, name) for name, fmt in ambiguous)
+    orders = {_day_first(fmt) for _, fmt in ambiguous}
+
+    if len(orders) > 1:
+        # Both orders accepted at once: the same string now has two possible
+        # meanings and QATrack+ resolves it by whichever is configured for
+        # display. That is defined behaviour, but it is not a safe thing to
+        # rely on when the data came from somewhere else.
+        return [
+            Warning(
+                "Both day/month and month/day date formats are configured (%s). A date "
+                "like 03/05/2026 is accepted by both and will be read using whichever "
+                "one is your display format, so the same text entered by two people can "
+                "mean two different days." % listed,
+                hint="Use the default ISO format (%Y-%m-%d), which cannot be read two "
+                     "ways, or accept only one of the two numeric orders.",
+                id='qatrack.W004',
+            )
+        ]
+
+    return [
+        Warning(
+            "An ambiguous date format is configured (%s). 03/05/2026 is the 3rd of May "
+            "in most of the world and March 5th in the United States, and nothing in "
+            "the date itself says which - a QC record read by someone using the other "
+            "convention is silently off by months." % listed,
+            hint="QATrack+ defaults to ISO 8601 (%Y-%m-%d, or %Y/%m/%d) for this "
+                 "reason. A month name (%d %b %Y) is also unambiguous. This is a "
+                 "warning, not an error - set it deliberately if your site needs it.",
+            id='qatrack.W004',
+        )
+    ]
+
+
 @register()
 def check_translation_catalogues(app_configs, **kwargs):
     """Warn when a committed .mo no longer matches the .po beside it.
@@ -101,3 +207,165 @@ def check_translation_catalogues(app_configs, **kwargs):
         )
         for problem in problems
     ]
+
+
+def declared_unique_columns(model):
+    """Column sets the model says must be unique, as frozensets.
+
+    Frozensets rather than tuples because uniqueness over (a, b) and (b, a) is
+    the same guarantee, while introspection reports whatever order the index
+    happens to use.
+
+    The primary key is excluded: it is unique by construction and a missing one
+    would fail far louder than this check.
+
+    Conditional and expression-based UniqueConstraints are skipped. They are
+    partial or functional indexes, and deciding whether the database's version
+    matches the model's is a different and much harder comparison than "are
+    these columns covered".
+    """
+    from django.db.models import UniqueConstraint
+
+    expected = set()
+
+    for field in model._meta.local_fields:
+        if field.unique and not field.primary_key:
+            expected.add(frozenset([field.column]))
+
+    for fields in model._meta.unique_together:
+        expected.add(frozenset(model._meta.get_field(f).column for f in fields))
+
+    for constraint in model._meta.constraints:
+        if not isinstance(constraint, UniqueConstraint):
+            continue
+        if getattr(constraint, 'condition', None) or getattr(constraint, 'expressions', None):
+            continue
+        expected.add(frozenset(model._meta.get_field(f).column for f in constraint.fields))
+
+    return expected
+
+
+def enforced_unique_columns(connection, table):
+    """Column sets the database actually enforces as unique, as frozensets."""
+    with connection.cursor() as cursor:
+        constraints = connection.introspection.get_constraints(cursor, table)
+
+    enforced = set()
+    for details in constraints.values():
+        if details.get('unique') and details.get('columns'):
+            enforced.add(frozenset(details['columns']))
+    return enforced
+
+
+def unenforced_unique_columns(declared, enforced):
+    """Which declared unique column sets the database does not enforce.
+
+    Split out from the check so the comparison can be tested without a
+    database. A wider unique constraint does not imply a narrower one, so this
+    is a plain set difference and not a subset test: uniqueness over (a, b)
+    permits duplicate a values.
+    """
+    return sorted(
+        (sorted(columns) for columns in declared - enforced),
+        key=lambda cols: (len(cols), cols),
+    )
+
+
+@register(Tags.database)
+def check_unique_constraints_enforced(app_configs=None, databases=None, **kwargs):
+    """Warn when a model declares uniqueness the database is not enforcing.
+
+    This exists because `mssql-django` drops a unique index when an unrelated
+    `AlterField` retypes a model's primary key, and never recreates it - which
+    the 4.0 migrations do to every model. The result is silent: the ORM stops
+    raising IntegrityError and accepts duplicates. QATrack+ relies on this for
+    TestListInstance.user_key, whose stated job is to keep API submissions
+    unique. Confirmed against mssql-django 1.7.3, 1.8.0 and 2.0.0; not
+    reproducible on PostgreSQL or SQLite.
+
+    **A Warning, deliberately, not an Error.** Checks run before `migrate`, and
+    an Error would abort it - on exactly the installations that already have
+    the problem. Telling somebody their database is missing a constraint while
+    refusing to let them run the migration that would fix it is worse than the
+    constraint being missing.
+
+    Registered under Tags.database so it runs on `migrate` and on
+    `check --database <alias>`, and costs nothing on every other management
+    command. One consequence worth knowing: on a first `migrate` the tables do
+    not exist yet, so nothing is reported until the next run.
+    """
+    if not databases:
+        return []
+
+    from django.apps import apps
+    from django.db import connections
+    from django.db.utils import DatabaseError
+
+    problems = []
+
+    for alias in databases:
+        connection = connections[alias]
+
+        # A database we cannot reach or introspect is not this check's
+        # business - other checks report that, and a broken connection should
+        # not turn into a confusing message about constraints.
+        try:
+            with connection.cursor() as cursor:
+                existing_tables = set(connection.introspection.table_names(cursor))
+        except (DatabaseError, OSError):
+            continue
+
+        for model in apps.get_models():
+            meta = model._meta
+            if meta.proxy or not meta.managed or meta.db_table not in existing_tables:
+                continue
+
+            declared = declared_unique_columns(model)
+            if not declared:
+                continue
+
+            try:
+                enforced = enforced_unique_columns(connection, meta.db_table)
+            except (DatabaseError, NotImplementedError):
+                continue
+
+            for columns in unenforced_unique_columns(declared, enforced):
+                problems.append(
+                    Warning(
+                        "%s.%s declares %s unique, but %s is not enforcing it."
+                        % (
+                            meta.app_label,
+                            meta.object_name,
+                            ', '.join(columns),
+                            connection.vendor,
+                        ),
+                        hint=(
+                            "Duplicate rows can be created that other database "
+                            "backends would reject. On SQL Server this is caused by "
+                            "mssql-django dropping the index when the 4.0 migrations "
+                            "retype primary keys; it is present in every released "
+                            "version as of 2026-09.\n\n"
+                            "The 4.0.2 migrations re-create these, so if you are "
+                            "upgrading there is nothing to do: this warning is printed "
+                            "before migrations run, and the same `migrate` repairs it. "
+                            "Run `manage.py check_unique_constraints` first to see "
+                            "whether any duplicate rows would block that - an index it "
+                            "cannot create is reported and skipped rather than failing "
+                            "the upgrade.\n\n"
+                            "To add it by hand instead:\n\n"
+                            "    CREATE UNIQUE INDEX %s ON %s (%s)\n\n"
+                            "on SQL Server add WHERE %s IS NOT NULL if the column is "
+                            "nullable, since it treats NULLs as equal."
+                            % (
+                                '%s_%s_uniq' % (meta.db_table, '_'.join(columns)),
+                                meta.db_table,
+                                ', '.join(columns),
+                                ' IS NOT NULL AND '.join(columns),
+                            )
+                        ),
+                        obj=model,
+                        id='qatrack.W011',
+                    )
+                )
+
+    return problems

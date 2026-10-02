@@ -10,6 +10,72 @@ Release Notes
 QATrack+ v4.0
 ~~~~~~~~~~~~~
 
+.. _`release_notes_401`:
+
+v4.0.2
+------
+
+Bug Fixes
+^^^^^^^^^
+
+* Forms no longer record the wrong date and time. Where a date field arrives
+  already filled in - the fault form's *Date & Time fault occurred*, a QC
+  session's *Work Completed*, a service event's date - the server wrote that
+  value in one format and the date picker read it back in another. The picker
+  then replaced it with an unrelated date, usually months away and at
+  midnight, before anyone had touched the page.
+
+  Nothing indicated it had happened: the replacement was a well-formed date in
+  the expected format, sitting in a field the user had not edited. A record
+  saved without changing that field carried a time that was simply wrong.
+
+  Date and time formats are now derived from a single setting, so the value
+  written to a form and the value read back from it cannot disagree
+  (:issues:`#826 <826>`).
+
+Other Changes
+^^^^^^^^^^^^^
+
+* **Dates are now shown as ``YYYY-MM-DD`` by default**, in every language, and
+  the date pickers write back the same format they display. Installations
+  upgrading from 4.0 previously saw ``31 May 2012 14:30``; to keep that, set the
+  following in ``local_settings.py``:
+
+  .. code-block:: python
+
+      QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"
+      QATRACK_DATE_FORMAT = "%d %b %Y"
+
+  Every date format QATrack+ uses is now derived from those settings, which is
+  what makes the fix above possible - see *Date and Time Format Settings* in the
+  configuration documentation. Dates typed in other formats are still accepted,
+  and the JSON API's format is unchanged.
+
+* **SQL Server installations have their lost unique constraints restored.** On
+  Microsoft SQL Server, ``mssql-django`` drops a unique index when an unrelated field
+  change retypes a table's primary key, and does not put it back - which the 4.0
+  migrations did to every table. The effect was silent: the database stopped enforcing
+  16 of the uniqueness rules QATrack+ declares, so duplicates could be created where
+  the application intends one record, including the key that keeps API submissions
+  unique. This release puts them back.
+
+  No other database engine was ever affected, and on those engines this step does
+  nothing. If your database already contains duplicate rows the affected index is
+  reported and skipped rather than failing the upgrade - run
+  ``python manage.py check_unique_constraints`` to list them, and the new
+  ``qatrack.W011`` system check reports any constraint still unenforced.
+
+* **The outstanding migrations have been recorded.** ``makemigrations`` reported
+  195 pending field-state changes across seven apps on a clean checkout - all
+  metadata, almost all of it ``verbose_name`` labels that the localisation work added
+  to fields which had none, without recording the resulting state.
+  They are now one migration per app. Every operation is a no-op on SQLite,
+  PostgreSQL and SQL Server, so applying them writes a row to
+  ``django_migrations`` and changes no schema and no data. The effect is that
+  ``manage.py makemigrations --check`` is meaningful again, having previously
+  failed on every installation.
+
+
 v4.0.1
 ------
 
@@ -84,6 +150,7 @@ Bug Fixes
   so an item that came due this morning did not appear until the following day,
   on the one page whose purpose is to show what is due. The Due Dates report was
   never affected and has always used the end of the day; the page now matches it.
+
 
 Other Changes
 ^^^^^^^^^^^^^

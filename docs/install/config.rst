@@ -173,6 +173,76 @@ timezones on Wikipedia
 <http://en.wikipedia.org/wiki/List_of_tz_database_time_zones>`_.
 
 
+Date and Time Format Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default QATrack+ displays dates as ``YYYY-MM-DD HH:MM`` in every language,
+and the date pickers write back the same format they display.
+
+Every format QATrack+ uses is derived from the settings below: what is
+displayed, what the date pickers produce, what the forms accept, and the help
+text under each date field. Set the format once and the rest follows, so the
+value written into a form and the value read back out of it cannot disagree.
+
+In your *local_settings.py* file:
+
+.. code-block:: python
+
+    QATRACK_DATETIME_FORMAT = "%Y/%m/%d %H:%M"   # 2012/05/31 14:30
+    QATRACK_DATE_FORMAT = "%Y/%m/%d"             # 2012/05/31
+    QATRACK_TIME_FORMAT = "%H:%M"
+
+These use Python `strptime` syntax (``%Y`` year, ``%m`` month, ``%d`` day,
+``%H`` hour, ``%M`` minute). A format with a month name is also unambiguous:
+
+.. code-block:: python
+
+    QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"   # 31 May 2012 14:30
+    QATRACK_DATE_FORMAT = "%d %b %Y"             # 31 May 2012
+
+Accepting other formats on input
+................................
+
+What people may *type* is separate from what QATrack+ displays. The format above
+is always accepted; these add to the list of formats understood on the way in,
+and change nothing anybody sees:
+
+.. code-block:: python
+
+    QATRACK_EXTRA_DATETIME_INPUT_FORMATS = [
+        "%d %b %Y %H:%M",     # 31 May 2012 14:30
+        "%d/%m/%Y %H:%M",     # 31/05/2012 14:30
+    ]
+    QATRACK_EXTRA_DATE_INPUT_FORMATS = [
+        "%Y/%m/%d",           # 2012/05/31
+        "%d %b %Y",           # 31 May 2012
+    ]
+
+This is the setting to use if your staff are used to entering dates a particular
+way, since it lets them do so without changing the format on any record anyone
+else reads.
+
+On all-numeric day and month orders
+...................................
+
+``03/05/2026`` is the 3rd of May to most of the world and March 5th in the
+United States, and nothing in the string says which. In a QC record that date is
+when a machine was or was not verified, read later by colleagues trained in a
+different convention and by people who were not there.
+
+Neither order is blocked -- it is your deployment -- but configuring one raises
+``qatrack.W004`` at startup, and configuring both raises a stronger warning,
+because at that point the same text typed by two people means two different
+days. The defaults are ISO for this reason, and the alternatives suggested above
+(year-first, or a month name) cannot be read two ways.
+
+.. note::
+
+    The JSON API is deliberately unaffected by these settings. Its date format
+    is fixed, so changing how your site displays dates cannot break an
+    integration that parses the API.
+
+
 Icon Settings
 ~~~~~~~~~~~~~
 
