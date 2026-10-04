@@ -104,13 +104,23 @@
 {# JavaScript for prepopulated fields #}
 {% prepopulated_fields_js %}
 
-{# Give a raw id field's view/change icons an href.
+{% comment %}
+   Give a raw id field's view/change icons an href.
 
    Django renders them with a data-href-template and no href, and fills the
    href in from updateRelatedObjectLinks, which it wires to `select` elements
    alone. A dynamic_raw_id field is a text input, so without this the eye and
-   the pencil appear beside the field and do nothing. Delegated from the
-   document so that inline rows added after load are covered too. #}
+   the pencil appear beside the field and do nothing.
+
+   Bound on each input rather than delegated from the document: dynamic_raw_id's
+   own change handler calls stopPropagation(), so a handler on the document
+   never hears the change and the icons keep pointing at the old object. Rows
+   added with "Add another" are clone(true) copies of the empty form, so they
+   carry this handler too.
+
+   This is a comment tag because Django's one-line comment syntax cannot span
+   lines: written across several, it is printed on every change form as text.
+{% endcomment %}
 <script type="text/javascript">
 (function($) {
     var fields = '.related-widget-wrapper .vForeignKeyRawIdAdminField, ' +
@@ -120,9 +130,8 @@
             window.updateRelatedObjectLinks(this);
         }
     }
-    $(document).on('change', fields, updateLinks);
     $(document).ready(function() {
-        $(fields).each(updateLinks);
+        $(fields).on('change', updateLinks).each(updateLinks);
     });
 })(django.jQuery);
 </script>

@@ -218,3 +218,34 @@ class TestRawIdWrapperIconTest(TestCase):
         )
         self.assertContains(response, 'updateRelatedObjectLinks')
         self.assertContains(response, 'vForeignKeyRawIdAdminField')
+
+    def test_the_change_form_prints_no_template_comment(self):
+        """Django's `{# #}` cannot span lines, and a multi-line one is printed.
+
+        The first version of the script above explained itself in a seven-line
+        `{# ... #}`. That is not a comment: the engine rendered it as text, below
+        the Save buttons of **every** admin add and change page, because this
+        template is the one they all extend. crane found it in a browser on
+        Windows; nothing here would have failed.
+
+        Asserted on the delimiter rather than on the wording, so it holds for
+        whatever the next comment says. `{% comment %}` leaves no trace, and the
+        `{# ... #}` one-liners elsewhere in this file are consumed normally.
+        """
+        test_list = utils.create_test_list()
+        utils.create_test_list_membership(test_list, utils.create_test())
+        for url in (
+            reverse('admin:qa_testlist_change', args=[test_list.pk]),
+            reverse('admin:qa_testlist_add'),
+            reverse('admin:auth_user_change', args=[self.user.pk]),
+        ):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200, url)
+            self.assertNotContains(
+                response,
+                '{#',
+                msg_prefix=(
+                    "%s renders a template comment as text - a multi-line "
+                    "{# #} is not a comment, use {%% comment %%}" % url
+                ),
+            )
