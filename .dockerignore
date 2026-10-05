@@ -32,6 +32,8 @@ user-data
 
 # SSL certificates and private keys
 certs
+SSL
+ssl
 *.certificate
 *.crt
 *.pem
