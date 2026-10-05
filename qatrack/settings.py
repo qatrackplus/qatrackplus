@@ -663,7 +663,7 @@ DEFAULT_TEST_STATUS_COLOUR = 'rgba(243,156,18,1)'
 
 USE_ISSUES = False  # internal development issue tracker
 
-DELETE_REASONS = ((_l('Duplicate'), _l('Duplicate')), (_l('Invalid'), _l('Invalid')))
+DELETE_REASONS = (('Duplicate', _l('Duplicate')), ('Invalid', _l('Invalid')))
 
 DEFAULT_AVAILABLE_TIMES = {
     'hours_sunday': datetime.timedelta(hours=0, minutes=0),
