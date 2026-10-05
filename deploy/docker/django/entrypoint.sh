@@ -35,10 +35,13 @@ python manage.py createsuperuser --noinput || true
 
 echo "Starting application..."
 
-if [ "${DEBUG:-false}" = "true" ]; then
-  echo "Development mode, starting Django development server"
-  exec python manage.py runserver 0.0.0.0:8000
-else
-  echo "Production mode, starting Gunicorn..."
-  exec gunicorn qatrack.wsgi:application -w 2 -b 0.0.0.0:8000
-fi
+case "${DEBUG:-false}" in
+    1|true|True|TRUE|yes|Yes|YES|on|On|ON)
+        echo "Development mode, starting Django development server"
+        exec python manage.py runserver 0.0.0.0:8000
+        ;;
+    *)
+        echo "Production mode, starting Gunicorn..."
+        exec gunicorn qatrack.wsgi:application -w 2 -b 0.0.0.0:8000
+        ;;
+esac
