@@ -86,6 +86,7 @@ RUN uv export \
     --no-hashes \
     --extra docker \
     --extra postgres \
+    --extra ldap \
     --format requirements-txt \
     --output-file /tmp/core-constraints.txt
 
