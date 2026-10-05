@@ -13,7 +13,7 @@ export PGPASSWORD="$POSTGRES_PASSWORD"
 pg_dump -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F c -f "$BACKUP_DIR/db_$DATE.dump"
 
 # Tar media
-tar -czf "$BACKUP_DIR/media_$DATE.tar.gz" -C / media/
+tar -czf "$BACKUP_DIR/media_$DATE.tar.gz" -C / app_data/media/
 
 # Cleanup old backups
 find "$BACKUP_DIR" -type f -name "db_*.dump" -mtime +$RETENTION_DAYS -delete
