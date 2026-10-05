@@ -215,7 +215,7 @@ Building the images with extra python packages
 
 If you'd like to be able to use in your composite tests python packages that
 do not already come installed with QATrack+, you can create a
-``user-requirements.txt`` file under ``deploy/docker/user-requirements/``.
+``requirements.txt`` file under ``deploy/docker/user-requirements/``.
 
 Specify each of your custom requirements, as described in
 https://pip.pypa.io/en/stable/reference/requirements-file-format/.
