@@ -81,7 +81,7 @@ Copy the following lines to your `local_settings.py` file:
         'qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend',
     )
 
-    # active directory settings (not required if only using ModelBackend
+    # Active directory settings (not required if only using ModelBackend
     AD_DNS_NAME = 'your.ad.server.yourhospital.com'
 
     # If using non-SSL use these
@@ -91,6 +91,15 @@ Copy the following lines to your `local_settings.py` file:
     # If using SSL use these:
     # AD_LDAP_PORT=636
     # AD_LDAP_PROTOCOL = 'ldaps'
+
+    # AD_LDAP_URL is automatically  built from AD_LDAP_PROTOCOL, AD_DNS_NAME and
+    # AD_LDAP_PORT.
+    #
+    # If you prefer, you may define only AD_LDAP_URL, which will then take
+    # precedence over AD_LDAP_PROTOCOL, AD_DNS_NAME and AD_LDAP_PORT.
+    #
+    # For example:
+    # AD_LDAP_URL = "ldaps://ldap-host.domain:portnumber"
 
     AD_CERT_FILE = None  # AD_CERT_FILE='/path/to/your/cert.txt'
 

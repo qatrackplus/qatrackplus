@@ -953,6 +953,7 @@ if use_docker:
     override_from_env("AD_DNS_NAME")
     override_from_env("AD_LDAP_PROTOCOL")
     override_from_env("AD_LDAP_PORT", converter=int)
+    override_from_env("AD_LDAP_URL")
 
     override_from_env("AD_LDAP_USER")
     override_from_env("AD_LDAP_PW")
@@ -1105,16 +1106,20 @@ if DEBUG_TOOLBAR:
 
 # Set MANAGERS after ADMINS has taken on its final value (after local_settings
 # is imported or the use_docker branch is executed).
-MANAGERS = ADMINS
+# Default to MANAGERS if already defined, or to ADMINS if not.
+MANAGERS = globals().get("MANAGERS", ADMINS)
 
 # LDAP URL is composed from previously-defined settings.
 # Set it here, after local_settings is imported or the use_docker branch
 # has been executed if USE_DOCKER is set.
+#
+# If user has set AD_LDAP_URL in local_settings.py, the value is used here
+# and AD_LDAP_PROTOCOL, AD_DNS_NAME and AD_LDAP_PORT are ignored.
 if AD_LDAP_PROTOCOL not in ("ldap", "ldaps"):
     raise ValueError(
         f"Invalid LDAP protocol: {AD_LDAP_PROTOCOL}, must be one of 'ldap', 'ldaps'"
     )
-AD_LDAP_URL = '%s://%s:%s' % (AD_LDAP_PROTOCOL, AD_DNS_NAME, AD_LDAP_PORT)
+AD_LDAP_URL = globals().get("AD_LDAP_URL", f"{AD_LDAP_PROTOCOL}://{AD_DNS_NAME}:{AD_LDAP_PORT}")
 
 USE_ADFS = (
     'qatrack.accounts.backends.QATrackAdfsAuthCodeBackend' in AUTHENTICATION_BACKENDS or
