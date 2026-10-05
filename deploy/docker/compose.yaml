@@ -89,6 +89,7 @@ services:
         condition: service_healthy
     volumes:
     - ${MEDIA_DIR:-media-volume}:/app_data/media:z
+    - ${USER_DATA_DIR:-user-data-volume}:/user_data:ro
     healthcheck:
       # Check that the qcluster process exists and that DB access is working
       test:
