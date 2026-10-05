@@ -158,7 +158,7 @@ COPY --chown=user:user . .
 # Move entrypoint to /, change its ownership to root
 COPY --chown=root:root ./deploy/docker/django/entrypoint.sh /entrypoint.sh
 
-# Ensure necessary directories exist: ./logs, ./qatrack/media and ./qatrack/static
+# Ensure necessary directories exist: ./logs, /app_data/media, /app_data/static and /user_data
 # Make entrypoint executable
 RUN dos2unix /entrypoint.sh \
     && chmod 755 /entrypoint.sh \
@@ -168,11 +168,11 @@ RUN dos2unix /entrypoint.sh \
                 /app_data/media \
                 /app_data/static \
                 /user_data \
-    && chown -R user:user /home/user \
-                                ./logs \
-                                /app_data/media \
-                                /app_data/static \
-                                /user_data
+    && chown -R user:user   /home/user \
+                            ./logs \
+                            /app_data/media \
+                            /app_data/static \
+                            /user_data
 
 USER user
 
