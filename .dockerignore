@@ -13,7 +13,32 @@
 
 !manage.py
 
+# Docker deployment files
 !deploy/
 !deploy/docker/
-# Make sure .env is not included in image
-deploy/docker/.env
+!deploy/docker/**
+
+# Re-ignore sensitive files that could exist in an already-included path.
+
+# Environment files
+.env
+*.env
+*env.bak
+*env.old
+
+# Django secret key, user-data
+secret_key.txt
+user-data
+
+# SSL certificates and private keys
+certs
+*.certificate
+*.crt
+*.pem
+*.key
+*.crt.key
+
+# potential DB backups
+backups
+*.tar
+*.tar.gz
