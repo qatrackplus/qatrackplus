@@ -21,26 +21,26 @@
 # Re-ignore sensitive files that could exist in an already-included path.
 
 # Environment files
-.env
-*.env
-*env.bak
-*env.old
+**/.env
+**/*.env
+**/*env.bak
+**/*env.old
 
 # Django secret key, user-data
-secret_key.txt
-user-data
+**/secret_key.txt
+**/user-data
 
 # SSL certificates and private keys
-certs
-SSL
-ssl
-*.certificate
-*.crt
-*.pem
-*.key
-*.crt.key
+**/certs
+**/SSL
+**/ssl
+**/*.certificate
+**/*.crt
+**/*.pem
+**/*.key
+**/*.crt.key
 
 # potential DB backups
-backups
-*.tar
-*.tar.gz
+**/backups
+**/*.tar
+**/*.tar.gz
