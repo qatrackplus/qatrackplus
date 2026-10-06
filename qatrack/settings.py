@@ -808,9 +808,7 @@ if use_docker:
     secret_key_from_env = os.getenv("SECRET_KEY")
     if secret_key_from_env:
         SECRET_KEY = secret_key_from_env.strip()
-        print("Using SECRET_KEY from environment variable.")
     else:
-        print("SECRET_KEY environment variable was not specified.")
         # If not specified in env var, try to read it from secret_key.txt
         try:
             with open(secret_filepath, encoding="utf-8") as f:
@@ -820,8 +818,6 @@ if use_docker:
                 raise ValueError(
                     f"Secret key file is empty: `{secret_filepath}`."
                 )
-
-            print(f"Found SECRET_KEY in `{secret_filepath}`.")
         except FileNotFoundError:
             # Fall back to generating it automatically.
             # It will be persisted in the user-data-volume or user-data bind mount.
@@ -831,9 +827,6 @@ if use_docker:
             with open(secret_filepath, 'w', encoding="utf-8") as f:
                 f.write(SECRET_KEY)
             secret_filepath.chmod(0o600)
-            print(
-                f"SECRET_KEY not found in `{secret_filepath}`. Generated a new value for SECRET_KEY and saved it to `{secret_filepath}`."
-            )
 
     # Database settings
     POSTGRES_DB = required_env("POSTGRES_DB")
