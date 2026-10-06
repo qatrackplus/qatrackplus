@@ -21,7 +21,7 @@ services:
     volumes:
       - ${MEDIA_DIR:-media-volume}:/app_data/media:ro,z
       - static-volume:/app_data/static:ro,z
-      - ${SSL_DIR:-./user-data/ssl}:/etc/nginx/ssl:ro  # To customize SSL location, set SSL_DIR, else the default ./user-data/ssl will be used.
+      - ${SSL_DIR:-./ssl}:/etc/nginx/ssl:ro  # To customize SSL certificate/certificate key location, set SSL_DIR, else the default ./ssl will be used.
     healthcheck:
       test:
         - CMD-SHELL

@@ -29,6 +29,7 @@
 # Django secret key, user-data
 **/secret_key.txt
 **/user-data
+**/user_data
 
 # SSL certificates and private keys
 **/certs
