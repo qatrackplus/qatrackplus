@@ -9,7 +9,7 @@ COPY backup.sh /backup.sh
 RUN dos2unix /backup.sh && chmod +x /backup.sh
 
 # Create volume mount point with matching UID/GID from Django
-RUN mkdir -p /media && chown -R ${HOST_UID}:${HOST_GID} /media
+RUN mkdir -p /app_data/media && chown -R ${HOST_UID}:${HOST_GID} /app_data/media
 
 # Setup cron job (runs daily at 2 AM)
 RUN echo "0 2 * * * bash /backup.sh >> /var/log/backup.log 2>&1" > /etc/crontabs/root

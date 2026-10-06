@@ -138,7 +138,7 @@ services:
         condition: service_healthy
     volumes:
       - ${BACKUPS_DIR:-backups-volume}:/backups
-      - ${MEDIA_DIR:-media-volume}:/media:ro,z
+      - ${MEDIA_DIR:-media-volume}:/app_data/media:ro,z
     healthcheck:
       # Test that cron is still running and that the backup dir/volume is writable
       test:
