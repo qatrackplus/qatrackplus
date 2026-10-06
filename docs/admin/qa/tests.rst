@@ -508,7 +508,7 @@ composite values as they will be calculated in the correct order.
 A note about division for people familiar with Python
 -----------------------------------------------------
 
-Since v0.3.0, QATrack+ uses Python 3.4+ which no longer uses integer division
+Since v0.3.0, QATrack+ uses Python 3 which no longer uses integer division
 by default.  The calculationn `a = 1/2` will result in `a = 0.5` rather than `a
 = 0` like in Python 2.x. If you need integer division, make sure you use the
 `//` operator like `a = 1//2 # a == 0`.
