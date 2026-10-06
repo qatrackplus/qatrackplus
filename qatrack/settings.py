@@ -991,9 +991,6 @@ if use_docker:
         For docker deployment, since we won't pass in python functions
         with env vars, we define a set of common username cleaning options.
         """
-        if ad_username_cleaning is None or not ad_username_cleaning:
-            return username
-
         strategy = ad_username_cleaning.strip().lower()
 
         if strategy == "none":
@@ -1018,7 +1015,10 @@ if use_docker:
             f"Unknown AD_USERNAME_CLEANING strategy: {strategy}"
         )
 
-    AD_CLEAN_USERNAME = clean_username
+    if ad_username_cleaning:
+        # Only set AD_CLEAN_USERNAME to a callable if docker deployment user
+        # sets AD_USERNAME_CLEANING
+        AD_CLEAN_USERNAME = clean_username
 
     override_from_env("AUTH_ADFS", converter=env_json)  # JSON format: {"SERVER": "some.adfs.server.com", ...}
 
