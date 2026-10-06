@@ -1,0 +1,14 @@
+{% comment %}
+Label for a Test in a dynamic_raw_id field, overriding dynamic_raw_id's generic
+`label.html`. Its view tries `dynamic_raw_id/<app>/<model>.html` first, so this is
+picked up for qa.Test and nothing else.
+
+It exists for one reason: `Test.__str__` returns `self.name`, and a Test whose name
+is empty renders an empty link - a row showing an id and a macro name with a blank
+where the name should be, which is indistinguishable from the fault #897 was. Fall
+back to the id so the field always says *something* identifying.
+
+`name` is a plain CharField, so an empty one can only come from data rather than
+from a migration default.
+{% endcomment %}
+<a href="{{ object.1 }}">{% if object.0.name %}{{ object.0.name }}{% else %}Test {{ object.0.pk }} (no name){% endif %}</a>

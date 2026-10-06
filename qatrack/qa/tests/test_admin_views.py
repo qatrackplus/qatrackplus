@@ -183,6 +183,27 @@ class TestListMembershipLabelTest(TestCase):
         )
 
 
+    def test_a_test_with_no_name_falls_back_to_its_id(self):
+        """A blank name must not render a blank label.
+
+        `Test.__str__` returns `self.name`, so dynamic_raw_id's generic label
+        template renders an empty link for a Test whose name is empty - which looks
+        exactly like the fault this branch fixes. Cody asked for the id instead.
+        """
+        test = utils.create_test(name="Temporary")
+        models.Test.objects.filter(pk=test.pk).update(name='')
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test %d (no name)' % test.pk)
+        self.assertContains(response, reverse('admin:qa_test_change', args=[test.pk]))
+
+    def test_a_named_test_is_unaffected_by_the_fallback(self):
+        test = utils.create_test(name="Output Constancy")
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertContains(response, "Output Constancy")
+        self.assertNotContains(response, 'no name')
+
+
 class TestRawIdWrapperIconTest(TestCase):
     """The view and change icons beside a raw id field in the admin.
 
