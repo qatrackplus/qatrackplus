@@ -111,7 +111,7 @@ def chrometopdf(html, name="", paper_size="letter"):
         tmp_html.close()
 
         with tempfile.TemporaryDirectory() as profiledir:
-            # Run chromium in temporary dir, as concurrent chromium processes could occur.
+            # Run chromium with temporary user data dir, as concurrent chromium processes could occur.
             command = [
                 settings.CHROME_PATH,
                 '--headless',
@@ -123,12 +123,12 @@ def chrometopdf(html, name="", paper_size="letter"):
                 "file://%s" % tmp_html.name,
             ]
 
-        if os.name.lower() == "nt":
-            command = ' '.join(command)
+            if os.name.lower() == "nt":
+                command = ' '.join(command)
 
-        stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
-        stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
-        subprocess.call(command, stdout=stdout, stderr=stderr)
+            stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
+            stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
+            subprocess.call(command, stdout=stdout, stderr=stderr)
 
         out_file = open(out_path, 'r+b')
         pdf = out_file.read()
@@ -153,7 +153,6 @@ def chrometopdf(html, name="", paper_size="letter"):
             pass
 
     return pdf
-
 
 def end_of_day(dt):
     """Take datetime and move forward to last microsecond of date"""
