@@ -1,12 +1,6 @@
 #!/bin/sh
 set -e
 
-# Wait for database
-echo "Waiting for postgres..."
-DB_HOST="${POSTGRES_HOST:-postgres}"
-DB_USER="${POSTGRES_USER:-postgres}"
-DB_NAME="${POSTGRES_DB:-qatrackplus}"
-
 export USE_DOCKER=true
 
 echo "Creating cache table..."
