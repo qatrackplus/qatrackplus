@@ -20,6 +20,12 @@ class JSONField(models.TextField):
     def from_db_value(self, value, *args):
         return self.to_python(value)
 
+    def value_to_string(self, obj):
+        """``value_to_string`` would otherwise call ``str`` on the value, which
+        turns our dictionary into a Python repr that is not valid JSON. Return
+        the object itself and let the serializer encode it."""
+        return self.value_from_object(obj)
+
     def get_db_prep_save(self, value, *args, **kwargs):
         if value == "":
             return None

@@ -1,15 +1,17 @@
 import datetime
+import json
 import re
 from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 from django.contrib.sites.models import Site
-from django.core import mail
+from django.core import mail, serializers
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from qatrack.qa.models import AutoSave
 from qatrack.qa.tests import utils
 from qatrack.qatrack_core.serializers import QATrackJSONEncoder
 from qatrack.qatrack_core.utils import end_of_day, relative_dates, start_of_day
@@ -74,6 +76,23 @@ class TestJSONEncoder:
         enc = QATrackJSONEncoder()
         dt = datetime.date(2020, 2, 29)
         assert enc.default(dt) == "29 Feb 2020"
+
+
+class TestJSONField:
+
+    def test_value_to_string(self):
+        """Serializing our JSONField leaves the value as an object to encode
+
+        ``AutoSave.data`` is one of the fields still using QATrack+'s own
+        JSONField rather than Django's - the default ``value_to_string`` would
+        return ``str(dict)``, which is a Python repr and not valid JSON."""
+        obj = AutoSave(data={"foo": "bar"})
+        assert obj._meta.get_field("data").value_to_string(obj) == {"foo": "bar"}
+
+    def test_serializes_as_an_object(self):
+        """A dumpdata round trip keeps the value a dictionary"""
+        dumped = json.loads(serializers.serialize("json", [AutoSave(data={"foo": "bar"})]))
+        assert dumped[0]["fields"]["data"] == {"foo": "bar"}
 
 
 class TestRelativeDates:

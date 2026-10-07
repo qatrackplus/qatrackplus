@@ -1129,6 +1129,18 @@ class TestReportModels(TestCase):
     def test_savedreport_str(self):
         assert str(self.report) == "#%d. title - Test List Instance Summary - PDF" % self.report.pk
 
+    def test_recipients_empty_group(self):
+        """A group with no members contributes nothing, rather than raising"""
+        schedule = models.ReportSchedule.objects.create(
+            report=self.report,
+            time="00:00",
+            schedule="RRULE:FREQ=DAILY",
+            created_by=self.user,
+            modified_by=self.user,
+        )
+        schedule.groups.add(Group.objects.create(name="reports"))
+        assert schedule.recipients() == []
+
     def test_reportschedule_str(self):
         schedule = models.ReportSchedule.objects.create(
             report=self.report,
