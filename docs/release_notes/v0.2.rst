@@ -1,3 +1,7 @@
+.. _release_notes_series_02:
+
+QATrack+ v0.2 Release Notes
+===========================
 
 QATrack+ v0.2.9 Release Notes
 -----------------------------

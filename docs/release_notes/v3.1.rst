@@ -1,3 +1,8 @@
+.. _release_notes_series_31:
+
+QATrack+ v3.1 Release Notes
+===========================
+
 .. _release_notes_311:
 
 QATrack+ v3.1.1.4 Release Notes
@@ -58,7 +63,7 @@ QA
   completed within the last minute.  
 
 Service Log
-^^^^^^^^^
+^^^^^^^^^^^
 
 * Fixed a bug with Return To Service work forms being populated with incorrect data
 * The first Service Event Status created will now automatically be set to the default
@@ -98,7 +103,7 @@ API
   Session from being created.
 
 Reports
-^^^^^^
+^^^^^^^
 
 * The Active filter for Service Log Scheduling report filters worked for "Both"
   but not "Yes" or "No". This has now been fixed.  In addition, the wrong set
@@ -125,7 +130,7 @@ Reports
 
 
 Miscellaneous
-^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 * A few documentation typo fixes
 * Fixed a permissions check for deleting faults
