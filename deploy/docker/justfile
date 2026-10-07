@@ -7,24 +7,32 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
 export BUILDKIT_PROGRESS := "plain"
 
+# Use of compose.dev.yaml file to override compose.yaml is decided by setting the QATDEV env variable to 1.
+# Any other value, or the variable being unset ends up using production settings.
+export COMPOSE_FILE := if env("QATDEV", "0") == "1" {
+    "compose.yaml:compose.dev.yaml"
+} else {
+    "compose.yaml"
+}
+export DOCKER_TAG := if env("QATDEV", "0") == "1" {
+    "dev"
+} else {
+    "prod"
+}
+
 # Run docker.
 docker *args:
     @docker {{args}}
 
-# Run docker compose. Use of compose.override.yaml file is decided by setting/unsetting the QATDEV env variable.
+# Run docker compose.
 [linux]
 compose *args:
-    @if [ "${QATDEV:-0}" = "1" ]; then HOST_GID="${HOST_GID:-$(id -g)}" HOST_UID="${HOST_UID:-$(id -u)}" docker compose {{args}}; else docker compose -f compose.yaml {{args}}; fi
+    @if [ "${QATDEV:-0}" = "1" ]; then HOST_GID="${HOST_GID:-$(id -g)}" HOST_UID="${HOST_UID:-$(id -u)}" docker compose {{args}}; else docker compose {{args}}; fi
 
 [windows]
 compose *args:
-    @if ($env:QATDEV -eq '1') { docker compose {{args}} } else { docker compose -f compose.yaml {{args}} }
+    @docker compose {{args}} 
 
 # Run django management commands in the running container.
-[linux]
 manage *args:
-    @if [ "${QATDEV:-0}" = "1" ]; then docker compose exec django python manage.py {{args}}; else docker compose -f compose.yaml exec django python manage.py {{args}}; fi
-
-[windows]
-manage *args:
-    @if ($env:QATDEV -eq '1') { docker compose exec django python manage.py {{args}} } else { docker compose -f compose.yaml exec django python manage.py {{args}} }
+    @docker compose exec django python manage.py {{args}}
