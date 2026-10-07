@@ -185,3 +185,33 @@ class TestTreesDoNotCollapseCollectionsSharingAName(TestCase):
             "only %s reached the category tree; a collection sharing a name was "
             "dropped" % sorted(found)
         )
+
+    def test_a_collection_with_several_tests_still_appears_once(self):
+        """The collapsing itself still has to happen.
+
+        The tree queries join through test membership, so a collection comes back
+        once per test it contains. Without this test, deleting the deduplication
+        outright would satisfy both of the assertions above.
+        """
+        import json
+        import re
+
+        category = utils.create_category(name="collapse-cat-two", slug="collapse-cat-two")
+        test_list = utils.create_test_list("collapse list three")
+        for name in ("collapse-t3", "collapse-t4"):
+            utils.create_test_list_membership(
+                test_list=test_list,
+                test=utils.create_test(name=name, category=category),
+            )
+        utc = utils.create_unit_test_collection(
+            unit=self.unit, frequency=self.frequency, test_collection=test_list)
+
+        for which, tree in (
+            ("frequency", trees.BootstrapFrequencyTree(None).generate()),
+            ("category", trees.BootstrapCategoryTree(None).generate()),
+        ):
+            hits = re.findall(r'/qc/utc/perform/%d/' % utc.pk, json.dumps(tree))
+            assert len(hits) == 1, (
+                "a collection with two tests in one category appeared %d times in the "
+                "%s tree" % (len(hits), which)
+            )
