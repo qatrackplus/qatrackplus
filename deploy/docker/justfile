@@ -15,9 +15,9 @@ export COMPOSE_FILE := if env("QATDEV", "0") == "1" {
     "compose.yaml"
 }
 export DOCKER_TAG := if env("QATDEV", "0") == "1" {
-    "dev"
+    ":dev"
 } else {
-    "prod"
+    ":prod"
 }
 
 # Run docker.
