@@ -11,13 +11,13 @@
 # django server them with its development server.
 if [ "${DEV:-false}" = "true" ]; then
     export NGINX_LOCATIONS_FILE=qatrackplus-locations-dev.conf
+    export NGINX_SERVER_NAME="${NGINX_SERVER_NAME} localhost 127.0.0.1"
 else
     export NGINX_LOCATIONS_FILE=qatrackplus-locations-prod.conf
+    export NGINX_SERVER_NAME="${NGINX_SERVER_NAME}"
 fi
 echo "NGINX_LOCATIONS_FILE=$NGINX_LOCATIONS_FILE"
-
-export NGINX_SERVER_NAME="${NGINX_SERVER_NAME:-_}"
-echo "NGINX_SERVER_NAME=$NGINX_SERVER_NAME"
+echo "NGINX_SERVER_NAME='$NGINX_SERVER_NAME'"
 
 export NGINX_CLIENT_MAX_BODY_SIZE="${NGINX_CLIENT_MAX_BODY_SIZE:-100m}"
 echo "NGINX_CLIENT_MAX_BODY_SIZE=$NGINX_CLIENT_MAX_BODY_SIZE"

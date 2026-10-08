@@ -28,7 +28,7 @@ services:
         - CMD-SHELL
         - >
           nginx -t &&
-          curl -fsS http://localhost/healthcheck >/dev/null
+          curl -fsS -H 'Host: nginxhc' http://localhost/healthcheck >/dev/null
       interval: 5s
       timeout: 5s
       retries: 5

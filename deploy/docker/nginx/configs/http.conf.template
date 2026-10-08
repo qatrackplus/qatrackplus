@@ -1,6 +1,29 @@
 # configs/http.conf.template
+
 server {
     listen 80 default_server;
+
+    # Docker healthcheck endpoint.
+    #
+    # This is the default server for port 80. Requests with hostnames that do not
+    # match another server block also end up here. Only /healthcheck is allowed;
+    # all other requests are terminated with status 444.
+    server_name nginxhc;
+
+    location = /healthcheck {
+        access_log off;
+        return 200 "OK\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Close connection
+    location / {
+        return 444;
+    }
+}
+
+server {
+    listen 80;
     server_name ${NGINX_SERVER_NAME};
     client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};
     charset utf-8;

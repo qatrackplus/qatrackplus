@@ -759,7 +759,7 @@ def env_csv(value, value_type=str):
 
 def required_env(name):
     """
-    Checks that a required env variable is provided  and non-empty.
+    Checks that a required env variable is provided and non-empty.
     If so, returns the value.
     
     Strips whitespace.
@@ -801,6 +801,8 @@ def override_from_env(setting_name, converter=str):
 use_docker = env_bool(os.getenv('USE_DOCKER', '0'))
 if use_docker:
     ALLOWED_HOSTS = env_csv(required_env("ALLOWED_HOSTS"))
+    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
+    ALLOWED_HOSTS = list(set(ALLOWED_HOSTS))
 
     secret_filepath = pathlib.Path("/user_data", "secrets", "secret_key.txt")
 

@@ -1,7 +1,13 @@
 # configs/https.conf.template
 server {
     listen 80 default_server;
-    server_name _;
+    
+    # Docker healthcheck endpoint.
+    #
+    # This is the default server for port 80. Requests with hostnames that do not
+    # match another server block also end up here. Only /healthcheck is allowed;
+    # all other requests are terminated with status 444.
+    server_name nginxhc;
 
     location = /healthcheck {
         access_log off;
@@ -9,13 +15,31 @@ server {
         add_header Content-Type text/plain;
     }
 
+    # Close connection
     location / {
-        return 301 https://$host$request_uri;
+        return 444;
     }
 }
 
 server {
+    listen 80;
+    server_name ${NGINX_SERVER_NAME};
+
+    return 301 https://$host$request_uri;
+}
+
+server {
     listen 443 ssl default_server;
+
+    ssl_certificate /etc/nginx/ssl/${NGINX_SSL_CERTIFICATE_FILE};
+    ssl_certificate_key /etc/nginx/ssl/${NGINX_SSL_CERTIFICATE_KEY_FILE};
+
+    # Close connection
+    return 444;
+}
+
+server {
+    listen 443 ssl;
     server_name ${NGINX_SERVER_NAME};
     client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};
     charset utf-8;

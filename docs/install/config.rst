@@ -75,17 +75,30 @@ Allowed Host Setting
 ....................
 
 
-On Linux, set allowed hosts either to your server name or IP address (e.g. for Nginx):
+On Linux, set allowed hosts either to your server name or IP address (e.g. for Nginx
+or docker deployment):
 
 .. code-block:: python
 
+    # by IP
     ALLOWED_HOSTS = ['52.123.4.9']
+    # or by hostname
+    ALLOWED_HOSTS = ['qatrackplus.domain']
+    # or by both
+    ALLOWED_HOSTS = ['qatrackplus.domain', '52.123.4.9']
+
 
 On Windows using CherryPy/IIS (or if you are running QATrack+ behind a reverse proxy on Linux):
 
 .. code-block:: python
 
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+.. note::
+
+    When using docker deployment, `localhost` and `127.0.0.1` are both injected
+    in `ALLOWED_HOSTS` if not already present to allow service healthchecks to
+    function.
 
 HTTP or HTTPS Setting
 .....................
