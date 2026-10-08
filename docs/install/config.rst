@@ -223,6 +223,12 @@ Date and Time Format Settings
 By default QATrack+ displays dates as ``YYYY-MM-DD HH:MM`` in every language,
 and the date pickers write back the same format they display.
 
+**"In every language" is the change, and it is deliberate.** Before this release each
+language carried its own date format, so the same record read differently depending on
+which interface language the reader had chosen. One format now applies to all of them,
+because a date in a QC record should not change meaning when someone switches
+language. If you need a different format, set it below and every language follows it.
+
 Every format QATrack+ uses is derived from the settings below: what is
 displayed, what the date pickers produce, what the forms accept, and the help
 text under each date field. Set the format once and the rest follows, so the
@@ -243,6 +249,13 @@ These use Python `strptime` syntax (``%Y`` year, ``%m`` month, ``%d`` day,
 
     QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"   # 31 May 2012 14:30
     QATRACK_DATE_FORMAT = "%d %b %Y"             # 31 May 2012
+
+``%b`` writes **English** month abbreviations whatever the interface language -
+*May*, not *mai*. Python takes those names from the C library's locale rather than
+from the language a user has selected, and QATrack+ does not change that locale, so
+what is displayed and what is accepted stay the same string in every language. If
+your deployment sets ``LC_TIME`` in the environment the service runs under, that
+stops being true and the two can disagree; use a numeric format there.
 
 Accepting other formats on input
 ................................
