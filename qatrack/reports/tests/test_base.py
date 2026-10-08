@@ -1031,9 +1031,10 @@ class TestReportInterface(BaseQATests):
         self.click('report-id-%s' % sr.pk)
 
         self.click('report-id-%s-schedule' % sr.pk)
+        self.wait_for_modal('schedule-modal')
 
         self.select_by_index('id_schedule-time', 1)
-        self.driver.find_element(By.ID, "id_schedule-emails").send_keys("a@b.com")
+        self.send_keys("id_schedule-emails", "a@b.com")
 
         self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'add-date')))
         self.driver.find_element(By.CLASS_NAME, "add-date").click()
