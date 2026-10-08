@@ -89,31 +89,15 @@ FORMAT_MODULE_PATH = "qatrack.formats"
 # ------------------------------------------------------------------------------
 # Dates and times
 #
-# Two questions, answered separately:
+# One format each for what QATrack+ *shows* and what the date pickers write, so the
+# value written into a field and the value read back out of it cannot disagree; plus
+# the QATRACK_EXTRA_*_INPUT_FORMATS lists for what it will also *accept* when someone
+# types a date themselves.
 #
-#   1. What does QATrack+ *show* you, and what do the date pickers write into a
-#      field? That is QATRACK_DATETIME_FORMAT / QATRACK_DATE_FORMAT /
-#      QATRACK_TIME_FORMAT below - one format each, used everywhere.
-#
-#   2. What will QATrack+ *accept* when you type a date yourself? That is the
-#      default from question 1, plus anything listed in the
-#      QATRACK_EXTRA_*_INPUT_FORMATS settings.
-#
-# Keeping them separate is deliberate. Accepting more ways of typing a date
-# costs nothing and helps whoever is entering data; displaying dates two
-# different ways in two parts of the application does not help anyone. So
-# extra input formats are a list, and the display format is a single value.
-#
-# Write these in Python's strptime syntax (%Y, %m, %d, %H, %M ...). Everything
-# else is derived from them - the Django display format, the flatpickr format
-# the date pickers use, the moment.js format the browser uses, and the help
-# text under each field - so there is one place to change and nothing can
-# drift out of step with anything else. See qatrack/formats/base.py.
-#
-# The default is ISO 8601 (YYYY-MM-DD HH:MM) in every language. It sorts
-# correctly, it is unambiguous - 03/04 is the 3rd of April to half the world
-# and the 4th of March to the other half - and it does not change meaning when
-# a site switches language.
+# Written in Python's strptime syntax. The full explanation - why display is a single
+# value while input is a list, what happens with all-numeric day/month orders, and
+# what %b does across languages - is in docs/install/config.rst under "Date and Time
+# Format Settings".
 
 QATRACK_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
 QATRACK_DATE_FORMAT = "%Y-%m-%d"
