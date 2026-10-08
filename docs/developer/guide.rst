@@ -475,6 +475,119 @@ QATrack+ includes a Makefile with convenient shortcuts for common development ta
     make help
 
 For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
+Setting Up Selenium Browser Testing
+-----------------------------------
+
+QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
+
+**Browser Requirements**
+
+You need a browser installed - either Firefox or Chrome/Chromium, whichever
+you prefer. You do not normally need to install or configure a matching
+driver (geckodriver/chromedriver): Selenium Manager, built into Selenium
+4.6+, detects whichever browser you have and fetches a driver to match the
+first time a Selenium test runs. No display server is needed either, since
+tests run the browser in its own native headless mode by default - so this
+behaves the same on a workstation, a CI runner or a sandbox.
+
+There is one case that does need a path set. If a ``geckodriver`` or
+``chromedriver`` is already on ``PATH`` and does not match the installed
+browser, Selenium Manager prints an incompatibility warning and uses it
+anyway. Whether that matters depends on how far apart they are - measured
+against Chrome 153, one major version behind still starts a session with
+nothing worse than the warning, while three behind fails with
+``SessionNotCreatedException``. Rather than work out where your own line is,
+treat the warning itself as the signal: either take
+the stale driver off ``PATH``, or point
+``SELENIUM_FIREFOX_DRIVER_PATH`` / ``SELENIUM_CHROMIUM_DRIVER_PATH`` at one
+that matches.
+
+.. code-block:: shell
+
+    # Linux - install whichever browser you don't already have
+    sudo apt install firefox
+    # - or -
+    sudo apt install chromium
+
+On Windows and macOS, install the browser the usual way; Selenium Manager
+locates it just the same.
+
+**Configuring Selenium Tests**
+
+Set `SELENIUM_BROWSER` in `qatrack/local_test_settings.py` - or in
+`qatrack/local_settings.py`, either is honoured - to pick which browser
+drives the tests:
+
+.. code-block:: python
+
+    SELENIUM_BROWSER = 'firefox'   # the default
+    # SELENIUM_BROWSER = 'chromium'
+
+That's the only setting most people need. A couple of others (all defined
+in `qatrack/settings.py`, overridable the same way) are there if you need
+them:
+
+* `SELENIUM_HEADLESS` - `True` by default (native headless mode, no display
+  needed). Set to `False`, on a machine with a real display, to watch a
+  test execute in a visible browser window - useful when debugging a
+  failing Selenium test.
+* `SELENIUM_FIREFOX_DRIVER_PATH` / `SELENIUM_CHROMIUM_DRIVER_PATH` - only
+  needed if you want to pin a specific driver binary instead of letting
+  Selenium Manager resolve one automatically.
+
+Viewport size, and why headless is the reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The suite lays out at **1920x1080 CSS pixels**, and
+``TestPerformQC::test_perform_qc_viewport_sizes`` additionally checks the
+perform-QC page at three widths - 960x1080 (half of a 1080p display, for
+someone working side by side), 1366x768 (a common laptop) and 1920x1080. That
+is one ordinary test with three ``subTest`` cases; it is not opt-in and runs in
+every Selenium run, including CI's.
+
+Both browsers are launched pinned to a **1:1 device pixel ratio**
+(``layout.css.devPixelsPerPx`` for Firefox, ``--force-device-scale-factor``
+for Chromium). Without that, a *visible* browser inherits the desktop's
+display scaling: on a HiDPI desktop scaled to 187.5% a window that renders
+1920x1080 headless reports a CSS viewport of only 1536x997. The pages are laid
+out for the wider viewport, so at 1536 CSS pixels controls overlap and clicks
+land on whatever is covering them.
+
+**Headless is the reference configuration.** It has no window manager and no
+desktop scaling, so the viewport is exactly what was asked for, every time,
+on every machine. That is what CI runs and what a layout assertion should be
+trusted from.
+
+**Visible mode cannot always control the viewport.** Narrowing to a specific
+size needs a viewport override - WebDriver BiDi for Firefox, CDP for
+Chromium. The Firefox one is not guaranteed to succeed, and when it fails it
+fails by *hanging*: the BiDi command times out after about 30 seconds, once per
+test class. That was observed on a HiDPI desktop where the browser laid out in a
+mis-scaled coordinate space; pinning the device pixel ratio fixed it, and the
+override now applies on that same machine, Wayland included. The guard is kept
+because the failure mode costs a whole suite run, not because any platform is
+known to need it. When it does fail, ``set_viewport_size()`` returns ``False``
+after that one timeout rather than repeating it per class, and
+``test_perform_qc_viewport_sizes`` **skips the profiles it cannot honour**
+rather than measuring whatever size the window happened to be. A skip that
+names the profile is the honest result; silently testing one size three times
+and reporting three is not.
+
+So: use visible mode to *watch* a test, and headless to *believe* a layout
+result.
+
+Both `SELENIUM_BROWSER` and `SELENIUM_HEADLESS` can also be set from the
+command line for a single run, instead of edited into a settings file -
+useful for a one-off ("just this run, watch it in Chromium instead"):
+
+.. code-block:: shell
+
+    # bash/zsh
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False pytest --run-selenium
+
+    # PowerShell - the inline form above is a parse error here
+    $env:SELENIUM_BROWSER='chromium'; $env:SELENIUM_HEADLESS='False'; pytest --run-selenium
+
 
 Running The Test Suite
 ----------------------
@@ -532,3 +645,154 @@ measure coverage with:
     were hard is worth less to everyone than one that arrives and gets finished
     together.
 
+Writing Documentation
+---------------------
+
+As well as writing tests for your new code, it will be extremely helpful for
+you to include documenation for the features you have built.  The documentation
+for QATrack+ is located in the `docs/` folder and is seperated into the
+following sections:
+
+#. **User guide:** Documentation for normal users of the QATrack+ installation.
+
+#. **Admin guide:** Documentation for users of QATrack+ who are responsible for
+   configuring and maintaining Test Lists, Units etc.
+
+#. **Tutorials:**  Complete examples of how to make use of QATrack+ features.
+
+#. **Install:** Documentation for the people responsible for installing,
+   upgrading, and otherwise maintaining the QATrack+ server.
+
+#. **Developers guide:** You are reading it :)
+
+Please browse through the docs and decide where is the most appropriate place
+to document your new feature.
+
+While writing documentation, you can view the documentation locally in your web
+browser (at http://127.0.0.1:8008) by running one of the following commands:
+
+.. code-block:: shell
+
+    make docs-autobuild
+    # -or-
+    sphinx-autobuild docs docs/_build/html --port 8008
+
+The documentation build treats warnings as errors, so a build that reports a
+warning fails. Run it the way CI does before you push:
+
+.. code-block:: shell
+
+    rm -rf docs/_build
+    uv run sphinx-build -W --keep-going -a --fresh-env -b html docs docs/_build/html
+
+Removing ``docs/_build`` matters. Sphinx caches what it has already parsed, and an
+incremental build does not repeat a warning it reported last time - so a warning you
+introduced can be invisible to you and fail for the next person.
+
+Fragments, and the leading underscore
+-------------------------------------
+
+A page that would otherwise be written out three times - once per platform, say -
+can be factored into a fragment and pulled into each page with ``.. include::``.
+``docs/install/_upgrade_4_0_before.rst`` is one.
+
+**Name a fragment with a leading underscore, and add it to ``exclude_patterns`` in
+``docs/conf.py``.** Both, because they do different jobs:
+
+- **The underscore is for people.** It says this file is not a page and is not meant
+  to be read on its own. Sphinx attaches no meaning to it whatsoever - unlike Sass
+  partials or Jekyll's ``_includes``, where the convention is enforced by the tool.
+  The names ``_build``, ``_static`` and ``_templates`` are special only because
+  ``conf.py`` points at them.
+- **``exclude_patterns`` is what gives it effect**, and it is worth knowing exactly
+  what it prevents. Without it Sphinx reads the fragment as a document *as well as*
+  including it. With a fragment that defines no labels - which is what
+  ``docs/install/_upgrade_4_0_*.rst`` are today - the build still passes, and the
+  only consequence is a published page duplicating content that already appears in
+  three guides.
+
+  **The moment a fragment defines a label, that changes.** Measured: adding one
+  ``.. _label:`` to an un-excluded fragment produces **three** duplicate-label
+  warnings, one for each page that includes it plus the fragment itself, and ``-W``
+  turns those into a failed build. So excluding a fragment is cheap insurance that
+  becomes necessary the first time somebody writes a label in one, which is not a
+  thing anyone will remember to check.
+
+``exclude_patterns`` matches ``**/_*.rst``, so a new fragment named with the
+underscore is excluded without further work. Keep the convention anyway: the pattern
+is what makes the build pass, and the name is what tells the next person why the file
+exists.
+
+Give a fragment a comment at the top saying which pages include it. A reader who
+opens it directly has no other way to find out, and ``git grep`` for the filename is
+a poor substitute for a sentence.
+
+Version Naming Convention
+-------------------------
+
+QATrack+ uses **Eff Ver (Effort Versioning)** for its version naming convention. 
+Eff Ver is a versioning strategy that focuses on the effort required to upgrade 
+rather than semantic meaning. This approach prioritizes the practical impact on 
+users and developers when considering version changes.
+
+For more information about Eff Ver, see the `Eff Ver documentation 
+<https://effver.org>`__.
+
+**Version Number Structure**
+
+The version number follows the format `X.Y.Z` where:
+
+- **X (Major)**: Corresponds to the Django LTS release version
+  - Currently at 4.0.1 (Django 4.2 LTS)
+  - When upgrading to Django 5.2 LTS, version will become 5.0.0
+  - This ensures compatibility and upgrade path alignment with Django
+
+- **Y (Minor)**: Feature releases within the same Django LTS cycle
+- **Z (Patch)**: Bug fixes and minor improvements
+
+**Examples:**
+- 4.0.0: Initial release on Django 4.2 LTS
+- 4.0.1: Bug fix release on the same Django LTS
+- 4.1.0: Major feature release while staying on Django 4.2 LTS
+- 4.1.1: Bug fix release
+- 5.0.0: Upgrade to Django 5.2 LTS
+
+Copyright & Licensing
+---------------------
+
+The author of the code (or potentially their employer) retains the copyright of
+their work even when contributing code to QATrack+.  However, unless specified
+otherwies, by submitting code to the QATrack+ project you agree to have it
+distributed using the same `MIT license
+<https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ as
+QATrack+ uses.
+
+I'm not a developer, how can I help out?
+----------------------------------------
+
+Not everyone has development experience or the desire to contribute code to
+QATrack+ but still wants to help the project out.  Here are a couple of ways
+that you can contribute to the QATrack+ project without doing any software
+development:
+
+
+* **Translations:** QATrack+ supports multiple languages through its
+  internationalization infrastructure. We welcome community contributions for
+  translation files in different languages. Use the translation manager script
+  to help automate translations, then refine them manually for accuracy.
+  See the "Internationalization & Translation" section above for detailed commands.
+
+* **Tutorials:** :ref:`Tutorials <tutorials>` are a great way for newcomers to
+  learn their way around QATrack+.  If you have an idea for a tutorial, we
+  would love to include it in our tutorials section!
+
+* **Mailing List:** QATrack+ has a :mailinglist:`mailing list <>` which
+  QATrack+ users and administrators may find useful for getting support and
+  discussing bugs and/or features. Join the list and chime in!
+
+* **Spread the word:** The QATrack+ community has grown primarily through word
+  of mouth. Please let others know about QATrack+ when discussing QA/QC
+  software :)
+
+* **Other:** Have any ideas for acquiring development funding for the QATrack+
+  project?  We'd love to hear them!
