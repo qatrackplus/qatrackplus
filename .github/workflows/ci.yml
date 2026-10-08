@@ -29,11 +29,12 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
         with:
+          version: "0.12.5"
           enable-cache: true
       - name: Setup Database configuration
         run: cp deploy/sqlite/local_settings.py qatrack/local_settings.py
       - name: Run pre-commit
-        run: uvx pre-commit run --all-files
+        run: uvx pre-commit@4.6.0 run --all-files
 
   requirements:
     name: Requirements Test
@@ -47,21 +48,45 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
         with:
+          version: "0.12.5"
           enable-cache: true
       - name: Sync dependencies
-        run: uv sync --all-extras
+        run: uv sync --all-extras --locked
       - name: Check dependencies
         run: uv pip check
 
   linux-tests:
-    name: Linux Tests
-    runs-on: ubuntu-latest
+    name: Linux Tests (${{ matrix.os }}, ${{ matrix.db }})
+    runs-on: ${{ matrix.os }}
     needs: [lint, requirements]
+    # ubuntu-latest is a moving alias, so on its own it is a canary rather
+    # than a promise: it tells us early when the next image breaks something,
+    # but it does not assert that QATrack+ works on any platform a deployer
+    # was told to use. docs/install/linux.rst commits to 24.04 LTS and says
+    # 22.04 is also tested, and neither was being checked deliberately -
+    # 22.04 not at all.
+    #
+    # So: keep the floating matrix as the early warning, and pin one job per
+    # documented version. The memory database is the one to duplicate - no
+    # service containers, fastest of the four, and it still exercises Python
+    # and the system libraries across the whole suite, which is where a
+    # change of base image actually shows up.
+    #
+    # 22.04 leaves standard support in April 2027 and 24.04 in April 2029;
+    # drop each entry when its version leaves the install guide.
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ["3.12"]
-        db: [sqlite, postgres, mysql]
+        db: [memory, sqlite, postgres, mysql]
+        include:
+          - os: ubuntu-24.04
+            python-version: "3.12"
+            db: memory
+          - os: ubuntu-22.04
+            python-version: "3.12"
+            db: memory
     
     services:
       postgres:
@@ -98,28 +123,60 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
         with:
+          version: "0.12.5"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
+      - name: Install dependencies (Memory SQLite)
+        if: matrix.db == 'memory'
+        run: uv sync --locked
+
       - name: Install dependencies (SQLite)
         if: matrix.db == 'sqlite'
-        run: uv sync
+        run: uv sync --locked
 
       - name: Install dependencies (Postgres)
         if: matrix.db == 'postgres'
         run: |
           sudo apt-get update && sudo apt-get install -y libpq-dev
-          uv sync --extra postgres
+          uv sync --extra postgres --locked
 
       - name: Install dependencies (MySQL)
         if: matrix.db == 'mysql'
         run: |
           sudo apt-get update && sudo apt-get install -y libmysqlclient-dev
-          uv sync --extra mysql
+          uv sync --extra mysql --locked
+
+      - name: Activate virtual environment
+        # Puts .venv/bin on PATH for every later step in this job, so they
+        # can call `pytest`/`python` directly instead of prefixing each
+        # with `uv run` (which re-checks the venv against the lockfile
+        # every time - redundant right after `uv sync` just ran above).
+        run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      # No "Setup Database configuration (Memory SQLite)" step here on
+      # purpose: settings.py falls back to a disposable in-memory SQLite
+      # database when qatrack/local_settings.py is absent under pytest
+      # (see qatrack/settings.py) - faster than a real file-based sqlite
+      # db, and doubles as real-world coverage of that fallback itself,
+      # on a genuinely different environment than any local dev machine.
+      # The separate "sqlite" matrix entry below covers the real,
+      # file-based sqlite3 backend instead - the two aren't redundant,
+      # since a real file-backed db exercises file I/O and on-disk
+      # locking behaviour the in-memory fallback never touches.
 
       - name: Setup Database configuration (SQLite)
         if: matrix.db == 'sqlite'
-        run: cp deploy/sqlite/local_settings.py qatrack/local_settings.py
+        run: |
+          cp deploy/sqlite/local_settings.py qatrack/local_settings.py
+          # local_test_settings.py too, not just local_settings.py:
+          # test_settings.py replaces DATABASES with in-memory SQLite whenever
+          # that file is missing, so without it this row silently tests nothing.
+          # Importing only DATABASES leaves every test-specific setting to
+          # test_settings.py, where they already are - copying a
+          # deploy/dev/local_test_settings.*.py template instead would bring its
+          # DEBUG = True along and override them.
+          echo 'from qatrack.local_settings import DATABASES  # noqa: F401' > qatrack/local_test_settings.py
 
       - name: Setup Database configuration (Postgres)
         if: matrix.db == 'postgres'
@@ -127,6 +184,7 @@ jobs:
           cp deploy/postgres/local_settings.py qatrack/local_settings.py
           sed -i "s/'HOST': ''/'HOST': '127.0.0.1'/g" qatrack/local_settings.py
           # User qatrack is already created with full privileges by the service container
+          echo 'from qatrack.local_settings import DATABASES  # noqa: F401' > qatrack/local_test_settings.py
 
       - name: Setup Database configuration (MySQL)
         if: matrix.db == 'mysql'
@@ -136,9 +194,20 @@ jobs:
           # Setup mysql users and privileges for MySQL 8 compat
           docker exec -i ${{ job.services.mysql.id }} mysql -u root -proot -e "CREATE USER 'qatrack'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE USER 'qatrack_reports'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE DATABASE qatrackplus CHARACTER SET utf8mb4; GRANT ALL ON qatrackplus.* TO 'qatrack'@'%'; GRANT ALL ON test_qatrackplus.* TO 'qatrack'@'%'; GRANT SELECT ON qatrackplus.* TO 'qatrack_reports'@'%'; FLUSH PRIVILEGES;"
           docker exec -i ${{ job.services.mysql.id }} sh -c "mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -proot mysql"
+          echo 'from qatrack.local_settings import DATABASES  # noqa: F401' > qatrack/local_test_settings.py
 
+      # Declared, not inferred: conftest.py aborts the session unless the
+      # connection it actually got matches. Without this, a row that loses its
+      # database configuration reports a pass - which is how the Postgres, MySQL
+      # and SQL Server rows came to run on in-memory SQLite.
       - name: Run Tests
-        run: uv run pytest -x -m "not selenium"
+        env:
+          QATRACK_EXPECTED_DB_VENDOR: >-
+            ${{ matrix.db == 'postgres' && 'postgresql'
+             || matrix.db == 'mysql'    && 'mysql'
+             || matrix.db == 'mssql'    && 'microsoft'
+             || 'sqlite' }}
+        run: pytest -x
 
   windows-tests:
     name: Windows Tests
@@ -157,20 +226,25 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
         with:
+          version: "0.12.5"
           enable-cache: true
           python-version: "3.12"
           
       - name: Install dependencies (SQLite)
         if: matrix.db == 'sqlite'
-        run: uv sync --extra win
+        run: uv sync --extra win --locked
         
       - name: Install dependencies (MSSQL)
         if: matrix.db == 'mssql'
-        run: uv sync --extra win --extra mssql
+        run: uv sync --extra win --extra mssql --locked
         
       - name: Setup Database configuration (SQLite)
         if: matrix.db == 'sqlite'
-        run: copy deploy\sqlite\local_settings.py qatrack\local_settings.py
+        run: |
+          copy deploy\sqlite\local_settings.py qatrack\local_settings.py
+          # See the Linux rows: without local_test_settings.py, test_settings.py
+          # swaps DATABASES for in-memory SQLite and this row tests nothing.
+          'from qatrack.local_settings import DATABASES  # noqa: F401' | Out-File -FilePath qatrack\local_test_settings.py -Encoding utf8
         
       - name: Setup Database configuration (MSSQL)
         if: matrix.db == 'mssql'
@@ -207,11 +281,20 @@ jobs:
               f.write('DEBUG = False\n')
               f.write('DATABASES = { "default": ' + repr(db_settings) + ' }\n')
               f.write('DATABASES["readonly"] = DATABASES["default"]\n')
+          # And local_test_settings.py, or test_settings.py discards all of the
+          # above for in-memory SQLite and the row tests nothing.
+          with open('qatrack/local_test_settings.py', 'w', encoding='utf8') as f:
+              f.write('from qatrack.local_settings import DATABASES  # noqa: F401\n')
           "@
           $code | Out-File -FilePath generate_settings.py -Encoding utf8
           python generate_settings.py
+      # As on Linux: the row declares which database it is for, and
+      # conftest.py refuses the session if that is not what it got.
       - name: Run Tests
-        run: uv run pytest -x -m "not selenium"
+        env:
+          QATRACK_EXPECTED_DB_VENDOR: >-
+            ${{ matrix.db == 'mssql' && 'microsoft' || 'sqlite' }}
+        run: uv run pytest -x
 
   docker-check:
     name: Docker Build & Run Check
@@ -297,3 +380,222 @@ jobs:
         if: always()
         working-directory: deploy/docker
         run: docker compose -f compose.yaml down -v
+
+  selenium-tests:
+    name: Selenium Tests
+    runs-on: ubuntu-latest
+    needs: [lint, requirements]
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, chromium]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+        with:
+          version: "0.12.5"
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Activate virtual environment
+        run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      # No local_settings.py here either: same in-memory SQLite fallback as
+      # the Linux Tests (memory) job. Chrome/Chromium and Firefox, with
+      # matching drivers, come pre-installed on GitHub's ubuntu-latest
+      # runner - no browser/driver install step needed. Runs the Selenium
+      # suite only (bypasses the skip-by-default via -m selenium), against
+      # one browser per matrix entry, headless (this branch's default).
+      #
+      # A GUI failure does not fail the build. The suite has residual timing
+      # flakiness that is still being worked through, and a red X that is
+      # usually noise teaches people to stop reading it. The outcome is still
+      # reported, in the summary step below, so it stays visible without
+      # gating anything.
+      #
+      # --tb=line holds a failure to one line. A full traceback for a browser
+      # test is mostly Selenium's own frames, and the screenshot is better
+      # evidence than any of it.
+      # WHY continue-on-error, and WHAT TURNS IT OFF.
+      #
+      # The GUI suite has unquantified flakiness: tests that fail in a full run
+      # pass in isolation, including ones untouched by the change under review.
+      # Blocking every PR on that would make the check meaningless in the other
+      # direction - people would start ignoring a red tick.
+      #
+      # But a green tick that hides five failing tests is its own problem, and
+      # it is the one this raised in review. So the failures are surfaced as
+      # GitHub *annotations* by the report step below - they appear on the PR
+      # itself, not only in the job summary - while still not failing the build.
+      #
+      # REMOVE `continue-on-error` when the flake rate is measured and the suite
+      # passes 10 consecutive full runs per browser on the same commit. Until
+      # someone has that number, "CI is green" means nothing for this suite and
+      # the annotation is the only honest signal.
+      - name: Run Selenium Tests
+        id: selenium
+        continue-on-error: true
+        shell: bash
+        env:
+          SELENIUM_BROWSER: ${{ matrix.browser }}
+        run: |
+          set -o pipefail
+          pytest -m selenium -q --tb=line -rf 2>&1 | tee selenium.log
+
+      # always(), not failure(). The step above is continue-on-error, so the
+      # job never reports failure and failure() would never fire - which
+      # would quietly stop uploading the screenshots this exists for.
+      #
+      # conftest.py writes one per failing Selenium test and nothing when they
+      # pass, so a green run still uploads no artifact.
+      - name: Upload failure screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: selenium-screenshots-linux-${{ matrix.browser }}
+          path: selenium-screenshots/
+          if-no-files-found: ignore
+
+      # The job reports success either way, so this is the only place the
+      # result is stated plainly. Names the failing tests and nothing else -
+      # the log has the detail and the artifact has the pictures.
+      - name: Report Selenium outcome
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Selenium — Linux / ${{ matrix.browser }}"
+            if [ "${{ steps.selenium.outcome }}" = "success" ]; then
+              echo "All GUI tests passed."
+            else
+              echo "**Failures below did not fail the build.** Screenshots are attached as an artifact."
+              echo
+              echo '```'
+              grep -E '^(FAILED|ERROR)' selenium.log || echo "no FAILED lines - the run did not finish; see the log"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # An annotation as well as the summary. A continue-on-error step makes
+          # the check green, so without this the only trace of a failure is a
+          # page nobody opens on a passing PR.
+          if [ "${{ steps.selenium.outcome }}" != "success" ]; then
+            n=$(grep -cE '^(FAILED|ERROR)' selenium.log || true)
+            echo "::warning title=Selenium GUI failures (did not fail the build)::${n:-unknown} test(s) failed on ${{ matrix.browser }} - see the job summary and the screenshot artifact"
+          fi
+
+  selenium-tests-windows:
+    name: Selenium Tests (Windows)
+    runs-on: windows-latest
+    needs: [lint, requirements]
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+        with:
+          version: "0.12.5"
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --extra win --locked
+
+      # No local_settings.py here either: same in-memory SQLite fallback as
+      # the Linux jobs. Chrome/Chromium (and Firefox and Edge) come
+      # pre-installed on GitHub's windows-latest runner - no browser/driver
+      # install step needed. Runs the Selenium suite only (bypasses the
+      # skip-by-default via -m selenium), headless (this branch's
+      # default).
+      #
+      # A GUI failure does not fail the build. The suite has residual timing
+      # flakiness that is still being worked through, and a red X that is
+      # usually noise teaches people to stop reading it. The outcome is still
+      # reported, in the summary step below, so it stays visible without
+      # gating anything.
+      #
+      # --tb=line holds a failure to one line. A full traceback for a browser
+      # test is mostly Selenium's own frames, and the screenshot is better
+      # evidence than any of it.
+      # WHY continue-on-error, and WHAT TURNS IT OFF.
+      #
+      # The GUI suite has unquantified flakiness: tests that fail in a full run
+      # pass in isolation, including ones untouched by the change under review.
+      # Blocking every PR on that would make the check meaningless in the other
+      # direction - people would start ignoring a red tick.
+      #
+      # But a green tick that hides five failing tests is its own problem, and
+      # it is the one this raised in review. So the failures are surfaced as
+      # GitHub *annotations* by the report step below - they appear on the PR
+      # itself, not only in the job summary - while still not failing the build.
+      #
+      # REMOVE `continue-on-error` when the flake rate is measured and the suite
+      # passes 10 consecutive full runs per browser on the same commit. Until
+      # someone has that number, "CI is green" means nothing for this suite and
+      # the annotation is the only honest signal.
+      - name: Run Selenium Tests
+        id: selenium
+        continue-on-error: true
+        shell: bash
+        env:
+          SELENIUM_BROWSER: ${{ matrix.browser }}
+        run: |
+          set -o pipefail
+          uv run pytest -m selenium -q --tb=line -rf 2>&1 | tee selenium.log
+
+      # always(), not failure(). The step above is continue-on-error, so the
+      # job never reports failure and failure() would never fire - which
+      # would quietly stop uploading the screenshots this exists for.
+      #
+      # conftest.py writes one per failing Selenium test and nothing when they
+      # pass, so a green run still uploads no artifact.
+      - name: Upload failure screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: selenium-screenshots-windows-${{ matrix.browser }}
+          path: selenium-screenshots/
+          if-no-files-found: ignore
+
+      # The job reports success either way, so this is the only place the
+      # result is stated plainly. Names the failing tests and nothing else -
+      # the log has the detail and the artifact has the pictures.
+      - name: Report Selenium outcome
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Selenium — Windows / ${{ matrix.browser }}"
+            if [ "${{ steps.selenium.outcome }}" = "success" ]; then
+              echo "All GUI tests passed."
+            else
+              echo "**Failures below did not fail the build.** Screenshots are attached as an artifact."
+              echo
+              echo '```'
+              grep -E '^(FAILED|ERROR)' selenium.log || echo "no FAILED lines - the run did not finish; see the log"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # An annotation as well as the summary. A continue-on-error step makes
+          # the check green, so without this the only trace of a failure is a
+          # page nobody opens on a passing PR.
+          if [ "${{ steps.selenium.outcome }}" != "success" ]; then
+            n=$(grep -cE '^(FAILED|ERROR)' selenium.log || true)
+            echo "::warning title=Selenium GUI failures (did not fail the build)::${n:-unknown} test(s) failed on ${{ matrix.browser }} - see the job summary and the screenshot artifact"
+          fi

@@ -87,7 +87,6 @@ qatrack-dump-*.json
 # were simply missed.
 django-q2.conf
 gunicorn.conf
-
 # Selenium failure artefacts. The suite writes a PNG here for each failing GUI
 # test, named after the test, so the directory fills up on any red run and its
 # contents are worthless to anyone else. Two of them reached `develop` in #847

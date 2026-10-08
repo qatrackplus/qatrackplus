@@ -477,6 +477,120 @@ QATrack+ includes a Makefile with convenient shortcuts for common development ta
 
 For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
 
+Setting Up Selenium Browser Testing
+-----------------------------------
+
+QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
+
+**Browser Requirements**
+
+You need a browser installed - either Firefox or Chrome/Chromium, whichever
+you prefer. You do not normally need to install or configure a matching
+driver (geckodriver/chromedriver): Selenium Manager, built into Selenium
+4.6+, detects whichever browser you have and fetches a driver to match the
+first time a Selenium test runs. No display server is needed either, since
+tests run the browser in its own native headless mode by default - so this
+behaves the same on a workstation, a CI runner or a sandbox.
+
+There is one case that does need a path set. If a ``geckodriver`` or
+``chromedriver`` is already on ``PATH`` and does not match the installed
+browser, Selenium Manager prints an incompatibility warning and uses it
+anyway. Whether that matters depends on how far apart they are - measured
+against Chrome 153, one major version behind still starts a session with
+nothing worse than the warning, while three behind fails with
+``SessionNotCreatedException``. Rather than work out where your own line is,
+treat the warning itself as the signal: either take
+the stale driver off ``PATH``, or point
+``SELENIUM_FIREFOX_DRIVER_PATH`` / ``SELENIUM_CHROMIUM_DRIVER_PATH`` at one
+that matches.
+
+.. code-block:: shell
+
+    # Linux - install whichever browser you don't already have
+    sudo apt install firefox
+    # - or -
+    sudo apt install chromium
+
+On Windows and macOS, install the browser the usual way; Selenium Manager
+locates it just the same.
+
+**Configuring Selenium Tests**
+
+Set `SELENIUM_BROWSER` in `qatrack/local_test_settings.py` - or in
+`qatrack/local_settings.py`, either is honoured - to pick which browser
+drives the tests:
+
+.. code-block:: python
+
+    SELENIUM_BROWSER = 'firefox'   # the default
+    # SELENIUM_BROWSER = 'chromium'
+
+That's the only setting most people need. A couple of others (all defined
+in `qatrack/settings.py`, overridable the same way) are there if you need
+them:
+
+* `SELENIUM_HEADLESS` - `True` by default (native headless mode, no display
+  needed). Set to `False`, on a machine with a real display, to watch a
+  test execute in a visible browser window - useful when debugging a
+  failing Selenium test.
+* `SELENIUM_FIREFOX_DRIVER_PATH` / `SELENIUM_CHROMIUM_DRIVER_PATH` - only
+  needed if you want to pin a specific driver binary instead of letting
+  Selenium Manager resolve one automatically.
+
+Viewport size, and why headless is the reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The suite lays out at **1920x1080 CSS pixels**, and
+``TestPerformQC::test_perform_qc_viewport_sizes`` additionally checks the
+perform-QC page at three widths - 960x1080 (half of a 1080p display, for
+someone working side by side), 1366x768 (a common laptop) and 1920x1080. That
+is one ordinary test with three ``subTest`` cases; it is not opt-in and runs in
+every Selenium run, including CI's.
+
+Both browsers are launched pinned to a **1:1 device pixel ratio**
+(``layout.css.devPixelsPerPx`` for Firefox, ``--force-device-scale-factor``
+for Chromium). Without that, a *visible* browser inherits the desktop's
+display scaling: on a HiDPI desktop scaled to 187.5% a window that renders
+1920x1080 headless reports a CSS viewport of only 1536x997. The pages are laid
+out for the wider viewport, so at 1536 CSS pixels controls overlap and clicks
+land on whatever is covering them.
+
+**Headless is the reference configuration.** It has no window manager and no
+desktop scaling, so the viewport is exactly what was asked for, every time,
+on every machine. That is what CI runs and what a layout assertion should be
+trusted from.
+
+**Visible mode cannot always control the viewport.** Narrowing to a specific
+size needs a viewport override - WebDriver BiDi for Firefox, CDP for
+Chromium. The Firefox one is not guaranteed to succeed, and when it fails it
+fails by *hanging*: the BiDi command times out after about 30 seconds, once per
+test class. That was observed on a HiDPI desktop where the browser laid out in a
+mis-scaled coordinate space; pinning the device pixel ratio fixed it, and the
+override now applies on that same machine, Wayland included. The guard is kept
+because the failure mode costs a whole suite run, not because any platform is
+known to need it. When it does fail, ``set_viewport_size()`` returns ``False``
+after that one timeout rather than repeating it per class, and
+``test_perform_qc_viewport_sizes`` **skips the profiles it cannot honour**
+rather than measuring whatever size the window happened to be. A skip that
+names the profile is the honest result; silently testing one size three times
+and reporting three is not.
+
+So: use visible mode to *watch* a test, and headless to *believe* a layout
+result.
+
+Both `SELENIUM_BROWSER` and `SELENIUM_HEADLESS` can also be set from the
+command line for a single run, instead of edited into a settings file -
+useful for a one-off ("just this run, watch it in Chromium instead"):
+
+.. code-block:: shell
+
+    # bash/zsh
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False pytest --run-selenium
+
+    # PowerShell - the inline form above is a parse error here
+    $env:SELENIUM_BROWSER='chromium'; $env:SELENIUM_HEADLESS='False'; pytest --run-selenium
+
+
 Running The Test Suite
 ----------------------
 
@@ -650,10 +764,14 @@ Copyright & Licensing
 
 The author of the code (or potentially their employer) retains the copyright of
 their work even when contributing code to QATrack+.  However, unless specified
-otherwies, by submitting code to the QATrack+ project you agree to have it
-distributed using the same `MIT license
-<https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ as
+otherwise, by submitting code to the QATrack+ project you agree to have it
+distributed under the same `Apache License 2.0
+<https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ that
 QATrack+ uses.
+
+Releases before 4.0 were MIT-licensed; 4.0 onwards are Apache 2.0, and the
+licence holder remains the Ottawa Cancer Centre. See the README for the note on
+that change.
 
 I'm not a developer, how can I help out?
 ----------------------------------------
