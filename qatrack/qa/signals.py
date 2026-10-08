@@ -299,6 +299,8 @@ def check_approved_statuses(*args, **kwargs):
 @receiver(post_save, sender=Group, dispatch_uid="qa_update_unreviewed_cache_group")
 def update_unreviewed_cache(sender, **kwargs):
     """When a test list is completed invalidate the unreviewed counts"""
+    if loaded_from_fixture(kwargs):
+        return
     cache.delete(settings.CACHE_UNREVIEWED_COUNT)
     cache.delete(settings.CACHE_UNREVIEWED_COUNT_USER)
     cache.delete(settings.CACHE_RTS_QA_COUNT)
@@ -321,6 +323,8 @@ def stash_old_unit_for_utc(sender, instance, **kwargs):
 @receiver(post_save, sender=models.UnitTestCollection, dispatch_uid="qa_update_active_unit_test_collections_for_unit_utc_post_save")
 @receiver(post_delete, sender=models.UnitTestCollection, dispatch_uid="qa_update_active_unit_test_collections_for_unit_utc_post_delete")
 def update_active_unit_test_collections_for_unit_utc(sender, instance, **kwargs):
+    if loaded_from_fixture(kwargs):
+        return
     unit = instance.unit
     models.set_active_unit_test_collections_for_unit_cache(unit)
     old_unit = getattr(instance, '_old_unit', None)
@@ -330,6 +334,8 @@ def update_active_unit_test_collections_for_unit_utc(sender, instance, **kwargs)
 
 @receiver(post_save, sender=Unit, dispatch_uid="qa_update_active_unit_test_collections_for_unit_post_save")
 def update_active_unit_test_collections_for_unit_post_save(sender, instance, **kwargs):
+    if loaded_from_fixture(kwargs):
+        return
     models.set_active_unit_test_collections_for_unit_cache(instance)
 
 

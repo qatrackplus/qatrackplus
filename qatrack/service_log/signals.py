@@ -48,6 +48,8 @@ def on_service_event_deleted(*args, **kwargs):
 @receiver(post_save, sender=models.ReturnToServiceQA, dispatch_uid="sl_update_rts_cache_post_save")
 @receiver(post_delete, sender=models.ReturnToServiceQA, dispatch_uid="sl_update_rts_cache_post_delete")
 def update_rts_cache(sender, **kwargs):
+    if loaded_from_fixture(kwargs):
+        return
     """When a RTS is completed invalidate the unreviewed counts"""
     cache.delete(settings.CACHE_RTS_QA_COUNT)
     cache.delete(settings.CACHE_RTS_INCOMPLETE_QA_COUNT)
@@ -60,6 +62,8 @@ def update_rts_cache(sender, **kwargs):
 @receiver(post_save, sender=models.ServiceEvent, dispatch_uid="sl_update_se_cache_se_post_save")
 def update_se_cache(sender, **kwargs):
     """When a service status is changed invalidate the default and review count"""
+    if loaded_from_fixture(kwargs):
+        return
     if sender == models.ServiceEventStatus:
         cache.delete(settings.CACHE_DEFAULT_SE_STATUS)
     cache.delete(settings.CACHE_SE_NEEDING_REVIEW_COUNT)
@@ -69,5 +73,7 @@ def update_se_cache(sender, **kwargs):
 @receiver(post_save, sender=models.ServiceEventStatus, dispatch_uid="sl_update_colours_post_save")
 @receiver(post_delete, sender=models.ServiceEventStatus, dispatch_uid="sl_update_colours_post_delete")
 def update_colours(sender, **kwargs):
+    if loaded_from_fixture(kwargs):
+        return
     service_status_colours = {ses.name: ses.colour for ses in models.ServiceEventStatus.objects.all()}
     cache.set(settings.CACHE_SERVICE_STATUS_COLOURS, service_status_colours)
