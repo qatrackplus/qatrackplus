@@ -474,13 +474,23 @@ An example showing how to use `write_file` to create a matplotlib plot:
 
 ::
 
-    import matplotlib.pyplot as plt
-
-    xs = range(10)
-    ys = range(10)
-    plt.plot(xs, ys)
-    figure = plt.gcf()
+    figure = UTILS.get_figure()
+    axes = figure.gca()
+    axes.plot(range(10), range(10))
     UTILS.write_file("a_line.png", figure)
+
+.. warning::
+
+    Do not plot with ``matplotlib.pyplot`` (often imported as ``plt``) in a
+    calculation procedure. ``pyplot`` keeps its figures in module level state,
+    shared by everything running in the same process, so two procedures plotting
+    at the same time can take each other's figures - and QATrack+ clears every
+    figure in the process after a plot, not only the one it made. The result is a
+    plot saved against the wrong test, or an empty one.
+
+    ``UTILS.get_figure()`` returns a figure with its own canvas, which nothing
+    else can reach. Earlier versions of this page showed the ``pyplot`` form;
+    ``qatrack.W012`` reports any procedure still written that way.
 
 An example showing how to use `get_last_test_instance` to calculate the percent change
 in a test value since the last time it was performed:
