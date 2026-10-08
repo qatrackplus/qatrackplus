@@ -265,10 +265,40 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             e_c.presence_of_element_located((By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]'))
         )
 
+    def wait_for_modal(self, modal_id, timeout=10):
+        """Wait for a Bootstrap modal to finish opening.
+
+        `modal("show")` inserts the backdrop first and adds the `in` class only
+        once that is in place, so the fields inside the dialog are present in
+        the DOM, and findable, while the dialog itself is still 0x0 and
+        display:none. Interacting with them before this returns is a race.
+
+        The default timeout is deliberately longer than the suite wide
+        `self.wait`, which is 2 seconds: the dialogs are populated by AJAX and
+        then faded in. Other waits keep the short default so genuine races stay
+        visible rather than passing slowly.
+        """
+        WebDriverWait(self.driver, timeout).until(e_c.visibility_of_element_located((By.ID, modal_id)))
+
+    def modal_is_open(self):
+        """Return True if a Bootstrap modal is currently shown.
+
+        Checked in the page rather than with find_elements so it does not pay
+        the suite's 2 second implicit wait every time no modal is open.
+        """
+        return bool(self.driver.execute_script("return document.querySelectorAll('.modal.in').length > 0;"))
+
     def scroll_into_view(self, el_id):
         self.wait.until(e_c.presence_of_element_located((By.ID, el_id)))
-        actions = ActionChains(self.driver)
         element = self.driver.find_element(By.ID, el_id)
+        if self.modal_is_open():
+            # The body click below dismisses an open Bootstrap modal: the click
+            # lands on the modal backdrop, Bootstrap drops the `in` class, and
+            # every field in the dialog goes to 0x0 and display:none. For a
+            # field inside a modal, just scroll it into view.
+            self.driver.execute_script("arguments[0].scrollIntoView();", element)
+            return
+        actions = ActionChains(self.driver)
         actions.move_to_element(element)
         time.sleep(1)
         try:
@@ -280,8 +310,12 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     def scroll_into_view_css(self, css_sel):
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, css_sel)))
-        actions = ActionChains(self.driver)
         element = self.driver.find_element(By.CSS_SELECTOR, css_sel)
+        if self.modal_is_open():
+            # See scroll_into_view: the body click would close the modal.
+            self.driver.execute_script("arguments[0].scrollIntoView();", element)
+            return
+        actions = ActionChains(self.driver)
         actions.move_to_element(element)
         time.sleep(1)
         try:
