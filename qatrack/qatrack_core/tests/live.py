@@ -1,3 +1,4 @@
+import os
 import shutil
 import time
 from contextlib import contextmanager
@@ -47,6 +48,48 @@ def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
     return outer
 
 
+# Seconds to pause after each browser interaction, so a person can follow a GUI
+# run. 0, the default, is off and costs one float comparison per action.
+#
+# Read from the environment on purpose rather than exposed as a setting beside
+# the other SELENIUM_* ones: the supported way to turn this on is the poe task,
+# and this is a debugging aid, not a test mode. Inserting delays can turn a race
+# that fails at full speed into a pass, so a slow run's results must never be
+# quoted as a normal run's - setUpClass() says so out loud when it is on.
+try:
+    SLOW_MO = max(0.0, float(os.environ.get('SELENIUM_SLOW_MO', '') or 0))
+except ValueError:
+    SLOW_MO = 0.0
+
+
+def slow_mo_pause(element=None):
+    """Outline `element`, hold it, and put the outline back. No-op when off.
+
+    Pausing alone is not much use to a watcher: scrollIntoView() moves the page
+    under them and nothing says which control was used. Outlining the element
+    for the duration is what makes a slow run readable.
+    """
+    if not SLOW_MO:
+        return
+    if element is None:
+        time.sleep(SLOW_MO)
+        return
+    try:
+        previous = element.parent.execute_script(
+            "var p = arguments[0].style.outline;"
+            "arguments[0].style.outline = '3px solid #e8590c';"
+            "arguments[0].style.outlineOffset = '2px';"
+            "return p;",
+            element,
+        )
+        time.sleep(SLOW_MO)
+        element.parent.execute_script("arguments[0].style.outline = arguments[1];", element, previous)
+    except WebDriverException:
+        # The element may have gone stale, or the page may have navigated under
+        # us. Still pause, so the run stays watchable.
+        time.sleep(SLOW_MO)
+
+
 @retry_if_exception(WebDriverException, 5, sleep_time=1)
 def WebElement_click(self):
     """
@@ -55,6 +98,7 @@ def WebElement_click(self):
     is not in view
     """
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    slow_mo_pause(self)
     return self._execute(Command.CLICK_ELEMENT)
 
 
@@ -67,6 +111,7 @@ orig_send_keys = WebElement.send_keys
 def WebElement_send_keys(self, keys):
     """Monky patch send_keys to ensure element is in view"""
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    slow_mo_pause(self)
     return orig_send_keys(self, keys)
 
 
@@ -96,6 +141,21 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def setUpClass(cls):
         use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
         browser_setting = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
+
+        if SLOW_MO:
+            # Said once, loudly, because the whole risk of this switch is a slow
+            # run's numbers being read as a normal run's.
+            print(
+                "\nSlow mode: pausing %.2fs after every click and keystroke, and "
+                "outlining the element in use. Timings and pass counts from this "
+                "run are not comparable with a normal one - a race that fails at "
+                "full speed can pass here." % SLOW_MO
+            )
+            if use_virtual_display:
+                print(
+                    "Slow mode is on but this run uses a virtual display, so there "
+                    "is nothing to watch."
+                )
 
         if use_virtual_display:
             # Make sure xvfb is installed
@@ -192,6 +252,8 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def open(self, url):
         with self.wait_for_page_load():
             self.driver.execute_script("window.location.href='%s%s'" % (self.live_server_url, url))
+        # Give a watcher time to read the page that just loaded.
+        slow_mo_pause()
 
     def force_login(self, user, backend=None):
         """Authenticate `user` in the browser without using a login form.
