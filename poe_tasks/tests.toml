@@ -79,6 +79,45 @@ def manage(*args, env=None):
         raise SystemExit(code)
 
 
+# Refuse, before touching anything, if this would provision the developer's own
+# database. migrate/createcachetable/collectstatic/createsuperuser are manage.py
+# commands, so they read local_settings.py - the development settings - while
+# only pytest reads the local_test_settings.py this task writes its TEST name
+# into. nsmela measured the consequence on 2026-10-08: with local_settings.py
+# naming db/my_real_dev.db, a superuser/superuser account was created in that
+# database and the tests ran against a separate db/default.db. Asking Django for
+# the effective name is the only reliable check - the value can come from any
+# layer of the settings.
+effective = subprocess.run(
+    [sys.executable, '-c',
+     "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'qatrack.settings');"
+     "django.setup();"
+     "from django.conf import settings; print(settings.DATABASES['default']['NAME'])"],
+    capture_output=True, text=True,
+)
+if effective.returncode != 0:
+    print(effective.stderr.strip() or 'could not read DATABASES from the settings')
+    raise SystemExit(1)
+# Compared as paths, not strings: the settings hold a posix-style name and
+# str(DB) is backslashed on Windows.
+if pathlib.Path(effective.stdout.strip()) != DB:
+    print('error: this task provisions the database your settings point at, and that is')
+    print('         %s' % effective.stdout.strip())
+    print('not %s. Continuing would migrate that database and leave a' % DB)
+    print('superuser/superuser account in it, while the tests ran somewhere else.')
+    print('Point local_settings.py at %s before running this.' % DB)
+    raise SystemExit(1)
+
+# Refuse too if a backup from an interrupted run is still here, rather than
+# moving a throwaway copy on top of it - which is how the real loss happens.
+stale = [p for p in (DB_BAK, LIVE_BAK) if p.exists()]
+if stale:
+    print('error: a backup from an earlier run is still here:')
+    for p in stale:
+        print('  %s' % p)
+    print('That run did not finish restoring. Put them back, or remove them, first.')
+    raise SystemExit(1)
+
 # Move the developer's real database and settings aside. The shell version
 # of this task does the same, but restores by falling through to its last
 # few lines - so if provisioning fails, or the run is interrupted, the
@@ -99,7 +138,7 @@ shutil.copyfile('deploy/dev/local_test_settings.sqlite.py', LIVE)
 # pytest destroyed the developer's populated db/default.db. This task is the
 # one thing that really does want them to be the same. Mirrors the Makefile.
 with LIVE.open('a', encoding='utf-8') as fh:
-    fh.write("\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\n")
+    fh.write("\\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\\n")
 
 status = 1
 try:
