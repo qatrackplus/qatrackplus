@@ -7,6 +7,13 @@ from qatrack.qatrack_core.checks import check_media_folder_permissions
 
 
 class TestCheckMediaFolderPermissions(SimpleTestCase):
+    def setUp(self):
+        # Pin a non-root euid so qatrack.W001 does not appear when the suite runs as root
+        # (Docker, CI containers). Tests that need root patch os.geteuid again.
+        patcher = patch('os.geteuid', return_value=1000, create=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_media_folder_configured_and_writable(self):
         import tempfile
 
