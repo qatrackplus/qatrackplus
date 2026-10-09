@@ -146,6 +146,17 @@ test-integration:
 	trap restore EXIT; \
 	trap "exit 130" INT; \
 	trap "exit 143" TERM; \
+	DBNAME=$$(uv run python -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'qatrack.settings'); django.setup(); from django.conf import settings; print(settings.DATABASES['default']['NAME'])"); \
+	if [ "$$DBNAME" != "db/default.db" ]; then \
+		echo "error: this target provisions the database your settings point at, and that is"; \
+		echo "         $$DBNAME"; \
+		echo "not db/default.db. migrate, createcachetable, collectstatic and createsuperuser"; \
+		echo "all read local_settings.py, not local_test_settings.py, so continuing would"; \
+		echo "migrate that database and create a superuser/superuser account in it - while"; \
+		echo "the tests ran somewhere else entirely."; \
+		echo "Point local_settings.py at db/default.db before running this."; \
+		exit 1; \
+	fi; \
 	if [ -f db/default.db.bak ] || [ -f qatrack/local_test_settings.py.bak ]; then \
 		echo "error: a backup from an earlier run is still here:"; \
 		[ -f db/default.db.bak ] && echo "  db/default.db.bak"; \
