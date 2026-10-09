@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+import warnings
 from contextlib import contextmanager
 from functools import wraps
 from importlib import import_module
@@ -143,18 +144,24 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         browser_setting = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
 
         if SLOW_MO:
-            # Said once, loudly, because the whole risk of this switch is a slow
-            # run's numbers being read as a normal run's.
-            print(
-                "\nSlow mode: pausing %.2fs after every click and keystroke, and "
-                "outlining the element in use. Timings and pass counts from this "
-                "run are not comparable with a normal one - a race that fails at "
-                "full speed can pass here." % SLOW_MO
+            # A warning, not a print. The whole risk of this switch is a slow
+            # run's numbers being read as a normal run's, and print() from
+            # setUpClass is swallowed by pytest's capture - it surfaces only on
+            # a failure or under -s, so in a passing run the caveat would never
+            # be seen, which is the one run where it matters. A warning lands in
+            # pytest's own warnings summary, which is shown either way.
+            warnings.warn(
+                "Slow mode: pausing %.2fs after every click and keystroke, and outlining "
+                "the element in use. Timings and pass counts from this run are not "
+                "comparable with a normal one - a race that fails at full speed can pass "
+                "here." % SLOW_MO,
+                stacklevel=2,
             )
             if use_virtual_display:
-                print(
-                    "Slow mode is on but this run uses a virtual display, so there "
-                    "is nothing to watch."
+                warnings.warn(
+                    "Slow mode is on but this run uses a virtual display, so there is "
+                    "nothing to watch.",
+                    stacklevel=2,
                 )
 
         if use_virtual_display:
