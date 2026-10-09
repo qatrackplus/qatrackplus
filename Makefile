@@ -87,18 +87,28 @@ _test-engine:
 		echo "Create it first - see deploy/dev/local_test_settings.$(ENGINE).py for a starting template."; \
 		exit 1; \
 	}
-	@if [ -f qatrack/local_test_settings.py ]; then \
-		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
-	fi
-	cp qatrack/local_test_settings.$(ENGINE).py qatrack/local_test_settings.py
-	@uv run pytest ${args}; \
-	STATUS=$$?; \
+	@set -e; \
 	if [ -f qatrack/local_test_settings.py.bak ]; then \
-		mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
-	else \
-		rm -f qatrack/local_test_settings.py; \
+		echo "error: qatrack/local_test_settings.py.bak already exists."; \
+		echo "An earlier run was interrupted before it could put your settings back."; \
+		echo "Move it to qatrack/local_test_settings.py, or delete it, then try again."; \
+		exit 1; \
 	fi; \
-	exit $$STATUS
+	restore() { \
+		if [ -f qatrack/local_test_settings.py.bak ]; then \
+			mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
+		else \
+			rm -f qatrack/local_test_settings.py; \
+		fi; \
+	}; \
+	trap restore EXIT; \
+	trap "exit 130" INT; \
+	trap "exit 143" TERM; \
+	if [ -f qatrack/local_test_settings.py ]; then \
+		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
+	fi; \
+	cp qatrack/local_test_settings.$(ENGINE).py qatrack/local_test_settings.py; \
+	uv run pytest ${args}
 
 # Integration-level test: provisions a brand-new sqlite db exactly the way
 # a fresh deployment would (migrate, createcachetable, collectstatic,
@@ -134,6 +144,16 @@ test-integration:
 		fi; \
 	}; \
 	trap restore EXIT; \
+	trap "exit 130" INT; \
+	trap "exit 143" TERM; \
+	if [ -f db/default.db.bak ] || [ -f qatrack/local_test_settings.py.bak ]; then \
+		echo "error: a backup from an earlier run is still here:"; \
+		[ -f db/default.db.bak ] && echo "  db/default.db.bak"; \
+		[ -f qatrack/local_test_settings.py.bak ] && echo "  qatrack/local_test_settings.py.bak"; \
+		echo "That run was interrupted before it could put them back. Restore or remove"; \
+		echo "them first - continuing would overwrite them with throwaway copies."; \
+		exit 1; \
+	fi; \
 	if [ -f db/default.db ]; then mv -f db/default.db db/default.db.bak; fi; \
 	if [ -f qatrack/local_test_settings.py ]; then \
 		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
