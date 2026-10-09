@@ -300,7 +300,14 @@ def delete_schedule(request):
 
         report.schedule.delete()
 
-    except (ValueError, models.ReportSchedule.DoesNotExist):
+    except (ValueError, models.SavedReport.DoesNotExist, models.ReportSchedule.DoesNotExist):
+        # SavedReport.DoesNotExist covers a post with no `schedule-report` at
+        # all, which `get(pk=None)` raises. The "Clear Schedule" button sits in
+        # the schedule dialog's footer and is in the DOM before the form it
+        # submits arrives by AJAX, so a click that lands early posts without it
+        # and the request became a 500. Treated like the other two: there is no
+        # schedule to clear, and the response already says the schedule is
+        # cleared in that case.
         pass
 
     resp = {'error': False, 'message': _("Schedule cleared")}

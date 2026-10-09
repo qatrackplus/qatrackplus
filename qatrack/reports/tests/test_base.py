@@ -459,6 +459,24 @@ class TestDeleteSchedule(TestCase):
         assert not payload['error']
         assert payload['message'] == "Schedule cleared"
 
+    def test_no_report_in_post(self):
+        """A post with no schedule-report must not be a server error.
+
+        The dialog's "Clear Schedule" button sits in the modal footer and is in
+        the DOM before the form it submits arrives by AJAX, so a click that
+        lands early posts without `schedule-report` at all. `get(pk=None)` then
+        raises SavedReport.DoesNotExist, which was not caught.
+        """
+        resp = self.client.post(self.url, {})
+        assert resp.status_code == 200
+        assert resp.json()['message'] == "Schedule cleared"
+
+    def test_unknown_report_in_post(self):
+        """Same for a schedule-report naming a report that does not exist."""
+        resp = self.client.post(self.url, {'schedule-report': self.sr.id + 10000})
+        assert resp.status_code == 200
+        assert resp.json()['message'] == "Schedule cleared"
+
     def test_no_perms(self):
         user = User.objects.create_user("reg_user", "a@b.com", "password")
         self.client.force_login(user)
