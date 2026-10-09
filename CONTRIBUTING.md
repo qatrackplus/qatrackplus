@@ -184,7 +184,9 @@ To test against a specific database engine without touching your usual
 `qatrack/local_test_settings.<engine>.py` first from the matching
 `deploy/dev/` template). `make test-integration` provisions a brand-new
 sqlite database the way a real deployment would - that provisioning is what the
-target verifies - and then runs the suite with `--reuse-db`.
+target verifies - and then runs the suite with `--reuse-db` against that same
+database. It is the only target that does: the shipped templates name a separate
+test database on purpose.
 
 Before opening a PR, it's also worth running the full pre-commit suite
 against the whole codebase, not just your changed files:

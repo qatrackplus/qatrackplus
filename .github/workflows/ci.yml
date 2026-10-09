@@ -160,10 +160,19 @@ jobs:
       # (see qatrack/settings.py) - faster than a real file-based sqlite
       # db, and doubles as real-world coverage of that fallback itself,
       # on a genuinely different environment than any local dev machine.
-      # The separate "sqlite" matrix entry below covers the real,
-      # file-based sqlite3 backend instead - the two aren't redundant,
-      # since a real file-backed db exercises file I/O and on-disk
-      # locking behaviour the in-memory fallback never touches.
+      # The separate "sqlite" matrix entry below was described here as covering
+      # the real, file-based sqlite3 backend. **It does not.** That row writes a
+      # local_test_settings.py importing DATABASES from
+      # deploy/sqlite/local_settings.py, which sets no TEST name, so Django 4.2
+      # gives it an in-memory test database too - confirmed by nsmela as
+      # `file:memorydb_default?mode=memory&cache=shared`. The vendor guard
+      # cannot catch it either, because it reports the non-test database name.
+      #
+      # So nothing in CI currently exercises file I/O or on-disk locking, which
+      # is where the GUI suite's "database is locked" failures live. Giving this
+      # row a file-backed test database is deliberately not done here: it needs
+      # the live-server request serialisation to survive, and that is tracked
+      # with the per-engine test database work. Reported by nsmela, 2026-10-08.
 
       - name: Setup Database configuration (SQLite)
         if: matrix.db == 'sqlite'
@@ -448,7 +457,7 @@ jobs:
           SELENIUM_BROWSER: ${{ matrix.browser }}
         run: |
           set -o pipefail
-          pytest -m selenium -q --tb=line -rf 2>&1 | tee selenium.log
+          pytest -m selenium --tb=line -rfE 2>&1 | tee selenium.log
 
       # always(), not failure(). The step above is continue-on-error, so the
       # job never reports failure and failure() would never fire - which
@@ -556,7 +565,7 @@ jobs:
           SELENIUM_BROWSER: ${{ matrix.browser }}
         run: |
           set -o pipefail
-          uv run pytest -m selenium -q --tb=line -rf 2>&1 | tee selenium.log
+          uv run pytest -m selenium --tb=line -rfE 2>&1 | tee selenium.log
 
       # always(), not failure(). The step above is continue-on-error, so the
       # job never reports failure and failure() would never fire - which
