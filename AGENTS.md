@@ -168,6 +168,22 @@ them). Copying `local_test_settings.memory.py` to
 with no further setup. See [Running the tests](#running-the-tests) for
 `make test-<engine>`.
 
+> **For the GUI tests, use the in-memory template.** With the file-backed
+> `sqlite` template above, `pytest --run-selenium` fails out of the box:
+> nsmela measured `TestReviewQC::test_review_ok` failing 5 of 5 runs with
+> `database is locked` on the bulk-review save, where the in-memory template
+> passed 4 of 4, and crane reproduced it on Windows at 8/8 in the suite and
+> 0/12 alone. CI does not see it, because every CI row runs in-memory.
+>
+> This is a real gap rather than a preference, and it is not fixed here: a
+> file-backed test database needs the live-server request serialisation, and
+> that travels with the per-engine test-database work. Until then:
+>
+> ```bash
+> cp deploy/dev/local_test_settings.memory.py qatrack/local_test_settings.py
+> uv run pytest --run-selenium
+> ```
+
 > **A note for AI agents:** the commands throughout this file are prefixed
 > with `uv run` rather than assuming an activated virtual environment. Many
 > agent tool-call environments start a fresh shell for every command, so an
