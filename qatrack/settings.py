@@ -766,6 +766,10 @@ if use_docker:
 
     if 'readonly' not in DATABASES and USE_SQL_REPORTS:
         DATABASES['readonly'] = DATABASES['default']
+
+    # The container runs as root by design, so the root-user warning does not apply and
+    # would otherwise print on every start (entrypoint.sh runs migrate, which runs checks).
+    SILENCED_SYSTEM_CHECKS = ['qatrack.W001']
 else:
     from .local_settings import *  # noqa: F403, F401, E402
 
