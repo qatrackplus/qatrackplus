@@ -188,3 +188,33 @@ env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "True" }
 help = "Run ONLY the GUI/Selenium tests: chromium, visible window (needs a display)"
 cmd = "pytest -m selenium"
 env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "False" }
+
+
+# The two tasks below are the supported way to watch a GUI run. They are the
+# only advertised interface to the pause: `SELENIUM_SLOW_MO` is read straight
+# from the environment in live.py rather than exposed as a setting beside
+# SELENIUM_BROWSER and SELENIUM_HEADLESS, so that it cannot be left switched on
+# in a settings file. One consequence worth knowing, and the opposite of the
+# warning above: because it does not come from settings, a local settings file
+# cannot override it either.
+#
+# Watching costs time. Every click, keystroke and page load pauses, so a suite
+# that runs in about eight minutes takes appreciably longer. Run a single test
+# or a class while you are actually watching something:
+#
+#     poe test-gui-firefox-watch -k test_schedule_report
+#
+# **A watched run is for looking at, not for measuring.** Pauses can let a race
+# that fails at full speed pass here, so its pass count is not evidence about
+# the suite. The harness prints that warning itself at the start of the run.
+
+[tasks.test-gui-firefox-watch]
+help = "Watch a GUI run: firefox, visible, paused between actions (not for measuring)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "False", SELENIUM_SLOW_MO = "0.4" }
+
+
+[tasks.test-gui-chromium-watch]
+help = "Watch a GUI run: chromium, visible, paused between actions (not for measuring)"
+cmd = "pytest -m selenium"
+env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "False", SELENIUM_SLOW_MO = "0.4" }
