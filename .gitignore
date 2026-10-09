@@ -7,6 +7,10 @@ src/
 # Local Settings, administrator controlled
     # developers may have multiple local settings files, but they should not be committed to the repo 
 qatrack/local_*.py 
+# The Makefile's test targets move a developer's settings aside as .bak while
+# they run. `local_*.py` does not match that, and the file can hold database
+# credentials, so it is covered explicitly.
+qatrack/local_*.py.bak
 logs/
 db/
 tmp/
