@@ -135,6 +135,64 @@ set `AUTOCOMMIT = False` for your readonly configuration (see the
 `USE_SQL_REPORTS` setting below).
 
 
+Environment variable overrides
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``local_settings.py`` is the primary way to configure QATrack+, and for an
+ordinary Linux or Windows deployment it is the only one you need. There are two
+other mechanisms, each scoped to a particular situation, and it is worth knowing
+which applies to you so you are not hunting for a setting in the wrong file.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 26 28 46
+
+   * - Mechanism
+     - Applies to
+     - Notes
+   * - ``local_settings.py``
+     - Every ordinary deployment
+     - The documented mechanism. Everything on this page refers to it.
+   * - Docker environment
+     - Docker deployments only
+     - Setting ``USE_DOCKER`` makes ``settings.py`` read ``ALLOWED_HOSTS``,
+       ``CSRF_TRUSTED_ORIGINS``, ``TIME_ZONE`` and the ``POSTGRES_*``
+       credentials from the environment, normally via ``deploy/docker/.env``.
+       These **layer on top of** ``local_settings.py`` rather than replacing
+       it - see the note below.
+   * - ``QATRACK_DB_*``
+     - Test settings only
+     - The per-engine templates under ``deploy/dev/`` read ``QATRACK_DB_NAME``,
+       ``_USER``, ``_PASSWORD``, ``_HOST`` and ``_PORT``, so CI can point the
+       test suite at a service container without rewriting the file. Has no
+       effect on a running QATrack+ instance.
+
+Two Selenium-only variables, ``SELENIUM_BROWSER`` and ``SELENIUM_HEADLESS``, are
+also read from the environment - see the developer guide rather than this page.
+
+.. note::
+
+    Under Docker the order is: ``settings.py`` defaults, then
+    ``local_settings.py`` if you have one, then anything set in the
+    environment. The environment wins, because it is what an operator can
+    change without rebuilding an image.
+
+    A Docker deployment does not *need* a ``local_settings.py`` - configuring
+    everything through ``.env`` is the normal path, and is unaffected by this.
+    But if you do have one, it is now read, which means settings with no
+    environment equivalent can be set there instead of going unsupported.
+
+    ``DATABASES`` is only taken over by the environment when at least one of
+    ``POSTGRES_DB``/``POSTGRES_USER``/``POSTGRES_PASSWORD`` is set.
+    ``docker-compose`` always supplies these, so the standard deployment is
+    unchanged.
+
+.. versionchanged:: 4.1
+
+    ``local_settings.py`` used not to be read at all under ``USE_DOCKER``, so
+    editing it on a Docker deployment silently had no effect.
+
+
 Cache Settings
 ~~~~~~~~~~~~~~
 
@@ -217,6 +275,87 @@ To change the alt text:
 - Add translations to your locale files if using multiple languages
 
 **Note:** The logo functionality is designed to be easily customizable without requiring code changes to the core application.
+Date and Time Format Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default QATrack+ displays dates as ``YYYY-MM-DD HH:MM`` in every language,
+and the date pickers write back the same format they display.
+
+**"In every language" is the change, and it is deliberate.** Before this release each
+language carried its own date format, so the same record read differently depending on
+which interface language the reader had chosen. One format now applies to all of them,
+because a date in a QC record should not change meaning when someone switches
+language. If you need a different format, set it below and every language follows it.
+
+Every format QATrack+ uses is derived from the settings below: what is
+displayed, what the date pickers produce, what the forms accept, and the help
+text under each date field. Set the format once and the rest follows, so the
+value written into a form and the value read back out of it cannot disagree.
+
+In your *local_settings.py* file:
+
+.. code-block:: python
+
+    QATRACK_DATETIME_FORMAT = "%Y/%m/%d %H:%M"   # 2012/05/31 14:30
+    QATRACK_DATE_FORMAT = "%Y/%m/%d"             # 2012/05/31
+    QATRACK_TIME_FORMAT = "%H:%M"
+
+These use Python `strptime` syntax (``%Y`` year, ``%m`` month, ``%d`` day,
+``%H`` hour, ``%M`` minute). A format with a month name is also unambiguous:
+
+.. code-block:: python
+
+    QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"   # 31 May 2012 14:30
+    QATRACK_DATE_FORMAT = "%d %b %Y"             # 31 May 2012
+
+``%b`` writes **English** month abbreviations whatever the interface language -
+*May*, not *mai*. Python takes those names from the C library's locale rather than
+from the language a user has selected, and QATrack+ does not change that locale, so
+what is displayed and what is accepted stay the same string in every language. If
+your deployment sets ``LC_TIME`` in the environment the service runs under, that
+stops being true and the two can disagree; use a numeric format there.
+
+Accepting other formats on input
+................................
+
+What people may *type* is separate from what QATrack+ displays. The format above
+is always accepted; these add to the list of formats understood on the way in,
+and change nothing anybody sees:
+
+.. code-block:: python
+
+    QATRACK_EXTRA_DATETIME_INPUT_FORMATS = [
+        "%d %b %Y %H:%M",     # 31 May 2012 14:30
+        "%d/%m/%Y %H:%M",     # 31/05/2012 14:30
+    ]
+    QATRACK_EXTRA_DATE_INPUT_FORMATS = [
+        "%Y/%m/%d",           # 2012/05/31
+        "%d %b %Y",           # 31 May 2012
+    ]
+
+This is the setting to use if your staff are used to entering dates a particular
+way, since it lets them do so without changing the format on any record anyone
+else reads.
+
+On all-numeric day and month orders
+...................................
+
+``03/05/2026`` is the 3rd of May to most of the world and March 5th in the
+United States, and nothing in the string says which. In a QC record that date is
+when a machine was or was not verified, read later by colleagues trained in a
+different convention and by people who were not there.
+
+Neither order is blocked -- it is your deployment -- but configuring one raises
+``qatrack.W004`` at startup, and configuring both raises a stronger warning,
+because at that point the same text typed by two people means two different
+days. The defaults are ISO for this reason, and the alternatives suggested above
+(year-first, or a month name) cannot be read two ways.
+
+.. note::
+
+    The JSON API is deliberately unaffected by these settings. Its date format
+    is fixed, so changing how your site displays dates cannot break an
+    integration that parses the API.
 
 
 Icon Settings
@@ -594,6 +733,25 @@ indefinitely.
 
     SESSION_COOKIE_AGE = 14 * 24 * 60 * 60
     SESSION_SAVE_EVERY_REQUEST = True
+
+
+Language Settings
+~~~~~~~~~~~~~~~~~
+
+``LANGUAGE_CODE`` sets the default language for your site, and
+``LANGUAGE_COOKIE_AGE`` controls how long (in seconds) a user's own language
+choice is remembered in their browser. QATrack+ defaults to one year, so a
+user who switches language is not silently reset back to the site default a
+fortnight later:
+
+.. code-block:: python
+
+    LANGUAGE_CODE = 'en'
+    LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60  # 1 year
+
+Set ``LANGUAGE_COOKIE_AGE = None`` to make the language choice last only for
+the browser session. For adding or configuring the available languages
+themselves, see :doc:`/tutorials/internationalization/index`.
 
 
 .. _config_email:

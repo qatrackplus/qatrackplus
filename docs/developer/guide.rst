@@ -81,6 +81,125 @@ Install uv using the official installer (recommended):
 
 For other installation methods or troubleshooting, see the full installation guide at https://docs.astral.sh/uv/getting-started/installation/
 
+.. note::
+
+    **Draft**: this section hasn't been reviewed yet - if something below
+    doesn't work for you, please report it on the :mailinglist:`mailing list <>`.
+
+Shell Autocomplete for uv and poe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tab completion for both tools is optional, but worth setting up if you use
+them often.
+
+**Requirements:**
+
+- ``uv`` itself (already required above).
+- ``poe`` (`poethepoet <https://poethepoet.natn.io/>`__), only if you also
+  want to use ``poe <task>`` as a cross-platform alternative to the
+  project's ``Makefile`` targets - see ``poe_tasks/*.toml`` (pulled in via
+  ``[tool.poe] include`` in ``pyproject.toml``) for the available tasks.
+  It isn't a project dependency; install it once, globally, with
+  ``uv tool install poethepoet``.
+- A shell ``uv``/``poe`` recognize: bash, zsh, fish, PowerShell, elvish
+  (``uv``) or nushell (``poe``, in addition to the previous four).
+
+**Enabling completion:**
+
+Both tools generate their own completion script - there is nothing to
+install from PyPI or npm. Add the appropriate line to your shell's profile
+(``~/.bashrc``, ``~/.zshrc``, ``~/.config/fish/config.fish``, or
+PowerShell's ``$PROFILE``), then restart your shell or ``source`` the
+profile:
+
+.. code-block:: powershell
+
+    # PowerShell ($PROFILE)
+    uv generate-shell-completion powershell | Out-String | Invoke-Expression
+    poe _powershell_completion | Out-String | Invoke-Expression
+
+.. code-block:: shell
+
+    # bash (~/.bashrc)
+    eval "$(uv generate-shell-completion bash)"
+    eval "$(poe _bash_completion)"
+
+    # zsh (~/.zshrc)
+    eval "$(uv generate-shell-completion zsh)"
+    eval "$(poe _zsh_completion)"
+
+    # fish (~/.config/fish/config.fish)
+    uv generate-shell-completion fish | source
+    poe _fish_completion | source
+
+.. note::
+
+    ``uv``'s completion is static - it completes ``uv``'s own subcommands
+    and flag names (e.g. ``uv sync --e<TAB>`` -> ``--extra``), but it does
+    not read this project's ``pyproject.toml``, so it will not suggest the
+    actual extra names (``mysql``, ``mssql``, ``postgres``, ``win``,
+    ``docker``, ``translations``) after ``--extra``. There's currently no
+    way to get that from ``uv`` itself.
+
+    ``poe``'s completion, in contrast, reads ``pyproject.toml`` each time it
+    runs, so ``poe <TAB>`` lists this project's actual task names. It can
+    also complete a task argument's allowed values, but only for arguments
+    that declare a ``choices`` list in ``pyproject.toml`` - none of this
+    project's task arguments do that yet.
+
+.. _adding-a-poe-task:
+
+Adding a new poe task
+~~~~~~~~~~~~~~~~~~~~~
+
+Task definitions live under ``poe_tasks/``, one file per theme, rather than
+directly in ``pyproject.toml``: ``dev.toml`` (dev environment setup),
+``tests.toml`` (running the suite, GUI/Selenium variants), ``coverage.toml``,
+``docs.toml`` (Sphinx, schema diagram, translation status), ``data.toml``
+(fixtures and destructive data commands) and ``deploy.toml`` (Ubuntu/sudo
+deployment helpers). ``pyproject.toml`` itself only lists them, via
+``[tool.poe] include``; it never grew a ``[tool.poe.tasks.*]`` table of its
+own. This split exists purely to stop ``pyproject.toml`` growing without
+bound as tasks are added - it changes nothing about how a task runs, or how
+``poe <task>``/``poe --help`` behave.
+
+``poe_tasks/make_compat.toml`` is different in kind, not just location: it
+holds the ``make-*`` tasks that deliberately mirror a ``Makefile`` target
+one-for-one (see the comment above ``[tool.poe] include`` in
+``pyproject.toml``), plus the shared ``_test-engine`` implementation they
+``ref``. Nothing new should be added there - a new task belongs in one of
+the theme files above, and only gets a ``make-*`` mirror if the ``Makefile``
+target it mirrors still exists.
+
+When adding a task:
+
+1. Pick the theme file that matches, or add a new ``poe_tasks/<theme>.toml``
+   and list it in ``pyproject.toml``'s ``[tool.poe] include`` if none fit.
+2. Included files use bare ``[tasks.<name>]`` headers, **not**
+   ``[tool.poe.tasks.<name>]`` - poe treats a non-``pyproject.toml`` file
+   with no ``tool.poe`` table of its own as if its entire contents sat under
+   ``tool.poe``. Copy the header style already used in that file.
+3. Make it work on Windows: prefer a plain ``cmd`` task, or
+   ``interpreter = "python"`` with stdlib (``pathlib``/``shutil``/
+   ``subprocess``) if it needs any logic at all. Avoid a bare ``shell``
+   task (defaults to bash/POSIX, which fails outright on a Windows host
+   with no Git Bash or WSL) unless the task is genuinely Ubuntu/sudo-only
+   by nature (see ``deploy.toml``) - in that case, say so in the task's
+   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do.
+4. If the task declares a named argument (``options = [...]``), poe will
+   silently drop any extra dash-prefixed tokens passed after it rather than
+   forwarding them - see the note on ``_test-engine`` in
+   ``poe_tasks/make_compat.toml`` for the reasoning. Prefer a positional
+   argument, or no argument at all, unless you specifically need the
+   ``--flag`` form.
+5. A task's argument can declare ``choices = [...]`` to get real tab
+   completion of its allowed values (see `Shell Autocomplete for uv and poe`_
+   above) - worth adding for anything with a small, fixed set of valid
+   values (an engine name, a browser name, and so on).
+6. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
+   prints the resolved command/script - it does not catch a task that
+   parses fine but fails or misbehaves once actually invoked).
+
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -151,6 +270,206 @@ files from the deploy subdirectory and then create your database:
 
 
 this will put a database called `default.db` in the `db` subdirectory.
+``deploy/dev/`` has a template per engine if you would rather test against
+something other than sqlite - see :ref:`local_test_settings_templates` below,
+and ``make test-<engine>`` under `Running The Test Suite`_ for running against
+one without touching your usual ``local_test_settings.py``.
+
+.. _local_settings_templates:
+
+``local_settings.py`` templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``deploy/dev/local_settings.dev.py`` above is the right starting point for
+development work. The remaining ``local_settings.py`` templates under
+``deploy/`` target real deployments rather than development, and are the
+ones referred to by the error QATrack+ raises when ``qatrack/local_settings.py``
+is missing:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Template
+     - Use it for
+   * - ``deploy/dev/local_settings.dev.py``
+     - Local development (sqlite, ``DEBUG`` on). Start here.
+   * - ``deploy/sqlite/local_settings.py``
+     - A file-backed sqlite deployment.
+   * - ``deploy/postgres/local_settings.py``
+     - A PostgreSQL deployment (see also the ``.sql`` role/database setup
+       scripts alongside it).
+   * - ``deploy/mysql/local_settings.py``
+     - A MySQL/MariaDB deployment (likewise with ``.sql`` setup scripts).
+   * - ``deploy/win/local_settings.py``
+     - A Windows/MS SQL Server deployment.
+
+Copy whichever one matches your target to ``qatrack/local_settings.py`` and
+edit it from there. For full deployment instructions see the
+:doc:`installation guides </install/install>`, not this page.
+
+
+.. _local_test_settings_templates:
+
+``local_test_settings.py`` templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These configure the database the *test suite* runs against, which is separate
+from the one the development server uses. There is one per supported engine:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 66
+
+   * - Template
+     - Use it for
+   * - ``deploy/dev/local_test_settings.sqlite.py``
+     - File-backed sqlite at ``db/default.db``. The default. Needs
+       nothing beyond Python.
+   * - ``deploy/dev/local_test_settings.memory.py``
+     - In-memory sqlite. The fastest option and leaves nothing on disk, so
+       it is the one to reach for when iterating. Copy it to
+       ``qatrack/local_test_settings.memory.py`` and ``make test-memory``
+       works against it.
+   * - ``deploy/dev/local_test_settings.postgres.py``
+     - PostgreSQL. Needs a reachable server and a ``qatrackplus_test``
+       database; edit the placeholder user, password and host first.
+   * - ``deploy/dev/local_test_settings.mysql.py``
+     - MySQL/MariaDB. Same again, against a ``qatrackplus_test`` database.
+   * - ``deploy/dev/local_test_settings.mssql.py``
+     - MS SQL Server. Needs the ODBC driver named in the template, and a
+       login with ``dbcreator`` rights so the suite can create its own test
+       database - which is why the template sets no database name. It also
+       shows the ``Trusted_Connection`` form if you would rather use
+       Windows-integrated authentication.
+
+Copy one to ``qatrack/local_test_settings.py`` to make it your everyday
+choice. To run against an engine *without* disturbing that file, copy it to
+``qatrack/local_test_settings.<engine>.py`` instead and use
+``make test-<engine>`` - see `Running The Test Suite`_.
+
+The two sqlite variants are not interchangeable for testing purposes: they
+exercise different code paths, and CI deliberately runs both.
+
+
+.. _test_databases:
+
+Getting a database to test against
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The sqlite variants need nothing installed. The other three need a running
+server *and* a database driver, neither of which arrives with
+``uv sync --dev``.
+
+Throwaway servers for all three::
+
+    cp deploy/dev/.env.test-databases.example deploy/dev/.env
+    poe test-databases-up
+
+They keep nothing - every service runs on tmpfs with no volume - so
+``poe test-databases-down`` leaves no trace and the next ``up`` is a clean
+slate. ``up`` waits until each server actually answers rather than returning
+while SQL Server is still starting, which otherwise fails the first run for
+reasons unrelated to the code.
+
+Then install the driver for the engine you want and run it::
+
+    uv sync --dev --extra postgres
+    cp deploy/dev/local_test_settings.postgres.py qatrack/local_test_settings.postgres.py
+    poe test-engine postgres
+
+The templates read their connection details from the same variables the
+compose file publishes, so the two cannot disagree - a hardcoded port in one
+and a different one in the other is a failure whose only symptom is a port
+that never comes up.
+
+Each engine needs a different amount installed on the host:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 14 20 66
+
+   * - Engine
+     - uv extra
+     - Also needs
+   * - ``postgres``
+     - ``--extra postgres``
+     - Nothing. ``psycopg[binary]`` is a self-contained wheel.
+   * - ``mysql``
+     - ``--extra mysql``
+     - ``default-libmysqlclient-dev`` and ``pkg-config``: ``mysqlclient`` is
+       pinned to a version that builds from source.
+   * - ``mssql``
+     - ``--extra mssql``
+     - ``unixodbc-dev`` and Microsoft's ``msodbcsql18``, plus
+       ``libldap2-dev`` and ``libsasl2-dev`` - the ``mssql`` extra also pulls
+       ``python-ldap``, which is why ``poe deps`` does not use
+       ``--all-extras``.
+
+Running a different version
+"""""""""""""""""""""""""""
+
+The defaults track the versions :doc:`the installation guides </install/install>`
+commit to, so a plain ``poe test-engine postgres`` exercises what the project
+promises rather than whatever is newest.
+
+To test something else, change one value in ``deploy/dev/.env`` and bring the
+servers back up::
+
+    QATRACK_TEST_POSTGRES_VERSION=14
+    QATRACK_TEST_POSTGRES_PORT=5433
+
+Ports are variables for the same reason versions are: two versions of the
+same engine can then run side by side, and a port already taken by a locally
+installed server can be moved without editing the compose file.
+
+Understanding the Settings Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ uses a layered approach to Django settings, with each file serving a specific purpose. Understanding this hierarchy will help you configure your development and testing environment.
+
+Every file below is imported with ``from ... import *``, so the *last* one
+loaded wins for any given setting. Under a test run the chain is
+``settings.py`` -> ``local_settings.py`` -> ``test_settings.py`` ->
+``local_test_settings.py``, giving this order:
+
+**Settings File Hierarchy (Highest to Lowest Precedence):**
+
+1. ``local_test_settings.py`` - Your custom test environment overrides
+
+   - Contains all essential development and test settings in one place
+   - This is the main file you'll customize for your testing needs
+
+2. ``test_settings.py`` - Default test environment settings
+
+   - Contains test-specific defaults like password hashers and notification
+     settings
+   - Note that ``test_settings.py`` re-imports ``local_settings.py`` and
+     *then* applies its own values, so under a test run it overrides
+     anything you set in ``local_settings.py``. If you set, say,
+     ``LANGUAGE_CODE`` or ``NOTIFICATIONS_ON`` in ``local_settings.py`` and
+     wonder why the tests don't see it, this is why - put test-only values
+     in ``local_test_settings.py`` instead.
+
+3. ``local_settings.py`` - Your custom development environment overrides
+
+   - Contains development-specific settings like database configuration
+   - This is the file the development server and management commands use;
+     outside of a test run it is the highest-precedence file.
+
+4. ``settings.py`` - Base Django application settings
+
+   - Contains core Django configuration, installed apps, middleware, etc.
+
+Collect Static Files
+~~~~~~~~~~~~~~~~~~~~
+
+Before running the development server, you need to collect all static files to the STATIC_ROOT directory:
+
+.. code-block:: shell
+
+    python manage.py collectstatic --noinput
+
 
 Loading Default Data (Fixtures)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -477,6 +796,120 @@ QATrack+ includes a Makefile with convenient shortcuts for common development ta
 
 For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
 
+Setting Up Selenium Browser Testing
+-----------------------------------
+
+QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
+
+**Browser Requirements**
+
+You need a browser installed - either Firefox or Chrome/Chromium, whichever
+you prefer. You do not normally need to install or configure a matching
+driver (geckodriver/chromedriver): Selenium Manager, built into Selenium
+4.6+, detects whichever browser you have and fetches a driver to match the
+first time a Selenium test runs. No display server is needed either, since
+tests run the browser in its own native headless mode by default - so this
+behaves the same on a workstation, a CI runner or a sandbox.
+
+There is one case that does need a path set. If a ``geckodriver`` or
+``chromedriver`` is already on ``PATH`` and does not match the installed
+browser, Selenium Manager prints an incompatibility warning and uses it
+anyway. Whether that matters depends on how far apart they are - measured
+against Chrome 153, one major version behind still starts a session with
+nothing worse than the warning, while three behind fails with
+``SessionNotCreatedException``. Rather than work out where your own line is,
+treat the warning itself as the signal: either take
+the stale driver off ``PATH``, or point
+``SELENIUM_FIREFOX_DRIVER_PATH`` / ``SELENIUM_CHROMIUM_DRIVER_PATH`` at one
+that matches.
+
+.. code-block:: shell
+
+    # Linux - install whichever browser you don't already have
+    sudo apt install firefox
+    # - or -
+    sudo apt install chromium
+
+On Windows and macOS, install the browser the usual way; Selenium Manager
+locates it just the same.
+
+**Configuring Selenium Tests**
+
+Set `SELENIUM_BROWSER` in `qatrack/local_test_settings.py` - or in
+`qatrack/local_settings.py`, either is honoured - to pick which browser
+drives the tests:
+
+.. code-block:: python
+
+    SELENIUM_BROWSER = 'firefox'   # the default
+    # SELENIUM_BROWSER = 'chromium'
+
+That's the only setting most people need. A couple of others (all defined
+in `qatrack/settings.py`, overridable the same way) are there if you need
+them:
+
+* `SELENIUM_HEADLESS` - `True` by default (native headless mode, no display
+  needed). Set to `False`, on a machine with a real display, to watch a
+  test execute in a visible browser window - useful when debugging a
+  failing Selenium test.
+* `SELENIUM_FIREFOX_DRIVER_PATH` / `SELENIUM_CHROMIUM_DRIVER_PATH` - only
+  needed if you want to pin a specific driver binary instead of letting
+  Selenium Manager resolve one automatically.
+
+Viewport size, and why headless is the reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The suite lays out at **1920x1080 CSS pixels**, and
+``TestPerformQC::test_perform_qc_viewport_sizes`` additionally checks the
+perform-QC page at three widths - 960x1080 (half of a 1080p display, for
+someone working side by side), 1366x768 (a common laptop) and 1920x1080. That
+is one ordinary test with three ``subTest`` cases; it is not opt-in and runs in
+every Selenium run, including CI's.
+
+Both browsers are launched pinned to a **1:1 device pixel ratio**
+(``layout.css.devPixelsPerPx`` for Firefox, ``--force-device-scale-factor``
+for Chromium). Without that, a *visible* browser inherits the desktop's
+display scaling: on a HiDPI desktop scaled to 187.5% a window that renders
+1920x1080 headless reports a CSS viewport of only 1536x997. The pages are laid
+out for the wider viewport, so at 1536 CSS pixels controls overlap and clicks
+land on whatever is covering them.
+
+**Headless is the reference configuration.** It has no window manager and no
+desktop scaling, so the viewport is exactly what was asked for, every time,
+on every machine. That is what CI runs and what a layout assertion should be
+trusted from.
+
+**Visible mode cannot always control the viewport.** Narrowing to a specific
+size needs a viewport override - WebDriver BiDi for Firefox, CDP for
+Chromium. The Firefox one is not guaranteed to succeed, and when it fails it
+fails by *hanging*: the BiDi command times out after about 30 seconds, once per
+test class. That was observed on a HiDPI desktop where the browser laid out in a
+mis-scaled coordinate space; pinning the device pixel ratio fixed it, and the
+override now applies on that same machine, Wayland included. The guard is kept
+because the failure mode costs a whole suite run, not because any platform is
+known to need it. When it does fail, ``set_viewport_size()`` returns ``False``
+after that one timeout rather than repeating it per class, and
+``test_perform_qc_viewport_sizes`` **skips the profiles it cannot honour**
+rather than measuring whatever size the window happened to be. A skip that
+names the profile is the honest result; silently testing one size three times
+and reporting three is not.
+
+So: use visible mode to *watch* a test, and headless to *believe* a layout
+result.
+
+Both `SELENIUM_BROWSER` and `SELENIUM_HEADLESS` can also be set from the
+command line for a single run, instead of edited into a settings file -
+useful for a one-off ("just this run, watch it in Chromium instead"):
+
+.. code-block:: shell
+
+    # bash/zsh
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False pytest --run-selenium
+
+    # PowerShell - the inline form above is a parse error here
+    $env:SELENIUM_BROWSER='chromium'; $env:SELENIUM_HEADLESS='False'; pytest --run-selenium
+
+
 Running The Test Suite
 ----------------------
 
@@ -532,131 +965,6 @@ measure coverage with:
     maintainer can help with the tests. A contribution held back because its tests
     were hard is worth less to everyone than one that arrives and gets finished
     together.
-
-Setting Up Selenium Browser Testing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
-
-**This setup should be completed before running the test suite if you want to see the Selenium tests in action.**
-
-**Browser Requirements**
-
-You will need to have both a browser and its corresponding driver installed on your system:
-
-* Option 1. **Firefox + geckodriver**
-* Option 2. **Chromium + chromedriver**
-
-If you are unsure whether or not you have both a browser and its corresponding driver installed, you can run the following commands to check:
-
-**Finding Browser and Driver Paths:**
-
-.. code-block:: shell
-
-    # Check for Firefox browser
-    which firefox
-    
-    # Check for geckodriver
-    which geckodriver
-    
-    # Check for Chromium browser
-    which chromium
-    
-    # Check for chromedriver
-    which chromedriver
-
-**Example Output:**
-
-.. code-block::
-
-    /usr/bin/firefox
-    /snap/bin/geckodriver
-    /snap/bin/chromium
-    /usr/bin/chromedriver
-
-**Installing Missing Components**
-
-If you do not have both firefox and geckodriver or both chromium and chromedriver,
-you can install either pair using the following commands:
-
-.. code-block:: shell
-
-    # Option 1: Install Firefox and geckodriver
-    sudo apt install firefox geckodriver
-    
-    # Option 2: Install Chromium and chromedriver
-    sudo apt install chromium-browser chromium-chromedriver
-
-**Manual Downloads (Alternative Installation)**
-
-If the package manager installation doesn't work or you need a specific version, you can download the drivers manually:
-
-* **geckodriver**: Download from the `official Mozilla website <https://firefox-source-docs.mozilla.org/testing/geckodriver/>`_
-* **chromedriver**: Download from the `official Chrome releases <https://chromedriver.chromium.org/downloads>`_
-
-After downloading, make the driver executable and verify the path.
-
-
-**Configuring Selenium Tests**
-
-You'll need to configure your browser settings in two files. First, update the Selenium configuration in `qatrack/settings.py`:
-
-.. code-block::
-
-    # Selenium Browser Configuration
-    # Options: 'firefox', 'chromium'
-    SELENIUM_BROWSER = ''
-    
-    # Browser Driver Paths
-    SELENIUM_FIREFOX_DRIVER_PATH = ''  # Path to geckodriver as shown above
-    SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver as shown above
-    
-    # Leave this False in 4.0 - see the note below
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-Then also set `SELENIUM_VIRTUAL_DISPLAY` in `qatrack/test_settings.py`:
-
-.. code-block::
-    
-    # In qatrack/test_settings.py:
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-**Configuration Examples**
-
-**Firefox with visible browser:**
-
-.. code-block::
-
-    # In qatrack/settings.py:
-    SELENIUM_BROWSER = 'firefox'
-    SELENIUM_VIRTUAL_DISPLAY = False
-    SELENIUM_FIREFOX_DRIVER_PATH = '/snap/bin/geckodriver' 
-    
-    # In qatrack/test_settings.py:
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-**Chromium with visible browser:**
-
-.. code-block::
-
-    # In qatrack/settings.py:
-    SELENIUM_BROWSER = 'chromium'
-    SELENIUM_VIRTUAL_DISPLAY = False
-    SELENIUM_CHROMIUM_DRIVER_PATH = '/usr/bin/chromedriver'
-    
-    # In qatrack/test_settings.py:
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-.. note::
-
-    **The browser tests run with a visible browser in 4.0.** Headless running is not
-    supported here and is being done properly for 4.1.
-
-    ``SELENIUM_VIRTUAL_DISPLAY = True`` in 4.0 does not mean the browser's own
-    headless mode: it means a virtual X display through ``xvfb``, which exists on
-    Linux and not on Windows. So it cannot work on a Windows development machine at
-    all, and on Linux it needs ``xvfb`` installed and a ``pyvirtualdisplay`` that is
-    not in the default dependencies. Leave it ``False``.
 
 Writing Documentation
 ---------------------
@@ -775,10 +1083,14 @@ Copyright & Licensing
 
 The author of the code (or potentially their employer) retains the copyright of
 their work even when contributing code to QATrack+.  However, unless specified
-otherwies, by submitting code to the QATrack+ project you agree to have it
-distributed using the same `MIT license
-<https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ as
+otherwise, by submitting code to the QATrack+ project you agree to have it
+distributed under the same `Apache License 2.0
+<https://github.com/qatrackplus/qatrackplus/blob/master/LICENSE>`__ that
 QATrack+ uses.
+
+Releases before 4.0 were MIT-licensed; 4.0 onwards are Apache 2.0, and the
+licence holder remains the Ottawa Cancer Centre. See the README for the note on
+that change.
 
 I'm not a developer, how can I help out?
 ----------------------------------------
