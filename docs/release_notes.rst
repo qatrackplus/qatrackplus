@@ -15,6 +15,52 @@ Release Notes
 QATrack+ 4.0
 ~~~~~~~~~~~~~
 
+4.0.2
+-----
+
+Bug Fixes
+^^^^^^^^^
+
+* **Forms no longer record the wrong date and time.** Where a date field arrives
+  already filled in - the fault form's *Date & Time fault occurred*, a QC session's
+  *Work Completed*, a service event's date - the server wrote that value in one format
+  and the date picker read it back in another. The picker then replaced it with an
+  unrelated date, usually months away and at midnight, before anyone had touched the
+  page.
+
+  Nothing indicated it had happened: the replacement was a well-formed date in the
+  expected format, sitting in a field the user had not edited. A record saved without
+  changing that field carried a time that was simply wrong. Date and time formats are
+  now derived from a single setting, so the value written to a form and the value read
+  back from it cannot disagree (:issues:`#826 <826>`).
+
+Other Changes
+^^^^^^^^^^^^^
+
+* **Dates are now shown as ``YYYY-MM-DD`` by default, in every language.** Two things
+  changed, and an upgrading installation will see both.
+
+  **What you will see:** 4.0 rendered ``31 May 2012 14:30`` into form fields; this
+  renders ``2012-05-31 14:30``. To keep the old display, set the following in
+  ``local_settings.py``:
+
+  .. code-block:: python
+
+      QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"
+      QATRACK_DATE_FORMAT = "%d %b %Y"
+
+  **What changed for sites with more than one language:** each language used to carry
+  its own date format, so the same record read differently depending on the interface
+  language the reader had chosen. One format now applies to every language,
+  deliberately - a date in a QC record should not change meaning when someone switches
+  language - and the setting above moves all of them together. ``%b`` writes English
+  month abbreviations in every language; see *Date and Time Format Settings* in the
+  configuration documentation.
+
+  Every date format QATrack+ uses is now derived from those two settings, which is what
+  makes the fix above possible. Dates typed in other formats are still accepted, and
+  the JSON API's format is unchanged.
+
 4.0.1
 ------
 

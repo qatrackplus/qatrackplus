@@ -17,7 +17,9 @@ version = "4.0.1"
 description = "QATrack+ is an open source application for managing QC data in radiotherapy and diagnostic imaging clinics"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
-license = {text = "MIT"}
+# The LICENSE file is Apache 2.0; this said MIT, which is a misstatement in the
+# packaging metadata rather than a difference of opinion.
+license = {text = "Apache-2.0"}
 authors = [
     {name = "QATrack+ contributors", email = "randy@multileaf.ca"},
 ]
@@ -28,7 +30,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Healthcare Industry", 
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python",
@@ -166,8 +168,18 @@ dev = [
     "coverage>=6.0,<8.0",
     "django-coverage>=1.2.4,<2.0",
     "freezegun>=1.0.0,<3.0",
-    "selenium>=4.0.0,<5.0",
-    "PyVirtualDisplay==2.0",
+    # >=4.38 for BiDi `emulation.setTimezoneOverride`, which the GUI tests use to
+    # put the browser in settings.TIME_ZONE; `BrowsingContext.set_viewport` needs
+    # >=4.33; and Selenium Manager - which resolves drivers itself, so there is no
+    # driver install step and no virtual-display dependency, headless mode using
+    # each browser's own native support instead - needs >=4.10.
+    #
+    # Below 4.38 the BiDi calls do not raise, they degrade to a warning, so the
+    # symptom is three date-dependent GUI tests failing for the couple of hours a
+    # day when the machine's zone and TIME_ZONE are on different dates, with
+    # nothing pointing at the Selenium version. The two BiDi boundaries are
+    # nsmela's figures, reported on #867 2026-10-08.
+    "selenium>=4.38,<5.0",
     "django-debug-toolbar>=4.0,<5.0",
     "django-upgrade>=1.25.0",
     "pre-commit>=4.2.0",
@@ -189,6 +201,7 @@ dev = [
     "sphinxcontrib-websupport==1.2.4",
     "sphinx-copybutton>=0.5.2",
     "sphinx-design>=0.6.0",
+    "pytest-xdist>=3.0,<4.0",
 ]
 
 [tool.ruff]
