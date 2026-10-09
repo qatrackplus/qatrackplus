@@ -10,6 +10,7 @@ from django.utils import timezone
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as e_c
+from selenium.webdriver.support.ui import Select
 
 from qatrack.accounts.tests.utils import create_group, create_user
 from qatrack.qa import models
@@ -152,7 +153,19 @@ class BaseQATests(SeleniumTests, TransactionTestCase):
         self.send_keys("id_password", self.password)
         self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
-        self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
+        # Wait for proof that the login POST was handled and the redirect has
+        # rendered. The logout link is inside {% if user.is_authenticated %}
+        # in site_base.html, so its presence means both.
+        #
+        # This used to wait for "head > title", which every page has -
+        # including the login page still on screen. It was satisfied
+        # immediately, before the POST had even been sent, so a slow round
+        # trip left the test unauthenticated. It then failed later, somewhere
+        # else, as a timeout waiting for an element that only exists when
+        # logged in - which looks like an unrelated flake.
+        self.wait.until(
+            e_c.presence_of_element_located((By.CSS_SELECTOR, 'a[href*="logout"]'))
+        )
 
     def load_main(self):
         self.login()
@@ -807,7 +820,8 @@ class TestPerformQC(BaseQATests):
         assert models.AutoSave.objects.count() == 1
 
     def test_load_autosave(self):
-        """Ensure that no failed tests on load and 3 "NO TOL" tests present"""
+        """Ensure an autosave is restored with its test values, comments and
+        work started/completed times displayed in the sites datetime format"""
 
         tl2 = utils.create_test_list(name="day 2")
         utils.create_test_list_membership(tl2, test=self.tnum_1)
@@ -849,8 +863,8 @@ class TestPerformQC(BaseQATests):
         title = "Perform %s : day 2" % utc.unit.name
         assert title in [el.text for el in self.driver.find_elements(By.CLASS_NAME, "box-title")]
         assert float(inputs[0].get_attribute("value")) == 1
-        assert self.driver.find_element(By.ID, "id_work_started").get_attribute("value") == "12 May 1980 12:00"
-        assert self.driver.find_element(By.ID, "id_work_completed").get_attribute("value") == "12 May 1980 12:01"
+        assert self.driver.find_element(By.ID, "id_work_started").get_attribute("value") == "1980-05-12 12:00"
+        assert self.driver.find_element(By.ID, "id_work_completed").get_attribute("value") == "1980-05-12 12:01"
         assert self.driver.find_element(By.ID, "id_work_duration").get_attribute("value") == "0hr:01min"
         assert self.driver.find_element(By.ID, "id_form-0-comment").get_attribute("value") == "test comment"
         assert self.driver.find_element(By.ID, "id_comment").get_attribute("value") == "test list instance comment"
@@ -895,6 +909,13 @@ class TestPerformQC(BaseQATests):
         time.sleep(0.2)
 
         self.click("submit-qa")
+        # click() returns as soon as the click is dispatched, not when the
+        # POST it triggers has been handled - so without this the assertion
+        # below raced the submission. It failed roughly two runs in three on
+        # Chromium, and the failure screenshot showed the submit button still
+        # reading "Submitting...". Every other submit-qa test in this file
+        # already waits for the success alert; this one was the exception.
+        self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
 
         assert models.AutoSave.objects.filter(pk=auto.pk).count() == 0
 
@@ -927,3 +948,73 @@ class TestReviewQC(BaseQATests):
             self.click("confirm-update")
             self.wait.until(e_c.presence_of_element_located((By.CLASS_NAME, 'alert-success')))
             assert models.TestListInstance.objects.unreviewed().count() == 0
+
+
+@pytest.mark.selenium
+class TestStringToleranceChoices(BaseQATests):
+    """Which tolerances Set References & Tolerances offers, per test type.
+
+    `test_admin_set_ref_tols` above already visits this page, but it covers only
+    multiple choice, simple and composite tests, and it picks
+    `select_by_index("id_tolerance", 1)` without asserting what is in the list. So
+    it could not have caught the regression this class exists for: a string
+    composite was offered absolute and percentage tolerances and nothing that
+    could judge it, because only a multiple choice tolerance can (see
+    `TestInstance.string_pass_fail`). Selecting index 1 would have chosen the
+    wrong one and passed.
+
+    These assert on the *contents* of the dropdown, which is where the defect was.
+    """
+
+    def setUp(self):
+        super().setUp()
+
+        with transaction.atomic():
+            self.mc_tol = utils.create_tolerance(
+                tol_type=models.MULTIPLE_CHOICE,
+                mc_pass_choices="PASS",
+                mc_tol_choices="Incorrect Linac,Incorrect Field",
+            )
+            self.abs_tol = utils.create_tolerance(tol_type=models.ABSOLUTE)
+
+            self.scomposite = utils.create_test(
+                name="string composite tol", test_type=models.STRING_COMPOSITE,
+                procedure="result = 'PASS'",
+            )
+            self.simple = utils.create_test(name="numeric tol", test_type=models.SIMPLE)
+
+            test_list = utils.create_test_list("tolerance choice list")
+            utils.create_test_list_membership(test_list=test_list, test=self.scomposite)
+            utils.create_test_list_membership(test_list=test_list, test=self.simple)
+            utils.create_unit_test_collection(test_collection=test_list)
+
+    def tolerance_options(self, test_name):
+        """The visible text of every option the tolerance dropdown offers."""
+        self.click_by_link_text(test_name)
+        self.wait.until(e_c.presence_of_element_located((By.ID, 'id_tolerance')))
+        select = Select(self.driver.find_element(By.ID, 'id_tolerance'))
+        return [o.text.strip() for o in select.options if o.text.strip()]
+
+    def test_string_composite_is_offered_a_multiple_choice_tolerance(self):
+        self.load_admin()
+        self.click_by_link_text('Set References & Tolerances')
+
+        options = self.tolerance_options(self.scomposite.name)
+
+        assert str(self.mc_tol) in options, (
+            "a string composite must be offered the multiple choice tolerance; got %r" % options
+        )
+        assert str(self.abs_tol) not in options, (
+            "a string composite has no numerical reference, so an absolute "
+            "tolerance should not be offered; got %r" % options
+        )
+
+    def test_numerical_test_is_not_offered_a_multiple_choice_tolerance(self):
+        """The narrowing must still narrow, or the fix is just a widening."""
+        self.load_admin()
+        self.click_by_link_text('Set References & Tolerances')
+
+        options = self.tolerance_options(self.simple.name)
+
+        assert str(self.abs_tol) in options, options
+        assert str(self.mc_tol) not in options, options

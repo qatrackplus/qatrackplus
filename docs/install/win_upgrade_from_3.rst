@@ -1,12 +1,12 @@
 .. _`win_upgrading_40`:
 
-Upgrading an existing Windows v3.1 installation to v4.0.0
+Upgrading an existing Windows v3.1 installation to 4.0.0
 =========================================================
 
 This guide will walk you through upgrading your existing v3.1 installation to
-v4.0.0. We understand that if you are not the original installer, this may be a bit daunting. Please reach out to the QATrack+ team for assistance if you have any questions or concerns.
+4.0.0. We understand that if you are not the original installer, this may be a bit daunting. Please reach out to the QATrack+ team for assistance if you have any questions or concerns.
 
-Documented support for upgrading from previous versions of QATrack+ (v0.3.0 and earlier) to v4.0.0 is not available at this time. We would be happy to assist you with upgrading from these older versions, do not hesitate to reach out to the QATrack+ team for assistance, the :mailinglist:`Google Group<>` and :supportemail:`support email<>` are open to all users.
+Documented support for upgrading from previous versions of QATrack+ (v0.3.0 and earlier) to 4.0.0 is not available at this time. We would be happy to assist you with upgrading from these older versions, do not hesitate to reach out to the QATrack+ team for assistance, the :mailinglist:`Google Group<>` and :supportemail:`support email<>` are open to all users.
 
 .. contents::
    :local:
@@ -15,7 +15,7 @@ Documented support for upgrading from previous versions of QATrack+ (v0.3.0 and 
 Introductory Notes
 ------------------
 
-There are significant changes to the tooling and dependencies in v4.0.0, please read through this entire guide before attempting to upgrade.  If you have any questions or concerns, please reach out to the QATrack+ team for assistance. Some of these changes include:
+There are significant changes to the tooling and dependencies in 4.0.0, please read through this entire guide before attempting to upgrade.  If you have any questions or concerns, please reach out to the QATrack+ team for assistance. Some of these changes include:
 
 * The Python virtual environment is now managed by the ``uv`` package manager, which will handle a lot of the python heavy lifting for you.
 * The old ``venvs/qatrack31`` directory is no longer needed.
@@ -113,13 +113,13 @@ First we must check out the code for version 4.0.0 in a PowerShell window:
 
 .. dropdown:: Side note: Alternate Tag
 
-   If you prefer to use a tag instead of a branch, you can check out the `v4.0.0` tag instead. We are switching defaults away from tags to branches for ease of patch distribution. Future patches can be applied simply with a git pull command, whereas tags are immutable. To check out the tag, run the following commands in a PowerShell window:
+   If you prefer to use a tag instead of a branch, you can check out the `4.0.0` tag instead. We are switching defaults away from tags to branches for ease of patch distribution. Future patches can be applied simply with a git pull command, whereas tags are immutable. To check out the tag, run the following commands in a PowerShell window:
 
    .. code-block:: powershell
 
       >>  cd C:\deploy\qatrackplus
       >>  git fetch origin
-      >>  git checkout v4.0.0
+      >>  git checkout 4.0.0
 
 Updating our Python environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -185,5 +185,5 @@ If you have issues with the migration, first check
    We now have a database, we have configured QATrack+ to use it, and we've loaded the default configuration data. Next, we could test that everything is working correctly by running the development server with `python manage.py runserver` and navigating to http://localhost:8000/ in a browser on the server. You should see a poor approximation of the QATrack+ login page (it won't look like this once we're finished!). If you see any errors, check the terminal output for details on what went wrong.  If you can log in successfully, then we know our database is configured correctly and we can move on to the next step.
 
 .. include:: win.rst
-   :start-after: .. _cherry_py_service:
+   :start-after: .. _`cherry_py_service`:
    :end-before: .. _finally:

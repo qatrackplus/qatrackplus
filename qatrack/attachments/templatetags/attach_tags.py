@@ -1,11 +1,11 @@
 import os.path
 
 from django import template
-from django.conf import settings
-from django.contrib.sites.models import Site
 from django.template.defaultfilters import filesizeformat
 from django.template.loader import get_template
 from django.utils.html import format_html
+
+from qatrack.qatrack_core.utils import site_base_url
 
 register = template.Library()
 
@@ -14,7 +14,7 @@ register = template.Library()
 def attachment_link(attachment, label=None, absolute=False):
     href = attachment.attachment.url
     if absolute:
-        href = "%s://%s%s" % (settings.HTTP_OR_HTTPS, Site.objects.get_current().domain, href)
+        href = "%s%s" % (site_base_url(), href)
 
     kwargs = {
         'href': href,

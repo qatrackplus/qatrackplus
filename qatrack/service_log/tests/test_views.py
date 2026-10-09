@@ -934,14 +934,13 @@ class TestServiceEventTemplateSearcher(TestCase):
         assert data[0]['id'] == t1.id
 
     def test_with_rts(self):
-        """If we filter for a unit, the searcher should only return
-        templates where the return to service test lists are all
-        assigned to that unit."""
+        """If we filter for a unit, the searcher returns all matching templates
+        and populates return_to_service_utcs with only the UTCs actively assigned to that unit."""
 
         tl1 = qa_utils.create_test_list()
         tl2 = qa_utils.create_test_list()
         u1 = qa_utils.create_unit()
-        qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
+        utc1 = qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
 
         # one template with RTS that is assigned to the unit
         t1 = self.create_template("1")
@@ -951,24 +950,26 @@ class TestServiceEventTemplateSearcher(TestCase):
         t2 = self.create_template("2")
         t2.return_to_service_test_lists.add(tl2)
 
-        # one template with not RTS
+        # one template with no RTS
         t3 = self.create_template("3")
 
         resp = self.client.get(self.url, data={'unit': u1.pk})
         data = resp.json()
-        assert len(data) == 2
-        assert [t['id'] for t in data] == [t1.id, t3.id]
+        assert len(data) == 3
+        data_by_id = {t['id']: t for t in data}
+        assert data_by_id[t1.id]['return_to_service_utcs'] == [utc1.id]
+        assert data_by_id[t2.id]['return_to_service_utcs'] == []
+        assert data_by_id[t3.id]['return_to_service_utcs'] == []
 
     def test_with_rts_and_service_type(self):
-        """If we filter for a unit, and service type, the searcher should only return
-        templates where the return to service test lists are all
-        assigned to that unit and the template has the correct service_type."""
+        """If we filter for a unit and service type, the searcher returns templates
+        matching the service type with unit-specific return_to_service_utcs."""
 
         st = sl_utils.create_service_type()
         tl1 = qa_utils.create_test_list()
         tl2 = qa_utils.create_test_list()
         u1 = qa_utils.create_unit()
-        qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
+        utc1 = qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
 
         # one template with RTS that is assigned to the unit
         t1 = self.create_template("1", service_type=st)
@@ -981,10 +982,114 @@ class TestServiceEventTemplateSearcher(TestCase):
         # one template with no RTS and correct service_type
         t3 = self.create_template("3", service_type=st)
 
-        # one template with no RTS and no service_type
-        self.create_template("4")
+        # one template with no RTS and no service_type (should be filtered out by service_type)
+        t4 = self.create_template("4")
 
         resp = self.client.get(self.url, data={'unit': u1.pk, 'service_type': st.pk})
         data = resp.json()
-        assert len(data) == 2
-        assert [t['id'] for t in data] == [t1.id, t3.id]
+        assert len(data) == 3
+        data_by_id = {t['id']: t for t in data}
+        assert data_by_id[t1.id]['return_to_service_utcs'] == [utc1.id]
+        assert data_by_id[t2.id]['return_to_service_utcs'] == []
+        assert data_by_id[t3.id]['return_to_service_utcs'] == []
+        assert t4.id not in data_by_id
+
+    def test_polymorphic_rts_templates(self):
+        """A single generic template configured with RTS test lists for multiple units
+        returns only the relevant unit's UTCs when queried for each unit (Issue #829)."""
+
+        tl1 = qa_utils.create_test_list(name="Tube Change QA CT1")
+        tl2 = qa_utils.create_test_list(name="Tube Change QA CT2")
+        u1 = qa_utils.create_unit(name="CT1")
+        u2 = qa_utils.create_unit(name="CT2")
+
+        utc1 = qa_utils.create_unit_test_collection(unit=u1, test_collection=tl1)
+        utc2 = qa_utils.create_unit_test_collection(unit=u2, test_collection=tl2)
+
+        template = self.create_template("Tube Change")
+        template.return_to_service_test_lists.add(tl1, tl2)
+
+        # Query for CT1
+        resp1 = self.client.get(self.url, data={'unit': u1.pk})
+        data1 = resp1.json()
+        template_res1 = next(t for t in data1 if t['id'] == template.id)
+        assert template_res1['return_to_service_utcs'] == [utc1.id]
+
+        # Query for CT2
+        resp2 = self.client.get(self.url, data={'unit': u2.pk})
+        data2 = resp2.json()
+        template_res2 = next(t for t in data2 if t['id'] == template.id)
+        assert template_res2['return_to_service_utcs'] == [utc2.id]
+
+    def test_rts_with_test_list_cycle(self):
+        """Ensure active TestListCycle values attached to a template as RTS QC
+        are included in return_to_service_utcs."""
+
+        tl1 = qa_utils.create_test_list(name="Daily Check")
+        tlc1 = qa_utils.create_cycle([tl1], name="Daily Cycle")
+        tl2 = qa_utils.create_test_list(name="RTS Standalone")
+
+        u1 = qa_utils.create_unit(name="Unit with Cycle")
+        utc_tlc = qa_utils.create_unit_test_collection(unit=u1, test_collection=tlc1)
+        utc_tl = qa_utils.create_unit_test_collection(unit=u1, test_collection=tl2)
+
+        template = self.create_template("Template With Cycle RTS")
+        template.return_to_service_cycles.add(tlc1)
+        template.return_to_service_test_lists.add(tl2)
+
+        resp = self.client.get(self.url, data={'unit': u1.pk})
+        data = resp.json()
+        template_res = next(t for t in data if t['id'] == template.id)
+        assert set(template_res['return_to_service_utcs']) == {utc_tlc.id, utc_tl.id}
+
+
+class TestGetTimeDisplayPluralisation(TestCase):
+    """
+    `get_time_display` used to build "%d minutes ago" by concatenation, which
+    made it untranslatable and rendered "1 minutes ago". It now uses `ngettext`.
+
+    @copilot-pull-request-reviewer asked for this: the behaviour had no regression
+    test, so nothing stopped the grammar or the untranslatability coming back.
+    """
+
+    def _ago(self, **delta):
+        from qatrack.service_log.views import get_time_display
+
+        return get_time_display(timezone.now() - timezone.timedelta(**delta))
+
+    def test_one_minute_is_singular(self):
+        """The bug as users met it: "1 minutes ago"."""
+
+        assert self._ago(minutes=1, seconds=5) == "1 minute ago"
+
+    def test_several_minutes_are_plural(self):
+        assert self._ago(minutes=7) == "7 minutes ago"
+
+    def test_zero_minutes_is_plural(self):
+        """English pluralises zero, and ngettext has to be given the chance to."""
+
+        assert self._ago(seconds=10) == "0 minutes ago"
+
+    def test_an_hour_or_more_falls_through_to_a_time(self):
+        """Only the under-an-hour branch pluralises; the rest formats a time."""
+
+        out = self._ago(hours=3)
+        assert "minute" not in out, out
+
+    def test_it_is_translated_rather_than_concatenated(self):
+        """
+        The other half of the original bug. Under a locale that has the plural
+        forms, the output must not be English - which it always was when the
+        string was built by concatenation.
+        """
+
+        from django.utils import translation
+
+        with translation.override("fr"):
+            singular = self._ago(minutes=1, seconds=5)
+            plural = self._ago(minutes=7)
+
+        assert "minute" in singular.lower(), singular
+        assert singular != "1 minute ago", "fr fell back to English"
+        assert plural != "7 minutes ago", "fr fell back to English"
+        assert singular != plural

@@ -13,10 +13,10 @@ include = [
 
 [project]
 name = "qatrackplus"
-version = "4.0.0"
+version = "4.0.1"
 description = "QATrack+ is an open source application for managing QC data in radiotherapy and diagnostic imaging clinics"
 readme = "README.md"
-requires-python = ">=3.12, <=3.13"
+requires-python = ">=3.12,<3.13"
 license = {text = "MIT"}
 authors = [
     {name = "QATrack+ contributors", email = "randy@multileaf.ca"},
@@ -40,7 +40,7 @@ classifiers = [
 package-mode = false
 
 dependencies = [
-    "Django==4.2",
+    "Django>=4.2.30,<4.3",
     "django-q2>=1.8.0",
     "beautifulsoup4==4.9.3",
     "concurrent-log-handler==0.9.19",
@@ -83,7 +83,11 @@ dependencies = [
     "XlsxWriter>=1.3.7,<4.0",
     "django-recurrence>=1.11.0",
     "django-sql-explorer>=5.3",
-    "black>=23.1.0",
+    # 24.10.0 is the first release with a TargetVersion for every interpreter
+    # this project allows, and the first whose parser accepts PEP 695 `type`
+    # statements. An older black rejects valid 3.12 syntax outright, whatever
+    # target versions it is handed - see clean_calculation_procedure().
+    "black>=24.10.0",
     "blessed>=1.20.0",  # Required for django-q2 qmonitor
     "wcwidth<0.2.13",  # Pinned due to django-q2 qmonitor bug passing int instead of str
 ]
@@ -136,7 +140,12 @@ norecursedirs = [
     ".venv",
     "venv"
 ]
-python_files = ["test_*.py", "*_test.py"]
+# "tests.py" is here because leaving it out has silently hidden real tests
+# twice: qatrack/units/tests.py and qatrack/faults/tests/tests.py, 76 tests in
+# the latter, neither of which errored or skipped - they simply never ran.
+# test_collection.py below enforces that nothing else slips through the same
+# way.
+python_files = ["test_*.py", "*_test.py", "tests.py"]
 addopts = "-ra -q"
 django_find_project = true
 DJANGO_SETTINGS_MODULE = "qatrack.settings"

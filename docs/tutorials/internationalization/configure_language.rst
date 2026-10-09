@@ -7,7 +7,7 @@ This tutorial will guide you through configuring a language in QATrack+ so that 
 in the language dropdown menu.
 
 Prerequisites
-------------
+-------------
 
 - QATrack+ development environment set up
 - Translation files created and compiled (see :ref:`add_language`)

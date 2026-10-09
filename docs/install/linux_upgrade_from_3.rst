@@ -1,7 +1,7 @@
 .. _linux_upgrading_40:
 
 
-Upgrading an existing Linux v3.X.Y installation to v4.0.0
+Upgrading an existing Linux v3.X.Y installation to 4.0.0
 ===========================================================
 
 .. note::
@@ -11,7 +11,7 @@ Upgrading an existing Linux v3.X.Y installation to v4.0.0
 
 
 This guide will walk you through upgrading your existing v3.X.Y installation to
-v4.0.0.
+4.0.0.
 
 .. warning::
 
@@ -101,7 +101,18 @@ following commands:
 
     cd ~/web/qatrackplus
     git fetch origin
-    git checkout v4.0.0
+    git checkout releases/4.0
+
+.. dropdown:: Side note: Alternate Tag
+    :color: warning
+
+    The ``releases/4.0`` branch is the 4.0 series including its patch releases, so
+    upgrading later is ``git fetch`` and ``git pull`` — you never name a version.
+
+    Pinning an exact version with a tag is possible but **not recommended**: a tag is
+    immutable, so ``git pull`` will not bring you patches and each upgrade becomes a
+    fresh checkout. If you must, the available tags are listed on the
+    `releases page <https://github.com/qatrackplus/qatrackplus/releases>`__.
 
 
 Updating our Python environment

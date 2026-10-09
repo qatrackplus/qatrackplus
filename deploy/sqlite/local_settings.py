@@ -33,7 +33,12 @@ USE_SQL_REPORTS =  True
 # If you host your QATrack+ instance at a non root url (e.g. 12.345.678.9/qatrack)
 # then you need to uncomment (and possibly modify) the following settings
 # FORCE_SCRIPT_NAME = "/qatrack"
-# LOGIN_EXEMPT_URLS = [r"^qatrack/accounts/", r"qatrack/api/*"]
+# LOGIN_EXEMPT_URLS does NOT need changing for a non-root deployment, and must
+# not be given a "/qatrack" prefix. LoginRequiredMiddleware matches
+# request.path_info, which is URLconf-relative - FORCE_SCRIPT_NAME affects
+# generated URLs, not path_info - so the default patterns in settings.py already
+# work here. Prefixed patterns match nothing, which would leave even the login
+# page unexempt.
 # LOGIN_REDIRECT_URL = '/qatrack/qa/unit/'
 # LOGIN_URL = "/qatrack/accounts/login/"
 

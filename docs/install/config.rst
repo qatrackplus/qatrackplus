@@ -173,6 +173,52 @@ timezones on Wikipedia
 <http://en.wikipedia.org/wiki/List_of_tz_database_time_zones>`_.
 
 
+Organization Logo
+~~~~~~~~~~~~~~~~~
+
+QATrack+ reports include an option to display your organization's logo.
+
+**Adding Your Organization Logo**
+
+1. **Prepare your logo file:**
+   - Use a PNG format for best compatibility
+   - Recommended size: 200x60 pixels or similar aspect ratio
+   - Keep file size reasonable (under 100KB)
+
+2. **Replace the placeholder logo:**
+   - Navigate to ``qatrack/reports/static/reports/img/``
+   - Replace the existing ``logo.png`` file with your own logo
+   - Keep the same filename (``logo.png``) to avoid template changes
+
+3. **Alternative: Use a different filename:**
+   - If you prefer a different filename, edit ``qatrack/reports/templates/reports/_header.html``
+   - Update all references from ``logo.png`` to your preferred filename
+   - Update the alt text and fallback messages as needed
+
+4. **Collect static files:**
+   After making changes, run:
+   
+   .. code-block:: shell
+   
+       python manage.py collectstatic
+
+**Logo Display Options**
+
+- **HTML Reports:** Logo is displayed using Django's static file handling
+- **PDF Reports:** Logo uses file:// paths for compatibility with PDF generation
+- **Error Handling:** If the logo fails to load, nothing is displayed (no fallback message)
+- **Visibility Control:** Users can toggle logo display on/off in report settings
+
+**Customizing Logo Text**
+
+To change the alt text:
+- Edit ``qatrack/reports/templates/reports/_header.html``
+- Update the translation strings for "Organization Logo"
+- Add translations to your locale files if using multiple languages
+
+**Note:** The logo functionality is designed to be easily customizable without requiring code changes to the core application.
+
+
 Icon Settings
 ~~~~~~~~~~~~~
 
@@ -315,6 +361,18 @@ Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. 
     # - or -
     CHROME_PATH = 'C:/path/to/chromium.exe'  # on Windows
 
+.. note::
+
+    PDF reports are normally rendered by WeasyPrint; Chrome is used as a
+    fallback when WeasyPrint is unavailable or fails, so `CHROME_PATH` only
+    needs to be valid for that fallback to work.
+
+    The paper size of a generated PDF follows the paper size selected for the
+    report itself. It is applied through the report stylesheet rather than a
+    Chrome command line switch, so it is honoured by both renderers. Before
+    4.0.1, reports rendered through Chrome were always produced at Letter
+    size regardless of the size chosen for the report.
+
 
 
 CATEGORY_FIRST_OF_GROUP_ONLY
@@ -371,8 +429,8 @@ warning message that will be shown when a performed test is at action level.
 If `DEFAULT_WARNING_MESSAGE = ""` then the default will be to not show any
 warning message when a test is at action level.
 
-FORCE_SCRIPT_NAME, LOGIN_REDIRECT_URL, LOGIN_URL, STATIC_URL, MEDIA_URL, UPLOADS_URL
-....................................................................................
+FORCE_SCRIPT_NAME, LOGIN_EXEMPT_URLS, LOGIN_REDIRECT_URL, LOGIN_URL, STATIC_URL, MEDIA_URL, UPLOADS_URL
+.........................................................................................................
 
 If you deploy QATrack+ at a non root url (e.g. http://5.5.5.5/qatrack/) then you need to
 set these settings as follows:
@@ -382,6 +440,37 @@ set these settings as follows:
     FORCE_SCRIPT_NAME = '/qatrack'
     LOGIN_REDIRECT_URL = 'qatrack/'
     LOGIN_URL = "/qatrack/accounts/login/"
+
+``LOGIN_EXEMPT_URLS`` does **not** need changing for a non-root deployment, and must
+not be given the prefix. ``LoginRequiredMiddleware`` matches ``request.path_info``,
+which is URLconf-relative: ``FORCE_SCRIPT_NAME`` changes the URLs QATrack+
+*generates*, not the path it *matches*. So the defaults in ``settings.py`` already
+work at a subpath, and a prefixed pattern such as ``^qatrack/accounts/`` matches
+nothing — which would leave even the login page unexempt and send anonymous
+visitors into a redirect loop.
+
+If you do override ``LOGIN_EXEMPT_URLS`` for some other reason, note that setting it
+in ``local_settings.py`` **replaces** the default list rather than adding to it, so
+repeat every entry you still want — omitting one silently makes that URL require a
+login. ``jsi18n`` in particular must stay exempt, or the JavaScript translation
+catalogue is redirected to the login page for anonymous visitors and the
+client-side translations never load:
+
+.. code-block:: python
+
+    LOGIN_EXEMPT_URLS = [
+        r"^favicon\.ico$",
+        r"^accounts/",
+        r"^api(/|$)",
+        r"^oauth2(/|$)",
+        r"^i18n/",
+        r"^jsi18n/",
+    ]
+
+These are regular expressions, matched against the request path with its leading
+slash removed. Write them as regexes, not globs: ``api/*`` means "api followed by
+zero or more slashes", which also matches ``apifoo``, while ``api(/|$)`` means what
+is intended.
 
 If you've also changed the directory IIS is serving static media from, you may need to adjust the static and media
 urls as well:
@@ -534,7 +623,7 @@ Who should be emailed when internal QATrack+ errors occur:
     MANAGERS = ADMINS
 
 Default Sender
-~~~~~~~~~~~
+~~~~~~~~~~~~~~
 The default "from" address for notification emails (e.g. password reset requests):
 
 .. code-block:: python

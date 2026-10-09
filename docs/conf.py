@@ -75,7 +75,18 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+# `**/_*.rst` is the fragment convention, documented in the developer guide: a file
+# named with a leading underscore is pulled into a page with `.. include::` and is not
+# a page itself. Matched by pattern rather than by name, so the next fragment needs no
+# change here.
+#
+# Measured, because the stronger claim that used to be here was wrong: with today's
+# label-free fragments, un-excluding them builds clean and merely publishes two
+# duplicate pages. Add one `.. _label:` to a fragment and the same build gives three
+# duplicate-label warnings - one per including page plus the fragment itself - which
+# `-W` turns into a failure. So this is insurance that becomes necessary the first
+# time somebody writes a label.
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**/_*.rst']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

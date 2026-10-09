@@ -76,10 +76,16 @@ class Command(BaseCommand):
         elif 'postgresql' in engine:
             self.stdout.write(self.style.WARNING("PostgreSQL backup not natively implemented in this script yet. Please use pg_dump."))
             return False
+        elif 'mysql' in engine:
+            self.stdout.write(self.style.WARNING("MySQL backup not natively implemented in this script yet. Please use mysqldump."))
+            return False
         elif 'sqlite3' in engine:
             db_path = db_settings['NAME']
             shutil.copy2(db_path, local_backup_file)
             self.stdout.write(self.style.SUCCESS(f"Copied SQLite database to {local_backup_file}"))
+        else:
+            self.stdout.write(self.style.WARNING(f"Database backup not implemented in this script for engine '{engine}'."))
+            return False
 
         # 2. Uploads Zip
         uploads_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')

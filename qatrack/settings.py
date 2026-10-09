@@ -25,14 +25,14 @@ MANAGERS = ADMINS
 SEND_BROKEN_LINK_EMAILS = False
 
 # -----------------------------------------------------------------------------
-# misc settings
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.abspath(os.path.join(PROJECT_ROOT, ".."))
 
 LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 LOCALE_PATHS = [
     os.path.join(PROJECT_ROOT, 'locale'),
 ]
-VERSION = "4.0.0"
+VERSION = "4.0.1"
 BUG_REPORT_URL = "https://github.com/qatrackplus/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 
@@ -106,6 +106,9 @@ DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en'
+# Duration of the language cookie 
+# TODO: add nice documentation to the local_settings defaults so deployment is clear. 
+LANGUAGE_COOKIE_AGE = 360 * 24 * 60 * 60 # 1 year
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -184,8 +187,28 @@ MIDDLEWARE = [
     'qatrack.middleware.maintain_filters.FilterPersistMiddleware',
 ]
 
-# login required middleware settings
-LOGIN_EXEMPT_URLS = [r"^favicon.ico$", r"^accounts/", r"api/*", r"^oauth2/*", r"^i18n/"]
+# Paths exempt from LoginRequiredMiddleware. These are *regular expressions*,
+# applied with re.match() against the path with its leading slash stripped, so
+# every one is anchored at the start whether or not it says "^".
+#
+# Write them as regexes, not globs. "api/*" is not "anything under api/" - in a
+# regex it reads as "api" followed by zero or more slashes, so it also exempted
+# apifoo, api_secret and anything else merely starting with those three
+# letters. "(/|$)" says what was meant: the segment ends there.
+#
+# jsi18n is listed separately from i18n because the URL is /jsi18n/, which
+# "^i18n/" does not match. site_base.html loads the catalogue with a <script>
+# tag on every page, so without this the tag 302s to the login page for
+# anonymous visitors, the browser parses HTML as JavaScript, and the
+# client-side translation catalogue silently never loads.
+LOGIN_EXEMPT_URLS = [
+    r"^favicon\.ico$",
+    r"^accounts/",
+    r"^api(/|$)",
+    r"^oauth2(/|$)",
+    r"^i18n/",
+    r"^jsi18n/",
+]
 ACCOUNT_ACTIVATION_DAYS = 7
 LOGIN_REDIRECT_URL = '/qc/unit/'
 LOGIN_URL = "/accounts/login/"
@@ -707,6 +730,17 @@ use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', '
 if use_docker:
     ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
+    _csrf_trusted_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '').strip()
+    if _csrf_trusted_env:
+        CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted_env.split(',') if o.strip()]
+    else:
+        CSRF_TRUSTED_ORIGINS = [
+            scheme + host
+            for host in ALLOWED_HOSTS
+            for scheme in ('http://', 'https://')
+            if host != '*'
+        ]
+    
     SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
     try:
         with open(SECRET_FILEPATH) as f:

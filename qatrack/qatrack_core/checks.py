@@ -99,3 +99,38 @@ def check_media_folder_permissions(app_configs, **kwargs):
                     )
                 )
     return errors
+
+
+@register()
+def check_translation_catalogues(app_configs, **kwargs):
+    """Warn when a committed .mo no longer matches the .po beside it.
+
+    A Warning rather than an Error on purpose. System checks run before
+    `migrate` unless --skip-checks is passed, and a site part-way through
+    editing its own translations should not be locked out of its migrations
+    for it.
+    """
+    from qatrack.qatrack_core.translation_catalogues import catalogue_problems
+
+    try:
+        problems = catalogue_problems()
+    except Exception:  # noqa: BLE001
+        # Deliberately broad. This runs during system checks, which run before
+        # `migrate`, and the docstring above promises it will not lock a site out
+        # of its migrations. `OSError` alone was not enough: a malformed .po can
+        # raise from the parser, and `locale_root` can raise AttributeError if
+        # PROJECT_ROOT is unset. A diagnostic that cannot report is worth less
+        # than a `migrate` that cannot run.
+        return []
+
+    return [
+        Warning(
+            problem,
+            hint=(
+                "The .po is what translators edit; the .mo is what Django reads. "
+                "Recompile so the two agree."
+            ),
+            id='qatrack.W010',
+        )
+        for problem in problems
+    ]
