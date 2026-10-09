@@ -373,6 +373,35 @@ class SeleniumTests(StaticLiveServerTestCase):
             # The Chromium equivalent of the Firefox preference below.
             chrome_options.add_argument('--force-device-scale-factor=1')
 
+            # Turn the password manager off, including the breach check.
+            #
+            # Every browser test logs in through the real login form as `user`
+            # with the password `password` - see create_user() in
+            # qatrack/accounts/tests/utils.py - and Chrome recognises that as a
+            # credential found in a data breach, so it answers the login with
+            # its "Change your password" dialog. That dialog is a browser-level
+            # overlay: WebDriver screenshots do not capture it, and the test
+            # fails further down looking for a page element it is covering.
+            #
+            # Measured by crane on Windows 11 / Chrome 154, running
+            # test_admin_testlist alone, one test per process, alternating the
+            # setting inside one session: 5 of 5 passed with the manager off,
+            # against 5 of 15 across two series with it on, and Cody watched the
+            # dialog appear during the failures. Found 2026-10-09.
+            #
+            # The leak check is also a network lookup on each login, which a
+            # test run has no business making - so this is worth setting for
+            # that reason alone, independent of the flakiness.
+            chrome_options.add_experimental_option(
+                'prefs',
+                {
+                    'credentials_enable_service': False,
+                    'profile.password_manager_enabled': False,
+                    'profile.password_manager_leak_detection': False,
+                },
+            )
+            chrome_options.add_argument('--disable-features=PasswordLeakDetection')
+
             if headless:
                 # The "new" headless mode (Chrome 109+) - the old
                 # `--headless` renders differently enough from a real
@@ -422,6 +451,16 @@ class SeleniumTests(StaticLiveServerTestCase):
             # headless one, which is the only way the two agree about what the
             # page looks like.
             ff_options.set_preference('layout.css.devPixelsPerPx', '1.0')
+
+            # Firefox's counterpart to the Chromium prefs above: suppress the
+            # "Save login?" prompt, since every test logs in for real.
+            #
+            # A precaution rather than a measured fix. No Firefox prompt has
+            # been reported during these runs, and neither crane nor jackdaw has
+            # seen one - Firefox has no equivalent of Chrome's breach dialog
+            # enabled by default. Set so the two browsers behave the same way
+            # about credentials rather than because Firefox was observed asking.
+            ff_options.set_preference('signon.rememberSignons', False)
 
             # An explicit setting or nothing, symmetric with the chromium
             # branch above. This used to fall back to
