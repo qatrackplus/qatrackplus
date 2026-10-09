@@ -4,7 +4,7 @@ import pathlib
 import pytest
 
 # The older idiom for excluding GUI tests. Still honoured (see
-# pytest_collection_modifyitems) but deprecated in 4.0 for removal in 4.2:
+# pytest_collection_modifyitems) but deprecated in 4.1 for removal in 4.3:
 # the space needs quoting on every shell, and plain `pytest` now does it.
 _DEPRECATED_EXCLUDE_MARKEXPR = 'not selenium'
 

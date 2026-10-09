@@ -246,9 +246,12 @@ sqlite database exactly the way a fresh deployment would (migrate,
 createcachetable, collectstatic, createsuperuser), which is what it verifies:
 that the provisioning sequence completes against a clean checkout. It then runs
 the suite with `--reuse-db`. Which database the tests themselves touch is
-pytest-django's choice, driven by the `TEST` name in the settings file in use -
-the sqlite template names the provisioned database for that reason, so a
-different template or settings module will not behave the same way.
+pytest-django's choice, driven by the `TEST` name in the settings file in use.
+**The sqlite template does not name the provisioned database** - it names a
+separate `test_sqlite.db`, deliberately, because Django deletes a file-based
+test database before creating it and again at teardown. `make test-integration`
+is the only thing that points the two at each other, and it does so by appending
+a line to its own copy of the settings file, not to the shipped template.
 
 Tests live next to the application code in `tests/` subdirectories inside each
 Django app. Write or update tests for every functional change. Do not remove or
