@@ -24,29 +24,82 @@ you will still have access to your backups.
     installation is backed up correctly**.
 
 
+Which backup method is supported
+--------------------------------
+
+**The Docker ``backup`` service is the supported database backup.** It runs
+``pg_dump`` against the PostgreSQL container on a schedule, and the next section
+describes it.
+
+**Every other deployment backs up its database with its own engine's tooling**,
+as part of the backup regime your IT department already runs for the rest of the
+server. QATrack+ does not wrap those tools, and does not try to:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Engine
+     - Use
+   * - PostgreSQL
+     - ``pg_dump`` - or the Docker service below, which is this
+   * - MS SQL Server
+     - ``BACKUP DATABASE``, SQL Server Management Studio, or your existing SQL
+       Server maintenance plan
+   * - MySQL / MariaDB
+     - ``mysqldump``
+   * - SQLite
+     - a file copy taken while QATrack+ is **stopped**, or ``sqlite3 .backup``
+
+A database backup taken with the engine's own tooling is also the only kind the
+engine can promise is consistent. A file copy taken while the application is
+writing is not a backup, whatever its size suggests.
+
 The ``backup_site`` Management Command
 --------------------------------------
 
-``manage.py backup_site`` writes the database and the uploaded media files to a
-timestamped directory.
+``manage.py backup_site`` backs up the **uploaded media files** to a timestamped
+directory. It does **not** back up the database on any engine.
+
+.. important::
+
+    **It reports, per engine, that it is not backing up the database**, and names
+    the tool you should use instead. It does not attempt the database on any
+    engine, so it cannot appear to have taken one.
+
+    **The command exits zero.** There is no non-zero exit path in it, so a
+    scheduled task that checks only the exit status records a success - for the
+    media backup, which is all it claims. Read the output.
 
 .. warning::
 
-    **It can only back up the database on SQL Server and SQLite.** On PostgreSQL,
-    MySQL, or any other engine it reports that it cannot, and skips the database.
+    **Check any backup set taken before 4.0.2 - on any engine.**
 
-    **The command exits zero either way.** There is no non-zero exit path in it, so
-    a scheduled task that checks only the exit status will record a success. Check
-    the output, or check that a database file is in the backup directory.
+    Earlier versions attempted the database on SQL Server and SQLite, and both
+    could mislead you:
 
-    **On MySQL, check any backup set produced before 4.0.1.** Earlier versions
-    skipped the database silently on MySQL and still reported success, so a backup
-    set can contain media and settings and no database at all. Use ``mysqldump``.
+    - **On SQL Server it reported success while writing nothing.** Measured on
+      SQL Server 2022: the command printed *"Successfully backed up SQL Server
+      database to ..."*, exited zero, and left the dated folders **empty**, with
+      no row in ``msdb.dbo.backupset`` and *"Error: 3041 ... BACKUP failed to
+      complete the command"* in the SQL Server error log at the same second. If
+      you have been relying on it, **you do not have a database backup.**
 
-    **On PostgreSQL this command has never written a database backup.** It has
-    always said so rather than failing quietly, but if you have been relying on it,
-    you do not have one. Use ``pg_dump``, or the Docker script below, which does
-    exactly that.
+    - **On SQLite it wrote the copy beside the live database**, not into your
+      backup directory - on the same disk as the original, so it survived nothing
+      the original did not - and took the copy while QATrack+ may have been
+      writing.
+
+    - **On MySQL, before 4.0.1**, the database was skipped silently while the
+      command still reported success, so a backup set can contain media and
+      settings and no database at all.
+
+    - **On PostgreSQL it has never written a database backup.** It always said so
+      rather than failing quietly, but if you were relying on it, you do not have
+      one.
+
+    In every case the remedy is the same: take a database backup now with the
+    tooling in the table above, and confirm it opens.
 
 Backups in Docker
 -----------------

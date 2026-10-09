@@ -5,7 +5,6 @@ import shutil
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 
 class Command(BaseCommand):
@@ -32,60 +31,55 @@ class Command(BaseCommand):
         if not os.path.exists(backup_loc):
             os.makedirs(backup_loc)
 
-        # 1. Database Backup
-        db_dir_override = self.get_setting('BACKUP_DB_DIR', None)
-        
-        if db_dir_override:
-            # Construct the path using forward slashes for Linux/Docker environments
-            sql_backup_loc = f"{db_dir_override}/{today_str}-{backup_type}"
-            sql_backup_file = f"{sql_backup_loc}/{db_name}-script.bak"
-        else:
-            sql_backup_file = os.path.join(backup_loc, f"{db_name}-script.bak")
-
-        local_backup_file = os.path.join(backup_loc, f"{db_name}-script.bak")
-        
-        if os.path.exists(local_backup_file):
-            os.remove(local_backup_file)
-            
+        # 1. Database Backup - reported, not attempted.
+        #
+        # This command does not back up the database on any engine, and says so
+        # per engine rather than appearing to succeed. The supported database
+        # backup is the Docker `backup` service (`deploy/docker/backup/backup.sh`,
+        # pg_dump); every other deployment uses its engine's own tooling as part
+        # of the site's existing backup regime. See docs/install/backup.rst.
+        #
+        # PostgreSQL and MySQL already reported honestly. The two that did not
+        # were measured and are why this block changed:
+        #
+        # - **SQL Server** ran `BACKUP DATABASE ... TO DISK` and printed
+        #   "Successfully backed up SQL Server database to ..." even when the
+        #   backup had failed. crane measured it on SQL Server 2022, 2026-10-08:
+        #   exit 0, dated folders empty, 0 rows in `msdb.dbo.backupset`, and
+        #   "Error: 3041 ... BACKUP failed to complete the command" in the server
+        #   error log at the same second. The cursor was closed without draining
+        #   BACKUP's result sets, and BACKUP streams progress as messages, so
+        #   closing cancelled the batch. A backup command that reports success
+        #   while writing nothing is worse than one that declines.
+        #
+        # - **SQLite** copied the database file, but to the wrong place and
+        #   unsafely. `db_name` is an absolute path for SQLite, and
+        #   `os.path.join(backup_loc, f"{db_name}-script.bak")` discards
+        #   `backup_loc` when its second argument is absolute, so the copy landed
+        #   beside the live database - on the same disk, outside BACKUP_DIR, and
+        #   taken with `shutil.copy2` while QATrack+ may have been mid-write.
+        #
+        # Media is still backed up below, and that part works.
         db_settings = settings.DATABASES['default']
         engine = db_settings['ENGINE']
-        
+
         if 'mssql' in engine or 'sqlserver' in engine:
-            query = f"BACKUP DATABASE [{db_name}] TO DISK='{sql_backup_file}'"
-            connection.ensure_connection()
-            old_autocommit = connection.get_autocommit()
-            connection.set_autocommit(True)
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute(query)
-                self.stdout.write(self.style.SUCCESS(f"Successfully backed up SQL Server database to {sql_backup_file}"))
-            except Exception as e:
-                err_msg = str(e)
-                self.stdout.write(self.style.ERROR(f"Failed to backup database: {err_msg}"))
-                self.stdout.write(self.style.WARNING(
-                    "\n[TIP] Docker or Remote DB Detected?\n"
-                    "If SQL Server is running in Docker or on a remote server, it has a completely isolated filesystem "
-                    "and cannot write to your local Windows drive directly.\n"
-                    "To fix this:\n"
-                    "1. Map your backup folder as a network share or Docker volume (e.g. `-v C:\\deploy\\backups:/backups`)\n"
-                    "2. Add `BACKUP_DB_DIR = '/backups'` to your `local_settings.py` so the script uses the correct path format."
-                ))
-                return False
-            finally:
-                connection.set_autocommit(old_autocommit)
+            tool = "SQL Server's own BACKUP DATABASE, or SQL Server Management Studio"
         elif 'postgresql' in engine:
-            self.stdout.write(self.style.WARNING("PostgreSQL backup not natively implemented in this script yet. Please use pg_dump."))
-            return False
+            tool = "pg_dump"
         elif 'mysql' in engine:
-            self.stdout.write(self.style.WARNING("MySQL backup not natively implemented in this script yet. Please use mysqldump."))
-            return False
+            tool = "mysqldump"
         elif 'sqlite3' in engine:
-            db_path = db_settings['NAME']
-            shutil.copy2(db_path, local_backup_file)
-            self.stdout.write(self.style.SUCCESS(f"Copied SQLite database to {local_backup_file}"))
+            tool = "a copy taken while QATrack+ is stopped, or sqlite3 .backup"
         else:
-            self.stdout.write(self.style.WARNING(f"Database backup not implemented in this script for engine '{engine}'."))
-            return False
+            tool = "the backup tooling for that engine"
+
+        self.stdout.write(self.style.WARNING(
+            f"Database backup is not performed by this command (engine: {engine}).\n"
+            f"Use {tool}, or the Docker backup service, which is the supported path.\n"
+            "See the Backup and Restore section of the documentation. Uploaded media "
+            "is backed up below."
+        ))
 
         # 2. Uploads Zip
         uploads_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
