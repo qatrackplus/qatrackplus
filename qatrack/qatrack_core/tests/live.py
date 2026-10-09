@@ -2,9 +2,11 @@ import shutil
 import time
 from contextlib import contextmanager
 from functools import wraps
+from importlib import import_module
 
 import pytest
 from django.conf import settings
+from django.contrib.auth import BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY
 from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.servers.basehttp import WSGIServer
@@ -190,6 +192,73 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def open(self, url):
         with self.wait_for_page_load():
             self.driver.execute_script("window.location.href='%s%s'" % (self.live_server_url, url))
+
+    def force_login(self, user, backend=None):
+        """Authenticate `user` in the browser without using a login form.
+
+        Builds the session server-side exactly as django.contrib.auth.login()
+        does, then hands the browser its cookie. The equivalent of
+        django.test.Client.force_login(), which the non-browser tests already
+        use - 52 call sites of client.login()/force_login() in this suite, none
+        of which post the login form either.
+
+        **Why not type the password.** Every browser test used to log in through
+        the real form as `user` / `password`, and that is a credential Chrome
+        recognises as found in a data breach, so it answered the login with its
+        "Change your password" dialog. Browser-level dialogs are invisible to
+        WebDriver - they are not in the DOM and not in the alert stack, so a
+        screenshot does not show them either - and the test fails further down
+        looking for a page element the dialog is covering. crane measured one
+        such test at 5 of 15 with the password manager on against 5 of 5 with it
+        off, 2026-10-09.
+
+        Suppressing that dialog is a blocklist against the browser UI we have
+        met. Not typing a password removes the surface: no breach dialog, no
+        "Save login?", no autofill, and nothing for a future browser release to
+        add. It is also faster - no form round trip, and no wait on the
+        logged-in navbar - across the 27 call sites that used to log in.
+
+        **What this deliberately stops testing** is the login page itself: form
+        rendering, the POST handler and the redirect. Nothing else in the suite
+        covers those, so a test that drives the real form is kept alongside
+        this - see login_through_form() in qatrack/qa/tests/test_selenium.py.
+
+        Only safe under TransactionTestCase, which these tests use: the session
+        row has to be committed before the live server thread, on its own
+        connection, can read it. Under plain TestCase it would sit inside the
+        test's open transaction and the browser would arrive unauthenticated.
+        """
+        engine = import_module(settings.SESSION_ENGINE)
+        session = engine.SessionStore()
+        session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+        session[BACKEND_SESSION_KEY] = backend or settings.AUTHENTICATION_BACKENDS[0]
+        session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+        session.save()
+
+        if not session.session_key:
+            # Signed-cookie sessions keep their data in the cookie and have no
+            # key to hand over. Say so here rather than letting every test fail
+            # as "not logged in" with nothing pointing at the session backend.
+            raise RuntimeError(
+                "force_login() needs a session backend with a session key; "
+                "%s does not provide one" % settings.SESSION_ENGINE
+            )
+
+        # add_cookie() only applies to the document's own origin, so the
+        # browser has to be on the site before the cookie can be set. The login
+        # page is the cheapest page that is guaranteed to render for an
+        # anonymous visitor.
+        self.driver.get('%s/accounts/login/' % self.live_server_url)
+        self.driver.add_cookie({
+            'name': settings.SESSION_COOKIE_NAME,
+            'value': session.session_key,
+            'path': settings.SESSION_COOKIE_PATH or '/',
+        })
+
+        # The browser is authenticated but still showing the anonymous login
+        # page; every caller navigates next, which is why nothing is loaded
+        # here. The form-based version landed on LOGIN_REDIRECT_URL, and no
+        # caller relied on that either.
 
     def wait_for_success(self):
         self.wait.until(
