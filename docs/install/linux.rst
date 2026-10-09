@@ -289,11 +289,7 @@ similar to the following:
 
 .. code-block:: bash
 
-    Results (88.45s):
-
-        975 passed
-        5 skipped
-        32 deselected
+    1367 passed, 3 skipped, 34 deselected in 164.73s (0:02:44)
 
 
 Configuration of QATrack+
@@ -374,6 +370,7 @@ which should show output like:
      [ ] 0002_activedirectorygroupmap_defaultgroup
      [ ] 0003_auto_20210207_1027
      [ ] 0004_Auto_BigAuto_TimeZone_Django42
+     [ ] 0005_v4_0_final
 
 
 If you were able to connect to your database, we can now create the tables in

@@ -58,7 +58,9 @@ class TestCheckMediaFolderPermissions(SimpleTestCase):
             with override_settings(MEDIA_ROOT=str(media_path)):
                 with patch('os.geteuid', return_value=0, create=True):
                     errors = check_media_folder_permissions(None)
-                    assert any(e.id == 'qatrack.W001' for e in errors)
+                    assert any(
+                        e.id == 'qatrack.W001' and 'local OS user for QATrack+ services' in e.hint for e in errors
+                    )
 
     def test_media_root_not_configured(self):
         with override_settings(MEDIA_ROOT=None):
@@ -205,6 +207,7 @@ class TestCheckMediaFolderPermissions(SimpleTestCase):
                     errors = check_media_folder_permissions(None)
                     assert any(
                         e.id == 'qatrack.E001'
+                        and f"to '{media_path}' to create" in e.msg
                         and ':www-data' in e.hint
                         and 'chmod 2775' in e.hint
                         and 'chmod 664' in e.hint

@@ -16,7 +16,7 @@ def check_media_folder_permissions(app_configs, **kwargs):
         errors.append(
             Warning(
                 'Django system check is running as root (or with sudo). Directory write permission checks may not report actual permissions for the application user.',
-                hint='Run `python manage.py check` as the regular QATrack+ system user.',
+                hint='Run `python manage.py check` as the local OS user for QATrack+ services.',
                 id='qatrack.W001',
             )
         )
