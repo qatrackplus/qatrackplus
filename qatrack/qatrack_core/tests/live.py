@@ -1,10 +1,14 @@
+import os
 import shutil
 import time
+import warnings
 from contextlib import contextmanager
 from functools import wraps
+from importlib import import_module
 
 import pytest
 from django.conf import settings
+from django.contrib.auth import BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY
 from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.servers.basehttp import WSGIServer
@@ -45,6 +49,48 @@ def retry_if_exception(ex, max_retries, sleep_time=None, reraise=True):
     return outer
 
 
+# Seconds to pause after each browser interaction, so a person can follow a GUI
+# run. 0, the default, is off and costs one float comparison per action.
+#
+# Read from the environment on purpose rather than exposed as a setting beside
+# the other SELENIUM_* ones: the supported way to turn this on is the poe task,
+# and this is a debugging aid, not a test mode. Inserting delays can turn a race
+# that fails at full speed into a pass, so a slow run's results must never be
+# quoted as a normal run's - setUpClass() says so out loud when it is on.
+try:
+    SLOW_MO = max(0.0, float(os.environ.get('SELENIUM_SLOW_MO', '') or 0))
+except ValueError:
+    SLOW_MO = 0.0
+
+
+def slow_mo_pause(element=None):
+    """Outline `element`, hold it, and put the outline back. No-op when off.
+
+    Pausing alone is not much use to a watcher: scrollIntoView() moves the page
+    under them and nothing says which control was used. Outlining the element
+    for the duration is what makes a slow run readable.
+    """
+    if not SLOW_MO:
+        return
+    if element is None:
+        time.sleep(SLOW_MO)
+        return
+    try:
+        previous = element.parent.execute_script(
+            "var p = arguments[0].style.outline;"
+            "arguments[0].style.outline = '3px solid #e8590c';"
+            "arguments[0].style.outlineOffset = '2px';"
+            "return p;",
+            element,
+        )
+        time.sleep(SLOW_MO)
+        element.parent.execute_script("arguments[0].style.outline = arguments[1];", element, previous)
+    except WebDriverException:
+        # The element may have gone stale, or the page may have navigated under
+        # us. Still pause, so the run stays watchable.
+        time.sleep(SLOW_MO)
+
+
 @retry_if_exception(WebDriverException, 5, sleep_time=1)
 def WebElement_click(self):
     """
@@ -53,6 +99,7 @@ def WebElement_click(self):
     is not in view
     """
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    slow_mo_pause(self)
     return self._execute(Command.CLICK_ELEMENT)
 
 
@@ -65,6 +112,7 @@ orig_send_keys = WebElement.send_keys
 def WebElement_send_keys(self, keys):
     """Monky patch send_keys to ensure element is in view"""
     self.parent.execute_script("arguments[0].scrollIntoView();", self)
+    slow_mo_pause(self)
     return orig_send_keys(self, keys)
 
 
@@ -94,6 +142,27 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def setUpClass(cls):
         use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
         browser_setting = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
+
+        if SLOW_MO:
+            # A warning, not a print. The whole risk of this switch is a slow
+            # run's numbers being read as a normal run's, and print() from
+            # setUpClass is swallowed by pytest's capture - it surfaces only on
+            # a failure or under -s, so in a passing run the caveat would never
+            # be seen, which is the one run where it matters. A warning lands in
+            # pytest's own warnings summary, which is shown either way.
+            warnings.warn(
+                "Slow mode: pausing %.2fs after every click and keystroke, and outlining "
+                "the element in use. Timings and pass counts from this run are not "
+                "comparable with a normal one - a race that fails at full speed can pass "
+                "here." % SLOW_MO,
+                stacklevel=2,
+            )
+            if use_virtual_display:
+                warnings.warn(
+                    "Slow mode is on but this run uses a virtual display, so there is "
+                    "nothing to watch.",
+                    stacklevel=2,
+                )
 
         if use_virtual_display:
             # Make sure xvfb is installed
@@ -190,16 +259,115 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
     def open(self, url):
         with self.wait_for_page_load():
             self.driver.execute_script("window.location.href='%s%s'" % (self.live_server_url, url))
+        # Give a watcher time to read the page that just loaded.
+        slow_mo_pause()
+
+    def force_login(self, user, backend=None):
+        """Authenticate `user` in the browser without using a login form.
+
+        Builds the session server-side exactly as django.contrib.auth.login()
+        does, then hands the browser its cookie. The equivalent of
+        django.test.Client.force_login(), which the non-browser tests already
+        use - 52 call sites of client.login()/force_login() in this suite, none
+        of which post the login form either.
+
+        **Why not type the password.** Every browser test used to log in through
+        the real form as `user` / `password`, and that is a credential Chrome
+        recognises as found in a data breach, so it answered the login with its
+        "Change your password" dialog. Browser-level dialogs are invisible to
+        WebDriver - they are not in the DOM and not in the alert stack, so a
+        screenshot does not show them either - and the test fails further down
+        looking for a page element the dialog is covering. crane measured one
+        such test at 5 of 15 with the password manager on against 5 of 5 with it
+        off, 2026-10-09.
+
+        Suppressing that dialog is a blocklist against the browser UI we have
+        met. Not typing a password removes the surface: no breach dialog, no
+        "Save login?", no autofill, and nothing for a future browser release to
+        add. It is also faster - no form round trip, and no wait on the
+        logged-in navbar - across the 27 call sites that used to log in.
+
+        **What this deliberately stops testing** is the login page itself: form
+        rendering, the POST handler and the redirect. Nothing else in the suite
+        covers those, so a test that drives the real form is kept alongside
+        this - see login_through_form() in qatrack/qa/tests/test_selenium.py.
+
+        Only safe under TransactionTestCase, which these tests use: the session
+        row has to be committed before the live server thread, on its own
+        connection, can read it. Under plain TestCase it would sit inside the
+        test's open transaction and the browser would arrive unauthenticated.
+        """
+        engine = import_module(settings.SESSION_ENGINE)
+        session = engine.SessionStore()
+        session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+        session[BACKEND_SESSION_KEY] = backend or settings.AUTHENTICATION_BACKENDS[0]
+        session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+        session.save()
+
+        if not session.session_key:
+            # Signed-cookie sessions keep their data in the cookie and have no
+            # key to hand over. Say so here rather than letting every test fail
+            # as "not logged in" with nothing pointing at the session backend.
+            raise RuntimeError(
+                "force_login() needs a session backend with a session key; "
+                "%s does not provide one" % settings.SESSION_ENGINE
+            )
+
+        # add_cookie() only applies to the document's own origin, so the
+        # browser has to be on the site before the cookie can be set. The login
+        # page is the cheapest page that is guaranteed to render for an
+        # anonymous visitor.
+        self.driver.get('%s/accounts/login/' % self.live_server_url)
+        self.driver.add_cookie({
+            'name': settings.SESSION_COOKIE_NAME,
+            'value': session.session_key,
+            'path': settings.SESSION_COOKIE_PATH or '/',
+        })
+
+        # The browser is authenticated but still showing the anonymous login
+        # page; every caller navigates next, which is why nothing is loaded
+        # here. The form-based version landed on LOGIN_REDIRECT_URL, and no
+        # caller relied on that either.
 
     def wait_for_success(self):
         self.wait.until(
             e_c.presence_of_element_located((By.XPATH, '//ul[@class = "messagelist"]/li[@class = "success"]'))
         )
 
+    def wait_for_modal(self, modal_id, timeout=10):
+        """Wait for a Bootstrap modal to finish opening.
+
+        `modal("show")` inserts the backdrop first and adds the `in` class only
+        once that is in place, so the fields inside the dialog are present in
+        the DOM, and findable, while the dialog itself is still 0x0 and
+        display:none. Interacting with them before this returns is a race.
+
+        The default timeout is deliberately longer than the suite wide
+        `self.wait`, which is 2 seconds: the dialogs are populated by AJAX and
+        then faded in. Other waits keep the short default so genuine races stay
+        visible rather than passing slowly.
+        """
+        WebDriverWait(self.driver, timeout).until(e_c.visibility_of_element_located((By.ID, modal_id)))
+
+    def modal_is_open(self):
+        """Return True if a Bootstrap modal is currently shown.
+
+        Checked in the page rather than with find_elements so it does not pay
+        the suite's 2 second implicit wait every time no modal is open.
+        """
+        return bool(self.driver.execute_script("return document.querySelectorAll('.modal.in').length > 0;"))
+
     def scroll_into_view(self, el_id):
         self.wait.until(e_c.presence_of_element_located((By.ID, el_id)))
-        actions = ActionChains(self.driver)
         element = self.driver.find_element(By.ID, el_id)
+        if self.modal_is_open():
+            # The body click below dismisses an open Bootstrap modal: the click
+            # lands on the modal backdrop, Bootstrap drops the `in` class, and
+            # every field in the dialog goes to 0x0 and display:none. For a
+            # field inside a modal, just scroll it into view.
+            self.driver.execute_script("arguments[0].scrollIntoView();", element)
+            return
+        actions = ActionChains(self.driver)
         actions.move_to_element(element)
         time.sleep(1)
         try:
@@ -211,8 +379,12 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     def scroll_into_view_css(self, css_sel):
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, css_sel)))
-        actions = ActionChains(self.driver)
         element = self.driver.find_element(By.CSS_SELECTOR, css_sel)
+        if self.modal_is_open():
+            # See scroll_into_view: the body click would close the modal.
+            self.driver.execute_script("arguments[0].scrollIntoView();", element)
+            return
+        actions = ActionChains(self.driver)
         actions.move_to_element(element)
         time.sleep(1)
         try:

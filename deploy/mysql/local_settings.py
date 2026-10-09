@@ -111,3 +111,30 @@ EMAIL_HOST_USER = ''  # e.g. "randle.taylor@gmail.com"
 EMAIL_HOST_PASSWORD = 'your_password_here'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
+
+
+# ------------------------------------------------------------------------------
+# Dates and times
+#
+# Default: YYYY-MM-DD HH:MM, in every language, and the date pickers write the
+# same format they display. Set the format here and everything follows from it -
+# display, pickers, and the help text under each date field. Python strptime
+# syntax (%Y year, %m month, %d day, %H hour, %M minute).
+#
+# QATRACK_DATETIME_FORMAT = "%Y/%m/%d %H:%M"   # 2012/05/31 14:30
+# QATRACK_DATE_FORMAT = "%Y/%m/%d"             # 2012/05/31
+# QATRACK_TIME_FORMAT = "%H:%M"
+#
+# What people may *type* is separate from what is displayed, and adding to it
+# changes nothing anybody sees:
+#
+# QATRACK_EXTRA_DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d/%m/%Y %H:%M"]
+# QATRACK_EXTRA_DATE_INPUT_FORMATS = ["%d %b %Y", "%Y/%m/%d"]
+#
+# All-numeric day/month orders are not blocked, but warn at startup
+# (qatrack.W004): 03/05/2026 is a different day depending on who reads it, and a
+# QC record is read by people trained in different conventions. The JSON API's
+# format is fixed and is unaffected by any of this.
+#
+# See "Date and Time Format Settings" in docs/install/config.rst.
+# ------------------------------------------------------------------------------
