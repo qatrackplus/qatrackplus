@@ -11,12 +11,16 @@ DATABASES = {
         # The test database is named, and named something *other* than the
         # development one, for two separate reasons.
         #
-        # Naming it at all is what makes `--reuse-db` run against a provisioned
-        # deployment: `make test-integration` migrates and populates a database
-        # first, and without a `TEST` name the suite would not touch it. (With
-        # no `TEST` name Django 4.2 uses an **in-memory** database for SQLite -
-        # an earlier version of this comment said `test_db/default.db`, which
-        # is not what Django does.)
+        # Naming it at all is what gives the suite a file-backed test database
+        # rather than an in-memory one: with no `TEST` name Django 4.2 uses an
+        # **in-memory** database for SQLite. (An earlier version of this comment
+        # said `test_db/default.db`, which is not what Django does.)
+        #
+        # It does **not** point the suite at a provisioned deployment, which an
+        # earlier version of this comment also claimed. The name below is a
+        # separate database; `make test-integration` is the only thing that
+        # tests the provisioned one, and it appends its own `TEST` name to its
+        # own copy of this file to do so.
         #
         # Naming it `test_sqlite.db` rather than `db/default.db` is the
         # important half. For a file-based SQLite test database Django calls
