@@ -925,6 +925,13 @@ class TestPerformQC(BaseQATests):
             ('full_hd', 1920, 1080),
         ]
 
+        # Put the viewport back even if an assertion below fails partway. The
+        # profiles end at 1920x1080, so a clean run leaves it where the rest of
+        # the class expects - but a failure at 960 or 1366 would otherwise leave
+        # every later test in this class rendering at that width, and those
+        # failures would look unrelated. nsmela's, 2026-10-08.
+        self.addCleanup(self.set_viewport_size, 1920, 1080)
+
         for label, width, height in profiles:
             with self.subTest(profile=label, width=width, height=height):
                 if not self.set_viewport_size(width, height):
