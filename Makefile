@@ -94,7 +94,9 @@ _test-engine:
 		echo "Move it to qatrack/local_test_settings.py, or delete it, then try again."; \
 		exit 1; \
 	fi; \
+	SWAPPED=0; \
 	restore() { \
+		[ "$$SWAPPED" = 1 ] || return 0; \
 		if [ -f qatrack/local_test_settings.py.bak ]; then \
 			mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
 		else \
@@ -108,6 +110,7 @@ _test-engine:
 		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
 	fi; \
 	cp qatrack/local_test_settings.$(ENGINE).py qatrack/local_test_settings.py; \
+	SWAPPED=1; \
 	uv run pytest ${args}
 
 # Integration-level test: provisions a brand-new sqlite db exactly the way
@@ -133,7 +136,9 @@ _test-engine:
 test-integration:
 	@set -e; \
 	mkdir -p db; \
+	SWAPPED=0; \
 	restore() { \
+		[ "$$SWAPPED" = 1 ] || return 0; \
 		if [ -f qatrack/local_test_settings.py.bak ]; then \
 			mv -f qatrack/local_test_settings.py.bak qatrack/local_test_settings.py; \
 		else \
@@ -170,6 +175,7 @@ test-integration:
 		cp qatrack/local_test_settings.py qatrack/local_test_settings.py.bak; \
 	fi; \
 	cp deploy/dev/local_test_settings.sqlite.py qatrack/local_test_settings.py; \
+	SWAPPED=1; \
 	printf "\n# test-integration only: test the database this target just\n# provisioned, rather than the template's separate test database.\nDATABASES['default']['TEST']['NAME'] = 'db/default.db'\n" \
 		>> qatrack/local_test_settings.py; \
 	uv run python manage.py migrate; \
