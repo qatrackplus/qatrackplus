@@ -76,15 +76,24 @@ def slow_mo_pause(element=None):
         time.sleep(SLOW_MO)
         return
     try:
+        # Save *both* properties. Restoring only `outline` would leave the 2px
+        # offset behind on every element slow mode has touched, which changes
+        # later focus outlines and breaks this helper's promise to put the
+        # styling back as it found it.
         previous = element.parent.execute_script(
-            "var p = arguments[0].style.outline;"
+            "var p = [arguments[0].style.outline, arguments[0].style.outlineOffset];"
             "arguments[0].style.outline = '3px solid #e8590c';"
             "arguments[0].style.outlineOffset = '2px';"
             "return p;",
             element,
         )
         time.sleep(SLOW_MO)
-        element.parent.execute_script("arguments[0].style.outline = arguments[1];", element, previous)
+        element.parent.execute_script(
+            "arguments[0].style.outline = arguments[1][0];"
+            "arguments[0].style.outlineOffset = arguments[1][1];",
+            element,
+            previous,
+        )
     except WebDriverException:
         # The element may have gone stale, or the page may have navigated under
         # us. Still pause, so the run stays watchable.
