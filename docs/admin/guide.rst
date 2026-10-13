@@ -41,6 +41,16 @@ idea to begin by doing some initial configuration.
 #. :ref:`Configure the QC app <initial_qa_config>`
 #. `Configure language settings <../tutorials/internationalization/configure_language.html>`__ (optional)
 
+.. note::
+
+    **Dates look the same in every language.** QATrack+ displays one date format
+    across all interface languages, set by ``QATRACK_DATE_FORMAT`` and
+    ``QATRACK_DATETIME_FORMAT`` - see :ref:`qatrack-config`. Before 4.0.2 each
+    language carried its own, so the same QC record read differently depending on
+    which language the reader had chosen. If your site offers more than one
+    language, that is the change to expect: configuring a format now moves every
+    language together, rather than per language.
+
 
 Admin Guide Contents
 --------------------
