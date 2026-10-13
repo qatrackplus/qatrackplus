@@ -1,6 +1,7 @@
 import time
 
 import pytest
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.db import transaction
 from django.test import TransactionTestCase
@@ -148,6 +149,27 @@ class BaseQATests(SeleniumTests, TransactionTestCase):
             self.user = create_user(pwd=self.password)
 
     def login(self):
+        """Authenticate without the login form - see force_login()."""
+        self.force_login(self.user)
+
+    def login_through_form(self):
+        """Log in by filling the real login form, as a user does.
+
+        Kept because force_login() does not exercise the login page at all, and
+        nothing else in the suite does either: no test posts to the login view,
+        and the non-browser tests authenticate with client.login() or
+        client.force_login(), both of which bypass it. This is the only path
+        that covers form rendering, the POST handler and the redirect.
+
+        Nothing on this branch calls it. The tests that do are added with the
+        rest of the Selenium work, so between this change landing and those
+        arriving the login page has no browser coverage - a gap worth knowing
+        about rather than discovering.
+
+        A test that uses this is also the only place the browser's password
+        manager can still interfere, since it is the only place a password is
+        typed.
+        """
         self.open("/accounts/login/")
         self.send_keys("id_username", self.user.username)
         self.send_keys("id_password", self.password)
@@ -172,10 +194,11 @@ class BaseQATests(SeleniumTests, TransactionTestCase):
         self.open("")
 
     def load_admin(self):
+        # The admin's login form is Django's own, not QATrack+'s, so there is
+        # nothing of ours to cover by filling it in. create_user() makes a
+        # superuser, so the injected session is enough to reach the admin.
+        self.login()
         self.open("/admin/")
-        self.send_keys("id_username", self.user.username)
-        self.send_keys("id_password", self.password)
-        self.driver.find_element(By.CSS_SELECTOR, 'button').click()
 
         self.wait.until(e_c.presence_of_element_located((By.CSS_SELECTOR, "head > title")))
 
@@ -186,6 +209,41 @@ class LiveQATests(BaseQATests):
     def setUp(self):
 
         super().setUp()
+
+    def test_browser_timezone_matches_server(self):
+        """The browser and the test server must agree on what day it is.
+
+        Several tests fill a date picker from the browser and then assert
+        against `timezone.localtime(now)` on the server. When the two zones
+        differ the picker chooses one date and the assertion expects another,
+        so the tests fail for the hours either side of midnight in one zone
+        but not the other - and pass the rest of the day, which is what makes
+        it look like flakiness. On a UTC-6 workstation against a Toronto
+        server that window is 22:00-00:00 local, every night.
+
+        setUpClass calls set_browser_timezone(), which issues the WebDriver
+        BiDi `emulation.setTimezoneOverride`. This asserts it took effect,
+        because the failure it prevents is invisible outside that window.
+
+        Not the TZ environment variable, which was measured not to work: on
+        POSIX Django has already set it, and on Windows neither browser reads
+        it - both reported the OS zone in 24 runs out of 24 while the harness
+        passed another.
+        """
+        browser_tz = self.driver.execute_script(
+            "return Intl.DateTimeFormat().resolvedOptions().timeZone"
+        )
+        assert browser_tz == settings.TIME_ZONE, (
+            "browser is on %s, server on %s - date-sensitive tests will "
+            "disagree around midnight" % (browser_tz, settings.TIME_ZONE)
+        )
+
+        browser_date = self.driver.execute_script(
+            "var d = new Date();"
+            "return [d.getFullYear(), d.getMonth() + 1, d.getDate()];"
+        )
+        server_date = timezone.localtime(timezone.now()).date()
+        assert tuple(browser_date) == (server_date.year, server_date.month, server_date.day)
 
     def test_admin_category(self):
 

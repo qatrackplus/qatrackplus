@@ -166,7 +166,14 @@ dev = [
     "coverage>=6.0,<8.0",
     "django-coverage>=1.2.4,<2.0",
     "freezegun>=1.0.0,<3.0",
-    "selenium>=4.0.0,<5.0",
+    # >=4.38 for BiDi emulation.setTimezoneOverride, which the GUI tests use to
+    # put the browser in settings.TIME_ZONE. BrowsingContext.set_viewport needs
+    # >=4.33. Below those the calls degrade to a warning rather than failing, so
+    # a developer on an older Selenium gets three date-dependent GUI tests that
+    # fail for a couple of hours a day with nothing pointing at the cause. The
+    # version boundaries are nsmela's, reported on #867 2026-10-08; confirmed
+    # here only that both are real releases.
+    "selenium>=4.38,<5.0",
     "PyVirtualDisplay==2.0",
     "django-debug-toolbar>=4.0,<5.0",
     "django-upgrade>=1.25.0",

@@ -142,7 +142,12 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
 
         $effective_date.flatpickr({
             allowInput: true,
-            dateFormat: 'd M Y'
+            // Derived, not written out: the insert handler below reads this field back
+            // with siteConfig.MOMENT_DATE_FMT, so the two must describe the same layout.
+            // A literal 'd M Y' here matched MOMENT_DATE_FMT only while that was
+            // 'DD MMM YYYY'; once the formats come from one setting it does not, moment
+            // returns NaN, and the POST fails with no message to the user.
+            dateFormat: siteConfig.FLATPICKR_DATE_FMT
         });
 
         $year.select2({
@@ -380,7 +385,7 @@ require(['jquery', 'moment_timezone', 'd3', 'flatpickr', 'daterangepicker', 'sel
                             date_acceptance = unit_available_time_data[unit_id].date_acceptance,
                             unit_avail_time_today = 0,
                             day_str = day.format(siteConfig.MOMENT_DATE_FMT),
-                            day_str_data = day.format(siteConfig.MOMEN_DATE_DATA_FMT),
+                            day_str_data = day.format(siteConfig.MOMENT_DATE_DATA_FMT),
                             day_edit_name = null,
                             available_time_changed,
                             unit_name = unit_available_time_data[unit_id].name;

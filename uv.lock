@@ -2388,7 +2388,7 @@ dev = [
     { name = "pytest-sugar", specifier = ">=0.9.6,<1.0" },
     { name = "pyvirtualdisplay", specifier = "==2.0" },
     { name = "ruff" },
-    { name = "selenium", specifier = ">=4.0.0,<5.0" },
+    { name = "selenium", specifier = ">=4.38,<5.0" },
     { name = "sphinx", specifier = "==7.4.7" },
     { name = "sphinx-autobuild", specifier = ">=1.0.0" },
     { name = "sphinx-copybutton", specifier = ">=0.5.2" },

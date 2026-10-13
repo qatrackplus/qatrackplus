@@ -25,6 +25,7 @@ from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import register
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import get_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import CreateView, TemplateView, View
@@ -40,6 +41,7 @@ from qatrack.faults.models import FaultReviewGroup
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.dates import (
     end_of_day,
+    format_as_date,
     format_datetime,
     parse_date,
     parse_datetime,
@@ -621,6 +623,37 @@ class CompositePerformer:
         self.data = data
         self.defaults = data.get('defaults')
 
+    def value_for_browser(self, slug, result):
+        """Format a date or datetime result the way the page's date picker reads it.
+
+        A calculated default is the documented way to pre-fill a date test -
+        ``your_date_test = timezone.now().date()`` in
+        ``docs/admin/qa/tests.rst`` - and the value goes straight into
+        flatpickr, which parses it with ``siteConfig.FLATPICKR_DATE_FMT``.
+
+        Left as a date object it is serialized by ``QATrackJSONEncoder``, which
+        writes ``QATRACK_API_DATE_FORMAT`` - the API's wire format, ``%d %b
+        %Y``. flatpickr configured for ``Y-m-d`` does not reject ``03 May
+        2026``; it reads what it can and silently produces a different date, so
+        the saved value is wrong and nothing anywhere says so. This is the same
+        defect, and the same fix, as ``autosave_load()`` below.
+
+        ``*_INPUT_FORMATS[0]`` is the configured display format, which is what
+        the flatpickr format is derived from, so the two cannot drift. Resolved
+        through ``get_format`` rather than ``settings`` so a format set in
+        ``local_settings.py`` is honoured.
+
+        Non-date results are returned untouched: a composite that happens to
+        produce a string must not be reformatted, and a test whose type is not
+        known here is left alone rather than guessed at.
+        """
+        test_type = self.test_types.get(slug)
+        if test_type == models.DATE:
+            return format_as_date(result) or None
+        elif test_type == models.DATETIME:
+            return format_datetime(result) or None
+        return result
+
     def calculate(self):
         """calculate and return all composite values"""
 
@@ -688,7 +721,7 @@ class CompositePerformer:
                 formatted = utils.format_qc_value(result, self.formatters.get(slug))
 
                 results[slug] = {
-                    'value': result,
+                    'value': self.value_for_browser(slug, result),
                     'formatted': formatted,
                     'error': None,
                     'user_attached': list(self.calculation_context.get("__user_attached__", [])),
@@ -1760,10 +1793,24 @@ def autosave_load(request):
     autosave_id = request.GET.get("autosave_id")
     auto = get_object_or_404(models.AutoSave, pk=autosave_id)
 
+    # work_started/work_completed are consumed client side by flatpickr's
+    # strict `.setDate()` (qa.js load_autosave()), which parses using
+    # siteConfig.FLATPICKR_DATETIME_FMT. They must be pre-formatted to exactly
+    # that format here rather than left as datetime objects for
+    # QATrackJSONEncoder to serialize, because the encoder writes the API's
+    # wire format, which flatpickr's parser mis-parses silently rather than
+    # erroring on - a date typed as 12 May 1980 comes back as 1980-11-30.
+    #
+    # DATETIME_INPUT_FORMATS[0] is the configured display format, which is
+    # what FLATPICKR_DATETIME_FMT is derived from, so the two cannot drift.
+    # Resolved through get_format rather than settings so that a format set in
+    # local_settings.py is honoured, and taken by position 0 by construction
+    # rather than by a magic index into a list deployers may extend.
+    fp_fmt = get_format('DATETIME_INPUT_FORMATS')[0]
     data = {
         'meta': {
-            'work_started': timezone.localtime(auto.work_started) if auto.work_started else None,
-            'work_completed': timezone.localtime(auto.work_completed) if auto.work_completed else None,
+            'work_started': format_datetime(auto.work_started, fmt=fp_fmt) or None,
+            'work_completed': format_datetime(auto.work_completed, fmt=fp_fmt) or None,
         },
         'data': auto.data,
     }
