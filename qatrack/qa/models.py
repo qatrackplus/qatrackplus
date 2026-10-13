@@ -130,6 +130,24 @@ color_re = re.compile(r'^rgba\(' + re_255 + ',' + re_255 + ',' + re_255 + r',(0(
 validate_color = RegexValidator(color_re, _l('Enter a valid color.'), 'invalid')
 
 #  A collection of the permissions most relevant to QATrack+
+def sees_all_collections(user):
+    """Should this user see UnitTestCollections regardless of their groups?
+
+    `visible_to` narrowing is a *convenience* for users who belong to groups, not
+    an authorisation boundary.  Filtering on `user.groups.all()` alone means a
+    user in no groups sees nothing -- including a superuser, who should see
+    everything.  `qa.can_review_non_visible_tli` is the permission that already
+    expresses the exemption; its verbose name is "Can view tli and utc not
+    visible to user's groups".  Superusers hold it implicitly.
+    """
+    return user.has_perm("qa.can_review_non_visible_tli")
+
+
+def visible_groups_for(user):
+    """Groups to narrow `visible_to` by, or None to not narrow at all."""
+    return None if sees_all_collections(user) else user.groups.all()
+
+
 PERMISSIONS = (
     (
         'Admin',
@@ -1830,6 +1848,13 @@ class UnitTestListManager(models.Manager):
         return self.get_queryset().filter(content_type=ContentType.objects.get(app_label="qa", model="testlist"))
 
     def by_visibility(self, groups):
+        """Narrow to collections visible to `groups`.
+
+        `groups` of None means do not narrow at all, for users who hold
+        `qa.can_review_non_visible_tli`.  See `sees_all_collections`.
+        """
+        if groups is None:
+            return self.get_queryset()
         return self.get_queryset().filter(visible_to__in=groups)
 
     def active(self):
@@ -2388,7 +2413,14 @@ class TestListInstanceManager(models.Manager):
     def in_progress(self, user=None):
         qs = self.get_queryset().filter(in_progress=True)
         if user:
-            qs = qs.filter(unit_test_collection__visible_to__in=user.groups.all()).distinct()
+            # visible_groups_for() returns None for a user who sees all
+            # collections, meaning do not narrow. Narrowing by
+            # user.groups.all() instead left a superuser in no groups unable to
+            # resume a list they had just started and saved: they could perform
+            # it, and then it was absent from In Progress.
+            groups = visible_groups_for(user)
+            if groups is not None:
+                qs = qs.filter(unit_test_collection__visible_to__in=groups).distinct()
         return qs.order_by("-work_completed")
 
     def your_in_progress_count(self, user):

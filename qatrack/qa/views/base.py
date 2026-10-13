@@ -29,6 +29,7 @@ from listable.views import (
 
 from qatrack.attachments.views import listable_attachment_tags
 from qatrack.qa import models
+from qatrack.qa.models import visible_groups_for
 from qatrack.service_log import models as sl_models
 from qatrack.units.models import Unit
 
@@ -176,7 +177,34 @@ class BaseEditTestListInstance(TestListInstanceMixin, UpdateView):
         return reverse("unreviewed")
 
 
-class UTCList(BaseListableView):
+class VisibilityExemptionMixin:
+    """Decide whether a view honours the "sees all collections" exemption.
+
+    `visible_groups_for()` returns None for a superuser, or for a user holding
+    "Can view tli and utc not visible to user's groups", meaning *do not narrow
+    at all*. That is right for a view that lists everything the user may see,
+    and wrong for one whose whole purpose is to narrow - "Review **Your** Test
+    List Data" showing every group's data is not a smaller mistake than it
+    showing none.
+
+    So the exemption is opt-out rather than global: views that mean "all"
+    inherit True, and the "your" views set it False and keep narrowing by the
+    user's own groups.
+
+    Returns None to mean no narrowing, mirroring `visible_groups_for()`, so a
+    caller cannot read an empty queryset as "no groups" by accident.
+    """
+
+    honour_visibility_exemption = True
+
+    def visible_groups(self):
+        user = self.request.user
+        if self.honour_visibility_exemption:
+            return visible_groups_for(user)
+        return user.groups.all()
+
+
+class UTCList(VisibilityExemptionMixin, BaseListableView):
 
     model = models.UnitTestCollection
 
@@ -311,9 +339,9 @@ class UTCList(BaseListableView):
         qs = super().get_queryset().order_by("pk")
 
         if self.visible_only:
-            qs = qs.filter(
-                visible_to__in=self.request.user.groups.all(),
-            ).distinct()
+            groups = self.visible_groups()
+            if groups is not None:
+                qs = qs.filter(visible_to__in=groups).distinct()
 
         if self.active_only:
             qs = qs.filter(active=True, unit__active=True)
@@ -370,7 +398,7 @@ class UTCList(BaseListableView):
         return template.render(c)
 
 
-class TestListInstances(BaseListableView):
+class TestListInstances(VisibilityExemptionMixin, BaseListableView):
     """
     This view provides a base for any sort of listing of
     :model:`qa.TestListInstance`'s.
@@ -497,7 +525,13 @@ class TestListInstances(BaseListableView):
 
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset(*args, **kwargs)
-        qs = qs.filter(unit_test_collection__visible_to__in=self.request.user.groups.all()).distinct()
+        # None means no narrowing, so an exempt user sees every group's
+        # instances here rather than none. Narrowing by `user.groups.all()`
+        # gave a superuser in no groups an empty list - they could start and
+        # save an in-progress list and then not find it again.
+        groups = self.visible_groups()
+        if groups is not None:
+            qs = qs.filter(unit_test_collection__visible_to__in=groups).distinct()
         qs = qs.annotate(attachment_count=Count("attachment"))
         return qs.order_by("-work_completed")
 
