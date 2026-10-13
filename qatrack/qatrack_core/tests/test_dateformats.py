@@ -11,12 +11,16 @@ import datetime
 import re
 from pathlib import Path
 
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.forms.fields import DateField, DateTimeField, TimeField
 from django.test import TestCase, override_settings
 from django.utils.dateformat import format as dj_format
 from django.utils.formats import get_format
+from django.utils.translation import override
 
 from qatrack.qatrack_core import checks, dateformats
+from qatrack.qatrack_core.dates import parse_date
 
 ISO = "%Y-%m-%d %H:%M"
 
@@ -40,17 +44,24 @@ def reload_formats():
     The dialects are module-level values computed at import from one setting, so an
     `override_settings` on its own changes nothing a caller can see. Django's own format
     cache has to be dropped too.
+
+    Every *loaded* language module is reloaded, not a hard-coded list. This used to
+    reload `en` and `fr` only, so `es` kept the values it was imported with and any
+    test here that overrode a format setting was silently checking two languages out
+    of three. nsmela noticed it while writing the round-trip tests for #873; it was
+    found again by a test that asserted all three behave alike and watched `es`
+    disagree.
     """
     import importlib
+    import sys
 
     from django.utils import formats as django_formats
 
     from qatrack.formats import base
-    from qatrack.formats.en import formats as en
-    from qatrack.formats.fr import formats as fr
     importlib.reload(base)
-    importlib.reload(en)
-    importlib.reload(fr)
+    for name, module in list(sys.modules.items()):
+        if name.startswith("qatrack.formats.") and name.endswith(".formats") and module is not base:
+            importlib.reload(module)
     django_formats.reset_format_cache()
 
 
@@ -581,3 +592,61 @@ class TestNoJavascriptHardCodesADateFormat(TestCase):
         text = path[0].read_text(encoding="utf-8")
         assert "dateFormat: siteConfig.FLATPICKR_DATE_FMT" in text
         assert "dateFormat: 'd M Y'" not in text
+
+
+class TestEveryLanguageAcceptsTheSameInput(TestCase):
+    """What a user may *type* no longer depends on the interface language.
+
+    4.0.1 gave each language its own `DATE_INPUT_FORMATS`, not just its own display
+    format. French accepted ``%d/%m/%Y``; Spanish had no QATrack+ module at all and
+    fell through to Django's, which accepts it too; English accepted ``%d %b %Y``.
+
+    That is a **breaking change for French and Spanish sites** and the release note
+    says so. These tests hold the two halves of that claim: that the accepted set is
+    now the same everywhere, and that the remedy the note offers actually works -
+    nsmela's review (#873, 2026-10-12) caught the note asserting the opposite, that
+    "dates typed in other formats are still accepted".
+    """
+
+    LANGUAGES = ("en", "fr", "es")
+
+    def accepted(self, lang):
+        with override(lang):
+            return list(get_format("DATE_INPUT_FORMATS"))
+
+    def test_the_accepted_set_is_identical_in_every_language(self):
+        sets = {lang: self.accepted(lang) for lang in self.LANGUAGES}
+        first = sets[self.LANGUAGES[0]]
+        for lang, fmts in sets.items():
+            assert fmts == first, "%s accepts %s, en accepts %s" % (lang, fmts, first)
+
+    def test_day_first_slashes_are_rejected_by_default_in_every_language(self):
+        """The breaking half. 03/05/2026 was valid French input in 4.0.1."""
+        for lang in self.LANGUAGES:
+            with override(lang):
+                assert parse_date("03/05/2026") is None, lang
+
+    def test_a_rejected_date_is_refused_rather_than_guessed(self):
+        """It must not quietly become 5 March or 3 May - that is the whole defect."""
+        for lang in self.LANGUAGES:
+            with override(lang):
+                with self.assertRaises(ValidationError):
+                    DateField().clean("03/05/2026")
+
+    def test_the_documented_remedy_restores_it(self):
+        """The release note tells a French site to add the format back; it has to work."""
+        with override_settings(
+            QATRACK_EXTRA_DATE_INPUT_FORMATS=["%d %b %Y", "%d/%m/%Y"]
+        ):
+            reload_formats()
+            try:
+                for lang in self.LANGUAGES:
+                    with override(lang):
+                        assert parse_date("03/05/2026") == datetime.date(2026, 5, 3), lang
+            finally:
+                reload_formats()
+
+    def test_the_shipped_default_does_not_include_it(self):
+        """Deliberate: %d/%m/%Y and %m/%d/%Y are indistinguishable for twelve days a
+        month, so accepting one everywhere would silently reinterpret the other."""
+        assert "%d/%m/%Y" not in settings.QATRACK_EXTRA_DATE_INPUT_FORMATS
