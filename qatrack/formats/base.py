@@ -33,23 +33,57 @@ _DATE = _setting('QATRACK_DATE_FORMAT', '%Y-%m-%d')
 _TIME = _setting('QATRACK_TIME_FORMAT', '%H:%M')
 
 
-def _inputs(primary, extra_setting):
-    """The display format first, then any extras, with duplicates dropped.
+# Formats QATrack+ itself writes, so it must always be able to read them back.
+#
+# These are **not** a preference and are deliberately not removable. The
+# QATRACK_EXTRA_*_INPUT_FORMATS settings are a list a deployer *replaces* - that
+# is what a list in local_settings.py does - and the shipped defaults happen to
+# include the API's own wire format. So a site that set its own extras,
+# following docs/install/config.rst, silently stopped being able to parse what
+# its own API emits: the JSON encoder writes QATRACK_API_DATETIME_FORMAT, and
+# nothing on the way back in accepted it any more.
+#
+# Appended rather than prepended, so a deployer's choices still come first and
+# forms still render with the display format at position 0.
+_REQUIRED_DATETIME_INPUTS = [
+    _setting('QATRACK_API_DATETIME_FORMAT', '%d %b %Y %H:%M:%S'),
+    '%Y-%m-%d %H:%M:%S',
+    '%Y-%m-%d %H:%M:%S.%f',
+    '%Y-%m-%dT%H:%M:%S.%fZ',
+]
+_REQUIRED_DATE_INPUTS = [
+    _setting('QATRACK_API_DATE_FORMAT', '%d %b %Y'),
+    '%Y-%m-%d',
+]
+_REQUIRED_TIME_INPUTS = [
+    '%H:%M:%S',
+    '%H:%M:%S.%f',
+]
 
-    Order matters twice over. Django tries input formats in order, so the
-    format QATrack+ itself writes should be tried first. And ``forms``
-    renders an existing value using ``input_formats[0]``, so if the display
-    format were not first, editing a record would rewrite its date into a
-    different format than the one the picker produces.
+
+def _inputs(primary, extra_setting, required=()):
+    """The display format first, then any extras, then the wire formats.
+
+    Order matters three times over. Django tries input formats in order, so the
+    format QATrack+ itself writes should be tried first. ``forms`` renders an
+    existing value using ``input_formats[0]``, so if the display format were not
+    first, editing a record would rewrite its date into a different format than
+    the one the picker produces. And the required wire formats go last, so they
+    are a fallback for parsing and never change what is displayed.
+
+    Duplicates are dropped, keeping the first occurrence, so a format that is
+    both the display format and a wire format stays at position 0.
     """
-    formats = [primary] + list(_setting(extra_setting, []))
+    formats = [primary] + list(_setting(extra_setting, [])) + list(required)
     seen = set()
     return [f for f in formats if not (f in seen or seen.add(f))]
 
 
-DATETIME_INPUT_FORMATS = _inputs(_DATETIME, 'QATRACK_EXTRA_DATETIME_INPUT_FORMATS')
-DATE_INPUT_FORMATS = _inputs(_DATE, 'QATRACK_EXTRA_DATE_INPUT_FORMATS')
-TIME_INPUT_FORMATS = _inputs(_TIME, 'QATRACK_EXTRA_TIME_INPUT_FORMATS')
+DATETIME_INPUT_FORMATS = _inputs(
+    _DATETIME, 'QATRACK_EXTRA_DATETIME_INPUT_FORMATS', _REQUIRED_DATETIME_INPUTS
+)
+DATE_INPUT_FORMATS = _inputs(_DATE, 'QATRACK_EXTRA_DATE_INPUT_FORMATS', _REQUIRED_DATE_INPUTS)
+TIME_INPUT_FORMATS = _inputs(_TIME, 'QATRACK_EXTRA_TIME_INPUT_FORMATS', _REQUIRED_TIME_INPUTS)
 
 # Server side rendering.
 DATETIME_FORMAT = dateformats.to_django(_DATETIME)
