@@ -215,3 +215,161 @@ class TestTreesDoNotCollapseCollectionsSharingAName(TestCase):
                 "a collection with two tests in one category appeared %d times in the "
                 "%s tree" % (len(hits), which)
             )
+
+
+class TestListingsAndTreesAtTheClient(TestCase):
+    """The narrowing, and the exemption from it, pinned through real requests.
+
+    nsmela's mutation check on this file found the gap: reverting `visible_utc`,
+    the two tree views, `ChooseUnit` and `UTCList.get_queryset` to their
+    narrowing-only form **together** still left 11 tests passing. Only
+    `PerformQA` and the tree deduplication were held by anything. So the
+    listings could silently go back to hiding every collection from a user in no
+    groups and this file would not have noticed.
+
+    Each test below asserts both directions, because only asserting that an
+    exempt user sees the collection would pass just as well if the narrowing
+    were removed altogether - which is the mistake this branch already made once
+    in `PerformQA`.
+    """
+
+    def setUp(self):
+        self.group = Group.objects.create(name="Physics")
+        self.other_group = Group.objects.create(name="Therapy")
+
+        # A test in a category, or the category tree - whose query joins
+        # through test membership - excludes the collection entirely.
+        category = utils.create_category(name="vis-cat", slug="vis-cat")
+        test_list = utils.create_test_list("visible listing list")
+        utils.create_test_list_membership(
+            test_list=test_list,
+            test=utils.create_test(name="vis-t1", category=category),
+        )
+        self.frequency = utils.create_frequency(name="vis-daily", slug="vis-daily")
+        self.utc = utils.create_unit_test_collection(
+            frequency=self.frequency, test_collection=test_list)
+        self.utc.visible_to.set([self.group])
+
+        self.perform = Permission.objects.get(codename="add_testlistinstance")
+        self.exemption = Permission.objects.get(codename="can_review_non_visible_tli")
+        self.completed = Permission.objects.get(codename="can_view_completed")
+
+    def make_user(self, username, groups=(), permissions=()):
+        u = User.objects.create_user(username, "%s@e.com" % username, "pw")
+        u.user_permissions.add(self.perform, *permissions)
+        for g in groups:
+            u.groups.add(g)
+        return User.objects.get(pk=u.pk)      # clear the permission cache
+
+    def login(self, username):
+        assert self.client.login(username=username, password="pw")
+
+    def body(self, url_name, **kwargs):
+        response = self.client.get(reverse(url_name, kwargs=kwargs) if kwargs else reverse(url_name))
+        assert response.status_code == 200, "%s gave %s" % (url_name, response.status_code)
+        return response.content.decode()
+
+    # -- the unit chooser and the two trees -------------------------------
+
+    def assert_listing_shows_for_exempt_and_hides_for_outsider(self, url_name, needle, **kwargs):
+        User.objects.create_superuser("su", "su@e.com", "pw")
+        self.login("su")
+        assert needle in self.body(url_name, **kwargs), \
+            "%s hid %r from a superuser in no groups" % (url_name, needle)
+        self.client.logout()
+
+        self.make_user("holder", permissions=[self.exemption])
+        self.login("holder")
+        assert needle in self.body(url_name, **kwargs), \
+            "%s hid %r from a permission holder" % (url_name, needle)
+        self.client.logout()
+
+        self.make_user("outsider", groups=[self.other_group])
+        self.login("outsider")
+        assert needle not in self.body(url_name, **kwargs), \
+            "%s showed %r to a user in the wrong group" % (url_name, needle)
+
+    def test_choose_unit(self):
+        self.assert_listing_shows_for_exempt_and_hides_for_outsider(
+            "choose_unit", self.utc.unit.name)
+
+    def test_qa_frequency_tree(self):
+        self.assert_listing_shows_for_exempt_and_hides_for_outsider(
+            "qa_frequency_tree", self.utc.unit.name)
+
+    def test_qa_category_tree(self):
+        self.assert_listing_shows_for_exempt_and_hides_for_outsider(
+            "qa_category_tree", self.utc.unit.name)
+
+    def test_qa_by_unit(self):
+        """The listing is fetched by the datatable, so the page alone proves nothing."""
+        User.objects.create_superuser("su", "su@e.com", "pw")
+        self.login("su")
+        response = self.client.get(
+            reverse("qa_by_unit", kwargs={"unit_number": self.utc.unit.number}),
+            {"format": "json"},
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        assert response.status_code == 200
+        assert str(self.utc.pk) in response.content.decode() or self.utc.name in response.content.decode(), \
+            "qa_by_unit hid the collection from a superuser in no groups"
+        self.client.logout()
+
+        self.make_user("outsider", groups=[self.other_group])
+        self.login("outsider")
+        response = self.client.get(
+            reverse("qa_by_unit", kwargs={"unit_number": self.utc.unit.number}),
+            {"format": "json"},
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        assert response.status_code == 200
+        assert self.utc.name not in response.content.decode(), \
+            "qa_by_unit showed another group's collection to an outsider"
+
+    # -- the template filter ---------------------------------------------
+
+    def test_visible_utc_filter(self):
+        """Used by the service event page to decide whether to offer a Perform link."""
+        from qatrack.qa.views.perform import PerformQA
+
+        su = User.objects.create_superuser("su2", "su2@e.com", "pw")
+        assert PerformQA.visible_utc(su, self.utc) is True
+
+        holder = self.make_user("holder2", permissions=[self.exemption])
+        assert PerformQA.visible_utc(holder, self.utc) is True
+
+        insider = self.make_user("insider2", groups=[self.group])
+        assert PerformQA.visible_utc(insider, self.utc) is True
+
+        outsider = self.make_user("outsider2", groups=[self.other_group])
+        assert PerformQA.visible_utc(outsider, self.utc) is False
+
+        groupless = self.make_user("groupless2")
+        assert PerformQA.visible_utc(groupless, self.utc) is False
+
+    # -- "your" views keep narrowing -------------------------------------
+
+    def test_review_your_all_still_narrows_for_a_permission_holder(self):
+        """`review_your_all` means the user's own groups, exemption or not.
+
+        `UTCYourReview` inherits `UTCList.get_queryset`, so making the exemption
+        global would have made this page show every group's data - identical to
+        `UTCReview` beside it in the menu, and no longer "yours". It opts out
+        with `honour_visibility_exemption = False`.
+        """
+        from qatrack.qa.views.base import UTCList
+        from qatrack.qa.views.review import UTCYourReview
+
+        assert UTCList.honour_visibility_exemption is True
+        assert UTCYourReview.honour_visibility_exemption is False
+
+        self.make_user("reviewer", permissions=[self.exemption, self.completed])
+        self.login("reviewer")
+        response = self.client.get(
+            reverse("review_your_all"),
+            {"format": "json"},
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        assert response.status_code == 200
+        assert self.utc.name not in response.content.decode(), \
+            "review_your_all showed a collection from a group the user is not in"

@@ -52,7 +52,7 @@ from qatrack.units.models import Site, Unit
 
 from .. import models, signals, utils
 from . import forms
-from .base import BaseEditTestListInstance, TestListInstances, UTCList, logger
+from .base import BaseEditTestListInstance, TestListInstances, UTCList, VisibilityExemptionMixin, logger
 
 pd.plotting.register_matplotlib_converters()  # required so matplotlib can convert dates correctly
 
@@ -888,7 +888,7 @@ class CompositeCalculation(JSONResponseMixin, View):
         return self.render_json_response(result)
 
 
-class ChooseUnit(TemplateView):
+class ChooseUnit(VisibilityExemptionMixin, TemplateView):
     """View for selecting a unit to perform QC on"""
 
     template_name = 'units/unittype_list.html'
@@ -908,7 +908,7 @@ class ChooseUnit(TemplateView):
 
         context = super().get_context_data(*args, **kwargs)
 
-        groups = models.visible_groups_for(self.request.user)
+        groups = self.visible_groups()
         q = models.UnitTestCollection.objects.by_visibility(groups)
 
         if self.active_only:
