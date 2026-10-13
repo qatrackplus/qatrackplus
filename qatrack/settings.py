@@ -859,7 +859,7 @@ if use_docker:
     override_from_env("USE_I18N", converter=env_bool)
     override_from_env("LANGUAGE_CODE")
 
-    # Hard-coded roots to conform with Dockerfile and conpose file
+    # Hard-coded roots to conform with Dockerfile and compose file
     MEDIA_ROOT = "/app_data/media"
     STATIC_ROOT = "/app_data/static"
 
@@ -968,7 +968,7 @@ if use_docker:
         AD_LU_ACCOUNT_NAME,
         AD_LU_MEMBER_OF,
     ]
-    # Or, if user specifies directly AD_SEARCH_FIELDS, weoverride its value below
+    # Or, if user specifies directly AD_SEARCH_FIELDS, we override its value below
     override_from_env("AD_SEARCH_FIELDS", converter=env_csv)
 
     override_from_env("AD_SEARCH_DN")

@@ -1,3 +1,9 @@
+# This file is meant to override compose.yaml for development/debuging purposes.
+#
+# To use it, call `just compose` with QATDEV=1 in `.env`, or equivalently:
+#   - call `docker compose -f compose.yaml -f compose.dev.yaml`
+#   - set COMPOSE_FILE=compose.yaml:compose.dev.yaml and call `docker compose`
+
 services:
 
   # Note: when running on linux and bind-mounting the qatrack source code
