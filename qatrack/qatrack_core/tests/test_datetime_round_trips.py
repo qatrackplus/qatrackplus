@@ -120,7 +120,7 @@ class DateTimeRoundTrip(TestCase):
                 reset_format_cache()
                 for lang, _name in LANGUAGES:
                     with override(lang):
-                        page = self.client.get("/accounts/login/", HTTP_ACCEPT_LANGUAGE=lang)
+                        page = self.client.get("/accounts/login/", headers={"accept-language": lang})
                         yield "%s / %s" % (dt_fmt or "default", lang), picker.site_config(page.content.decode())
 
 
@@ -189,7 +189,7 @@ class TestServerToBrowser(DateTimeRoundTrip):
         for label, config in self.configurations():
             lang = label.split(" / ")[1]
             meta = self.client.get(reverse("autosave_load"), {"autosave_id": auto.pk},
-                                   HTTP_ACCEPT_LANGUAGE=lang).json()["meta"]
+                                   headers={"accept-language": lang}).json()["meta"]
             assert picker.read_flatpickr(meta["work_started"], config["FLATPICKR_DATETIME_FMT"]) == WHEN, label
 
     def test_defaults_from_a_calculation_procedure(self):
@@ -225,7 +225,7 @@ class TestServerToBrowser(DateTimeRoundTrip):
         for label, config in self.configurations():
             lang = label.split(" / ")[1]
             data = self.client.get(reverse("get_unit_available_time_data"),
-                                   HTTP_ACCEPT_LANGUAGE=lang).json()["unit_available_time_data"][str(unit.pk)]
+                                   headers={"accept-language": lang}).json()["unit_available_time_data"][str(unit.pk)]
             fmt = config["MOMENT_DATE_FMT"]
             assert picker.read_moment(data["date_acceptance"], fmt).date() == OTHER_DAY, label
             assert [picker.read_moment(k, fmt).date() for k in data["available_time_edits"]] == [DAY], label
