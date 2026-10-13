@@ -58,8 +58,34 @@ Other Changes
   configuration documentation.
 
   Every date format QATrack+ uses is now derived from those two settings, which is what
-  makes the fix above possible. Dates typed in other formats are still accepted, and
-  the JSON API's format is unchanged.
+  makes the fix above possible. The JSON API's format is unchanged.
+
+  .. warning::
+
+      **Breaking, for French and Spanish sites: ``03/05/2026`` is no longer accepted
+      when typing a date.**
+
+      4.0.1 gave each language its own list of formats it would *accept*, not just
+      display. French accepted ``%d/%m/%Y``, and Spanish had no QATrack+ list at all so
+      it fell through to Django's, which accepts it too. Both are gone: every language
+      now accepts the display format plus
+      ``QATRACK_EXTRA_DATE_INPUT_FORMATS``, which ships as ``%d %b %Y`` only.
+
+      A user typing ``03/05/2026`` gets a validation error rather than a wrong date, so
+      nothing is saved incorrectly - but on a French or Spanish site it is a habit that
+      stops working. To accept it again:
+
+      .. code-block:: python
+
+          QATRACK_EXTRA_DATE_INPUT_FORMATS = ["%d %b %Y", "%d/%m/%Y"]
+          QATRACK_EXTRA_DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d/%m/%Y %H:%M"]
+
+      **It is deliberately not shipped as a default, and the reason is worth reading
+      before you add it.** ``%d/%m/%Y`` and ``%m/%d/%Y`` cannot be told apart for the
+      first twelve days of any month: ``03/05/2026`` is 3 May under one and 5 March
+      under the other. Accepting one of them everywhere would silently reinterpret dates
+      typed by someone used to the other, and silently is the whole problem this release
+      is fixing. Add it where you know which convention your users type in.
 
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
