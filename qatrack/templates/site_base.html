@@ -39,14 +39,24 @@
             CSRF_COOKIE_NAME: '{{ CSRF_COOKIE_NAME }}',
             PING_INTERVAL_S: {{ PING_INTERVAL_S }},
 
-            MOMENT_DATE_DATA_FMT: '{{ MOMENT_DATE_DATA_FMT }}',
-            MOMENT_DATE_FMT: '{{ MOMENT_DATE_FMT }}',
-            MOMENT_DATETIME_FMT: '{{ MOMENT_DATETIME_FMT }}',
-            FLATPICKR_DATE_FMT: '{{ FLATPICKR_DATE_FMT }}',
-            FLATPICKR_DATETIME_FMT: '{{ FLATPICKR_DATETIME_FMT }}',
-            DATERANGEPICKER_DATE_FMT: '{{ DATERANGEPICKER_DATE_FMT }}',
+{% comment %}
+            escapejs, not autoescaping: these are JavaScript string literals, and
+            autoescaping only escapes for HTML. A format containing a literal
+            alphabetic character carries a backslash - "%H h %M" becomes flatpickr's
+            "H\hi" - and JavaScript drops the backslash of an unrecognised escape, so
+            the browser would receive "Hhi" and read the literal "h" as the 12-hour
+            token. The picker then writes a value the server cannot parse, and nothing
+            raises.
 
-            CSRF_COOKIE_NAME: '{{ CSRF_COOKIE_NAME }}'
+            {% templatetag openvariable %} comment syntax is single-line only, so this
+            is a comment tag: a multi-line one is emitted verbatim into the script.
+{% endcomment %}
+            MOMENT_DATE_DATA_FMT: '{{ MOMENT_DATE_DATA_FMT|escapejs }}',
+            MOMENT_DATE_FMT: '{{ MOMENT_DATE_FMT|escapejs }}',
+            MOMENT_DATETIME_FMT: '{{ MOMENT_DATETIME_FMT|escapejs }}',
+            FLATPICKR_DATE_FMT: '{{ FLATPICKR_DATE_FMT|escapejs }}',
+            FLATPICKR_DATETIME_FMT: '{{ FLATPICKR_DATETIME_FMT|escapejs }}',
+            DATERANGEPICKER_DATE_FMT: '{{ DATERANGEPICKER_DATE_FMT|escapejs }}'
         };
 
         var QAURLs = {
