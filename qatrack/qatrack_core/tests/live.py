@@ -149,6 +149,16 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @classmethod
     def setUpClass(cls):
+        # Selenium Manager reports usage to plausible.io on every invocation
+        # ("Sending stats to Plausible" in its logs), which means an outbound
+        # call each time it resolves a driver. QATrack+ is deployed inside
+        # hospital networks where traffic leaving a test run is a compliance
+        # question rather than a preference, and the person running the suite
+        # is not usually the person who would have to account for it - so it
+        # is off unless someone turns it back on. `setdefault`, not assignment,
+        # so SE_AVOID_STATS=false in the environment still wins.
+        os.environ.setdefault('SE_AVOID_STATS', 'true')
+
         use_virtual_display = getattr(settings, 'SELENIUM_VIRTUAL_DISPLAY', False)
         browser_setting = getattr(settings, 'SELENIUM_BROWSER', 'firefox')
 
@@ -187,6 +197,10 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
             chromium_driver_path = getattr(settings, 'SELENIUM_CHROMIUM_DRIVER_PATH', '')
             chrome_options = ChromeOptions()
+            # Enables the WebDriver BiDi session that set_browser_timezone()
+            # needs. Selenium opens a classic WebDriver session otherwise and
+            # the emulation commands are simply absent.
+            chrome_options.web_socket_url = True
             if use_virtual_display:
                 chrome_options.add_argument('--headless')
                 chrome_options.add_argument('--no-sandbox')
@@ -202,6 +216,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             from selenium.webdriver.firefox.service import Service as FirefoxService
 
             ff_options = FirefoxOptions()
+            ff_options.web_socket_url = True
             if use_virtual_display:
                 ff_options.add_argument('--headless')
             else:
@@ -215,6 +230,8 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 service = FirefoxService(executable_path=shutil.which('geckodriver'))
                 
             cls.driver = webdriver.Firefox(service=service, options=ff_options)
+
+        cls.set_browser_timezone()
 
         orig_find_element = cls.driver.find_element
 
@@ -233,6 +250,50 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
         cls.wait = WebDriverWait(cls.driver, 2)
 
         super().setUpClass()
+
+    @classmethod
+    def set_browser_timezone(cls):
+        """Put the browser's clock in settings.TIME_ZONE, and say so if it fails.
+
+        The assertions in this suite compare against
+        `timezone.localtime(timezone.now())` on the server, while the values
+        under test come from the browser - a date picker's idea of today, the
+        recurrence widget's `date_today()`. When the two clocks disagree the
+        tests fail for the hours that fall on different sides of midnight in one
+        zone but not the other, every night, and the failure looks like a flake.
+
+        `TZ` in the driver's environment does not achieve this. On POSIX Django
+        has already set it, so passing it changes nothing; on Windows neither
+        browser reads it at all - measured, both reported the OS zone while the
+        harness passed another. This is the mechanism that works:
+        `emulation.setTimezoneOverride` is a WebDriver BiDi command implemented
+        browser-side, so it does not depend on the platform's environment
+        handling. Verified against both browsers.
+
+        Both browsers reject the command unless a context is named, so the
+        window handle is passed explicitly rather than relying on a default.
+
+        A failure here is not fatal. It is reported, and
+        test_browser_timezone_matches_server exists to fail with the two zones
+        named - which is more use than an error in setUpClass that takes the
+        whole class down and says nothing about why.
+        """
+        try:
+            cls.driver.emulation.set_timezone_override(
+                timezone=settings.TIME_ZONE,
+                contexts=[cls.driver.current_window_handle],
+            )
+        except Exception as exc:
+            # Deliberately broad: an unsupported command, a browser without a
+            # BiDi session and a transport error all reach here, and none of
+            # them should stop the suite running.
+            warnings.warn(
+                "could not set the browser's time zone to %s (%s: %s). "
+                "Date-dependent tests will fail for the hours where the "
+                "browser's zone and the server's are on different dates."
+                % (settings.TIME_ZONE, type(exc).__name__, exc),
+                stacklevel=2,
+            )
 
     @classmethod
     def maximize(cls):
