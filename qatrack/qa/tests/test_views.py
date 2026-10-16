@@ -590,6 +590,27 @@ class TestComposite(TestCase):
         }
         self.assertDictEqual(values, expected)
 
+    def test_composite_comment_converts_exceptions_to_strings(self):
+        self.tc.calculation_procedure = "UTILS.set_comment(ValueError('bad value'))\nresult = test1 + test2"
+        self.tc.save()
+
+        data = {
+            'tests': {
+                "testc": "",
+                "test1": 1,
+                "test2": 2,
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+        }
+        request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+        request.user = self.user
+        response = self.view(request)
+        values = json.loads(response.content.decode("UTF-8"))
+
+        self.assertEqual(values['results']['testc']['comment'], 'bad value')
+
     @override_settings(CONSTANT_PRECISION=2)
     def test_date_composite(self):
 

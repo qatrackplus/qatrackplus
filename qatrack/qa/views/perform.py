@@ -114,7 +114,7 @@ class CompositeUtils:
         self.changed_skips = {}
 
     def set_comment(self, comment):
-        self.context["__comment__"] = comment
+        self.context["__comment__"] = str(comment)
 
     def get_comment(self, slug):
         return self.comments.get(slug, "")
