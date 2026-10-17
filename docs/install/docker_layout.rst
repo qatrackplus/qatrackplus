@@ -94,7 +94,7 @@ environment variable in ``.env``.
                     |             |             |             |
                     v             v             v             v
                  django       django-q        nginx         backup
-                                              (ro)           (ro)
+                                              (ro)               
                                   /app_data/media
 
 
