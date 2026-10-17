@@ -9,8 +9,8 @@ Configuring QATrack+ when deployed under Docker is possible by setting environme
 variables. The values of the variables are set from the ``.env`` file, which you
 must create, as it is not stored in the repository.
 
-Copy ``.env.example`` to ``.env``. This step is applicable to both production and
-development setups.
+From the ``deploy/docker/`` directory, copy ``.env.example`` to ``.env``. This step is
+applicable to both production and development setups.
 
 .. code-block:: console
 
