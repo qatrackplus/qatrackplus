@@ -275,7 +275,7 @@ jobs:
             rm -f /backups/db_*.dump /backups/media_*.tar.gz 2>/dev/null || true
 
             # Run the backup exactly as the nightly cron job does.
-            bash /backup.sh
+            /usr/local/bin/backup
 
             dump=$(ls -1t /backups/db_*.dump 2>/dev/null | head -1 || true)
             [ -n "$dump" ] || { echo "FAIL: no db dump produced"; exit 1; }
