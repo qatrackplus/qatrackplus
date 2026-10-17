@@ -2,7 +2,7 @@ name: qatrackplus
 
 services:
   nginx:
-    image: qatrackplus-nginx${DOCKER_TAG}
+    image: qatrackplus-nginx:prod
     build:
       context: ./nginx
     hostname: qat-nginx
@@ -35,7 +35,7 @@ services:
       start_period: 5s
 
   django:
-    image: qatrackplus-django${DOCKER_TAG}
+    image: qatrackplus-django:prod
     hostname: qat-django
     shm_size: 256m  # increased from the default 64m for chromium HTML-to-PDF conversion
     logging:
@@ -68,7 +68,7 @@ services:
       start_period: 30s
 
   django-q:
-    image: qatrackplus-django${DOCKER_TAG}
+    image: qatrackplus-django:prod
     hostname: qat-django-q
     shm_size: 256m  # increased from the default 64m for chromium HTML-to-PDF conversion
     logging:
@@ -89,8 +89,9 @@ services:
       django:
         condition: service_healthy
     volumes:
-    - ${MEDIA_DIR:-media-volume}:/app_data/media:z
-    - ${USER_DATA_DIR:-user-data-volume}:/user_data:ro
+      - ${MEDIA_DIR:-media-volume}:/app_data/media:z
+      - static-volume:/app_data/static:ro,z
+      - ${USER_DATA_DIR:-user-data-volume}:/user_data:ro
     healthcheck:
       # Check that the qcluster process exists and that DB access is working
       test:
@@ -139,7 +140,7 @@ services:
         condition: service_healthy
     volumes:
       - ${BACKUPS_DIR:-backups-volume}:/backups
-      - ${MEDIA_DIR:-media-volume}:/app_data/media:ro,z
+      - ${MEDIA_DIR:-media-volume}:/app_data/media:z
     healthcheck:
       # Test that cron is still running and that the backup dir/volume is writable
       test:

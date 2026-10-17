@@ -15,6 +15,7 @@ services:
   # same UID/GID.
 
   nginx:
+    image: qatrackplus-nginx:dev
     build:
       args:
         HOST_UID: ${HOST_UID:-999}
@@ -25,6 +26,7 @@ services:
       DEV: "true"
 
   django:
+    image: qatrackplus-django:dev
     build:
       args:
         UV_NO_DEV: 0  # do install dev dependencies for local development
@@ -37,6 +39,7 @@ services:
       - ../../.:/app  # bind mount source code in container
 
   django-q:
+    image: qatrackplus-django:dev
     environment:
       DEBUG: "true"
       DEBUG_TOOLBAR: "true"
