@@ -33,7 +33,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      # Before gunicorn starts, the entrypoint creates the cache table, runs
+      # every migration and collects static files. On a first install or an
+      # upgrade that can take several minutes. Failed checks during
+      # start_period don't count, so this only stops `docker compose up`
+      # giving up on django (and never starting nginx) too early; a normal
+      # start is still marked healthy at the first passing check.
+      start_period: 600s
 
   postgres:
     image: postgres:15-alpine
