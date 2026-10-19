@@ -14,8 +14,13 @@ deploy/docker/user-data
 deploy/docker/user-requirements/requirements.txt
 deployLocal.py
 
-# Same as above for local .env for docker deployment, should not be commited to repo
-deploy/docker/.env
+# Environment files hold passwords and site settings and must never be committed.
+# Only the documented templates are tracked.
+.env
+.env.*
+*.env
+!.env.example
+!*.env.example
 
 # Local resources
 /qatrack*.conf
