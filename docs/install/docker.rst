@@ -203,6 +203,24 @@ the following:
     git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
 
+.. _docker_line_endings:
+
+.. note::
+
+    Files under ``deploy/docker`` run inside Linux containers and must have LF line
+    endings. Git checks them out that way on every platform. A clone made before
+    QATrack+ 4.0.2 on Windows may still have CRLF copies. To check them out again,
+    run the following from the ``qatrackplus`` folder. It replaces the tracked files
+    under ``deploy/docker`` with fresh copies, so the first and last lines keep your
+    ``.env``:
+
+    .. code-block:: console
+
+        cp deploy/docker/.env ../qatrack-env.bak
+        git rm -r --cached -q deploy/docker
+        git checkout HEAD -- deploy/docker
+        cp ../qatrack-env.bak deploy/docker/.env
+
 
 Installation
 ~~~~~~~~~~~~

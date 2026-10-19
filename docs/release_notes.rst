@@ -15,6 +15,35 @@ Release Notes
 QATrack+ 4.0
 ~~~~~~~~~~~~~
 
+4.0.2
+------
+
+Deployment and Upgrade Notes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Docker images no longer contain your ``.env`` file, local settings or site data.**
+  The ``.dockerignore`` patterns only matched files at the top of the repository, so
+  the image copied in ``deploy/docker/.env`` (which holds the database password), and
+  anything else present in the checkout when it was built: a generated
+  ``deploy/docker/user-data/secret_key.txt``, database dumps under
+  ``deploy/docker/backups/``, uploaded files under ``qatrack/media/uploads/`` and
+  ``qatrack/local_*.py`` settings files. The image now receives only the files it
+  needs to run. If you have copied a QATrack+ image to a registry or another machine,
+  rebuild it with ``docker compose build`` and remove the old one.
+
+* **Database dumps written by the Docker backup service are ignored by git.**
+  ``deploy/docker/backups/`` was not in ``.gitignore``, so ``git status`` listed every
+  nightly dump and ``git add -A`` would have committed them. Environment files
+  (``.env``, ``*.env``, ``.env.*``) are now ignored as well, except the
+  ``.env.example`` templates. ``deploy/docker/.env`` itself is still tracked, so
+  nothing changes for an existing installation.
+
+* **Files under ``deploy/docker`` always check out with LF line endings**, including
+  on Windows with ``core.autocrlf=true``. A Dockerfile or script with CRLF endings
+  fails inside the container. An existing checkout keeps its current line endings
+  until the files are checked out again; see
+  :ref:`checking out deploy/docker again <docker_line_endings>`.
+
 4.0.1
 ------
 
