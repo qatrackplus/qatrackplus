@@ -1,0 +1,67 @@
+# Throwaway database servers for running the QATrack+ test suite against a
+# real engine. LOCAL DEVELOPMENT ONLY.
+#
+# These are not a deployment. The credentials are committed in plain text
+# on purpose, because nothing here is meant to hold anything - every
+# service is ephemeral, has no volume, and loses its contents when the
+# container stops. Do not copy this pattern into deploy/docker/, which is
+# the production compose and is a different thing entirely.
+#
+#     cp .env.test-databases.example .env
+#     docker compose -f compose.test-databases.yaml up -d --wait
+#
+# --wait matters: SQL Server takes the better part of a minute to accept
+# connections, and without a healthcheck the command returns while it is
+# still starting.
+#
+# Nothing is hard-coded. Ports and image versions come from .env so that
+# several versions of the same engine can run side by side, and so that a
+# port already taken by a locally installed server can be moved without
+# editing this file. The per-engine settings templates read the same
+# variables, so the published port and the Django setting cannot disagree.
+
+services:
+
+  postgres:
+    image: postgres:${QATRACK_TEST_POSTGRES_VERSION:-16}
+    environment:
+      POSTGRES_USER: ${QATRACK_TEST_POSTGRES_USER:-qatrack}
+      POSTGRES_PASSWORD: ${QATRACK_TEST_POSTGRES_PASSWORD:-qatrack-test-only}
+      POSTGRES_DB: postgres
+    ports:
+      - "${QATRACK_TEST_POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${QATRACK_TEST_POSTGRES_USER:-qatrack}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  mysql:
+    image: mysql:${QATRACK_TEST_MYSQL_VERSION:-8.0}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${QATRACK_TEST_MYSQL_PASSWORD:-qatrack-test-only}
+    ports:
+      - "${QATRACK_TEST_MYSQL_PORT:-3306}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${QATRACK_TEST_MYSQL_PASSWORD:-qatrack-test-only}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    tmpfs:
+      - /var/lib/mysql
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:${QATRACK_TEST_MSSQL_VERSION:-2022-latest}
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${QATRACK_TEST_MSSQL_PASSWORD:-QATrack-test-only-1}
+    ports:
+      - "${QATRACK_TEST_MSSQL_PORT:-1433}:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'select 1' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
