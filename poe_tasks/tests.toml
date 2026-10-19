@@ -10,6 +10,77 @@
 help = "Run the suite (GUI/Selenium tests skipped by default - pass --run-selenium to include them)"
 cmd = "pytest"
 
+# `test-order` is the local half of
+# `.github/workflows/order-independence.yml`, and `poe help` is the only place
+# it is written down. That is deliberate: a check that exists only as a
+# workflow file is a check nobody runs before pushing, and this one is meant to
+# be run by a person who has decided a change deserves it. The workflow's
+# header holds the policy - as preparation for any release, when a new app or a
+# significant database change arrives, and when a database driver or a maths
+# library moves version significantly.
+#
+# `-p randomly` is passed here rather than enabled for every run. `poe test`
+# has to stay deterministic: a failure you cannot reproduce from the command
+# that produced it is worse than no failure at all. pytest-randomly prints the
+# seed it chose at the top of its output, and replaying that seed replays the
+# order exactly, which is what makes a failure here actionable.
+#
+# What it catches is tests that depend on each other - state left in a module,
+# a class attribute mutated, an id that is 1 only because nothing ran first. It
+# does not catch a test that depends on the order a *database* returns rows in;
+# that is a property of the query, and the fix is an explicit `order_by`.
+#
+# Known: the suite does not pass shuffled yet. Measured 2026-10-19, seeds 1 and
+# 2 each give 15 failures. So expect red, and read the failures rather than the
+# count.
+
+[[tasks.test-order.args]]
+name = "seed"
+positional = true
+required = false
+help = "A seed printed by an earlier run, to replay that exact order"
+
+
+[tasks.test-order]
+help = "Run the suite in a shuffled order, to catch tests that depend on each other"
+interpreter = "python"
+shell = """
+import importlib.util
+import os
+import subprocess
+import sys
+
+# poe passes a declared arg to a `shell` task through the environment, and
+# `${seed}` is not substituted inside a python body - see `test-engine`.
+seed = os.environ.get('seed') or ''
+
+if importlib.util.find_spec('pytest_randomly') is None:
+    # The dev-group entry for pytest-randomly arrives with the
+    # order-independence work, so `uv sync --group dev` only answers this once
+    # that branch is in the tree. The one-off command works either way.
+    print('pytest-randomly is not installed in this environment.')
+    print()
+    print('If the order-independence branch is in your tree:')
+    print()
+    print('    uv sync --group dev')
+    print()
+    print('Otherwise, for a one-off run without installing it:')
+    print()
+    print('    uv run --with pytest-randomly pytest -m \"not selenium\" -p randomly')
+    sys.exit(1)
+
+argv = [sys.executable, '-m', 'pytest', '-m', 'not selenium', '-p', 'randomly']
+if seed:
+    argv.append('--randomly-seed=%s' % seed)
+    print('Replaying seed %s.' % seed)
+else:
+    print('New shuffle. pytest-randomly prints the seed it chose below; pass it')
+    print('back as `poe test-order <seed>` to run the same order again.')
+print()
+
+sys.exit(subprocess.call(argv))
+"""
+
 
 [[tasks.test-engine.args]]
 name = "engine"
