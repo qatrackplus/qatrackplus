@@ -14,9 +14,12 @@ Installing & Deploying QATrack+ with Docker
 Prerequisites by OS
 -------------------
 
-This has been tested under two setups, Ubuntu 18.04, or Windows 10.  Depending
-on which system you are using there are different ways to install the required
-dependencies. Follow the section that applies to your specific machine.
+Docker installations are supported on Ubuntu 24.04 LTS, and the instructions
+have also been tested on Ubuntu 22.04 LTS, the same releases as the
+:ref:`Linux installation guide <linux_install_40>`. The Windows 10 section below
+predates QATrack+ 4.0. Depending on which system you are using there are
+different ways to install the required dependencies. Follow the section that
+applies to your specific machine.
 
 Windows 10 Professional or Enterprise with Hyper-V
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,11 +113,11 @@ files.
 
 Docker for Windows does not support network drives.
 
-Ubuntu
-~~~~~~
+Ubuntu 24.04 LTS
+~~~~~~~~~~~~~~~~
 
-If your PC is running Ubuntu follow these steps to install the required
-prerequisites.
+If your server runs Ubuntu 24.04 LTS (or 22.04 LTS), follow these steps to
+install the required prerequisites.
 
 Docker Engine and Docker Compose
 ................................

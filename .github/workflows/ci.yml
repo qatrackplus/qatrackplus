@@ -215,7 +215,7 @@ jobs:
 
   docker-check:
     name: Docker Build & Run Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint, requirements]
     
     steps:
@@ -338,7 +338,7 @@ jobs:
         run: docker compose down -v
   docker-upgrade:
     name: Docker Upgrade from 4.0.1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint, requirements]
 
     steps:
@@ -443,7 +443,7 @@ jobs:
 
   docker-dev:
     name: Docker Development Overlay
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint, requirements]
 
     steps:
