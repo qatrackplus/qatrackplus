@@ -3,7 +3,7 @@
 #
 # Run from anywhere inside the repository:
 #
-#     bash deploy/docker/check-build-context.sh
+#     bash .github/scripts/check-docker-build-context.sh
 #
 # Needs git and docker with BuildKit. It pulls no images: the build is
 # `FROM scratch`, copying the build context out to a temporary folder so the
@@ -62,7 +62,7 @@ for f in "${decoys[@]}"; do
             mkdir -p "$d"
             created_dirs+=("$d")
         fi
-        echo "decoy created by check-build-context.sh" > "$f"
+        echo "decoy created by check-docker-build-context.sh" > "$f"
         created+=("$f")
     fi
 done
