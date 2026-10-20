@@ -6,7 +6,7 @@
 # database dumps, uploaded files, local settings - stays out of the image.
 #
 # If the image needs a new path, add it below *and* to the "present" list in
-# deploy/docker/check-build-context.sh, which CI runs to check this file.
+# .github/scripts/check-docker-build-context.sh, which CI runs to check this file.
 **
 
 !pyproject.toml
