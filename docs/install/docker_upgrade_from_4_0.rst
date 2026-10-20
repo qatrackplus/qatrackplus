@@ -27,6 +27,31 @@ patches is in the next section.
 
 .. include:: _upgrade_4_0_before.rst
 
+.. _docker_upgrade_env_untracked:
+
+Upgrading from 4.0.0 or 4.0.1: keep your ``.env``
+-------------------------------------------------
+
+From 4.0.2, ``deploy/docker/.env`` is no longer part of the QATrack+ repository,
+because it holds your database password. Your copy has your own settings in it, so
+on this one upgrade ``git pull`` stops with *Your local changes to the following
+files would be overwritten*. Before the first pull to 4.0.2 or later, set your
+``.env`` aside and put it back afterwards:
+
+.. code-block:: bash
+
+    cd ~/web/qatrackplus
+    cp deploy/docker/.env ../qatrack.env.backup
+    git checkout -- deploy/docker/.env
+    git pull
+    cp ../qatrack.env.backup deploy/docker/.env
+
+Your ``.env`` is now ignored by git, and later pulls leave it alone. Compare it
+with ``deploy/docker/.env.example``, which lists every setting you can now make
+there: in particular set ``ALLOWED_HOSTS`` to the names people use to reach
+QATrack+. Keep ``qatrack.env.backup`` somewhere safe, or delete it: it holds your
+database password.
+
 Running the upgrade
 -------------------
 

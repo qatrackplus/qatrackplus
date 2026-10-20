@@ -226,6 +226,32 @@ To run any `docker compose` commands you need to be within the
 
     cd deploy\docker
 
+.. _docker_configuration:
+
+Configuring QATrack+
+....................
+
+All of QATrack+'s Docker settings live in a file called ``.env`` in this
+directory. It holds your passwords, so it is never part of the QATrack+
+repository: create it from the documented template, then edit it.
+
+.. code-block:: console
+
+    cp .env.example .env
+
+At minimum, set:
+
+* ``POSTGRES_USER`` and ``POSTGRES_PASSWORD``, before the first start. The
+  database is created with them.
+* ``ALLOWED_HOSTS``, the host names or IP addresses people use to reach
+  QATrack+, comma-separated.
+
+Everything else is optional and documented in ``.env.example``: email, time
+zone, HTTPS, Active Directory / LDAP sign-in, and the QC display options. Leave
+a setting commented out to keep its default. ``SECRET_KEY`` is generated and
+kept for you if you do not set one. After changing ``.env``, apply it with
+``docker compose up -d``.
+
 To build and start the server run the following:
 
 .. code-block:: console

@@ -116,6 +116,11 @@ docker = [
     "gunicorn>=21.2.0",
 ]
 
+# LDAP / Active Directory sign-in; included in the Docker image
+ldap = [
+    "python-ldap",
+]
+
 translations = [
     "polib>=1.2.0",
     "googletrans==4.0.0rc1",

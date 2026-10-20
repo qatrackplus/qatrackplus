@@ -1,8 +1,11 @@
 # Builder stage: install the locked dependencies into /opt/venv
 FROM python:3.12-slim-bookworm AS builder
 
+# libldap2-dev and libsasl2-dev: python-ldap builds from source on Linux
 RUN apt-get update && apt-get install -y \
     build-essential \
+    libldap2-dev \
+    libsasl2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /usr/local/bin/uv
@@ -18,7 +21,7 @@ WORKDIR /usr/src/qatrackplus
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-install-project --extra docker --extra postgres
+    uv sync --frozen --no-dev --no-install-project --extra docker --extra postgres --extra ldap
 
 # Runtime stage
 FROM python:3.12-slim-bookworm
@@ -30,6 +33,8 @@ RUN apt-get update && apt-get install -y \
     libpq5 \
     curl \
     dos2unix \
+    libldap-2.5-0 \
+    libsasl2-2 \
     && rm -rf /var/lib/apt/lists/*
 
 # QATrack+ runs as this unprivileged user. The nginx and backup images use the

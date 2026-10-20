@@ -284,6 +284,21 @@ jobs:
           echo "django server process uid: $uid"
           [ "$uid" = 1000 ]
 
+      - name: Verify LDAP support and that the secret key survives recreation
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          dc="docker compose -f compose.yaml"
+          $dc exec -T django python -c "import ldap; print('python-ldap', ldap.__version__)"
+          # .env.example sets no SECRET_KEY, so one was generated into the
+          # user-data volume. Recreating the container must keep it.
+          key_file=deploy/docker/user-data/secret_key.txt
+          before=$($dc exec -T django sha256sum "$key_file")
+          $dc up -d --force-recreate --wait --wait-timeout 300 django
+          after=$($dc exec -T django sha256sum "$key_file")
+          [ "$before" = "$after" ] || { echo "FAIL: secret key changed when django was recreated"; exit 1; }
+          echo "PASS: secret key kept across recreation"
+
       - name: Verify backup produces a valid dump
         working-directory: deploy/docker
         run: |
@@ -332,6 +347,29 @@ jobs:
         run: |
           git fetch --no-tags --depth 1 https://github.com/qatrackplus/qatrackplus.git refs/tags/v4.0.1:refs/tags/v4.0.1
           git worktree add ../base v4.0.1
+
+      - name: Documented git steps keep a site's .env (docker_upgrade_from_4_0.rst)
+        # 4.0.1 tracks deploy/docker/.env and every site has edited it. Follow
+        # the documented commands, with `git checkout` of this commit standing
+        # in for `git pull`.
+        run: |
+          set -euo pipefail
+          site=$(mktemp -d)/qatrackplus
+          git worktree add -q --detach "$site" v4.0.1
+          cd "$site"
+          echo "POSTGRES_PASSWORD=site-secret" >> deploy/docker/.env
+          # Without the steps, git refuses, as the docs say.
+          if git checkout -q "$GITHUB_SHA" 2>/dev/null; then
+            echo "FAIL: expected git to refuse while .env has local edits"; exit 1
+          fi
+          cp deploy/docker/.env ../qatrack.env.backup
+          git checkout -- deploy/docker/.env
+          git checkout -q "$GITHUB_SHA"
+          cp ../qatrack.env.backup deploy/docker/.env
+          grep -qx "POSTGRES_PASSWORD=site-secret" deploy/docker/.env
+          [ -z "$(git ls-files deploy/docker/.env)" ] || { echo "FAIL: .env still tracked"; exit 1; }
+          [ -z "$(git status --porcelain)" ] || { git status; echo "FAIL: .env not ignored"; exit 1; }
+          echo "PASS: site .env kept, untracked and ignored"
 
       - name: Start a 4.0.1 site
         working-directory: ../base/deploy/docker

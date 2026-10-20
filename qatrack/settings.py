@@ -727,44 +727,9 @@ for path in chrome_paths:
 
 use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', 'yes', 'on'}
 if use_docker:
-    ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
-
-    _csrf_trusted_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '').strip()
-    if _csrf_trusted_env:
-        CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted_env.split(',') if o.strip()]
-    else:
-        CSRF_TRUSTED_ORIGINS = [
-            scheme + host
-            for host in ALLOWED_HOSTS
-            for scheme in ('http://', 'https://')
-            if host != '*'
-        ]
-    
-    SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
-    try:
-        with open(SECRET_FILEPATH) as f:
-            SECRET_KEY = f.read()
-    except OSError:
-        import secrets
-        SECRET_KEY = secrets.token_urlsafe(64)
-        if not os.path.isdir(os.path.dirname(SECRET_FILEPATH)):
-            os.makedirs(os.path.dirname(SECRET_FILEPATH), exist_ok=True)
-        with open(SECRET_FILEPATH, 'w') as f:
-            f.write(SECRET_KEY)
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'qatrackplus'),
-            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-            'HOST': 'postgres',
-            'PORT': 5432
-        }
-    }
-
-    if 'readonly' not in DATABASES and USE_SQL_REPORTS:
-        DATABASES['readonly'] = DATABASES['default']
+    # Docker sites configure QATrack+ with environment variables (deploy/docker/.env)
+    from .docker_settings import apply as _apply_docker_settings
+    _apply_docker_settings(globals())
 else:
     from .local_settings import *  # noqa: F403, F401, E402
 

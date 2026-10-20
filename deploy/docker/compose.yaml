@@ -28,10 +28,11 @@ services:
     command:
       - sh
       - -c
-      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static \( ! -user 1000 -o ! -group 1000 \) -exec chown 1000:1000 {} +
+      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static /usr/src/qatrackplus/deploy/docker/user-data \( ! -user 1000 -o ! -group 1000 \) -exec chown 1000:1000 {} +
     volumes:
       - media-volume:/usr/src/qatrackplus/qatrack/media
       - static-volume:/usr/src/qatrackplus/qatrack/static
+      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
 
   django:
     build:
@@ -47,6 +48,9 @@ services:
     volumes:
       - media-volume:/usr/src/qatrackplus/qatrack/media
       - static-volume:/usr/src/qatrackplus/qatrack/static
+      # Keeps the generated secret key (when SECRET_KEY is not set in .env)
+      # across rebuilds, so upgrades do not log every user out.
+      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 30s
@@ -83,3 +87,4 @@ volumes:
   postgres-volume:
   media-volume:
   static-volume:
+  user-data-volume:
