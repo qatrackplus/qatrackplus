@@ -233,18 +233,25 @@ jobs:
       - name: Set up Docker Compose
         run: sudo apt-get update && sudo apt-get install docker-compose -y
 
+      - name: Plain docker compose uses only compose.yaml
+        # The docs tell sites to run plain `docker compose`. An automatically
+        # applied compose.override.yaml would change what that runs: the old one
+        # mounted the checkout over the image's code.
+        working-directory: deploy/docker
+        run: test ! -e compose.override.yaml
+
       - name: Build Docker Images
         working-directory: deploy/docker
         run: |
           cp .env.example .env
-          docker compose -f compose.yaml build
+          docker compose build
 
       - name: Fix script permissions
         run: chmod +x deploy/docker/django/entrypoint.sh
 
       - name: Start Docker Containers
         working-directory: deploy/docker
-        run: docker compose -f compose.yaml up -d --wait --wait-timeout 300
+        run: docker compose up -d --wait --wait-timeout 300
 
       - name: Check Running Containers
         run: docker ps -a
@@ -252,18 +259,18 @@ jobs:
       - name: Check Container Logs for Errors (Optional)
         if: always()
         working-directory: deploy/docker
-        run: docker compose -f compose.yaml logs
+        run: docker compose logs
 
       - name: Verify Application is Up (Optional health check)
         # Check that no container exited or became unhealthy. The one-shot init
         # service is expected to exit, and must have exited 0.
         working-directory: deploy/docker
         run: |
-          init_id=$(docker compose -f compose.yaml ps -aq init)
+          init_id=$(docker compose ps -aq init)
           init_code=$(docker inspect -f '{{.State.ExitCode}}' "$init_id")
           if [ "$init_code" != 0 ]; then
             echo "The init service exited with $init_code"
-            docker compose -f compose.yaml logs init
+            docker compose logs init
             exit 1
           fi
           if [ $(docker ps -q -f status=exited | grep -v "^${init_id:0:12}" | wc -l) -gt 0 ]; then
@@ -280,7 +287,7 @@ jobs:
       - name: Verify the application runs unprivileged
         working-directory: deploy/docker
         run: |
-          uid=$(docker compose -f compose.yaml exec -T django stat -c %u /proc/1)
+          uid=$(docker compose exec -T django stat -c %u /proc/1)
           echo "django server process uid: $uid"
           [ "$uid" = 1000 ]
 
@@ -288,7 +295,7 @@ jobs:
         working-directory: deploy/docker
         run: |
           set -euo pipefail
-          dc="docker compose -f compose.yaml"
+          dc="docker compose"
           $dc exec -T django python -c "import ldap; print('python-ldap', ldap.__version__)"
           # .env.example sets no SECRET_KEY, so one was generated into the
           # user-data volume. Recreating the container must keep it.
@@ -303,7 +310,7 @@ jobs:
         working-directory: deploy/docker
         run: |
           set -euo pipefail
-          docker compose -f compose.yaml exec -T backup sh -eu -c '
+          docker compose exec -T backup sh -eu -c '
             rm -f /backups/db_*.dump /backups/media_*.tar.gz 2>/dev/null || true
 
             # Run the backup exactly as the nightly cron job does.
@@ -328,7 +335,7 @@ jobs:
       - name: Tear Down
         if: always()
         working-directory: deploy/docker
-        run: docker compose -f compose.yaml down -v
+        run: docker compose down -v
   docker-upgrade:
     name: Docker Upgrade from 4.0.1
     runs-on: ubuntu-latest
@@ -375,7 +382,7 @@ jobs:
         working-directory: ../base/deploy/docker
         run: |
           cp .env.example .env
-          docker compose -f compose.yaml up -d --build --wait --wait-timeout 300
+          docker compose up -d --build --wait --wait-timeout 300
 
       - name: Record 4.0.1 state and add data
         # 4.0.1 runs the server as root, so the files it writes to the shared
@@ -383,33 +390,33 @@ jobs:
         working-directory: ../base/deploy/docker
         run: |
           set -euo pipefail
-          uid=$(docker compose -f compose.yaml exec -T django stat -c %u /proc/1)
+          uid=$(docker compose exec -T django stat -c %u /proc/1)
           echo "4.0.1 django server process uid: $uid"
           [ "$uid" = 0 ]
-          docker compose -f compose.yaml exec -T -e DJANGO_SUPERUSER_PASSWORD=ci-password-123 django \
+          docker compose exec -T -e DJANGO_SUPERUSER_PASSWORD=ci-password-123 django \
             python manage.py createsuperuser --noinput --username ci --email ci@example.com
-          docker compose -f compose.yaml exec -T django sh -c \
+          docker compose exec -T django sh -c \
             'mkdir -p qatrack/media/uploads && echo "written by 4.0.1" > qatrack/media/uploads/ci-upgrade.txt'
-          [ "$(docker compose -f compose.yaml exec -T django stat -c %u qatrack/static/admin)" = 0 ]
-          [ "$(docker compose -f compose.yaml exec -T django stat -c %u qatrack/media/uploads/ci-upgrade.txt)" = 0 ]
-          docker compose -f compose.yaml down
+          [ "$(docker compose exec -T django stat -c %u qatrack/static/admin)" = 0 ]
+          [ "$(docker compose exec -T django stat -c %u qatrack/media/uploads/ci-upgrade.txt)" = 0 ]
+          docker compose down
 
       - name: Upgrade to this branch on the same volumes
         working-directory: deploy/docker
         run: |
           cp .env.example .env
-          docker compose -f compose.yaml up -d --build --wait --wait-timeout 300
+          docker compose up -d --build --wait --wait-timeout 300
 
       - name: Container logs
         if: always()
         working-directory: deploy/docker
-        run: docker compose -f compose.yaml logs
+        run: docker compose logs
 
       - name: Verify the upgraded site
         working-directory: deploy/docker
         run: |
           set -euo pipefail
-          dc="docker compose -f compose.yaml"
+          dc="docker compose"
           [ "$(docker inspect -f '{{.State.ExitCode}}' "$($dc ps -aq init)")" = 0 ]
           [ $(docker ps -q -f health=unhealthy | wc -l) -eq 0 ]
 
@@ -432,4 +439,55 @@ jobs:
       - name: Tear Down
         if: always()
         working-directory: deploy/docker
-        run: docker compose -f compose.yaml down -v
+        run: docker compose down -v
+
+  docker-dev:
+    name: Docker Development Overlay
+    runs-on: ubuntu-latest
+    needs: [lint, requirements]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+
+      - name: Start the stack from the checkout as the runner's own user
+        # The runner's uid is not 1000, like many developers'. The app has to
+        # write into the mounted checkout (logs/, site.css) as that user.
+        working-directory: deploy/docker
+        run: |
+          cp .env.example .env
+          echo "QATRACK_UID=$(id -u)" >> .env
+          echo "QATRACK_GID=$(id -g)" >> .env
+          echo "runner uid=$(id -u) gid=$(id -g)"
+          docker compose -f compose.yaml -f compose.dev.yaml up -d --build --wait --wait-timeout 300
+
+      - name: Container logs
+        if: always()
+        working-directory: deploy/docker
+        run: docker compose -f compose.yaml -f compose.dev.yaml logs
+
+      - name: Verify the app runs as the developer and writes into the checkout
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          dc="docker compose -f compose.yaml -f compose.dev.yaml"
+          [ "$(docker inspect -f '{{.State.ExitCode}}' "$($dc ps -aq init)")" = 0 ]
+          uid=$($dc exec -T django stat -c %u /proc/1)
+          echo "django server process uid: $uid"
+          [ "$uid" = "$(id -u)" ]
+          css="$GITHUB_WORKSPACE/qatrack/qatrack_core/static/qatrack_core/css/site.css"
+          [ "$(stat -c %u "$css")" = "$(id -u)" ]
+          ls -ln "$GITHUB_WORKSPACE/logs"
+          [ -n "$(find "$GITHUB_WORKSPACE/logs" -type f -user "$(id -u)")" ]
+          $dc exec -T django touch qatrack/media/uploads-dev-check.txt
+          echo "PASS: dev overlay runs as uid $(id -u) and writes into the checkout"
+
+      - name: Tear Down
+        if: always()
+        working-directory: deploy/docker
+        run: docker compose -f compose.yaml -f compose.dev.yaml down -v

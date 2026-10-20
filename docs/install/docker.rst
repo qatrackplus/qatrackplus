@@ -292,6 +292,28 @@ answer its prompts:
 
 You can then sign in at http://localhost with the credentials you just chose.
 
+.. _docker_development:
+
+Developing with Docker
+~~~~~~~~~~~~~~~~~~~~~~
+
+The commands above run the QATrack+ code built into the image. To work on
+QATrack+ itself, run your checkout instead, so code changes show up without
+rebuilding. QATrack+ then writes into your checkout (its log files, for
+example), so it runs as your own user. Add your user and group ids to ``.env``
+once, then start with the development overlay:
+
+.. code-block:: console
+
+    echo "QATRACK_UID=$(id -u)" >> .env
+    echo "QATRACK_GID=$(id -g)" >> .env
+    docker compose -f compose.yaml -f compose.dev.yaml up -d --build
+
+Use the same ``-f compose.yaml -f compose.dev.yaml`` on every ``docker compose``
+command for that stack. If your checkout has a ``logs`` folder created by an
+earlier QATrack+ container, which ran as root, give it to your user once with
+``sudo chown -R $(id -u):$(id -g) ../../logs``.
+
 
 Setting up copying backups from local machine to remote server on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -4,7 +4,7 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
 
 ## Directory Layout
 - `compose.yaml`: The production-ready defaults.
-- `compose.override.yaml`: Development overrides (e.g., binding local source code).
+- `compose.dev.yaml`: Development overlay that runs your checkout instead of the image's code. Not applied automatically.
 - `django/`: Multi-stage Dockerfile and entrypoint script for the Django app.
 - `nginx/`: NGINX configuration and server blocks.
 - `backup/`: A lightweight Alpine container that automatically runs database and media backups via cron.
@@ -22,21 +22,21 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
 
 `.env` holds your passwords and is ignored by git. Sites upgrading from 4.0.0 or 4.0.1, where it was tracked, follow the steps in the Docker upgrade guide before their first `git pull`.
 
-### 2. Development
-By default, Docker Compose will read both `compose.yaml` and `compose.override.yaml`. The override file maps your local source code into the container for live reloading.
-
-Run the development environment:
-```bash
-docker compose up --build
-```
-
-### 3. Production
-1. Review the NGINX TLS config in `nginx/conf.d/tls.conf.example`.
-2. Configure strong, secure passwords in your `.env` file.
-3. Start the containers using **only** the production file (ignoring the local code bind-mounts):
+### 2. Production
+1. Configure strong, secure passwords in your `.env` file.
+2. Build and start the containers:
    ```bash
-   docker compose -f compose.yaml up -d --build
+   docker compose up -d --build
    ```
+   This runs the QATrack+ code built into the image, as an unprivileged user.
+
+### 3. Development
+`compose.dev.yaml` mounts your checkout into the container so code changes show up without rebuilding. It is not applied automatically. QATrack+ writes into your checkout, so it runs as your own user: add your ids to `.env` once, then use both files on every command.
+```bash
+echo "QATRACK_UID=$(id -u)" >> .env
+echo "QATRACK_GID=$(id -g)" >> .env
+docker compose -f compose.yaml -f compose.dev.yaml up -d --build
+```
 
 ### 4. First Run Setup
 When booting a fresh database for the first time, you must create a superuser (admin) account. With the containers running, open a new terminal window and execute:
