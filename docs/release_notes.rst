@@ -35,6 +35,18 @@ Deployment and Upgrade Notes
   A short-lived ``init`` container that does this appears as exited in
   ``docker compose ps -a``, which is expected.
 
+* **Docker: ``compose.override.yaml`` is now ``compose.dev.yaml`` and is no longer
+  applied automatically.** The override mounted the whole checkout over the code in
+  the image, so every plain ``docker compose`` command ran the checkout instead of
+  the image, as root. Plain ``docker compose`` now runs the code built into the
+  image. Developers who want their checkout live use
+  ``docker compose -f compose.yaml -f compose.dev.yaml``, with their own ids in
+  ``.env`` (see :ref:`docker_development`).
+
+  QATrack+'s log files are now inside the container rather than in the checkout's
+  ``logs`` folder. Read them with ``docker compose logs django``, or
+  ``docker compose exec django ls logs``.
+
 * **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
   same versions the test suite runs against. Previously ``pip`` chose versions when
   the image was built, so two builds of the same release could differ.
