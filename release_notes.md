@@ -5,7 +5,7 @@ Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes
 ## v4.0.2
 
 * **Docker**: Docker images no longer contain your `.env` file, local settings, uploaded files or database dumps. Rebuild any QATrack+ image you have copied to a registry or another machine.
-* **Docker**: Database dumps in `deploy/docker/backups/` and `.env` files (other than the `.env.example` templates) are now ignored by git, so they cannot be committed by accident.
+* **Docker**: Database dumps in `deploy/docker/backups/` and new `.env` files (other than the `.env.example` templates) are now ignored by git. `deploy/docker/.env` is still tracked, so changes to it can still be committed.
 * **Docker**: Files under `deploy/docker` always check out with LF line endings, including on Windows.
 
 ## v4.0.0 Recent Fixes

@@ -211,15 +211,22 @@ the following:
     endings. Git checks them out that way on every platform. A clone made before
     QATrack+ 4.0.2 on Windows may still have CRLF copies. To check them out again,
     run the following from the ``qatrackplus`` folder. It replaces the tracked files
-    under ``deploy/docker`` with fresh copies, so the first and last lines keep your
-    ``.env``:
+    under ``deploy/docker`` with fresh copies, so the first and last lines save your
+    own changes to them (your ``.env``, and any edits to ``nginx.conf`` or the
+    compose files) and put them back. These are git commands only, so they work the
+    same in Command Prompt, PowerShell or a Linux terminal. Untracked folders such
+    as ``user-data`` and ``backups`` are not touched.
 
     .. code-block:: console
 
-        cp deploy/docker/.env ../qatrack-env.bak
+        git diff HEAD --output=../qatrack-docker-local.patch -- deploy/docker
         git rm -r --cached -q deploy/docker
         git checkout HEAD -- deploy/docker
-        cp ../qatrack-env.bak deploy/docker/.env
+        git apply --allow-empty ../qatrack-docker-local.patch
+
+    ``--allow-empty`` needs git 2.35 or newer. The patch file holds your ``.env``,
+    including the database password, so delete ``qatrack-docker-local.patch`` once
+    you have checked that QATrack+ starts.
 
 
 Installation
