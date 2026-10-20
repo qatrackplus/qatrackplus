@@ -27,10 +27,10 @@ while IFS= read -r line; do
         *) fail "not forced to LF on checkout: ${line%%: eol:*}" ;;
     esac
 done < <(git ls-files -z deploy/docker | xargs -0 git check-attr eol --)
-# And none may be stored with CRLF in the repository itself.
+# And none may be stored with CRLF (or mixed endings) in the repository itself.
 while IFS= read -r line; do
-    fail "stored with CRLF: ${line##*$'\t'}"
-done < <(git ls-files --eol deploy/docker | grep '^i/crlf' || true)
+    fail "stored with CRLF or mixed endings:${line##*$'\t'}"
+done < <(git ls-files --eol deploy/docker | grep -E '^i/(crlf|mixed)' || true)
 [ "$failures" -eq 0 ] && pass "all files under deploy/docker are LF"
 
 echo "== Build context of the django image"
@@ -44,6 +44,7 @@ decoys=(
     qatrack/media/uploads/decoy.pdf
     qatrack/static/decoy.css
     site.key
+    fixtures/site_export.json
 )
 created=()
 created_dirs=()

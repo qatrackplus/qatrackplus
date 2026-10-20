@@ -16,8 +16,8 @@
 !manage.py
 !qatrack
 !qatrack/**
-!fixtures
-!fixtures/**
+!fixtures/defaults
+!fixtures/defaults/**
 !deploy/docker/django/entrypoint.sh
 
 # Re-ignore local files that can exist inside the paths let back in above.
@@ -30,7 +30,6 @@ qatrack/media/reports
 qatrack/cache/cache_data
 qatrack/static
 qatrack/assets
-fixtures/dev
 **/__pycache__
 **/*.py[co]
 
