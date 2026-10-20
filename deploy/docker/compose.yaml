@@ -16,6 +16,23 @@ services:
       - static-volume:/usr/src/qatrackplus/qatrack/static:ro
       - ./user-data/ssl:/etc/nginx/ssl:ro
 
+  # Runs once before django: the app runs as uid 1000, and installs from before
+  # 4.0.2 ran it as root, so their volumes can hold root-owned files. This
+  # re-owns only those files, then exits.
+  init:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/django/Dockerfile
+    user: "0"
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static \( ! -user 1000 -o ! -group 1000 \) -exec chown 1000:1000 {} +
+    volumes:
+      - media-volume:/usr/src/qatrackplus/qatrack/media
+      - static-volume:/usr/src/qatrackplus/qatrack/static
+
   django:
     build:
       context: ../../
@@ -23,6 +40,8 @@ services:
     restart: always
     env_file: .env
     depends_on:
+      init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     volumes:

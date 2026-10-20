@@ -21,6 +21,24 @@ QATrack+ 4.0
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* **The Docker application container no longer runs as root.** QATrack+ now runs as
+  an unprivileged ``qatrack`` user (uid 1000). Calculation procedures for composite
+  and upload tests run inside the application, with its privileges, so on earlier
+  releases they ran as root inside the container. They still run with the
+  application's privileges: they can read its environment, including the database
+  password, and use the database. But they can no longer change QATrack+'s own code
+  or the container's system files.
+
+  Nothing changes in the commands you run. Existing media and static files, written
+  as root by earlier releases, are re-owned automatically the next time you run
+  ``docker compose up -d``; on a large media volume that first start takes longer.
+  A short-lived ``init`` container that does this appears as exited in
+  ``docker compose ps -a``, which is expected.
+
+* **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
+  same versions the test suite runs against. Previously ``pip`` chose versions when
+  the image was built, so two builds of the same release could differ.
+
 * **Docker images no longer contain your ``.env`` file, local settings or site data.**
   The ``.dockerignore`` patterns only matched files at the top of the repository, so
   the image copied in ``deploy/docker/.env`` (which holds the database password), and

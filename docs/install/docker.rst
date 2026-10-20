@@ -110,40 +110,27 @@ files.
 
 Docker for Windows does not support network drives.
 
-Ubuntu 18.04
-~~~~~~~~~~~~
+Ubuntu
+~~~~~~
 
-If your PC is running Ubuntu 18.04 follow these steps to install the required
+If your PC is running Ubuntu follow these steps to install the required
 prerequisites.
 
-Docker and Docker-Compose
-.........................
+Docker Engine and Docker Compose
+................................
 
-To run this installation method you will need both docker-ce and docker-compose
-on your system. When running Ubuntu 18.04 do this by running the following
-commands:
+To run this installation method you need Docker Engine with the Docker Compose
+plugin, which provides the ``docker compose`` command. Install both by following
+Docker's instructions for your distribution:
+
+* `Install Docker Engine on Ubuntu <https://docs.docker.com/engine/install/ubuntu/>`__
+* `Other Linux distributions <https://docs.docker.com/engine/install/>`__
+
+Check that Compose is available with:
 
 .. code-block:: console
 
-    sudo apt update
-    sudo apt upgrade
-    sudo snap install docker
-
-    sudo apt install python3-venv
-    python3 -m venv ~/.docker-compose
-    source ~/.docker-compose/bin/activate
-    pip install --upgrade pip
-    pip install docker-compose
-
-
-Each time before using the `docker-compose` command you will need to repeat the
-above command of `source ~/.docker-compose/bin/activate`.
-
-On other systems you can follow the instructions found at the following
-locations:
-
-* `docker-ce <https://docs.docker.com/install/>`__
-* `docker-compose <https://docs.docker.com/compose/install/#install-compose>`__
+    docker compose version
 
 Make docker work without sudo on Linux
 ......................................
@@ -225,7 +212,7 @@ the following:
 Installation
 ~~~~~~~~~~~~
 
-To run any `docker-compose` commands you need to be within the
+To run any `docker compose` commands you need to be within the
 `qatrackplus\\deploy\\docker` directory. So lets change to there now:
 
 .. code-block:: console
@@ -236,8 +223,8 @@ To build and start the server run the following:
 
 .. code-block:: console
 
-    docker-compose build
-    docker-compose up
+    docker compose build
+    docker compose up
 
 On initial run this will take quite some time to load.
 
@@ -309,7 +296,7 @@ To have QATrack+ start on boot run the following command:
 
 .. code-block:: console
 
-    docker-compose up -d
+    docker compose up -d
 
 Setting up SSL
 ~~~~~~~~~~~~~~
@@ -331,17 +318,17 @@ To reset the server and use your updated `nginx.conf` file run:
 
 .. code-block:: console
 
-    docker-compose stop
-    docker-compose up
+    docker compose stop
+    docker compose up
 
 Changing from port 80 to a different port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The first number of the `ports` item within `docker-compose.yml` can be changed
+The first number of the `ports` item within `compose.yaml` can be changed
 to use a port that is different to port 80. For example, if `80:80` was changed
 to `8080:80` then you would need to type http://localhost:8080 within your
-browser to see QATrack+. After editing `docker-compose.yml` you need to rerun
-`docker-compose up`.
+browser to see QATrack+. After editing `compose.yaml` you need to rerun
+`docker compose up`.
 
 Making the backup management store its files on a network share
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -371,10 +358,10 @@ To shutdown the server run:
 
 .. code-block:: console
 
-    docker-compose stop
+    docker compose stop
 
 You can also single press `Ctrl + C` within the server terminal that you ran
-`docker-compose up` to gracefully shutdown the server.
+`docker compose up` to gracefully shutdown the server.
 
 Update server
 ~~~~~~~~~~~~~
@@ -383,26 +370,26 @@ To update the server from github run:
 
 .. code-block:: console
 
-    docker-compose stop
+    docker compose stop
     git pull
 
 Once any files have changed in the qatrackplus directory you need to run the following:
 
 .. code-block:: console
 
-    docker-compose build
-    docker-compose up
+    docker compose build
+    docker compose up
 
 Backup management
 ~~~~~~~~~~~~~~~~~
 
-Everytime `docker-compose up` is run a timestamped backup zip file of the
+Everytime `docker compose up` is run a timestamped backup zip file of the
 database, uploaded files, and your site specific css is created. These backups
 are stored within
 `qatrackplus/deploy/docker/user-data/backup-management/backups`.  To restore a
 backup zip file copy it to the restore directory found at
 `qatrackplus/deploy/docker/user-data/backup-management/restore`.  The
-restoration will occur next time `docker-compose up` is called. After
+restoration will occur next time `docker compose up` is called. After
 successful restoration the zip file within the restore directory is deleted.
 
 This restore method will also successfully restore backup files created on a
