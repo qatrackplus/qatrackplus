@@ -56,6 +56,11 @@ RUN cp deploy/docker/django/entrypoint.sh /entrypoint.sh && \
 RUN mkdir -p logs deploy/docker/user-data qatrack/media qatrack/static && \
     chown qatrack:qatrack logs deploy/docker/user-data qatrack/media qatrack/static
 
+# settings.py creates this empty site-specific stylesheet on first import if it
+# is missing. The app cannot write to the source tree, so create it here.
+RUN css=qatrack/qatrack_core/static/qatrack_core/css/site.css && \
+    [ -f "$css" ] || printf '/* You can place any site specific css in this file*/\n' > "$css"
+
 USER qatrack
 
 EXPOSE 8000
