@@ -61,7 +61,9 @@ RUN mkdir -p logs deploy/docker/user-data qatrack/media qatrack/static && \
 RUN css=qatrack/qatrack_core/static/qatrack_core/css/site.css && \
     [ -f "$css" ] || printf '/* You can place any site specific css in this file*/\n' > "$css"
 
-USER qatrack
+# Numeric, so container runtimes can verify the image does not run as root
+# without looking up the name inside it. 1000:1000 is the qatrack user above.
+USER 1000:1000
 
 EXPOSE 8000
 CMD ["/entrypoint.sh"]
