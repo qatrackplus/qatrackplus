@@ -1,7 +1,7 @@
 .. _linux_install_40:
 
-New Installation of QATrack+ v4.0.0 on Ubuntu Linux
-===================================================
+New Installation of QATrack+ 4.0 on Ubuntu Linux
+=================================================
 
 .. note::
 
@@ -20,7 +20,7 @@ officially supported or tested.
 If you are upgrading an existing QATrack+ installation, please see
 one of the following pages:
 
-* :ref:`Upgrading an existing v3.x.y installation to v4.0.0
+* :ref:`Upgrading an existing v3.x.y installation to 4.0.0
   <linux_upgrading_40>`. 
 
 The steps we will be undertaking are:
@@ -92,7 +92,18 @@ QATrack+.  To checkout the code enter the following commands:
     cd ~/web
     git clone https://github.com/qatrackplus/qatrackplus.git
     cd qatrackplus
-    git checkout v4.0.0
+    git checkout releases/4.0
+
+.. dropdown:: Side note: Alternate Tag
+    :color: warning
+
+    The ``releases/4.0`` branch is the 4.0 series including its patch releases, so
+    upgrading later is ``git fetch`` and ``git pull`` — you never name a version.
+
+    Pinning an exact version with a tag is possible but **not recommended**: a tag is
+    immutable, so ``git pull`` will not bring you patches and each upgrade becomes a
+    fresh checkout. If you must, the available tags are listed on the
+    `releases page <https://github.com/qatrackplus/qatrackplus/releases>`__.
 
 
 Installing a Database System
@@ -207,7 +218,7 @@ Setting up our Python environment (including virtualenv)
 Check your Python version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 4.0.0 runs on Python 3.12. Check your version of
+QATrack+ 4.0 runs on Python 3.12. Check your version of
 python3 with the command:
 
 .. code-block:: bash

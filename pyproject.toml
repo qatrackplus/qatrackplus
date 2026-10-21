@@ -13,7 +13,7 @@ include = [
 
 [project]
 name = "qatrackplus"
-version = "4.0.0"
+version = "4.0.1"
 description = "QATrack+ is an open source application for managing QC data in radiotherapy and diagnostic imaging clinics"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"

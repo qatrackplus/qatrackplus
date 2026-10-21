@@ -24,7 +24,7 @@ with SQL Server 2022 database (and SQL Express).
 
 If you are upgrading an existing QATrack+ installation from version 3.1, please see:
 
-* :ref:`Upgrading an existing v3.x.y installation to v4.0.0
+* :ref:`Upgrading an existing v3.x.y installation to 4.0.0
   <win_upgrading_40>`.
 
 .. note::

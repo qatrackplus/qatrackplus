@@ -11,9 +11,20 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from qatrack.qatrack_core.dates import format_as_time, format_datetime
+from qatrack.qatrack_core.utils import file_uri as _file_uri
 from qatrack.service_log import models as sl_models
 
 register = template.Library()
+
+
+@register.filter(name='file_uri')
+def file_uri(path):
+    """Turn a filesystem path into a valid `file://` URI.
+
+    Used by the PDF templates for their stylesheet and logo links. See
+    `qatrack_core.utils.file_uri` for why string concatenation is not enough.
+    """
+    return _file_uri(path)
 
 
 @register.filter(name='addcss')

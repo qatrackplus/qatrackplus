@@ -39,6 +39,7 @@ from qatrack.faults.forms import FaultForm, InlineReviewForm
 from qatrack.faults.models import FaultReviewGroup
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.dates import (
+    end_of_day,
     format_datetime,
     parse_date,
     parse_datetime,
@@ -1821,9 +1822,20 @@ class DueAndOverdue(UTCList):
     page_title = _l("Due & Overdue QC")
 
     def get_queryset(self):
-        today = timezone.now().astimezone(timezone.get_current_timezone()).date()
+        # `due_date` is a DateTimeField, so comparing it to a date made Django
+        # coerce that date to a naive midnight datetime - it says so, with
+        # "received a naive datetime while time zone support is active". The
+        # cutoff was therefore *today at 00:00*, and anything due later today
+        # was missing from the page whose job is to list what is due. Measured
+        # at 19:44 local: due today at 09:00 and at 23:00 were both absent.
+        #
+        # `end_of_day(timezone.now())` is what the Due Dates *report* has always
+        # used (reports/qc/due_dates.py), so the page and the report disagreed
+        # about the same question. They now agree, and "due" means due at any
+        # point today rather than due by this moment - a due time on a QC
+        # assignment is almost never meaningful.
         qs = super().get_queryset()
-        return qs.exclude(due_date=None).filter(due_date__lte=today)
+        return qs.exclude(due_date=None).filter(due_date__lte=end_of_day(timezone.now()))
 
 
 class UnitFrequencyList(FrequencyList):

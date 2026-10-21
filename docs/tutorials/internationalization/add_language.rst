@@ -8,14 +8,14 @@ This process involves extracting translatable strings, translating them, compili
 the system to use the new language.
 
 Prerequisites
-------------
+-------------
 
 - QATrack+ development environment set up
 - Python 3.12+ and uv package manager installed
 - Translation tools installed (see below)
 
 Supported Languages
-------------------
+-------------------
 
 QATrack+ supports any language that Django supports. Common language codes include:
 
@@ -125,6 +125,51 @@ Once you have translated the strings, compile them into Django's binary format:
 
 This creates ``.mo`` files that Django uses at runtime.
 
+Checking what is actually translated
+------------------------------------
+
+``compilemessages`` tells you it succeeded, not how much of the interface is now in
+your language. ``check_translations`` answers that:
+
+.. code-block:: bash
+
+    python manage.py check_translations
+
+It reports, for every language in your ``LANGUAGES`` setting, how many strings are
+translated and how many fall back to English, and whether any compiled ``.mo`` is
+older than the ``.po`` it came from:
+
+.. code-block:: text
+
+    Languages offered by LANGUAGES (source language: en)
+      en      English                the language the strings are written in
+      fr      Français                2027 / 2027  translated (100%)
+      es      Español                 1136 / 2027  translated (56%)  -  891 fall back to en
+
+    Compiled catalogues (.mo) against their sources (.po)
+      every .po has a .mo compiled from that exact source
+
+To see which strings are still missing for one language:
+
+.. code-block:: bash
+
+    python manage.py check_translations --missing es
+    python manage.py check_translations --missing es --limit 0   # list them all
+
+.. note::
+
+    A count below 100% is not necessarily a problem — it means those strings fall
+    back to English. A **stale** ``.mo``, however, means your translated ``.po`` is
+    not what the running application is serving, which is reported separately and is
+    worth acting on.
+
+    Two things make a ``.po`` look more complete than it is. ``msgfmt`` excludes
+    entries marked *fuzzy* by default, so a file can appear finished while the
+    compiled catalogue serves far less; and entries with a message context are keyed
+    separately, so the same text can need translating more than once.
+    ``check_translations`` counts what the ``.mo`` actually provides, not what the
+    ``.po`` appears to contain.
+
 Step 4: Configure Language Settings
 -----------------------------------
 
@@ -165,7 +210,7 @@ translation files, but only displays languages that are explicitly configured in
 to users while still maintaining the ability to detect available translations.
 
 Known Issues
------------
+------------
 
 **String Extraction Coverage**
 

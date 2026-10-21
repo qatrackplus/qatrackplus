@@ -1,47 +1,49 @@
-# Ignore everything
+# Build context for deploy/docker/django/Dockerfile (the nginx and backup
+# images use their own folders as context, so this file does not apply to them).
+#
+# This is a whitelist: everything is ignored, and only what the image needs is
+# let back in. Anything left over in a checkout - .env files, secret keys,
+# database dumps, uploaded files, local settings - stays out of the image.
+#
+# If the image needs a new path, add it below *and* to the "present" list in
+# .github/scripts/check-docker-build-context.sh, which CI runs to check this file.
 **
-
-# Re-include only what is needed for an editable install of the package
-# Nothing else is needed in the image.
 
 !pyproject.toml
 !uv.lock
 !README.md
-
-!qatrack/
-!qatrack/**
-
+!LICENSE
 !manage.py
+!qatrack
+!qatrack/**
+!fixtures/defaults
+!fixtures/defaults/**
+!deploy/docker/django/entrypoint.sh
 
-# Docker deployment files
-!deploy/
-!deploy/docker/
-!deploy/docker/**
+# q#866's Dockerfile installs a site's own python packages from here
+# (`COPY ./deploy/docker/user-requirements/`), so the build context needs it.
+!deploy/docker/user-requirements
+!deploy/docker/user-requirements/**
 
-# Re-ignore sensitive files that could exist in an already-included path.
+# Re-ignore local files that can exist inside the paths let back in above.
+# These mirror the matching entries in .gitignore.
+qatrack/local_*.py
+qatrack/accel_migration_tool/local_accel_settings.py
+qatrack/accel_migration_tool/db
+qatrack/media/uploads
+qatrack/media/reports
+qatrack/cache/cache_data
+qatrack/static
+qatrack/assets
+**/__pycache__
+**/*.py[co]
 
-# Environment files
+# Secrets and data, wherever they turn up.
 **/.env
+**/.env.*
 **/*.env
-**/*env.bak
-**/*env.old
-
-# Django secret key, user-data
-**/secret_key.txt
-**/user-data
-**/user_data
-
-# SSL certificates and private keys
-**/certs
-**/SSL
-**/ssl
-**/*.certificate
-**/*.crt
-**/*.pem
 **/*.key
-**/*.crt.key
-
-# potential DB backups
-**/backups
-**/*.tar
-**/*.tar.gz
+**/*.pem
+**/*.dump
+**/*.sqlite3
+**/*.db

@@ -1,13 +1,72 @@
 import os
+import shutil
 import subprocess
 import tempfile
 import uuid
 from io import BytesIO
+from pathlib import Path
 
 from dateutil import relativedelta as rdelta
 from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
+
+
+class PdfGenerationError(Exception):
+    """A report PDF could not be produced."""
+
+
+class ChromeNotFound(PdfGenerationError):
+    """No usable Chrome/Chromium executable is configured."""
+
+
+class ChromePdfFailed(PdfGenerationError):
+    """Chrome was runnable but did not produce a PDF."""
+
+
+PAPER_SIZES = ("letter", "a4")
+
+
+def clean_paper_size(paper_size):
+    """Validate a paper size before it is interpolated into a CSS declaration.
+
+    Without this check an unexpected value would not fail - it would be
+    interpolated into the `@page` rule and quietly change the rendered
+    document. The web UI cannot send one (the model field carries `choices`
+    and the form validates against them), but this is reachable from
+    management commands and scheduled reports, and a silently mis-rendered QC
+    record is a poor failure mode, so it raises instead.
+    """
+    cleaned = (paper_size or "letter").strip().lower()
+    if cleaned not in PAPER_SIZES:
+        raise ValueError(
+            "unsupported paper size %r - expected one of %s"
+            % (paper_size, ", ".join(PAPER_SIZES))
+        )
+    return cleaned
+
+
+def file_uri(path):
+    """A `file://` URI for a filesystem path, for the PDF engines' asset fetches.
+
+    Concatenating `"file://" + path` is wrong on Windows. Everything between the
+    two slashes and the next one is the URI's *authority*, so `file://D:\\x\\y`
+    names a host of `D:\\x\\y` with an empty path, and the drive and folders are
+    simply gone. WeasyPrint reports each such link as
+    `URLError: [WinError 3] The system cannot find the path specified` and renders
+    the report with no stylesheets and no logo. Chrome happens to accept the
+    malformed form, which is why this went unnoticed for as long as Chrome was
+    the only engine that could run on Windows at all.
+
+    `Path.as_uri()` gives `file:///D:/x/y` on Windows and `file:///srv/x` on
+    POSIX, and percent-encodes spaces and the like. It requires an absolute
+    path, so a relative STATIC_ROOT is made absolute first - which is what the
+    old concatenation effectively did too, just without saying so.
+    """
+    if not path:
+        return ""
+    return Path(path).absolute().as_uri()
+
 
 
 def site_base_url(site=None):
@@ -58,12 +117,17 @@ def weasyprint_to_pdf(html, name="", paper_size="letter"):
     # flexbox `.row` stops WeasyPrint from fragmenting its contents across
     # pages, which silently truncates any report containing a forced page
     # break (see reports/pdf.css).
+    # clean_paper_size, not paper_size.lower(): this value is interpolated into a
+    # CSS declaration, and WeasyPrint is the engine BaseReport.to_pdf prefers - so
+    # validating only on the Chrome path (set_paper_size) left the default path
+    # unchecked, and the CSS-injection case the tests cover bypassed it whenever
+    # WeasyPrint succeeded.
     paper_css = """
     @page {
         size: %s;
         margin: 20px 20px 20px 30px;
     }
-    """ % paper_size.lower()
+    """ % clean_paper_size(paper_size)
 
     pdf = BytesIO()
     HTML(string=html).write_pdf(pdf, stylesheets=[CSS(string=paper_css)])
@@ -79,7 +143,7 @@ def set_paper_size(html, paper_size="letter"):
     the user picked.  CSS is the only lever that works, and it has to come
     after reports/pdf.css so it wins the cascade against its `@page` block.
     """
-    rule = "<style>@page { size: %s; }</style>" % paper_size.lower()
+    rule = "<style>@page { size: %s; }</style>" % clean_paper_size(paper_size)
     if "</head>" in html:
         return html.replace("</head>", "%s</head>" % rule, 1)
     return rule + html
@@ -96,6 +160,7 @@ def chrometopdf(html, name="", paper_size="letter"):
 
     tmp_html = None
     out_file = None
+    out_path = None      # the finally below cleans by path, so it must always exist
 
     try:
 
@@ -110,32 +175,78 @@ def chrometopdf(html, name="", paper_size="letter"):
         tmp_html.write(set_paper_size(html, paper_size).encode("UTF-8"))
         tmp_html.close()
 
-        with tempfile.TemporaryDirectory() as profiledir:
-            # Run chromium with temporary user data dir, as concurrent chromium processes could occur.
-            command = [
-                settings.CHROME_PATH,
-                '--headless',
-                '--disable-gpu',
-                '--no-sandbox',
-                '--print-to-pdf=%s' % out_path,
-                '--print-to-pdf-no-header',
-                '--user-data-dir=%s' % profiledir,
-                "file://%s" % tmp_html.name,
-            ]
+        if not settings.CHROME_PATH:
+            raise ChromeNotFound(
+                "No Chrome/Chromium executable was found. Set CHROME_PATH in "
+                "qatrack/local_settings.py to the browser to use for PDF generation."
+            )
 
-            if os.name.lower() == "nt":
-                command = ' '.join(command)
+        # Passed as a sequence on every platform. On Windows this was
+        # collapsed with ' '.join() first, which quotes nothing: every Chrome
+        # location settings.py probes is under "C:\Program Files (x86)", and
+        # TMP_REPORT_ROOT can sit under a profile directory with a space in
+        # it, so both the executable and --print-to-pdf= were split on their
+        # spaces before Chrome saw them. subprocess quotes a sequence itself
+        # with list2cmdline(), which is what it is for. Likely a second cause
+        # of #835 - a service account's temp directory is not the one a
+        # deployer tests from by hand.
+        # Each run gets its own user data directory, from #866: two reports
+        # rendering at once otherwise share Chrome's default profile, and the
+        # second finds the first's lock. It is removed after `subprocess.call`
+        # returns rather than around the call, so Chrome has finished with it.
+        profile_dir = tempfile.mkdtemp(prefix="qatrack-chrome-")
 
-            stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
-            stderr = open(os.path.join(settings.LOG_ROOT, 'report-stderr.txt'), 'a')
-            subprocess.call(command, stdout=stdout, stderr=stderr)
+        command = [
+            settings.CHROME_PATH,
+            '--headless',
+            '--disable-gpu',
+            '--no-sandbox',
+            '--print-to-pdf=%s' % out_path,
+            '--print-to-pdf-no-header',
+            '--user-data-dir=%s' % profile_dir,
+            "file://%s" % tmp_html.name,
+        ]
+
+        stderr_path = os.path.join(settings.LOG_ROOT, 'report-stderr.txt')
+        stdout = open(os.path.join(settings.LOG_ROOT, 'report-stdout.txt'), 'a')
+        stderr = open(stderr_path, 'a')
+        try:
+            status = subprocess.call(command, stdout=stdout, stderr=stderr)
+        except OSError as e:
+            raise ChromeNotFound(
+                "Could not run '%s': %s. Check CHROME_PATH in "
+                "qatrack/local_settings.py." % (settings.CHROME_PATH, e)
+            )
+        finally:
+            stdout.close()
+            stderr.close()
+            shutil.rmtree(profile_dir, ignore_errors=True)
+
+        # The exit status and the output file are checked separately: they
+        # fail differently, and the difference is what tells a deployer
+        # whether the browser is wrong or its environment is. Neither was
+        # checked before - a browser that ran but produced nothing left
+        # open(out_path) to raise FileNotFoundError, which the handler below
+        # reported as "executable not found", pointing at the one thing that
+        # was demonstrably fine. That is the symptom described in #835.
+        if status != 0:
+            raise ChromePdfFailed(
+                "'%s' exited with status %d without producing a report. Its output "
+                "is in %s." % (settings.CHROME_PATH, status, stderr_path)
+            )
+
+        if not os.path.exists(out_path):
+            raise ChromePdfFailed(
+                "'%s' exited cleanly but wrote no PDF to %s. A browser that does "
+                "not support --print-to-pdf, or cannot write to that directory, "
+                "fails exactly this way. Its output is in %s."
+                % (settings.CHROME_PATH, out_path, stderr_path)
+            )
 
         out_file = open(out_path, 'r+b')
         pdf = out_file.read()
         out_file.close()
 
-    except OSError:
-        raise OSError("chrome '%s' executable not found" % (settings.CHROME_PATH))
     finally:
         if tmp_html and not tmp_html.closed:
             tmp_html.close()
@@ -146,9 +257,12 @@ def chrometopdf(html, name="", paper_size="letter"):
                 os.unlink(tmp_html.name)
         except:  # noqa: E722
             pass
+        # By path, not by `out_file`: that handle is only assigned once both
+        # failure branches above have passed, so a browser that exited non-zero
+        # after writing a partial PDF left the file behind on every run.
         try:
-            if out_file:
-                os.unlink(out_file.name)
+            if out_path:
+                os.unlink(out_path)
         except:  # noqa: E722
             pass
 
@@ -335,17 +449,61 @@ class relative_dates:
 
 def unique_slug_generator(instance, text, manager=None):
     """Take in a model manager (e.g. Unit.objects) and a text value and generate
-    a unique slug based on the text"""
+    a unique slug based on the text.
+
+    `slugify` keeps only what survives being decomposed and stripped to ASCII, so
+    text that yields nothing reduces to the empty string. Scripts with no ASCII
+    form - Chinese, Cyrillic, Greek, Arabic - are the obvious case, but it is not
+    a Latin/non-Latin boundary: `Ø`, `Ł`, `Đ`, `Œ`, `Æ` and `ß` are Latin letters
+    that do not decompose, and they empty too. What survives is a letter with an
+    ASCII form to fall back to, which is why `Arrêt` gives `arret`. An empty slug is not a usable address: the URL patterns
+    that take one require at least one character, so `{% url %}` raises
+    `NoReverseMatch` and the page 500s.
+
+    When that happens the model's own name is used as the base instead, so the
+    record still gets a working, unique, ASCII address. Model names are ASCII by
+    construction, so the fallback cannot itself slugify away.
+
+    That also repairs what the uniqueness loop did with the second such code. It
+    appends its counter to the text and slugifies the result, so a second Chinese
+    code became `slugify("<chinese>-1")` - and since slugify strips the leading
+    dash, that left the bare number `1`. A valid address, meaning nothing, and
+    one that a real code of "1" would want.
+
+    Anything that already slugifies to something keeps exactly the slug it has
+    always had, counter included. See the comment in the loop.
+
+    Fixing this for good means `allow_unicode=True` here and on the field, which
+    would give readable non-Latin addresses. It is not done here because it also
+    changes every accented code's slug on its next save (`Arrêt` becoming `arrêt`
+    rather than `arret`), breaking existing links - a minor-release change.
+    """
 
     klass = instance._meta.model
     manager = manager or klass.objects
 
+    base = slugify(text)
+    fell_back = not base
+    if fell_back:
+        base = slugify(instance._meta.model_name)
+
     append = 0
     while True:
-        append_text = "-%d" % append if append > 0 else ""
-        slug = slugify(text + append_text)
-        if manager.exclude(id=instance.id).filter(slug=slug):
+        if append == 0:
+            slug = base
+        elif fell_back:
+            slug = "%s-%d" % (base, append)
+        else:
+            # Deliberately appending to the text and slugifying the result,
+            # which is what this has always done. Appending to the slug instead
+            # would read better but changes the answer for any text whose slug
+            # ends in "-" or "_", because slugify strips those from the ends:
+            # "Dose_Rate_" would go from "dose_rate_-1" to "dose_rate-1". Only a
+            # collision reaches this line, but a deployment that has one already
+            # has the old slug in its URLs, and save() regenerates on every save.
+            slug = slugify("%s-%d" % (text, append))
+
+        if manager.exclude(id=instance.id).filter(slug=slug).exists():
             append += 1
         else:
-            break
-    return slug
+            return slug

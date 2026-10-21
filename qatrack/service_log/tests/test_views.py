@@ -1041,3 +1041,55 @@ class TestServiceEventTemplateSearcher(TestCase):
         data = resp.json()
         template_res = next(t for t in data if t['id'] == template.id)
         assert set(template_res['return_to_service_utcs']) == {utc_tlc.id, utc_tl.id}
+
+
+class TestGetTimeDisplayPluralisation(TestCase):
+    """
+    `get_time_display` used to build "%d minutes ago" by concatenation, which
+    made it untranslatable and rendered "1 minutes ago". It now uses `ngettext`.
+
+    @copilot-pull-request-reviewer asked for this: the behaviour had no regression
+    test, so nothing stopped the grammar or the untranslatability coming back.
+    """
+
+    def _ago(self, **delta):
+        from qatrack.service_log.views import get_time_display
+
+        return get_time_display(timezone.now() - timezone.timedelta(**delta))
+
+    def test_one_minute_is_singular(self):
+        """The bug as users met it: "1 minutes ago"."""
+
+        assert self._ago(minutes=1, seconds=5) == "1 minute ago"
+
+    def test_several_minutes_are_plural(self):
+        assert self._ago(minutes=7) == "7 minutes ago"
+
+    def test_zero_minutes_is_plural(self):
+        """English pluralises zero, and ngettext has to be given the chance to."""
+
+        assert self._ago(seconds=10) == "0 minutes ago"
+
+    def test_an_hour_or_more_falls_through_to_a_time(self):
+        """Only the under-an-hour branch pluralises; the rest formats a time."""
+
+        out = self._ago(hours=3)
+        assert "minute" not in out, out
+
+    def test_it_is_translated_rather_than_concatenated(self):
+        """
+        The other half of the original bug. Under a locale that has the plural
+        forms, the output must not be English - which it always was when the
+        string was built by concatenation.
+        """
+
+        from django.utils import translation
+
+        with translation.override("fr"):
+            singular = self._ago(minutes=1, seconds=5)
+            plural = self._ago(minutes=7)
+
+        assert "minute" in singular.lower(), singular
+        assert singular != "1 minute ago", "fr fell back to English"
+        assert plural != "7 minutes ago", "fr fell back to English"
+        assert singular != plural
