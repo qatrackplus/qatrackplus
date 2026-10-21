@@ -20,6 +20,8 @@ from django.utils.translation import gettext_lazy as _l
 from qatrack.qatrack_core.dates import format_as_date, format_datetime
 from qatrack.qatrack_core.utils import (
     chrometopdf,
+    clean_paper_size,
+    pdf_renderer,
     relative_dates,
     site_base_url,
     weasyprint_to_pdf,
@@ -271,20 +273,46 @@ class BaseReport(metaclass=ReportMeta):
         context['base_template'] = "reports/pdf_report.html"
         template = self.get_template(using=None)
         content = template.render(context)
-        paper_size = context.get('paper_size', 'letter')
-        
-        # Use WeasyPrint for paper size support
+        # Validated here, before an engine is chosen, because both engines
+        # validate it themselves and the fallback turns that into a lie: an
+        # invalid size raised ValueError out of WeasyPrint, was caught by the
+        # generic handler below, logged a traceback headed "WeasyPrint failed
+        # on this report", and then failed identically inside Chrome. The
+        # eventual error was right and everything said about its cause was
+        # wrong. Raised by CodeRabbit on PR crcrewso#18.
+        paper_size = clean_paper_size(context.get('paper_size', 'letter'))
+
+        if pdf_renderer() == "chrome":
+            # Chosen, not fallen back to. Nothing is attempted and nothing is
+            # logged: on a platform where WeasyPrint's libraries are not part
+            # of the install (Windows, by default), an import failure per
+            # report is noise about a decision that has already been made.
+            return chrometopdf(content, name=fname, paper_size=paper_size)
+
+        # WeasyPrint preferred: it honours the paper size, needs no browser, and
+        # is a declared dependency. Chrome remains the fallback below, so an
+        # installation that opts in and then loses pango still gets its reports.
         try:
             return weasyprint_to_pdf(content, name=fname, paper_size=paper_size)
-        except ImportError:
-            # WeasyPrint not available, fall back to Chrome
-            logger.warning("WeasyPrint not available, falling back to Chrome")
+        except (ImportError, OSError) as e:
+            # Unavailable, rather than broken. WeasyPrint is pure Python but
+            # renders through pango, cairo and gdk-pixbuf, and when those are
+            # missing - a stock Windows install without GTK, for instance - the
+            # *import* raises OSError, not ImportError. Catching only
+            # ImportError sent that case to the branch below, which logged a
+            # full ERROR traceback for every report on a machine where falling
+            # back to Chrome is simply the normal path. Measured by crane on
+            # Windows, 2026-10-18.
+            #
+            # A warning naming the reason, once per report, is the honest
+            # amount of noise: it is not an error, and it is not nothing.
+            logger.warning("WeasyPrint is unavailable (%s), using Chrome instead: %s", type(e).__name__, e)
             return chrometopdf(content, name=fname, paper_size=paper_size)
         except Exception:
-            # WeasyPrint failed for some other reason, fall back to Chrome.
-            # Log the traceback: falling back silently makes a broken report
-            # look like a rendering bug rather than a PDF engine failure.
-            logger.exception("WeasyPrint failed, falling back to Chrome")
+            # Available but failed on this document. That is a real fault and
+            # keeps its traceback: falling back silently would make a broken
+            # report look like a rendering bug rather than an engine failure.
+            logger.exception("WeasyPrint failed on this report, falling back to Chrome")
             return chrometopdf(content, name=fname, paper_size=paper_size)
 
     def to_csv(self):

@@ -76,8 +76,8 @@ home in the QATrack+ directory, then we would want to do the following:
 
 .. code-block:: console
 
-    $ mkdir ~/QATrack+
-    $ cd ~/QATrack+
+    $ mkdir ~/qatrack
+    $ cd ~/qatrack
 
 .. _docker_line_endings:
 

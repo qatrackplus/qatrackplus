@@ -814,6 +814,10 @@ class TestBaseReport(TestCase):
     def test_to_html(self):
         assert 'class="container-fluid"' in reports.BaseReport().to_html()
 
+    # Pinned: `to_pdf` picks its engine from PDF_RENDERER, whose default
+    # resolves to Chrome on Windows, and this test is about the HTML that
+    # reaches the engine rather than about which engine is chosen.
+    @override_settings(PDF_RENDERER='weasyprint')
     @mock.patch("qatrack.reports.reports.weasyprint_to_pdf")
     def test_to_pdf(self, weasyprint_to_pdf):
         reports.BaseReport().to_pdf()

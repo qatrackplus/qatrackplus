@@ -363,6 +363,63 @@ Set `AUTOSAVE_DAYS_TO_KEEP` to control the maximum number of days that auto-save
 QC data will be kept for.  The default settings is 30 days.
 
 
+.. _pdf_renderer:
+
+PDF_RENDERER
+............
+
+Set `PDF_RENDERER` to choose which engine renders report PDFs:
+
+.. code-block:: python
+
+    PDF_RENDERER = 'auto'        # default
+    # - or -
+    PDF_RENDERER = 'weasyprint'
+    # - or -
+    PDF_RENDERER = 'chrome'
+
+`auto` means WeasyPrint on Linux and in the Docker deployment, and Chrome on
+Windows.
+
+The difference is what each engine needs installed. WeasyPrint is a Python
+library, but it lays text out through the Pango, cairo and gdk-pixbuf
+libraries. A Linux server has those already and the Docker image installs
+them, so WeasyPrint simply works there. Windows has no such libraries: getting
+them means installing MSYS2 and its `mingw-w64-x86_64-pango` package, which is
+a second software stack to update and secure on your server. That is a
+decision to make deliberately, so a Windows installation uses Chrome - which
+the Windows installation guide already asks you to install - unless you say
+otherwise.
+
+To use WeasyPrint on Windows, first install Pango
+(:ref:`install_weasyprint_win`), then set:
+
+.. code-block:: python
+
+    PDF_RENDERER = 'weasyprint'
+
+and restart the QATrack+ Web Service and the Django Q cluster.
+
+.. note::
+
+    Chrome stays the fallback whichever engine you select: if WeasyPrint is
+    chosen and its libraries are missing or stop working, reports are rendered
+    by Chrome rather than failing. `manage.py check` reports that situation
+    (`qatrack.W016`) so you learn about it at upgrade time instead of from a
+    user waiting on a report.
+
+    The two engines produce visually equivalent reports from the same
+    stylesheets, and both honour the report's paper size. They do not produce
+    byte-identical files, and file sizes differ in both directions depending
+    on the report.
+
+.. note::
+
+    Setting `PDF_RENDERER` to anything other than the three values above is
+    reported by `manage.py check` as `qatrack.W015`, and reports are rendered
+    as though it were `auto`.
+
+
 CHROME_PATH
 ...........
 
@@ -376,9 +433,10 @@ Set `CHROME_PATH` to the Chrome/Chromium executable for generating PDF reports. 
 
 .. note::
 
-    PDF reports are normally rendered by WeasyPrint; Chrome is used as a
-    fallback when WeasyPrint is unavailable or fails, so `CHROME_PATH` only
-    needs to be valid for that fallback to work.
+    Which engine renders a report is set by :ref:`PDF_RENDERER
+    <pdf_renderer>`. Chrome is the default on Windows and the fallback
+    everywhere, so `CHROME_PATH` needs to be valid on any installation that
+    produces PDF reports.
 
     The paper size of a generated PDF follows the paper size selected for the
     report itself. It is applied through the report stylesheet rather than a

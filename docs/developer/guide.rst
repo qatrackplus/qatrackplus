@@ -448,8 +448,16 @@ and each section should be in alphabetical order.  For example:
     from qatrack.units.models import Unit
 
 Import order is checked by ruff's ``I`` rules, which are enabled in
-``pyproject.toml``. ``uv run ruff check --fix .`` sorts them, scoped to the files
-you changed as above.
+``pyproject.toml``. ``uv run ruff check --fix`` sorts them - name the files you
+changed:
+
+.. code-block:: bash
+
+    uv run ruff check --fix qatrack/qa/views/perform.py qatrack/qa/models.py
+
+``--fix .`` is the whole repository, and it will rewrite imports in files you
+never touched, which puts unrelated changes in your pull request. Raised by
+CodeRabbit.
 
 Indentation
 ^^^^^^^^^^^
@@ -724,12 +732,23 @@ can be factored into a fragment and pulled into each page with ``.. include::``.
   only consequence is a published page duplicating content that already appears in
   three guides.
 
-  **The moment a fragment defines a label, that changes.** Measured: adding one
-  ``.. _label:`` to an un-excluded fragment produces **three** duplicate-label
-  warnings, one for each page that includes it plus the fragment itself, and ``-W``
-  turns those into a failed build. So excluding a fragment is cheap insurance that
-  becomes necessary the first time somebody writes a label in one, which is not a
-  thing anyone will remember to check.
+  **The moment a fragment defines a label, that changes - and excluding it does
+  not save you.** Measured on 2026-10-19: one ``.. _label:`` added to
+  ``_upgrade_4_0_after.rst``, which is excluded by the pattern below and included
+  by four pages, produces **three** duplicate-label warnings, and ``-W`` turns
+  those into a failed build. ``exclude_patterns`` removes the fragment's own copy
+  of the label; it cannot stop the pages that include it from each defining it.
+
+  **So the rule is not "exclude the fragment" but "do not put a label in a shared
+  fragment".** Labels are a project-wide namespace, and a fragment is by
+  definition text that exists more than once. Put the label in the page, above the
+  ``.. include::``.
+
+  The same applies to a page that includes part of *another page* with
+  ``:start-after:``/``:end-before:`` - ``win_upgrade_from_3.rst`` does this to
+  ``win.rst``. A new labelled section inside that range is defined twice, which is
+  how this was rediscovered: a section added to ``win.rst`` in exactly that range
+  failed the build until it was moved below ``What Next``.
 
 ``exclude_patterns`` matches ``**/_*.rst``, so a new fragment named with the
 underscore is excluded without further work. Keep the convention anyway: the pattern

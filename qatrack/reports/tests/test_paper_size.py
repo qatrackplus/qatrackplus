@@ -270,6 +270,34 @@ class TestChromeCommandQuoting(TestCase):
 
         return captured['command']
 
+    def test_input_document_is_passed_as_a_well_formed_file_uri(self):
+        """Chrome tolerates "file://" + path; that is luck, not correctness.
+
+        Everything between the two slashes and the next one is a URI's
+        authority, so "file://D:\\x\\y.html" names a host and an empty path.
+        WeasyPrint rejects it, Chrome accepts it, and the two engines render
+        the same document - so the form that works everywhere is the one to
+        pass.
+        """
+        command = self._capture_command("/usr/bin/chromium")
+        inputs = [a for a in command if str(a).startswith("file:")]
+        assert len(inputs) == 1, command
+        assert inputs[0].startswith("file:///"), inputs[0]
+
+    def test_both_header_suppression_switches_are_passed(self):
+        """Chrome 155 ignores --print-to-pdf-no-header; the other one works.
+
+        Measured by crane on 2026-10-18: with only the old switch, Chrome and
+        Edge 155 print a date header and a footer containing the temporary
+        file's `file:///...` path. Report templates hide both behind their
+        margins, so no report is affected - but `chrometopdf()` is callable
+        directly, and an unrecognised switch is ignored rather than refused, so
+        passing both is free.
+        """
+        command = self._capture_command("/usr/bin/chromium")
+        assert "--print-to-pdf-no-header" in command, command
+        assert "--no-pdf-header-footer" in command, command
+
     def test_command_is_a_sequence_not_a_string(self):
         command = self._capture_command("/usr/bin/chromium")
         assert isinstance(command, list | tuple), repr(command)

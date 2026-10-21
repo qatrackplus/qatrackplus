@@ -1,9 +1,18 @@
-FROM alpine:3
+# The same image as the `postgres` service in compose.yaml, so the client tools
+# here can never be a different major version from the server they dump.
+#
+# `alpine:3` with the unpinned `postgresql-client` meta-package was installing
+# PostgreSQL 18 client tools against the 15 server - checked, not guessed - and
+# `postgresql15-client` is no longer available on current Alpine, so the version
+# could not simply be pinned. Using the server's own image makes the two
+# impossible to drift apart: change the postgres image and this follows.
+FROM postgres:15-alpine
 
 ARG HOST_UID=999
 ARG HOST_GID=999
 
-RUN apk add --no-cache postgresql-client bash tar dcron dos2unix procps flock
+# postgresql-client is already in the base image at the server's exact version
+RUN apk add --no-cache bash tar dcron dos2unix procps flock
 
 COPY backup.sh /usr/local/bin/backup
 COPY restore-media.sh /usr/local/bin/restore-media

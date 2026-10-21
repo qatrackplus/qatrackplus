@@ -48,7 +48,7 @@ class TestLogoInReports(TestCase):
         self.assertIn('class="logo logo-hidden"', html_content, "Logo should be hidden when include_logo=False")
         self.assertIn('logo.png', html_content, "Logo should reference the correct image file")
 
-    @override_settings(STATIC_ROOT='/test/static/root')
+    @override_settings(STATIC_ROOT='/test/static/root', PDF_RENDERER='weasyprint')
     def test_logo_visible_pdf_report_include_logo_true(self):
         """Test that logo uses file:// path in PDF reports when include_logo=True."""
         rep = qc.TestListInstanceDetailsReport(
@@ -72,7 +72,7 @@ class TestLogoInReports(TestCase):
             "Logo should use correct file:// path for PDF"
         )
 
-    @override_settings(STATIC_ROOT='/test/static/root')
+    @override_settings(STATIC_ROOT='/test/static/root', PDF_RENDERER='weasyprint')
     def test_logo_hidden_pdf_report_include_logo_false(self):
         """Test that logo is hidden in PDF reports when include_logo=False."""
         rep = qc.TestListInstanceDetailsReport(
@@ -93,7 +93,7 @@ class TestLogoInReports(TestCase):
         self.assertIn('class="logo logo-hidden"', html_content, "Logo should be hidden when include_logo=False")
         self.assertIn('file://', html_content, "Logo should use file:// path even when hidden")
 
-    @override_settings(STATIC_ROOT='/test/static/root')
+    @override_settings(STATIC_ROOT='/test/static/root', PDF_RENDERER='weasyprint')
     def test_logo_present_in_pdf(self):
         """Test that logo is present in PDF reports."""
         rep = qc.TestListInstanceDetailsReport(

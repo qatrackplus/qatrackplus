@@ -187,3 +187,18 @@ If you have issues with the migration, first check
 .. include:: win.rst
    :start-after: .. _`cherry_py_service`:
    :end-before: .. _finally:
+
+.. note::
+
+    **If you installed Pango so that reports render with WeasyPrint**, add this to
+    ``qatrack\local_settings.py`` as part of the upgrade:
+
+    .. code-block:: python
+
+        PDF_RENDERER = 'weasyprint'
+
+    From this release a Windows installation renders with Chrome unless it is asked
+    for WeasyPrint, so a server that has Pango installed will quietly go back to
+    Chrome without it. Reports keep working either way - see
+    :ref:`install_weasyprint_win`. If you have never installed Pango, there is
+    nothing to do.

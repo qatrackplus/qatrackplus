@@ -710,6 +710,27 @@ def EXPLORER_PERMISSION_VIEW(request):
     return request.user.has_perm("reports.can_run_sql_reports")
 
 
+# Which engine renders report PDFs: "auto", "weasyprint" or "chrome".
+#
+# "auto" means WeasyPrint everywhere except Windows, and Chrome on Windows.
+# WeasyPrint is pure Python but lays out through pango, cairo and
+# gdk-pixbuf. A Linux install gets those from its package manager, and the
+# Docker image declares them; Windows has no such libraries, and supplying
+# them means installing MSYS2 and its mingw-w64 pango package - a second
+# software stack on the server, with its own update path and its own
+# permissions to think about (see docs/install/win.rst).
+#
+# That is a decision for an administrator to make deliberately, so Windows
+# defaults to Chrome, which the Windows install guide already requires. It
+# also stops a stock Windows install logging a failed WeasyPrint import for
+# every report it renders, on a machine where Chrome is not a fallback but
+# the normal path.
+#
+# Set this to "weasyprint" on Windows after installing pango to opt in, or to
+# "chrome" anywhere to pin Chrome regardless of platform. Whichever is chosen,
+# Chrome remains the fallback if the preferred engine is unavailable.
+PDF_RENDERER = "auto"
+
 CHROME_PATH = ""
 if os.name.lower() == "nt":
     user = os.getlogin()
@@ -757,6 +778,19 @@ def env_csv(value, value_type=str):
     return [value_type(_.strip()) for _ in value.split(",") if _.strip()]
 
 
+def env_int(name, default):
+    """An integer setting from the environment, saying which one is wrong."""
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw.strip())
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid value for environment setting {name}: {raw!r} is not a whole number"
+        ) from exc
+
+
 def required_env(name):
     """
     Checks that a required env variable is provided and non-empty.
@@ -800,9 +834,11 @@ def override_from_env(setting_name, converter=str):
 # If not, the local_settings module is imported.
 use_docker = env_bool(os.getenv('USE_DOCKER', '0'))
 if use_docker:
-    ALLOWED_HOSTS = env_csv(required_env("ALLOWED_HOSTS"))
-    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
-    ALLOWED_HOSTS = list(set(ALLOWED_HOSTS))
+    # The site's own host names, and only those: the container's internal names
+    # are added further down, *after* CSRF_TRUSTED_ORIGINS has been derived from
+    # this list, so that localhost never becomes a trusted origin. nsmela asked
+    # for that ordering on qatrackplus#866.
+    ALLOWED_HOSTS = list(dict.fromkeys(env_csv(required_env("ALLOWED_HOSTS"))))
 
     secret_filepath = pathlib.Path("/user_data", "secrets", "secret_key.txt")
 
@@ -811,24 +847,13 @@ if use_docker:
     if secret_key_from_env:
         SECRET_KEY = secret_key_from_env.strip()
     else:
-        # If not specified in env var, try to read it from secret_key.txt
-        try:
-            with open(secret_filepath, encoding="utf-8") as f:
-                SECRET_KEY = f.read().strip()
+        # Otherwise read it from secret_key.txt, generating and persisting one
+        # on first boot. The mechanics live in their own stdlib-only module so
+        # that the race between django, django-q and several gunicorn workers
+        # all starting at once can be tested - see qatrack_core/secret_key.py.
+        from qatrack.qatrack_core.secret_key import load_or_create
 
-            if not SECRET_KEY:
-                raise ValueError(
-                    f"Secret key file is empty: `{secret_filepath}`."
-                )
-        except FileNotFoundError:
-            # Fall back to generating it automatically.
-            # It will be persisted in the user-data-volume or user-data bind mount.
-            import secrets
-            secret_filepath.parent.mkdir(parents=True, exist_ok=True)
-            SECRET_KEY = secrets.token_urlsafe(64)
-            with open(secret_filepath, 'w', encoding="utf-8") as f:
-                f.write(SECRET_KEY)
-            secret_filepath.chmod(0o600)
+        SECRET_KEY = load_or_create(secret_filepath)
 
     # Database settings
     POSTGRES_DB = required_env("POSTGRES_DB")
@@ -842,7 +867,10 @@ if use_docker:
             'USER': POSTGRES_USER,
             'PASSWORD': POSTGRES_PASSWORD,
             'HOST': os.getenv("POSTGRES_HOST", "postgres"),
-            'PORT': int(os.getenv("POSTGRES_PORT", "5432"))
+            # env_int, not int(): a bad value raised a bare ValueError during
+            # import, naming neither the setting nor the value, while every
+            # setting handled by override_from_env below reports both.
+            'PORT': env_int("POSTGRES_PORT", 5432)
         }
     }
 
@@ -912,12 +940,34 @@ if use_docker:
 
     CSRF_TRUSTED_ORIGINS = override_from_env("CSRF_TRUSTED_ORIGINS", converter=env_csv)
     if not CSRF_TRUSTED_ORIGINS:
+        # Only the scheme this deployment actually serves. Trusting both meant
+        # an https site also accepted http origins, which is what
+        # qatrackplus/qatrackplus#784 asks to stop doing - and what the TODO
+        # that used to sit on this loop was asking about.
+        #
+        # Note what this does *not* carry: the port. A deployment published on
+        # anything other than 80 or 443 has to set CSRF_TRUSTED_ORIGINS itself,
+        # because a browser's Origin header includes the port and these values
+        # do not. The container cannot know which host port it was published
+        # on. See the note in .env.example.
         CSRF_TRUSTED_ORIGINS = [
-            scheme + host
-            for host in ALLOWED_HOSTS
-            for scheme in ('http://', 'https://')  # TODO: limit this to protocol set in HTTP_OR_HTTPS?
-            if host != '*'
+            '%s://%s' % (HTTP_OR_HTTPS, host) for host in ALLOWED_HOSTS if host != '*'
         ]
+
+    # Now that the origins are fixed, accept the names the container reaches
+    # itself by. compose.yaml's django healthcheck requests
+    # http://localhost:8000/ from inside the container, so a site that narrows
+    # ALLOWED_HOSTS to its real host name would otherwise answer the check with
+    # a 400 and never be marked healthy - and nginx and django-q wait on that
+    # health, so the stack would not start at all. Measured by nsmela on
+    # qatrackplus#866.
+    #
+    # A '*' already accepts them, and adding them to that list would be
+    # meaningless.
+    if '*' not in ALLOWED_HOSTS:
+        for internal in ("localhost", "127.0.0.1"):
+            if internal not in ALLOWED_HOSTS:
+                ALLOWED_HOSTS.append(internal)
 
     override_from_env("SESSION_COOKIE_SECURE", converter=env_bool)
     override_from_env("CSRF_COOKIE_SECURE", converter=env_bool)

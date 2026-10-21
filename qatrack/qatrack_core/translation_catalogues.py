@@ -58,6 +58,8 @@ def po_entries(path):
     entries = []
     msgid, msgstr, msgctxt, mode, fuzzy, pending_fuzzy, plural = [], [], [], None, False, False, False
 
+    plurals = {}
+
     def flush():
         key = "".join(msgid)
         if not key:
@@ -69,7 +71,9 @@ def po_entries(path):
             # `msgctxt` entry would be compared as its bare msgid and report as
             # both missing from the .mo and extra in it.
             key = "%s\x04%s" % (context, key)
-        entries.append((key, "".join(msgstr), fuzzy, plural))
+        nonlocal plurals
+        forms = {i: "".join(parts) for i, parts in plurals.items()} if plural else None
+        entries.append((key, "".join(msgstr), fuzzy, forms))
 
     for raw_line in Path(path).read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
@@ -82,14 +86,24 @@ def po_entries(path):
         elif line.startswith("msgctxt"):
             flush()
             msgid, msgstr, msgctxt = [], [], [_unescape(_QUOTED.search(line).group(1))]
-            mode, fuzzy, pending_fuzzy, plural = "msgctxt", pending_fuzzy, False, False
+            mode, fuzzy, pending_fuzzy, plural, plurals = "msgctxt", pending_fuzzy, False, False, {}
         elif line.startswith("msgid_plural"):
             mode, plural = "plural", True    # shares the msgid already collected
         elif line.startswith("msgid"):
             if not msgctxt:
                 flush()
             msgid, msgstr = [_unescape(_QUOTED.search(line).group(1))], []
-            mode, fuzzy, pending_fuzzy, plural = "msgid", (pending_fuzzy or fuzzy), False, False
+            mode, fuzzy, pending_fuzzy, plural, plurals = "msgid", (pending_fuzzy or fuzzy), False, False, {}
+        elif line.startswith("msgstr["):
+            # A plural form. Each index is a separate translation in the .mo,
+            # keyed (msgid, index), so they have to be collected separately -
+            # concatenating them made an edit to any one of them invisible.
+            index = int(line[len("msgstr["):line.index("]")])
+            mode = ("plural", index)
+            plurals.setdefault(index, [])
+            m = _QUOTED.search(line)
+            if m:
+                plurals[index].append(_unescape(m.group(1)))
         elif line.startswith("msgstr"):
             mode = "msgstr"
             m = _QUOTED.search(line)
@@ -97,7 +111,9 @@ def po_entries(path):
                 msgstr.append(_unescape(m.group(1)))
         elif line.startswith('"'):
             text = _unescape(_QUOTED.search(line).group(1))
-            if mode == "msgid":
+            if isinstance(mode, tuple) and mode[0] == "plural":
+                plurals[mode[1]].append(text)
+            elif mode == "msgid":
                 msgid.append(text)
             elif mode == "msgctxt":
                 msgctxt.append(text)
@@ -106,6 +122,7 @@ def po_entries(path):
         elif not line:
             flush()
             msgid, msgstr, msgctxt, mode, fuzzy, plural = [], [], [], None, False, False
+            plurals = {}
     flush()
     return entries
 
@@ -114,23 +131,34 @@ def po_translations(path):
     """What a .po expects its .mo to contain, as {msgid: msgstr}.
 
     Only entries that will actually be compiled: a translation is present and the
-    entry is not fuzzy. Plural entries map to `None`, because their .mo
-    representation is indexed by plural form and comparing those to a single
-    string would be wrong - for them only presence is checked.
+    entry is not fuzzy.
+
+    A plural entry contributes one key per form, `(msgid, index)`, which is how
+    gettext keys them in the .mo. Mapping the whole entry to `None` and checking
+    only that it existed - what this did before - meant a translator could edit
+    `msgstr[0]` or `msgstr[1]`, leave the .mo uncompiled, and the staleness
+    check would pass while Django served the old wording. Raised by Copilot on
+    PR crcrewso#18.
     """
 
-    return {
-        msgid: (None if plural else msgstr)
-        for msgid, msgstr, fuzzy, plural in po_entries(path)
-        if msgstr and not fuzzy
-    }
+    translations = {}
+    for msgid, msgstr, fuzzy, forms in po_entries(path):
+        if fuzzy:
+            continue
+        if forms:
+            for index, text in forms.items():
+                if text:
+                    translations[(msgid, index)] = text
+        elif msgstr:
+            translations[msgid] = msgstr
+    return translations
 
 
 def mo_translations(path):
     """What a compiled catalogue actually contains, as {msgid: msgstr}.
 
-    Plural entries are keyed `(msgid, index)` by gettext; they map to `None` here
-    for the same reason as in `po_translations`.
+    Plural entries keep gettext's own `(msgid, index)` key and their text, so
+    that each form can be compared with the .po's.
     """
 
     with open(path, "rb") as handle:
@@ -138,8 +166,10 @@ def mo_translations(path):
     ids = {}
     for key, value in catalogue._catalog.items():
         if isinstance(key, tuple):
-            key = key[0]
-            value = None
+            # (msgid, index) - keep both; the .po side is keyed the same way.
+            if key[0]:
+                ids.setdefault(key, value)
+            continue
         if key:
             ids.setdefault(key, value)
     return ids

@@ -9,9 +9,13 @@ and 150 with an unsubstituted `__Format_0__` placeholder, shown verbatim to
 Spanish users for a year.
 """
 import re
+import struct
+import tempfile
+from io import StringIO
 from pathlib import Path
 
-from django.test import SimpleTestCase
+from django.core.management import call_command
+from django.test import SimpleTestCase, override_settings
 
 from qatrack.qatrack_core.translation_catalogues import (
     _unescape,
@@ -324,3 +328,136 @@ class TestContextQualifiedEntries(SimpleTestCase):
     def test_a_fuzzy_context_entry_is_still_excluded(self):
         po = self._po('#, fuzzy\nmsgctxt "month name"\nmsgid "May"\nmsgstr "mai"\n')
         assert po_translations(po) == {}
+
+
+class TestSourceLanguageIsIndependentOfTheSiteDefault(SimpleTestCase):
+    """`check_translations` must not take its source language from settings.
+
+    LANGUAGE_CODE is the locale a site serves by default; the language the
+    msgids are written in is a fact about this codebase. Conflating them meant
+    a site with LANGUAGE_CODE='fr' had French coverage skipped as "the language
+    the strings are written in", and English's deliberately absent catalogue
+    counted as a problem - exiting 1 with every catalogue current. Raised by
+    Copilot on PR crcrewso#18.
+    """
+
+    def test_source_language_is_english(self):
+        from qatrack.qatrack_core.management.commands.check_translations import (
+            SOURCE_LANGUAGE,
+        )
+
+        assert SOURCE_LANGUAGE == "en"
+
+    @override_settings(LANGUAGE_CODE="fr", LANGUAGES=[("en", "English"), ("fr", "French")])
+    def test_a_french_default_locale_does_not_change_the_source(self):
+        out = StringIO()
+        call_command("check_translations", stdout=out, stderr=StringIO())
+        output = out.getvalue()
+        assert "source language: en" in output, output
+        # French is a target under this configuration, so it must be reported
+        # on rather than waved through as the source language.
+        assert "the language the strings are written in" not in output.split("fr")[-1][:80], output
+
+
+class TestEditedPluralsAreDetected(SimpleTestCase):
+    """A changed plural form must make its catalogue stale.
+
+    Before this, both sides mapped a plural entry to `None`, so only its
+    presence was compared: a translator could improve `msgstr[0]` or
+    `msgstr[1]`, not recompile, and `qatrack.W010` stayed silent while Django
+    served the old wording. Copilot named this on PR crcrewso#18 with the
+    French minute-ago entry, which is the one used here.
+    """
+
+    PO = '''
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "%(minutes)d minute ago"
+msgid_plural "%(minutes)d minutes ago"
+msgstr[0] "il y a %(minutes)d minute"
+msgstr[1] "il y a %(minutes)d minutes"
+'''
+
+    # The .mo is written here rather than by msgfmt, which is not installed on
+    # this machine and is not on the Windows CI runners either. The format is
+    # small and documented, and writing it keeps the test self-contained: a
+    # test of catalogue staleness should not be able to skip because a system
+    # tool is absent.
+    @staticmethod
+    def _write_mo(path, entries):
+        """entries: {key: value}, keys and values already \x00-joined for plurals."""
+        items = sorted((k.encode("utf-8"), v.encode("utf-8")) for k, v in entries.items())
+        count = len(items)
+        key_table = 7 * 4
+        value_table = key_table + count * 8
+        payload = value_table + count * 8
+        keys, values, blob = [], [], b""
+        for key, value in items:
+            keys.append((len(key), payload + len(blob)))
+            blob += key + b"\x00"
+        for key, value in items:
+            values.append((len(value), payload + len(blob)))
+            blob += value + b"\x00"
+        header = struct.pack(
+            "<Iiiiiii", 0x950412DE, 0, count, key_table, value_table, 0, 0,
+        )
+        tables = b"".join(struct.pack("<ii", length, offset) for length, offset in keys)
+        tables += b"".join(struct.pack("<ii", length, offset) for length, offset in values)
+        Path(path).write_bytes(header + tables + blob)
+
+    def _catalogue(self, directory, po_text, mo_entries=None):
+        """Write a .po, and a .mo that matches it unless told otherwise."""
+        messages = Path(directory) / "fr" / "LC_MESSAGES"
+        messages.mkdir(parents=True, exist_ok=True)
+        po = messages / "django.po"
+        po.write_text(po_text.lstrip(), encoding="utf-8")
+        self._write_mo(po.with_suffix(".mo"), mo_entries or self.MO_ENTRIES)
+        return po
+
+    # What msgfmt would produce from PO: the header, and the plural entry keyed
+    # "msgid\x00msgid_plural" with its forms joined the same way.
+    MO_ENTRIES = {
+        "": "Content-Type: text/plain; charset=UTF-8\n"
+            "Plural-Forms: nplurals=2; plural=(n > 1);\n",
+        "%(minutes)d minute ago\x00%(minutes)d minutes ago":
+            "il y a %(minutes)d minute\x00il y a %(minutes)d minutes",
+    }
+
+    def test_a_compiled_catalogue_is_clean(self):
+        with tempfile.TemporaryDirectory() as directory:
+            self._catalogue(directory, self.PO)
+            assert catalogue_problems(directory) == []
+
+    def test_editing_one_plural_form_makes_it_stale(self):
+        with tempfile.TemporaryDirectory() as directory:
+            po = self._catalogue(directory, self.PO)
+
+            # The .mo stays as compiled; only the source changes - exactly what
+            # a translator does before forgetting to recompile.
+            po.write_text(
+                self.PO.lstrip().replace(
+                    'msgstr[0] "il y a %(minutes)d minute"',
+                    'msgstr[0] "il y a %(minutes)d minute seulement"',
+                ),
+                encoding="utf-8",
+            )
+
+            problems = catalogue_problems(directory)
+            assert problems, "an edited plural form left the catalogue looking current"
+            assert "django.po" in problems[0]
+
+    def test_editing_the_other_plural_form_also_makes_it_stale(self):
+        with tempfile.TemporaryDirectory() as directory:
+            po = self._catalogue(directory, self.PO)
+            po.write_text(
+                self.PO.lstrip().replace(
+                    'msgstr[1] "il y a %(minutes)d minutes"',
+                    'msgstr[1] "il y a %(minutes)d minutes entières"',
+                ),
+                encoding="utf-8",
+            )
+            assert catalogue_problems(directory), "msgstr[1] edits must count too"

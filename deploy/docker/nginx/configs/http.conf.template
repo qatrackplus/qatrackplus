@@ -12,8 +12,8 @@ server {
 
     location = /healthcheck {
         access_log off;
+        default_type text/plain;
         return 200 "OK\n";
-        add_header Content-Type text/plain;
     }
 
     # Close connection

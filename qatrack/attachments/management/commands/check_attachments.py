@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from qatrack.attachments.models import Attachment
 
@@ -15,7 +17,20 @@ class Command(BaseCommand):
 
     help = "Report finalized attachments whose backing file is missing from storage."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--staging",
+            action="store_true",
+            help=(
+                "Also report staged (unfinalized) attachments, which nothing "
+                "removes automatically."
+            ),
+        )
+
     def handle(self, *args, **options):
+        if options["staging"]:
+            self.report_staging()
+
         missing = []
         storage_errors = 0
         # select_related the owner FKs so the per-row `finalized`/`owner`
@@ -61,3 +76,60 @@ class Command(BaseCommand):
         # Non-zero exit (missing files and/or storage errors) so the audit can be
         # wired into cron / monitoring.
         raise SystemExit(1)
+
+    def report_staging(self):
+        """Report staged attachments, which no scheduled task ever removes.
+
+        A file attached while performing QC is written to MEDIA_ROOT/uploads/tmp
+        and its `Attachment` row is created immediately; both are moved into
+        place only when the test list instance is saved. Abandon the form -
+        navigate away, give up on a validation error, upload a replacement for
+        the same test - and the staged row and its file stay where they are.
+        Nothing in QATrack+ deletes them: `clean_autosaves` only removes
+        `AutoSave` rows, and no other scheduled task touches the upload tree.
+
+        So this reports rather than deletes, on purpose. A staged file is not
+        necessarily abandoned: the autosave payload records `attachment_id` for
+        upload tests, so an in-progress session a user can still resume - for
+        AUTOSAVE_DAYS_TO_KEEP days, 30 by default - refers to exactly these
+        rows. Anything that removes them has to respect that, and deciding the
+        retention window is a site's call rather than this command's.
+        """
+        staged = [a for a in Attachment.objects.iterator() if not a.finalized]
+        if not staged:
+            self.stdout.write("No staged (unfinalized) attachments.")
+            return
+
+        now = timezone.now()
+        keep_days = getattr(settings, "AUTOSAVE_DAYS_TO_KEEP", 30)
+        total_bytes = 0
+        older = 0
+        oldest = None
+
+        for attachment in staged:
+            try:
+                total_bytes += attachment.attachment.size
+            except Exception:  # noqa: BLE001 - a staged file may be gone already
+                pass
+            created = getattr(attachment, "created", None)
+            if created:
+                if oldest is None or created < oldest:
+                    oldest = created
+                if (now - created).days > keep_days:
+                    older += 1
+
+        self.stdout.write(
+            "%d staged (unfinalized) attachment(s), %.1f MiB, in %s."
+            % (len(staged), total_bytes / (1024 * 1024), settings.TMP_UPLOAD_ROOT)
+        )
+        if oldest:
+            self.stdout.write("  oldest: %s" % oldest.isoformat(timespec="seconds"))
+        self.stdout.write(
+            "  %d older than AUTOSAVE_DAYS_TO_KEEP (%d days), so referenced by no "
+            "session a user could still resume." % (older, keep_days)
+        )
+        self.stdout.write(
+            "Nothing removes these automatically. They are staging files, not "
+            "records - unlike everything else under the media folder, which must "
+            "never be deleted."
+        )

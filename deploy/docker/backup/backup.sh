@@ -17,6 +17,15 @@ fi
 
 mkdir -p "$BACKUP_DIR" # If backup folder does not exist, create it. 
 DATE=$(date +%Y%m%d_%H%M%S)
+# How long the *backup archives* under /backups are kept. This is the only
+# thing in this script that deletes anything, and it deletes only the archives
+# it wrote itself - the db_*.dump and media_*.tar.gz pairs below.
+#
+# It must never be pointed at /app_data/media. The media folder is records: an
+# attachment is part of the record of the work it is attached to, a corrected
+# upload is stored beside the file it replaces rather than over it, and nothing
+# in QATrack+ deletes one. A retention sweep over that tree would be deleting
+# clinical records, and it would be deleting them silently.
 RETENTION_DAYS=7
 
 dump_file="$BACKUP_DIR/db_$DATE.dump"

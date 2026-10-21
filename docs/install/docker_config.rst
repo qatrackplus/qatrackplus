@@ -68,6 +68,18 @@ ALLOWED_HOSTS (required)
   ``127.0.0.1`` are automatically injected into ``ALLOWED_HOST`` when running
   in development mode.
 
+DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_PASSWORD, DJANGO_SUPERUSER_EMAIL (optional)
+  Set all three and the django container creates that superuser on start-up, so a
+  new deployment can be signed into without running :ref:`createsuperuser
+  <docker_first_user>` by hand. Set none of them - the default - and the
+  entrypoint skips the step entirely.
+
+  Django's ``createsuperuser --noinput`` requires the username; it is the
+  variable the entrypoint tests for. The account is created once and nothing
+  touches it afterwards, so changing the password here later has no effect:
+  change it in QATrack+, and remove the variables once the account exists, since
+  a password in ``.env`` is a password on disk in plain text.
+
 SECRET_KEY (optional)
   The Django secret key. It's recommended you set this to a unique value which
   will be backed up in secure storage. If this variable is unset, the system will

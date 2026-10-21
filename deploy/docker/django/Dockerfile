@@ -101,8 +101,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     --requirement /tmp/user-requirements/requirements.txt; \
     fi
 
-# Make sure weasyprint is uninstalled. If it's installed, then it will be used instead of chromium for HTML-to-PDF conversion.
-RUN /opt/venv/bin/pip uninstall -y weasyprint || true
 
 # Runtime stage without uv installed
 FROM ${RUNTIME_BASE_IMAGE}
@@ -132,7 +130,26 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     # for LDAP support
     libldap2 \
     libsasl2-2 \
-    # for converting HTML to PDF
+    # for converting HTML to PDF: settings.PDF_RENDERER defaults to "auto",
+    # which means WeasyPrint on Linux, with chromium as the fallback.
+    #
+    # WeasyPrint is pure Python but renders through these libraries, and it
+    # raises OSError - not ImportError - when they are missing. They happen to
+    # arrive with chromium today, which is a dependency nobody declared: drop
+    # or change chromium and PDF generation would break for a reason that has
+    # nothing to do with chromium. Named here so that cannot happen.
+    #
+    # Measured 2026-10-18: a 4.0.1 image, which declares none of these, still
+    # rendered with WeasyPrint 65.1 - the undeclared dependency was real and
+    # was load-bearing.
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libffi8 \
+    # a usable default font: the slim base image ships almost none, and
+    # WeasyPrint renders text with whatever fontconfig can find
+    fonts-dejavu-core \
     chromium \
     # For debugging in the container
     nano \

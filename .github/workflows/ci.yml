@@ -137,6 +137,12 @@ jobs:
           docker exec -i ${{ job.services.mysql.id }} mysql -u root -proot -e "CREATE USER 'qatrack'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE USER 'qatrack_reports'@'%' IDENTIFIED WITH mysql_native_password BY 'qatrackpass'; CREATE DATABASE qatrackplus CHARACTER SET utf8mb4; GRANT ALL ON qatrackplus.* TO 'qatrack'@'%'; GRANT ALL ON test_qatrackplus.* TO 'qatrack'@'%'; GRANT SELECT ON qatrackplus.* TO 'qatrack_reports'@'%'; FLUSH PRIVILEGES;"
           docker exec -i ${{ job.services.mysql.id }} sh -c "mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -proot mysql"
 
+      - name: Point the tests at the job's database
+        if: matrix.db != 'sqlite'
+        # test_settings.py pins in-memory SQLite unless local_test_settings.py says otherwise;
+        # without this step the postgres and mysql jobs test SQLite. Fails if they still would.
+        run: uv run python scripts/ci_test_database.py
+
       - name: Run Tests
         run: uv run pytest -x -m "not selenium"
 
@@ -210,6 +216,7 @@ jobs:
           "@
           $code | Out-File -FilePath generate_settings.py -Encoding utf8
           python generate_settings.py
+
       - name: Run Tests
         run: uv run pytest -x -m "not selenium"
 
@@ -295,6 +302,85 @@ jobs:
 
             echo "PASS: valid db dump + media archive produced"
           '
+
+      - name: HTTP smoke test
+        # The checks above prove the containers start and stay healthy, and
+        # that the backup service produces a real archive. They do not prove
+        # the deployment is wired together: nginx could be serving nothing, or
+        # serving it from the wrong place, with every container still "Up".
+        # This hits it the way a client does - through nginx on its published
+        # port, not an internal healthcheck.
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+
+          # nginx serves only its configured server_name, which
+          # 10-set-env-var-defaults.envsh derives from ALLOWED_HOSTS, so every
+          # request has to carry a matching Host header. Read it from .env
+          # rather than hard-coding, so this keeps working if the example file
+          # changes its hostname.
+          host=$(grep -E '^ALLOWED_HOSTS=' .env | cut -d= -f2- | cut -d, -f1)
+          echo "testing against Host: $host"
+
+          # `/` must be the application's own redirect to its login page.
+          # "anything under 500" was the old test, and it passes for a default
+          # nginx welcome page, for a 404, and for any redirect to anywhere -
+          # none of which mean QATrack+ is being served. Raised by Copilot and
+          # CodeRabbit both.
+          # curl's own fields rather than parsing the headers: `awk
+          # IGNORECASE` is a gawk extension and Ubuntu's awk is mawk, so a
+          # header-matching version of this silently found no Location at all.
+          #
+          # Two requests rather than one with a heredoc: a heredoc terminator
+          # has to sit at column 1, which ends the YAML block scalar this step
+          # is written in and makes the file unparseable.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H "Host: $host" http://localhost/)
+          redirect=$(curl -s -o /dev/null -w '%{redirect_url}' -H "Host: $host" http://localhost/)
+          [ "$code" = "302" ] || { echo "FAIL: / returned $code, expected 302"; exit 1; }
+          case "$redirect" in
+            */accounts/login/*) echo "PASS: / redirects to $redirect" ;;
+            *) echo "FAIL: / redirected to '$redirect', expected /accounts/login/..."; exit 1 ;;
+          esac
+
+          # And the login page is QATrack+'s own, not an error page that
+          # happens to answer 200. The CSRF field is in the form, and the
+          # title is built by QATrack+'s base template.
+          login=$(curl -s -H "Host: $host" http://localhost/accounts/login/)
+          echo "$login" | grep -q "csrfmiddlewaretoken" \
+            || { echo "FAIL: no CSRF field on the login page"; exit 1; }
+          echo "$login" | grep -qi "log in" \
+            || { echo "FAIL: the login page does not look like QATrack+'s"; exit 1; }
+          echo "PASS: the login page is served and carries a CSRF token"
+
+          # The media and static locations reach the volumes django writes to.
+          # The old test accepted any status under 500 for /media/ and /static/,
+          # which a missing alias answers 404 to and a removed location answers
+          # with Django's login redirect - both passes. A file written through
+          # django's mount and read back byte for byte through nginx is the
+          # thing actually worth asserting.
+          marker="ci-smoke-$GITHUB_RUN_ID-$RANDOM"
+          docker compose -f compose.yaml exec -T django sh -c \
+            "printf %s '$marker' > /app_data/media/ci-smoke.txt; printf %s '$marker' > /app_data/static/ci-smoke.txt"
+          for path in /media/ci-smoke.txt /static/ci-smoke.txt; do
+            got=$(curl -s -H "Host: $host" "http://localhost$path")
+            [ "$got" = "$marker" ] || {
+              echo "FAIL: $path returned '$got', expected '$marker'"; exit 1; }
+            echo "PASS: $path is served from django's own volume"
+          done
+          docker compose -f compose.yaml exec -T django \
+            rm -f /app_data/media/ci-smoke.txt /app_data/static/ci-smoke.txt
+
+          # An unknown Host is not served. nginx refuses it with its 444,
+          # closing the connection without a response, so curl exits non-zero
+          # and reports no status at all - hence testing the exit code rather
+          # than comparing a number. Django's own ALLOWED_HOSTS check would
+          # answer 400, but nginx never lets the request that far, which is
+          # the defence worth asserting here.
+          if curl -sS -o /dev/null --max-time 10 -H 'Host: evil.example.com' http://localhost/ 2>/dev/null; then
+            echo "FAIL: an unknown Host header was served"
+            exit 1
+          fi
+          echo "PASS: an unknown Host header is refused by nginx"
 
       - name: Tear Down
         if: always()

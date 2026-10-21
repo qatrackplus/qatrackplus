@@ -26,12 +26,30 @@ class Command(BaseCommand):
                     shutil.rmtree(path)
 
     def run_backup(self, backup_dir, backup_type, db_name):
+        """Back up the database and the uploads, and say whether both worked.
+
+        The two steps are independent on purpose. They used to be one, and the
+        database half returns early on PostgreSQL, on MySQL and on any engine
+        it does not implement - so those sites got no uploads archive either,
+        with nothing said about it. A site reading "Please use pg_dump" would
+        reasonably take the rest of the backup to have happened. Raised by
+        Copilot and CodeRabbit both on PR crcrewso#18.
+
+        The return value still requires both, because it is what gates the
+        retention step: nothing old is deleted on the strength of a backup that
+        was not completely written.
+        """
         today_str = datetime.date.today().strftime("%Y-%m-%d")
         backup_loc = os.path.join(backup_dir, f"{today_str}-{backup_type}")
-        
+
         if not os.path.exists(backup_loc):
             os.makedirs(backup_loc)
 
+        database = self.backup_database(backup_loc, backup_type, db_name, today_str)
+        uploads = self.backup_uploads(backup_loc)
+        return database and uploads
+
+    def backup_database(self, backup_loc, backup_type, db_name, today_str):
         # 1. Database Backup
         db_dir_override = self.get_setting('BACKUP_DB_DIR', None)
         
@@ -87,18 +105,34 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"Database backup not implemented in this script for engine '{engine}'."))
             return False
 
+        return True
+
+    def backup_uploads(self, backup_loc):
         # 2. Uploads Zip
         uploads_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
         zip_file_path = os.path.join(backup_loc, 'uploads.zip')
         if os.path.exists(zip_file_path):
             os.remove(zip_file_path)
-            
-        if os.path.exists(uploads_dir):
-            shutil.make_archive(zip_file_path.replace('.zip', ''), 'zip', uploads_dir)
-            self.stdout.write(self.style.SUCCESS(f"Successfully backed up uploads to {zip_file_path}"))
-        else:
-            self.stdout.write(self.style.WARNING(f"Uploads directory {uploads_dir} does not exist. Skipping uploads backup."))
 
+        if not os.path.exists(uploads_dir):
+            # Not a failure: a site that has never had an upload has nothing
+            # here, and refusing to rotate old backups over that would be
+            # wrong.
+            self.stdout.write(self.style.WARNING(
+                f"Uploads directory {uploads_dir} does not exist. Skipping uploads backup."
+            ))
+            return True
+
+        try:
+            shutil.make_archive(zip_file_path.replace('.zip', ''), 'zip', uploads_dir)
+        except OSError as e:
+            # Said out loud, and it costs the retention step, for the same
+            # reason the database half does: a backup that is missing the
+            # uploads must not license deleting an older one that has them.
+            self.stdout.write(self.style.ERROR(f"Failed to back up uploads: {e}"))
+            return False
+
+        self.stdout.write(self.style.SUCCESS(f"Successfully backed up uploads to {zip_file_path}"))
         return True
 
     def handle(self, *args, **options):

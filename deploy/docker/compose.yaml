@@ -65,7 +65,19 @@ services:
       interval: 15s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      # The first start is much slower than later ones: the entrypoint runs
+      # createcachetable, migrate and collectstatic (846 files) before gunicorn
+      # binds. 30s plus 3 x 15s gave a 75 second budget, and a first boot on a
+      # 2-CPU Linode took 71 seconds to reach "Listening at" - so the container
+      # was marked unhealthy, nginx never started because it waits for django to
+      # be healthy, and `docker compose up -d` exited 1 on a deployment that was
+      # in fact seconds from working. Measured 2026-10-18 following
+      # docs/install/docker_production.rst as written.
+      #
+      # A failure inside start_period does not count against `retries`, so a
+      # generous value costs a fast machine nothing: it still reports healthy on
+      # its first successful probe.
+      start_period: 300s
 
   django-q:
     image: qatrackplus-django:prod
@@ -105,7 +117,10 @@ services:
       interval: 15s
       timeout: 15s
       retries: 3
-      start_period: 30s
+      # Same exposure as django's, and a heavier probe: each attempt starts a
+      # full `manage.py shell`. django-q also waits for django to be healthy,
+      # so on a slow first boot it begins its own 75 second budget late.
+      start_period: 300s
 
   postgres:
     image: postgres:15-alpine

@@ -77,6 +77,21 @@ If you do not set ``SECRET_KEY``, the system will generate a safe value for you
 in the ``secret_key.txt`` file in the user-data volume. You must then access the
 user-data storage to backup its value to safe storage for future use.
 
+.. warning::
+
+    **Treat that file as a backup item in its own right.** If it is lost - a
+    deleted volume, a restore that misses it - the next start generates a new
+    key, and QATrack+ comes up looking perfectly healthy. What has actually
+    happened, measured on 2026-10-18, is that every signed-in user is signed
+    out, every outstanding password-reset link stops working, and the only
+    trace in the log is a ``Session data corrupted`` line for each affected
+    session, which says nothing about the cause. Start-up now prints a
+    ``SECRET_KEY:`` notice when it generates a key, so this is visible in
+    ``docker compose logs django`` if you are looking.
+
+    Setting ``SECRET_KEY`` in ``.env`` avoids the whole question: the file is
+    then never used.
+
 
 Enable HTTPS/SSL (Optional)
 ...........................
@@ -121,3 +136,27 @@ host is rebooted.
 .. code-block:: console
 
     $ docker compose up -d
+
+
+.. _docker_first_user:
+
+Create Your First User
+^^^^^^^^^^^^^^^^^^^^^^
+
+No user account is created for you, so create one before your first login.
+The ``django`` service runs the application, so run ``createsuperuser`` there
+and answer its prompts:
+
+.. code-block:: console
+
+    $ docker compose exec django python manage.py createsuperuser
+
+You can then sign in with the credentials you just chose.
+
+.. note::
+
+    This can be done for you instead: set ``DJANGO_SUPERUSER_USERNAME``,
+    ``DJANGO_SUPERUSER_PASSWORD`` and ``DJANGO_SUPERUSER_EMAIL`` in ``.env``
+    before the first start and the entrypoint creates the account. Remove them
+    once it exists - a password in ``.env`` is a password on disk in plain text.
+    See the Docker configuration page for the full list.

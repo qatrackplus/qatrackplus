@@ -71,6 +71,41 @@ To perform an immediate one-off backup, run:
 container that shares the same volumes as the running container create when
 ``docker compose up`` is used.
 
+Do the services need stopping first?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**No, and the scheduled backup cannot do it anyway** - the ``backup`` container
+runs its own cron inside the stack and has no way to stop the other services.
+Every nightly backup is therefore taken on a running system, by design.
+
+That is safe for the database on its own. ``pg_dump`` takes a transactionally
+consistent snapshot, so the dump is never a half-written database no matter what
+is happening at the time.
+
+**What stopping the writers buys is a database and a media archive from the same
+moment**, and it is worth being precise about how much that is worth here. The
+script dumps the database and *then* archives the media files, so there is a
+window between the two. A file uploaded in that window ends up in the archive
+with no database row pointing at it, which is harmless - and the reverse case,
+a referenced file missing from the archive, cannot arise from anything QATrack+
+does: nothing in it deletes an upload, and a corrected upload is stored beside
+the file it replaces rather than over it. See :ref:`qatrack_backup`.
+
+So on a correctly run system the hot backup is not losing anything; what the
+pause gives you is a pair you can reason about without that argument, which is
+worth having before an upgrade and worth having if your site's practice expects
+it. Take it the same way you would restore one:
+
+.. code-block:: console
+
+    $ docker compose stop django django-q
+    $ docker compose run --rm --no-deps backup backup
+    $ docker compose up -d django django-q
+
+``postgres`` and ``backup`` stay up; it is only the two services that write that
+need to be out of the way. Out of clinical hours the downtime is a minute or two,
+and nothing about the scheduled nightly backup has to change.
+
 
 Listing the Backup Files in the Backups Storage
 -----------------------------------------------
@@ -94,9 +129,30 @@ Restoring Media Files
 Restoring the Database
 ----------------------
 
+**Stop everything that can write to the database first.** Restoring is not the
+mirror image of backing up: taking a backup is safe on a running system, and
+replacing the database is not.
+
 .. code-block:: console
 
+    $ docker compose stop django django-q
     $ docker compose run --rm --no-deps backup restore-db <db_XXXXXXXX_XXXXXX.dump>
+    $ docker compose up -d django django-q
+
+``restore-db`` asks you to type the database name before it does anything, and
+it says the same thing there. It will not refuse to run with the services up,
+though - it drops the database with ``--force``, which **terminates their
+connections** rather than waiting for them. So on a live system a restore
+interrupts whatever anybody was submitting at that moment, and leaves the task
+cluster free to write into a database that is part-way through being replaced.
+Neither failure announces itself.
+
+.. note::
+
+    **Backups do not need this.** The backup script is written so that a backup
+    can be taken safely while the system is running, which is what lets the
+    ``backup`` container keep to its own schedule without anybody coordinating
+    with it.
 
 
 Restarting the Service Containers
@@ -216,7 +272,7 @@ If you need to run any Django management commands, you may do so by calling:
 This requires that the django container is already running.
 
 Accessing the Django Shell
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In particular, if you need to access the Django shell run the following:
 
