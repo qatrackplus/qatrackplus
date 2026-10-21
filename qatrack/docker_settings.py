@@ -8,6 +8,7 @@ import datetime
 import json
 import os
 import secrets
+import tempfile
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -101,8 +102,18 @@ def load_secret_key(env):
     key = secrets.token_urlsafe(64)
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(key, encoding='utf-8')
-        path.chmod(0o600)
+        # Write the key to a private temporary file, then link it into place, so a
+        # process starting at the same moment never reads a half-written key. If
+        # another process published one first, use theirs.
+        fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f'.{path.name}.')
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                f.write(key)
+            os.link(tmp, path)
+        except FileExistsError:
+            return load_secret_key(env)
+        finally:
+            os.unlink(tmp)
     except OSError as e:
         raise ImproperlyConfigured(
             f"Could not save a new secret key to {path} ({e}). Set SECRET_KEY in deploy/docker/.env, "

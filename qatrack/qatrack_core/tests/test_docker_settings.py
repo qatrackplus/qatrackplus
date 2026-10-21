@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
@@ -177,6 +178,25 @@ class TestSecretKey(DockerSettingsTestCase):
             self.skipTest("POSIX file modes")
         self.apply()
         self.assertEqual(os.stat(self.key_file).st_mode & 0o777, 0o600)
+
+    def test_leaves_no_temporary_files(self):
+        self.apply()
+        self.assertEqual(os.listdir(self.key_file.parent), ['secret_key.txt'])
+
+    def test_key_published_by_another_process_first_is_used(self):
+        # Another container process publishes its key between our check for the
+        # file and our link: both must end up with the same key.
+        real_link = os.link
+
+        def other_process_wins(src, dst):
+            Path(dst).write_text('published-first', encoding='utf-8')
+            return real_link(src, dst)
+
+        with mock.patch.object(docker_settings.os, 'link', side_effect=other_process_wins):
+            g = self.apply()
+        self.assertEqual(g['SECRET_KEY'], 'published-first')
+        self.assertEqual(self.key_file.read_text(encoding='utf-8'), 'published-first')
+        self.assertEqual(os.listdir(self.key_file.parent), ['secret_key.txt'])
 
     def test_empty_file_is_an_error(self):
         self.key_file.parent.mkdir(parents=True)
