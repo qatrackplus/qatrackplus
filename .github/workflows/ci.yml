@@ -290,6 +290,11 @@ jobs:
           uid=$(docker compose exec -T django stat -c %u /proc/1)
           echo "django server process uid: $uid"
           [ "$uid" = 1000 ]
+          # Nothing the app needs (Matplotlib's cache, for one) may be unwritable.
+          if docker compose logs django 2>&1 | grep -E "Permission denied|mkdir -p failed"; then
+            echo "::error::django logged a permission error"
+            exit 1
+          fi
 
       - name: Verify LDAP support and that the secret key survives recreation
         working-directory: deploy/docker
@@ -485,6 +490,11 @@ jobs:
           ls -ln "$GITHUB_WORKSPACE/logs"
           [ -n "$(find "$GITHUB_WORKSPACE/logs" -type f -user "$(id -u)")" ]
           $dc exec -T django touch qatrack/media/uploads-dev-check.txt
+          # Nothing the app needs (Matplotlib's cache, for one) may be unwritable.
+          if $dc logs django 2>&1 | grep -E "Permission denied|mkdir -p failed"; then
+            echo "::error::django logged a permission error"
+            exit 1
+          fi
           echo "PASS: dev overlay runs as uid $(id -u) and writes into the checkout"
 
       - name: Tear Down
