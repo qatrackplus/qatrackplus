@@ -36,6 +36,7 @@ done < <(git ls-files --eol deploy/docker | grep -E '^i/(crlf|mixed)' || true)
 echo "== Build context of the django image"
 decoys=(
     .env
+    deploy/docker/.env
     deploy/docker/.env.local
     qatrack/local_settings.py
     qatrack/local_decoy.py
@@ -83,11 +84,10 @@ present=(
     fixtures/defaults/units
     deploy/docker/django/entrypoint.sh
 )
-# Paths that must never be in the image. deploy/docker/.env is the real,
-# tracked file holding the database password.
+# Paths that must never be in the image. deploy/docker/.env holds the database
+# password; it is not tracked, so a fresh checkout has none and it is a decoy above.
 absent=(
     "${decoys[@]}"
-    deploy/docker/.env
     docs
     .git
 )

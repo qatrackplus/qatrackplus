@@ -21,6 +21,64 @@ QATrack+ 4.0
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* **Docker: ``deploy/docker/.env`` is no longer tracked by git. Set your copy aside
+  before you pull.** It holds the database password, so it no longer belongs in the
+  repository. Every Docker site has edited it, so on the first pull to 4.0.2
+  ``git pull`` stops with *Your local changes would be overwritten*. Follow
+  :ref:`the steps in the Docker upgrade guide <docker_upgrade_env_untracked>`: copy
+  ``.env`` aside, pull, and copy it back. Later pulls leave it alone. New
+  installations create it with ``cp .env.example .env``.
+
+* **Docker sites can now set QATrack+'s settings in ``deploy/docker/.env``.**
+  Previously only the database credentials, ``ALLOWED_HOSTS`` and
+  ``CSRF_TRUSTED_ORIGINS`` could be set, and everything else needed a change inside
+  the image. ``deploy/docker/.env.example`` now documents every setting available:
+  email, time zone, HTTPS behind the proxy, sessions, the QC display options,
+  accounts, ADFS, Active Directory / LDAP sign-in (including username cleaning), and
+  the REST API. The Docker image now includes ``python-ldap``, so LDAP sign-in works
+  there too.
+
+  ``localhost`` and ``127.0.0.1`` are always allowed hosts, so the container health
+  check keeps working when ``ALLOWED_HOSTS`` names only the real host. They are
+  never trusted CSRF origins.
+
+* **Docker: upgrades no longer sign everyone out.** When ``SECRET_KEY`` was not set,
+  the key was generated inside the container and lost each time the container was
+  rebuilt, which signed out every user and voided password-reset links. It is now
+  kept in a ``user-data-volume`` volume, or taken from ``SECRET_KEY`` in ``.env`` if
+  you set one. The first start after upgrading generates a key once, so users sign
+  in one last time.
+
+* **The Docker application container no longer runs as root.** QATrack+ now runs as
+  an unprivileged ``qatrack`` user (uid 1000). Calculation procedures for composite
+  and upload tests run inside the application, with its privileges, so on earlier
+  releases they ran as root inside the container. They still run with the
+  application's privileges: they can read its environment, including the database
+  password, and use the database. But they can no longer change QATrack+'s own code
+  or the container's system files.
+
+  Nothing changes in the commands you run. Existing media and static files, written
+  as root by earlier releases, are re-owned automatically the next time you run
+  ``docker compose up -d``; on a large media volume that first start takes longer.
+  A short-lived ``init`` container that does this appears as exited in
+  ``docker compose ps -a``, which is expected.
+
+* **Docker: ``compose.override.yaml`` is now ``compose.dev.yaml`` and is no longer
+  applied automatically.** The override mounted the whole checkout over the code in
+  the image, so every plain ``docker compose`` command ran the checkout instead of
+  the image, as root. Plain ``docker compose`` now runs the code built into the
+  image. Developers who want their checkout live use
+  ``docker compose -f compose.yaml -f compose.dev.yaml``, with their own ids in
+  ``.env`` (see :ref:`docker_development`).
+
+  QATrack+'s log files are now inside the container rather than in the checkout's
+  ``logs`` folder. Read them with ``docker compose logs django``, or
+  ``docker compose exec django ls logs``.
+
+* **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
+  same versions the test suite runs against. Previously ``pip`` chose versions when
+  the image was built, so two builds of the same release could differ.
+
 * **Docker images no longer contain your ``.env`` file, local settings or site data.**
   The ``.dockerignore`` patterns only matched files at the top of the repository, so
   the image copied in ``deploy/docker/.env`` (which holds the database password), and
@@ -35,8 +93,7 @@ Deployment and Upgrade Notes
   ``deploy/docker/backups/`` was not in ``.gitignore``, so ``git status`` listed every
   nightly dump and ``git add -A`` would have committed them. Environment files
   (``.env``, ``*.env``, ``.env.*``) are now ignored as well, except the
-  ``.env.example`` templates. ``deploy/docker/.env`` itself is still tracked, so
-  nothing changes for an existing installation.
+  ``.env.example`` templates, including ``deploy/docker/.env`` (see above).
 
 * **Files under ``deploy/docker`` always check out with LF line endings**, including
   on Windows with ``core.autocrlf=true``. A Dockerfile or script with CRLF endings

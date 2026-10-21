@@ -1,0 +1,24 @@
+# Development overlay: runs QATrack+ from your checkout instead of the image's
+# own copy, so code changes show up without rebuilding the image.
+#
+# It is not applied automatically. Use it explicitly:
+#
+#     docker compose -f compose.yaml -f compose.dev.yaml up -d --build
+#
+# Plain `docker compose` runs the production image.
+#
+# QATrack+ writes into your checkout (logs/, and site.css on first start), so it
+# runs as your own user here. Set your ids in .env first:
+#
+#     echo "QATRACK_UID=$(id -u)" >> .env
+#     echo "QATRACK_GID=$(id -g)" >> .env
+services:
+  django:
+    user: "${QATRACK_UID:-1000}:${QATRACK_GID:-1000}"
+    environment:
+      # Your uid may have no home folder in the image; keep HOME and
+      # Matplotlib's cache in /tmp.
+      HOME: /tmp
+      MPLCONFIGDIR: /tmp/matplotlib
+    volumes:
+      - ../../.:/usr/src/qatrackplus

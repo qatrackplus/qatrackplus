@@ -12,6 +12,13 @@ meet your clinics needs.  The most important settings are explained below.
 These settings should be defined in a `local_settings.py` file in the main
 directory (same directory as `settings.py`)
 
+.. note::
+
+    On a Docker installation, these settings are set as variables in
+    ``deploy/docker/.env`` instead of in ``local_settings.py``. The setting names are
+    the same; ``deploy/docker/.env.example`` lists every one that can be set there
+    and the format each takes. See :ref:`docker_configuration`.
+
 .. _reload-config:
 
 After configuration changes

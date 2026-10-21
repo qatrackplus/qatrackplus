@@ -16,6 +16,25 @@ services:
       - static-volume:/usr/src/qatrackplus/qatrack/static:ro
       - ./user-data/ssl:/etc/nginx/ssl:ro
 
+  # Runs once before django: the app runs as uid 1000, and installs from before
+  # 4.0.2 ran it as root, so their volumes can hold root-owned files. This
+  # re-owns only those files, then exits. QATRACK_UID/QATRACK_GID are only for
+  # compose.dev.yaml, which runs the app as the developer's own user.
+  init:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/django/Dockerfile
+    user: "0"
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static /usr/src/qatrackplus/deploy/docker/user-data \( ! -user ${QATRACK_UID:-1000} -o ! -group ${QATRACK_GID:-1000} \) -exec chown ${QATRACK_UID:-1000}:${QATRACK_GID:-1000} {} +
+    volumes:
+      - media-volume:/usr/src/qatrackplus/qatrack/media
+      - static-volume:/usr/src/qatrackplus/qatrack/static
+      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
+
   django:
     build:
       context: ../../
@@ -23,11 +42,16 @@ services:
     restart: always
     env_file: .env
     depends_on:
+      init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     volumes:
       - media-volume:/usr/src/qatrackplus/qatrack/media
       - static-volume:/usr/src/qatrackplus/qatrack/static
+      # Keeps the generated secret key (when SECRET_KEY is not set in .env)
+      # across rebuilds, so upgrades do not log every user out.
+      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 30s
@@ -64,3 +88,4 @@ volumes:
   postgres-volume:
   media-volume:
   static-volume:
+  user-data-volume:
