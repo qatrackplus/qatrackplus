@@ -353,9 +353,12 @@ jobs:
         working-directory: deploy/docker
         run: |
           set -euo pipefail
-          mkdir -p user-data/ssl
+          # Docker created user-data/ssl, owned by root, when nginx first started:
+          # copy the certificate in with sudo, as the docs say.
           openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=qatrack.test \
-            -keyout user-data/ssl/key.pem -out user-data/ssl/cert.pem
+            -keyout "$RUNNER_TEMP/key.pem" -out "$RUNNER_TEMP/cert.pem" 2>/dev/null
+          sudo mkdir -p user-data/ssl
+          sudo cp "$RUNNER_TEMP/cert.pem" "$RUNNER_TEMP/key.pem" user-data/ssl/
           echo "HTTP_OR_HTTPS=https" >> .env
           docker compose up -d --wait --wait-timeout 300
           r="--resolve qatrack.test:443:127.0.0.1"

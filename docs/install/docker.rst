@@ -373,6 +373,17 @@ hospital's IT department, a certificate authority, or an origin certificate from
 a proxy such as Cloudflare.
 
 1. Put them in ``deploy/docker/user-data/ssl`` as ``cert.pem`` and ``key.pem``.
+   Docker creates that folder, owned by root, the first time QATrack+ starts, so
+   copy them in with ``sudo``:
+
+   .. code-block:: console
+
+       cd qatrackplus/deploy/docker
+       sudo mkdir -p user-data/ssl
+       sudo cp /path/to/your/certificate.pem user-data/ssl/cert.pem
+       sudo cp /path/to/your/private.key user-data/ssl/key.pem
+       sudo chmod 600 user-data/ssl/key.pem
+
    The certificate file should hold the full chain: your certificate first, then
    any intermediate certificates. To use other file names, set
    ``NGINX_SSL_CERTIFICATE`` and ``NGINX_SSL_CERTIFICATE_KEY`` in ``.env``.
