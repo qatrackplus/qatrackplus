@@ -1,0 +1,53 @@
+# This file is meant to override compose.yaml for development/debuging purposes.
+#
+# To use it, call `just compose` with QATDEV=1 in `.env`, or equivalently:
+#   - call `docker compose -f compose.yaml -f compose.dev.yaml`
+#   - set COMPOSE_FILE=compose.yaml:compose.dev.yaml and call `docker compose`
+
+services:
+
+  # Note: when running on linux and bind-mounting the qatrack source code
+  # inside the container, it is necessary to use the host's UID and GID to
+  # avoid permission errors. UID and GID are passed as build-time arguments
+  # when building the docker images.
+  #
+  # Furthermore, it's necessary all containers accessing a shared volume use the
+  # same UID/GID.
+
+  nginx:
+    image: qatrackplus-nginx:dev
+    build:
+      args:
+        HOST_UID: ${HOST_UID:-999}
+        HOST_GID: ${HOST_GID:-999}
+    environment:
+      # prevent nginx from serving static files. For local dev, we let django's
+      # development server do this.
+      DEV: "true"
+
+  django:
+    image: qatrackplus-django:dev
+    build:
+      args:
+        UV_NO_DEV: 0  # do install dev dependencies for local development
+        HOST_UID: ${HOST_UID:-999}
+        HOST_GID: ${HOST_GID:-999}
+    environment:
+      DEBUG: "true"
+      DEBUG_TOOLBAR: "true"
+    volumes:
+      - ../../.:/app  # bind mount source code in container
+
+  django-q:
+    image: qatrackplus-django:dev
+    environment:
+      DEBUG: "true"
+      DEBUG_TOOLBAR: "true"
+    volumes:
+      - ../../.:/app # bind mount source code in container
+
+  backup:
+    build:
+      args:
+        HOST_UID: ${HOST_UID:-999}
+        HOST_GID: ${HOST_GID:-999}

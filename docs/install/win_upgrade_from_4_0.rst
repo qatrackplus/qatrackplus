@@ -8,7 +8,7 @@ upgrade is a code update, a dependency sync and a restart:
 
 1. Stop the scheduled task and the web service
 2. ``git fetch`` and ``git pull``
-3. ``uv sync --exact --extra win --extra mssql``
+3. ``uv sync --exact --extra win --extra mssql``, then activate ``.venv``
 4. ``python manage.py check``
 5. ``python manage.py migrate`` and ``python manage.py collectstatic``
 6. Start the service and scheduled task again
@@ -49,6 +49,19 @@ Fetch the new version and update the environment. You do not name a version — 
     >>  git pull
     >>  uv sync --exact --extra win --extra mssql
 
+Activate the environment. ``uv sync`` updates ``.venv`` but does not activate it,
+and the commands below are run with the environment's own ``python``:
+
+.. code-block:: console
+
+    >>  .\.venv\Scripts\Activate.ps1
+
+Your command prompt should now be prefixed with ``(qatrackplus)`` or ``(.venv)``.
+Without this, in a fresh PowerShell window ``python`` is the system interpreter -
+or Windows' Python Store alias, which opens the Microsoft Store instead of running
+anything - so the commands below would either fail on missing dependencies or
+run against the wrong environment, while your services are stopped.
+
 Check the installation, then run the migration step and collect static files:
 
 .. code-block:: console
@@ -63,5 +76,20 @@ Restart:
 
     >>  Start-Service "QATrack+ Web Service"
     >>  Start-ScheduledTask -TaskName "QATrack+ Django Q Cluster"
+
+.. note::
+
+    **If you installed Pango so that reports render with WeasyPrint**, add this to
+    ``qatrack\local_settings.py`` as part of the upgrade:
+
+    .. code-block:: python
+
+        PDF_RENDERER = 'weasyprint'
+
+    From this release a Windows installation renders with Chrome unless it is asked
+    for WeasyPrint, so a server that has Pango installed will quietly go back to
+    Chrome without it. Reports keep working either way - see
+    :ref:`install_weasyprint_win`. If you have never installed Pango, there is
+    nothing to do.
 
 .. include:: _upgrade_4_0_after.rst

@@ -1,0 +1,61 @@
+#!/bin/sh
+#/docker-entrypoint.d/10-set-env-var-defaults.envsh
+
+# This file, because it has the extension .envsh, will be sourced,
+# and the env vars exported here will be accessible in later scripts
+# found in docker-entrypoint.d.
+
+validate_allowed_hosts() {
+    OLD_IFS=$IFS  # original Internal Field Separator (normally whitespace)
+    IFS=','  # Temporarily set IFS to ','
+
+    for host in $ALLOWED_HOSTS; do
+        if [ -z "$host" ]; then
+            echo "ERROR: ALLOWED_HOSTS contains an empty entry." >&2
+            echo "Example: 'a,,b' or a leading/trailing comma." >&2
+            return 1
+        fi
+    done
+
+    IFS=$OLD_IFS
+    return 0
+}
+
+validate_allowed_hosts || exit 1
+
+# Test if NGINX_SERVER_NAME has zero length or is unset
+if [ -z "${NGINX_SERVER_NAME:-}" ]; then
+    case ",$ALLOWED_HOSTS," in
+        *,\*,*)
+            echo "ERROR: ALLOWED_HOSTS contains '*'." >&2
+            echo "This converts to 'server_name *', which is invalid nginx syntax." >&2
+            echo "If you want to use '*' in ALLOWED_HOSTS, you must specify NGINX_SERVER_NAME explicitly." >&2
+            exit 1
+            ;;
+    esac
+
+    # Set a default value for NGINX_SERVER_NAME generated from Django's ALLOWED_HOSTS
+    # when NGINX_SERVER_NAME is not already specified.
+    export NGINX_SERVER_NAME="$(printf '%s' "$ALLOWED_HOSTS" | tr ',' ' ')"
+fi
+
+# Export env vars based on the value of the DEV env var.
+#
+# NGINX_LOCATIONS_FILE selects the correct locations to be served by nginx.
+# In DEV mode, we don't want static files served by nginx. Rather, we let
+# django server them with its development server.
+#
+# Also, in DEV mode, we inject localhost and 127.0.0.1 in NGINX_SERVER_NAME
+# as a convenience.
+if [ "${DEV:-false}" = "true" ]; then
+    export NGINX_LOCATIONS_FILE=qatrackplus-locations-dev.conf
+    export NGINX_SERVER_NAME="${NGINX_SERVER_NAME} localhost 127.0.0.1"
+else
+    export NGINX_LOCATIONS_FILE=qatrackplus-locations-prod.conf
+    export NGINX_SERVER_NAME="${NGINX_SERVER_NAME}"
+fi
+echo "NGINX_LOCATIONS_FILE=$NGINX_LOCATIONS_FILE"
+echo "NGINX_SERVER_NAME='$NGINX_SERVER_NAME'"
+
+export NGINX_CLIENT_MAX_BODY_SIZE="${NGINX_CLIENT_MAX_BODY_SIZE:-100m}"
+echo "NGINX_CLIENT_MAX_BODY_SIZE=$NGINX_CLIENT_MAX_BODY_SIZE"

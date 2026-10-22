@@ -18,6 +18,105 @@ QATrack+ 4.0
 4.0.2
 ------
 
+Docker
+^^^^^^
+
+* **The generated secret key is now published atomically, and says when it is
+  created.** On first boot the django service, the django-q service and several
+  gunicorn workers all start at once; the key file was created empty and then
+  written, so another process could read it in that window and start with an
+  empty ``SECRET_KEY``. Reproduced in 54 of 60 runs of eight concurrent
+  initialisers; now 0 of 60. A process that cannot create the key - django-q
+  mounts the volume read-only - says so and names the service that can.
+
+* **Losing the key file is no longer silent.** Start-up prints a ``SECRET_KEY:``
+  notice when it generates a key, saying that any previous key is gone and that
+  every session and password-reset link has been invalidated. Previously the
+  site came up looking healthy, with only a ``Session data corrupted`` line per
+  session to go on. An empty key file is now refused rather than replaced.
+
+* **The first-boot log no longer shows a ``CommandError``.** The entrypoint ran
+  ``createsuperuser --noinput`` unconditionally, which reports *"You must use
+  --username with --noinput"* on every installation that does not set
+  ``DJANGO_SUPERUSER_USERNAME``.
+
+Settings
+^^^^^^^^
+
+* **New setting:** ``PDF_RENDERER`` chooses the engine that renders report PDFs -
+  ``'auto'`` (the default), ``'weasyprint'`` or ``'chrome'``. ``'auto'`` means
+  WeasyPrint on Linux and in the Docker deployment, and Chrome on Windows.
+
+  This is a change of behaviour on Windows. WeasyPrint was preferred there and
+  then failed on every report, because its layout libraries (Pango, cairo,
+  gdk-pixbuf) are not part of a Windows installation: the report was produced by
+  Chrome anyway, after a failed import and an error traceback in ``debug.log``
+  for every PDF. On such a server nothing changes but the noise.
+
+  .. warning::
+
+      **If you installed Pango yourself, this upgrade switches you back to
+      Chrome.** A Windows server with Pango present renders with WeasyPrint on
+      4.0.1, and will render with Chrome after upgrading unless you add
+      ``PDF_RENDERER = 'weasyprint'`` to ``qatrack/local_settings.py``. Reports
+      keep working either way, which is what makes it easy to miss. Measured on
+      Windows Server 2019, 2022 and 2025.
+
+  Windows sites that want WeasyPrint can install Pango through MSYS2 and set
+  ``PDF_RENDERER = 'weasyprint'`` - see :ref:`install_weasyprint_win`. Linux and
+  Docker installations are unaffected.
+
+  ``manage.py check`` warns about an unusable value (``qatrack.W015``), and about a
+  WeasyPrint that was selected but cannot be imported (``qatrack.W016``).
+
+Bug Fixes
+^^^^^^^^^
+
+* **Staged uploads can be cleaned up**, which several sites have asked for. A file
+  attached while performing QC is written to ``media/uploads/tmp`` and moved into
+  place when the test list instance is saved; abandoned forms left theirs behind,
+  and nothing removed them, so that folder grew indefinitely. ``manage.py check_attachments --staging`` reports what
+  is in there, and ``manage.py clean_staged_attachments`` sweeps it - reporting by
+  default, removing with ``--delete``.
+
+  Its boundary is ``AUTOSAVE_DAYS_TO_KEEP`` plus a margin of seven days, because an
+  in-progress session a user can still resume refers to its staged uploads by id
+  for the length of the autosave window. Nothing inside that window is touched, and
+  finalized attachments are never candidates: everything else under the media folder
+  is a record.
+
+* **``manage.py backup_site`` backs up the uploaded media files on every engine.**
+  The database step returns early on PostgreSQL, on MySQL and on any engine it does
+  not implement, and it used to take the uploads archive with it - so those sites
+  got no media backup either, with nothing said about it. A site that read "Please
+  use pg_dump" and arranged its own database dump would reasonably have believed
+  the rest of the backup happened. The two steps are now independent; the retention
+  step still waits for both, so nothing old is deleted on the strength of an
+  incomplete set.
+
+  **Check any backup set a PostgreSQL or MySQL site made before this release**: it
+  contains neither the database nor the uploads.
+
+* **A fault type whose code has no ASCII form can be repaired.** 4.0.1 stopped new
+  ones being created with an unusable slug, but a record written before that keeps
+  it - and its pages return 500, so it cannot be fixed by editing it in the site
+  either. ``manage.py repair_fault_type_slugs`` gives it a working address, and
+  ``--dry-run`` shows what it would change first. Slugs that already resolve are
+  left exactly as they are, including their uniqueness counters, so no working URL
+  changes.
+
+  There is at most one such record per site: the ``slug`` column is unique, so the
+  second code with no ASCII form got a different broken value rather than a second
+  empty one.
+
+Documentation
+^^^^^^^^^^^^^
+
+* The Windows guide's Django Q scheduled task now sets a five minute startup
+  delay. Without it, on a server where SQL Server runs locally, the cluster
+  starts before the database is accepting connections, never reconnects, and
+  scheduled reports and notices stop silently until somebody restarts the task.
+
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -228,13 +327,11 @@ Technical Improvements
 * Reduced package complexity by removing an unnecessary external dependency from the stack.
 * Improved consistency of installation and upgrade command sequences.
 * Updated time handling to use timezone-aware datetimes throughout the codebase.
-* Added a `generate_sample_data` management command for development and testing. It fills a database with a small radiation oncology centre: two linacs and a CT simulator, TG-142 style daily and monthly QA protocols with references and tolerances, rolling QA history including an unreviewed backlog, service events with return to service QA, faults, a parts inventory, and saved reports with schedules. Re-running it extends the data rather than duplicating it, and the `--clear` option (which empties those tables for the whole database) asks for confirmation first. See the developers guide for the command's options and the sample logins.
 * The development local settings template now enables `DEBUG` and sets `ALLOWED_HOSTS` for local addresses, and default fixture loading no longer depends on the current working directory.
 
 Bug Fixes
 ^^^^^^^^^
 
-* Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form (:issues:`#829 <829>`).
 * Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
 * Fixed tolerance compatibility validation across different test types.
 * Fixed reference value type preservation in admin forms.

@@ -12,11 +12,11 @@ db/
 tmp/
 deploy/docker/user-data
 deploy/docker/backups/
+deploy/docker/user-requirements/requirements.txt
 deployLocal.py
 
 # Environment files hold passwords and site settings and must never be committed.
-# Only the documented templates are tracked. (deploy/docker/.env is still tracked
-# for existing Docker installs; ignoring a tracked file does not untrack it.)
+# Only the documented templates are tracked.
 .env
 .env.*
 *.env

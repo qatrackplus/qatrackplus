@@ -28,6 +28,15 @@ cache.delete(settings.CACHE_SERVICE_STATUS_COLOURS)
 cache.delete(settings.CACHE_SL_NOTIFICATION_TOTAL)
 
 
+def _l_dict(d):
+    """
+    Converts gettext lazy-translated values of a dict to strings.
+    
+    Necessary prior to conversion to JSON.
+    """
+    return {k: str(v) for k, v in d.items()}
+
+
 def site(request):
 
     context = {
@@ -40,7 +49,7 @@ def site(request):
         'FEATURE_REQUEST_URL': settings.FEATURE_REQUEST_URL,
         'ICON_SETTINGS': settings.ICON_SETTINGS,
         'ICON_SETTINGS_JSON': json.dumps(settings.ICON_SETTINGS),
-        'TEST_STATUS_SHORT_JSON': json.dumps(settings.TEST_STATUS_DISPLAY_SHORT),
+        'TEST_STATUS_SHORT_JSON': json.dumps(_l_dict(settings.TEST_STATUS_DISPLAY_SHORT)),
         'REVIEW_DIFF_COL': settings.REVIEW_DIFF_COL,
         'DEBUG': settings.DEBUG,
         'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,

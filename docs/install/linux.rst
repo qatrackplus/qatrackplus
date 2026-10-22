@@ -429,7 +429,18 @@ Nginx to serve:
     python manage.py collectstatic
 
 If you want to enable internationalization, then you need to compile the
-messages catalogs for the languages you need:
+messages catalogs for the languages you need. ``compilemessages`` is a wrapper
+around GNU gettext's ``msgfmt``, which is not part of Python, so install it
+first:
+
+.. code-block:: bash
+
+    sudo apt install gettext
+
+Without it the command stops with ``CommandError: Can't find msgfmt. Make sure
+you have GNU gettext tools 0.15 or newer installed.`` and no catalogue is
+compiled - QATrack+ then serves every string in English, with nothing else to
+say it is wrong.
 
 .. code-block:: bash
 

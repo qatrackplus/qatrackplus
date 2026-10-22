@@ -42,6 +42,7 @@ run into any issues.  Of course you can always look for help on the
 
    docker
    docker_upgrade_from_4_0
+   docker_upgrade_from_4_0_1
 
 
 Configuring your QATrack+ Instance

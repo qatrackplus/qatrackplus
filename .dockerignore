@@ -20,6 +20,11 @@
 !fixtures/defaults/**
 !deploy/docker/django/entrypoint.sh
 
+# q#866's Dockerfile installs a site's own python packages from here
+# (`COPY ./deploy/docker/user-requirements/`), so the build context needs it.
+!deploy/docker/user-requirements
+!deploy/docker/user-requirements/**
+
 # Re-ignore local files that can exist inside the paths let back in above.
 # These mirror the matching entries in .gitignore.
 qatrack/local_*.py

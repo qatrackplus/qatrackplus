@@ -13,6 +13,60 @@ At a minimum, you must ensure that you keep secure, off-server backups of:
 2. Your ``local_settings.py`` file (located in ``qatrackplus\qatrack\local_settings.py`` or ``qatrackplus/qatrack/local_settings.py``)
 3. Your ``media`` folder (located in ``qatrackplus\qatrack\media`` or ``qatrackplus/qatrack/media``)
 
+.. danger::
+
+    **The ``media`` folder is records. Nothing in it should ever be deleted.**
+
+    An attachment to a test list instance, a service event or a fault is part of
+    the record of that work, the same as the values typed beside it. If somebody
+    uploads a corrected file, the correct behaviour is for **both** files to
+    remain: the new one is what the record now points at, and the old one is what
+    it pointed at before, which is exactly the question an audit asks.
+
+    QATrack+ is built this way and does not need your help to be: every upload is
+    stored under a name carrying a date and a random suffix, so a later upload
+    cannot overwrite an earlier one, and nothing in the application deletes a
+    file from ``media`` - deleting an attachment in the interface removes the
+    database row and leaves the file where it is.
+
+    So the folder only grows, and that is intended. Plan storage for it rather
+    than pruning it. **Never point a retention or clean-up job at ``media``**, and
+    be careful with anything that "tidies" orphaned files: a file with no database
+    row pointing at it is usually the previous version of a record, not rubbish.
+
+.. note::
+
+    **One subfolder is not records: ``media/uploads/tmp``.** A file attached while
+    performing QC is written there first and moved into place when the test list
+    instance is saved, so what is left behind belongs to forms that were never
+    submitted. Those are staging files, and nothing in QATrack+ removes them -
+    the folder grows with every abandoned upload.
+
+    ``manage.py check_attachments --staging`` reports how many there are, how much
+    space they take, and how many are older than ``AUTOSAVE_DAYS_TO_KEEP``.
+
+    Do not simply empty it. An in-progress session that a user can still resume
+    refers to its staged uploads by id for ``AUTOSAVE_DAYS_TO_KEEP`` days (30 by
+    default), so deleting a file younger than that takes an upload out of a form
+    somebody is coming back to.
+
+    ``manage.py clean_staged_attachments`` applies that rule for you. Its sweep
+    boundary is ``AUTOSAVE_DAYS_TO_KEEP`` **plus a margin** - seven days by
+    default, ``--margin-days`` to change it - so it never touches a staged file
+    that a resumable session could refer to, and the margin covers the two clocks
+    not lining up exactly. It reports what it would remove and does nothing else
+    unless you pass ``--delete``:
+
+    .. code-block:: bash
+
+        python manage.py clean_staged_attachments            # report
+        python manage.py clean_staged_attachments --delete   # and remove
+
+    It removes the database row and then the file, in that order, so it cannot
+    leave a row pointing at a file that is gone - which is the fault
+    ``check_attachments`` exists to report. Finalized attachments are never
+    candidates, whatever their age.
+
 It is highly recommended that your backups do not reside on the QATrack+ server itself.
 Store them on a remote system (e.g. a network or shared drive) so that if your server
 loses its primary hard drive, or if the files become corrupted or locked by ransomware,
@@ -34,6 +88,12 @@ timestamped directory.
 
     **It can only back up the database on SQL Server and SQLite.** On PostgreSQL,
     MySQL, or any other engine it reports that it cannot, and skips the database.
+
+    **Before 4.0.2 it also skipped the uploaded media files on those engines**,
+    without saying so: the database step returned early and took the uploads
+    archive with it. So a backup set made by a PostgreSQL or MySQL site before
+    this release contains **neither** - check one before you rely on it. From
+    4.0.2 the media archive is written whatever the database step did.
 
     **The command exits zero either way.** There is no non-zero exit path in it, so
     a scheduled task that checks only the exit status will record a success. Check
