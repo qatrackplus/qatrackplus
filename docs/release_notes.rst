@@ -49,6 +49,31 @@ Deployment and Upgrade Notes
   you set one. The first start after upgrading generates a key once, so users sign
   in one last time.
 
+* **Docker: scheduled notifications and reports now run.** Docker installations
+  had no process running QATrack+'s background tasks, so scheduled QC
+  notifications, scheduled reports and the emails they send were never sent. A
+  new ``django-q`` service runs them; it starts with the next
+  ``docker compose up -d``.
+
+* **Docker: HTTPS works.** nginx published port 443 but had no HTTPS
+  configuration. With ``HTTP_OR_HTTPS=https`` in ``.env`` and your certificate
+  and key in ``deploy/docker/user-data/ssl``, nginx now serves QATrack+ over
+  HTTPS, redirects HTTP to it, and tells QATrack+ the request was secure (see
+  :ref:`docker_https`).
+
+* **Docker: nginx answers only the hosts in ``ALLOWED_HOSTS``.** Requests for any
+  other host name are dropped before they reach QATrack+, so they no longer
+  produce *Invalid HTTP_HOST header* errors (and error emails to ``ADMINS``).
+  ``ALLOWED_HOSTS=*`` keeps passing every host on.
+
+* **Docker: uploads larger than 1 MB work.** nginx used its 1 MB default limit,
+  which rejected larger uploaded test results and attachments. The limit is now
+  100 MB, set with ``NGINX_CLIENT_MAX_BODY_SIZE``.
+
+* **Docker: container logs are capped** at 50 MB per service, so they can no
+  longer fill the disk. Every service now has a health check, shown by
+  ``docker compose ps``.
+
 * **The Docker application container no longer runs as root.** QATrack+ now runs as
   an unprivileged ``qatrack`` user (uid 1000). Calculation procedures for composite
   and upload tests run inside the application, with its privileges, so on earlier

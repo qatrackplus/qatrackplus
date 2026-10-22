@@ -247,7 +247,8 @@ At minimum, set:
 * ``POSTGRES_USER`` and ``POSTGRES_PASSWORD``, before the first start. The
   database is created with them.
 * ``ALLOWED_HOSTS``, the host names or IP addresses people use to reach
-  QATrack+, comma-separated.
+  QATrack+, comma-separated. nginx answers only these names, and drops requests
+  for any other host before they reach QATrack+.
 
 Everything else is optional and documented in ``.env.example``: email, time
 zone, HTTPS, Active Directory / LDAP sign-in, and the QC display options. Leave
@@ -294,6 +295,11 @@ answer its prompts:
     docker compose exec django python manage.py createsuperuser
 
 You can then sign in at http://localhost with the credentials you just chose.
+
+Scheduled notifications, scheduled reports and the emails they send run in the
+``django-q`` service. ``docker compose ps`` shows it, with the other services, as
+``healthy``, and ``docker compose logs django-q`` shows what it has run. Each
+service keeps at most 50 MB of logs.
 
 .. _docker_development:
 
@@ -356,28 +362,32 @@ To have QATrack+ start on boot run the following command:
 
     docker compose up -d
 
-Setting up SSL
-~~~~~~~~~~~~~~
+.. _docker_https:
 
-To set up SSL I highly recommending using CloudFlare's free 'one-click ssl'
-which will set up SSL security between your users and CloudFlare:
-https://www.cloudflare.com/ssl/
+Serving QATrack+ over HTTPS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To also secure the path between CloudFlare and your server you will need to
-follow the following steps:
-https://support.cloudflare.com/hc/en-us/articles/217471977
+nginx serves QATrack+ over HTTPS with your certificate. You need a certificate
+for the host name people use, and its private key, in PEM format: from your
+hospital's IT department, a certificate authority, or an origin certificate from
+a proxy such as Cloudflare.
 
-The `nginx.conf` file referred to by that guide is contained within this
-directory. Place the certificate files within `user-data/ssl` then they will be
-available at `/root/ssl/your_certificate.pem` and `/root/ssl/your_key.key` on
-the server.
+1. Put them in ``deploy/docker/user-data/ssl`` as ``cert.pem`` and ``key.pem``.
+   The certificate file should hold the full chain: your certificate first, then
+   any intermediate certificates. To use other file names, set
+   ``NGINX_SSL_CERTIFICATE`` and ``NGINX_SSL_CERTIFICATE_KEY`` in ``.env``.
+2. In ``deploy/docker/.env``, set ``HTTP_OR_HTTPS=https``, and set
+   ``ALLOWED_HOSTS`` to the name on the certificate.
+3. Apply the change:
 
-To reset the server and use your updated `nginx.conf` file run:
+   .. code-block:: console
 
-.. code-block:: console
+       docker compose up -d
 
-    docker compose stop
-    docker compose up
+nginx now listens on port 443 and redirects HTTP to HTTPS, and QATrack+ marks its
+cookies secure. If nginx cannot read the certificate or key, it stops, and
+``docker compose logs nginx`` says which file is missing. To renew the
+certificate, replace the files and run ``docker compose restart nginx``.
 
 Changing from port 80 to a different port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

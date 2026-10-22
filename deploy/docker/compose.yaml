@@ -1,10 +1,28 @@
 name: qatrackplus
 
+# Every service keeps at most 50 MB of logs (5 files of 10 MB), so container
+# logs cannot fill the disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   nginx:
     build:
       context: ./nginx
     restart: always
+    logging: *logging
+    # Only the settings nginx needs from .env (see .env.example), not the
+    # database password.
+    environment:
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
+      HTTP_OR_HTTPS: ${HTTP_OR_HTTPS:-http}
+      NGINX_SERVER_NAME: ${NGINX_SERVER_NAME:-}
+      NGINX_CLIENT_MAX_BODY_SIZE: ${NGINX_CLIENT_MAX_BODY_SIZE:-100m}
+      NGINX_SSL_CERTIFICATE: ${NGINX_SSL_CERTIFICATE:-cert.pem}
+      NGINX_SSL_CERTIFICATE_KEY: ${NGINX_SSL_CERTIFICATE_KEY:-key.pem}
     ports:
       - "80:80"
       - "443:443"
@@ -15,6 +33,12 @@ services:
       - media-volume:/usr/src/qatrackplus/qatrack/media:ro
       - static-volume:/usr/src/qatrackplus/qatrack/static:ro
       - ./user-data/ssl:/etc/nginx/ssl:ro
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/nginx-health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # Runs once before django: the app runs as uid 1000, and installs from before
   # 4.0.2 ran it as root, so their volumes can hold root-owned files. This
@@ -26,6 +50,7 @@ services:
       dockerfile: deploy/docker/django/Dockerfile
     user: "0"
     restart: "no"
+    logging: *logging
     command:
       - sh
       - -c
@@ -40,6 +65,7 @@ services:
       context: ../../
       dockerfile: deploy/docker/django/Dockerfile
     restart: always
+    logging: *logging
     env_file: .env
     depends_on:
       init:
@@ -59,9 +85,36 @@ services:
       retries: 3
       start_period: 40s
 
+  # Runs QATrack+'s background tasks: scheduled notifications, scheduled
+  # reports, and the emails and PDFs they send.
+  django-q:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/django/Dockerfile
+    command: [ "python", "manage.py", "qcluster" ]
+    init: true
+    restart: always
+    logging: *logging
+    env_file: .env
+    depends_on:
+      # django applies the database migrations before it reports healthy.
+      django:
+        condition: service_healthy
+    volumes:
+      - media-volume:/usr/src/qatrackplus/qatrack/media
+      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data:ro
+    healthcheck:
+      # The cluster is running. [e] keeps this check from matching itself.
+      test: [ "CMD-SHELL", "grep -qa 'qclust[e]r' /proc/[0-9]*/cmdline" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   postgres:
     image: postgres:15-alpine
     restart: always
+    logging: *logging
     env_file: .env
     volumes:
       - postgres-volume:/var/lib/postgresql/data
@@ -76,6 +129,7 @@ services:
       context: ./backup
     init: true
     restart: always
+    logging: *logging
     env_file: .env
     depends_on:
       postgres:
@@ -83,6 +137,12 @@ services:
     volumes:
       - ./backups:/backups
       - media-volume:/media:ro
+    healthcheck:
+      # crond, which runs the nightly backup, is running.
+      test: [ "CMD", "pgrep", "crond" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres-volume:

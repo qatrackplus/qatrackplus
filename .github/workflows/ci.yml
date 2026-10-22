@@ -244,6 +244,8 @@ jobs:
         working-directory: deploy/docker
         run: |
           cp .env.example .env
+          # A real host name, so nginx's host filtering is exercised.
+          sed -i 's/^ALLOWED_HOSTS=.*/ALLOWED_HOSTS=qatrack.test/' .env
           docker compose build
 
       - name: Fix script permissions
@@ -296,6 +298,42 @@ jobs:
             exit 1
           fi
 
+      - name: Verify background tasks run (django-q)
+        working-directory: deploy/docker
+        run: |
+          # Queue a task from the app and wait for the django-q service to run it.
+          docker compose exec -T django python manage.py shell -c "
+          from django_q.tasks import async_task, result
+          task = async_task('math.floor', 2.5)
+          value = result(task, wait=60000)
+          print('django-q ran task', task, '->', value)
+          assert value == 2, value
+          "
+
+      - name: Verify nginx answers only ALLOWED_HOSTS, accepts large uploads, and logs are capped
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: qatrack.test' http://127.0.0.1/accounts/login/)
+          echo "qatrack.test: $code"
+          [ "$code" = 200 ]
+          # Any other host is closed without an answer (curl: empty reply, exit 52).
+          rc=0
+          curl -s -o /dev/null -H 'Host: other.test' http://127.0.0.1/ || rc=$?
+          echo "other.test: curl exit $rc"
+          [ "$rc" = 52 ]
+          # A 5 MB upload reaches QATrack+ (403, no CSRF token) instead of nginx's 413.
+          code=$(head -c 5000000 /dev/zero | curl -s -o /dev/null -w '%{http_code}' -H 'Host: qatrack.test' \
+            -H 'Content-Type: application/octet-stream' --data-binary @- http://127.0.0.1/accounts/login/)
+          echo "5 MB upload: $code"
+          [ "$code" = 403 ]
+          curl -fsS -o /dev/null -H 'Host: qatrack.test' http://127.0.0.1/static/qatrack_core/css/site.css
+          for id in $(docker compose ps -aq); do
+            size=$(docker inspect -f '{{index .HostConfig.LogConfig.Config "max-size"}}' "$id")
+            echo "$(docker inspect -f '{{.Name}}' "$id"): max-size=$size"
+            [ "$size" = 10m ]
+          done
+
       - name: Verify LDAP support and that the secret key survives recreation
         working-directory: deploy/docker
         run: |
@@ -310,6 +348,38 @@ jobs:
           after=$($dc exec -T django sha256sum "$key_file")
           [ "$before" = "$after" ] || { echo "FAIL: secret key changed when django was recreated"; exit 1; }
           echo "PASS: secret key kept across recreation"
+
+      - name: Verify HTTPS
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          mkdir -p user-data/ssl
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=qatrack.test \
+            -keyout user-data/ssl/key.pem -out user-data/ssl/cert.pem
+          echo "HTTP_OR_HTTPS=https" >> .env
+          docker compose up -d --wait --wait-timeout 300
+          r="--resolve qatrack.test:443:127.0.0.1"
+          location=$(curl -s -o /dev/null -w '%{redirect_url}' -H 'Host: qatrack.test' http://127.0.0.1/accounts/login/)
+          echo "HTTP redirects to: $location"
+          [ "$location" = "https://qatrack.test/accounts/login/" ]
+          # Signing in over HTTPS passes the CSRF check: QATrack+ sees the request
+          # as secure (X-Forwarded-Proto), so its secure cookies and origin match.
+          # Wrong credentials redisplay the form (200); a CSRF failure is 403.
+          jar=$(mktemp)
+          curl -fsSk $r -c "$jar" -o /dev/null https://qatrack.test/accounts/login/
+          token=$(awk '$6 == "csrftoken" {print $7}' "$jar")
+          [ -n "$token" ]
+          code=$(curl -sSk $r -b "$jar" -o /dev/null -w '%{http_code}' \
+            -H 'Origin: https://qatrack.test' -H 'Referer: https://qatrack.test/accounts/login/' \
+            --data-urlencode "csrfmiddlewaretoken=$token" --data-urlencode username=nobody --data-urlencode password=wrong \
+            https://qatrack.test/accounts/login/)
+          echo "sign-in POST over HTTPS: $code"
+          [ "$code" = 200 ]
+          # Other host names get no TLS handshake (curl exit 35).
+          rc=0
+          curl -sk --resolve other.test:443:127.0.0.1 -o /dev/null https://other.test/ || rc=$?
+          echo "other.test over HTTPS: curl exit $rc"
+          [ "$rc" = 35 ]
 
       - name: Verify backup produces a valid dump
         working-directory: deploy/docker

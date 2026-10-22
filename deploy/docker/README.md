@@ -6,7 +6,7 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
 - `compose.yaml`: The production-ready defaults.
 - `compose.dev.yaml`: Development overlay that runs your checkout instead of the image's code. Not applied automatically.
 - `django/`: Multi-stage Dockerfile and entrypoint script for the Django app.
-- `nginx/`: NGINX configuration and server blocks.
+- `nginx/`: NGINX image. It writes its server configuration at startup from `.env` (`ALLOWED_HOSTS`, `HTTP_OR_HTTPS` and the `NGINX_*` settings).
 - `backup/`: A lightweight Alpine container that automatically runs database and media backups via cron.
 
 ## How to Run
@@ -28,7 +28,8 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
    ```bash
    docker compose up -d --build
    ```
-   This runs the QATrack+ code built into the image, as an unprivileged user.
+   This runs the QATrack+ code built into the image, as an unprivileged user. The `django-q` service runs scheduled notifications and reports.
+3. To serve over HTTPS, put `cert.pem` (full chain) and `key.pem` in `user-data/ssl`, set `HTTP_OR_HTTPS=https` in `.env`, and run `docker compose up -d`.
 
 ### 3. Development
 `compose.dev.yaml` mounts your checkout into the container so code changes show up without rebuilding. It is not applied automatically. QATrack+ writes into your checkout, so it runs as your own user: add your ids to `.env` once, then use both files on every command.

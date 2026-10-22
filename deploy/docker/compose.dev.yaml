@@ -13,7 +13,7 @@
 #     echo "QATRACK_UID=$(id -u)" >> .env
 #     echo "QATRACK_GID=$(id -g)" >> .env
 services:
-  django:
+  django: &from-checkout
     user: "${QATRACK_UID:-1000}:${QATRACK_GID:-1000}"
     environment:
       # Your uid may have no home folder in the image; keep HOME and
@@ -22,3 +22,6 @@ services:
       MPLCONFIGDIR: /tmp/matplotlib
     volumes:
       - ../../.:/usr/src/qatrackplus
+
+  # Background tasks run the same code, as the same user.
+  django-q: *from-checkout
