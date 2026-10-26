@@ -1789,6 +1789,43 @@ def autosave(request):
     return JsonResponse({'ok': True, 'autosave_id': saved.pk})
 
 
+def _autosave_data_for_picker(auto):
+    """An autosave's test values, with Date and Date & Time ones re-formatted.
+
+    Same defect as the meta dates below, one level further in. A Date test's
+    value is stored as the string the user saw, so an autosave written before
+    this release - or before any later change to QATRACK_DATE_FORMAT - holds it
+    in the *old* display format. `qa.js` `set_value()` hands it to
+    `date_picker.setDate()`, which parses with the *current* format and
+    succeeds on the wrong date rather than failing: `03 May 2026` read as
+    `Y-m-d` comes back as `2026-01-01`.
+
+    Re-formatting here means an autosave is read with the format it is about to
+    be displayed in, whatever format it was written in. A value that cannot be
+    parsed is passed through untouched, because a stored value this cannot
+    understand is better shown as it stands than replaced with a guess.
+
+    Found by nsmela on q#873, along with the normalisation shape used here.
+    """
+    data = dict(auto.data)
+    if not data.get('tests'):
+        return data
+
+    tests = data['tests'] = dict(data['tests'])
+    types = {t.slug: t.type for t in auto.test_list.all_tests() if t.type in models.DATE_TYPES}
+    for slug, test_type in types.items():
+        value = tests.get(slug)
+        if not isinstance(value, str) or not value:
+            continue
+        if test_type == models.DATE:
+            parsed = parse_date(value)
+            tests[slug] = format_as_date(parsed) if parsed else value
+        else:
+            parsed = parse_datetime(value)
+            tests[slug] = format_datetime(parsed) if parsed else value
+    return data
+
+
 def autosave_load(request):
     autosave_id = request.GET.get("autosave_id")
     auto = get_object_or_404(models.AutoSave, pk=autosave_id)
@@ -1812,7 +1849,7 @@ def autosave_load(request):
             'work_started': format_datetime(auto.work_started, fmt=fp_fmt) or None,
             'work_completed': format_datetime(auto.work_completed, fmt=fp_fmt) or None,
         },
-        'data': auto.data,
+        'data': _autosave_data_for_picker(auto),
     }
 
     return JsonResponse(data, encoder=QATrackJSONEncoder)
