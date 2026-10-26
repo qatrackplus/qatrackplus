@@ -45,9 +45,9 @@ services:
   # re-owns only those files, then exits. QATRACK_UID/QATRACK_GID are only for
   # compose.dev.yaml, which runs the app as the developer's own user.
   init:
-    build:
-      context: ../../
-      dockerfile: deploy/docker/django/Dockerfile
+    # The image the django service builds; never pulled from a registry.
+    image: qatrackplus-django
+    pull_policy: never
     user: "0"
     restart: "no"
     logging: *logging
@@ -64,6 +64,9 @@ services:
     build:
       context: ../../
       dockerfile: deploy/docker/django/Dockerfile
+    # init and django-q run this same image, so it is built once.
+    image: qatrackplus-django
+    pull_policy: never
     restart: always
     logging: *logging
     env_file: .env
@@ -83,14 +86,19 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      # Before gunicorn starts, the entrypoint creates the cache table, runs
+      # every migration and collects static files. On a first install or an
+      # upgrade that can take several minutes. Failed checks during
+      # start_period don't count, so this only stops `docker compose up`
+      # giving up on django (and never starting nginx and django-q) too early;
+      # a normal start is still marked healthy at the first passing check.
+      start_period: 600s
 
   # Runs QATrack+'s background tasks: scheduled notifications, scheduled
   # reports, and the emails and PDFs they send.
   django-q:
-    build:
-      context: ../../
-      dockerfile: deploy/docker/django/Dockerfile
+    image: qatrackplus-django
+    pull_policy: never
     command: [ "python", "manage.py", "qcluster" ]
     init: true
     restart: always

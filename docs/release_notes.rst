@@ -42,12 +42,17 @@ Deployment and Upgrade Notes
   check keeps working when ``ALLOWED_HOSTS`` names only the real host. They are
   never trusted CSRF origins.
 
-* **Docker: upgrades no longer sign everyone out.** When ``SECRET_KEY`` was not set,
-  the key was generated inside the container and lost each time the container was
-  rebuilt, which signed out every user and voided password-reset links. It is now
-  kept in a ``user-data-volume`` volume, or taken from ``SECRET_KEY`` in ``.env`` if
-  you set one. The first start after upgrading generates a key once, so users sign
-  in one last time.
+* **Docker: the secret key now lives in a volume, or in ``.env``.** When
+  ``SECRET_KEY`` is not set, QATrack+ generates one and keeps it in the
+  ``user-data-volume`` volume, so rebuilds never sign users out. 4.0.0 and 4.0.1
+  kept the key in your QATrack+ folder (``deploy/docker/user-data/secret_key.txt``),
+  so a new one is generated on the first start of 4.0.2, signing every user out once
+  and voiding password-reset links sent before the upgrade. To avoid that, copy the
+  old key into ``.env`` first (see :ref:`docker_upgrade_keep_secret_key`).
+
+* **Docker: the upgrade keeps your other local changes.** If you changed the port
+  in ``compose.yaml`` or edited ``nginx.conf``, the upgrade guide's ``git stash``
+  steps keep those changes across ``git pull``.
 
 * **Docker: scheduled notifications and reports now run.** Docker installations
   had no process running QATrack+'s background tasks, so scheduled QC
@@ -69,6 +74,16 @@ Deployment and Upgrade Notes
 * **Docker: uploads larger than 1 MB work.** nginx used its 1 MB default limit,
   which rejected larger uploaded test results and attachments. The limit is now
   100 MB, set with ``NGINX_CLIENT_MAX_BODY_SIZE``.
+
+* **Docker: the site no longer answers 502 after an upgrade.** nginx looked up the
+  ``django`` service's address once, when it started. An upgrade that recreated
+  ``django`` could give it a new address, and nginx kept sending requests to the
+  old one until it was restarted. It now looks the address up as requests arrive.
+
+* **Docker: a slow first start no longer leaves the site down.** ``django`` runs
+  every database migration before it reports that it is ready. On slow storage
+  that took longer than Docker allowed, so ``docker compose up`` gave up and never
+  started nginx. ``django`` now has up to 10 minutes.
 
 * **Docker: container logs are capped** at 50 MB per service, so they can no
   longer fill the disk. Every service now has a health check, shown by

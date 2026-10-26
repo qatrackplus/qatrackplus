@@ -349,6 +349,28 @@ jobs:
           [ "$before" = "$after" ] || { echo "FAIL: secret key changed when django was recreated"; exit 1; }
           echo "PASS: secret key kept across recreation"
 
+      - name: Verify nginx follows django to a new address
+        # An upgrade recreates django, which can give it a new address on the
+        # Docker network. nginx must not keep sending requests to the old one.
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          ip() {
+            docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker compose ps -q django)"
+          }
+          before=$(ip)
+          docker compose rm -sf django
+          # Hold django's old address, so the new container gets another one.
+          docker run -d --rm --name ip-holder --network qatrackplus_default postgres:15-alpine sleep 600
+          docker compose up -d --no-deps --wait --wait-timeout 300 django
+          after=$(ip)
+          echo "django moved from $before to $after"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: qatrack.test' http://127.0.0.1/accounts/login/)
+          echo "through nginx: $code"
+          docker rm -f ip-holder
+          [ "$before" != "$after" ]
+          [ "$code" = 200 ]
+
       - name: Verify HTTPS
         working-directory: deploy/docker
         run: |
@@ -433,28 +455,52 @@ jobs:
           git fetch --no-tags --depth 1 https://github.com/qatrackplus/qatrackplus.git refs/tags/v4.0.1:refs/tags/v4.0.1
           git worktree add ../base v4.0.1
 
-      - name: Documented git steps keep a site's .env (docker_upgrade_from_4_0.rst)
-        # 4.0.1 tracks deploy/docker/.env and every site has edited it. Follow
-        # the documented commands, with `git checkout` of this commit standing
-        # in for `git pull`.
+      - name: Documented git steps keep a site's .env and local edits (docker_upgrade_from_4_0.rst)
+        # 4.0.1 tracks deploy/docker/.env and every site has edited it; some have
+        # also changed the port in compose.yaml or the nginx configuration. Follow
+        # the documented commands, with `git checkout` of this commit standing in
+        # for `git pull`.
         run: |
           set -euo pipefail
           site=$(mktemp -d)/qatrackplus
           git worktree add -q --detach "$site" v4.0.1
           cd "$site"
           echo "POSTGRES_PASSWORD=site-secret" >> deploy/docker/.env
+          sed -i 's/"80:80"/"8080:80"/' deploy/docker/compose.yaml
+          echo "# site edit" >> deploy/docker/nginx/nginx.conf
+          sed -i 's/listen 80;/listen 80; # site edit/' deploy/docker/nginx/conf.d/default.conf
           # Without the steps, git refuses, as the docs say.
           if git checkout -q "$GITHUB_SHA" 2>/dev/null; then
             echo "FAIL: expected git to refuse while .env has local edits"; exit 1
           fi
+          # The docs' answer to "Please tell me who you are"; runners have no
+          # git identity either.
+          git config user.name "QATrack+ administrator"
+          git config user.email "admin@example.com"
           cp deploy/docker/.env ../qatrack.env.backup
           git checkout -- deploy/docker/.env
+          git stash
           git checkout -q "$GITHUB_SHA"
+          # This release removed nginx/conf.d/default.conf, so the site's edit to
+          # it conflicts, as the docs say. Then follow their steps.
+          if git stash pop; then
+            echo "FAIL: expected a conflict on nginx/conf.d/default.conf"; exit 1
+          fi
+          git show 'stash@{0}:deploy/docker/nginx/conf.d/default.conf' > ../old-nginx-default.conf
+          git rm -q deploy/docker/nginx/conf.d/default.conf
+          git reset -q
+          git stash drop
           cp ../qatrack.env.backup deploy/docker/.env
           grep -qx "POSTGRES_PASSWORD=site-secret" deploy/docker/.env
+          grep -q '"8080:80"' deploy/docker/compose.yaml
+          grep -qx "# site edit" deploy/docker/nginx/nginx.conf
+          grep -q "site edit" ../old-nginx-default.conf
           [ -z "$(git ls-files deploy/docker/.env)" ] || { echo "FAIL: .env still tracked"; exit 1; }
-          [ -z "$(git status --porcelain)" ] || { git status; echo "FAIL: .env not ignored"; exit 1; }
-          echo "PASS: site .env kept, untracked and ignored"
+          [ -z "$(git stash list)" ] || { echo "FAIL: stash left behind"; exit 1; }
+          git status --short
+          expected=$(printf ' M deploy/docker/compose.yaml\n M deploy/docker/nginx/nginx.conf')
+          [ "$(git status --porcelain)" = "$expected" ] || { echo "FAIL: unexpected working tree"; exit 1; }
+          echo "PASS: site .env, port and nginx edits kept, .env untracked and ignored"
 
       - name: Start a 4.0.1 site
         working-directory: ../base/deploy/docker
@@ -477,12 +523,17 @@ jobs:
             'mkdir -p qatrack/media/uploads && echo "written by 4.0.1" > qatrack/media/uploads/ci-upgrade.txt'
           [ "$(docker compose exec -T django stat -c %u qatrack/static/admin)" = 0 ]
           [ "$(docker compose exec -T django stat -c %u qatrack/media/uploads/ci-upgrade.txt)" = 0 ]
+          # 4.0.1 keeps its secret key in the checkout (compose.override.yaml
+          # mounts it); the upgrade guide carries it over.
+          test -s user-data/secret_key.txt
           docker compose down
 
       - name: Upgrade to this branch on the same volumes
         working-directory: deploy/docker
         run: |
           cp .env.example .env
+          # The upgrade guide's optional step: keep 4.0.1's secret key.
+          echo "SECRET_KEY=$(cat "$GITHUB_WORKSPACE/../base/deploy/docker/user-data/secret_key.txt")" >> .env
           docker compose up -d --build --wait --wait-timeout 300
 
       - name: Container logs
@@ -508,6 +559,12 @@ jobs:
           [ "$($dc exec -T django stat -c %u qatrack/static/admin)" = 1000 ]
           $dc exec -T django python manage.py shell -c \
             "import sys; from django.contrib.auth.models import User; sys.exit(not User.objects.filter(username='ci').exists())"
+
+          # QATrack+ uses the key 4.0.1 generated, so nobody is signed out.
+          old=$(sha256sum < "$GITHUB_WORKSPACE/../base/deploy/docker/user-data/secret_key.txt")
+          new=$($dc exec -T django python manage.py shell -c \
+            "from django.conf import settings; print(settings.SECRET_KEY, end='')" | sha256sum)
+          [ "$old" = "$new" ] || { echo "FAIL: the 4.0.1 secret key was not carried over"; exit 1; }
 
           # The commands users already run keep working, and write as the app user.
           $dc exec -T django touch qatrack/media/uploads/after-upgrade.txt

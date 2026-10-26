@@ -236,7 +236,14 @@ Configuring QATrack+
 
 All of QATrack+'s Docker settings live in a file called ``.env`` in this
 directory. It holds your passwords, so it is never part of the QATrack+
-repository: create it from the documented template, then edit it.
+repository: create it from the documented template, then edit it. In Windows
+Command Prompt:
+
+.. code-block:: console
+
+    copy .env.example .env
+
+On Linux:
 
 .. code-block:: console
 
@@ -285,6 +292,18 @@ initialising. The first time QATrack+ starts up initialisation can take about
 
 .. figure:: images/502_error.png
     :alt: Error visible while server is starting up
+
+.. note::
+
+    The web server (``nginx``) and the background task service (``django-q``)
+    only start once the ``django`` service reports that it is ready, and
+    ``django`` is given up to 10 minutes for its first start. On a slow machine
+    this may still not be enough, and ``docker compose up`` stops with
+    ``dependency failed to start: container qatrackplus-django-1 is unhealthy``.
+    Nothing is broken: ``django`` keeps working through its database migrations.
+    Wait until ``docker compose logs django`` shows the ``Listening at`` line,
+    then run ``docker compose up -d`` to start the rest. Migrations that have
+    already run are not repeated.
 
 No user account is created for you, so create one before your first login.
 The `django` service runs the application, so run `createsuperuser` there and
