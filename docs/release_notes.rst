@@ -18,6 +18,75 @@ QATrack+ 4.0
 4.0.2
 ------
 
+Bug Fixes
+^^^^^^^^^
+
+* **Forms no longer record the wrong date and time.** Where a date field arrives
+  already filled in - the fault form's *Date & Time fault occurred*, a QC session's
+  *Work Completed*, a service event's date - the server wrote that value in one format
+  and the date picker read it back in another. The picker then replaced it with an
+  unrelated date, usually months away and at midnight, before anyone had touched the
+  page.
+
+  Nothing indicated it had happened: the replacement was a well-formed date in the
+  expected format, sitting in a field the user had not edited. A record saved without
+  changing that field carried a time that was simply wrong. Date and time formats are
+  now derived from a single setting, so the value written to a form and the value read
+  back from it cannot disagree (:issues:`#826 <826>`).
+
+Other Changes
+^^^^^^^^^^^^^
+
+* **Dates are now shown as ``YYYY-MM-DD`` by default, in every language.** Two things
+  changed, and an upgrading installation will see both.
+
+  **What you will see:** 4.0 rendered ``31 May 2012 14:30`` into form fields; this
+  renders ``2012-05-31 14:30``. To keep the old display, set the following in
+  ``local_settings.py``:
+
+  .. code-block:: python
+
+      QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"
+      QATRACK_DATE_FORMAT = "%d %b %Y"
+
+  **What changed for sites with more than one language:** each language used to carry
+  its own date format, so the same record read differently depending on the interface
+  language the reader had chosen. One format now applies to every language,
+  deliberately - a date in a QC record should not change meaning when someone switches
+  language - and the setting above moves all of them together. ``%b`` writes English
+  month abbreviations in every language; see *Date and Time Format Settings* in the
+  configuration documentation.
+
+  Every date format QATrack+ uses is now derived from those two settings, which is what
+  makes the fix above possible. The JSON API's format is unchanged.
+
+  .. warning::
+
+      **Breaking, for French and Spanish sites: ``03/05/2026`` is no longer accepted
+      when typing a date.**
+
+      4.0.1 gave each language its own list of formats it would *accept*, not just
+      display. French accepted ``%d/%m/%Y``, and Spanish had no QATrack+ list at all so
+      it fell through to Django's, which accepts it too. Both are gone: every language
+      now accepts the display format plus
+      ``QATRACK_EXTRA_DATE_INPUT_FORMATS``, which ships as ``%d %b %Y`` only.
+
+      A user typing ``03/05/2026`` gets a validation error rather than a wrong date, so
+      nothing is saved incorrectly - but on a French or Spanish site it is a habit that
+      stops working. To accept it again:
+
+      .. code-block:: python
+
+          QATRACK_EXTRA_DATE_INPUT_FORMATS = ["%d %b %Y", "%d/%m/%Y"]
+          QATRACK_EXTRA_DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d/%m/%Y %H:%M"]
+
+      **It is deliberately not shipped as a default, and the reason is worth reading
+      before you add it.** ``%d/%m/%Y`` and ``%m/%d/%Y`` cannot be told apart for the
+      first twelve days of any month: ``03/05/2026`` is 3 May under one and 5 March
+      under the other. Accepting one of them everywhere would silently reinterpret dates
+      typed by someone used to the other, and silently is the whole problem this release
+      is fixing. Add it where you know which convention your users type in.
+
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

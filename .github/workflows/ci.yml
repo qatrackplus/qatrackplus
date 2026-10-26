@@ -405,11 +405,18 @@ jobs:
             https://qatrack.test/accounts/login/)
           echo "sign-in POST over HTTPS: $code"
           [ "$code" = 200 ]
-          # Other host names get no TLS handshake (curl exit 35).
+          # An IP address sends no host name in the handshake, so the catch-all
+          # server must complete it; nginx then routes by Host. 127.0.0.1 is
+          # always served.
+          code=$(curl -sk -o /dev/null -w '%{http_code}' https://127.0.0.1/accounts/login/)
+          echo "https://127.0.0.1: $code"
+          [ "$code" = 200 ]
+          # Other host names complete the handshake, then are closed without an
+          # answer (curl exit 56).
           rc=0
           curl -sk --resolve other.test:443:127.0.0.1 -o /dev/null https://other.test/ || rc=$?
           echo "other.test over HTTPS: curl exit $rc"
-          [ "$rc" = 35 ]
+          [ "$rc" = 56 ]
 
       - name: Verify backup produces a valid dump
         working-directory: deploy/docker
@@ -484,16 +491,19 @@ jobs:
           git config user.email "admin@example.com"
           cp deploy/docker/.env ../qatrack.env.backup
           git checkout -- deploy/docker/.env
-          git stash
+          git stash push -m qatrack-4.0.2-upgrade
           git checkout -q "$GITHUB_SHA"
           # This release removed nginx/conf.d/default.conf, so the site's edit to
           # it conflicts, as the docs say. Then follow their steps.
-          if git stash pop; then
+          if git stash list | grep -q qatrack-4.0.2-upgrade && git stash pop; then
             echo "FAIL: expected a conflict on nginx/conf.d/default.conf"; exit 1
           fi
           git show 'stash@{0}:deploy/docker/nginx/conf.d/default.conf' > ../old-nginx-default.conf
           git rm -q deploy/docker/nginx/conf.d/default.conf
           git reset -q
+          git status
+          # The docs say to drop the stash only once no conflict is left.
+          ! git grep -q '^<<<<<<<' -- deploy || { echo "FAIL: conflict markers left"; exit 1; }
           git stash drop
           cp ../qatrack.env.backup deploy/docker/.env
           grep -qx "POSTGRES_PASSWORD=site-secret" deploy/docker/.env

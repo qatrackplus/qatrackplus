@@ -61,11 +61,18 @@ server {
 
 CONF
         if [ "$protocol" = https ]; then
+            # This server needs the site certificate: a browser opening
+            # https://<IP address> sends no host name during the handshake, so
+            # nginx finishes the handshake here and only then picks the server
+            # by the Host header. Rejecting the handshake would lock out sites
+            # reached by IP address even when ALLOWED_HOSTS lists it.
             cat <<CONF
 server {
     listen 443 ssl default_server;
     server_name _;
-    ssl_reject_handshake on;
+    ssl_certificate $cert;
+    ssl_certificate_key $key;
+    return 444;
 }
 
 CONF
