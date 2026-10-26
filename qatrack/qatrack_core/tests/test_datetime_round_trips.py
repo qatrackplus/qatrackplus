@@ -216,6 +216,58 @@ class TestServerToBrowser(DateTimeRoundTrip):
             assert d.date() == DAY, label
             assert dt == WHEN, label
 
+    def test_a_procedure_that_sets_a_string_does_not_break(self):
+        """@nsmela, q#873: `result = "2026-05-03"` raised AttributeError.
+
+        `value_for_browser` branched on the *test's* type, so a date test was
+        always sent through `format_as_date` whatever its procedure produced -
+        and `strftime` on a `str` surfaced to the user as "Invalid Test
+        Procedure". It worked before this PR, so it was a regression.
+
+        A parseable string is now normalised to the display format, which is
+        what the picker needs; the value must come back as the configured
+        format rather than as whatever the procedure wrote.
+        """
+        unit = qa_utils.create_unit()
+        test_list = qa_utils.create_test_list()
+        procedures = {
+            "d_str": (qa_models.DATE, 'd_str = "2026-05-03"'),
+            "dt_str": (qa_models.DATETIME, 'dt_str = "2026-05-03 04:54"'),
+        }
+        for slug, (type_, procedure) in procedures.items():
+            test = qa_utils.create_test(name=slug, test_type=type_)
+            test.calculation_procedure = procedure
+            test.save()
+            qa_utils.create_test_list_membership(test_list, test)
+            qa_utils.create_unit_test_info(test=test, unit=unit)
+
+        for label, config in self.configurations():
+            results = composite(self.user, test_list, unit, {"d_str": "", "dt_str": ""}, defaults=True)
+            for slug in procedures:
+                assert results[slug]["error"] is None, "%s: %s" % (label, results[slug])
+            d = picker.read_flatpickr(results["d_str"]["value"], config["FLATPICKR_DATE_FMT"])
+            assert d.date() == DAY, label
+
+    def test_a_procedure_that_sets_an_unreadable_string_is_left_alone(self):
+        """Not a date at all, so it keeps the behaviour it had before this PR.
+
+        Deliberately unlike `autosave_load`, which drops what it cannot read:
+        there the value is known to be a date in a stale format, so handing it
+        to the picker risks a silently wrong date. Here it never was a date, and
+        inventing a new behaviour for a broken procedure is not this PR's job.
+        """
+        unit = qa_utils.create_unit()
+        test_list = qa_utils.create_test_list()
+        test = qa_utils.create_test(name="d_junk", test_type=qa_models.DATE)
+        test.calculation_procedure = 'd_junk = "not a date at all"'
+        test.save()
+        qa_utils.create_test_list_membership(test_list, test)
+        qa_utils.create_unit_test_info(test=test, unit=unit)
+
+        results = composite(self.user, test_list, unit, {"d_junk": ""}, defaults=True)
+        assert results["d_junk"]["error"] is None, results["d_junk"]
+        assert results["d_junk"]["value"] == "not a date at all"
+
     def test_unit_available_time_calendar(self):
         unit = qa_utils.create_unit()
         unit.date_acceptance = OTHER_DAY

@@ -1,4 +1,5 @@
 import collections
+import datetime
 import json
 import math
 import os
@@ -643,16 +644,45 @@ class CompositePerformer:
         through ``get_format`` rather than ``settings`` so a format set in
         ``local_settings.py`` is honoured.
 
-        Non-date results are returned untouched: a composite that happens to
-        produce a string must not be reformatted, and a test whose type is not
-        known here is left alone rather than guessed at.
+        **The decision is made on the value, not on the test's type.** A date
+        test's procedure may set a string rather than a date object -
+        ``result = "2026-05-03"`` - and branching on the test type sent that
+        string into ``format_as_date``, which calls ``strftime`` on it:
+        ``AttributeError``, shown to the user as "Invalid Test Procedure" for a
+        procedure that worked before this change. @nsmela found that on q#873.
+
+        A string is parsed with the configured input formats and re-emitted in
+        the display format, which is the same thing ``autosave_load`` does and
+        for the same reason - returning it unchanged would hand the picker a
+        value in whatever format the procedure happened to write, which is the
+        defect this method exists to prevent.
+
+        A string that cannot be parsed is **returned untouched**: it is not a
+        date at all, and that is what happened before this method existed, so a
+        broken procedure keeps whatever behaviour it had rather than gaining a
+        new one. That differs from ``autosave_load``, which drops what it cannot
+        read - there the value is known to *be* a date in a stale format, so
+        handing it over risks a silently wrong date; here it never was one.
+
+        Anything that is neither a string nor a date - a number, say - is left
+        alone rather than guessed at, as is a test whose type is not known here.
         """
         test_type = self.test_types.get(slug)
+        if test_type not in (models.DATE, models.DATETIME):
+            return result
+
+        if isinstance(result, str):
+            parsed = parse_date(result) if test_type == models.DATE else parse_datetime(result)
+            if parsed is None:
+                return result
+            result = parsed
+
+        if not isinstance(result, datetime.date):  # datetime is a subclass of date
+            return result
+
         if test_type == models.DATE:
             return format_as_date(result) or None
-        elif test_type == models.DATETIME:
-            return format_datetime(result) or None
-        return result
+        return format_datetime(result) or None
 
     def calculate(self):
         """calculate and return all composite values"""
