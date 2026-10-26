@@ -1,4 +1,5 @@
 import collections
+import datetime
 import json
 import math
 import os
@@ -25,6 +26,7 @@ from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import register
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import get_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from django.views.generic import CreateView, TemplateView, View
@@ -40,6 +42,7 @@ from qatrack.faults.models import FaultReviewGroup
 from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.dates import (
     end_of_day,
+    format_as_date,
     format_datetime,
     parse_date,
     parse_datetime,
@@ -621,6 +624,66 @@ class CompositePerformer:
         self.data = data
         self.defaults = data.get('defaults')
 
+    def value_for_browser(self, slug, result):
+        """Format a date or datetime result the way the page's date picker reads it.
+
+        A calculated default is the documented way to pre-fill a date test -
+        ``your_date_test = timezone.now().date()`` in
+        ``docs/admin/qa/tests.rst`` - and the value goes straight into
+        flatpickr, which parses it with ``siteConfig.FLATPICKR_DATE_FMT``.
+
+        Left as a date object it is serialized by ``QATrackJSONEncoder``, which
+        writes ``QATRACK_API_DATE_FORMAT`` - the API's wire format, ``%d %b
+        %Y``. flatpickr configured for ``Y-m-d`` does not reject ``03 May
+        2026``; it reads what it can and silently produces a different date, so
+        the saved value is wrong and nothing anywhere says so. This is the same
+        defect, and the same fix, as ``autosave_load()`` below.
+
+        ``*_INPUT_FORMATS[0]`` is the configured display format, which is what
+        the flatpickr format is derived from, so the two cannot drift. Resolved
+        through ``get_format`` rather than ``settings`` so a format set in
+        ``local_settings.py`` is honoured.
+
+        **The decision is made on the value, not on the test's type.** A date
+        test's procedure may set a string rather than a date object -
+        ``result = "2026-05-03"`` - and branching on the test type sent that
+        string into ``format_as_date``, which calls ``strftime`` on it:
+        ``AttributeError``, shown to the user as "Invalid Test Procedure" for a
+        procedure that worked before this change. @nsmela found that on q#873.
+
+        A string is parsed with the configured input formats and re-emitted in
+        the display format, which is the same thing ``autosave_load`` does and
+        for the same reason - returning it unchanged would hand the picker a
+        value in whatever format the procedure happened to write, which is the
+        defect this method exists to prevent.
+
+        A string that cannot be parsed is **returned untouched**: it is not a
+        date at all, and that is what happened before this method existed, so a
+        broken procedure keeps whatever behaviour it had rather than gaining a
+        new one. That differs from ``autosave_load``, which drops what it cannot
+        read - there the value is known to *be* a date in a stale format, so
+        handing it over risks a silently wrong date; here it never was one.
+
+        Anything that is neither a string nor a date - a number, say - is left
+        alone rather than guessed at, as is a test whose type is not known here.
+        """
+        test_type = self.test_types.get(slug)
+        if test_type not in (models.DATE, models.DATETIME):
+            return result
+
+        if isinstance(result, str):
+            parsed = parse_date(result) if test_type == models.DATE else parse_datetime(result)
+            if parsed is None:
+                return result
+            result = parsed
+
+        if not isinstance(result, datetime.date):  # datetime is a subclass of date
+            return result
+
+        if test_type == models.DATE:
+            return format_as_date(result) or None
+        return format_datetime(result) or None
+
     def calculate(self):
         """calculate and return all composite values"""
 
@@ -688,7 +751,7 @@ class CompositePerformer:
                 formatted = utils.format_qc_value(result, self.formatters.get(slug))
 
                 results[slug] = {
-                    'value': result,
+                    'value': self.value_for_browser(slug, result),
                     'formatted': formatted,
                     'error': None,
                     'user_attached': list(self.calculation_context.get("__user_attached__", [])),
@@ -1758,16 +1821,88 @@ def autosave(request):
     return JsonResponse({'ok': True, 'autosave_id': saved.pk})
 
 
+def _autosave_data_for_picker(auto):
+    """An autosave's test values, with Date and Date & Time ones re-formatted.
+
+    Same defect as the meta dates below, one level further in. A Date test's
+    value is stored as the string the user saw, so an autosave written before
+    this release - or before any later change to QATRACK_DATE_FORMAT - holds it
+    in the *old* display format. `qa.js` `set_value()` hands it to
+    `date_picker.setDate()`, which parses with the *current* format and
+    succeeds on the wrong date rather than failing: `03 May 2026` read as
+    `Y-m-d` comes back as `2026-01-01`.
+
+    Re-formatting here means an autosave is read with the format it is about to
+    be displayed in, whatever format it was written in.
+
+    **A value that cannot be parsed is dropped rather than passed through.**
+    Passing it through does not avoid a guess - it hands the string to
+    flatpickr, which is the parser that misreads dates silently in the first
+    place, so the guess still happens somewhere this code cannot see. Dropping
+    the key means `qa.js` never calls `set_value()` for that test (it iterates
+    the keys that are present), so the operator gets an **empty field** and
+    re-enters the date. For a QC record, blank is recoverable and a plausible
+    wrong date is not. The autosave row itself is untouched, so nothing is lost
+    beyond one field the operator can see is missing.
+
+    In practice this is rare: the accepted input formats are `%Y-%m-%d` and
+    `%d %b %Y`, and the latter is the format 4.0.x and 3.1.1.x displayed, so an
+    autosave that straddles the upgrade parses. It takes a site that accepted a
+    numeric day/month format and then stopped.
+
+    Found by nsmela on q#873, along with the normalisation shape used here. The
+    drop rather than the passthrough is Cody's call, 2026-10-26.
+    """
+    data = dict(auto.data)
+    if not data.get('tests'):
+        return data
+
+    tests = data['tests'] = dict(data['tests'])
+    types = {t.slug: t.type for t in auto.test_list.all_tests() if t.type in models.DATE_TYPES}
+    for slug, test_type in types.items():
+        value = tests.get(slug)
+        if not isinstance(value, str) or not value:
+            continue
+        if test_type == models.DATE:
+            parsed = parse_date(value)
+            formatted = format_as_date(parsed) if parsed else None
+        else:
+            parsed = parse_datetime(value)
+            formatted = format_datetime(parsed) if parsed else None
+
+        if formatted:
+            tests[slug] = formatted
+        else:
+            # Unreadable in every accepted format: leave the field empty rather
+            # than hand the picker something it will misread.
+            del tests[slug]
+    return data
+
+
 def autosave_load(request):
     autosave_id = request.GET.get("autosave_id")
     auto = get_object_or_404(models.AutoSave, pk=autosave_id)
 
+    # work_started/work_completed are consumed client side by flatpickr's
+    # strict `.setDate()` (qa.js load_autosave()), which parses using
+    # siteConfig.FLATPICKR_DATETIME_FMT. They must be pre-formatted to exactly
+    # that format here rather than left as datetime objects for
+    # QATrackJSONEncoder to serialize, because the encoder writes the API's
+    # wire format, which flatpickr's parser mis-parses silently rather than
+    # erroring on - a date typed as 12 May 1980 comes back as 1980-11-30.
+    #
+    # DATETIME_INPUT_FORMATS[0] is the configured display format, which is
+    # what FLATPICKR_DATETIME_FMT is derived from, so the two cannot drift.
+    # Resolved through get_format rather than settings so that a format set in
+    # local_settings.py is honoured, and taken by position 0 by construction
+    # rather than by a magic index into a list deployers may extend.
+    fp_fmt = get_format('DATETIME_INPUT_FORMATS')[0]
     data = {
         'meta': {
-            'work_started': timezone.localtime(auto.work_started) if auto.work_started else None,
-            'work_completed': timezone.localtime(auto.work_completed) if auto.work_completed else None,
+            'work_started': format_datetime(auto.work_started, fmt=fp_fmt) or None,
+            'work_completed': format_datetime(auto.work_completed, fmt=fp_fmt) or None,
         },
-        'data': auto.data,
+        'data': _autosave_data_for_picker(auto),
     }
 
     return JsonResponse(data, encoder=QATrackJSONEncoder)

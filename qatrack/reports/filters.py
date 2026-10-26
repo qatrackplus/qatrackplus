@@ -9,6 +9,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
 from qatrack.qa import models
+from qatrack.qatrack_core.dates import parse_date
 from qatrack.qatrack_core.utils import relative_dates
 from qatrack.service_log import models as sl_models
 from qatrack.units import models as umodels
@@ -20,6 +21,30 @@ class NonNullBooleanFilter(django_filters.filters.BooleanFilter):
 
 
 class RelativeDateRangeField(forms.fields.CharField):
+
+    @staticmethod
+    def parse_one(text):
+        """Read one end of a range, preferring the configured date format.
+
+        The range picker writes what ``DATERANGEPICKER_DATE_FMT`` tells it to,
+        derived from ``QATRACK_DATE_FORMAT``, so that is what this field should
+        read.
+
+        ``dateutil.parser.parse`` alone is wrong here, and wrong in the way that
+        does the most damage: for an ambiguous value it assumes **month first**
+        regardless of the configured format, so a site on ``%d/%m/%Y`` asking
+        for ``02/01/2026`` - 2 January, as its own picker wrote it - gets a
+        report for 1 February. No error, just the wrong rows, and a reader has
+        no way to tell from the output.
+
+        dateutil is kept as a fallback rather than removed, because a saved
+        report or a hand-edited URL may hold a value in some other format, and
+        that used to work.
+        """
+        parsed = parse_date(text, as_date=False)
+        if parsed is not None:
+            return parsed
+        return dateutil.parser.parse(text)
 
     def clean(self, value):
 
@@ -38,8 +63,8 @@ class RelativeDateRangeField(forms.fields.CharField):
             else:
                 start, end = (x.strip() for x in val.split("-"))
             tz = timezone.get_current_timezone()
-            start = dateutil.parser.parse(start).replace(tzinfo=tz)
-            end = dateutil.parser.parse(end).replace(hour=23, minute=59, second=59, tzinfo=tz)
+            start = self.parse_one(start).replace(tzinfo=tz)
+            end = self.parse_one(end).replace(hour=23, minute=59, second=59, tzinfo=tz)
         except:  # noqa: E722
             raise forms.ValidationError(_("Format must be a range e.g. 01 Jan 2000 - 01 Feb 2000"), code="invalid")
 
