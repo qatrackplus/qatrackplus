@@ -85,9 +85,14 @@ Deployment and Upgrade Notes
   that took longer than Docker allowed, so ``docker compose up`` gave up and never
   started nginx. ``django`` now has up to 10 minutes.
 
-* **Docker: container logs are capped** at 50 MB per service, so they can no
-  longer fill the disk. Every service now has a health check, shown by
-  ``docker compose ps``.
+* **Docker: container output is capped** at 50 MB per service, so what
+  ``docker compose logs`` keeps can no longer fill the disk. Every service now has
+  a health check, shown by ``docker compose ps``.
+
+* **Docker: overdue follow-up emails are sent when background tasks first run.**
+  Follow-up emails from *QC Completed* notices were queued but never sent on
+  Docker, and 4.0.2 sends every one still waiting as soon as it starts. To remove
+  them first, see :ref:`docker_upgrade_stale_follow_ups`.
 
 * **The Docker application container no longer runs as root.** QATrack+ now runs as
   an unprivileged ``qatrack`` user (uid 1000). Calculation procedures for composite
@@ -113,7 +118,10 @@ Deployment and Upgrade Notes
 
   QATrack+'s log files are now inside the container rather than in the checkout's
   ``logs`` folder. Read them with ``docker compose logs django``, or
-  ``docker compose exec django ls logs``.
+  ``docker compose exec django ls logs``. Both belong to the container, so they are
+  removed when it is recreated, for example by an upgrade or a change to ``.env``.
+  To keep them, save a copy first, e.g.
+  ``docker compose logs --no-color django > django-$(date +%F).log``.
 
 * **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
   same versions the test suite runs against. Previously ``pip`` chose versions when

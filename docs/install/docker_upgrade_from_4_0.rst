@@ -105,6 +105,33 @@ If that file does not exist, there is no key to carry over; skip this step. The
 key signs your users' sessions: keep ``.env`` as private as your database
 password.
 
+.. _docker_upgrade_stale_follow_ups:
+
+Clear follow-up emails that were never sent (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Docker installations before 4.0.2 did not run QATrack+'s background tasks, so
+the follow-up emails of *QC Completed* notices set to *Follow up* were queued but
+never sent. 4.0.2 runs background tasks, and the first time it starts it sends
+every follow-up still waiting, all at once, however old. Only sites that set up
+follow-up notices are affected.
+
+While your current QATrack+ is still running, and before ``docker compose up -d``
+starts 4.0.2, see how many are waiting:
+
+.. code-block:: bash
+
+    cd ~/web/qatrackplus/deploy/docker
+    docker compose exec -T django python manage.py shell -c "from django.utils import timezone; from django_q.models import Schedule; print(Schedule.objects.filter(name__startswith='follow-up-for-tli-', schedule_type=Schedule.ONCE, next_run__lt=timezone.now()).exclude(repeats=0).count(), 'overdue follow-up emails')"
+
+To remove them instead of sending them:
+
+.. code-block:: bash
+
+    docker compose exec -T django python manage.py shell -c "from django.utils import timezone; from django_q.models import Schedule; print(Schedule.objects.filter(name__startswith='follow-up-for-tli-', schedule_type=Schedule.ONCE, next_run__lt=timezone.now()).exclude(repeats=0).delete()[0], 'overdue follow-up emails removed')"
+
+Follow-ups that are not due yet are kept, and are sent on time.
+
 Running the upgrade
 -------------------
 

@@ -1,7 +1,8 @@
 name: qatrackplus
 
-# Every service keeps at most 50 MB of logs (5 files of 10 MB), so container
-# logs cannot fill the disk.
+# Every service keeps at most 50 MB of output (5 files of 10 MB), so what
+# `docker compose logs` keeps cannot fill the disk. QATrack+'s own log files
+# (logs/ inside the containers) are not covered by this.
 x-logging: &logging
   driver: json-file
   options:

@@ -317,8 +317,10 @@ You can then sign in at http://localhost with the credentials you just chose.
 
 Scheduled notifications, scheduled reports and the emails they send run in the
 ``django-q`` service. ``docker compose ps`` shows it, with the other services, as
-``healthy``, and ``docker compose logs django-q`` shows what it has run. Each
-service keeps at most 50 MB of logs.
+``healthy``, and ``docker compose logs django-q`` shows what it has run.
+``docker compose logs`` keeps at most 50 MB of each service's output. Those logs,
+and QATrack+'s log files inside the containers, are removed when a container is
+recreated, for example by an upgrade: save a copy first if you need them.
 
 .. _docker_development:
 
