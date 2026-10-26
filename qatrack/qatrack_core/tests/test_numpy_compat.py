@@ -19,24 +19,49 @@ survived four years.
 import os
 import re
 
+import pytest
 from django.conf import settings
 
-# Names numpy 2.0 removed outright. The expired aliases are the common ones -
-# np.float_, np.NaN and friends - and the rest are functions that were renamed
-# or folded into another API.
+# Names that numpy 2.x no longer provides. The expired aliases are the common
+# ones - np.float_, np.NaN and friends - and the rest are functions that were
+# renamed or folded into another API.
+#
+# This list is a floor, not a ceiling: the numpy 2 migration guide's table is
+# longer, and a name missing here is a gap in the guard rather than a name that
+# is safe. Adding one costs nothing, so add it when you meet it. nsmela raised
+# that on q#904, along with the np.object_ mistake noted below.
+#
+# np.object_ is deliberately absent. It was *not* removed - it is still the
+# object scalar type in numpy 2 - so listing it would make this guard reject
+# working code. Four more entries were wrong the same way and are gone:
+# Bytes0, Str0, Datetime64 and Uint32 never existed in any numpy. The real
+# names are lowercase, and test_every_listed_name_exists_in_the_pinned_numpy
+# below now makes that class of mistake impossible to commit.
+#
+# `qatrack/qa/calculation_check.py`, on the check-calculations branch, carries
+# a longer list derived from numpy's own `_expired_attrs_2_0.py` rather than
+# transcribed. The two should become one derived list; that is a 4.1 job,
+# because this one has a different target - this guards *our* source, that one
+# scans a site's stored calculation procedures.
 REMOVED_IN_NUMPY_2 = [
     # expired aliases for scalar types
-    'float_', 'complex_', 'unicode_', 'string_', 'object_', 'int0', 'uint0',
-    'bool8', 'Bytes0', 'Str0', 'Datetime64', 'Uint32',
+    'float_', 'complex_', 'unicode_', 'string_', 'int0', 'uint0',
+    'bool8', 'bytes0', 'str0', 'object0', 'void0',
+    'cfloat', 'longfloat', 'singlecomplex',
     # expired constants
     'NaN', 'NAN', 'Inf', 'Infinity', 'infty', 'NINF', 'PINF',
+    'NZERO', 'PZERO',
     # renamed or removed functions
-    'alltrue', 'sometrue', 'cumproduct', 'product', 'round_', 'in1d', 'msort',
-    'row_stack', 'trapz', 'find_common_type', 'issctype', 'set_string_function',
+    'alltrue', 'sometrue', 'cumproduct', 'product', 'round_', 'msort',
+    'find_common_type', 'issctype', 'set_string_function',
     'asfarray', 'byte_bounds', 'cast', 'source', 'lookfor', 'who', 'disp',
-    'safe_eval', 'recfromcsv', 'deprecate', 'mat', 'add_newdoc',
-    'fastCopyAndTranspose', 'get_array_wrap', 'maximum_sctype', 'issubsctype',
-    'set_numeric_ops', 'compare_chararrays',
+    'safe_eval', 'recfromcsv', 'recfromtxt', 'sctypes', 'deprecate', 'mat',
+    'add_newdoc', 'fastCopyAndTranspose', 'get_array_wrap', 'maximum_sctype',
+    'issubsctype', 'set_numeric_ops', 'compare_chararrays',
+    # Deprecated in 2.0 and removed later in the 2.x series rather than in 2.0
+    # itself. Kept here on purpose: the point of the guard is that a name is
+    # gone by the time the pin is lifted, not that it went in one exact release.
+    'in1d', 'row_stack', 'trapz',
 ]
 
 REPLACEMENTS = {
@@ -57,6 +82,11 @@ REPLACEMENTS = {
     'in1d': 'np.isin',
     'row_stack': 'np.vstack',
     'trapz': 'np.trapezoid',
+    'cfloat': 'np.complex128',
+    'longfloat': 'np.longdouble',
+    'singlecomplex': 'np.complex64',
+    'NZERO': '-0.0',
+    'PZERO': '0.0',
     'asfarray': 'np.asarray(x, dtype=float)',
 }
 
@@ -115,6 +145,43 @@ class TestNoRemovedNumpyApis:
         assert FORBIDDEN.findall('    return np.NaN') == ['NaN']
         assert FORBIDDEN.findall('np.float_,') == ['float_']
         assert FORBIDDEN.findall('np.float64, np.nan, np.prod') == []
+
+    def test_every_listed_name_exists_in_the_pinned_numpy(self):
+        """A name that never existed cannot have been removed.
+
+        np.object_ was listed and was never removed; Bytes0, Str0, Datetime64
+        and Uint32 were listed and never existed at all. Both mistakes are the
+        same one - a transcribed list nobody checked - and both are caught here
+        by asking the pinned numpy what it actually has.
+
+        Skipped once the pin is lifted, when these names are gone by design.
+        """
+        import numpy
+
+        if int(numpy.__version__.split('.')[0]) >= 2:
+            pytest.skip("the names are removed in numpy 2, which is the point of the list")
+
+        missing = [name for name in REMOVED_IN_NUMPY_2 if not hasattr(numpy, name)]
+        assert not missing, (
+            "these are listed as removed by numpy 2.0 but do not exist in numpy %s, "
+            "so they were never real names:\n  %s" % (numpy.__version__, ', '.join(missing))
+        )
+
+    def test_object_is_not_treated_as_removed(self):
+        """np.object_ survives in numpy 2, so the guard must not reject it.
+
+        nsmela, q#904. Listing it would have failed a file for writing working
+        code, which is worse than missing a name: a guard that cries wolf gets
+        switched off.
+        """
+        assert FORBIDDEN.findall('dtype=np.object_') == []
+
+    def test_a_name_added_from_the_migration_guide_is_caught(self):
+        """The names added after review are really in the pattern."""
+        assert FORBIDDEN.findall('np.cfloat') == ['cfloat']
+        assert FORBIDDEN.findall('x = np.NZERO') == ['NZERO']
+        assert FORBIDDEN.findall('np.sctypes["float"]') == ['sctypes']
+        assert FORBIDDEN.findall('np.bytes0') == ['bytes0']
 
     def test_comments_may_name_what_they_replaced(self):
         """Both fixes explain themselves by naming the removed alias."""
