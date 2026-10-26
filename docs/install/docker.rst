@@ -318,9 +318,11 @@ You can then sign in at http://localhost with the credentials you just chose.
 Scheduled notifications, scheduled reports and the emails they send run in the
 ``django-q`` service. ``docker compose ps`` shows it, with the other services, as
 ``healthy``, and ``docker compose logs django-q`` shows what it has run.
-``docker compose logs`` keeps at most 50 MB of each service's output. Those logs,
-and QATrack+'s log files inside the containers, are removed when a container is
-recreated, for example by an upgrade: save a copy first if you need them.
+``docker compose logs`` keeps at most 50 MB of each service's output, and starts
+again empty when a container is recreated, for example by an upgrade.
+QATrack+'s own log files (``debug.log``, ``auth.log`` and the others) are kept in
+the ``logs-volume`` volume and survive upgrades; read them with
+``docker compose exec django ls logs``.
 
 .. _docker_development:
 
@@ -340,9 +342,9 @@ once, then start with the development overlay:
     docker compose -f compose.yaml -f compose.dev.yaml up -d --build
 
 Use the same ``-f compose.yaml -f compose.dev.yaml`` on every ``docker compose``
-command for that stack. If your checkout has a ``logs`` folder created by an
-earlier QATrack+ container, which ran as root, give it to your user once with
-``sudo chown -R $(id -u):$(id -g) ../../logs``.
+command for that stack. QATrack+'s log files go to your checkout's ``logs``
+folder, which is given to your user when the stack starts, even if an earlier
+QATrack+ container created it as root.
 
 
 Setting up copying backups from local machine to remote server on Windows

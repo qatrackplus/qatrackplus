@@ -22,6 +22,15 @@ services:
       MPLCONFIGDIR: /tmp/matplotlib
     volumes:
       - ../../.:/usr/src/qatrackplus
+      # Logs go to your checkout's logs/ folder, not to logs-volume.
+      - ../../logs:/usr/src/qatrackplus/logs
 
   # Background tasks run the same code, as the same user.
   django-q: *from-checkout
+
+  # Docker creates your checkout's logs/ folder, owned by root, if it is
+  # missing; init (which runs as root) hands it to your user, along with any
+  # log files earlier root containers left there.
+  init:
+    volumes:
+      - ../../logs:/usr/src/qatrackplus/logs

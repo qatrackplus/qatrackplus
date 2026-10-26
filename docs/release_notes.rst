@@ -86,8 +86,19 @@ Deployment and Upgrade Notes
   started nginx. ``django`` now has up to 10 minutes.
 
 * **Docker: container output is capped** at 50 MB per service, so what
-  ``docker compose logs`` keeps can no longer fill the disk. Every service now has
-  a health check, shown by ``docker compose ps``.
+  ``docker compose logs`` keeps can no longer fill the disk. That output belongs to
+  each container and starts again empty when the container is recreated, for
+  example by an upgrade. Every service now has a health check, shown by
+  ``docker compose ps``.
+
+* **QATrack+'s log files now rotate.** ``debug.log``, ``auth.log``, ``migrate.log``
+  and ``django-q2.log`` were set up to rotate but never did, so they grew without
+  limit. Each now starts a new file at 10 MB and keeps a fixed number of old ones.
+  This applies to every installation, not only Docker.
+
+* **Background tasks can run for up to 5 minutes**, up from 1. A scheduled report
+  whose PDF took longer than a minute to make was stopped and never sent. This
+  applies to every installation.
 
 * **Docker: overdue follow-up emails are sent when background tasks first run.**
   Follow-up emails from *QC Completed* notices were queued but never sent on
@@ -116,12 +127,12 @@ Deployment and Upgrade Notes
   ``docker compose -f compose.yaml -f compose.dev.yaml``, with their own ids in
   ``.env`` (see :ref:`docker_development`).
 
-  QATrack+'s log files are now inside the container rather than in the checkout's
-  ``logs`` folder. Read them with ``docker compose logs django``, or
-  ``docker compose exec django ls logs``. Both belong to the container, so they are
-  removed when it is recreated, for example by an upgrade or a change to ``.env``.
-  To keep them, save a copy first, e.g.
-  ``docker compose logs --no-color django > django-$(date +%F).log``.
+  QATrack+'s log files are now kept in a ``logs-volume`` volume, shared by the
+  ``django`` and ``django-q`` services, rather than in the checkout's ``logs``
+  folder, and they survive upgrades. Read them with
+  ``docker compose exec django ls logs`` and
+  ``docker compose exec django tail -n 50 logs/debug.log``. With the development
+  overlay they are still written to your checkout's ``logs`` folder.
 
 * **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
   same versions the test suite runs against. Previously ``pip`` chose versions when

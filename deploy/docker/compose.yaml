@@ -2,7 +2,7 @@ name: qatrackplus
 
 # Every service keeps at most 50 MB of output (5 files of 10 MB), so what
 # `docker compose logs` keeps cannot fill the disk. QATrack+'s own log files
-# (logs/ inside the containers) are not covered by this.
+# are in logs-volume; they rotate at 10 MB (see LOGGING in settings.py).
 x-logging: &logging
   driver: json-file
   options:
@@ -55,11 +55,12 @@ services:
     command:
       - sh
       - -c
-      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static /usr/src/qatrackplus/deploy/docker/user-data \( ! -user ${QATRACK_UID:-1000} -o ! -group ${QATRACK_GID:-1000} \) -exec chown ${QATRACK_UID:-1000}:${QATRACK_GID:-1000} {} +
+      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static /usr/src/qatrackplus/deploy/docker/user-data /usr/src/qatrackplus/logs \( ! -user ${QATRACK_UID:-1000} -o ! -group ${QATRACK_GID:-1000} \) -exec chown ${QATRACK_UID:-1000}:${QATRACK_GID:-1000} {} +
     volumes:
       - media-volume:/usr/src/qatrackplus/qatrack/media
       - static-volume:/usr/src/qatrackplus/qatrack/static
       - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
+      - logs-volume:/usr/src/qatrackplus/logs
 
   django:
     build:
@@ -84,6 +85,9 @@ services:
       # Keeps the generated secret key (when SECRET_KEY is not set in .env)
       # across rebuilds, so upgrades do not log every user out.
       - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
+      # QATrack+'s log files (debug.log, auth.log, ...), kept across rebuilds and
+      # shared with django-q, as on a Linux install.
+      - logs-volume:/usr/src/qatrackplus/logs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 30s
@@ -114,6 +118,7 @@ services:
     volumes:
       - media-volume:/usr/src/qatrackplus/qatrack/media
       - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data:ro
+      - logs-volume:/usr/src/qatrackplus/logs
     healthcheck:
       # The cluster is running. [e] keeps this check from matching itself.
       test: [ "CMD-SHELL", "grep -qa 'qclust[e]r' /proc/[0-9]*/cmdline" ]
@@ -160,3 +165,4 @@ volumes:
   media-volume:
   static-volume:
   user-data-volume:
+  logs-volume:

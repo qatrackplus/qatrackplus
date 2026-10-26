@@ -344,10 +344,15 @@ jobs:
           # user-data volume. Recreating the container must keep it.
           key_file=deploy/docker/user-data/secret_key.txt
           before=$($dc exec -T django sha256sum "$key_file")
+          # QATrack+'s log files are in logs-volume, so they survive too.
+          $dc exec -T django python manage.py shell -c "import logging; logging.getLogger('qatrack').warning('ci-log-marker')"
           $dc up -d --force-recreate --wait --wait-timeout 300 django
           after=$($dc exec -T django sha256sum "$key_file")
           [ "$before" = "$after" ] || { echo "FAIL: secret key changed when django was recreated"; exit 1; }
           echo "PASS: secret key kept across recreation"
+          $dc exec -T django grep -q ci-log-marker logs/debug.log || { echo "FAIL: log files lost when django was recreated"; exit 1; }
+          $dc exec -T django-q grep -q ci-log-marker logs/debug.log || { echo "FAIL: django-q does not share the log files"; exit 1; }
+          echo "PASS: log files kept across recreation and shared with django-q"
 
       - name: Verify nginx follows django to a new address
         # An upgrade recreates django, which can give it a new address on the
