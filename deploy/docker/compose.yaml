@@ -66,6 +66,16 @@ services:
     build:
       context: ../../
       dockerfile: deploy/docker/django/Dockerfile
+      # A site's own Python packages (see site-requirements/README.md), passed
+      # as a separate context so nothing in that folder is copied into the
+      # image. The folder must exist (its README keeps it in every checkout);
+      # without it the build stops with "failed to get build context
+      # site-requirements". Needs Docker Compose 2.17+ (older releases stop up,
+      # build and run with "Additional property additional_contexts is not
+      # allowed") and Docker Engine 23.0+ for named build contexts; see
+      # "Minimum Docker versions" in docs/install/docker.rst.
+      additional_contexts:
+        site-requirements: ./site-requirements
     # init and django-q run this same image, so it is built once. It is named
     # after the Compose project, so a second stack on the same host (a test
     # copy run with -p) builds its own image instead of replacing this one.

@@ -217,12 +217,22 @@ jobs:
     name: Docker Build & Run Check
     runs-on: ubuntu-24.04
     needs: [lint, requirements]
-    
+    env:
+      # A site's own package, which QATrack+ itself does not install. pint shares
+      # dependencies with QATrack+ (platformdirs, typing-extensions), so it also
+      # checks that a site package reuses QATrack+'s locked versions of those.
+      SITE_REQUIREMENT: pint==0.24.4
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           persist-credentials: false
+
+      - name: Set up uv
+        # Only to read QATrack+'s locked versions (uv export); the images
+        # bring their own.
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
@@ -246,6 +256,7 @@ jobs:
           cp .env.example .env
           # A real host name, so nginx's host filtering is exercised.
           sed -i 's/^ALLOWED_HOSTS=.*/ALLOWED_HOSTS=qatrack.test/' .env
+          echo "$SITE_REQUIREMENT" > site-requirements/requirements.txt
           docker compose build
 
       - name: Fix script permissions
@@ -309,6 +320,73 @@ jobs:
           print('django-q ran task', task, '->', value)
           assert value == 2, value
           "
+
+      - name: Verify the site's own Python packages are installed
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          want="${SITE_REQUIREMENT#*==}"
+          for service in django django-q; do
+            got=$(docker compose exec -T "$service" python -c "import pint; print(pint.__version__)")
+            echo "$service: pint $got"
+            [ "$got" = "$want" ] || { echo "FAIL: $service has pint $got, expected $want"; exit 1; }
+          done
+          # Installing it changed none of QATrack+'s own versions: every package
+          # QATrack+ locks for this image (the extras the Dockerfile installs) is
+          # in the image at exactly its locked version. Packages only in the
+          # image, the site's own and their new dependencies, are allowed.
+          uv export --project ../.. --frozen --no-dev --no-emit-project --no-hashes \
+            --extra docker --extra postgres --extra ldap \
+            --format requirements-txt > "$RUNNER_TEMP/locked.txt"
+          compare=$(cat <<'EOF'
+          import importlib.metadata as md
+          import re
+          import sys
+
+          from packaging.requirements import Requirement
+          from packaging.version import Version
+
+
+          def norm(name):
+              return re.sub(r'[-_.]+', '-', name).lower()
+
+
+          installed = {}
+          for dist in md.distributions():
+              if dist.metadata['Name']:
+                  installed[norm(dist.metadata['Name'])] = dist.version
+
+          locked, problems = set(), []
+          for line in sys.stdin:
+              line = line.strip()
+              if not line or line.startswith(('#', '-')):
+                  continue
+              req = Requirement(line)
+              # Skip what the lock installs only elsewhere, e.g. on Windows.
+              if req.marker is not None and not req.marker.evaluate():
+                  continue
+              name = norm(req.name)
+              locked.add(name)
+              pins = [s.version for s in req.specifier if s.operator == '==']
+              want = pins[0] if len(pins) == 1 else (req.url or str(req.specifier))
+              have = installed.get(name)
+              if have is None:
+                  problems.append(f'{name}: locked {want}, not in the image')
+              elif req.url is None and (len(pins) != 1 or Version(pins[0]) != Version(have)):
+                  problems.append(f'{name}: locked {want}, the image has {have}')
+
+          if not locked:
+              sys.exit('FAIL: read no packages from the lock')
+          print(f'{len(locked)} locked packages checked')
+          print('Only in the image:', ', '.join(sorted(set(installed) - locked)) or 'none')
+          if problems:
+              print("FAIL: the image does not have QATrack+'s locked versions:")
+              print('\n'.join(f'  {p}' for p in sorted(problems)))
+              sys.exit(1)
+          print('PASS: every locked package has its locked version')
+          EOF
+          )
+          docker compose exec -T django python -I -c "$compare" < "$RUNNER_TEMP/locked.txt"
 
       - name: Verify the site record links emails to this site
         # Django's site record starts as example.com, and QATrack+ builds email
@@ -556,6 +634,19 @@ jobs:
           [ "$($dc exec -T django cat qatrack/media/uploads/ci-restored.txt)" = "restore me" ]
           [ "$($dc exec -T django stat -c %u qatrack/media/uploads/ci-restored.txt)" = 1000 ]
           echo "PASS: backup restored the user and the uploaded file"
+
+      - name: Verify a site package that conflicts with QATrack+ stops the build
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          echo "Django==4.1" > site-requirements/requirements.txt
+          rc=0
+          docker compose build django > "$RUNNER_TEMP/conflict.log" 2>&1 || rc=$?
+          tail -n 20 "$RUNNER_TEMP/conflict.log"
+          [ "$rc" != 0 ] || { echo "FAIL: the build accepted Django==4.1"; exit 1; }
+          grep -q "No solution found" "$RUNNER_TEMP/conflict.log"
+          # The running site is untouched.
+          docker compose exec -T django python -c "import django, pint; print('still running Django', django.__version__, 'and pint', pint.__version__)"
 
       - name: Tear Down
         if: always()

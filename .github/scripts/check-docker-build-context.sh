@@ -46,6 +46,12 @@ decoys=(
     qatrack/static/decoy.css
     site.key
     fixtures/site_export.json
+    # A site's own Python packages reach the build only through compose.yaml's
+    # separate "site-requirements" context, never through this one, so none of
+    # them is copied into the image: a requirements file can hold a private
+    # index token. The whole folder is checked below.
+    deploy/docker/site-requirements/requirements.txt
+    deploy/docker/site-requirements/pip.conf
 )
 created=()
 created_dirs=()
@@ -64,7 +70,10 @@ for f in "${decoys[@]}"; do
             mkdir -p "$d"
             created_dirs+=("$d")
         fi
-        echo "decoy created by check-docker-build-context.sh" > "$f"
+        # A comment line: should this script be killed before it cleans up, the
+        # decoy left behind is harmless in requirements.txt, pip.conf, .env and
+        # local_settings.py.
+        echo "# decoy created by check-docker-build-context.sh" > "$f"
         created+=("$f")
     fi
 done
@@ -88,6 +97,7 @@ present=(
 # password; it is not tracked, so a fresh checkout has none and it is a decoy above.
 absent=(
     "${decoys[@]}"
+    deploy/docker/site-requirements
     docs
     .git
 )

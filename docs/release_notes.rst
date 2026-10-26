@@ -90,6 +90,14 @@ Other Changes
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* **Docker: Docker Compose 2.17 and Docker Engine 23.0 are now the minimum. Check
+  before you pull.** With an older Compose, the commands that build or create
+  containers (``up``, ``build``, ``run`` and others) stop with *Additional property
+  additional_contexts is not allowed*. Running containers keep running, but 4.0.2
+  can't be built or started, and containers removed with ``docker compose down``
+  can't be created again, until Docker is updated. See
+  :ref:`docker_upgrade_check_compose`.
+
 * **Docker: ``deploy/docker/.env`` is no longer tracked by git. Set your copy aside
   before you pull.** It holds the database password, so it no longer belongs in the
   repository. Every Docker site has edited it, so on the first pull to 4.0.2
@@ -237,6 +245,14 @@ Deployment and Upgrade Notes
 * **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
   same versions the test suite runs against. Previously ``pip`` chose versions when
   the image was built, so two builds of the same release could differ.
+
+* **Docker: add your own Python packages for calculation procedures.** List them in
+  ``deploy/docker/site-requirements/requirements.txt`` and run
+  ``docker compose build``. They are installed at versions that work with
+  QATrack+'s own, and a package that needs a different version of one of them
+  stops the build instead of changing what QATrack+ runs on. Wheel files in the
+  same folder can be installed without internet access. See
+  :ref:`docker_site_packages`.
 
 * **Docker images no longer contain your ``.env`` file, local settings or site data.**
   The ``.dockerignore`` patterns only matched files at the top of the repository, so

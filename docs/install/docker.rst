@@ -21,6 +21,45 @@ predates QATrack+ 4.0. Depending on which system you are using there are
 different ways to install the required dependencies. Follow the section that
 applies to your specific machine.
 
+.. _docker_minimum_versions:
+
+Minimum Docker versions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Whichever system you use, QATrack+ needs:
+
+* **Docker Compose 2.17 or newer.** QATrack+'s ``compose.yaml`` passes your
+  :ref:`own Python packages <docker_site_packages>` to the build in a way older
+  Compose releases don't understand. With one of them, the commands that build
+  or create containers (``up``, ``build``, ``run``, ``create`` and ``pull``), as
+  well as ``config``, stop with:
+
+  .. code-block:: text
+
+      services.django.build Additional property additional_contexts is not allowed
+
+  Containers that are already running carry on, and ``ps``, ``logs``, ``exec``,
+  ``stop``, ``start`` and ``restart`` still work on them. What you can't do is
+  build or start a new release, or create containers again after
+  ``docker compose down``, until Docker is updated.
+
+* **Docker Engine 23.0 or newer.** The image build relies on BuildKit features
+  that Docker Engine 20.10 and earlier don't include.
+
+Check what you have with:
+
+.. code-block:: console
+
+    docker compose version
+    docker version --format '{{.Server.Version}}'
+
+The first prints the Compose version (for example ``Docker Compose version
+v2.27.0``) and the second the Engine version. If either is too old, update
+Docker by following Docker's own instructions linked below (on Ubuntu, Docker's
+``apt`` repository updates both the Engine and the ``docker-compose-plugin``
+package), or update Docker Desktop on Windows. Docker's current releases are
+well above both minimums.
+
 Windows 10 Professional or Enterprise with Hyper-V
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -129,11 +168,14 @@ Docker's instructions for your distribution:
 * `Install Docker Engine on Ubuntu <https://docs.docker.com/engine/install/ubuntu/>`__
 * `Other Linux distributions <https://docs.docker.com/engine/install/>`__
 
-Check that Compose is available with:
+Check that Compose is available, and that both meet
+:ref:`the minimum versions <docker_minimum_versions>` (Compose 2.17, Engine
+23.0), with:
 
 .. code-block:: console
 
     docker compose version
+    docker version --format '{{.Server.Version}}'
 
 Make docker work without sudo on Linux
 ......................................
@@ -380,6 +422,66 @@ To have QATrack+ start on boot run the following command:
 
     docker compose up -d
 
+.. _docker_site_packages:
+
+Adding Python packages
+~~~~~~~~~~~~~~~~~~~~~~
+
+Calculation procedures can import Python packages that QATrack+ does not
+include. QATrack+ already includes numpy, scipy, pandas, matplotlib, pydicom,
+pylinac and others; the versions it uses are in ``uv.lock`` at the top of your
+QATrack+ folder. To add another package, list it in
+``deploy/docker/site-requirements/requirements.txt``, one per line, with its
+version:
+
+.. code-block:: text
+
+    pint==0.24.4
+
+Then rebuild the image and restart:
+
+.. code-block:: console
+
+    docker compose build
+    docker compose up -d
+
+The packages are installed alongside QATrack+'s own, at versions that work with
+them. If a package needs a different version of something QATrack+ uses (Django
+or numpy, for example), ``docker compose build`` stops and names the conflict,
+and your running QATrack+ is left as it was. Choose a version of the package
+that works with QATrack+'s, or ask on the QATrack+ mailing list.
+
+``requirements.txt`` and any wheel files beside it are yours: git ignores them,
+so ``git pull`` leaves them alone.
+Docker remembers the installed packages between builds and only installs them
+again when something in ``deploy/docker/site-requirements`` or QATrack+'s own
+dependencies changes. Packages that yours depend on, and that QATrack+ doesn't
+already include, are picked when they are installed, so a later rebuild can get
+newer versions of them. If you need every rebuild to be identical, pin those in
+``requirements.txt`` too, or use wheel files as below. To install everything
+afresh, run ``docker compose build --no-cache django``.
+
+On a server without internet access, use wheel (``.whl``) files. They must suit
+the image rather than the computer you download them on: Linux, CPython 3.12 and
+the server's processor (``x86_64`` on most servers; ``aarch64`` on ARM). On any
+computer with internet access and Python, pip can fetch the right ones, along
+with everything they depend on:
+
+.. code-block:: console
+
+    pip download --only-binary=:all: --python-version 3.12 --implementation cp --platform manylinux2014_x86_64 --platform manylinux_2_28_x86_64 -d site-wheels pint==0.24.4
+
+Copy everything in ``site-wheels`` into ``deploy/docker/site-requirements`` (any
+copies of packages QATrack+ already has do no harm), and add a line
+``--no-index`` at the top of ``requirements.txt`` so your packages come only from
+those files. If pip finds no wheel for a package, it needs building from source;
+ask on the mailing list.
+
+The rest of the build still needs the internet, to download the Python base
+image and QATrack+'s own packages. Build the image once while the server is
+connected, so Docker has those steps saved; or build it on a connected computer
+and move the finished image with ``docker save`` and ``docker load``.
+
 .. _docker_https:
 
 Serving QATrack+ over HTTPS
@@ -442,19 +544,34 @@ You can also single press `Ctrl + C` within the server terminal that you ran
 Update server
 ~~~~~~~~~~~~~
 
-To update the server from github run:
+Before you update, check that your Docker still meets
+:ref:`the minimum versions <docker_minimum_versions>` (Compose 2.17, Engine
+23.0). An older Compose can't build or start the new release, so if you find out
+first, your site keeps running while you update Docker:
 
 .. code-block:: console
 
-    docker compose stop
+    docker compose version
+    docker version --format '{{.Server.Version}}'
+
+Then get the new code and build it. Your site keeps running while you do this:
+
+.. code-block:: console
+
     git pull
+    docker compose build
 
-Once any files have changed in the qatrackplus directory you need to run the following:
+Once the build has finished without errors, swap the running containers for the
+new ones:
 
 .. code-block:: console
 
-    docker compose build
-    docker compose up
+    docker compose up -d
+
+There's no need to stop the site first: ``up -d`` replaces each container that
+has changed, so QATrack+ is only unavailable while they restart. If the build
+stops with an error instead, nothing has been stopped and your site carries on
+running the version it had before.
 
 .. _docker_backups:
 
