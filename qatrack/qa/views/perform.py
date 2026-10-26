@@ -1801,11 +1801,25 @@ def _autosave_data_for_picker(auto):
     `Y-m-d` comes back as `2026-01-01`.
 
     Re-formatting here means an autosave is read with the format it is about to
-    be displayed in, whatever format it was written in. A value that cannot be
-    parsed is passed through untouched, because a stored value this cannot
-    understand is better shown as it stands than replaced with a guess.
+    be displayed in, whatever format it was written in.
 
-    Found by nsmela on q#873, along with the normalisation shape used here.
+    **A value that cannot be parsed is dropped rather than passed through.**
+    Passing it through does not avoid a guess - it hands the string to
+    flatpickr, which is the parser that misreads dates silently in the first
+    place, so the guess still happens somewhere this code cannot see. Dropping
+    the key means `qa.js` never calls `set_value()` for that test (it iterates
+    the keys that are present), so the operator gets an **empty field** and
+    re-enters the date. For a QC record, blank is recoverable and a plausible
+    wrong date is not. The autosave row itself is untouched, so nothing is lost
+    beyond one field the operator can see is missing.
+
+    In practice this is rare: the accepted input formats are `%Y-%m-%d` and
+    `%d %b %Y`, and the latter is the format 4.0.x and 3.1.1.x displayed, so an
+    autosave that straddles the upgrade parses. It takes a site that accepted a
+    numeric day/month format and then stopped.
+
+    Found by nsmela on q#873, along with the normalisation shape used here. The
+    drop rather than the passthrough is Cody's call, 2026-10-26.
     """
     data = dict(auto.data)
     if not data.get('tests'):
@@ -1819,10 +1833,17 @@ def _autosave_data_for_picker(auto):
             continue
         if test_type == models.DATE:
             parsed = parse_date(value)
-            tests[slug] = format_as_date(parsed) if parsed else value
+            formatted = format_as_date(parsed) if parsed else None
         else:
             parsed = parse_datetime(value)
-            tests[slug] = format_datetime(parsed) if parsed else value
+            formatted = format_datetime(parsed) if parsed else None
+
+        if formatted:
+            tests[slug] = formatted
+        else:
+            # Unreadable in every accepted format: leave the field empty rather
+            # than hand the picker something it will misread.
+            del tests[slug]
     return data
 
 

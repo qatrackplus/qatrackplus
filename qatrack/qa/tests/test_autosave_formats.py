@@ -86,10 +86,26 @@ class TestAutoSaveLoadsDatesInTheCurrentFormat(TestCase):
         assert out[test.slug] == expected
         assert out[test.slug] != "03 May 2026 13:45", "the stored format was passed straight through"
 
-    def test_an_unparseable_value_is_passed_through_untouched(self):
-        """Better shown as it stands than replaced with a guess."""
+    def test_an_unparseable_value_is_dropped_so_the_field_comes_up_empty(self):
+        """Blank is recoverable; a plausible wrong date is not.
+
+        Passing the value through would not avoid a guess - it hands the string
+        to flatpickr, the parser that misreads dates silently. Dropping the key
+        means `qa.js` never calls set_value() for that test, because it iterates
+        the keys that are present, so the operator sees an empty field.
+        """
         test = self.add_test("nonsense_date", models.DATE)
-        assert self.load({test.slug: "not a date at all"})[test.slug] == "not a date at all"
+        out = self.load({test.slug: "not a date at all"})
+        assert test.slug not in out, out
+
+    def test_dropping_one_value_leaves_the_others_alone(self):
+        """One unreadable date must not cost the operator the whole session."""
+        bad = self.add_test("unreadable", models.DATE)
+        good = self.add_test("readable", models.DATE)
+        out = self.load({bad.slug: "???", good.slug: "03 May 2026", "a_comment": "kept"})
+        assert bad.slug not in out
+        assert out[good.slug] == format_as_date(parse_date("03 May 2026"))
+        assert out["a_comment"] == "kept"
 
     def test_non_date_tests_are_left_alone(self):
         test = self.add_test("a_string", models.STRING)
