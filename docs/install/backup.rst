@@ -51,6 +51,11 @@ timestamped directory.
 Backups in Docker
 -----------------
 
+The Docker deployment's ``backup`` service backs up the database and uploaded
+files every night, and comes with ``restore-db`` and ``restore-media`` commands to
+put a backup back. :ref:`docker_backups` explains how to use them. Its backups
+can only be read by root on the server, so copy them off it with ``sudo``.
+
 ``deploy/docker/backup/backup.sh`` reads the database connection from the
 environment rather than hard-coding it:
 
@@ -85,10 +90,12 @@ Restoring from Backups
 
 If you need to restore your QATrack+ instance from a backup (for example, when migrating to a new server or recovering from an issue), follow the general guidelines below for your deployment platform.
 
+Restore onto the same version of QATrack+ that made the backup, then upgrade as usual if you need to. Never restore a backup into an older version of QATrack+ than the one that made it. The Docker deployment's ``restore-db`` can also restore backups made by its 4.0.0 and 4.0.1 releases directly into the current release (see :ref:`docker_backups`).
+
 Linux
 .....
 
-1. **Re-install QATrack+:** Follow the standard Linux installation instructions to rebuild your server. Ensure you check out the *exact same version* of QATrack+ that you were running when the backup was taken.
+1. **Re-install QATrack+:** Follow the standard Linux installation instructions to rebuild your server. Check out the same version of QATrack+ that you were running when the backup was taken.
 2. **Restore Database:** Consult your IT department to restore the database from your automated backups using the native database tools (e.g., ``pg_restore`` or ``mysql``).
 3. **Restore Settings and Media:** Copy your backed-up ``local_settings.py`` file to the ``qatrackplus/qatrack/`` directory. Extract your backed-up ``media`` folder into the ``qatrackplus/qatrack/media/`` directory.
 4. **Permissions and Restart:** Ensure the web server user (e.g., ``www-data``) has the correct ownership and permissions for the restored ``media`` folder. Finally, restart the web server and your background task runner.
@@ -96,7 +103,7 @@ Linux
 Windows
 .......
 
-1. **Re-install QATrack+:** Follow the standard Windows installation instructions. Ensure you check out the *exact same version* of QATrack+ that you were running when the backup was taken.
+1. **Re-install QATrack+:** Follow the standard Windows installation instructions. Check out the same version of QATrack+ that you were running when the backup was taken.
 2. **Restore Database:** Consult your IT department to restore your database using SQL Server Management Studio or native MS SQL backup tools.
 3. **Restore Settings and Media:** Copy your backed-up ``local_settings.py`` file to the ``qatrackplus\qatrack\`` directory. Copy your backed-up ``media`` folder into the ``qatrackplus\qatrack\media\`` directory.
 4. **Permissions and Restart:** Ensure the Windows Service account or IIS application pool has write permissions to the restored ``media`` folder. Finally, restart your QATrack+ Web Service and your Django Q Scheduled Task.
@@ -104,7 +111,11 @@ Windows
 Docker
 ......
 
-1. **Re-deploy Containers:** On a fresh Docker host, clone the QATrack+ repository and ensure you are on the *exact same version* (branch/tag) as your backup.
+If you use the ``backup`` service from ``deploy/docker``, follow :ref:`docker_backups`: put your ``.env`` file back, then restore with ``restore-db`` and ``restore-media``.
+
+Otherwise:
+
+1. **Re-deploy Containers:** On a fresh Docker host, clone the QATrack+ repository and check out the same version (branch/tag) as your backup.
 2. **Restore Database:** If you are using an external database, consult your IT department to restore it. If you are using a containerized database volume, follow Docker best practices to restore the database volume from your backup archives.
 3. **Restore Settings and Media:** Restore your ``local_settings.py`` file and ``media`` files to the appropriate mounted volumes or host directories as configured in your ``docker-compose.yml``.
 4. **Start Containers:** Run ``docker compose up -d`` to bring the restored QATrack+ containers back online.

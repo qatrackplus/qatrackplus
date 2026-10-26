@@ -146,6 +146,9 @@ services:
   backup:
     build:
       context: ./backup
+    # restore-media runs this same image, so it is built once (see django).
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-backup
+    pull_policy: never
     init: true
     restart: always
     logging: *logging
@@ -155,6 +158,8 @@ services:
         condition: service_healthy
     volumes:
       - ./backups:/backups
+      # Read-only: the nightly backup only reads the uploaded files, so it can
+      # never change them. Only restore-media, below, can write to them.
       - media-volume:/media:ro
     healthcheck:
       # crond, which runs the nightly backup, is running.
@@ -162,6 +167,22 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  # Puts a backup of the uploaded files back. It only runs when asked:
+  #   docker compose run --rm restore-media media_YYYYMMDD_HHMMSS.tar.gz
+  # The "restore" profile keeps `docker compose up` from ever starting it.
+  restore-media:
+    profiles: [ "restore" ]
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-backup
+    pull_policy: never
+    entrypoint: [ "restore-media" ]
+    init: true
+    restart: "no"
+    logging: *logging
+    volumes:
+      # Writable: the lock file, shared with the backup service, is kept here.
+      - ./backups:/backups
+      - media-volume:/media
 
 volumes:
   postgres-volume:

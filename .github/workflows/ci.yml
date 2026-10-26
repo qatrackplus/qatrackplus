@@ -440,31 +440,122 @@ jobs:
           echo "other.test over HTTPS: curl exit $rc"
           [ "$rc" = 52 ]
 
-      - name: Verify backup produces a valid dump
+      - name: Verify backup and restore
+        # Back up, then change the data and restore it the way the docs say,
+        # checking on the way that a refused or cancelled restore changes nothing.
         working-directory: deploy/docker
         run: |
           set -euo pipefail
-          docker compose exec -T backup sh -eu -c '
-            rm -f /backups/db_*.dump /backups/media_*.tar.gz 2>/dev/null || true
+          dc="docker compose"
+          lock=/backups/.qatrackplus-backup-restore.lock
+          # The ci-* users in the database, and ci-* uploaded files, read without
+          # django, which is stopped for the restores.
+          users() {
+            echo "SELECT string_agg(username, ',' ORDER BY username) FROM auth_user WHERE username LIKE 'ci-%';" |
+              $dc exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA'
+          }
+          uploads() { $dc exec -T backup sh -c 'ls /media/uploads | grep "^ci-" | tr "\n" " "'; }
+          # Run a command that must fail with the given message; stdin passes through.
+          expect_refusal() {
+            local message=$1 out
+            shift
+            if out=$("$@" 2>&1); then echo "$out"; echo "FAIL: this should have been refused: $*"; exit 1; fi
+            echo "$out"
+            grep -qF "$message" <<<"$out" || { echo "FAIL: expected \"$message\" from: $*"; exit 1; }
+          }
 
-            # Run the backup exactly as the nightly cron job does.
-            bash /backup.sh
+          # The tools must read the 4.0 backups, which pg_dump 16 made.
+          $dc exec -T backup pg_dump --version | grep -E ' 16\.[0-9]+'
 
-            dump=$(ls -1t /backups/db_*.dump 2>/dev/null | head -1 || true)
-            [ -n "$dump" ] || { echo "FAIL: no db dump produced"; exit 1; }
+          # The long-running backup service can never change the uploaded files,
+          # and `up` does not start restore-media, which can.
+          expect_refusal "Read-only file system" $dc exec -T backup touch /media/ci-write-check
+          [ -z "$($dc ps -aq restore-media)" ] || { echo "FAIL: up started restore-media"; exit 1; }
 
-            size=$(stat -c %s "$dump")
-            echo "dump=$dump size=$size"
-            [ "$size" -gt 0 ] || { echo "FAIL: db dump is 0 bytes (auth failed)"; exit 1; }
+          $dc exec -T -e DJANGO_SUPERUSER_PASSWORD=ci-password-123 django \
+            python manage.py createsuperuser --noinput --username ci-restored --email restored@example.com
+          $dc exec -T django sh -c 'mkdir -p qatrack/media/uploads && echo "restore me" > qatrack/media/uploads/ci-restored.txt'
 
-            # Prove it is a real pg_dump archive, not just non-empty.
-            pg_restore --list "$dump" >/dev/null || { echo "FAIL: not a valid archive"; exit 1; }
+          # The command the nightly cron job runs, under the loosest umask docker
+          # exec can start it with (000), beside backups left by an earlier
+          # release that anyone on the server can read.
+          $dc exec -T backup sh -c 'umask 000 && echo old > /backups/db_ci_old.dump && echo old > /backups/media_ci_old.tar.gz'
+          $dc exec -T backup sh -c 'umask 000 && exec backup'
+          # Every backup, old or new, and the lock file, is root's alone on the
+          # host: the runner's own user cannot read them.
+          only_root_reads() {
+            local f
+            for f in "$@"; do
+              [ "$(stat -c %a:%u "backups/$f")" = 600:0 ] || { echo "FAIL: $f is $(stat -c %a:%U "backups/$f")"; exit 1; }
+              if cat "backups/$f" >/dev/null 2>&1; then echo "FAIL: the runner can read $f"; exit 1; fi
+            done
+          }
+          only_root_reads db_ci_old.dump media_ci_old.tar.gz .qatrackplus-backup-restore.lock
+          $dc exec -T backup rm /backups/db_ci_old.dump /backups/media_ci_old.tar.gz
+          dump=$($dc exec -T backup sh -c 'cd /backups && ls -1t db_*.dump | head -1')
+          media=$($dc exec -T backup sh -c 'cd /backups && ls -1t media_*.tar.gz | head -1')
+          echo "backups: $dump $media"
+          only_root_reads "$dump" "$media"
 
-            # Media archive must also be produced.
-            ls -1 /backups/media_*.tar.gz >/dev/null || { echo "FAIL: media archive missing"; exit 1; }
+          # While something holds the lock, a backup or restore is refused. The
+          # holder signals once it has the lock, and lets go when told to.
+          $dc exec -d backup flock "$lock" sh -c \
+            'touch /tmp/ci-lock-held; until [ -e /tmp/ci-lock-release ]; do sleep 1; done'
+          for _ in $(seq 30); do $dc exec -T backup test -e /tmp/ci-lock-held && break; sleep 1; done
+          $dc exec -T backup test -e /tmp/ci-lock-held
+          expect_refusal "already running" $dc exec -T backup backup
+          echo qatrackplus | expect_refusal "already running" $dc run --rm -T --no-deps backup restore-db "$dump"
+          echo RESTORE | expect_refusal "already running" $dc run --rm -T restore-media "$media"
+          $dc exec -T backup touch /tmp/ci-lock-release
+          for _ in $(seq 30); do $dc exec -T backup flock --nonblock "$lock" true && break; sleep 1; done
+          $dc exec -T backup flock --nonblock "$lock" true
 
-            echo "PASS: valid db dump + media archive produced"
-          '
+          # After the backup: one user and file lost, another of each added.
+          $dc exec -T django python manage.py shell -c \
+            "from django.contrib.auth.models import User; User.objects.filter(username='ci-restored').delete()"
+          $dc exec -T django rm qatrack/media/uploads/ci-restored.txt
+          $dc exec -T -e DJANGO_SUPERUSER_PASSWORD=ci-password-123 django \
+            python manage.py createsuperuser --noinput --username ci-later --email later@example.com
+          $dc exec -T django sh -c 'echo "added later" > qatrack/media/uploads/ci-later.txt'
+          $dc stop django django-q
+          [ "$(users)" = "ci-later" ]
+          [ "$(uploads)" = "ci-later.txt " ]
+
+          # A wrong confirmation, a backup cut short, or restore-media run in the
+          # backup service, where the uploaded files are read-only: each is
+          # refused, and nothing changes.
+          echo nope | expect_refusal "cancelled; nothing was changed" \
+            $dc run --rm -T --no-deps backup restore-db "$dump"
+          echo nope | expect_refusal "cancelled; nothing was changed" $dc run --rm -T restore-media "$media"
+          $dc exec -T backup sh -c \
+            'head -c $(( $(stat -c %s "$1") / 2 )) "$1" > /backups/db_ci_truncated.dump' sh "/backups/$dump"
+          echo qatrackplus | expect_refusal "could not read from input file" \
+            $dc run --rm -T --no-deps backup restore-db db_ci_truncated.dump
+          $dc exec -T backup rm /backups/db_ci_truncated.dump
+          echo RESTORE | expect_refusal "not mounted writable" \
+            $dc run --rm -T --no-deps backup restore-media "$media"
+          [ "$(users)" = "ci-later" ]
+          [ "$(uploads)" = "ci-later.txt " ]
+
+          echo qatrackplus | $dc run --rm -T --no-deps backup restore-db "$dump"
+          echo RESTORE | $dc run --rm -T restore-media "$media"
+          [ "$(users)" = "ci-restored" ]
+          [ "$(uploads)" = "ci-restored.txt " ]
+          # Nothing left behind: no working databases, no staging folder.
+          leftovers=$(echo "SELECT datname FROM pg_database WHERE datname IN ('qatrackplus_restoring', 'qatrackplus_before_restore');" |
+            $dc exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d postgres -tA')
+          [ -z "$leftovers" ] || { echo "FAIL: left over: $leftovers"; exit 1; }
+          [ -z "$($dc exec -T backup find /media -maxdepth 1 -name '.restore.*')" ]
+          # The restores used the stack's own media volume; none was made beside it.
+          volumes=$(docker volume ls -q | grep media || true)
+          [ "$volumes" = "qatrackplus_media-volume" ] || { echo "FAIL: media volumes: $volumes"; exit 1; }
+
+          $dc up -d --wait --wait-timeout 300
+          $dc exec -T django python manage.py shell -c \
+            "import sys; from django.contrib.auth.models import User; sys.exit(not User.objects.filter(username='ci-restored').exists())"
+          [ "$($dc exec -T django cat qatrack/media/uploads/ci-restored.txt)" = "restore me" ]
+          [ "$($dc exec -T django stat -c %u qatrack/media/uploads/ci-restored.txt)" = 1000 ]
+          echo "PASS: backup restored the user and the uploaded file"
 
       - name: Tear Down
         if: always()
@@ -563,6 +654,9 @@ jobs:
           # 4.0.1 keeps its secret key in the checkout (compose.override.yaml
           # mounts it); the upgrade guide carries it over.
           test -s user-data/secret_key.txt
+          # A backup made by 4.0.1's own backup service, restored after the upgrade.
+          docker compose exec -T backup bash /backup.sh
+          ls -l backups
           docker compose down
 
       - name: Upgrade to this branch on the same volumes
@@ -607,6 +701,40 @@ jobs:
           $dc exec -T django touch qatrack/media/uploads/after-upgrade.txt
           [ "$($dc exec -T django stat -c %u qatrack/media/uploads/after-upgrade.txt)" = 1000 ]
           echo "PASS: 4.0.1 site upgraded; data intact and owned by the app user"
+
+      - name: Restore the 4.0.1 backup with this release's tools
+        # Sites' existing backups were made by 4.0.1's backup image (pg_dump 16);
+        # this release's restore-db and restore-media must read them.
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          dc="docker compose"
+          old="$GITHUB_WORKSPACE/../base/deploy/docker/backups"
+          sudo mkdir -p backups
+          sudo cp "$old"/db_*.dump "$old"/media_*.tar.gz backups/
+          dump=$(cd backups && ls db_*.dump | head -1)
+          media=$(cd backups && ls media_*.tar.gz | head -1)
+          $dc exec -T django python manage.py shell -c \
+            "from django.contrib.auth.models import User; User.objects.filter(username='ci').delete()"
+          $dc exec -T django rm qatrack/media/uploads/ci-upgrade.txt
+          $dc stop django django-q
+          echo qatrackplus | $dc run --rm -T --no-deps backup restore-db "$dump"
+          echo RESTORE | $dc run --rm -T restore-media "$media"
+          $dc up -d --wait --wait-timeout 300
+          $dc exec -T django python manage.py shell -c \
+            "import sys; from django.contrib.auth.models import User; sys.exit(not User.objects.filter(username='ci').exists())"
+          [ "$($dc exec -T django cat qatrack/media/uploads/ci-upgrade.txt)" = "written by 4.0.1" ]
+          [ "$($dc exec -T django stat -c %u qatrack/media/uploads/ci-upgrade.txt)" = 1000 ]
+          echo "PASS: a 4.0.1 backup restored with this release's tools"
+
+          # Backups made before the upgrade (copied in above, readable by anyone)
+          # are made readable by root only by the next backup.
+          [ "$(stat -c %a "backups/$dump")" != 600 ]
+          $dc exec -T backup backup
+          for f in "backups/$dump" "backups/$media"; do
+            [ "$(stat -c %a:%u "$f")" = 600:0 ] || { echo "FAIL: $f is $(stat -c %a:%U "$f")"; exit 1; }
+          done
+          echo "PASS: backups from before the upgrade are now readable by root only"
 
       - name: Tear Down
         if: always()
