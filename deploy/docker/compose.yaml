@@ -46,7 +46,7 @@ services:
   # compose.dev.yaml, which runs the app as the developer's own user.
   init:
     # The image the django service builds; never pulled from a registry.
-    image: qatrackplus-django
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-django
     pull_policy: never
     user: "0"
     restart: "no"
@@ -64,8 +64,10 @@ services:
     build:
       context: ../../
       dockerfile: deploy/docker/django/Dockerfile
-    # init and django-q run this same image, so it is built once.
-    image: qatrackplus-django
+    # init and django-q run this same image, so it is built once. It is named
+    # after the Compose project, so a second stack on the same host (a test
+    # copy run with -p) builds its own image instead of replacing this one.
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-django
     pull_policy: never
     restart: always
     logging: *logging
@@ -97,7 +99,7 @@ services:
   # Runs QATrack+'s background tasks: scheduled notifications, scheduled
   # reports, and the emails and PDFs they send.
   django-q:
-    image: qatrackplus-django
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-django
     pull_policy: never
     command: [ "python", "manage.py", "qcluster" ]
     init: true
