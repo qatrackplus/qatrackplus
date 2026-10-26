@@ -405,11 +405,18 @@ jobs:
             https://qatrack.test/accounts/login/)
           echo "sign-in POST over HTTPS: $code"
           [ "$code" = 200 ]
-          # Other host names get no TLS handshake (curl exit 35).
+          # An IP address sends no host name in the handshake, so the catch-all
+          # server must complete it; nginx then routes by Host. 127.0.0.1 is
+          # always served.
+          code=$(curl -sk -o /dev/null -w '%{http_code}' https://127.0.0.1/accounts/login/)
+          echo "https://127.0.0.1: $code"
+          [ "$code" = 200 ]
+          # Other host names complete the handshake, then are closed without an
+          # answer (curl exit 56).
           rc=0
           curl -sk --resolve other.test:443:127.0.0.1 -o /dev/null https://other.test/ || rc=$?
           echo "other.test over HTTPS: curl exit $rc"
-          [ "$rc" = 35 ]
+          [ "$rc" = 56 ]
 
       - name: Verify backup produces a valid dump
         working-directory: deploy/docker
