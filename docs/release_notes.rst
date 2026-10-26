@@ -154,6 +154,19 @@ Deployment and Upgrade Notes
   that took longer than Docker allowed, so ``docker compose up`` gave up and never
   started nginx. ``django`` now has up to 10 minutes.
 
+* **Docker: links in emails and reports point to your site.** Django's site
+  record starts as ``example.com``, and QATrack+ builds the links in its emails and
+  reports from it, so on Docker they pointed to ``http://example.com/...`` unless an
+  administrator changed the record. Now that scheduled emails are sent, QATrack+
+  fills the record in on start: from ``SITE_DOMAIN`` and ``SITE_NAME`` in ``.env``
+  if set (every start), otherwise once from the first host name in
+  ``ALLOWED_HOSTS`` while the record is still ``example.com``. A domain and name
+  you have already set in the admin are kept, unless ``SITE_DOMAIN`` or
+  ``SITE_NAME`` is set in ``.env``: those replace them on every start. So if you
+  manage them in the admin, leave both commented out when you compare your
+  ``.env`` with ``.env.example``. ``SITE_NAME`` sets the name shown at the top of
+  each page.
+
 * **Docker: container output is capped** at 50 MB per service, so what
   ``docker compose logs`` keeps can no longer fill the disk. That output belongs to
   each container and starts again empty when the container is recreated, for

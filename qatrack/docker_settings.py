@@ -13,11 +13,9 @@ from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
-DEFAULT_SECRET_KEY_FILE = '/usr/src/qatrackplus/deploy/docker/user-data/secret_key.txt'
+from qatrack.qatrack_core.hosts import LOOPBACK_HOSTS
 
-# Hosts the containers use to reach Django themselves (the compose healthcheck).
-# They are allowed, but never become trusted CSRF origins.
-INTERNAL_HOSTS = ['localhost', '127.0.0.1']
+DEFAULT_SECRET_KEY_FILE = '/usr/src/qatrackplus/deploy/docker/user-data/secret_key.txt'
 
 _TRUE = {'1', 'true', 'yes', 'on'}
 _FALSE = {'0', 'false', 'no', 'off'}
@@ -126,14 +124,16 @@ def apply(g, environ=os.environ):
     """Update the settings namespace `g` from the environment."""
     env = Env(environ)
 
-    # Hosts. CSRF origins are derived from the site's own hosts before the
-    # internal ones are added, so localhost never becomes a trusted origin.
-    hosts = env.get('ALLOWED_HOSTS', parse_csv, default=['localhost', '127.0.0.1'])
+    # Hosts. The containers reach Django themselves through the loopback names
+    # (the compose health check), so those are always allowed. CSRF origins are
+    # derived from the site's own hosts before they are added, so localhost never
+    # becomes a trusted origin.
+    hosts = env.get('ALLOWED_HOSTS', parse_csv, default=list(LOOPBACK_HOSTS))
     csrf_origins = env.get('CSRF_TRUSTED_ORIGINS', parse_csv)
     if csrf_origins is None:
         csrf_origins = [scheme + host for host in hosts for scheme in ('http://', 'https://') if host != '*']
     g['CSRF_TRUSTED_ORIGINS'] = csrf_origins
-    g['ALLOWED_HOSTS'] = hosts + [h for h in INTERNAL_HOSTS if h not in hosts]
+    g['ALLOWED_HOSTS'] = hosts + [h for h in LOOPBACK_HOSTS if h not in hosts]
 
     g['SECRET_KEY'] = load_secret_key(env)
 

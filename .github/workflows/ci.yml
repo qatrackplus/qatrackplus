@@ -310,6 +310,28 @@ jobs:
           assert value == 2, value
           "
 
+      - name: Verify the site record links emails to this site
+        # Django's site record starts as example.com, and QATrack+ builds email
+        # and report links from it.
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          site() {
+            docker compose exec -T django python manage.py shell -c \
+              "from django.contrib.sites.models import Site; from qatrack.qatrack_core.utils import site_base_url; s = Site.objects.get_current(); print(s.domain, s.name, site_base_url(s), sep='|')"
+          }
+          # Unset in .env: filled in from the first host in ALLOWED_HOSTS.
+          got=$(site)
+          echo "from ALLOWED_HOSTS: $got"
+          [ "$got" = "qatrack.test|QATrack+|http://qatrack.test" ]
+          # Set in .env: applied on the next start.
+          printf 'SITE_DOMAIN=qatrack.test:8080\nSITE_NAME=CI Clinic QA\n' >> .env
+          docker compose up -d --wait --wait-timeout 300
+          got=$(site)
+          echo "from .env: $got"
+          [ "$got" = "qatrack.test:8080|CI Clinic QA|http://qatrack.test:8080" ]
+          sed -i '/^SITE_DOMAIN=/d; /^SITE_NAME=/d' .env
+
       - name: Verify nginx answers only ALLOWED_HOSTS, accepts large uploads, and logs are capped
         working-directory: deploy/docker
         run: |

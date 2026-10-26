@@ -255,7 +255,15 @@ At minimum, set:
   database is created with them.
 * ``ALLOWED_HOSTS``, the host names or IP addresses people use to reach
   QATrack+, comma-separated. nginx answers only these names, and drops requests
-  for any other host before they reach QATrack+.
+  for any other host before they reach QATrack+. The first name in the list is
+  also used for the links in QATrack+'s emails and reports, unless you set
+  ``SITE_DOMAIN``.
+
+If people reach QATrack+ on a port other than 80 (or 443 with HTTPS), set
+``SITE_DOMAIN`` to the name with the port, e.g. ``qatrack.myclinic.ca:8080``, so
+links in emails work. ``SITE_NAME`` sets the name shown at the top of each page.
+Both are applied every time QATrack+ starts, and replace any change made to them
+in the admin's *Websites* page; leave them unset to manage them there instead.
 
 Everything else is optional and documented in ``.env.example``: email, time
 zone, HTTPS, Active Directory / LDAP sign-in, and the QC display options. Leave

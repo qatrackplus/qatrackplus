@@ -26,6 +26,13 @@ python manage.py createcachetable
 echo "Running migrations..."
 python manage.py migrate --noinput
 
+# The Site record's domain is what links in emails and reports point to, and
+# its name is shown at the top of each page. SITE_DOMAIN and SITE_NAME in .env
+# are applied on every start; without them, a record still at Django's default
+# (example.com) is filled in once from ALLOWED_HOSTS.
+echo "Configuring the site's domain and name..."
+python manage.py configure_site --domain "${SITE_DOMAIN:-}" --name "${SITE_NAME:-}"
+
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 

@@ -90,8 +90,10 @@ Your other changes stay in place.
 Your ``.env`` is now ignored by git, and later pulls leave it alone. Compare it
 with ``deploy/docker/.env.example``, which lists every setting you can now make
 there: in particular set ``ALLOWED_HOSTS`` to the names people use to reach
-QATrack+. Keep ``qatrack.env.backup`` somewhere safe, or delete it: it holds your
-database password.
+QATrack+. If you have set your site's name or domain in the admin's *Websites*
+page, leave ``SITE_NAME`` and ``SITE_DOMAIN`` commented out: set in ``.env``, they
+replace those on every start. Keep ``qatrack.env.backup`` somewhere safe, or
+delete it: it holds your database password.
 
 If your server is a Windows machine, see :ref:`the note on line endings
 <docker_line_endings>` in the installation guide as well.
