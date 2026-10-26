@@ -123,6 +123,18 @@ def check_ambiguous_date_formats(app_configs, **kwargs):
     So this is a warning rather than an error: a site that has decided it
     knows its own data can carry on. It should be a decision though, not
     something discovered later from a record that was read as the wrong day.
+
+    **It is not a report about stored data, and the wording must not read like
+    one.** Dates live in `DateField` and `DateTimeField` columns, so every date
+    already in the database means exactly one day; there is nothing ambiguous
+    to repair and this setting does not alter any of it. The exposure is at the
+    boundary - what a person types and what a page shows - which is why the
+    hint says so first. An upgrading site reading a warning as "your records
+    may be wrong" would be being frightened by a warning about a setting.
+
+    An upgrade also does not raise this by itself: the shipped default is ISO,
+    which is unambiguous, so the check is silent unless somebody has chosen a
+    numeric day/month format.
     """
     settings_to_check = [
         ('QATRACK_DATE_FORMAT', [getattr(settings, 'QATRACK_DATE_FORMAT', None)]),
@@ -154,7 +166,9 @@ def check_ambiguous_date_formats(app_configs, **kwargs):
                 "like 03/05/2026 is accepted by both and will be read using whichever "
                 "one is your display format, so the same text entered by two people can "
                 "mean two different days." % listed,
-                hint="Use the default ISO format (%Y-%m-%d), which cannot be read two "
+                hint="Nothing already saved is affected: QATrack+ stores dates as "
+                     "dates, not as text. This is about what is typed in from now on.\n\n"
+                     "Use the default ISO format (%Y-%m-%d), which cannot be read two "
                      "ways, or accept only one of the two numeric orders.",
                 id='qatrack.W004',
             )
@@ -164,11 +178,16 @@ def check_ambiguous_date_formats(app_configs, **kwargs):
         Warning(
             "An ambiguous date format is configured (%s). 03/05/2026 is the 3rd of May "
             "in most of the world and March 5th in the United States, and nothing in "
-            "the date itself says which - a QC record read by someone using the other "
-            "convention is silently off by months." % listed,
-            hint="QATrack+ defaults to ISO 8601 (%Y-%m-%d, or %Y/%m/%d) for this "
-                 "reason. A month name (%d %b %Y) is also unambiguous. This is a "
-                 "warning, not an error - set it deliberately if your site needs it.",
+            "the date itself says which, so someone typing or reading a date can mean "
+            "a different day from the one QATrack+ records." % listed,
+            hint="Nothing already saved is affected: QATrack+ stores dates as dates, "
+                 "not as text, so every date in your database means exactly one day "
+                 "and this setting does not change any of them. It affects only what "
+                 "is typed in and shown from now on.\n\n"
+                 "You are seeing this because a numeric day/month format is set; the "
+                 "shipped default, ISO 8601 (%Y-%m-%d), does not raise it, and a month "
+                 "name (%d %b %Y) is unambiguous too. This is a warning, not an error "
+                 "- keep your format if your site wants it.",
             id='qatrack.W004',
         )
     ]

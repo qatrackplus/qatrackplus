@@ -535,6 +535,40 @@ class TestAmbiguousFormatCheck(TestCase):
         """Changing away from ISO is fine, as long as it stays readable."""
         assert checks.check_ambiguous_date_formats(None) == []
 
+    @override_settings(QATRACK_DATE_FORMAT="%d/%m/%Y")
+    def test_the_hint_says_stored_dates_are_not_affected(self):
+        """A site upgrading from 3.1.1.x must not read this as "your data is wrong".
+
+        Dates live in DateField and DateTimeField columns, so every date already
+        stored means exactly one day and this setting changes none of them. The
+        exposure is at the boundary - what someone types, and what a page shows.
+        A warning about a *setting* that leaves an operator doubting their
+        records has done more harm than the setting.
+        """
+        hint = checks.check_ambiguous_date_formats(None)[0].hint
+        flat = ' '.join(hint.split())
+        assert "Nothing already saved is affected" in flat
+        assert "stores dates as dates" in flat
+        assert "from now on" in flat
+
+    @override_settings(QATRACK_DATE_FORMAT="%m/%d/%Y", QATRACK_EXTRA_DATE_INPUT_FORMATS=["%d/%m/%Y"])
+    def test_the_both_orders_hint_also_says_it(self):
+        hint = checks.check_ambiguous_date_formats(None)[0].hint
+        assert "Nothing already saved is affected" in ' '.join(hint.split())
+
+    @override_settings(QATRACK_DATE_FORMAT="%d/%m/%Y")
+    def test_the_message_does_not_claim_existing_records_are_wrong(self):
+        """The old wording said a QC record "is silently off by months".
+
+        That is a statement about stored data, and it is not true: the risk is
+        that a person means a different day from the one recorded, at the moment
+        of typing or reading. Pinned because the difference is exactly what an
+        upgrading site reacts to.
+        """
+        msg = ' '.join(checks.check_ambiguous_date_formats(None)[0].msg.split())
+        assert "silently off by months" not in msg
+        assert "typing or reading" in msg
+
 
 class TestNoJavascriptHardCodesADateFormat(TestCase):
     """QATrack+'s own JavaScript must take its date formats from `siteConfig`.
