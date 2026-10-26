@@ -423,6 +423,11 @@ cookies secure. If nginx cannot read the certificate or key, it stops, and
 ``docker compose logs nginx`` says which file is missing. To renew the
 certificate, replace the files and run ``docker compose restart nginx``.
 
+If a proxy in front of QATrack+ (a load balancer, or Cloudflare's *Flexible*
+mode) handles HTTPS and forwards plain HTTP to it, leave ``HTTP_OR_HTTPS=http``.
+With ``https``, nginx would redirect the proxy's HTTP requests back to HTTPS, and
+the browser would loop between the two.
+
 Changing from port 80 to a different port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
