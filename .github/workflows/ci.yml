@@ -412,11 +412,11 @@ jobs:
           echo "https://127.0.0.1: $code"
           [ "$code" = 200 ]
           # Other host names complete the handshake, then are closed without an
-          # answer (curl exit 56).
+          # answer: curl reports an empty reply (exit 52).
           rc=0
           curl -sk --resolve other.test:443:127.0.0.1 -o /dev/null https://other.test/ || rc=$?
           echo "other.test over HTTPS: curl exit $rc"
-          [ "$rc" = 56 ]
+          [ "$rc" = 52 ]
 
       - name: Verify backup produces a valid dump
         working-directory: deploy/docker
