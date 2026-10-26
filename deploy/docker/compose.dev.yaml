@@ -10,8 +10,7 @@
 # QATrack+ writes into your checkout (logs/, and site.css on first start), so it
 # runs as your own user here. Set your ids in .env first:
 #
-#     echo "QATRACK_UID=$(id -u)" >> .env
-#     echo "QATRACK_GID=$(id -g)" >> .env
+#     printf '\nQATRACK_UID=%s\nQATRACK_GID=%s\n' "$(id -u)" "$(id -g)" >> .env
 services:
   django: &from-checkout
     user: "${QATRACK_UID:-1000}:${QATRACK_GID:-1000}"

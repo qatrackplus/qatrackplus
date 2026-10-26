@@ -310,7 +310,8 @@ in the admin's *Websites* page; leave them unset to manage them there instead.
 Everything else is optional and documented in ``.env.example``: email, time
 zone, HTTPS, Active Directory / LDAP sign-in, and the QC display options. Leave
 a setting commented out to keep its default. ``SECRET_KEY`` is generated and
-kept for you if you do not set one. After changing ``.env``, apply it with
+kept for you if you do not set one, but it is not in the nightly backup; see
+:ref:`docker_secret_key`. After changing ``.env``, apply it with
 ``docker compose up -d``.
 
 To build and start the server run the following:
@@ -387,8 +388,7 @@ once, then start with the development overlay:
 
 .. code-block:: console
 
-    echo "QATRACK_UID=$(id -u)" >> .env
-    echo "QATRACK_GID=$(id -g)" >> .env
+    printf '\nQATRACK_UID=%s\nQATRACK_GID=%s\n' "$(id -u)" "$(id -g)" >> .env
     docker compose -f compose.yaml -f compose.dev.yaml up -d --build
 
 Use the same ``-f compose.yaml -f compose.dev.yaml`` on every ``docker compose``
@@ -520,6 +520,56 @@ cookies secure. If nginx cannot read the certificate or key, it stops, and
 ``docker compose logs nginx`` says which file is missing. To renew the
 certificate, replace the files and run ``docker compose restart nginx``.
 
+.. _docker_secret_key:
+
+Keeping the secret key safe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ signs everyone's sign-in sessions and password-reset links with a
+secret key. If ``SECRET_KEY`` is not set in ``.env``, QATrack+ generates a key
+the first time it starts and saves it in the ``user-data-volume`` Docker volume,
+as ``deploy/docker/user-data/secret_key.txt`` inside the containers (the
+``deploy/docker/user-data`` folder on the server holds only your HTTPS
+certificates). The key is kept when the containers are rebuilt or upgraded, and
+each time QATrack+ starts, ``docker compose logs django`` shows a notice saying
+where it is.
+
+That volume is not part of the nightly backup. If it is lost, for example with
+``docker compose down -v``, or QATrack+ is moved to another server without it,
+QATrack+ generates a new key: everyone is signed out once, and password-reset
+links already sent stop working. Your QC records are not affected.
+
+The simplest way to keep the key safe is to copy it into ``.env``, with the rest
+of your settings. Run this in ``deploy/docker`` while QATrack+ is running, then
+apply it:
+
+.. code-block:: console
+
+    printf '\nSECRET_KEY=%s\n' "$(docker compose exec -T django cat deploy/docker/user-data/secret_key.txt)" >> .env
+    docker compose up -d
+
+The key is the same one, so nobody is signed out, and the notice no longer
+appears in the log. On Windows, run
+``docker compose exec -T django cat deploy/docker/user-data/secret_key.txt``
+instead, and paste what it prints into ``.env`` after ``SECRET_KEY=``. From then
+on, ``.env`` holds the key that signs your users' sessions: keep it as private
+as your database password, and keep a copy with your backups.
+
+To choose your own key instead, set ``SECRET_KEY`` in ``.env`` before QATrack+
+first starts. This prints a suitable one:
+
+.. code-block:: console
+
+    docker compose run --rm --no-deps django python -c "import secrets; print(secrets.token_urlsafe(50))"
+
+Avoid keys containing ``$``, such as those made by Django's
+``get_random_secret_key``: Docker Compose reads ``$`` in ``.env`` as the start
+of a variable and silently changes the key. Changing the key of a site already
+in use signs everyone out once.
+
+If you are upgrading from QATrack+ 4.0.0 or 4.0.1, which kept the key in a
+different place, see :ref:`docker_upgrade_keep_secret_key`.
+
 Changing from port 80 to a different port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -598,8 +648,9 @@ A backup does not contain your ``.env`` file, which holds the database password
 and your settings, nor the certificates in ``user-data/ssl``. Keep copies of
 those as well. If you have not set ``SECRET_KEY`` in ``.env``, QATrack+ keeps a
 generated one in a Docker volume, which a backup does not contain: restoring on
-another server signs everyone out once and voids password-reset links. Set
-``SECRET_KEY`` in ``.env`` to keep it with your settings.
+another server signs everyone out once and voids password-reset links.
+:ref:`docker_secret_key` shows how to copy it into ``.env``, so it is kept with
+your settings.
 
 **Keep copies off the server.** ``deploy/docker/backups`` is on the same disk as
 QATrack+, so a disk failure, or ransomware, that takes the server takes these

@@ -3,11 +3,13 @@
 apply() is called with a fake environment and a copy of the defaults it reads,
 so these tests never touch the real settings or environment.
 """
+import contextlib
 import datetime
+import io
 import os
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from unittest import mock
 
 from django.core.exceptions import ImproperlyConfigured
@@ -209,6 +211,63 @@ class TestSecretKey(DockerSettingsTestCase):
         blocker.write_text('')
         with self.assertRaisesRegex(ImproperlyConfigured, 'SECRET_KEY'):
             self.apply(QATRACK_SECRET_KEY_FILE=str(blocker / 'secret_key.txt'))
+
+
+class TestSecretKeyNotice(DockerSettingsTestCase):
+    """The notice the entrypoint prints when the key is kept in a file, not in .env."""
+
+    def notice(self, **environ):
+        environ.setdefault('QATRACK_SECRET_KEY_FILE', str(self.key_file))
+        return docker_settings.secret_key_notice(environ)
+
+    def test_generated_key_names_its_file_and_how_to_keep_it(self):
+        key = self.apply()['SECRET_KEY']
+        notice = self.notice()
+        self.assertIn(self.key_file.as_posix(), notice)
+        self.assertIn('backup', notice)
+        self.assertIn(
+            f'printf \'\\nSECRET_KEY=%s\\n\' "$(docker compose exec -T django cat {self.key_file.as_posix()})" >> .env',
+            notice,
+        )
+        self.assertNotIn(key, notice)
+
+    def test_key_read_back_from_the_file_is_never_shown(self):
+        self.key_file.parent.mkdir(parents=True)
+        self.key_file.write_text('kept-in-the-volume', encoding='utf-8')
+        self.assertEqual(self.apply()['SECRET_KEY'], 'kept-in-the-volume')
+        self.assertNotIn('kept-in-the-volume', self.notice())
+
+    def test_no_notice_when_set_in_env(self):
+        self.assertIsNone(self.notice(SECRET_KEY='from-env'))
+
+    def test_blank_secret_key_counts_as_unset(self):
+        self.assertIsNotNone(self.notice(SECRET_KEY='   '))
+
+    def test_default_file_is_named_as_the_volume(self):
+        notice = docker_settings.secret_key_notice({})
+        self.assertIn(docker_settings.DEFAULT_SECRET_KEY_FILE, notice)
+        self.assertIn('user-data-volume', notice)
+        self.assertIn(f'cat {docker_settings.DEFAULT_SECRET_KEY_FILE})', notice)
+
+    def test_default_file_keeps_forward_slashes_on_windows(self):
+        # On Windows, Path renders /usr/src/... with backslashes; the file is in
+        # the Linux container, so the notice must not.
+        with mock.patch.object(docker_settings, 'Path', PureWindowsPath):
+            notice = docker_settings.secret_key_notice({})
+        self.assertIn(docker_settings.DEFAULT_SECRET_KEY_FILE, notice)
+        self.assertIn('user-data-volume', notice)
+        self.assertNotIn('\\usr', notice)
+
+    def test_notice_does_not_create_the_file(self):
+        self.notice()
+        self.assertFalse(self.key_file.exists())
+
+    def test_settings_stay_quiet(self):
+        # Every process imports the settings; only the entrypoint prints the notice.
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), self.assertNoLogs(level='DEBUG'):
+            self.apply()
+        self.assertEqual((out.getvalue(), err.getvalue()), ('', ''))
 
 
 class TestActiveDirectory(DockerSettingsTestCase):

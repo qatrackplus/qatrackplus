@@ -127,6 +127,12 @@ Deployment and Upgrade Notes
   and voiding password-reset links sent before the upgrade. To avoid that, copy the
   old key into ``.env`` first (see :ref:`docker_upgrade_keep_secret_key`).
 
+* **Docker: QATrack+ says where it keeps the secret key it generated.** When
+  ``SECRET_KEY`` is not set in ``.env``, each start of the ``django`` service
+  logs a short notice naming the key file. The nightly backup does not include
+  it, so the notice and :ref:`docker_secret_key` show how to copy the key into
+  ``.env``, where losing the volume can no longer sign everyone out.
+
 * **Docker: the upgrade keeps your other local changes.** If you changed the port
   in ``compose.yaml`` or edited ``nginx.conf``, the upgrade guide's ``git stash``
   steps keep those changes across ``git pull``.

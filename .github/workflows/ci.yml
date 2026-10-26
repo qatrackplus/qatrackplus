@@ -450,6 +450,14 @@ jobs:
           after=$($dc exec -T django sha256sum "$key_file")
           [ "$before" = "$after" ] || { echo "FAIL: secret key changed when django was recreated"; exit 1; }
           echo "PASS: secret key kept across recreation"
+          # The entrypoint says where the generated key is kept, once per start,
+          # and never prints the key itself.
+          logs=$($dc logs django 2>&1)
+          notices=$(grep -c 'NOTICE: SECRET_KEY is not set' <<<"$logs" || true)
+          [ "$notices" = 1 ] || { echo "FAIL: expected one secret key notice, got $notices"; exit 1; }
+          key=$($dc exec -T django cat "$key_file")
+          if grep -qF -- "$key" <<<"$logs"; then echo "FAIL: the secret key was printed in the log"; exit 1; fi
+          echo "PASS: secret key notice logged once, without the key"
           $dc exec -T django grep -q ci-log-marker logs/debug.log || { echo "FAIL: log files lost when django was recreated"; exit 1; }
           $dc exec -T django-q grep -q ci-log-marker logs/debug.log || { echo "FAIL: django-q does not share the log files"; exit 1; }
           echo "PASS: log files kept across recreation and shared with django-q"
@@ -755,7 +763,7 @@ jobs:
         run: |
           cp .env.example .env
           # The upgrade guide's optional step: keep 4.0.1's secret key.
-          echo "SECRET_KEY=$(cat "$GITHUB_WORKSPACE/../base/deploy/docker/user-data/secret_key.txt")" >> .env
+          printf '\nSECRET_KEY=%s\n' "$(cat "$GITHUB_WORKSPACE/../base/deploy/docker/user-data/secret_key.txt")" >> .env
           docker compose up -d --build --wait --wait-timeout 300
 
       - name: Container logs
@@ -787,6 +795,9 @@ jobs:
           new=$($dc exec -T django python manage.py shell -c \
             "from django.conf import settings; print(settings.SECRET_KEY, end='')" | sha256sum)
           [ "$old" = "$new" ] || { echo "FAIL: the 4.0.1 secret key was not carried over"; exit 1; }
+          # With SECRET_KEY in .env there is no key file to warn about.
+          logs=$($dc logs django 2>&1)
+          if grep -q 'NOTICE: SECRET_KEY' <<<"$logs"; then echo "FAIL: secret key notice despite SECRET_KEY"; exit 1; fi
 
           # The commands users already run keep working, and write as the app user.
           $dc exec -T django touch qatrack/media/uploads/after-upgrade.txt
@@ -852,8 +863,7 @@ jobs:
         working-directory: deploy/docker
         run: |
           cp .env.example .env
-          echo "QATRACK_UID=$(id -u)" >> .env
-          echo "QATRACK_GID=$(id -g)" >> .env
+          printf '\nQATRACK_UID=%s\nQATRACK_GID=%s\n' "$(id -u)" "$(id -g)" >> .env
           echo "runner uid=$(id -u) gid=$(id -g)"
           docker compose -f compose.yaml -f compose.dev.yaml up -d --build --wait --wait-timeout 300
 

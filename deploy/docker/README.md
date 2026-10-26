@@ -34,8 +34,7 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
 ### 3. Development
 `compose.dev.yaml` mounts your checkout into the container so code changes show up without rebuilding. It is not applied automatically. QATrack+ writes into your checkout, so it runs as your own user: add your ids to `.env` once, then use both files on every command.
 ```bash
-echo "QATRACK_UID=$(id -u)" >> .env
-echo "QATRACK_GID=$(id -g)" >> .env
+printf '\nQATRACK_UID=%s\nQATRACK_GID=%s\n' "$(id -u)" "$(id -g)" >> .env
 docker compose -f compose.yaml -f compose.dev.yaml up -d --build
 ```
 
