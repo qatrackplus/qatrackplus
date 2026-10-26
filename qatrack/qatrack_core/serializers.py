@@ -18,8 +18,10 @@ NP_INT_TYPES = (
     np.uint64,
 )
 
+# np.float_ was an alias of np.float64 and numpy 2.0 removed it. Dropping it
+# rather than renaming it: np.float64 is already in this tuple, so the alias was
+# never adding a type on numpy 1 either.
 NP_FLOAT_TYPES = (
-    np.float_,
     np.float16,
     np.float32,
     np.float64,
