@@ -279,6 +279,13 @@ class UTCYourReview(PermissionRequiredMixin, UTCList):
     permission_required = "qa.can_view_completed"
     raise_exception = True
 
+    # "Review *Your* Test List Data" means the user's own groups, so it keeps
+    # narrowing even for a user who is exempt elsewhere. Without this, the
+    # exemption would make this page identical to UTCReview above and the
+    # distinction the menu draws would stop being true. Inherited by
+    # UTCFrequencyReview, UTCUnitReview and YourInactiveReview.
+    honour_visibility_exemption = False
+
     action = "review"
     action_display = _l("Review")
 
@@ -333,6 +340,10 @@ class UTCUnitReview(UTCYourReview):
 
 class ChooseUnitForReview(ChooseUnit):
     """Allow user to choose a :model:`units.Unit` to review :model:`qa.TestListInstance`s for"""
+
+    # As UTCYourReview: this chooser feeds the "your" review views, so the
+    # units it offers must match what those views will actually show.
+    honour_visibility_exemption = False
 
     active_only = True
     template_name = 'units/unittype_choose_for_review.html'
