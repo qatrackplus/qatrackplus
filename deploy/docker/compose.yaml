@@ -117,6 +117,9 @@ services:
         condition: service_healthy
     volumes:
       - media-volume:/usr/src/qatrackplus/qatrack/media
+      # PDF reports link their stylesheets and logo from the collected static
+      # files, which django fills in before it reports healthy.
+      - static-volume:/usr/src/qatrackplus/qatrack/static:ro
       - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data:ro
       - logs-volume:/usr/src/qatrackplus/logs
     healthcheck:
