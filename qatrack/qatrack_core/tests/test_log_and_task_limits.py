@@ -23,3 +23,8 @@ class TestBackgroundTaskLimits(SimpleTestCase):
         # django-q hands a task out again after `retry` seconds; a task allowed
         # to run longer than that would be run twice.
         self.assertGreater(settings.Q_CLUSTER['retry'], settings.Q_CLUSTER['timeout'])
+
+    def test_timeout_allows_large_reports(self):
+        # Scheduled reports render their PDFs in a task, and a large report can
+        # take more than a minute.
+        self.assertGreaterEqual(settings.Q_CLUSTER['timeout'], 300)
