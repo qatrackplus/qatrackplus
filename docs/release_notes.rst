@@ -175,6 +175,20 @@ Deployment and Upgrade Notes
   through an SSH tunnel. See :ref:`docker_postgres_access`. Thanks to Vincent
   Leduc, whose pull request this is based on (:issues:`#866 <866>`).
 
+* **Docker: Active Directory sign-in over LDAPS works with your own CA.** A
+  directory server whose certificate comes from your organization's own
+  certificate authority needs that CA's certificate, and there was no way to give
+  it to the ``django`` container. Copy it into ``deploy/docker/user-data/ldap`` and
+  set ``AD_CERT_FILE=/etc/qatrack/ldap/ca.pem`` in ``.env`` (see
+  :ref:`docker_ldaps`). A certificate from a public CA still needs no file.
+
+* **QATrack+ warns at startup when it can't use ``AD_CERT_FILE``.** A file that is
+  missing, unreadable or not in PEM format made every LDAPS sign-in fail with
+  *Unable to contact LDAP server*, which looks like a network problem. The
+  ``qatrack.W011`` to ``qatrack.W013`` warnings now say what is wrong with the
+  file. They are warnings only, so the site still starts. This applies to every
+  installation, not only Docker.
+
 * **Docker: nginx answers only the hosts in ``ALLOWED_HOSTS``.** Requests for any
   other host name are dropped before they reach QATrack+, so they no longer
   produce *Invalid HTTP_HOST header* errors (and error emails to ``ADMINS``).

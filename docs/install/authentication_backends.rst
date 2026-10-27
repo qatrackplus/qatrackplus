@@ -107,6 +107,12 @@ You will also obviously have to modify `AD_DNS_NAME1, `AD_SEARCH_DN` and
 Active Directory settings are described here: :ref:`Active Directory Settings
 <settings_ad>`.
 
+With SSL (``ldaps``), set ``AD_CERT_FILE`` when your directory server's
+certificate comes from your organization's own certificate authority (CA): the
+path to that CA's certificate, in PEM format, in a file the user QATrack+ runs
+as can read. See ``AD_CERT_FILE`` in :ref:`Active Directory Settings
+<settings_ad>`, and if you run QATrack+ with Docker, :ref:`docker_ldaps`.
+
 After you have saved that file, you will need to restart your application
 server (or for example your CherryPy service).
 

@@ -53,6 +53,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Runtime stage
 FROM python:3.12-slim-bookworm
 
+# libldap-common provides /etc/ldap/ldap.conf, which points LDAP at the system
+# CA store (/etc/ssl/certs/ca-certificates.crt). That is what lets Active
+# Directory sign-in over LDAPS trust a directory whose certificate comes from a
+# public CA, with no AD_CERT_FILE. libldap-2.5-0 only recommends it, so it is
+# listed here to keep it if recommended packages are ever left out.
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     cifs-utils \
@@ -61,6 +66,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     dos2unix \
     libldap-2.5-0 \
+    libldap-common \
     libsasl2-2 \
     && rm -rf /var/lib/apt/lists/*
 

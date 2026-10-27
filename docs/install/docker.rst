@@ -279,9 +279,10 @@ QATrack+'s Docker settings all live in ``deploy/docker/.env``, which you created
 from ``.env.example`` when :ref:`setting up <docker_setup>`. Apart from the
 database user name and password and ``ALLOWED_HOSTS``, everything is optional
 and documented in ``.env.example``: email, time zone, HTTPS, Active Directory /
-LDAP sign-in, and the QC display options. Leave a setting commented out to keep
-its default. ``SECRET_KEY`` is generated and kept for you if you do not set one,
-but it is not in the nightly backup; see :ref:`docker_secret_key`. After changing
+LDAP sign-in (see :ref:`docker_ldaps` for an encrypted connection), and the QC
+display options. Leave a setting commented out to keep its default.
+``SECRET_KEY`` is generated and kept for you if you do not set one, but it is
+not in the nightly backup; see :ref:`docker_secret_key`. After changing
 ``.env``, apply it with ``docker compose up -d``.
 
 The settings have the same names as on any other QATrack+ installation, where
@@ -329,7 +330,8 @@ need and fill them in.
 * **Active Directory / LDAP sign-in**: put
   ``qatrack.accounts.backends.ActiveDirectoryGroupMembershipSSLBackend`` first in
   ``AUTHENTICATION_BACKENDS`` and fill in the ``AD_*`` settings. See
-  :ref:`active_directory` and :ref:`settings_ad`.
+  :ref:`active_directory` and :ref:`settings_ad`. For an encrypted (LDAPS)
+  connection to the directory, see :ref:`docker_ldaps`.
 * **Time zone, language and the QC display options**: see :ref:`qatrack-config`.
 
 .. _docker_https:
@@ -370,6 +372,113 @@ cookies secure. If nginx cannot read the certificate or key, it stops, and
 ``docker compose logs nginx`` says which file is missing. To renew the
 certificate, replace the files and run ``docker compose restart nginx``.
 
+.. _docker_ldaps:
+
+Signing in with Active Directory over LDAPS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ can let people sign in with their usual network user name and password,
+by checking them with your Active Directory (see :ref:`active_directory`; the
+``AD_`` settings in ``.env.example`` set it up). With ``AD_LDAP_PROTOCOL=ldaps``
+and ``AD_LDAP_PORT=636``, the connection to the directory is encrypted, and
+QATrack+ checks the directory server's certificate before it sends anyone's
+password, much as a web browser checks a website's.
+
+To check that certificate, QATrack+ has to trust the certificate authority (CA)
+that issued it:
+
+* **A public CA**, the kind that issues website certificates: there is nothing to
+  do. QATrack+ trusts the same public CAs as the operating system in its
+  container. Leave ``AD_CERT_FILE`` unset.
+* **Your organization's own CA**, which is what most hospital directory servers
+  use: QATrack+ needs a copy of that CA's certificate. Ask your IT department for
+  the root CA certificate, plus any intermediate CA certificates, in PEM format.
+
+A CA certificate is public, not secret: it holds no private key, and it is safe
+to copy and email.
+
+To add your CA, run these in ``deploy/docker``:
+
+1. Make sure the file is in PEM format: a text file starting with
+   ``-----BEGIN CERTIFICATE-----``. A ``.cer`` file exported from Windows is
+   often in DER (binary) format instead; convert it with:
+
+   .. code-block:: console
+
+       openssl x509 -inform der -in ca.cer -out ca.pem
+
+   If you were given a root and an intermediate certificate, convert each one,
+   then put them one after the other in a single file:
+   ``cat root.pem intermediate.pem > ca.pem``. A file with only the root works
+   only if the directory server sends its intermediate certificate when
+   QATrack+ connects, and not every server does. If you're not sure, include
+   the root and every intermediate in the one file; it does no harm.
+
+2. Copy it into ``user-data/ldap``. Docker creates that folder, owned by root,
+   the first time QATrack+ starts, so use ``sudo``. This also makes the file
+   readable by QATrack+:
+
+   .. code-block:: console
+
+       sudo install -D -m 644 ca.pem user-data/ldap/ca.pem
+
+3. In ``.env``, set:
+
+   .. code-block:: shell
+
+       AD_LDAP_PROTOCOL=ldaps
+       AD_LDAP_PORT=636
+       AD_DNS_NAME=ad.myclinic.ca
+       AD_CERT_FILE=/etc/qatrack/ldap/ca.pem
+
+   ``/etc/qatrack/ldap`` is where the ``django`` and ``django-q`` containers
+   see the server's ``deploy/docker/user-data/ldap`` folder, so ``AD_CERT_FILE``
+   always uses that path, not the folder's path on the server. Only ``django``
+   signs people in; ``django-q`` sees the file too so that its startup check
+   finds it and doesn't warn that it is missing.
+
+4. Apply the change:
+
+   .. code-block:: console
+
+       docker compose up -d
+
+**The name must match the certificate.** ``AD_DNS_NAME`` must be a name written
+on the directory server's certificate, such as ``ad.myclinic.ca``: not its IP
+address, and not a short name the certificate doesn't list. To see the names on
+the certificate, run this on the server:
+
+.. code-block:: console
+
+    openssl s_client -connect ad.myclinic.ca:636 </dev/null 2>/dev/null | openssl x509 -noout -subject -ext subjectAltName
+
+**Check that it works.** This connects to your directory the way sign-in does,
+and prints ``OK``, or ``FAILED:`` and the reason:
+
+.. code-block:: console
+
+    docker compose exec django python manage.py shell -c "import sys, ldap; from django.conf import settings; from qatrack.accounts.backends import ActiveDirectoryGroupMembershipSSLBackend as AD; sys.excepthook = lambda *e: print('FAILED:', e[1]); AD(); ldap.initialize(settings.AD_LDAP_URL).simple_bind_s('', ''); print('OK')"
+
+A missing or unreadable CA file, a DER file, a certificate from a CA you have
+not added, or a name that doesn't match all fail the same way, as
+``Can't contact LDAP server``; QATrack+'s ``auth.log`` says ``Unable to contact
+LDAP server``. When the file itself is the problem, ``docker compose logs django``
+also shows a warning saying what is wrong with it each time QATrack+ starts.
+Local QATrack+ accounts keep working while you fix it.
+
+.. warning::
+
+    Advice on the internet often suggests ``TLS_REQCERT never`` (or
+    ``LDAPTLS_REQCERT=never``) to make this error go away. Never use it: it
+    turns off the certificate check, so QATrack+ would send people's passwords to
+    anything that answers on that name. Fix the CA file or the name instead.
+
+When IT renews the directory server's certificate from the same CA, there is
+nothing to do. If the CA itself changes, replace ``user-data/ldap/ca.pem`` the
+same way and run ``docker compose restart django django-q``. The nightly backup
+does not include ``user-data/ldap``, so keep a copy of the CA file with your
+settings (see :ref:`docker_backups`).
+
 .. _docker_secret_key:
 
 Keeping the secret key safe
@@ -380,7 +489,7 @@ secret key. If ``SECRET_KEY`` is not set in ``.env``, QATrack+ generates a key
 the first time it starts and saves it in the ``user-data-volume`` Docker volume
 (or the folder ``QATRACK_USER_DATA_DIR`` names; see :ref:`docker_data_dirs`),
 as ``deploy/docker/user-data/secret_key.txt`` inside the containers (the
-``deploy/docker/user-data`` folder on the server holds only your HTTPS
+``deploy/docker/user-data`` folder on the server holds only your HTTPS and LDAPS
 certificates). The key is kept when the containers are rebuilt or upgraded, and
 each time QATrack+ starts, ``docker compose logs django`` shows a notice saying
 where it is.
@@ -587,9 +696,9 @@ Data and backups
 QATrack+'s records are its database and the files people upload. Out of the
 box, both are kept in Docker volumes, along with QATrack+'s log files and the
 secret key it generates, and the nightly backups go in the
-``deploy/docker/backups`` folder. Your settings (``.env``) and HTTPS
-certificates (``user-data/ssl``) are files in ``deploy/docker``, which you look
-after yourself. :ref:`docker_data_dirs` has a table of every location.
+``deploy/docker/backups`` folder. Your settings (``.env``), HTTPS certificates
+(``user-data/ssl``) and LDAPS CA certificate (``user-data/ldap``) are files in
+``deploy/docker``, which you look after yourself. :ref:`docker_data_dirs` has a table of every location.
 
 This section covers how QATrack+'s data is backed up and restored, and how to
 keep it in folders on the server instead of Docker volumes.
@@ -623,9 +732,10 @@ you have, newest first:
     docker compose exec backup ls -lt /backups
 
 A backup does not contain your ``.env`` file, which holds the database password
-and your settings, nor the certificates in ``user-data/ssl``. Keep copies of
-those as well. If you have not set ``SECRET_KEY`` in ``.env``, QATrack+ keeps a
-generated one in a Docker volume, which a backup does not contain: restoring on
+and your settings, nor the certificates in ``user-data/ssl`` and
+``user-data/ldap``. Keep copies of those as well. If you have not set
+``SECRET_KEY`` in ``.env``, QATrack+ keeps a generated one in a Docker volume,
+which a backup does not contain: restoring on
 another server signs everyone out once and voids password-reset links.
 :ref:`docker_secret_key` shows how to copy it into ``.env``, so it is kept with
 your settings.
@@ -817,7 +927,7 @@ included. Nested inside the media folder, the log files or the secret key would
 be shown by the web server to anyone, without signing in; with the backups
 inside, every database backup would be given to user 1000. Do not use
 ``deploy/docker/user-data`` for ``QATRACK_USER_DATA_DIR`` either: that folder
-holds your HTTPS certificates.
+holds your HTTPS certificates and LDAPS CA certificate.
 
 On a Linux server, user id 1000 is often the first person's account, who could
 then read the uploaded files. To keep them private, put QATrack+'s folders inside
@@ -1117,8 +1227,8 @@ brings QATrack+ back as it was.
     are never deleted.
 
     Before you run it, make a backup with ``docker compose exec backup backup``,
-    and copy the backups folder, your ``.env`` and ``user-data/ssl`` somewhere
-    off the server (see :ref:`docker_backups`). Only run it when you mean to
+    and copy the backups folder, your ``.env``, ``user-data/ssl`` and
+    ``user-data/ldap`` somewhere off the server (see :ref:`docker_backups`). Only run it when you mean to
     remove QATrack+ for good, or to start again with an empty site.
 
 To remove QATrack+ completely, run ``docker compose down -v --rmi all``, which

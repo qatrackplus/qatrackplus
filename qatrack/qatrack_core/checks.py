@@ -226,3 +226,98 @@ def check_translation_catalogues(app_configs, **kwargs):
         )
         for problem in problems
     ]
+
+
+# A PEM certificate starts with a line like this. GnuTLS, which libldap uses on
+# Debian and Ubuntu, also reads the older "X509 CERTIFICATE" and "TRUSTED
+# CERTIFICATE" forms, so any word before CERTIFICATE is accepted.
+PEM_CERTIFICATE = re.compile(rb'-----BEGIN [A-Z0-9 ]*CERTIFICATE-----')
+
+AD_CERT_FILE_DOCS = (
+    'See "Signing in with Active Directory over LDAPS" in the Docker installation guide, '
+    'or AD_CERT_FILE in the configuration guide.'
+)
+
+
+@register()
+def check_ad_cert_file(app_configs, **kwargs):
+    """Warn when AD_CERT_FILE is set but QATrack+ cannot use the file it names.
+
+    AD_CERT_FILE is the certificate authority (CA) that signed the directory
+    server's certificate, for sign-in over LDAPS. When libldap cannot use it -
+    the file is missing, unreadable, or in DER rather than PEM format - every
+    LDAPS sign-in fails with "Unable to contact LDAP server" in auth.log, which
+    reads like a network problem and sends people looking in the wrong place.
+    This names the real cause once, at startup.
+
+    A Warning, never an Error: system checks run before `migrate`, and a
+    mistake in the sign-in settings must not stop the site starting. Local
+    QATrack+ accounts keep working while it is fixed.
+
+    The messages name the file and never include anything read from it. A CA
+    certificate is public, but nothing here needs its contents.
+    """
+    path = getattr(settings, 'AD_CERT_FILE', None)
+    if not path:
+        return []
+
+    path = Path(path)
+    effect = (
+        'Active Directory sign-in over LDAPS will fail, logged as "Unable to contact LDAP server" in auth.log, '
+        'until this is fixed.'
+    )
+
+    if not path.exists():
+        return [
+            Warning(
+                f'AD_CERT_FILE is set to {path}, but there is no file there. {effect}',
+                hint=(
+                    'Check the path, and that the file is where QATrack+ can see it. On Docker, the '
+                    'certificate goes in deploy/docker/user-data/ldap/ on the server, and AD_CERT_FILE '
+                    f'should be /etc/qatrack/ldap/ca.pem. {AD_CERT_FILE_DOCS}'
+                ),
+                id='qatrack.W011',
+            )
+        ]
+
+    if not path.is_file():
+        return [
+            Warning(
+                f'AD_CERT_FILE is set to {path}, which is a folder, not a certificate file. {effect}',
+                hint=f'Set AD_CERT_FILE to the certificate file inside that folder. {AD_CERT_FILE_DOCS}',
+                id='qatrack.W011',
+            )
+        ]
+
+    try:
+        with path.open('rb') as f:
+            contents = f.read()
+    except OSError as e:
+        return [
+            Warning(
+                f'QATrack+ cannot read AD_CERT_FILE ({path}): {e.strerror or e}. {effect}',
+                hint=(
+                    'The file must be readable by the user QATrack+ runs as. A CA certificate is public, '
+                    'not secret, so it is safe to make it readable by everyone: on Docker, run '
+                    '`sudo chmod 644` on the file in deploy/docker/user-data/ldap/. '
+                    f'{AD_CERT_FILE_DOCS}'
+                ),
+                id='qatrack.W012',
+            )
+        ]
+
+    if not PEM_CERTIFICATE.search(contents):
+        return [
+            Warning(
+                f'AD_CERT_FILE ({path}) does not hold a certificate in PEM format. {effect}',
+                hint=(
+                    'A PEM certificate is a text file starting with -----BEGIN CERTIFICATE-----. A .cer '
+                    'file from Windows is often in DER format instead; convert it with '
+                    '`openssl x509 -inform der -in ca.cer -out ca.pem`. '
+                    f'{AD_CERT_FILE_DOCS}'
+                ),
+                id='qatrack.W013',
+            )
+        ]
+
+    return []

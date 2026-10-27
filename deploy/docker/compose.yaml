@@ -113,6 +113,13 @@ services:
       # QATrack+'s log files (debug.log, auth.log, ...), kept across rebuilds and
       # shared with django-q, as on a Linux install.
       - ${QATRACK_LOGS_DIR:-logs-volume}:/usr/src/qatrackplus/logs
+      # The CA certificate for Active Directory sign-in over LDAPS
+      # (AD_CERT_FILE=/etc/qatrack/ldap/ca.pem in .env). Only needed when the
+      # directory's certificate comes from your organization's own CA; one from
+      # a public CA is trusted without it. A CA certificate is public, not
+      # secret. Docker creates the empty folder, owned by root, on first start.
+      # django-q mounts it too (see there).
+      - ./user-data/ldap:/etc/qatrack/ldap:ro
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 30s
@@ -147,6 +154,11 @@ services:
       - static-volume:/usr/src/qatrackplus/qatrack/static:ro
       - ${QATRACK_USER_DATA_DIR:-user-data-volume}:/usr/src/qatrackplus/deploy/docker/user-data:ro
       - ${QATRACK_LOGS_DIR:-logs-volume}:/usr/src/qatrackplus/logs
+      # The same CA certificate as django. django-q signs no one in, but it
+      # reads AD_CERT_FILE from .env too, and QATrack+ checks that file each
+      # time a process starts: without this folder, every start would warn
+      # (qatrack.W011) that the file is missing, even when it is in place.
+      - ./user-data/ldap:/etc/qatrack/ldap:ro
     healthcheck:
       # The cluster is running. [e] keeps this check from matching itself.
       test: [ "CMD-SHELL", "grep -qa 'qclust[e]r' /proc/[0-9]*/cmdline" ]
