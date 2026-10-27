@@ -13,6 +13,9 @@ At a minimum, you must ensure that you keep secure, off-server backups of:
 2. Your ``local_settings.py`` file (located in ``qatrackplus\qatrack\local_settings.py`` or ``qatrackplus/qatrack/local_settings.py``)
 3. Your ``media`` folder (located in ``qatrackplus\qatrack\media`` or ``qatrackplus/qatrack/media``)
 
+On a Docker site, your settings are in ``deploy/docker/.env`` rather than
+``local_settings.py``; see `Backups in Docker`_ below.
+
 It is highly recommended that your backups do not reside on the QATrack+ server itself.
 Store them on a remote system (e.g. a network or shared drive) so that if your server
 loses its primary hard drive, or if the files become corrupted or locked by ransomware,
@@ -53,26 +56,23 @@ Backups in Docker
 
 The Docker deployment's ``backup`` service backs up the database and uploaded
 files every night, and comes with ``restore-db`` and ``restore-media`` commands to
-put a backup back. :ref:`docker_backups` explains how to use them. Its backups
-can only be read by root on the server, so copy them off it with ``sudo``.
+put a backup back. :ref:`docker_backups` in the Docker guide explains how to use
+them and how to keep copies off the server. Its backups can only be read by root
+on the server, so copy them off it with ``sudo``.
 
-``deploy/docker/backup/backup.sh`` reads the database connection from the
-environment rather than hard-coding it:
+A backup does not include your settings file, ``deploy/docker/.env``, or your
+HTTPS certificates in ``deploy/docker/user-data/ssl``, so keep copies of those
+yourself.
 
-.. code-block:: bash
-
-    POSTGRES_DB        # the database to dump
-    POSTGRES_USER      # the role to connect as
-    POSTGRES_PASSWORD  # that role's password
-
-These are the same variables the ``postgres`` service uses, so a deployment that
-sets them in its Compose environment or ``.env`` file needs no further
-configuration. If they are not set the dump fails rather than silently writing a
-backup of the wrong database.
+The ``backup`` service connects to the database with ``POSTGRES_DB``,
+``POSTGRES_USER`` and ``POSTGRES_PASSWORD`` from ``deploy/docker/.env``, the same
+settings the ``postgres`` service uses, so it needs no setup of its own. If one of
+them is missing from ``.env``, the backup stops with an *unbound variable* error
+before it runs ``pg_dump``, rather than backing up the wrong database.
 
 .. note::
 
-    Before 4.0.1 this script had the database name and user written into it, so a
+    Before 4.0.1 the backup script had the database name and user written into it, so a
     deployment that had changed either was dumping the wrong database, or nothing at
     all. If you have customised them, confirm your next backup contains what you
     expect.
@@ -111,14 +111,8 @@ Windows
 Docker
 ......
 
-If you use the ``backup`` service from ``deploy/docker``, follow :ref:`docker_backups`: put your ``.env`` file back, then restore with ``restore-db`` and ``restore-media``.
-
-Otherwise:
-
-1. **Re-deploy Containers:** On a fresh Docker host, clone the QATrack+ repository and check out the same version (branch/tag) as your backup.
-2. **Restore Database:** If you are using an external database, consult your IT department to restore it. If you are using a containerized database volume, follow Docker best practices to restore the database volume from your backup archives.
-3. **Restore Settings and Media:** Restore your ``local_settings.py`` file and ``media`` files to the appropriate mounted volumes or host directories as configured in your ``docker-compose.yml``.
-4. **Start Containers:** Run ``docker compose up -d`` to bring the restored QATrack+ containers back online.
+1. **Set QATrack+ up again:** On a Linux server, follow :ref:`docker_setup`, checking out the same version of QATrack+ that made the backup. When you reach the settings file, copy your backed-up ``.env`` into ``deploy/docker`` instead of making a new one, and put ``user-data/ssl`` back too if you use HTTPS.
+2. **Restore the database and uploaded files:** Follow the restore steps in :ref:`docker_backups`, which use ``restore-db`` and ``docker compose run --rm restore-media``.
 
 
 Appendix: if your production database is SQLite

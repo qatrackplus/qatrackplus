@@ -20,6 +20,16 @@ patches is in the next section.
 
 .. note::
 
+    **Docker hosting is supported on Linux only.** If your Docker site runs on a
+    Windows computer (with Docker Desktop, for example), that is no longer tested
+    or supported. Plan to move it to a Linux server: make a backup, set up
+    QATrack+ on the new server, and restore it there, as
+    :ref:`docker_backups` describes. Bring your ``.env`` with you, with your
+    secret key copied into it (see :ref:`docker_upgrade_keep_secret_key`), so
+    nobody is signed out by the move.
+
+.. note::
+
     The service and scheduled task names stopped carrying version numbers in 4.0.0
     precisely so that patch upgrades would not require renaming anything. If you
     upgraded to 4.0.0 from v3.x, your service is called *QATrack+ Web Service* and your
@@ -128,8 +138,9 @@ page, leave ``SITE_NAME`` and ``SITE_DOMAIN`` commented out: set in ``.env``, th
 replace those on every start. Keep ``qatrack.env.backup`` somewhere safe, or
 delete it: it holds your database password.
 
-If your server is a Windows machine, see :ref:`the note on line endings
-<docker_line_endings>` in the installation guide as well.
+If your QATrack+ folder was first cloned on a Windows computer and copied to
+your Linux server, see :ref:`the note on line endings <docker_line_endings>` in
+the installation guide as well.
 
 .. _docker_upgrade_keep_secret_key:
 

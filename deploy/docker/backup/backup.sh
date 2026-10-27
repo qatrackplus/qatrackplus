@@ -27,7 +27,7 @@ mkdir -p "$BACKUP_DIR"
 
 # Make every backup in /backups readable by root only, including those made by
 # earlier releases, which anyone on the server could read (mode 644, or 666). A
-# folder that cannot hold Unix permissions (a Windows or network share) may
+# folder that cannot hold Unix permissions (an SMB/CIFS or other network share) may
 # refuse; a backup matters more than its permissions, so that is only a warning.
 restrict_backups() {
     find "$BACKUP_DIR" -maxdepth 1 -type f \

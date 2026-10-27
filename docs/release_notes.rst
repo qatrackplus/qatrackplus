@@ -90,6 +90,23 @@ Other Changes
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* **Docker hosting is supported on Linux only.** QATrack+'s Docker deployment
+  needs a Linux server with Docker Engine 23.0 or newer and Docker Compose 2.17 or
+  newer. Running it on Windows, including with Docker Desktop, is not supported,
+  and the Windows sections of the Docker guide have been removed. On a Windows
+  server, use the :ref:`Windows Server installation <win_install_40>`, which
+  doesn't use Docker. If your Docker site runs on Windows today, plan a move to a
+  Linux server (see :ref:`docker_upgrade_from_4_0`).
+
+* **The Docker installation guide has been reorganised.** :doc:`install/docker` is
+  now grouped into setting up, configuring, data and backups, running QATrack+ day
+  to day, and development, and its out-of-date parts are fixed: the Django shell
+  is ``docker compose exec django python manage.py shell``, removing a site is
+  explained safely (``docker compose down -v`` deletes the database, uploaded files
+  and generated secret key), and the nightly backup is shown at the time it really
+  runs, 2 AM UTC. Thanks to Vincent Leduc, whose reorganisation of the Docker
+  docs in :issues:`#866 <866>` this draws on.
+
 * **Docker: Docker Compose 2.17 and Docker Engine 23.0 are now the minimum. Check
   before you pull.** With an older Compose, the commands that build or create
   containers (``up``, ``build``, ``run`` and others) stop with *Additional property
@@ -305,10 +322,10 @@ Deployment and Upgrade Notes
   (``.env``, ``*.env``, ``.env.*``) are now ignored as well, except the
   ``.env.example`` templates, including ``deploy/docker/.env`` (see above).
 
-* **Files under ``deploy/docker`` always check out with LF line endings**, including
-  on Windows with ``core.autocrlf=true``. A Dockerfile or script with CRLF endings
-  fails inside the container. An existing checkout keeps its current line endings
-  until the files are checked out again; see
+* **Files under ``deploy/docker`` always check out with LF line endings**, whatever
+  git's ``core.autocrlf`` setting. A Dockerfile or script with CRLF endings fails
+  inside the container. A checkout made on Windows and copied to a Linux server
+  keeps its current line endings until the files are checked out again; see
   :ref:`checking out deploy/docker again <docker_line_endings>`.
 
 4.0.1

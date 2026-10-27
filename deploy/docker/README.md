@@ -2,6 +2,10 @@
 
 This folder contains the Docker configuration for running QATrack+ in a modern, production-ready environment using Docker Compose V2.
 
+Docker hosting is supported on **Linux only**: a Linux server with Docker Engine 23.0+ and Docker Compose 2.17+. Windows and Docker Desktop are not supported; on a Windows server, follow the Windows Server installation guide, which doesn't use Docker.
+
+The full guide is "Installing & Deploying QATrack+ with Docker" (`docs/install/docker.rst`, or the Installation section of the QATrack+ documentation). It covers setup, configuration, data and backups, day-to-day operation and development; this README is a quick summary.
+
 ## Directory Layout
 - `compose.yaml`: The production-ready defaults.
 - `compose.dev.yaml`: Development overlay that runs your checkout instead of the image's code. Not applied automatically.
