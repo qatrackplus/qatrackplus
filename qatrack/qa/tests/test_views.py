@@ -1,4 +1,5 @@
 import calendar
+import datetime
 import glob
 import json
 import os
@@ -610,6 +611,48 @@ class TestComposite(TestCase):
         values = json.loads(response.content.decode("UTF-8"))
 
         self.assertEqual(values['results']['testc']['comment'], 'bad value')
+
+    def test_composite_comment_falsy_values_send_no_comment(self):
+        # The browser only shows a comment for a truthy value, so a falsy one must come back
+        # empty rather than as its str() form, which would be shown as a comment "None".
+        data = {
+            'tests': {
+                "testc": "",
+                "test1": 1,
+                "test2": 2,
+            },
+            'meta': {},
+            'test_list_id': self.test_list.id,
+            'unit_id': self.unit.id,
+        }
+        for falsy in ["None", "0", "False", "[]", "''"]:
+            with self.subTest(falsy=falsy):
+                self.tc.calculation_procedure = "UTILS.set_comment(%s)\nresult = test1 + test2" % falsy
+                self.tc.save()
+                request = self.factory.post(self.url, content_type='application/json', data=json.dumps(data))
+                request.user = self.user
+                response = self.view(request)
+                values = json.loads(response.content.decode("UTF-8"))
+
+                self.assertEqual(values['results']['testc']['comment'], "")
+
+    def test_composite_comment_text(self):
+        cases = [
+            (None, ""),
+            (0, ""),
+            (False, ""),
+            ("", ""),
+            ([], ""),
+            ("a note", "a note"),
+            (42, "42"),
+            (datetime.date(2026, 5, 3), "2026-05-03"),
+            (datetime.datetime(2026, 5, 3, 12, 0, tzinfo=datetime.UTC), "2026-05-03 08:00"),
+            (datetime.datetime(2026, 5, 3, 12, 0), "2026-05-03 12:00"),
+            (datetime.time(9, 30), "09:30"),
+        ]
+        for comment, expected in cases:
+            with self.subTest(comment=comment):
+                self.assertEqual(views.perform.CompositeUtils.comment_text(comment), expected)
 
     @override_settings(CONSTANT_PRECISION=2)
     def test_date_composite(self):

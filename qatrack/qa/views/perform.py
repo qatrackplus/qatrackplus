@@ -43,6 +43,7 @@ from qatrack.qa.trees import BootstrapCategoryTree, BootstrapFrequencyTree
 from qatrack.qatrack_core.dates import (
     end_of_day,
     format_as_date,
+    format_as_time,
     format_datetime,
     parse_date,
     parse_datetime,
@@ -117,7 +118,21 @@ class CompositeUtils:
         self.changed_skips = {}
 
     def set_comment(self, comment):
-        self.context["__comment__"] = str(comment)
+        self.context["__comment__"] = self.comment_text(comment)
+
+    @staticmethod
+    def comment_text(comment):
+        # A falsy comment means no comment; the browser only shows a truthy one.
+        if not comment:
+            return ""
+        # datetime subclasses date, so it has to be tested first.
+        if isinstance(comment, datetime.datetime):
+            return format_datetime(comment)
+        if isinstance(comment, datetime.date):
+            return format_as_date(comment)
+        if isinstance(comment, datetime.time):
+            return format_as_time(comment)
+        return str(comment)
 
     def get_comment(self, slug):
         return self.comments.get(slug, "")
