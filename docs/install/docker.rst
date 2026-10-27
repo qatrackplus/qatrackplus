@@ -579,6 +579,106 @@ to `8080:80` then you would need to type http://localhost:8080 within your
 browser to see QATrack+. After editing `compose.yaml` you need to rerun
 `docker compose up`.
 
+.. _docker_postgres_access:
+
+Connecting to the database directly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Out of the box, QATrack+'s PostgreSQL database isn't published on any of the
+server's network addresses, so there is nothing for other computers on your
+network to connect to. Most sites never need to change that.
+
+That doesn't make it unreachable from the server itself. On Linux, the server
+can reach Docker's internal network directly, so anyone with an account on the
+server who knows the database password can connect. Whether or not you turn on
+the option below, it's ``POSTGRES_PASSWORD`` in ``.env`` that protects the
+database, so make it long and hard to guess, and don't reuse it anywhere else.
+
+For a quick look, you don't need to change anything. This opens ``psql`` inside
+the database container (replace ``POSTGRES_USER`` and ``POSTGRES_DB`` with the
+values in your ``.env``):
+
+.. code-block:: console
+
+    docker compose exec postgres psql -U POSTGRES_USER -d POSTGRES_DB
+
+If a database client, a GUI tool such as pgAdmin, or a reporting tool needs to
+connect, you can publish the database on the server with the optional
+``compose.db-port.yaml`` file. It stays off until you turn it on.
+
+**To turn it on**, add this line to ``.env`` (it is in ``.env.example``,
+commented out):
+
+.. code-block:: text
+
+    COMPOSE_FILE=compose.yaml:compose.db-port.yaml
+
+then apply it:
+
+.. code-block:: console
+
+    docker compose up -d
+
+``COMPOSE_FILE`` tells every ``docker compose`` command run in
+``deploy/docker`` to use ``compose.db-port.yaml`` as well as ``compose.yaml``,
+so the commands you run don't change, and it carries on across restarts and
+upgrades.
+
+PostgreSQL then listens on ``127.0.0.1``, port ``5434``: on the server itself
+only, on a port that doesn't clash with a PostgreSQL that may already be
+installed there. To use another port, set ``POSTGRES_HOST_PORT`` in ``.env``.
+``POSTGRES_HOST_ADDRESS`` sets the address, and should stay ``127.0.0.1`` (see
+the warning below). These are not the same as ``POSTGRES_HOST`` and
+``POSTGRES_PORT``, which tell QATrack+ how to reach the database inside Docker;
+leave those alone.
+
+Turning it on or off restarts the whole site, not just the database. Every
+QATrack+ service reads its settings from ``.env``, so any change to ``.env``
+(this one included) makes ``docker compose up -d`` recreate the ``django``,
+``django-q``, ``backup`` and ``postgres`` containers. Expect QATrack+ to be
+unavailable for about half a minute, with the browser showing a *502 Bad
+Gateway* page until it's back. Do it at a quiet time, not while people are
+saving QC results. **To turn it off**, remove the line (or put a ``#`` back in
+front of it) and run ``docker compose up -d`` again.
+
+If you use the :ref:`development overlay <docker_development>`, which is chosen
+with ``-f``, add the file to your ``-f`` options instead, for example
+``docker compose -f compose.yaml -f compose.dev.yaml -f compose.db-port.yaml up -d``.
+``-f`` replaces ``COMPOSE_FILE`` rather than adding to it.
+
+**To connect on the server**, use the user name, password and database name
+from ``.env`` (``POSTGRES_USER``, ``POSTGRES_PASSWORD`` and ``POSTGRES_DB``):
+
+.. code-block:: console
+
+    psql -h 127.0.0.1 -p 5434 -U POSTGRES_USER -d POSTGRES_DB
+
+``psql`` asks for the password. A GUI client takes the same host, port, user
+name, password and database.
+
+**To connect from another computer**, use an SSH tunnel rather than opening the
+database to the network. This forwards port 5433 on your own computer, through
+an SSH connection to the server, to the database (replace ``user@server`` with
+your SSH login):
+
+.. code-block:: console
+
+    ssh -N -L 5433:127.0.0.1:5434 user@server
+
+Leave it running, and point your client at ``127.0.0.1``, port ``5433``, on your
+own computer. Only people who can sign in to the server over SSH can use the
+tunnel, and the connection is encrypted all the way.
+
+.. warning::
+
+    **Do not set** ``POSTGRES_HOST_ADDRESS=0.0.0.0``. That opens the clinic's QA
+    database to every network the server is connected to, protected only by the
+    database password. The connection isn't encrypted, so that password and your
+    data would cross the network as plain text, and Docker opens the port even
+    past a firewall on the server such as ``ufw``. Use an SSH tunnel instead. If
+    another system really must connect over the network, ask your IT department
+    to help limit who can reach it.
+
 Shutdown the server
 ~~~~~~~~~~~~~~~~~~~
 

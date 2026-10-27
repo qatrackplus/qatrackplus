@@ -5,6 +5,7 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
 ## Directory Layout
 - `compose.yaml`: The production-ready defaults.
 - `compose.dev.yaml`: Development overlay that runs your checkout instead of the image's code. Not applied automatically.
+- `compose.db-port.yaml`: Optional overlay that publishes PostgreSQL on `127.0.0.1` for a database client or an SSH tunnel. Off unless turned on in `.env`; see `.env.example`.
 - `django/`: Multi-stage Dockerfile and entrypoint script for the Django app.
 - `nginx/`: NGINX image. It writes its server configuration at startup from `.env` (`ALLOWED_HOSTS`, `HTTP_OR_HTTPS` and the `NGINX_*` settings).
 - `backup/`: A lightweight Alpine container that automatically runs database and media backups via cron.

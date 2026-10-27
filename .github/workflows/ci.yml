@@ -309,6 +309,46 @@ jobs:
             exit 1
           fi
 
+      - name: Verify PostgreSQL is published only when asked, and only on 127.0.0.1
+        # compose.db-port.yaml publishes the database for direct access
+        # (docs/install/docker.rst, "Connecting to the database directly").
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          # The running site, from plain compose.yaml: nothing on the host.
+          bindings=$(docker inspect -f '{{json .HostConfig.PortBindings}}' "$(docker compose ps -q postgres)")
+          echo "postgres port bindings without compose.db-port.yaml: $bindings"
+          [ "$bindings" = "{}" ] || { echo "FAIL: postgres is published on the host"; exit 1; }
+          # Turned on, in a separate project so the running site is not touched.
+          # Set for these commands only, so .env and later steps are unchanged.
+          db_port() {
+            COMPOSE_FILE=compose.yaml:compose.db-port.yaml POSTGRES_HOST_PORT=15432 \
+              docker compose -p qatrack-db-port "$@"
+          }
+          trap 'db_port down -v' EXIT
+          db_port up -d --wait --wait-timeout 120 postgres
+          bindings=$(docker inspect -f '{{json .HostConfig.PortBindings}}' "$(db_port ps -q postgres)")
+          echo "postgres port bindings with compose.db-port.yaml: $bindings"
+          [ "$bindings" = '{"5432/tcp":[{"HostIp":"127.0.0.1","HostPort":"15432"}]}' ] ||
+            { echo "FAIL: expected 127.0.0.1:15432 only"; exit 1; }
+          # A client on the server needs the password from .env, and signs in with it.
+          # The $POSTGRES_ variables are expanded in the client container, from .env.
+          psql_on_host() { docker run --rm --network host --env-file .env postgres:15-alpine sh -c "$1"; }
+          # shellcheck disable=SC2016
+          if psql_on_host 'psql -w -h 127.0.0.1 -p 15432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1"'; then
+            echo "FAIL: signed in without a password"; exit 1
+          fi
+          # shellcheck disable=SC2016
+          db=$(psql_on_host 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 15432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT current_database()"')
+          echo "signed in through 127.0.0.1:15432 to: $db"
+          [ "$db" = qatrackplus ]
+          # The runner's network address does not answer.
+          address=$(hostname -I | awk '{print $1}')
+          if timeout 5 bash -c "exec 3<>/dev/tcp/$address/15432" 2>/dev/null; then
+            echo "FAIL: postgres answers on $address:15432"; exit 1
+          fi
+          echo "PASS: published only on 127.0.0.1, and only with compose.db-port.yaml"
+
       - name: Verify background tasks run (django-q)
         working-directory: deploy/docker
         run: |

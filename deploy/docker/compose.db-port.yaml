@@ -1,0 +1,28 @@
+# Optional overlay: publishes PostgreSQL on the server, for a database client,
+# a reporting tool, or an SSH tunnel. Without it, the database is not published
+# on the server's network addresses. Either way, POSTGRES_PASSWORD is what
+# protects it: on Linux, programs on the server can reach Docker's internal
+# network directly.
+#
+# It is not applied automatically. To use it, add this line to .env (it is in
+# .env.example, commented out) and run `docker compose up -d`:
+#
+#     COMPOSE_FILE=compose.yaml:compose.db-port.yaml
+#
+# To stop publishing the database, remove it and run `docker compose up -d`
+# again. Every service reads .env, so either change restarts the whole site for
+# about half a minute. See "Connecting to the database directly" in
+# docs/install/docker.rst.
+#
+# The database is published on 127.0.0.1 (this server only), port 5434, unless
+# POSTGRES_HOST_ADDRESS or POSTGRES_HOST_PORT in .env say otherwise. Keep
+# 127.0.0.1: 0.0.0.0 opens the clinic's database to the network. To connect from
+# another computer, use an SSH tunnel.
+services:
+  postgres:
+    ports:
+      # The long form, so an IPv6 address such as ::1 also works.
+      - target: 5432
+        host_ip: ${POSTGRES_HOST_ADDRESS:-127.0.0.1}
+        published: ${POSTGRES_HOST_PORT:-5434}
+        protocol: tcp

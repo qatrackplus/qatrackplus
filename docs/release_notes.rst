@@ -149,6 +149,14 @@ Deployment and Upgrade Notes
   HTTPS, redirects HTTP to it, and tells QATrack+ the request was secure (see
   :ref:`docker_https`).
 
+* **Docker: a database client can connect to PostgreSQL, if you turn it on.** The
+  database is still not published on the server unless you ask, so an upgrade
+  opens no new port. Listing the new ``compose.db-port.yaml`` in ``COMPOSE_FILE``
+  in ``.env`` publishes it on ``127.0.0.1``, port 5434 (``POSTGRES_HOST_PORT``
+  changes it), for a client or reporting tool on the server, or for one elsewhere
+  through an SSH tunnel. See :ref:`docker_postgres_access`. Thanks to Vincent
+  Leduc, whose pull request this is based on (:issues:`#866 <866>`).
+
 * **Docker: nginx answers only the hosts in ``ALLOWED_HOSTS``.** Requests for any
   other host name are dropped before they reach QATrack+, so they no longer
   produce *Invalid HTTP_HOST header* errors (and error emails to ``ADMINS``).
