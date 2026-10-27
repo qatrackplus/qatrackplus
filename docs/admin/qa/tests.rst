@@ -377,7 +377,7 @@ When your script (calculation procedure) is executed, it has access to
 
     - **UTILS.get_comment(** *macro_name* **)** gets the user set comment for the input
 
-    - **UTILS.set_comment(** "*your comment here*" **)** sets the comment for the current test
+    - **UTILS.set_comment(** "*your comment here*" **)** sets the comment for the current test. Any value is accepted: dates and times use the site's display format, and an empty or false value such as ``None`` or ``0`` sets no comment
 
     - **UTILS.set_skip(** *macro_name* **, True|False )** set skip status of a
       test. Please note that if a user alters the skip state of the same test
