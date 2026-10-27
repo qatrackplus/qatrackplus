@@ -178,6 +178,13 @@ services:
     restart: always
     logging: *logging
     env_file: .env
+    environment:
+      # The nightly backup's 4 AM, and the date and time in each backup's file
+      # name, follow TZ. It is QATrack+'s own TIME_ZONE, so the backups and
+      # QATrack+ agree (the backup service's log warns if they do not); when
+      # TIME_ZONE is unset or empty, this default must match TIME_ZONE in
+      # qatrack/settings.py (a test checks it).
+      TZ: ${TIME_ZONE:-America/Toronto}
     depends_on:
       postgres:
         condition: service_healthy

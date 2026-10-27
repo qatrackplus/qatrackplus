@@ -104,8 +104,9 @@ Deployment and Upgrade Notes
   is ``docker compose exec django python manage.py shell``, removing a site is
   explained safely (``docker compose down -v`` deletes the database, uploaded files
   and generated secret key), and the nightly backup is shown at the time it really
-  runs, 2 AM UTC. Thanks to Vincent Leduc, whose reorganisation of the Docker
-  docs in :issues:`#866 <866>` this draws on.
+  runs, which is now 4 AM in QATrack+'s own time zone (see below). Thanks to
+  Vincent Leduc, whose reorganisation of the Docker docs in :issues:`#866 <866>`
+  this draws on.
 
 * **Docker: Docker Compose 2.17 and Docker Engine 23.0 are now the minimum. Check
   before you pull.** With an older Compose, the commands that build or create
@@ -223,6 +224,22 @@ Deployment and Upgrade Notes
   version 16, the version that made those backups: PostgreSQL 15's tools cannot
   read them. The image now installs just those client tools on Alpine, rather
   than starting from the PostgreSQL server image.
+
+* **Docker: the nightly backup moves to 4 AM local time.** It ran at 2 AM UTC,
+  which is the evening before across the Americas (10 PM in Toronto in summer),
+  and named its files in UTC. It now runs at 4 AM in QATrack+'s own time zone,
+  ``TIME_ZONE`` in ``.env``, and names its files in that local time. If
+  ``TIME_ZONE`` is not set, that is QATrack+'s default, America/Toronto, which
+  QATrack+ already shows dates in: set it if your site is elsewhere.
+  ``docker compose logs backup`` shows the zone in use. 4 AM rather than 2 AM
+  because no time zone changes its clocks for daylight saving time at 4 AM, so the
+  backup runs once every night, all year round (see :ref:`docker_backups`).
+  Backups from before the upgrade keep their UTC names, so for a day or so the
+  names do not sort in the order the backups were made; ``ls -lt`` lists them
+  newest first. The first backup after the upgrade may come up to a day sooner or
+  later than usual. **If a job copies the backups off the server** at a time
+  chosen to follow the old 2 AM UTC backup, move it to after 4 AM local time, or
+  it will copy the previous night's backup.
 
 * **Docker: QATrack+'s data can be kept in folders on the server.** Nothing changes
   unless you ask for it: the uploaded files, log files and generated secret key stay

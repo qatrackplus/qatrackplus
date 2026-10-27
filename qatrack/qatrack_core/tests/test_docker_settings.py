@@ -3,10 +3,12 @@
 apply() is called with a fake environment and a copy of the defaults it reads,
 so these tests never touch the real settings or environment.
 """
+import ast
 import contextlib
 import datetime
 import io
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path, PureWindowsPath
@@ -17,9 +19,12 @@ from django.test import SimpleTestCase
 
 from qatrack import docker_settings
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
 
 def defaults():
     return {
+        'TIME_ZONE': 'America/Toronto',
         'ADMINS': (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),),
         'MANAGERS': (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),),
         'DEBUG': False,
@@ -73,6 +78,33 @@ class TestDefaults(DockerSettingsTestCase):
         self.assertEqual(db['ENGINE'], 'django.db.backends.postgresql')
         self.assertEqual((db['NAME'], db['USER'], db['PASSWORD']), ('qatrackplus', 'postgres', 'postgres'))
         self.assertEqual((db['HOST'], db['PORT']), ('postgres', 5432))
+
+    def test_time_zone_from_environment(self):
+        self.assertEqual(self.apply(TIME_ZONE='Asia/Kolkata')['TIME_ZONE'], 'Asia/Kolkata')
+        # Empty counts as unset, as it does for the backup service's ${TIME_ZONE:-...}.
+        for value in ('', '   '):
+            self.assertEqual(self.apply(TIME_ZONE=value)['TIME_ZONE'], 'America/Toronto')
+
+    def test_backup_time_zone_default_matches_settings(self):
+        """With TIME_ZONE unset, the backup service runs in QATrack+'s default zone.
+
+        compose.yaml gives the backup service TZ from TIME_ZONE, falling back to a
+        default of its own, which must stay the same as settings.py's, or the
+        nightly backup's 4 AM and its file names drift from QATrack+'s clock.
+        """
+        settings_py = ast.parse((REPO_ROOT / 'qatrack' / 'settings.py').read_text(encoding='utf-8'))
+        settings_default = [
+            node.value.value for node in settings_py.body
+            if isinstance(node, ast.Assign) and [getattr(t, 'id', None) for t in node.targets] == ['TIME_ZONE']
+        ]
+        compose = (REPO_ROOT / 'deploy' / 'docker' / 'compose.yaml').read_text(encoding='utf-8')
+        compose_default = re.findall(r'^ +TZ: \$\{TIME_ZONE:-([^}]+)\}$', compose, re.MULTILINE)
+        # start-cron.sh warns when the backups' zone differs from QATrack+'s default.
+        start_cron = (REPO_ROOT / 'deploy' / 'docker' / 'backup' / 'start-cron.sh').read_text(encoding='utf-8')
+        start_cron_default = re.findall(r'^default_zone=(\S+)$', start_cron, re.MULTILINE)
+        self.assertEqual(len(settings_default), 1)
+        self.assertEqual(compose_default, settings_default)
+        self.assertEqual(start_cron_default, settings_default)
 
     def test_database_from_environment(self):
         g = self.apply(

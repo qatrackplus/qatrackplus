@@ -600,23 +600,27 @@ Backing up and restoring
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``backup`` service backs up QATrack+'s database and uploaded files every
-night at 2 AM UTC (the ``backup`` container keeps UTC whatever ``TIME_ZONE`` is
-set to, so this may be a different hour where you are), into the
-``deploy/docker/backups`` folder (or the folder ``QATRACK_BACKUPS_DIR`` names;
-see :ref:`docker_data_dirs`):
+night at 4 AM, into the ``deploy/docker/backups`` folder (or the folder
+``QATRACK_BACKUPS_DIR`` names; see :ref:`docker_data_dirs`):
 
 * ``db_YYYYMMDD_HHMMSS.dump``, the database;
 * ``media_YYYYMMDD_HHMMSS.tar.gz``, the uploaded files.
 
+That is 4 AM in QATrack+'s time zone, ``TIME_ZONE`` in ``.env`` (America/Toronto if
+it is not set), and the file names use the same local time;
+``docker compose logs backup`` shows the zone in use. No time zone changes its
+clocks for daylight saving time at 4 AM, so the backup runs exactly once every
+night, all year round.
+
 Each file is read back in full as it is made, and only gets its final name once
 it is complete, so an interrupted backup never looks like a finished one. Each
 backup is kept for 7 days, then deleted. To back up now, or to see the backups
-you have:
+you have, newest first:
 
 .. code-block:: console
 
     docker compose exec backup backup
-    docker compose exec backup ls -lh /backups
+    docker compose exec backup ls -lt /backups
 
 A backup does not contain your ``.env`` file, which holds the database password
 and your settings, nor the certificates in ``user-data/ssl``. Keep copies of

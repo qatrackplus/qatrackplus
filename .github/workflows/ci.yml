@@ -683,6 +683,68 @@ jobs:
           [ "$($dc exec -T django stat -c %u qatrack/media/uploads/ci-restored.txt)" = 1000 ]
           echo "PASS: backup restored the user and the uploaded file"
 
+      - name: Verify backups follow TIME_ZONE
+        # The nightly 4 AM and the backups' file names are in TIME_ZONE from .env,
+        # or QATrack+'s default zone (America/Toronto) when it is unset.
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          dc="docker compose"
+          # The backup's file name, cut to the minute: db_YYYYMMDD_HHMMSS.dump -> YYYYMMDD_HHMM.
+          minute_of() { local name=${1#db_}; echo "${name:0:13}"; }
+
+          # Unset in CI's .env: the running service uses the default zone.
+          [ "$($dc exec -T backup printenv TZ)" = America/Toronto ]
+          abbreviation=$($dc exec -T backup date +%Z)
+          [[ "$abbreviation" =~ ^E[SD]T$ ]] || { echo "FAIL: the backup service's zone is $abbreviation"; exit 1; }
+          $dc logs backup | grep -F "Backups run every night at 4 AM, America/Toronto time"
+          # The schedule itself, which that message describes.
+          $dc exec -T backup cat /etc/crontabs/root | grep -E '^0 4 \* \* \* /usr/local/bin/backup '
+
+          # Backups named in UTC by an earlier release: one an hour old, whose
+          # name sorts after one named in Toronto time now, and one 8 days old.
+          # The newest backup is still the one ls -1t (newest modified first)
+          # lists first, and the old one is still deleted.
+          recent=$(date -u -d '1 hour ago' +%s)
+          expired=$(date -u -d '8 days ago' +%s)
+          for t in "$recent" "$expired"; do
+            sudo sh -c 'echo old > "$1" && touch -d "@$2" "$1"' sh "backups/db_$(date -u -d "@$t" +%Y%m%d_%H%M%S).dump" "$t"
+          done
+          before=$(TZ=America/Toronto date +%Y%m%d_%H%M)
+          $dc exec -T backup backup
+          after=$(TZ=America/Toronto date +%Y%m%d_%H%M)
+          dump=$($dc exec -T backup sh -c 'cd /backups && ls -1t db_*.dump | head -1')
+          echo "newest: $dump; in Toronto it was $before"
+          [ "$(minute_of "$dump")" = "$before" ] || [ "$(minute_of "$dump")" = "$after" ] ||
+            { echo "FAIL: $dump is not named in Toronto time"; exit 1; }
+          $dc exec -T backup test -f "/backups/db_$(date -u -d "@$recent" +%Y%m%d_%H%M%S).dump"
+          if $dc exec -T backup test -e "/backups/db_$(date -u -d "@$expired" +%Y%m%d_%H%M%S).dump"; then
+            echo "FAIL: the 8-day-old backup was kept"; exit 1
+          fi
+          $dc exec -T backup rm "/backups/db_$(date -u -d "@$recent" +%Y%m%d_%H%M%S).dump"
+
+          # Set in .env: a zone with no daylight saving and a half-hour offset,
+          # so its time can't be mistaken for UTC's or the default's.
+          echo "TIME_ZONE=Asia/Kolkata" >> .env
+          before=$(TZ=Asia/Kolkata date +%Y%m%d_%H%M)
+          out=$($dc run --rm -T --no-deps backup sh -c 'echo "zone: $TZ $(date +%Z)" && backup')
+          after=$(TZ=Asia/Kolkata date +%Y%m%d_%H%M)
+          echo "$out"
+          grep -qx "zone: Asia/Kolkata IST" <<<"$out"
+          dump=$($dc exec -T backup sh -c 'cd /backups && ls -1t db_*.dump | head -1')
+          echo "newest: $dump; in Kolkata it was $before"
+          [ "$(minute_of "$dump")" = "$before" ] || [ "$(minute_of "$dump")" = "$after" ] ||
+            { echo "FAIL: $dump is not named in Asia/Kolkata time"; exit 1; }
+
+          # A zone the container does not know: it says so instead of quietly using UTC.
+          sed -i 's|^TIME_ZONE=.*|TIME_ZONE=Mars/Olympus_Mons|' .env
+          out=$($dc run --rm -T --no-deps backup timeout 3 start-cron 2>&1 || true)
+          echo "$out"
+          grep -qF '"Mars/Olympus_Mons" is not a time zone this container knows' <<<"$out"
+
+          sed -i '/^TIME_ZONE=/d' .env
+          echo "PASS: backups run and are named in TIME_ZONE, or America/Toronto when it is unset"
+
       - name: Verify the data can be kept in folders on the server
         # Unset, the QATRACK_*_DIR settings keep the named volumes, which every
         # step above used. Then move the data into folders on the server the way
@@ -1035,8 +1097,11 @@ jobs:
           old="$GITHUB_WORKSPACE/../base/deploy/docker/backups"
           sudo mkdir -p backups
           sudo cp "$old"/db_*.dump "$old"/media_*.tar.gz backups/
-          dump=$(cd backups && ls db_*.dump | head -1)
-          media=$(cd backups && ls media_*.tar.gz | head -1)
+          # Picked from 4.0.1's own folder: 4.0.1 named backups in UTC and this
+          # release names them in local time, so by name alone a backup made
+          # since the upgrade could sort on either side of 4.0.1's.
+          dump=$(cd "$old" && ls -1t db_*.dump | head -1)
+          media=$(cd "$old" && ls -1t media_*.tar.gz | head -1)
           $dc exec -T django python manage.py shell -c \
             "from django.contrib.auth.models import User; User.objects.filter(username='ci').delete()"
           $dc exec -T django rm qatrack/media/uploads/ci-upgrade.txt

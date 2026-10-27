@@ -24,7 +24,7 @@ umask 077
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: restore-media media_YYYYMMDD_HHMMSS.tar.gz" >&2
-    echo "The backups are listed by: docker compose exec backup ls -lh /backups" >&2
+    echo "The backups are listed, newest first, by: docker compose exec backup ls -lt /backups" >&2
     exit 2
 fi
 backup_name=$1

@@ -46,9 +46,17 @@ fi
 
 restrict_backups
 
-DATE=$(date +%Y%m%d_%H%M%S)
-dump_file="$BACKUP_DIR/db_$DATE.dump"
-media_file="$BACKUP_DIR/media_$DATE.tar.gz"
+# Named in local time: TZ, which compose.yaml sets from TIME_ZONE in .env. Local
+# time can repeat (the hour clocks go back, or the first backup after upgrading
+# from a release that named them in UTC), so never take an existing backup's
+# name: wait for the next second instead. Holding the lock, nothing else names one.
+while :; do
+    DATE=$(date +%Y%m%d_%H%M%S)
+    dump_file="$BACKUP_DIR/db_$DATE.dump"
+    media_file="$BACKUP_DIR/media_$DATE.tar.gz"
+    [ -e "$dump_file" ] || [ -e "$media_file" ] || break
+    sleep 1
+done
 
 # Each archive is written under a .tmp name and renamed only once it is complete
 # and readable, so an interrupted backup never leaves a file that looks finished.
@@ -57,7 +65,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "Starting backup at $DATE"
+echo "Starting backup at $DATE ($(date +%Z))"
 
 # A backup killed outright (power cut, docker kill) cannot remove its own .tmp
 # file. Holding the lock means no other backup is writing one now.
