@@ -104,6 +104,31 @@
 {# JavaScript for prepopulated fields #}
 {% prepopulated_fields_js %}
 
+{% comment %}
+   Give a raw id field's view/change icons an href, which Django only does for
+   `select` elements. See TestRawIdWrapperIconTest for the why.
+
+   Bound on each input rather than delegated from the document, because
+   dynamic_raw_id's own change handler calls stopPropagation(). Rows added with
+   "Add another" are clone(true) copies, so they carry this handler already.
+
+   Keep this as a comment *tag*: `{# #}` cannot span lines and prints as text.
+{% endcomment %}
+<script type="text/javascript">
+(function($) {
+    var fields = '.related-widget-wrapper .vForeignKeyRawIdAdminField, ' +
+                 '.related-widget-wrapper .vManyToManyRawIdAdminField';
+    function updateLinks() {
+        if (typeof window.updateRelatedObjectLinks === 'function') {
+            window.updateRelatedObjectLinks(this);
+        }
+    }
+    $(document).ready(function() {
+        $(fields).on('change', updateLinks).each(updateLinks);
+    });
+})(django.jQuery);
+</script>
+
 </div>
 </form></div>
 {% endblock %}
