@@ -185,6 +185,14 @@ class TestSecretKey(DockerSettingsTestCase):
         self.apply()
         self.assertEqual(os.listdir(self.key_file.parent), ['secret_key.txt'])
 
+    def test_key_file_has_one_name(self):
+        # The key is linked into place from a temporary file, which is then
+        # removed. The Docker init service never re-owns a file with more than
+        # one name (a hard link), so a second name left behind would leave the
+        # key as it is on every start.
+        self.apply()
+        self.assertEqual(os.stat(self.key_file).st_nlink, 1)
+
     def test_key_published_by_another_process_first_is_used(self):
         # Another container process publishes its key between our check for the
         # file and our link: both must end up with the same key.
@@ -248,6 +256,18 @@ class TestSecretKeyNotice(DockerSettingsTestCase):
         self.assertIn(docker_settings.DEFAULT_SECRET_KEY_FILE, notice)
         self.assertIn('user-data-volume', notice)
         self.assertIn(f'cat {docker_settings.DEFAULT_SECRET_KEY_FILE})', notice)
+
+    def test_default_file_in_a_folder_on_the_server(self):
+        # QATRACK_USER_DATA_DIR in .env puts the default file in a folder on the
+        # server instead of the volume; the notice names that folder.
+        notice = docker_settings.secret_key_notice({'QATRACK_USER_DATA_DIR': '/srv/qatrack/user-data'})
+        self.assertIn(f'{docker_settings.DEFAULT_SECRET_KEY_FILE}, in the folder /srv/qatrack/user-data', notice)
+        self.assertNotIn('user-data-volume', notice)
+        self.assertIn(f'cat {docker_settings.DEFAULT_SECRET_KEY_FILE})', notice)
+
+    def test_blank_user_data_dir_means_the_volume(self):
+        notice = docker_settings.secret_key_notice({'QATRACK_USER_DATA_DIR': '  '})
+        self.assertIn('user-data-volume', notice)
 
     def test_default_file_keeps_forward_slashes_on_windows(self):
         # On Windows, Path renders /usr/src/... with backslashes; the file is in

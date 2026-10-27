@@ -134,13 +134,22 @@ def secret_key_notice(environ=os.environ):
     django-q, every management command), so it is not logged from apply(). It
     names the file and never includes the key.
     """
-    path = secret_key_file(Env(environ))
+    env = Env(environ)
+    path = secret_key_file(env)
     if path is None:
         return None
     # The file is inside the Linux container, so show it with forward slashes
     # whatever system this runs on (the tests also run on Windows).
     path = path.as_posix()
-    where = f'{path}, in the user-data-volume Docker volume' if path == DEFAULT_SECRET_KEY_FILE else path
+    # compose.yaml mounts QATRACK_USER_DATA_DIR, a folder on the server, in place
+    # of the volume when .env sets it.
+    host_dir = env.raw('QATRACK_USER_DATA_DIR')
+    if path != DEFAULT_SECRET_KEY_FILE:
+        where = path
+    elif host_dir:
+        where = f'{path}, in the folder {host_dir} on the server'
+    else:
+        where = f'{path}, in the user-data-volume Docker volume'
     return (
         'NOTICE: SECRET_KEY is not set in .env, so QATrack+ is using the secret key it generated '
         f'and saved in {where}.\n'

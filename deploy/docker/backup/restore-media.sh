@@ -100,12 +100,15 @@ trap 'exit 143' TERM
 
 # Move every entry directly inside $1 into $2, dot-files included. .restore.*
 # folders (this restore's staging folder, or one left by a restore that was
-# killed outright) are never moved. Stops at the first move that fails and
-# returns non-zero: put_back runs inside an "if", where set -e does not apply,
-# so the failure has to be returned by hand.
+# killed outright) are never moved, and neither is .qatrackplus-data: it marks a
+# folder on the server as QATrack+'s (see deploy/docker/django/init.sh), so it
+# belongs to the folder, not to the uploaded files, and stays as it is (one in
+# the backup is left out). Stops at the first move that fails and returns
+# non-zero: put_back runs inside an "if", where set -e does not apply, so the
+# failure has to be returned by hand.
 move_entries() {
     local entry
-    find "$1" -mindepth 1 -maxdepth 1 ! -name '.restore.*' -print0 |
+    find "$1" -mindepth 1 -maxdepth 1 ! -name '.restore.*' ! -name .qatrackplus-data -print0 |
         while IFS= read -r -d '' entry; do
             mv -- "$entry" "$2/" || return 1
         done
@@ -115,7 +118,8 @@ move_entries() {
 # (it is all still in the backup file), then move the earlier files back.
 put_back() {
     if [ "$stage" = replacing ]; then
-        find "$TARGET_DIR" -mindepth 1 -maxdepth 1 ! -name '.restore.*' -exec rm -rf -- {} + || return 1
+        find "$TARGET_DIR" -mindepth 1 -maxdepth 1 ! -name '.restore.*' ! -name .qatrackplus-data \
+            -exec rm -rf -- {} + || return 1
     fi
     move_entries "$staging/previous" "$TARGET_DIR"
 }

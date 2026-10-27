@@ -92,6 +92,7 @@ present=(
     fixtures/defaults/qa
     fixtures/defaults/units
     deploy/docker/django/entrypoint.sh
+    deploy/docker/django/init.sh
 )
 # Paths that must never be in the image. deploy/docker/.env holds the database
 # password; it is not tracked, so a fresh checkout has none and it is a decoy above.

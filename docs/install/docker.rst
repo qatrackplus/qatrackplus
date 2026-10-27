@@ -527,7 +527,8 @@ Keeping the secret key safe
 
 QATrack+ signs everyone's sign-in sessions and password-reset links with a
 secret key. If ``SECRET_KEY`` is not set in ``.env``, QATrack+ generates a key
-the first time it starts and saves it in the ``user-data-volume`` Docker volume,
+the first time it starts and saves it in the ``user-data-volume`` Docker volume
+(or the folder ``QATRACK_USER_DATA_DIR`` names; see :ref:`docker_data_dirs`),
 as ``deploy/docker/user-data/secret_key.txt`` inside the containers (the
 ``deploy/docker/user-data`` folder on the server holds only your HTTPS
 certificates). The key is kept when the containers are rebuilt or upgraded, and
@@ -729,7 +730,8 @@ Backing up and restoring
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``backup`` service backs up QATrack+'s database and uploaded files every
-night at 2 AM, into the ``deploy/docker/backups`` folder:
+night at 2 AM, into the ``deploy/docker/backups`` folder (or the folder
+``QATRACK_BACKUPS_DIR`` names; see :ref:`docker_data_dirs`):
 
 * ``db_YYYYMMDD_HHMMSS.dump``, the database;
 * ``media_YYYYMMDD_HHMMSS.tar.gz``, the uploaded files.
@@ -755,7 +757,8 @@ your settings.
 **Keep copies off the server.** ``deploy/docker/backups`` is on the same disk as
 QATrack+, so a disk failure, or ransomware, that takes the server takes these
 backups too. Have your IT department's backup system copy that folder to another
-machine every day.
+machine every day. ``QATRACK_BACKUPS_DIR`` can also put the backups on a second
+disk or a network share mounted on the server.
 
 **Only root can read the backups.** They hold all of your clinic's QATrack+
 records and uploaded files, and everyone's (hashed) passwords, so each backup
@@ -824,6 +827,238 @@ database is often smaller than the one it replaces, but plan for at least the
 size of the current one. ``restore-media`` likewise unpacks a second copy of the
 uploaded files before it swaps them in; ``docker compose exec backup du -sh /media``
 shows how much room that needs.
+
+.. _docker_data_dirs:
+
+Keeping QATrack+'s data in folders on the server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Out of the box, QATrack+ keeps its data in Docker *volumes*, which Docker stores
+in its own folder (usually ``/var/lib/docker/volumes`` on Linux). That suits most
+sites, and nothing needs to change. If you would rather keep some of it in a
+folder on the server, for example one your IT department already backs up or
+watches, you can, one location at a time:
+
+.. list-table::
+    :header-rows: 1
+
+    * - What
+      - Kept by default in
+      - To use a folder, set in ``.env``
+    * - Uploaded files (attachments, test images)
+      - the ``media-volume`` volume
+      - ``QATRACK_MEDIA_DIR``
+    * - The nightly backups
+      - the ``deploy/docker/backups`` folder
+      - ``QATRACK_BACKUPS_DIR``
+    * - QATrack+'s log files
+      - the ``logs-volume`` volume
+      - ``QATRACK_LOGS_DIR``
+    * - The generated secret key (see :ref:`docker_secret_key`)
+      - the ``user-data-volume`` volume
+      - ``QATRACK_USER_DATA_DIR``
+    * - The database
+      - the ``postgres-volume`` volume
+      - (no setting)
+    * - The web pages' stylesheets and scripts
+      - the ``static-volume`` volume
+      - (no setting)
+
+The database stays in its volume. PostgreSQL's own files can only be copied
+safely while it is stopped, and the nightly backup already puts a copy of the
+database in the backups folder, which you can move. The stylesheets and scripts
+are rebuilt every time QATrack+ starts, so there is nothing in them to keep.
+
+Docker names each volume after the project, so on the server they are listed by
+``docker volume ls`` as ``qatrackplus_media-volume`` and so on.
+
+**Using a folder.** Set the variable in ``.env`` to the folder's full path, for
+example ``QATRACK_MEDIA_DIR=/srv/qatrack/media``, then run
+``docker compose up -d``. Each setting is separate, so set only the ones you need;
+``.env.example`` describes each one.
+Every service that uses that data (``django``, ``django-q``, ``nginx``, ``init``,
+``backup`` and ``restore-media``) follows the same setting. On a new site, set
+them before the first start. On a site that is already in use, copy the data
+across first, as shown below: set on its own, the variable starts QATrack+ with
+an empty folder, and every uploaded file would seem to be missing.
+
+**Who owns the files.** QATrack+ runs as user id 1000 and group id 1000, and must
+be able to write to its folders. You do not need to set this up: Docker creates a
+folder that does not exist yet, and each time QATrack+ starts, its ``init``
+service gives everything in the media, logs and user-data folders to 1000:1000.
+It changes nothing outside those folders, follows no links out of them, and
+does not go into another disk mounted inside one. A file that also has another
+name elsewhere on the disk (a *hard link*) is left as it is, since giving it to
+1000:1000 would give away that other file too; ``docker compose logs init``
+then shows a warning naming the setting and the file. QATrack+ never makes such
+files itself. The backups folder is never changed: the backups in it stay
+readable by root only.
+
+**Folders of QATrack+'s own.** Giving files to another user cannot be undone, so
+``init`` only does it to folders that are clearly QATrack+'s. Such a folder holds
+a small file named ``.qatrackplus-data``. When a folder is empty (as it is when
+Docker has just created it), ``init`` adds that file itself, so a new site needs
+no extra step. If you set a variable to a folder that already holds files and has
+no ``.qatrackplus-data`` file (a shared folder, say, or the wrong path), QATrack+
+does not start, and nothing in the folder is changed: ``docker compose up``
+stops with ``service "init" didn't complete successfully``, and
+``docker compose logs init`` names the setting and the folder.
+
+When that happens, check the path in ``.env`` first: the most common slip is a
+folder one level too high, such as ``/srv/qatrack`` instead of
+``/srv/qatrack/media``. For a new site, choose an empty folder instead. Only once
+you have checked that the folder holds QATrack+'s own data for that setting and
+nothing else, such as uploaded files you copied from its volume yourself, mark it
+as QATrack+'s:
+
+.. code-block:: console
+
+    sudo touch /srv/qatrack/media/.qatrackplus-data
+
+Keep that file in place. ``restore-media`` leaves it where it is, and the web
+server does not show it. Marking does not help a folder that clearly holds more
+than QATrack+'s data for that one setting: ``init`` refuses it, marked or not,
+if anywhere inside it there is another ``.qatrackplus-data`` file (it holds
+another of QATrack+'s folders) or a file named like a QATrack+ backup
+(``db_YYYYMMDD_HHMMSS.dump`` or ``media_YYYYMMDD_HHMMSS.tar.gz``, also with
+anything added to the end, such as ``.gz``). Point the setting at the right
+folder instead. Uploaded files, which QATrack+ keeps in the media folder's
+``uploads`` folder, are not checked for backup names, so an old upload with a
+name like that does not stop QATrack+.
+
+While ``init`` refuses to start, the site stays offline until the setting is
+fixed, even if QATrack+ was running before you changed ``.env``: browsers get
+*502 Bad Gateway*, or no answer at all. ``docker compose logs init`` says why.
+Fix ``.env`` and run ``docker compose up -d`` again; the site comes back once
+QATrack+ has started, usually within a minute. Docker creates any folder named
+in ``.env`` that does not exist yet, empty and owned by root, even when ``init``
+then refuses; remove any you do not want.
+
+For the same reason, each location needs a folder of its own, side by side, as
+in ``/srv/qatrack/media`` and ``/srv/qatrack/logs``. ``init`` refuses to start if
+one is inside another, or two settings name the same folder, the backups folder
+included. Nested inside the media folder, the log files or the secret key would
+be shown by the web server to anyone, without signing in; with the backups
+inside, every database backup would be given to user 1000. Do not use
+``deploy/docker/user-data`` for ``QATRACK_USER_DATA_DIR`` either: that folder
+holds your HTTPS certificates.
+
+On a Linux server, user id 1000 is often the first person's account, who could
+then read the uploaded files. To keep them private, put QATrack+'s folders inside
+one that only root can open. QATrack+'s containers can still reach them, and
+nobody else on the server can:
+
+.. code-block:: console
+
+    sudo mkdir -p /srv/qatrack
+    sudo chmod 700 /srv/qatrack
+
+Do not restrict the media folder itself the same way: the web server reads
+uploaded files as a different user, and would answer *403 Forbidden*. Members of
+the ``docker`` group can still read everything, as they can any volume: running
+Docker is as good as being root, so add only people you would trust with root.
+
+If the folder is on a network share where root cannot change who owns files (an
+NFS share with ``root_squash``, for example), ``init`` cannot do its work, and
+``docker compose up`` stops with ``service "init" didn't complete successfully``.
+``docker compose logs init`` shows ``Operation not permitted``. Have the share's
+files owned by 1000:1000 (or mount it with ``uid=1000,gid=1000``); ``init`` then
+has nothing to change. On a server with SELinux enforcing, such as Red Hat, Rocky
+or AlmaLinux, the containers are refused access to a folder until it is labelled
+for containers:
+
+.. code-block:: console
+
+    sudo semanage fcontext -a -t container_file_t '/srv/qatrack(/.*)?'
+    sudo restorecon -R /srv/qatrack
+
+**Moving a site's data from a volume to a folder.** For example, for the
+uploaded files, in ``deploy/docker``:
+
+#. Stop QATrack+, so nothing changes while the files are copied:
+
+   .. code-block:: console
+
+       docker compose stop
+
+#. Copy everything from the volume into the new folder, keeping each file's
+   owner, permissions and dates, and mark the folder as QATrack+'s (see above).
+   Docker creates the folder if needed:
+
+   .. code-block:: console
+
+       docker run --rm -v qatrackplus_media-volume:/from:ro -v /srv/qatrack/media:/to alpine sh -c "cp -a /from/. /to/ && touch /to/.qatrackplus-data"
+
+#. Add ``QATRACK_MEDIA_DIR=/srv/qatrack/media`` to ``.env``, and start QATrack+:
+
+   .. code-block:: console
+
+       docker compose up -d
+
+#. Check that nothing was missed. These two commands count the files in the old
+   volume and in the new folder (leaving out the ``.qatrackplus-data`` file), and
+   should print the same number:
+
+   .. code-block:: console
+
+       docker run --rm -v qatrackplus_media-volume:/d:ro alpine sh -c "find /d -type f ! -name .qatrackplus-data | wc -l"
+       docker run --rm -v /srv/qatrack/media:/d:ro alpine sh -c "find /d -type f ! -name .qatrackplus-data | wc -l"
+
+   Then open a few attachments in QATrack+, and make a backup with
+   ``docker compose exec backup backup``.
+
+#. Only once you are happy, delete the old volume. Until then it is your way
+   back (see below).
+
+   .. code-block:: console
+
+       docker volume rm qatrackplus_media-volume
+
+The log files and the secret key move the same way, with ``logs-volume`` and
+``QATRACK_LOGS_DIR``, or ``user-data-volume`` and ``QATRACK_USER_DATA_DIR``. If
+you move the user-data folder without copying the key, QATrack+ makes a new one,
+and everyone is signed out once. The backups are already in a folder: stop
+QATrack+, copy them across (``sudo mkdir -p /mnt/backups/qatrack``, then
+``sudo cp -a backups/. /mnt/backups/qatrack/``), set
+``QATRACK_BACKUPS_DIR=/mnt/backups/qatrack``, and start it again.
+
+**Moving back to the volume.** Files uploaded while QATrack+ used the folder are
+only in the folder, so copy it back into the volume before you go back, or they
+will seem to be missing. For the uploaded files, in ``deploy/docker``:
+
+#. Stop QATrack+:
+
+   .. code-block:: console
+
+       docker compose stop
+
+#. Copy the folder's contents into the volume, in place of the older files
+   still there from before the move. If you have already deleted the volume,
+   Docker creates it again (``docker compose`` then warns that it did not create
+   that volume itself, which is harmless):
+
+   .. code-block:: console
+
+       docker run --rm -v /srv/qatrack/media:/from:ro -v qatrackplus_media-volume:/to alpine sh -c "find /to -mindepth 1 -delete && cp -a /from/. /to/ && rm -f /to/.qatrackplus-data"
+
+#. Remove the ``QATRACK_MEDIA_DIR`` line from ``.env``, start QATrack+ with
+   ``docker compose up -d``, and check, as above, that the volume and the folder
+   hold the same number of files. Keep the folder until you are happy.
+
+The log files and the secret key go back the same way.
+
+**Backups and restores.** The nightly backup reads the uploaded files from
+wherever ``QATRACK_MEDIA_DIR`` points, and ``restore-media`` puts them back there,
+so the backup and restore commands above do not change. ``restore-media`` unpacks
+the backup into a temporary ``.restore.*`` folder inside the media folder, then
+swaps the files in by renaming them, so the media folder needs room for a second
+copy of the uploaded files while it runs, and should not have another disk
+mounted inside it. If your own backup system also copies the media folder, it can
+leave out any ``.restore.*`` folder: it is not part of the uploaded files, and
+the web server does not show what is in it. Keep
+the database and the uploaded files from the same night together: a restore
+needs both. ``docker compose down -v`` removes QATrack+'s volumes, but never
+deletes a folder on the server.
 
 Delete docker data
 ~~~~~~~~~~~~~~~~~~

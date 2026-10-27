@@ -683,6 +683,187 @@ jobs:
           [ "$($dc exec -T django stat -c %u qatrack/media/uploads/ci-restored.txt)" = 1000 ]
           echo "PASS: backup restored the user and the uploaded file"
 
+      - name: Verify the data can be kept in folders on the server
+        # Unset, the QATRACK_*_DIR settings keep the named volumes, which every
+        # step above used. Then move the data into folders on the server the way
+        # docs/install/docker.rst says, and check that every service follows,
+        # that init gives the folders to the app user without following links,
+        # and that nginx, backups and restores work from them. Last, check that
+        # init refuses, changing nothing, a folder that is not QATrack+'s and a
+        # folder inside another.
+        working-directory: deploy/docker
+        run: |
+          set -euo pipefail
+          dc="docker compose"
+          data="$RUNNER_TEMP/qatrack-data"
+          media=/usr/src/qatrackplus/qatrack/media
+          # "volume NAME" or "bind SOURCE": what is mounted at $2 in service $1.
+          mount_of() {
+            docker inspect -f "{{range .Mounts}}{{if eq .Destination \"$2\"}}{{.Type}} {{if eq .Type \"volume\"}}{{.Name}}{{else}}{{.Source}}{{end}}{{end}}{{end}}" \
+              "$($dc ps -aq "$1")"
+          }
+          expect_mount() {
+            local got
+            got=$(mount_of "$1" "$2")
+            [ "$got" = "$3" ] || { echo "FAIL: $1 has $got at $2, expected $3"; exit 1; }
+          }
+          for s in django django-q nginx init; do expect_mount $s $media "volume qatrackplus_media-volume"; done
+          expect_mount backup /media "volume qatrackplus_media-volume"
+          expect_mount backup /backups "bind $PWD/backups"
+          expect_mount django /usr/src/qatrackplus/logs "volume qatrackplus_logs-volume"
+          expect_mount django /usr/src/qatrackplus/deploy/docker/user-data "volume qatrackplus_user-data-volume"
+          key=$($dc exec -T django cat deploy/docker/user-data/secret_key.txt | sha256sum)
+
+          # The documented move: stop, copy each volume into a folder inside a
+          # parent only root can open, marking it as QATrack+'s, set the
+          # variables, start.
+          $dc stop
+          sudo mkdir -p "$data"
+          sudo chmod 700 "$data"
+          for v in media user-data; do
+            docker run --rm -v "qatrackplus_${v}-volume:/from:ro" -v "$data/$v:/to" alpine:3.22 \
+              sh -c "cp -a /from/. /to/ && touch /to/.qatrackplus-data"
+          done
+          count() { docker run --rm -v "$1:/d:ro" alpine:3.22 sh -c "find /d -type f ! -name .qatrackplus-data | wc -l"; }
+          [ "$(count qatrackplus_media-volume)" = "$(count "$data/media")" ]
+          sudo mkdir "$data/backups"
+          sudo cp -a backups/. "$data/backups/"
+          # Root-owned entries init must hand over: a file, and a link to nowhere
+          # (chown without -h would follow it, fail, and stop the site starting).
+          # The logs folder does not exist yet; Docker creates it, owned by root,
+          # and init marks it as QATrack+'s, since it is empty.
+          sudo touch "$data/media/ci-root-owned.txt"
+          sudo ln -s /nowhere "$data/media/ci-dangling-link"
+          printf '\nQATRACK_MEDIA_DIR=%s\nQATRACK_USER_DATA_DIR=%s\nQATRACK_LOGS_DIR=%s\nQATRACK_BACKUPS_DIR=%s\n' \
+            "$data/media" "$data/user-data" "$data/logs" "$data/backups" >> .env
+          $dc up -d --wait --wait-timeout 300
+
+          [ "$(docker inspect -f '{{.State.ExitCode}}' "$($dc ps -aq init)")" = 0 ]
+          for s in django django-q nginx init; do expect_mount $s $media "bind $data/media"; done
+          expect_mount backup /media "bind $data/media"
+          expect_mount backup /backups "bind $data/backups"
+          for s in django django-q init; do
+            expect_mount $s /usr/src/qatrackplus/logs "bind $data/logs"
+            expect_mount $s /usr/src/qatrackplus/deploy/docker/user-data "bind $data/user-data"
+          done
+          sudo ls -lan "$data" "$data/media"
+          owners=$(sudo stat -c %u:%g "$data/media" "$data/logs" "$data/user-data" \
+            "$data/media/ci-root-owned.txt" "$data/media/ci-dangling-link" | sort -u)
+          [ "$owners" = 1000:1000 ] || { echo "FAIL: owners $owners"; exit 1; }
+          for v in media user-data logs; do sudo test -f "$data/$v/.qatrackplus-data"; done
+          grep -qF "Re-owned to 1000:1000 in QATRACK_MEDIA_DIR=$data/media: " <<<"$($dc logs init 2>&1)"
+          # Left alone: the parent folder, and the backups (root's only).
+          [ "$(sudo stat -c %u:%a "$data")" = 0:700 ]
+          [ "$(sudo stat -c %u "$data/backups")" = 0 ]
+
+          # The same data, and the same key: nobody is signed out.
+          [ "$(sudo cat "$data/media/uploads/ci-restored.txt")" = "restore me" ]
+          [ "$($dc exec -T django cat deploy/docker/user-data/secret_key.txt | sha256sum)" = "$key" ]
+          grep -qF "in the folder $data/user-data on the server" <<<"$($dc logs django 2>&1)"
+          # New uploads and log files land in the folders, owned by the app user.
+          $dc exec -T django sh -c 'echo "on the server" > qatrack/media/uploads/ci-host-folder.txt'
+          [ "$(sudo stat -c %u:%g "$data/media/uploads/ci-host-folder.txt")" = 1000:1000 ]
+          [ -n "$(sudo find "$data/logs" -name '*.log' -user 1000)" ]
+          got=$(curl -fsSk --resolve qatrack.test:443:127.0.0.1 https://qatrack.test/media/uploads/ci-host-folder.txt)
+          [ "$got" = "on the server" ] || { echo "FAIL: nginx served: $got"; exit 1; }
+          # The marker is in the media folder, but it is not an uploaded file.
+          got=$(curl -sk -o /dev/null -w '%{http_code}' --resolve qatrack.test:443:127.0.0.1 https://qatrack.test/media/.qatrackplus-data)
+          [ "$got" = 404 ] || { echo "FAIL: nginx answered $got for the marker"; exit 1; }
+          # Nor is restore-media's working folder, which holds a whole unpacked
+          # backup while a restore runs, however the path is written. Uploads
+          # are still served.
+          sudo mkdir -m 755 "$data/media/.restore.ci1234"
+          echo "unpacked" | sudo tee "$data/media/.restore.ci1234/f.txt" >/dev/null
+          sudo chmod 644 "$data/media/.restore.ci1234/f.txt"
+          for path in .restore.ci1234/f.txt %2Erestore.ci1234/f.txt %2erestore.ci1234%2Ff.txt \
+            /.restore.ci1234/f.txt uploads/../.restore.ci1234/f.txt .restore.ci1234/ \
+            .qatrackplus-data/ %2Eqatrackplus-data //.qatrackplus-data; do
+            got=$(curl -sk --path-as-is -o /dev/null -w '%{http_code}' --resolve qatrack.test:443:127.0.0.1 "https://qatrack.test/media/$path")
+            [ "$got" = 404 ] || { echo "FAIL: nginx answered $got for /media/$path"; exit 1; }
+          done
+          got=$(curl -sk -o /dev/null -w '%{http_code}' --resolve qatrack.test:443:127.0.0.1 https://qatrack.test/media/uploads/ci-host-folder.txt)
+          [ "$got" = 200 ] || { echo "FAIL: nginx answered $got for an upload"; exit 1; }
+          sudo rm -r "$data/media/.restore.ci1234"
+
+          # Back up and restore the uploaded files in the folders.
+          $dc exec -T backup backup
+          new=$($dc exec -T backup sh -c 'cd /backups && ls -1t media_*.tar.gz | head -1')
+          [ "$(sudo stat -c %u:%a "$data/backups/$new")" = 0:600 ]
+          grep -qx media/uploads/ci-host-folder.txt <<<"$(sudo tar -tzf "$data/backups/$new")"
+          $dc exec -T django rm qatrack/media/uploads/ci-host-folder.txt
+          $dc stop django django-q
+          echo RESTORE | $dc run --rm -T restore-media "$new"
+          [ "$(sudo cat "$data/media/uploads/ci-host-folder.txt")" = "on the server" ]
+          [ -z "$(sudo find "$data/media" -maxdepth 1 -name '.restore.*')" ]
+          # The marker belongs to the folder, and a restore keeps it.
+          sudo test -f "$data/media/.qatrackplus-data"
+          $dc up -d --wait --wait-timeout 300
+
+          # init refuses, and changes nothing, when a setting names a folder that
+          # is not empty and not marked as QATrack+'s, or one inside another. Only
+          # init is run: the site keeps running throughout.
+          # What is not the app user's (the running site may add its own files).
+          owners_of() { sudo find "$@" \( ! -user 1000 -o ! -group 1000 \) -printf '%p %U:%G\n' | sort; }
+          refused() {
+            if out=$($dc run --rm -T init 2>&1); then echo "FAIL: init accepted $1"; exit 1; fi
+            echo "$out"
+          }
+          sudo touch "$data/media/ci-root-owned-later.txt"
+          shared="$RUNNER_TEMP/ci-shared"
+          sudo mkdir "$shared"
+          sudo touch "$shared/someone-elses.txt" "$shared/root-only.txt"
+          sudo chown 1234:1234 "$shared/someone-elses.txt"
+          sudo chmod 600 "$shared/root-only.txt"
+          before=$(owners_of "$data" "$shared")
+          grep -qF "$data/media/ci-root-owned-later.txt 0:0" <<<"$before"
+          sed -i "s|^QATRACK_LOGS_DIR=.*|QATRACK_LOGS_DIR=$shared|" .env
+          refused "a folder that is not QATrack+'s"
+          grep -qxF "QATRACK_LOGS_DIR=$shared" <<<"$out"
+          grep -qF "is not empty, and has no .qatrackplus-data file" <<<"$out"
+          [ "$(owners_of "$data" "$shared")" = "$before" ] || { echo "FAIL: init changed owners"; exit 1; }
+          sudo test ! -e "$shared/.qatrackplus-data"
+          # The parent folder as the media folder: nginx would serve the logs and
+          # secret key inside it, and init would hand over the backups.
+          sed -i "s|^QATRACK_LOGS_DIR=.*|QATRACK_LOGS_DIR=$data/logs|" .env
+          sed -i "s|^QATRACK_MEDIA_DIR=.*|QATRACK_MEDIA_DIR=$data|" .env
+          sudo touch "$data/.qatrackplus-data"
+          before=$(owners_of "$data")
+          grep -qF "$data/backups/$new 0:0" <<<"$before"
+          refused "a folder holding the others"
+          for inner in LOGS_DIR=$data/logs USER_DATA_DIR=$data/user-data BACKUPS_DIR=$data/backups; do
+            grep -qF "QATRACK_$inner is inside QATRACK_MEDIA_DIR=$data." <<<"$out"
+          done
+          [ "$(owners_of "$data")" = "$before" ] || { echo "FAIL: init changed owners"; exit 1; }
+          [ "$(sudo stat -c %u:%a "$data/backups/$new")" = 0:600 ]
+          # A parent folder, marked by mistake, holding an old database dump that
+          # is not in the backups folder: marking does not make it QATrack+'s.
+          sudo mkdir "$shared/old"
+          sudo install -m 600 /dev/null "$shared/old/db_20240101_020000.dump"
+          sudo touch "$shared/.qatrackplus-data"
+          sed -i "s|^QATRACK_MEDIA_DIR=.*|QATRACK_MEDIA_DIR=$shared|" .env
+          before=$(owners_of "$shared")
+          refused "a marked folder holding a backup"
+          grep -qxF "    $shared/old/db_20240101_020000.dump" <<<"$out"
+          if grep -qF "sudo touch" <<<"$out"; then echo "FAIL: suggested marking it"; exit 1; fi
+          [ "$(owners_of "$shared")" = "$before" ] || { echo "FAIL: init changed owners"; exit 1; }
+          [ "$(sudo stat -c %u:%g:%a "$shared/old/db_20240101_020000.dump")" = 0:0:600 ]
+          # Back as the site uses it, with a file from outside linked into the
+          # media folder: init leaves it as it is, and says so.
+          sed -i "s|^QATRACK_MEDIA_DIR=.*|QATRACK_MEDIA_DIR=$data/media|" .env
+          sudo rm -rf "$data/.qatrackplus-data" "$data/media/ci-root-owned-later.txt" "$shared"
+          sudo install -m 664 /dev/null "$RUNNER_TEMP/ci-elsewhere.txt"
+          sudo ln "$RUNNER_TEMP/ci-elsewhere.txt" "$data/media/ci-hard-link.txt"
+          # And an upload from before 2016 that kept its own name, which happens
+          # to be a backup's: uploads are not checked for backup names.
+          sudo mkdir -p "$data/media/uploads/tli/1"
+          sudo touch "$data/media/uploads/tli/1/db_20150101_120000.dump"
+          out=$($dc run --rm -T init 2>&1)
+          grep -qF "Warning: not re-owned to 1000:1000 in QATRACK_MEDIA_DIR=$data/media:" <<<"$out"
+          grep -qxF "    $data/media/ci-hard-link.txt" <<<"$out"
+          [ "$(sudo stat -c %u:%g "$RUNNER_TEMP/ci-elsewhere.txt")" = 0:0 ]
+          sudo rm -r "$data/media/ci-hard-link.txt" "$RUNNER_TEMP/ci-elsewhere.txt" "$data/media/uploads/tli"
+          echo "PASS: data kept in folders on the server, owned by the app user, backed up and restored; unsafe folders refused"
+
       - name: Verify a site package that conflicts with QATrack+ stops the build
         working-directory: deploy/docker
         run: |

@@ -19,6 +19,7 @@
 !fixtures/defaults
 !fixtures/defaults/**
 !deploy/docker/django/entrypoint.sh
+!deploy/docker/django/init.sh
 # Not deploy/docker/site-requirements: compose.yaml passes it to the build as a
 # separate context, so a site's requirements file (which can hold a private
 # index token) and wheels are never copied into the image.

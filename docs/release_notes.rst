@@ -207,6 +207,27 @@ Deployment and Upgrade Notes
   read them. The image now installs just those client tools on Alpine, rather
   than starting from the PostgreSQL server image.
 
+* **Docker: QATrack+'s data can be kept in folders on the server.** Nothing changes
+  unless you ask for it: the uploaded files, log files and generated secret key stay
+  in their Docker volumes, and the backups in ``deploy/docker/backups``. To keep any
+  of them in a folder you already back up or watch, set ``QATRACK_MEDIA_DIR``,
+  ``QATRACK_LOGS_DIR``, ``QATRACK_USER_DATA_DIR`` or ``QATRACK_BACKUPS_DIR`` in
+  ``.env``. Every service, the nightly backup and ``restore-media`` included, uses
+  the same folder, and the ``init`` service gives the folder to the QATrack+ user
+  each time the site starts. So that it never does this to anyone else's files,
+  ``init`` only uses a folder that is empty (which it marks with a
+  ``.qatrackplus-data`` file) or already marked, that is not inside another of
+  QATrack+'s folders, and that holds neither another of them nor a backup;
+  otherwise the site does not start, nothing is changed, and
+  ``docker compose logs init`` says why. A file with a second name (a hard link)
+  is never handed over. For a site already in use, copy the data
+  across first: :ref:`docker_data_dirs` shows how, step by step. The database stays
+  in its volume. ``init`` also no longer follows symbolic links or crosses into
+  another disk when it re-owns files, so a link can neither change a file outside
+  QATrack+'s folders nor, if it points nowhere, stop the site from starting, and it
+  logs how many files it re-owned. Based on the ``/app_data`` layout proposed
+  in :issues:`#866 <866>`.
+
 * **Docker: container output is capped** at 50 MB per service, so what
   ``docker compose logs`` keeps can no longer fill the disk. That output belongs to
   each container and starts again empty when the container is recreated, for

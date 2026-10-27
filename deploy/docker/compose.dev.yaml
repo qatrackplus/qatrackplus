@@ -21,7 +21,9 @@ services:
       MPLCONFIGDIR: /tmp/matplotlib
     volumes:
       - ../../.:/usr/src/qatrackplus
-      # Logs go to your checkout's logs/ folder, not to logs-volume.
+      # Logs go to your checkout's logs/ folder, not to logs-volume (or the
+      # folder QATRACK_LOGS_DIR names). Uploads and the secret key stay where
+      # compose.yaml keeps them.
       - ../../logs:/usr/src/qatrackplus/logs
 
   # Background tasks run the same code, as the same user.
@@ -30,6 +32,9 @@ services:
   # Docker creates your checkout's logs/ folder, owned by root, if it is
   # missing; init (which runs as root) hands it to your user, along with any
   # log files earlier root containers left there.
+  # It is not the QATRACK_LOGS_DIR folder, so init does not check it as one.
   init:
+    environment:
+      QATRACK_LOGS_DIR: ""
     volumes:
       - ../../logs:/usr/src/qatrackplus/logs

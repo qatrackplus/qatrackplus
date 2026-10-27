@@ -79,10 +79,12 @@ WORKDIR /usr/src/qatrackplus
 # The source stays owned by root, so the app cannot modify its own code.
 COPY . .
 
-# Make entrypoint executable and move it out of the volume mount
+# Make entrypoint executable and move it out of the volume mount. init.sh is
+# what compose.yaml's init service runs, as root, before django starts.
 RUN cp deploy/docker/django/entrypoint.sh /entrypoint.sh && \
-    dos2unix /entrypoint.sh && \
-    chmod 755 /entrypoint.sh
+    cp deploy/docker/django/init.sh /init.sh && \
+    dos2unix /entrypoint.sh /init.sh && \
+    chmod 755 /entrypoint.sh /init.sh
 
 # Directories the app writes to
 RUN mkdir -p logs deploy/docker/user-data qatrack/media qatrack/static && \

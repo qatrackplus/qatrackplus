@@ -31,6 +31,7 @@ This folder contains the Docker configuration for running QATrack+ in a modern, 
    ```
    This runs the QATrack+ code built into the image, as an unprivileged user. The `django-q` service runs scheduled notifications and reports.
 3. To serve over HTTPS, copy `cert.pem` (full chain) and `key.pem` into `user-data/ssl` (with `sudo`: Docker creates that folder as root), set `HTTP_OR_HTTPS=https` in `.env`, and run `docker compose up -d`.
+4. Uploaded files, log files and the generated secret key are kept in Docker volumes, and backups in `backups/`. To keep any of them in a folder on the server instead, set `QATRACK_MEDIA_DIR`, `QATRACK_LOGS_DIR`, `QATRACK_USER_DATA_DIR` or `QATRACK_BACKUPS_DIR` in `.env` (see `.env.example`). On a site already in use, copy the data across first, as "Keeping QATrack+'s data in folders on the server" in the Docker installation guide shows.
 
 ### 3. Development
 `compose.dev.yaml` mounts your checkout into the container so code changes show up without rebuilding. It is not applied automatically. QATrack+ writes into your checkout, so it runs as your own user: add your ids to `.env` once, then use both files on every command.

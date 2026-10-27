@@ -2,7 +2,8 @@ name: qatrackplus
 
 # Every service keeps at most 50 MB of output (5 files of 10 MB), so what
 # `docker compose logs` keeps cannot fill the disk. QATrack+'s own log files
-# are in logs-volume; they rotate at 10 MB (see LOGGING in settings.py).
+# are in logs-volume (or QATRACK_LOGS_DIR); they rotate at 10 MB (see LOGGING
+# in settings.py).
 x-logging: &logging
   driver: json-file
   options:
@@ -31,7 +32,7 @@ services:
       django:
         condition: service_healthy
     volumes:
-      - media-volume:/usr/src/qatrackplus/qatrack/media:ro
+      - ${QATRACK_MEDIA_DIR:-media-volume}:/usr/src/qatrackplus/qatrack/media:ro
       - static-volume:/usr/src/qatrackplus/qatrack/static:ro
       - ./user-data/ssl:/etc/nginx/ssl:ro
     healthcheck:
@@ -45,6 +46,12 @@ services:
   # 4.0.2 ran it as root, so their volumes can hold root-owned files. This
   # re-owns only those files, then exits. QATRACK_UID/QATRACK_GID are only for
   # compose.dev.yaml, which runs the app as the developer's own user.
+  #
+  # The same goes for a folder on the server set by QATRACK_MEDIA_DIR,
+  # QATRACK_USER_DATA_DIR or QATRACK_LOGS_DIR in .env. Since that cannot be
+  # undone, init first refuses to start, changing nothing, if a folder is not
+  # empty and not marked as QATrack+'s, or if one location is inside another
+  # (the backups folder included). See deploy/docker/django/init.sh.
   init:
     # The image the django service builds; never pulled from a registry.
     image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-django
@@ -52,15 +59,23 @@ services:
     user: "0"
     restart: "no"
     logging: *logging
-    command:
-      - sh
-      - -c
-      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static /usr/src/qatrackplus/deploy/docker/user-data /usr/src/qatrackplus/logs \( ! -user ${QATRACK_UID:-1000} -o ! -group ${QATRACK_GID:-1000} \) -exec chown ${QATRACK_UID:-1000}:${QATRACK_GID:-1000} {} +
+    command: [ "/init.sh" ]
+    # Only what init needs: which locations are folders on the server.
+    environment:
+      QATRACK_UID: ${QATRACK_UID:-1000}
+      QATRACK_GID: ${QATRACK_GID:-1000}
+      QATRACK_MEDIA_DIR: ${QATRACK_MEDIA_DIR:-}
+      QATRACK_USER_DATA_DIR: ${QATRACK_USER_DATA_DIR:-}
+      QATRACK_LOGS_DIR: ${QATRACK_LOGS_DIR:-}
+      QATRACK_BACKUPS_DIR: ${QATRACK_BACKUPS_DIR:-}
     volumes:
-      - media-volume:/usr/src/qatrackplus/qatrack/media
+      - ${QATRACK_MEDIA_DIR:-media-volume}:/usr/src/qatrackplus/qatrack/media
       - static-volume:/usr/src/qatrackplus/qatrack/static
-      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
-      - logs-volume:/usr/src/qatrackplus/logs
+      - ${QATRACK_USER_DATA_DIR:-user-data-volume}:/usr/src/qatrackplus/deploy/docker/user-data
+      - ${QATRACK_LOGS_DIR:-logs-volume}:/usr/src/qatrackplus/logs
+      # Read-only, and never re-owned: only so init can check that no other
+      # location is inside the backups folder, or contains it.
+      - ${QATRACK_BACKUPS_DIR:-./backups}:/backups:ro
 
   django:
     build:
@@ -90,14 +105,14 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - media-volume:/usr/src/qatrackplus/qatrack/media
+      - ${QATRACK_MEDIA_DIR:-media-volume}:/usr/src/qatrackplus/qatrack/media
       - static-volume:/usr/src/qatrackplus/qatrack/static
       # Keeps the generated secret key (when SECRET_KEY is not set in .env)
       # across rebuilds, so upgrades do not log every user out.
-      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
+      - ${QATRACK_USER_DATA_DIR:-user-data-volume}:/usr/src/qatrackplus/deploy/docker/user-data
       # QATrack+'s log files (debug.log, auth.log, ...), kept across rebuilds and
       # shared with django-q, as on a Linux install.
-      - logs-volume:/usr/src/qatrackplus/logs
+      - ${QATRACK_LOGS_DIR:-logs-volume}:/usr/src/qatrackplus/logs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 30s
@@ -126,12 +141,12 @@ services:
       django:
         condition: service_healthy
     volumes:
-      - media-volume:/usr/src/qatrackplus/qatrack/media
+      - ${QATRACK_MEDIA_DIR:-media-volume}:/usr/src/qatrackplus/qatrack/media
       # PDF reports link their stylesheets and logo from the collected static
       # files, which django fills in before it reports healthy.
       - static-volume:/usr/src/qatrackplus/qatrack/static:ro
-      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data:ro
-      - logs-volume:/usr/src/qatrackplus/logs
+      - ${QATRACK_USER_DATA_DIR:-user-data-volume}:/usr/src/qatrackplus/deploy/docker/user-data:ro
+      - ${QATRACK_LOGS_DIR:-logs-volume}:/usr/src/qatrackplus/logs
     healthcheck:
       # The cluster is running. [e] keeps this check from matching itself.
       test: [ "CMD-SHELL", "grep -qa 'qclust[e]r' /proc/[0-9]*/cmdline" ]
@@ -167,10 +182,10 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backups:/backups
+      - ${QATRACK_BACKUPS_DIR:-./backups}:/backups
       # Read-only: the nightly backup only reads the uploaded files, so it can
       # never change them. Only restore-media, below, can write to them.
-      - media-volume:/media:ro
+      - ${QATRACK_MEDIA_DIR:-media-volume}:/media:ro
     healthcheck:
       # crond, which runs the nightly backup, is running.
       test: [ "CMD", "pgrep", "crond" ]
@@ -191,9 +206,22 @@ services:
     logging: *logging
     volumes:
       # Writable: the lock file, shared with the backup service, is kept here.
-      - ./backups:/backups
-      - media-volume:/media
+      - ${QATRACK_BACKUPS_DIR:-./backups}:/backups
+      # The restore unpacks into a folder inside this mount, then swaps the files
+      # in by renaming them, so they never cross from one disk to another.
+      - ${QATRACK_MEDIA_DIR:-media-volume}:/media
 
+# Where QATrack+ keeps its data. Each ${QATRACK_..._DIR:-...} mount above uses
+# the named volume (or, for backups, the folder) after the :-, unless .env sets
+# that variable to a folder on the server (see .env.example, and "Keeping
+# QATrack+'s data in folders on the server" in docs/install/docker.rst). Every
+# service that mounts a location uses the same variable, so they always share
+# it. A volume no service uses is left out, and never created.
+#
+# postgres-volume has no such setting: the database's own files are only safe to
+# copy while PostgreSQL is stopped, and the nightly backup already writes a
+# database dump to the backups folder. static-volume has none either: QATrack+
+# fills it afresh every time it starts, so it holds nothing to keep.
 volumes:
   postgres-volume:
   media-volume:
