@@ -18,8 +18,10 @@ NP_INT_TYPES = (
     np.uint64,
 )
 
+# np.float_ was an alias of np.float64 and numpy 2.0 removed it. Dropping it
+# rather than renaming it: np.float64 is already in this tuple, so the alias was
+# never adding a type on numpy 1 either.
 NP_FLOAT_TYPES = (
-    np.float_,
     np.float16,
     np.float32,
     np.float64,
@@ -49,13 +51,13 @@ class QATrackJSONEncoder(DjangoJSONEncoder):
                 return method()
 
         if isinstance(o, datetime.datetime):
-            r = o.strftime(settings.DATETIME_INPUT_FORMATS[1])
+            r = o.strftime(settings.QATRACK_API_DATETIME_FORMAT)
             if o.microsecond:
                 r = r[:23] + r[26:]
             if r.endswith('+00:00'):
                 r = r[:-6] + 'Z'
             return r
         elif isinstance(o, datetime.date):
-            return o.strftime(settings.DATE_INPUT_FORMATS[0])
+            return o.strftime(settings.QATRACK_API_DATE_FORMAT)
 
         return super().default(o)

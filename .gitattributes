@@ -2,3 +2,10 @@
 
 # Ensure shell scripts always have LF line endings
 *.sh text eol=lf
+
+# Everything under deploy/docker runs inside Linux containers: Dockerfiles,
+# entrypoints, nginx configs and templates, crontabs. CRLF line endings break
+# them (a Dockerfile's "\" continuations, a shell script's first line).
+deploy/docker/** text eol=lf
+Dockerfile text eol=lf
+*.envsh text eol=lf

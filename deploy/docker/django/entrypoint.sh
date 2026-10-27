@@ -3,8 +3,6 @@ set -e
 
 # Wait for database
 echo "Waiting for postgres..."
-# Wait for database
-echo "Waiting for postgres..."
 DB_HOST="${POSTGRES_HOST:-postgres}"
 DB_USER="${POSTGRES_USER:-postgres}"
 DB_NAME="${POSTGRES_DB:-qatrackplus}"
@@ -18,7 +16,6 @@ while ! pg_isready -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME"; do
   fi
   sleep 1
 done
-echo "PostgreSQL started"
 echo "PostgreSQL started"
 
 export USE_DOCKER=true

@@ -15,6 +15,220 @@ Release Notes
 QATrack+ 4.0
 ~~~~~~~~~~~~~
 
+4.0.2
+------
+
+Bug Fixes
+^^^^^^^^^
+
+* **Forms no longer record the wrong date and time.** Where a date field arrives
+  already filled in - the fault form's *Date & Time fault occurred*, a QC session's
+  *Work Completed*, a service event's date - the server wrote that value in one format
+  and the date picker read it back in another. The picker then replaced it with an
+  unrelated date, usually months away and at midnight, before anyone had touched the
+  page.
+
+  Nothing indicated it had happened: the replacement was a well-formed date in the
+  expected format, sitting in a field the user had not edited. A record saved without
+  changing that field carried a time that was simply wrong. Date and time formats are
+  now derived from a single setting, so the value written to a form and the value read
+  back from it cannot disagree (:issues:`#826 <826>`).
+
+Other Changes
+^^^^^^^^^^^^^
+
+* **Dates are now shown as ``YYYY-MM-DD`` by default, in every language.** Two things
+  changed, and an upgrading installation will see both.
+
+  **What you will see:** 4.0 rendered ``31 May 2012 14:30`` into form fields; this
+  renders ``2012-05-31 14:30``. To keep the old display, set the following in
+  ``local_settings.py``:
+
+  .. code-block:: python
+
+      QATRACK_DATETIME_FORMAT = "%d %b %Y %H:%M"
+      QATRACK_DATE_FORMAT = "%d %b %Y"
+
+  **What changed for sites with more than one language:** each language used to carry
+  its own date format, so the same record read differently depending on the interface
+  language the reader had chosen. One format now applies to every language,
+  deliberately - a date in a QC record should not change meaning when someone switches
+  language - and the setting above moves all of them together. ``%b`` writes English
+  month abbreviations in every language; see *Date and Time Format Settings* in the
+  configuration documentation.
+
+  Every date format QATrack+ uses is now derived from those two settings, which is what
+  makes the fix above possible. The JSON API's format is unchanged.
+
+  .. warning::
+
+      **Breaking, for French and Spanish sites: ``03/05/2026`` is no longer accepted
+      when typing a date.**
+
+      4.0.1 gave each language its own list of formats it would *accept*, not just
+      display. French accepted ``%d/%m/%Y``, and Spanish had no QATrack+ list at all so
+      it fell through to Django's, which accepts it too. Both are gone: every language
+      now accepts the display format plus
+      ``QATRACK_EXTRA_DATE_INPUT_FORMATS``, which ships as ``%d %b %Y`` only.
+
+      A user typing ``03/05/2026`` gets a validation error rather than a wrong date, so
+      nothing is saved incorrectly - but on a French or Spanish site it is a habit that
+      stops working. To accept it again:
+
+      .. code-block:: python
+
+          QATRACK_EXTRA_DATE_INPUT_FORMATS = ["%d %b %Y", "%d/%m/%Y"]
+          QATRACK_EXTRA_DATETIME_INPUT_FORMATS = ["%d %b %Y %H:%M", "%d/%m/%Y %H:%M"]
+
+      **It is deliberately not shipped as a default, and the reason is worth reading
+      before you add it.** ``%d/%m/%Y`` and ``%m/%d/%Y`` cannot be told apart for the
+      first twelve days of any month: ``03/05/2026`` is 3 May under one and 5 March
+      under the other. Accepting one of them everywhere would silently reinterpret dates
+      typed by someone used to the other, and silently is the whole problem this release
+      is fixing. Add it where you know which convention your users type in.
+
+Deployment and Upgrade Notes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Docker: ``deploy/docker/.env`` is no longer tracked by git. Set your copy aside
+  before you pull.** It holds the database password, so it no longer belongs in the
+  repository. Every Docker site has edited it, so on the first pull to 4.0.2
+  ``git pull`` stops with *Your local changes would be overwritten*. Follow
+  :ref:`the steps in the Docker upgrade guide <docker_upgrade_env_untracked>`: copy
+  ``.env`` aside, pull, and copy it back. Later pulls leave it alone. New
+  installations create it with ``cp .env.example .env``.
+
+* **Docker sites can now set QATrack+'s settings in ``deploy/docker/.env``.**
+  Previously only the database credentials, ``ALLOWED_HOSTS`` and
+  ``CSRF_TRUSTED_ORIGINS`` could be set, and everything else needed a change inside
+  the image. ``deploy/docker/.env.example`` now documents every setting available:
+  email, time zone, HTTPS behind the proxy, sessions, the QC display options,
+  accounts, ADFS, Active Directory / LDAP sign-in (including username cleaning), and
+  the REST API. The Docker image now includes ``python-ldap``, so LDAP sign-in works
+  there too.
+
+  ``localhost`` and ``127.0.0.1`` are always allowed hosts, so the container health
+  check keeps working when ``ALLOWED_HOSTS`` names only the real host. They are
+  never trusted CSRF origins.
+
+* **Docker: the secret key now lives in a volume, or in ``.env``.** When
+  ``SECRET_KEY`` is not set, QATrack+ generates one and keeps it in the
+  ``user-data-volume`` volume, so rebuilds never sign users out. 4.0.0 and 4.0.1
+  kept the key in your QATrack+ folder (``deploy/docker/user-data/secret_key.txt``),
+  so a new one is generated on the first start of 4.0.2, signing every user out once
+  and voiding password-reset links sent before the upgrade. To avoid that, copy the
+  old key into ``.env`` first (see :ref:`docker_upgrade_keep_secret_key`).
+
+* **Docker: the upgrade keeps your other local changes.** If you changed the port
+  in ``compose.yaml`` or edited ``nginx.conf``, the upgrade guide's ``git stash``
+  steps keep those changes across ``git pull``.
+
+* **Docker: scheduled notifications and reports now run.** Docker installations
+  had no process running QATrack+'s background tasks, so scheduled QC
+  notifications, scheduled reports and the emails they send were never sent. A
+  new ``django-q`` service runs them; it starts with the next
+  ``docker compose up -d``.
+
+* **Docker: HTTPS works.** nginx published port 443 but had no HTTPS
+  configuration. With ``HTTP_OR_HTTPS=https`` in ``.env`` and your certificate
+  and key in ``deploy/docker/user-data/ssl``, nginx now serves QATrack+ over
+  HTTPS, redirects HTTP to it, and tells QATrack+ the request was secure (see
+  :ref:`docker_https`).
+
+* **Docker: nginx answers only the hosts in ``ALLOWED_HOSTS``.** Requests for any
+  other host name are dropped before they reach QATrack+, so they no longer
+  produce *Invalid HTTP_HOST header* errors (and error emails to ``ADMINS``).
+  ``ALLOWED_HOSTS=*`` keeps passing every host on.
+
+* **Docker: uploads larger than 1 MB work.** nginx used its 1 MB default limit,
+  which rejected larger uploaded test results and attachments. The limit is now
+  100 MB, set with ``NGINX_CLIENT_MAX_BODY_SIZE``.
+
+* **Docker: the site no longer answers 502 after an upgrade.** nginx looked up the
+  ``django`` service's address once, when it started. An upgrade that recreated
+  ``django`` could give it a new address, and nginx kept sending requests to the
+  old one until it was restarted. It now looks the address up as requests arrive.
+
+* **Docker: a slow first start no longer leaves the site down.** ``django`` runs
+  every database migration before it reports that it is ready. On slow storage
+  that took longer than Docker allowed, so ``docker compose up`` gave up and never
+  started nginx. ``django`` now has up to 10 minutes.
+
+* **Docker: container output is capped** at 50 MB per service, so what
+  ``docker compose logs`` keeps can no longer fill the disk. That output belongs to
+  each container and starts again empty when the container is recreated, for
+  example by an upgrade. Every service now has a health check, shown by
+  ``docker compose ps``.
+
+* **QATrack+'s log files now rotate.** ``debug.log``, ``auth.log``, ``migrate.log``
+  and ``django-q2.log`` were set up to rotate but never did, so they grew without
+  limit. Each now starts a new file at 10 MB and keeps a fixed number of old ones.
+  This applies to every installation, not only Docker.
+
+* **Background tasks can run for up to 5 minutes**, up from 1. A scheduled report
+  whose PDF took longer than a minute to make was stopped and never sent. This
+  applies to every installation.
+
+* **Docker: overdue follow-up emails are sent when background tasks first run.**
+  Follow-up emails from *QC Completed* notices were queued but never sent on
+  Docker, and 4.0.2 sends every one still waiting as soon as it starts. To remove
+  them first, see :ref:`docker_upgrade_stale_follow_ups`.
+
+* **The Docker application container no longer runs as root.** QATrack+ now runs as
+  an unprivileged ``qatrack`` user (uid 1000). Calculation procedures for composite
+  and upload tests run inside the application, with its privileges, so on earlier
+  releases they ran as root inside the container. They still run with the
+  application's privileges: they can read its environment, including the database
+  password, and use the database. But they can no longer change QATrack+'s own code
+  or the container's system files.
+
+  Nothing changes in the commands you run. Existing media and static files, written
+  as root by earlier releases, are re-owned automatically the next time you run
+  ``docker compose up -d``; on a large media volume that first start takes longer.
+  A short-lived ``init`` container that does this appears as exited in
+  ``docker compose ps -a``, which is expected.
+
+* **Docker: ``compose.override.yaml`` is now ``compose.dev.yaml`` and is no longer
+  applied automatically.** The override mounted the whole checkout over the code in
+  the image, so every plain ``docker compose`` command ran the checkout instead of
+  the image, as root. Plain ``docker compose`` now runs the code built into the
+  image. Developers who want their checkout live use
+  ``docker compose -f compose.yaml -f compose.dev.yaml``, with their own ids in
+  ``.env`` (see :ref:`docker_development`).
+
+  QATrack+'s log files are now kept in a ``logs-volume`` volume, shared by the
+  ``django`` and ``django-q`` services, rather than in the checkout's ``logs``
+  folder, and they survive upgrades. Read them with
+  ``docker compose exec django ls logs`` and
+  ``docker compose exec django tail -n 50 logs/debug.log``. With the development
+  overlay they are still written to your checkout's ``logs`` folder.
+
+* **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
+  same versions the test suite runs against. Previously ``pip`` chose versions when
+  the image was built, so two builds of the same release could differ.
+
+* **Docker images no longer contain your ``.env`` file, local settings or site data.**
+  The ``.dockerignore`` patterns only matched files at the top of the repository, so
+  the image copied in ``deploy/docker/.env`` (which holds the database password), and
+  anything else present in the checkout when it was built: a generated
+  ``deploy/docker/user-data/secret_key.txt``, database dumps under
+  ``deploy/docker/backups/``, uploaded files under ``qatrack/media/uploads/`` and
+  ``qatrack/local_*.py`` settings files. The image now receives only the files it
+  needs to run. If you have copied a QATrack+ image to a registry or another machine,
+  rebuild it with ``docker compose build`` and remove the old one.
+
+* **Database dumps written by the Docker backup service are ignored by git.**
+  ``deploy/docker/backups/`` was not in ``.gitignore``, so ``git status`` listed every
+  nightly dump and ``git add -A`` would have committed them. Environment files
+  (``.env``, ``*.env``, ``.env.*``) are now ignored as well, except the
+  ``.env.example`` templates, including ``deploy/docker/.env`` (see above).
+
+* **Files under ``deploy/docker`` always check out with LF line endings**, including
+  on Windows with ``core.autocrlf=true``. A Dockerfile or script with CRLF endings
+  fails inside the container. An existing checkout keeps its current line endings
+  until the files are checked out again; see
+  :ref:`checking out deploy/docker again <docker_line_endings>`.
+
 4.0.1
 ------
 

@@ -1,14 +1,44 @@
-.git
-.venv
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-ENV/
-.env
-db.sqlite3
-qatrackplus31
-qatrack/local_settings.py
+# Build context for deploy/docker/django/Dockerfile (the nginx and backup
+# images use their own folders as context, so this file does not apply to them).
+#
+# This is a whitelist: everything is ignored, and only what the image needs is
+# let back in. Anything left over in a checkout - .env files, secret keys,
+# database dumps, uploaded files, local settings - stays out of the image.
+#
+# If the image needs a new path, add it below *and* to the "present" list in
+# .github/scripts/check-docker-build-context.sh, which CI runs to check this file.
+**
+
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE
+!manage.py
+!qatrack
+!qatrack/**
+!fixtures/defaults
+!fixtures/defaults/**
+!deploy/docker/django/entrypoint.sh
+
+# Re-ignore local files that can exist inside the paths let back in above.
+# These mirror the matching entries in .gitignore.
+qatrack/local_*.py
+qatrack/accel_migration_tool/local_accel_settings.py
+qatrack/accel_migration_tool/db
+qatrack/media/uploads
+qatrack/media/reports
+qatrack/cache/cache_data
+qatrack/static
+qatrack/assets
+**/__pycache__
+**/*.py[co]
+
+# Secrets and data, wherever they turn up.
+**/.env
+**/.env.*
+**/*.env
+**/*.key
+**/*.pem
+**/*.dump
+**/*.sqlite3
+**/*.db

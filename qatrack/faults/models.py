@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -102,7 +101,11 @@ class Fault(models.Model):
     occurred = models.DateTimeField(
         verbose_name=_l("Date & Time fault occurred"),
         default=timezone.now,
-        help_text=_l("When did this fault occur. ") + settings.DATETIME_HELP,
+        # The format hint is added by FaultForm, not baked in here. A model
+        # field's help_text is part of its migration state, so deriving it
+        # from a setting means every deployer who changes the date format
+        # gets a spurious pending migration on their own install.
+        help_text=_l("When did this fault occur."),
         db_index=True
     )
 

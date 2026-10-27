@@ -12,6 +12,8 @@ import sys
 
 import matplotlib
 
+from qatrack.qatrack_core import dateformats
+
 matplotlib.use("Agg")
 
 # -----------------------------------------------------------------------------
@@ -84,23 +86,66 @@ USE_TZ = True
 
 FORMAT_MODULE_PATH = "qatrack.formats"
 
-# formats for strptime/strftime
-DATE_INPUT_FORMATS = ["%d %b %Y", "%Y-%m-%d"]
-DATETIME_INPUT_FORMATS = [
-    "%d %b %Y %H:%M",
+# ------------------------------------------------------------------------------
+# Dates and times
+#
+# One format each for what QATrack+ *shows* and what the date pickers write, so the
+# value written into a field and the value read back out of it cannot disagree; plus
+# the QATRACK_EXTRA_*_INPUT_FORMATS lists for what it will also *accept* when someone
+# types a date themselves.
+#
+# Written in Python's strptime syntax. The full explanation - why display is a single
+# value while input is a list, what happens with all-numeric day/month orders, and
+# what %b does across languages - is in docs/install/config.rst under "Date and Time
+# Format Settings".
+
+QATRACK_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
+QATRACK_DATE_FORMAT = "%Y-%m-%d"
+QATRACK_TIME_FORMAT = "%H:%M"
+
+# Additional formats accepted when parsing, on top of the three above. These
+# only affect what can be typed in; they never change what is displayed.
+QATRACK_EXTRA_DATETIME_INPUT_FORMATS = [
+    "%d %b %Y %H:%M",       # 31 May 2012 14:30 - the pre-4.1 QATrack+ format
     "%d %b %Y %H:%M:%S",
-    "%Y-%m-%d %H:%M",
     "%Y-%m-%d %H:%M:%S",
     "%Y-%m-%d %H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S.%fZ",
 ]
-TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S", "%H:%M:%S.%f"]
+QATRACK_EXTRA_DATE_INPUT_FORMATS = [
+    "%d %b %Y",             # 31 May 2012
+]
+QATRACK_EXTRA_TIME_INPUT_FORMATS = [
+    "%H:%M:%S",
+    "%H:%M:%S.%f",
+]
 
-DATETIME_FORMAT = "j M Y H:i"
-DATE_FORMAT = "j M Y"
-TIME_FORMAT = "H:i"
+# The values below are what Django itself reads. They are derived from the
+# settings above in qatrack/formats/base.py, which is what FORMAT_MODULE_PATH
+# points at, and are repeated here only so that anything reading them before
+# the format modules load sees the same thing. Override the QATRACK_* settings
+# above rather than these - Django resolves formats through the format modules
+# first, so setting DATETIME_INPUT_FORMATS directly has no effect.
+DATE_INPUT_FORMATS = [QATRACK_DATE_FORMAT] + QATRACK_EXTRA_DATE_INPUT_FORMATS
+DATETIME_INPUT_FORMATS = [QATRACK_DATETIME_FORMAT] + QATRACK_EXTRA_DATETIME_INPUT_FORMATS
+TIME_INPUT_FORMATS = [QATRACK_TIME_FORMAT] + QATRACK_EXTRA_TIME_INPUT_FORMATS
 
-DATETIME_HELP = "Format DD MMM YYYY hh:mm (hh:mm is 24h time e.g. 31 May 2012 14:30)"
+DATETIME_FORMAT = dateformats.to_django(QATRACK_DATETIME_FORMAT)
+DATE_FORMAT = dateformats.to_django(QATRACK_DATE_FORMAT)
+TIME_FORMAT = dateformats.to_django(QATRACK_TIME_FORMAT)
+
+DATETIME_HELP = "Format %s (24h time)" % dateformats.describe(QATRACK_DATETIME_FORMAT)
+
+# What the JSON API writes. Deliberately *not* derived from the settings above:
+# changing how QATrack+ displays a date should not change the wire format that
+# somebody's integration is parsing. These keep the values the API has always
+# emitted.
+#
+# They used to be read as DATETIME_INPUT_FORMATS[1] and DATE_INPUT_FORMATS[0] -
+# positions in a list a deployer is invited to add to - so adding an accepted
+# input format silently changed the API's output.
+QATRACK_API_DATETIME_FORMAT = "%d %b %Y %H:%M:%S"
+QATRACK_API_DATE_FORMAT = "%d %b %Y"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -479,28 +524,38 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "debug.log"),
-            'backupCount': 26,  # how many backup file to keep, 10 days
+            # Start a new file at 10 MB and keep 26 old ones. Without maxBytes
+            # the file never rotates and grows until the disk is full.
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 26,
             'formatter': 'verbose',
         },
         'migrate': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "migrate.log"),
-            'backupCount': 26,  # how many backup file to keep, 10 days
+            # Start a new file at 10 MB and keep 26 old ones. Without maxBytes
+            # the file never rotates and grows until the disk is full.
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 26,
             'formatter': 'verbose',
         },
         'django-q2': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "django-q2.log"),
-            'backupCount': 26,  # how many backup file to keep, 10 days
+            # Start a new file at 10 MB and keep 26 old ones. Without maxBytes
+            # the file never rotates and grows until the disk is full.
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 26,
             'formatter': 'verbose',
         },
         'auth': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "auth.log"),
-            'backupCount': 1,  # how many backup file to keep, 10 days
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 1,
             'formatter': 'verbose',
         },
     },
@@ -727,44 +782,9 @@ for path in chrome_paths:
 
 use_docker = os.environ.get('USE_DOCKER', '').strip().lower() in {'1', 'true', 'yes', 'on'}
 if use_docker:
-    ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
-
-    _csrf_trusted_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '').strip()
-    if _csrf_trusted_env:
-        CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted_env.split(',') if o.strip()]
-    else:
-        CSRF_TRUSTED_ORIGINS = [
-            scheme + host
-            for host in ALLOWED_HOSTS
-            for scheme in ('http://', 'https://')
-            if host != '*'
-        ]
-    
-    SECRET_FILEPATH = os.path.join(PROJECT_ROOT, '..', 'deploy', 'docker', 'user-data', 'secret_key.txt')
-    try:
-        with open(SECRET_FILEPATH) as f:
-            SECRET_KEY = f.read()
-    except OSError:
-        import secrets
-        SECRET_KEY = secrets.token_urlsafe(64)
-        if not os.path.isdir(os.path.dirname(SECRET_FILEPATH)):
-            os.makedirs(os.path.dirname(SECRET_FILEPATH), exist_ok=True)
-        with open(SECRET_FILEPATH, 'w') as f:
-            f.write(SECRET_KEY)
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'qatrackplus'),
-            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-            'HOST': 'postgres',
-            'PORT': 5432
-        }
-    }
-
-    if 'readonly' not in DATABASES and USE_SQL_REPORTS:
-        DATABASES['readonly'] = DATABASES['default']
+    # Docker sites configure QATrack+ with environment variables (deploy/docker/.env)
+    from .docker_settings import apply as _apply_docker_settings
+    _apply_docker_settings(globals())
 else:
     from .local_settings import *  # noqa: F403, F401, E402
 
@@ -871,7 +891,12 @@ LOGOUT_REDIRECT_URL = LOGIN_URL
 Q_CLUSTER = {
     'name': 'qatrack',
     'workers': 2,
-    'timeout': 60,
+    # A task running longer than this is stopped. Scheduled reports render
+    # their PDFs in a task, and a large report can take more than a minute.
+    'timeout': 300,
+    # Seconds before a task that has not finished is handed out again: it must
+    # be longer than timeout, or a slow task runs twice.
+    'retry': 360,
     'catch_up': True,
     'recycle': 20,
     'compress': False,
