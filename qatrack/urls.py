@@ -41,6 +41,12 @@ urlpatterns = [
     url(r'^faults/', include('qatrack.faults.urls')),
     url(r'^issues/', include('qatrack.issue_tracker.urls')),
 
+    # dynamic_raw_id before admin.site.urls, not after: the admin site ends its
+    # own urlconf with a catch-all (Django 3.2's AdminSite.final_catch_all_view),
+    # so anything under admin/ that the admin does not recognise raises Http404
+    # there instead of falling through to the patterns below.
+    url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
+
     # Uncomment the next line to enable the admin:
     path(r'admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
@@ -50,7 +56,6 @@ urlpatterns = [
     # third party
     url(r'^', include('qatrack.genericdropdown.urls')),
     url(r'^comments/', include('django_comments.urls')),
-    url(r'^admin/dynamic_raw_id/', include('dynamic_raw_id.urls')),
     url(r'^api/', include('qatrack.api.urls')),
 ]
 
