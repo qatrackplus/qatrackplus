@@ -111,12 +111,68 @@ Deployment and Upgrade Notes
   check keeps working when ``ALLOWED_HOSTS`` names only the real host. They are
   never trusted CSRF origins.
 
-* **Docker: upgrades no longer sign everyone out.** When ``SECRET_KEY`` was not set,
-  the key was generated inside the container and lost each time the container was
-  rebuilt, which signed out every user and voided password-reset links. It is now
-  kept in a ``user-data-volume`` volume, or taken from ``SECRET_KEY`` in ``.env`` if
-  you set one. The first start after upgrading generates a key once, so users sign
-  in one last time.
+* **Docker: the secret key now lives in a volume, or in ``.env``.** When
+  ``SECRET_KEY`` is not set, QATrack+ generates one and keeps it in the
+  ``user-data-volume`` volume, so rebuilds never sign users out. 4.0.0 and 4.0.1
+  kept the key in your QATrack+ folder (``deploy/docker/user-data/secret_key.txt``),
+  so a new one is generated on the first start of 4.0.2, signing every user out once
+  and voiding password-reset links sent before the upgrade. To avoid that, copy the
+  old key into ``.env`` first (see :ref:`docker_upgrade_keep_secret_key`).
+
+* **Docker: the upgrade keeps your other local changes.** If you changed the port
+  in ``compose.yaml`` or edited ``nginx.conf``, the upgrade guide's ``git stash``
+  steps keep those changes across ``git pull``.
+
+* **Docker: scheduled notifications and reports now run.** Docker installations
+  had no process running QATrack+'s background tasks, so scheduled QC
+  notifications, scheduled reports and the emails they send were never sent. A
+  new ``django-q`` service runs them; it starts with the next
+  ``docker compose up -d``.
+
+* **Docker: HTTPS works.** nginx published port 443 but had no HTTPS
+  configuration. With ``HTTP_OR_HTTPS=https`` in ``.env`` and your certificate
+  and key in ``deploy/docker/user-data/ssl``, nginx now serves QATrack+ over
+  HTTPS, redirects HTTP to it, and tells QATrack+ the request was secure (see
+  :ref:`docker_https`).
+
+* **Docker: nginx answers only the hosts in ``ALLOWED_HOSTS``.** Requests for any
+  other host name are dropped before they reach QATrack+, so they no longer
+  produce *Invalid HTTP_HOST header* errors (and error emails to ``ADMINS``).
+  ``ALLOWED_HOSTS=*`` keeps passing every host on.
+
+* **Docker: uploads larger than 1 MB work.** nginx used its 1 MB default limit,
+  which rejected larger uploaded test results and attachments. The limit is now
+  100 MB, set with ``NGINX_CLIENT_MAX_BODY_SIZE``.
+
+* **Docker: the site no longer answers 502 after an upgrade.** nginx looked up the
+  ``django`` service's address once, when it started. An upgrade that recreated
+  ``django`` could give it a new address, and nginx kept sending requests to the
+  old one until it was restarted. It now looks the address up as requests arrive.
+
+* **Docker: a slow first start no longer leaves the site down.** ``django`` runs
+  every database migration before it reports that it is ready. On slow storage
+  that took longer than Docker allowed, so ``docker compose up`` gave up and never
+  started nginx. ``django`` now has up to 10 minutes.
+
+* **Docker: container output is capped** at 50 MB per service, so what
+  ``docker compose logs`` keeps can no longer fill the disk. That output belongs to
+  each container and starts again empty when the container is recreated, for
+  example by an upgrade. Every service now has a health check, shown by
+  ``docker compose ps``.
+
+* **QATrack+'s log files now rotate.** ``debug.log``, ``auth.log``, ``migrate.log``
+  and ``django-q2.log`` were set up to rotate but never did, so they grew without
+  limit. Each now starts a new file at 10 MB and keeps a fixed number of old ones.
+  This applies to every installation, not only Docker.
+
+* **Background tasks can run for up to 5 minutes**, up from 1. A scheduled report
+  whose PDF took longer than a minute to make was stopped and never sent. This
+  applies to every installation.
+
+* **Docker: overdue follow-up emails are sent when background tasks first run.**
+  Follow-up emails from *QC Completed* notices were queued but never sent on
+  Docker, and 4.0.2 sends every one still waiting as soon as it starts. To remove
+  them first, see :ref:`docker_upgrade_stale_follow_ups`.
 
 * **The Docker application container no longer runs as root.** QATrack+ now runs as
   an unprivileged ``qatrack`` user (uid 1000). Calculation procedures for composite
@@ -140,9 +196,12 @@ Deployment and Upgrade Notes
   ``docker compose -f compose.yaml -f compose.dev.yaml``, with their own ids in
   ``.env`` (see :ref:`docker_development`).
 
-  QATrack+'s log files are now inside the container rather than in the checkout's
-  ``logs`` folder. Read them with ``docker compose logs django``, or
-  ``docker compose exec django ls logs``.
+  QATrack+'s log files are now kept in a ``logs-volume`` volume, shared by the
+  ``django`` and ``django-q`` services, rather than in the checkout's ``logs``
+  folder, and they survive upgrades. Read them with
+  ``docker compose exec django ls logs`` and
+  ``docker compose exec django tail -n 50 logs/debug.log``. With the development
+  overlay they are still written to your checkout's ``logs`` folder.
 
 * **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
   same versions the test suite runs against. Previously ``pip`` chose versions when

@@ -524,28 +524,38 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "debug.log"),
-            'backupCount': 26,  # how many backup file to keep, 10 days
+            # Start a new file at 10 MB and keep 26 old ones. Without maxBytes
+            # the file never rotates and grows until the disk is full.
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 26,
             'formatter': 'verbose',
         },
         'migrate': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "migrate.log"),
-            'backupCount': 26,  # how many backup file to keep, 10 days
+            # Start a new file at 10 MB and keep 26 old ones. Without maxBytes
+            # the file never rotates and grows until the disk is full.
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 26,
             'formatter': 'verbose',
         },
         'django-q2': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "django-q2.log"),
-            'backupCount': 26,  # how many backup file to keep, 10 days
+            # Start a new file at 10 MB and keep 26 old ones. Without maxBytes
+            # the file never rotates and grows until the disk is full.
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 26,
             'formatter': 'verbose',
         },
         'auth': {
             'level': 'INFO',
             'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
             'filename': os.path.join(LOG_ROOT, "auth.log"),
-            'backupCount': 1,  # how many backup file to keep, 10 days
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 1,
             'formatter': 'verbose',
         },
     },
@@ -881,7 +891,12 @@ LOGOUT_REDIRECT_URL = LOGIN_URL
 Q_CLUSTER = {
     'name': 'qatrack',
     'workers': 2,
-    'timeout': 60,
+    # A task running longer than this is stopped. Scheduled reports render
+    # their PDFs in a task, and a large report can take more than a minute.
+    'timeout': 300,
+    # Seconds before a task that has not finished is handed out again: it must
+    # be longer than timeout, or a slow task runs twice.
+    'retry': 360,
     'catch_up': True,
     'recycle': 20,
     'compress': False,

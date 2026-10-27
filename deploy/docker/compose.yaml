@@ -1,10 +1,29 @@
 name: qatrackplus
 
+# Every service keeps at most 50 MB of output (5 files of 10 MB), so what
+# `docker compose logs` keeps cannot fill the disk. QATrack+'s own log files
+# are in logs-volume; they rotate at 10 MB (see LOGGING in settings.py).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   nginx:
     build:
       context: ./nginx
     restart: always
+    logging: *logging
+    # Only the settings nginx needs from .env (see .env.example), not the
+    # database password.
+    environment:
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
+      HTTP_OR_HTTPS: ${HTTP_OR_HTTPS:-http}
+      NGINX_SERVER_NAME: ${NGINX_SERVER_NAME:-}
+      NGINX_CLIENT_MAX_BODY_SIZE: ${NGINX_CLIENT_MAX_BODY_SIZE:-100m}
+      NGINX_SSL_CERTIFICATE: ${NGINX_SSL_CERTIFICATE:-cert.pem}
+      NGINX_SSL_CERTIFICATE_KEY: ${NGINX_SSL_CERTIFICATE_KEY:-key.pem}
     ports:
       - "80:80"
       - "443:443"
@@ -15,31 +34,45 @@ services:
       - media-volume:/usr/src/qatrackplus/qatrack/media:ro
       - static-volume:/usr/src/qatrackplus/qatrack/static:ro
       - ./user-data/ssl:/etc/nginx/ssl:ro
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/nginx-health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # Runs once before django: the app runs as uid 1000, and installs from before
   # 4.0.2 ran it as root, so their volumes can hold root-owned files. This
   # re-owns only those files, then exits. QATRACK_UID/QATRACK_GID are only for
   # compose.dev.yaml, which runs the app as the developer's own user.
   init:
-    build:
-      context: ../../
-      dockerfile: deploy/docker/django/Dockerfile
+    # The image the django service builds; never pulled from a registry.
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-django
+    pull_policy: never
     user: "0"
     restart: "no"
+    logging: *logging
     command:
       - sh
       - -c
-      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static /usr/src/qatrackplus/deploy/docker/user-data \( ! -user ${QATRACK_UID:-1000} -o ! -group ${QATRACK_GID:-1000} \) -exec chown ${QATRACK_UID:-1000}:${QATRACK_GID:-1000} {} +
+      - find /usr/src/qatrackplus/qatrack/media /usr/src/qatrackplus/qatrack/static /usr/src/qatrackplus/deploy/docker/user-data /usr/src/qatrackplus/logs \( ! -user ${QATRACK_UID:-1000} -o ! -group ${QATRACK_GID:-1000} \) -exec chown ${QATRACK_UID:-1000}:${QATRACK_GID:-1000} {} +
     volumes:
       - media-volume:/usr/src/qatrackplus/qatrack/media
       - static-volume:/usr/src/qatrackplus/qatrack/static
       - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
+      - logs-volume:/usr/src/qatrackplus/logs
 
   django:
     build:
       context: ../../
       dockerfile: deploy/docker/django/Dockerfile
+    # init and django-q run this same image, so it is built once. It is named
+    # after the Compose project, so a second stack on the same host (a test
+    # copy run with -p) builds its own image instead of replacing this one.
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-django
+    pull_policy: never
     restart: always
+    logging: *logging
     env_file: .env
     depends_on:
       init:
@@ -52,16 +85,55 @@ services:
       # Keeps the generated secret key (when SECRET_KEY is not set in .env)
       # across rebuilds, so upgrades do not log every user out.
       - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data
+      # QATrack+'s log files (debug.log, auth.log, ...), kept across rebuilds and
+      # shared with django-q, as on a Linux install.
+      - logs-volume:/usr/src/qatrackplus/logs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      # Before gunicorn starts, the entrypoint creates the cache table, runs
+      # every migration and collects static files. On a first install or an
+      # upgrade that can take several minutes. Failed checks during
+      # start_period don't count, so this only stops `docker compose up`
+      # giving up on django (and never starting nginx and django-q) too early;
+      # a normal start is still marked healthy at the first passing check.
+      start_period: 600s
+
+  # Runs QATrack+'s background tasks: scheduled notifications, scheduled
+  # reports, and the emails and PDFs they send.
+  django-q:
+    image: ${COMPOSE_PROJECT_NAME:-qatrackplus}-django
+    pull_policy: never
+    command: [ "python", "manage.py", "qcluster" ]
+    init: true
+    restart: always
+    logging: *logging
+    env_file: .env
+    depends_on:
+      # django applies the database migrations before it reports healthy.
+      django:
+        condition: service_healthy
+    volumes:
+      - media-volume:/usr/src/qatrackplus/qatrack/media
+      # PDF reports link their stylesheets and logo from the collected static
+      # files, which django fills in before it reports healthy.
+      - static-volume:/usr/src/qatrackplus/qatrack/static:ro
+      - user-data-volume:/usr/src/qatrackplus/deploy/docker/user-data:ro
+      - logs-volume:/usr/src/qatrackplus/logs
+    healthcheck:
+      # The cluster is running. [e] keeps this check from matching itself.
+      test: [ "CMD-SHELL", "grep -qa 'qclust[e]r' /proc/[0-9]*/cmdline" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   postgres:
     image: postgres:15-alpine
     restart: always
+    logging: *logging
     env_file: .env
     volumes:
       - postgres-volume:/var/lib/postgresql/data
@@ -76,6 +148,7 @@ services:
       context: ./backup
     init: true
     restart: always
+    logging: *logging
     env_file: .env
     depends_on:
       postgres:
@@ -83,9 +156,16 @@ services:
     volumes:
       - ./backups:/backups
       - media-volume:/media:ro
+    healthcheck:
+      # crond, which runs the nightly backup, is running.
+      test: [ "CMD", "pgrep", "crond" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres-volume:
   media-volume:
   static-volume:
   user-data-volume:
+  logs-volume:

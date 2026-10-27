@@ -236,7 +236,14 @@ Configuring QATrack+
 
 All of QATrack+'s Docker settings live in a file called ``.env`` in this
 directory. It holds your passwords, so it is never part of the QATrack+
-repository: create it from the documented template, then edit it.
+repository: create it from the documented template, then edit it. In Windows
+Command Prompt:
+
+.. code-block:: console
+
+    copy .env.example .env
+
+On Linux:
 
 .. code-block:: console
 
@@ -247,7 +254,8 @@ At minimum, set:
 * ``POSTGRES_USER`` and ``POSTGRES_PASSWORD``, before the first start. The
   database is created with them.
 * ``ALLOWED_HOSTS``, the host names or IP addresses people use to reach
-  QATrack+, comma-separated.
+  QATrack+, comma-separated. nginx answers only these names, and drops requests
+  for any other host before they reach QATrack+.
 
 Everything else is optional and documented in ``.env.example``: email, time
 zone, HTTPS, Active Directory / LDAP sign-in, and the QC display options. Leave
@@ -285,6 +293,18 @@ initialising. The first time QATrack+ starts up initialisation can take about
 .. figure:: images/502_error.png
     :alt: Error visible while server is starting up
 
+.. note::
+
+    The web server (``nginx``) and the background task service (``django-q``)
+    only start once the ``django`` service reports that it is ready, and
+    ``django`` is given up to 10 minutes for its first start. On a slow machine
+    this may still not be enough, and ``docker compose up`` stops with
+    ``dependency failed to start: container qatrackplus-django-1 is unhealthy``.
+    Nothing is broken: ``django`` keeps working through its database migrations.
+    Wait until ``docker compose logs django`` shows the ``Listening at`` line,
+    then run ``docker compose up -d`` to start the rest. Migrations that have
+    already run are not repeated.
+
 No user account is created for you, so create one before your first login.
 The `django` service runs the application, so run `createsuperuser` there and
 answer its prompts:
@@ -294,6 +314,15 @@ answer its prompts:
     docker compose exec django python manage.py createsuperuser
 
 You can then sign in at http://localhost with the credentials you just chose.
+
+Scheduled notifications, scheduled reports and the emails they send run in the
+``django-q`` service. ``docker compose ps`` shows it, with the other services, as
+``healthy``, and ``docker compose logs django-q`` shows what it has run.
+``docker compose logs`` keeps at most 50 MB of each service's output, and starts
+again empty when a container is recreated, for example by an upgrade.
+QATrack+'s own log files (``debug.log``, ``auth.log`` and the others) are kept in
+the ``logs-volume`` volume and survive upgrades; read them with
+``docker compose exec django ls logs``.
 
 .. _docker_development:
 
@@ -313,9 +342,9 @@ once, then start with the development overlay:
     docker compose -f compose.yaml -f compose.dev.yaml up -d --build
 
 Use the same ``-f compose.yaml -f compose.dev.yaml`` on every ``docker compose``
-command for that stack. If your checkout has a ``logs`` folder created by an
-earlier QATrack+ container, which ran as root, give it to your user once with
-``sudo chown -R $(id -u):$(id -g) ../../logs``.
+command for that stack. QATrack+'s log files go to your checkout's ``logs``
+folder, which is given to your user when the stack starts, even if an earlier
+QATrack+ container created it as root.
 
 
 Setting up copying backups from local machine to remote server on Windows
@@ -356,28 +385,48 @@ To have QATrack+ start on boot run the following command:
 
     docker compose up -d
 
-Setting up SSL
-~~~~~~~~~~~~~~
+.. _docker_https:
 
-To set up SSL I highly recommending using CloudFlare's free 'one-click ssl'
-which will set up SSL security between your users and CloudFlare:
-https://www.cloudflare.com/ssl/
+Serving QATrack+ over HTTPS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To also secure the path between CloudFlare and your server you will need to
-follow the following steps:
-https://support.cloudflare.com/hc/en-us/articles/217471977
+nginx serves QATrack+ over HTTPS with your certificate. You need a certificate
+for the host name people use, and its private key, in PEM format: from your
+hospital's IT department, a certificate authority, or an origin certificate from
+a proxy such as Cloudflare.
 
-The `nginx.conf` file referred to by that guide is contained within this
-directory. Place the certificate files within `user-data/ssl` then they will be
-available at `/root/ssl/your_certificate.pem` and `/root/ssl/your_key.key` on
-the server.
+1. Put them in ``deploy/docker/user-data/ssl`` as ``cert.pem`` and ``key.pem``.
+   Docker creates that folder, owned by root, the first time QATrack+ starts, so
+   copy them in with ``sudo``:
 
-To reset the server and use your updated `nginx.conf` file run:
+   .. code-block:: console
 
-.. code-block:: console
+       cd qatrackplus/deploy/docker
+       sudo mkdir -p user-data/ssl
+       sudo cp /path/to/your/certificate.pem user-data/ssl/cert.pem
+       sudo cp /path/to/your/private.key user-data/ssl/key.pem
+       sudo chmod 600 user-data/ssl/key.pem
 
-    docker compose stop
-    docker compose up
+   The certificate file should hold the full chain: your certificate first, then
+   any intermediate certificates. To use other file names, set
+   ``NGINX_SSL_CERTIFICATE`` and ``NGINX_SSL_CERTIFICATE_KEY`` in ``.env``.
+2. In ``deploy/docker/.env``, set ``HTTP_OR_HTTPS=https``, and set
+   ``ALLOWED_HOSTS`` to the name on the certificate.
+3. Apply the change:
+
+   .. code-block:: console
+
+       docker compose up -d
+
+nginx now listens on port 443 and redirects HTTP to HTTPS, and QATrack+ marks its
+cookies secure. If nginx cannot read the certificate or key, it stops, and
+``docker compose logs nginx`` says which file is missing. To renew the
+certificate, replace the files and run ``docker compose restart nginx``.
+
+If a proxy in front of QATrack+ (a load balancer, or Cloudflare's *Flexible*
+mode) handles HTTPS and forwards plain HTTP to it, leave ``HTTP_OR_HTTPS=http``.
+With ``https``, nginx would redirect the proxy's HTTP requests back to HTTPS, and
+the browser would loop between the two.
 
 Changing from port 80 to a different port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
