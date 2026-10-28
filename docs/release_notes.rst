@@ -113,7 +113,8 @@ Deployment and Upgrade Notes
   containers (``up``, ``build``, ``run`` and others) stop with *Additional property
   additional_contexts is not allowed*. Running containers keep running, but 4.0.2
   can't be built or started, and containers removed with ``docker compose down``
-  can't be created again, until Docker is updated. See
+  can't be created again, until Docker is updated. Until then, other commands
+  such as ``logs`` and ``stop`` need ``-p qatrackplus``. See
   :ref:`docker_upgrade_check_compose`.
 
 * **Docker: ``deploy/docker/.env`` is no longer tracked by git. Set your copy aside

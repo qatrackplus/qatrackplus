@@ -840,8 +840,10 @@ jobs:
           after=$(TZ=Asia/Kolkata date +%Y%m%d_%H%M)
           echo "$out"
           grep -qx "zone: Asia/Kolkata IST" <<<"$out"
-          dump=$($dc exec -T backup sh -c 'cd /backups && ls -1t db_*.dump | head -1')
-          echo "newest: $dump; in Kolkata it was $before"
+          # The name this backup reports, not the newest by ls -t: BusyBox compares
+          # whole seconds, so the Toronto backup made a moment ago can tie and win.
+          dump=$(sed -n 's|^Database saved to /backups/||p' <<<"$out")
+          echo "this backup: $dump; in Kolkata it was $before"
           [ "$(minute_of "$dump")" = "$before" ] || [ "$(minute_of "$dump")" = "$after" ] ||
             { echo "FAIL: $dump is not named in Asia/Kolkata time"; exit 1; }
 

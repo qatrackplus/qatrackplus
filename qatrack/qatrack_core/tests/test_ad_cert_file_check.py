@@ -84,6 +84,26 @@ class TestAdCertFileCheck(SimpleTestCase):
         self.addCleanup(path.chmod, 0o600)
         assert [w.id for w in self.run_check(str(path))] == ['qatrack.W012']
 
+    def test_a_folder_that_cannot_be_opened_warns(self):
+        """Checking whether the file exists fails outright when its folder can't be
+        opened (permissions, or SELinux on Docker); that is a warning too, not a
+        crash that stops the site starting."""
+        path = self.write('ca.pem', PEM)
+        with mock.patch.object(Path, 'stat', side_effect=PermissionError(13, 'Permission denied')):
+            warnings = self.run_check(str(path))
+        assert [w.id for w in warnings] == ['qatrack.W012']
+        assert 'Permission denied' in warnings[0].msg
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason='POSIX file permissions')
+    def test_a_folder_that_cannot_be_opened_warns_for_real(self):
+        """The mocked test above, against a real folder nobody can open."""
+        if os.geteuid() == 0:
+            pytest.skip('root can open any folder')
+        path = self.write('ca.pem', PEM)
+        self.dir.chmod(0o000)
+        self.addCleanup(self.dir.chmod, 0o700)
+        assert [w.id for w in self.run_check(str(path))] == ['qatrack.W012']
+
     def test_a_der_file_warns(self):
         warnings = self.run_check(str(self.write('ca.cer', DER)))
         assert [w.id for w in warnings] == ['qatrack.W013']

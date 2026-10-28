@@ -59,11 +59,13 @@ and ``pull``, as well as ``config``. The error looks like this:
 
     services.django.build Additional property additional_contexts is not allowed
 
-Your current containers aren't affected: they keep running, and ``ps``, ``logs``,
-``exec``, ``stop``, ``start`` and ``restart`` still work. But you can't build or
-start 4.0.2 until Docker is updated, and if you run ``docker compose down`` in the
-meantime, ``up`` can't create the containers again, so your site stays down until
-then.
+Your current containers aren't affected: they keep running. But every other
+``docker compose`` command stops with the same error, ``ps``, ``logs``,
+``exec``, ``stop``, ``start``, ``restart`` and ``down`` included, unless you add
+``-p qatrackplus`` (for example, ``docker compose -p qatrackplus logs django``).
+You can't build or start 4.0.2 until Docker is updated, and if you run
+``docker compose down`` in the meantime, ``up`` can't create the containers
+again, so your site stays down until then.
 
 If either version is too old, update Docker first (on Ubuntu, through Docker's ``apt``
 repository, which updates the Engine and the ``docker-compose-plugin`` package

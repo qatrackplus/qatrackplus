@@ -48,11 +48,26 @@ if [ ! -f "$backup_file" ]; then
 fi
 # TARGET_DIR must be the media volume, mounted writable. Run in the backup
 # service it is read-only; run with no volume at all, it is just the image's empty
-# folder, and restored files would vanish with the container.
-if ! awk -v dir="$TARGET_DIR" '$2 == dir { found = 1 } END { exit !found }' /proc/mounts \
-    || [ ! -d "$TARGET_DIR" ] || [ ! -w "$TARGET_DIR" ]; then
+# folder, and restored files would vanish with the container. The last line for
+# it in /proc/mounts is the mount in use.
+mount_options=$(awk -v dir="$TARGET_DIR" '$2 == dir { options = $4 } END { print options }' /proc/mounts)
+case ",$mount_options," in
+    ,,|*,ro,*) mounted_writable= ;;
+    *) mounted_writable=yes ;;
+esac
+if [ -z "$mounted_writable" ] || [ ! -d "$TARGET_DIR" ]; then
     echo "The uploaded files are not mounted writable at $TARGET_DIR. Restore them with" >&2
     echo "  docker compose run --rm restore-media $backup_name" >&2
+    exit 1
+fi
+# Mounted writable, yet root still cannot write there: a network share that
+# treats root as an ordinary user, such as NFS with root_squash.
+if [ ! -w "$TARGET_DIR" ]; then
+    echo "The uploaded files are mounted at $TARGET_DIR, but root cannot write to them," >&2
+    echo "so they cannot be restored. This happens when QATRACK_MEDIA_DIR is on a network" >&2
+    echo "share that treats root as an ordinary user, such as an NFS share exported with" >&2
+    echo "root_squash. Nothing was changed. See \"Keeping QATrack+'s data in folders on" >&2
+    echo "the server\" in docs/install/docker.rst for how to restore onto such a share." >&2
     exit 1
 fi
 

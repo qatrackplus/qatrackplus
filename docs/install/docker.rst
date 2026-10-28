@@ -60,10 +60,13 @@ QATrack+ needs:
 
       services.django.build Additional property additional_contexts is not allowed
 
-  Containers that are already running carry on, and ``ps``, ``logs``, ``exec``,
-  ``stop``, ``start`` and ``restart`` still work on them. What you can't do is
-  build or start a new release, or create containers again after
-  ``docker compose down``, until Docker is updated.
+  Containers that are already running carry on. Every other ``docker compose``
+  command stops with the same error too, ``ps``, ``logs``, ``exec``, ``stop``,
+  ``start``, ``restart`` and ``down`` included, unless you name the project with
+  ``-p qatrackplus``: for example, ``docker compose -p qatrackplus stop``. (If
+  your ``.env`` sets ``COMPOSE_PROJECT_NAME``, they work without it.) What you
+  can't do at all is build or start a new release, or create containers again
+  after ``docker compose down``, until Docker is updated.
 
 * **Docker Engine 23.0 or newer.** The image build relies on BuildKit features
   that Docker Engine 20.10 and earlier don't include.
@@ -393,6 +396,8 @@ that issued it:
 * **Your organization's own CA**, which is what most hospital directory servers
   use: QATrack+ needs a copy of that CA's certificate. Ask your IT department for
   the root CA certificate, plus any intermediate CA certificates, in PEM format.
+  With ``AD_CERT_FILE`` set, QATrack+ trusts only the CAs in that file, not the
+  public ones, so set it only for a directory that uses your own CA.
 
 A CA certificate is public, not secret: it holds no private key, and it is safe
 to copy and email.
@@ -522,8 +527,11 @@ first starts. This prints a suitable one:
 
 Avoid keys containing ``$``, such as those made by Django's
 ``get_random_secret_key``: Docker Compose reads ``$`` in ``.env`` as the start
-of a variable and silently changes the key. Changing the key of a site already
-in use signs everyone out once.
+of a variable and changes the key. Its warning names only the part of the key
+after the ``$``, not ``SECRET_KEY``, so it is easy to miss. If your key already
+has a ``$`` in it, put the key in single quotes, which keeps it exactly as it is:
+``SECRET_KEY='...'``. Changing the key of a site already in use signs everyone
+out once.
 
 If you are upgrading from QATrack+ 4.0.0 or 4.0.1, which kept the key in a
 different place, see :ref:`docker_upgrade_keep_secret_key`.
@@ -949,14 +957,34 @@ NFS share with ``root_squash``, for example), ``init`` cannot do its work, and
 ``docker compose up`` stops with ``service "init" didn't complete successfully``.
 ``docker compose logs init`` shows ``Operation not permitted``. Have the share's
 files owned by 1000:1000 (or mount it with ``uid=1000,gid=1000``); ``init`` then
-has nothing to change. On a server with SELinux enforcing, such as Red Hat, Rocky
-or AlmaLinux, the containers are refused access to a folder until it is labelled
-for containers:
+has nothing to change. ``restore-media`` runs as root too, so it cannot write to
+such a share either: it stops, changing nothing, with a message saying root
+cannot write to the uploaded files. To restore onto the share, ask whoever runs
+the file server to export it without ``root_squash`` (``no_root_squash``) for the
+restore, then to put it back.
+
+On a server with SELinux enforcing, such as Red Hat, Rocky or AlmaLinux, it
+depends on whether Docker applies SELinux to its containers. Docker Engine
+installed from Docker's own repository, as linked above, doesn't unless it is
+turned on (``"selinux-enabled": true`` in ``/etc/docker/daemon.json``);
+``docker info`` lists ``selinux`` under *Security Options* when it is. When it
+is on, the containers are refused every folder on the server until it is
+labelled for containers: QATrack+'s folders, and also the ``backups`` and
+``user-data`` folders in ``deploy/docker``. Without the label on those, the
+nightly backup fails (while ``docker compose ps`` still shows the backup service
+as healthy), and the HTTPS and LDAPS certificates can't be read. Label them all,
+in ``deploy/docker``, before you start QATrack+:
 
 .. code-block:: console
 
+    sudo mkdir -p backups user-data/ssl user-data/ldap
     sudo semanage fcontext -a -t container_file_t '/srv/qatrack(/.*)?'
-    sudo restorecon -R /srv/qatrack
+    sudo semanage fcontext -a -t container_file_t "$(pwd)/backups(/.*)?"
+    sudo semanage fcontext -a -t container_file_t "$(pwd)/user-data(/.*)?"
+    sudo restorecon -R /srv/qatrack backups user-data
+
+If ``QATRACK_BACKUPS_DIR`` puts the backups somewhere else, label that folder in
+place of ``backups``.
 
 **Moving a site's data from a volume to a folder.** For example, for the
 uploaded files, in ``deploy/docker``:
@@ -1035,7 +1063,8 @@ The log files and the secret key go back the same way.
 
 **Backups and restores.** The nightly backup reads the uploaded files from
 wherever ``QATRACK_MEDIA_DIR`` points, and ``restore-media`` puts them back there,
-so the backup and restore commands above do not change. ``restore-media`` unpacks
+so the backup and restore commands above do not change (on an NFS share with
+``root_squash``, see the note on network shares above). ``restore-media`` unpacks
 the backup into a temporary ``.restore.*`` folder inside the media folder, then
 swaps the files in by renaming them, so the media folder needs room for a second
 copy of the uploaded files while it runs, and should not have another disk

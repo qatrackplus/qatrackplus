@@ -239,6 +239,20 @@ AD_CERT_FILE_DOCS = (
 )
 
 
+def _ad_cert_file_unreadable(path, error, effect):
+    return Warning(
+        f'QATrack+ cannot read AD_CERT_FILE ({path}): {error.strerror or error}. {effect}',
+        hint=(
+            'The file, and the folder it is in, must be readable by the user QATrack+ runs as. A CA '
+            'certificate is public, not secret, so it is safe to make it readable by everyone: on Docker, '
+            'run `sudo chmod 644` on the file in deploy/docker/user-data/ldap/, and `sudo chmod 755` on that '
+            'folder. On a server with SELinux, the folder must also be labelled for containers. '
+            f'{AD_CERT_FILE_DOCS}'
+        ),
+        id='qatrack.W012',
+    )
+
+
 @register()
 def check_ad_cert_file(app_configs, **kwargs):
     """Warn when AD_CERT_FILE is set but QATrack+ cannot use the file it names.
@@ -267,7 +281,15 @@ def check_ad_cert_file(app_configs, **kwargs):
         'until this is fixed.'
     )
 
-    if not path.exists():
+    # exists() and is_file() raise, rather than return False, when the folder
+    # holding the file can't be opened (its permissions, or SELinux on Docker).
+    try:
+        exists = path.exists()
+        is_file = exists and path.is_file()
+    except OSError as e:
+        return [_ad_cert_file_unreadable(path, e, effect)]
+
+    if not exists:
         return [
             Warning(
                 f'AD_CERT_FILE is set to {path}, but there is no file there. {effect}',
@@ -280,7 +302,7 @@ def check_ad_cert_file(app_configs, **kwargs):
             )
         ]
 
-    if not path.is_file():
+    if not is_file:
         return [
             Warning(
                 f'AD_CERT_FILE is set to {path}, which is a folder, not a certificate file. {effect}',
@@ -293,18 +315,7 @@ def check_ad_cert_file(app_configs, **kwargs):
         with path.open('rb') as f:
             contents = f.read()
     except OSError as e:
-        return [
-            Warning(
-                f'QATrack+ cannot read AD_CERT_FILE ({path}): {e.strerror or e}. {effect}',
-                hint=(
-                    'The file must be readable by the user QATrack+ runs as. A CA certificate is public, '
-                    'not secret, so it is safe to make it readable by everyone: on Docker, run '
-                    '`sudo chmod 644` on the file in deploy/docker/user-data/ldap/. '
-                    f'{AD_CERT_FILE_DOCS}'
-                ),
-                id='qatrack.W012',
-            )
-        ]
+        return [_ad_cert_file_unreadable(path, e, effect)]
 
     if not PEM_CERTIFICATE.search(contents):
         return [
