@@ -3,11 +3,15 @@
 apply() is called with a fake environment and a copy of the defaults it reads,
 so these tests never touch the real settings or environment.
 """
+import ast
+import contextlib
 import datetime
+import io
 import os
+import re
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from unittest import mock
 
 from django.core.exceptions import ImproperlyConfigured
@@ -15,9 +19,12 @@ from django.test import SimpleTestCase
 
 from qatrack import docker_settings
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
 
 def defaults():
     return {
+        'TIME_ZONE': 'America/Toronto',
         'ADMINS': (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),),
         'MANAGERS': (('Admin Name', 'YOUR_EMAIL_ADDRESS_GOES_HERE'),),
         'DEBUG': False,
@@ -71,6 +78,33 @@ class TestDefaults(DockerSettingsTestCase):
         self.assertEqual(db['ENGINE'], 'django.db.backends.postgresql')
         self.assertEqual((db['NAME'], db['USER'], db['PASSWORD']), ('qatrackplus', 'postgres', 'postgres'))
         self.assertEqual((db['HOST'], db['PORT']), ('postgres', 5432))
+
+    def test_time_zone_from_environment(self):
+        self.assertEqual(self.apply(TIME_ZONE='Asia/Kolkata')['TIME_ZONE'], 'Asia/Kolkata')
+        # Empty counts as unset, as it does for the backup service's ${TIME_ZONE:-...}.
+        for value in ('', '   '):
+            self.assertEqual(self.apply(TIME_ZONE=value)['TIME_ZONE'], 'America/Toronto')
+
+    def test_backup_time_zone_default_matches_settings(self):
+        """With TIME_ZONE unset, the backup service runs in QATrack+'s default zone.
+
+        compose.yaml gives the backup service TZ from TIME_ZONE, falling back to a
+        default of its own, which must stay the same as settings.py's, or the
+        nightly backup's 4 AM and its file names drift from QATrack+'s clock.
+        """
+        settings_py = ast.parse((REPO_ROOT / 'qatrack' / 'settings.py').read_text(encoding='utf-8'))
+        settings_default = [
+            node.value.value for node in settings_py.body
+            if isinstance(node, ast.Assign) and [getattr(t, 'id', None) for t in node.targets] == ['TIME_ZONE']
+        ]
+        compose = (REPO_ROOT / 'deploy' / 'docker' / 'compose.yaml').read_text(encoding='utf-8')
+        compose_default = re.findall(r'^ +TZ: \$\{TIME_ZONE:-([^}]+)\}$', compose, re.MULTILINE)
+        # start-cron.sh warns when the backups' zone differs from QATrack+'s default.
+        start_cron = (REPO_ROOT / 'deploy' / 'docker' / 'backup' / 'start-cron.sh').read_text(encoding='utf-8')
+        start_cron_default = re.findall(r'^default_zone=(\S+)$', start_cron, re.MULTILINE)
+        self.assertEqual(len(settings_default), 1)
+        self.assertEqual(compose_default, settings_default)
+        self.assertEqual(start_cron_default, settings_default)
 
     def test_database_from_environment(self):
         g = self.apply(
@@ -183,6 +217,14 @@ class TestSecretKey(DockerSettingsTestCase):
         self.apply()
         self.assertEqual(os.listdir(self.key_file.parent), ['secret_key.txt'])
 
+    def test_key_file_has_one_name(self):
+        # The key is linked into place from a temporary file, which is then
+        # removed. The Docker init service never re-owns a file with more than
+        # one name (a hard link), so a second name left behind would leave the
+        # key as it is on every start.
+        self.apply()
+        self.assertEqual(os.stat(self.key_file).st_nlink, 1)
+
     def test_key_published_by_another_process_first_is_used(self):
         # Another container process publishes its key between our check for the
         # file and our link: both must end up with the same key.
@@ -209,6 +251,75 @@ class TestSecretKey(DockerSettingsTestCase):
         blocker.write_text('')
         with self.assertRaisesRegex(ImproperlyConfigured, 'SECRET_KEY'):
             self.apply(QATRACK_SECRET_KEY_FILE=str(blocker / 'secret_key.txt'))
+
+
+class TestSecretKeyNotice(DockerSettingsTestCase):
+    """The notice the entrypoint prints when the key is kept in a file, not in .env."""
+
+    def notice(self, **environ):
+        environ.setdefault('QATRACK_SECRET_KEY_FILE', str(self.key_file))
+        return docker_settings.secret_key_notice(environ)
+
+    def test_generated_key_names_its_file_and_how_to_keep_it(self):
+        key = self.apply()['SECRET_KEY']
+        notice = self.notice()
+        self.assertIn(self.key_file.as_posix(), notice)
+        self.assertIn('backup', notice)
+        self.assertIn(
+            f'printf \'\\nSECRET_KEY=%s\\n\' "$(docker compose exec -T django cat {self.key_file.as_posix()})" >> .env',
+            notice,
+        )
+        self.assertNotIn(key, notice)
+
+    def test_key_read_back_from_the_file_is_never_shown(self):
+        self.key_file.parent.mkdir(parents=True)
+        self.key_file.write_text('kept-in-the-volume', encoding='utf-8')
+        self.assertEqual(self.apply()['SECRET_KEY'], 'kept-in-the-volume')
+        self.assertNotIn('kept-in-the-volume', self.notice())
+
+    def test_no_notice_when_set_in_env(self):
+        self.assertIsNone(self.notice(SECRET_KEY='from-env'))
+
+    def test_blank_secret_key_counts_as_unset(self):
+        self.assertIsNotNone(self.notice(SECRET_KEY='   '))
+
+    def test_default_file_is_named_as_the_volume(self):
+        notice = docker_settings.secret_key_notice({})
+        self.assertIn(docker_settings.DEFAULT_SECRET_KEY_FILE, notice)
+        self.assertIn('user-data-volume', notice)
+        self.assertIn(f'cat {docker_settings.DEFAULT_SECRET_KEY_FILE})', notice)
+
+    def test_default_file_in_a_folder_on_the_server(self):
+        # QATRACK_USER_DATA_DIR in .env puts the default file in a folder on the
+        # server instead of the volume; the notice names that folder.
+        notice = docker_settings.secret_key_notice({'QATRACK_USER_DATA_DIR': '/srv/qatrack/user-data'})
+        self.assertIn(f'{docker_settings.DEFAULT_SECRET_KEY_FILE}, in the folder /srv/qatrack/user-data', notice)
+        self.assertNotIn('user-data-volume', notice)
+        self.assertIn(f'cat {docker_settings.DEFAULT_SECRET_KEY_FILE})', notice)
+
+    def test_blank_user_data_dir_means_the_volume(self):
+        notice = docker_settings.secret_key_notice({'QATRACK_USER_DATA_DIR': '  '})
+        self.assertIn('user-data-volume', notice)
+
+    def test_default_file_keeps_forward_slashes_on_windows(self):
+        # On Windows, Path renders /usr/src/... with backslashes; the file is in
+        # the Linux container, so the notice must not.
+        with mock.patch.object(docker_settings, 'Path', PureWindowsPath):
+            notice = docker_settings.secret_key_notice({})
+        self.assertIn(docker_settings.DEFAULT_SECRET_KEY_FILE, notice)
+        self.assertIn('user-data-volume', notice)
+        self.assertNotIn('\\usr', notice)
+
+    def test_notice_does_not_create_the_file(self):
+        self.notice()
+        self.assertFalse(self.key_file.exists())
+
+    def test_settings_stay_quiet(self):
+        # Every process imports the settings; only the entrypoint prints the notice.
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), self.assertNoLogs(level='DEBUG'):
+            self.apply()
+        self.assertEqual((out.getvalue(), err.getvalue()), ('', ''))
 
 
 class TestActiveDirectory(DockerSettingsTestCase):

@@ -12,11 +12,13 @@ db/
 tmp/
 deploy/docker/user-data
 deploy/docker/backups/
+# A site's own Python packages for the Docker image; only the README is tracked.
+deploy/docker/site-requirements/*
+!deploy/docker/site-requirements/README.md
 deployLocal.py
 
 # Environment files hold passwords and site settings and must never be committed.
-# Only the documented templates are tracked. (deploy/docker/.env is still tracked
-# for existing Docker installs; ignoring a tracked file does not untrack it.)
+# Only the documented templates are tracked.
 .env
 .env.*
 *.env

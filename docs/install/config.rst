@@ -1403,6 +1403,16 @@ General AD Settings
                                 # wish to clean usernames before sending to ldap server e.g.
                                 # def AD_CLEAN_USERNAME(username): return username.lower()
 
+``AD_CERT_FILE`` is the certificate of the certificate authority (CA) that issued
+your directory server's certificate, for SSL (``ldaps``) connections. When it is
+your organization's own CA, set it to the path of the CA's certificate in PEM
+format (the root, plus any intermediates), in a file the user QATrack+ runs as
+can read. A public CA is usually trusted without it (on Docker, always), as long
+as the server's LDAP library is set up to use the system's CA store. ``AD_DNS_NAME``
+must then be a name on the directory server's certificate. If the file is
+missing, unreadable or not PEM, QATrack+ shows a warning when it starts. On
+Docker, see :ref:`docker_ldaps`.
+
 Non-SSL AD Connection Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

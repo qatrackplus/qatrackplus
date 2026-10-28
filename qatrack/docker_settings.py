@@ -13,11 +13,9 @@ from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
-DEFAULT_SECRET_KEY_FILE = '/usr/src/qatrackplus/deploy/docker/user-data/secret_key.txt'
+from qatrack.qatrack_core.hosts import LOOPBACK_HOSTS
 
-# Hosts the containers use to reach Django themselves (the compose healthcheck).
-# They are allowed, but never become trusted CSRF origins.
-INTERNAL_HOSTS = ['localhost', '127.0.0.1']
+DEFAULT_SECRET_KEY_FILE = '/usr/src/qatrackplus/deploy/docker/user-data/secret_key.txt'
 
 _TRUE = {'1', 'true', 'yes', 'on'}
 _FALSE = {'0', 'false', 'no', 'off'}
@@ -82,17 +80,23 @@ class Env:
         return value
 
 
+def secret_key_file(env):
+    """The file the secret key is kept in, or None when SECRET_KEY is set in the environment."""
+    if env.raw('SECRET_KEY'):
+        return None
+    return Path(env.raw('QATRACK_SECRET_KEY_FILE') or DEFAULT_SECRET_KEY_FILE)
+
+
 def load_secret_key(env):
     """SECRET_KEY from the environment, else from a file kept in a volume.
 
     The file is created with a new key the first time, so the key survives
     container rebuilds instead of logging every user out on each upgrade.
     """
-    key = env.raw('SECRET_KEY')
-    if key:
-        return key
+    path = secret_key_file(env)
+    if path is None:
+        return env.raw('SECRET_KEY')
 
-    path = Path(env.raw('QATRACK_SECRET_KEY_FILE') or DEFAULT_SECRET_KEY_FILE)
     if path.exists():
         key = path.read_text(encoding='utf-8').strip()
         if not key:
@@ -122,18 +126,57 @@ def load_secret_key(env):
     return key
 
 
+def secret_key_notice(environ=os.environ):
+    """A notice for the start-up log when the secret key is kept in a file, else None.
+
+    deploy/docker/django/entrypoint.sh prints it once each time the django
+    container starts. Settings are imported by every process (each web worker,
+    django-q, every management command), so it is not logged from apply(). It
+    names the file and never includes the key.
+    """
+    env = Env(environ)
+    path = secret_key_file(env)
+    if path is None:
+        return None
+    # The file is inside the Linux container, so show it with forward slashes
+    # whatever system this runs on (the tests also run on Windows).
+    path = path.as_posix()
+    # compose.yaml mounts QATRACK_USER_DATA_DIR, a folder on the server, in place
+    # of the volume when .env sets it.
+    host_dir = env.raw('QATRACK_USER_DATA_DIR')
+    if path != DEFAULT_SECRET_KEY_FILE:
+        where = path
+    elif host_dir:
+        where = f'{path}, in the folder {host_dir} on the server'
+    else:
+        where = f'{path}, in the user-data-volume Docker volume'
+    return (
+        'NOTICE: SECRET_KEY is not set in .env, so QATrack+ is using the secret key it generated '
+        f'and saved in {where}.\n'
+        'The nightly backup does not include that file. If it is lost, or QATrack+ is moved to another server '
+        'without it, everyone is signed out and password-reset links already sent stop working.\n'
+        'To keep the key with your settings, copy it into .env by running this in deploy/docker, '
+        'then `docker compose up -d`:\n'
+        f'    printf \'\\nSECRET_KEY=%s\\n\' "$(docker compose exec -T django cat {path})" >> .env\n'
+        'Keep .env as private as your database password. '
+        'See "Keeping the secret key safe" in the Docker installation guide.'
+    )
+
+
 def apply(g, environ=os.environ):
     """Update the settings namespace `g` from the environment."""
     env = Env(environ)
 
-    # Hosts. CSRF origins are derived from the site's own hosts before the
-    # internal ones are added, so localhost never becomes a trusted origin.
-    hosts = env.get('ALLOWED_HOSTS', parse_csv, default=['localhost', '127.0.0.1'])
+    # Hosts. The containers reach Django themselves through the loopback names
+    # (the compose health check), so those are always allowed. CSRF origins are
+    # derived from the site's own hosts before they are added, so localhost never
+    # becomes a trusted origin.
+    hosts = env.get('ALLOWED_HOSTS', parse_csv, default=list(LOOPBACK_HOSTS))
     csrf_origins = env.get('CSRF_TRUSTED_ORIGINS', parse_csv)
     if csrf_origins is None:
         csrf_origins = [scheme + host for host in hosts for scheme in ('http://', 'https://') if host != '*']
     g['CSRF_TRUSTED_ORIGINS'] = csrf_origins
-    g['ALLOWED_HOSTS'] = hosts + [h for h in INTERNAL_HOSTS if h not in hosts]
+    g['ALLOWED_HOSTS'] = hosts + [h for h in LOOPBACK_HOSTS if h not in hosts]
 
     g['SECRET_KEY'] = load_secret_key(env)
 

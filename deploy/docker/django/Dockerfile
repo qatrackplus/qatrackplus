@@ -1,3 +1,9 @@
+# Stands in for the "site-requirements" build context when a build does not
+# give one (compose.yaml always does): an empty folder, so no site packages.
+# `docker build --build-context site-requirements=deploy/docker/site-requirements`
+# gives it without compose.
+FROM scratch AS site-requirements
+
 # Builder stage: install the locked dependencies into /opt/venv
 FROM python:3.12-slim-bookworm AS builder
 
@@ -23,9 +29,35 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-dev --no-install-project --extra docker --extra postgres --extra ldap
 
+# A site's own packages, from deploy/docker/site-requirements (see the README
+# there). compose.yaml passes that folder in as a separate build context named
+# "site-requirements", so it is never part of the main context (see
+# .dockerignore) and nothing in it - a requirements file holding a private index
+# token, large wheel files - is copied into the image by the runtime stage.
+# Built without compose, the empty stage at the top stands in for it and no site
+# packages are installed.
+#
+# QATrack+'s own packages, exactly as installed above, are the constraints, so a
+# package that needs a different version of one of them fails the build instead
+# of changing what QATrack+ runs on.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,from=site-requirements,target=/tmp/site-requirements \
+    if [ -s /tmp/site-requirements/requirements.txt ]; then \
+        uv pip freeze --python /opt/venv/bin/python > /tmp/qatrack-constraints.txt \
+        && uv pip install --python /opt/venv/bin/python \
+            --constraint /tmp/qatrack-constraints.txt \
+            --find-links /tmp/site-requirements \
+            --requirement /tmp/site-requirements/requirements.txt; \
+    fi
+
 # Runtime stage
 FROM python:3.12-slim-bookworm
 
+# libldap-common provides /etc/ldap/ldap.conf, which points LDAP at the system
+# CA store (/etc/ssl/certs/ca-certificates.crt). That is what lets Active
+# Directory sign-in over LDAPS trust a directory whose certificate comes from a
+# public CA, with no AD_CERT_FILE. libldap-2.5-0 only recommends it, so it is
+# listed here to keep it if recommended packages are ever left out.
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     cifs-utils \
@@ -34,6 +66,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     dos2unix \
     libldap-2.5-0 \
+    libldap-common \
     libsasl2-2 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -52,10 +85,12 @@ WORKDIR /usr/src/qatrackplus
 # The source stays owned by root, so the app cannot modify its own code.
 COPY . .
 
-# Make entrypoint executable and move it out of the volume mount
+# Make entrypoint executable and move it out of the volume mount. init.sh is
+# what compose.yaml's init service runs, as root, before django starts.
 RUN cp deploy/docker/django/entrypoint.sh /entrypoint.sh && \
-    dos2unix /entrypoint.sh && \
-    chmod 755 /entrypoint.sh
+    cp deploy/docker/django/init.sh /init.sh && \
+    dos2unix /entrypoint.sh /init.sh && \
+    chmod 755 /entrypoint.sh /init.sh
 
 # Directories the app writes to
 RUN mkdir -p logs deploy/docker/user-data qatrack/media qatrack/static && \

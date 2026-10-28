@@ -90,6 +90,33 @@ Other Changes
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* **Docker hosting is supported on Linux only.** QATrack+'s Docker deployment
+  needs a Linux server with Docker Engine 23.0 or newer and Docker Compose 2.17 or
+  newer. Running it on Windows, including with Docker Desktop, is not supported,
+  and the Windows sections of the Docker guide have been removed. On a Windows
+  server, use the :ref:`Windows Server installation <win_install_40>`, which
+  doesn't use Docker. If your Docker site runs on Windows today, plan a move to a
+  Linux server (see :ref:`docker_upgrade_from_4_0`).
+
+* **The Docker installation guide has been reorganised.** :doc:`install/docker` is
+  now grouped into setting up, configuring, data and backups, running QATrack+ day
+  to day, and development, and its out-of-date parts are fixed: the Django shell
+  is ``docker compose exec django python manage.py shell``, removing a site is
+  explained safely (``docker compose down -v`` deletes the database, uploaded files
+  and generated secret key), and the nightly backup is shown at the time it really
+  runs, which is now 4 AM in QATrack+'s own time zone (see below). Thanks to
+  Vincent Leduc, whose reorganisation of the Docker docs in :issues:`#866 <866>`
+  this draws on.
+
+* **Docker: Docker Compose 2.17 and Docker Engine 23.0 are now the minimum. Check
+  before you pull.** With an older Compose, the commands that build or create
+  containers (``up``, ``build``, ``run`` and others) stop with *Additional property
+  additional_contexts is not allowed*. Running containers keep running, but 4.0.2
+  can't be built or started, and containers removed with ``docker compose down``
+  can't be created again, until Docker is updated. Until then, other commands
+  such as ``logs`` and ``stop`` need ``-p qatrackplus``. See
+  :ref:`docker_upgrade_check_compose`.
+
 * **Docker: ``deploy/docker/.env`` is no longer tracked by git. Set your copy aside
   before you pull.** It holds the database password, so it no longer belongs in the
   repository. Every Docker site has edited it, so on the first pull to 4.0.2
@@ -119,6 +146,12 @@ Deployment and Upgrade Notes
   and voiding password-reset links sent before the upgrade. To avoid that, copy the
   old key into ``.env`` first (see :ref:`docker_upgrade_keep_secret_key`).
 
+* **Docker: QATrack+ says where it keeps the secret key it generated.** When
+  ``SECRET_KEY`` is not set in ``.env``, each start of the ``django`` service
+  logs a short notice naming the key file. The nightly backup does not include
+  it, so the notice and :ref:`docker_secret_key` show how to copy the key into
+  ``.env``, where losing the volume can no longer sign everyone out.
+
 * **Docker: the upgrade keeps your other local changes.** If you changed the port
   in ``compose.yaml`` or edited ``nginx.conf``, the upgrade guide's ``git stash``
   steps keep those changes across ``git pull``.
@@ -134,6 +167,30 @@ Deployment and Upgrade Notes
   and key in ``deploy/docker/user-data/ssl``, nginx now serves QATrack+ over
   HTTPS, redirects HTTP to it, and tells QATrack+ the request was secure (see
   :ref:`docker_https`).
+
+* **Docker: a database client can connect to PostgreSQL, if you turn it on.** The
+  database is still not published on the server unless you ask, so an upgrade
+  opens no new port. Listing the new ``compose.db-port.yaml`` in ``COMPOSE_FILE``
+  in ``.env`` publishes it on ``127.0.0.1``, port 5434 (``POSTGRES_HOST_PORT``
+  changes it), for a client or reporting tool on the server, or for one elsewhere
+  through an SSH tunnel. With Docker Engine older than 28.0, computers on the
+  same network switch can reach that port too. See :ref:`docker_postgres_access`.
+  Thanks to Vincent Leduc, whose pull request this is based on
+  (:issues:`#866 <866>`).
+
+* **Docker: Active Directory sign-in over LDAPS works with your own CA.** A
+  directory server whose certificate comes from your organization's own
+  certificate authority needs that CA's certificate, and there was no way to give
+  it to the ``django`` container. Copy it into ``deploy/docker/user-data/ldap`` and
+  set ``AD_CERT_FILE=/etc/qatrack/ldap/ca.pem`` in ``.env`` (see
+  :ref:`docker_ldaps`). A certificate from a public CA still needs no file.
+
+* **QATrack+ warns at startup when it can't use ``AD_CERT_FILE``.** A file that is
+  missing, unreadable or not in PEM format made every LDAPS sign-in fail with
+  *Unable to contact LDAP server*, which looks like a network problem. The
+  ``qatrack.W011`` to ``qatrack.W013`` warnings now say what is wrong with the
+  file. They are warnings only, so the site still starts. This applies to every
+  installation, not only Docker.
 
 * **Docker: nginx answers only the hosts in ``ALLOWED_HOSTS``.** Requests for any
   other host name are dropped before they reach QATrack+, so they no longer
@@ -153,6 +210,74 @@ Deployment and Upgrade Notes
   every database migration before it reports that it is ready. On slow storage
   that took longer than Docker allowed, so ``docker compose up`` gave up and never
   started nginx. ``django`` now has up to 10 minutes.
+
+* **Docker: links in emails and reports point to your site.** Django's site
+  record starts as ``example.com``, and QATrack+ builds the links in its emails and
+  reports from it, so on Docker they pointed to ``http://example.com/...`` unless an
+  administrator changed the record. Now that scheduled emails are sent, QATrack+
+  fills the record in on start: from ``SITE_DOMAIN`` and ``SITE_NAME`` in ``.env``
+  if set (every start), otherwise once from the first host name in
+  ``ALLOWED_HOSTS`` while the record is still ``example.com``. A domain and name
+  you have already set in the admin are kept, unless ``SITE_DOMAIN`` or
+  ``SITE_NAME`` is set in ``.env``: those replace them on every start. So if you
+  manage them in the admin, leave both commented out when you compare your
+  ``.env`` with ``.env.example``. ``SITE_NAME`` sets the name shown at the top of
+  each page.
+
+* **Docker: backups can be restored, and an interrupted backup can't pass for a
+  finished one.** The ``backup`` service now writes each file under a temporary
+  name, reads it back in full, and renames it only once it is complete. It
+  refuses to start while another backup or a restore is running. Backups are
+  now readable only by root on the server, and the first backup after the
+  upgrade does the same to older ones, so copy them with ``sudo``. Two new
+  commands, ``restore-db`` and ``restore-media``, put a backup back after checking
+  it and asking you to confirm (see :ref:`docker_backups`). They unpack the
+  backup beside your current data and only then swap it in, so a restore that
+  fails or is stopped leaves your data as it was; while one runs, the disk needs
+  room for that second copy. The ``backup`` service can still only read the
+  uploaded files; ``restore-media`` runs as its own service, which can write to
+  them, and only when you ask for it. Backups made by QATrack+ 4.0.0 and 4.0.1
+  can be restored. The backup service's PostgreSQL tools are now pinned to
+  version 16, the version that made those backups: PostgreSQL 15's tools cannot
+  read them. The image now installs just those client tools on Alpine, rather
+  than starting from the PostgreSQL server image.
+
+* **Docker: the nightly backup moves to 4 AM local time.** It ran at 2 AM UTC,
+  which is the evening before across the Americas (10 PM in Toronto in summer),
+  and named its files in UTC. It now runs at 4 AM in QATrack+'s own time zone,
+  ``TIME_ZONE`` in ``.env``, and names its files in that local time. If
+  ``TIME_ZONE`` is not set, that is QATrack+'s default, America/Toronto, which
+  QATrack+ already shows dates in: set it if your site is elsewhere.
+  ``docker compose logs backup`` shows the zone in use. 4 AM rather than 2 AM
+  because no time zone changes its clocks for daylight saving time at 4 AM, so the
+  backup runs once every night, all year round (see :ref:`docker_backups`).
+  Backups from before the upgrade keep their UTC names, so for a day or so the
+  names do not sort in the order the backups were made; ``ls -lt`` lists them
+  newest first. The first backup after the upgrade may come up to a day sooner or
+  later than usual. **If a job copies the backups off the server** at a time
+  chosen to follow the old 2 AM UTC backup, move it to after 4 AM local time, or
+  it will copy the previous night's backup.
+
+* **Docker: QATrack+'s data can be kept in folders on the server.** Nothing changes
+  unless you ask for it: the uploaded files, log files and generated secret key stay
+  in their Docker volumes, and the backups in ``deploy/docker/backups``. To keep any
+  of them in a folder you already back up or watch, set ``QATRACK_MEDIA_DIR``,
+  ``QATRACK_LOGS_DIR``, ``QATRACK_USER_DATA_DIR`` or ``QATRACK_BACKUPS_DIR`` in
+  ``.env``. Every service, the nightly backup and ``restore-media`` included, uses
+  the same folder, and the ``init`` service gives the folder to the QATrack+ user
+  each time the site starts. So that it never does this to anyone else's files,
+  ``init`` only uses a folder that is empty (which it marks with a
+  ``.qatrackplus-data`` file) or already marked, that is not inside another of
+  QATrack+'s folders, and that holds neither another of them nor a backup;
+  otherwise the site does not start, nothing is changed, and
+  ``docker compose logs init`` says why. A file with a second name (a hard link)
+  is never handed over. For a site already in use, copy the data
+  across first: :ref:`docker_data_dirs` shows how, step by step. The database stays
+  in its volume. ``init`` also no longer follows symbolic links or crosses into
+  another disk when it re-owns files, so a link can neither change a file outside
+  QATrack+'s folders nor, if it points nowhere, stop the site from starting, and it
+  logs how many files it re-owned. Based on the ``/app_data`` layout proposed
+  in :issues:`#866 <866>`.
 
 * **Docker: container output is capped** at 50 MB per service, so what
   ``docker compose logs`` keeps can no longer fill the disk. That output belongs to
@@ -207,6 +332,14 @@ Deployment and Upgrade Notes
   same versions the test suite runs against. Previously ``pip`` chose versions when
   the image was built, so two builds of the same release could differ.
 
+* **Docker: add your own Python packages for calculation procedures.** List them in
+  ``deploy/docker/site-requirements/requirements.txt`` and run
+  ``docker compose build``. They are installed at versions that work with
+  QATrack+'s own, and a package that needs a different version of one of them
+  stops the build instead of changing what QATrack+ runs on. Wheel files in the
+  same folder can be installed without internet access. See
+  :ref:`docker_site_packages`.
+
 * **Docker images no longer contain your ``.env`` file, local settings or site data.**
   The ``.dockerignore`` patterns only matched files at the top of the repository, so
   the image copied in ``deploy/docker/.env`` (which holds the database password), and
@@ -223,10 +356,10 @@ Deployment and Upgrade Notes
   (``.env``, ``*.env``, ``.env.*``) are now ignored as well, except the
   ``.env.example`` templates, including ``deploy/docker/.env`` (see above).
 
-* **Files under ``deploy/docker`` always check out with LF line endings**, including
-  on Windows with ``core.autocrlf=true``. A Dockerfile or script with CRLF endings
-  fails inside the container. An existing checkout keeps its current line endings
-  until the files are checked out again; see
+* **Files under ``deploy/docker`` always check out with LF line endings**, whatever
+  git's ``core.autocrlf`` setting. A Dockerfile or script with CRLF endings fails
+  inside the container. A checkout made on Windows and copied to a Linux server
+  keeps its current line endings until the files are checked out again; see
   :ref:`checking out deploy/docker again <docker_line_endings>`.
 
 4.0.1

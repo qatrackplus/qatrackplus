@@ -13,6 +13,9 @@ At a minimum, you must ensure that you keep secure, off-server backups of:
 2. Your ``local_settings.py`` file (located in ``qatrackplus\qatrack\local_settings.py`` or ``qatrackplus/qatrack/local_settings.py``)
 3. Your ``media`` folder (located in ``qatrackplus\qatrack\media`` or ``qatrackplus/qatrack/media``)
 
+On a Docker site, your settings are in ``deploy/docker/.env`` rather than
+``local_settings.py``; see `Backups in Docker`_ below.
+
 It is highly recommended that your backups do not reside on the QATrack+ server itself.
 Store them on a remote system (e.g. a network or shared drive) so that if your server
 loses its primary hard drive, or if the files become corrupted or locked by ransomware,
@@ -51,23 +54,25 @@ timestamped directory.
 Backups in Docker
 -----------------
 
-``deploy/docker/backup/backup.sh`` reads the database connection from the
-environment rather than hard-coding it:
+The Docker deployment's ``backup`` service backs up the database and uploaded
+files every night, and comes with ``restore-db`` and ``restore-media`` commands to
+put a backup back. :ref:`docker_backups` in the Docker guide explains how to use
+them and how to keep copies off the server. Its backups can only be read by root
+on the server, so copy them off it with ``sudo``.
 
-.. code-block:: bash
+A backup does not include your settings file, ``deploy/docker/.env``, or your
+HTTPS certificates in ``deploy/docker/user-data/ssl``, so keep copies of those
+yourself.
 
-    POSTGRES_DB        # the database to dump
-    POSTGRES_USER      # the role to connect as
-    POSTGRES_PASSWORD  # that role's password
-
-These are the same variables the ``postgres`` service uses, so a deployment that
-sets them in its Compose environment or ``.env`` file needs no further
-configuration. If they are not set the dump fails rather than silently writing a
-backup of the wrong database.
+The ``backup`` service connects to the database with ``POSTGRES_DB``,
+``POSTGRES_USER`` and ``POSTGRES_PASSWORD`` from ``deploy/docker/.env``, the same
+settings the ``postgres`` service uses, so it needs no setup of its own. If one of
+them is missing from ``.env``, the backup stops with an *unbound variable* error
+before it runs ``pg_dump``, rather than backing up the wrong database.
 
 .. note::
 
-    Before 4.0.1 this script had the database name and user written into it, so a
+    Before 4.0.1 the backup script had the database name and user written into it, so a
     deployment that had changed either was dumping the wrong database, or nothing at
     all. If you have customised them, confirm your next backup contains what you
     expect.
@@ -85,10 +90,12 @@ Restoring from Backups
 
 If you need to restore your QATrack+ instance from a backup (for example, when migrating to a new server or recovering from an issue), follow the general guidelines below for your deployment platform.
 
+Restore onto the same version of QATrack+ that made the backup, then upgrade as usual if you need to. Never restore a backup into an older version of QATrack+ than the one that made it. The Docker deployment's ``restore-db`` can also restore backups made by its 4.0.0 and 4.0.1 releases directly into the current release (see :ref:`docker_backups`).
+
 Linux
 .....
 
-1. **Re-install QATrack+:** Follow the standard Linux installation instructions to rebuild your server. Ensure you check out the *exact same version* of QATrack+ that you were running when the backup was taken.
+1. **Re-install QATrack+:** Follow the standard Linux installation instructions to rebuild your server. Check out the same version of QATrack+ that you were running when the backup was taken.
 2. **Restore Database:** Consult your IT department to restore the database from your automated backups using the native database tools (e.g., ``pg_restore`` or ``mysql``).
 3. **Restore Settings and Media:** Copy your backed-up ``local_settings.py`` file to the ``qatrackplus/qatrack/`` directory. Extract your backed-up ``media`` folder into the ``qatrackplus/qatrack/media/`` directory.
 4. **Permissions and Restart:** Ensure the web server user (e.g., ``www-data``) has the correct ownership and permissions for the restored ``media`` folder. Finally, restart the web server and your background task runner.
@@ -96,7 +103,7 @@ Linux
 Windows
 .......
 
-1. **Re-install QATrack+:** Follow the standard Windows installation instructions. Ensure you check out the *exact same version* of QATrack+ that you were running when the backup was taken.
+1. **Re-install QATrack+:** Follow the standard Windows installation instructions. Check out the same version of QATrack+ that you were running when the backup was taken.
 2. **Restore Database:** Consult your IT department to restore your database using SQL Server Management Studio or native MS SQL backup tools.
 3. **Restore Settings and Media:** Copy your backed-up ``local_settings.py`` file to the ``qatrackplus\qatrack\`` directory. Copy your backed-up ``media`` folder into the ``qatrackplus\qatrack\media\`` directory.
 4. **Permissions and Restart:** Ensure the Windows Service account or IIS application pool has write permissions to the restored ``media`` folder. Finally, restart your QATrack+ Web Service and your Django Q Scheduled Task.
@@ -104,10 +111,8 @@ Windows
 Docker
 ......
 
-1. **Re-deploy Containers:** On a fresh Docker host, clone the QATrack+ repository and ensure you are on the *exact same version* (branch/tag) as your backup.
-2. **Restore Database:** If you are using an external database, consult your IT department to restore it. If you are using a containerized database volume, follow Docker best practices to restore the database volume from your backup archives.
-3. **Restore Settings and Media:** Restore your ``local_settings.py`` file and ``media`` files to the appropriate mounted volumes or host directories as configured in your ``docker-compose.yml``.
-4. **Start Containers:** Run ``docker compose up -d`` to bring the restored QATrack+ containers back online.
+1. **Set QATrack+ up again:** On a Linux server, follow :ref:`docker_setup`, checking out the same version of QATrack+ that made the backup. When you reach the settings file, copy your backed-up ``.env`` into ``deploy/docker`` instead of making a new one, and put ``user-data/ssl`` back too if you use HTTPS. Put ``user-data/ldap`` back if you use LDAPS with your organization's own CA, and, if you added your own Python packages, put your copy of ``deploy/docker/site-requirements`` (``requirements.txt`` and any wheel files) back before you run ``docker compose build``. Backups contain none of these, and git does not keep ``site-requirements``, so keep copies of them yourself.
+2. **Restore the database and uploaded files:** Follow the restore steps in :ref:`docker_backups`, which use ``restore-db`` and ``docker compose run --rm restore-media``.
 
 
 Appendix: if your production database is SQLite

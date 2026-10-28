@@ -20,12 +20,57 @@ patches is in the next section.
 
 .. note::
 
+    **Docker hosting is supported on Linux only.** If your Docker site runs on a
+    Windows computer (with Docker Desktop, for example), that is no longer tested
+    or supported. Plan to move it to a Linux server: make a backup, set up
+    QATrack+ on the new server, and restore it there, as
+    :ref:`docker_backups` describes. Bring your ``.env`` with you, with your
+    secret key copied into it (see :ref:`docker_upgrade_keep_secret_key`), so
+    nobody is signed out by the move.
+
+.. note::
+
     The service and scheduled task names stopped carrying version numbers in 4.0.0
     precisely so that patch upgrades would not require renaming anything. If you
     upgraded to 4.0.0 from v3.x, your service is called *QATrack+ Web Service* and your
     scheduled task *QATrack+ Django Q Cluster*.
 
 .. include:: _upgrade_4_0_before.rst
+
+.. _docker_upgrade_check_compose:
+
+Before you pull: check your Docker Compose version
+--------------------------------------------------
+
+From 4.0.2, QATrack+ needs **Docker Compose 2.17 or newer** and **Docker Engine
+23.0 or newer** (see :ref:`docker_minimum_versions` for why). Check both *before*
+``git pull``:
+
+.. code-block:: bash
+
+    docker compose version
+    docker version --format '{{.Server.Version}}'
+
+With an older Compose, once you have pulled, every command that builds or creates
+containers stops: ``up``, ``build``, ``run`` (so ``restore-media`` too), ``create``
+and ``pull``, as well as ``config``. The error looks like this:
+
+.. code-block:: text
+
+    services.django.build Additional property additional_contexts is not allowed
+
+Your current containers aren't affected: they keep running. But every other
+``docker compose`` command stops with the same error, ``ps``, ``logs``,
+``exec``, ``stop``, ``start``, ``restart`` and ``down`` included, unless you add
+``-p qatrackplus`` (for example, ``docker compose -p qatrackplus logs django``).
+You can't build or start 4.0.2 until Docker is updated, and if you run
+``docker compose down`` in the meantime, ``up`` can't create the containers
+again, so your site stays down until then.
+
+If either version is too old, update Docker first (on Ubuntu, through Docker's ``apt``
+repository, which updates the Engine and the ``docker-compose-plugin`` package
+together), then carry on with the upgrade. If you have already pulled and see that
+error, updating Docker is the fix too: nothing else needs undoing.
 
 .. _docker_upgrade_env_untracked:
 
@@ -90,11 +135,14 @@ Your other changes stay in place.
 Your ``.env`` is now ignored by git, and later pulls leave it alone. Compare it
 with ``deploy/docker/.env.example``, which lists every setting you can now make
 there: in particular set ``ALLOWED_HOSTS`` to the names people use to reach
-QATrack+. Keep ``qatrack.env.backup`` somewhere safe, or delete it: it holds your
-database password.
+QATrack+. If you have set your site's name or domain in the admin's *Websites*
+page, leave ``SITE_NAME`` and ``SITE_DOMAIN`` commented out: set in ``.env``, they
+replace those on every start. Keep ``qatrack.env.backup`` somewhere safe, or
+delete it: it holds your database password.
 
-If your server is a Windows machine, see :ref:`the note on line endings
-<docker_line_endings>` in the installation guide as well.
+If your QATrack+ folder was first cloned on a Windows computer and copied to
+your Linux server, see :ref:`the note on line endings <docker_line_endings>` in
+the installation guide as well.
 
 .. _docker_upgrade_keep_secret_key:
 
@@ -112,11 +160,13 @@ To keep the key, copy it into ``.env`` before you start 4.0.2 for the first time
 .. code-block:: bash
 
     cd ~/web/qatrackplus
-    echo "SECRET_KEY=$(cat deploy/docker/user-data/secret_key.txt)" >> deploy/docker/.env
+    printf '\nSECRET_KEY=%s\n' "$(cat deploy/docker/user-data/secret_key.txt)" >> deploy/docker/.env
 
-If that file does not exist, there is no key to carry over; skip this step. The
-key signs your users' sessions: keep ``.env`` as private as your database
-password.
+If that file does not exist, there is no key to carry over; skip this step.
+QATrack+ then generates a key and keeps it in a Docker volume that the nightly
+backup does not include: :ref:`docker_secret_key` shows how to copy it into
+``.env`` too. The key signs your users' sessions: keep ``.env`` as private as
+your database password.
 
 .. _docker_upgrade_stale_follow_ups:
 
