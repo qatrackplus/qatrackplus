@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
 
 from qatrack.qa import models
@@ -104,3 +105,178 @@ class TestListAdminViewsTest(TestCase):
         # Verify the test list and test were imported
         self.assertTrue(models.TestList.objects.filter(slug=self.test_list.slug).exists())
         self.assertTrue(models.Test.objects.filter(slug=self.test.slug).exists())
+
+
+class TestListMembershipLabelTest(TestCase):
+    """The test name shown beside the raw id field in the Test List admin.
+
+    The field itself holds a test's id. Its name is fetched over AJAX from
+    dynamic_raw_id's label view, which QATrack+ mounts under `admin/`.
+
+    Since Django 3.2 the admin site ends its own urlconf with a catch-all
+    (`AdminSite.final_catch_all_view`), so anything under `admin/` that the
+    admin does not recognise raises Http404 there rather than falling through to
+    later patterns. With the mount listed after `admin.site.urls` the label view
+    was unreachable, and a Test List's memberships showed an id and a macro name
+    - which are rendered server-side - with no test name at all.
+    """
+
+    label_url_name = 'dynamic_raw_id:dynamic_raw_id_label'
+
+    def setUp(self):
+        self.user = utils.create_user(is_superuser=True)
+        self.client.force_login(self.user)
+
+    def label_url(self, model_name):
+        return reverse(
+            self.label_url_name, kwargs={'app_name': 'qa', 'model_name': model_name}
+        )
+
+    def test_the_label_url_is_not_shadowed_by_the_admin_catch_all(self):
+        """Asserted on the resolver, because the symptom is a plain 404.
+
+        A 404 from the admin's catch-all and a 404 from a missing object look
+        identical to the caller, so this names which view answered.
+        """
+        match = resolve(self.label_url('test'))
+        self.assertEqual(
+            match.func.__module__,
+            'dynamic_raw_id.views',
+            "%s answered instead - the admin catch-all is shadowing the mount" % (
+                match.func.__module__,
+            ),
+        )
+
+    def test_the_label_view_returns_the_test_name(self):
+        test = utils.create_test(name="Output Constancy")
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Output Constancy")
+        self.assertContains(response, reverse('admin:qa_test_change', args=[test.pk]))
+
+    def test_the_label_view_returns_a_sublists_test_list_name(self):
+        """The Sublist inline uses the same mechanism for its child test list."""
+        test_list = utils.create_test_list(name="Daily Linac QC")
+        response = self.client.get(self.label_url('testlist'), {'id': test_list.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Daily Linac QC")
+
+    def test_the_label_view_still_requires_a_staff_user(self):
+        """Listing the mount ahead of `admin.site.urls` must not open it up.
+
+        The view brings its own `is_staff` test, so this holds either way - but
+        the admin's position in the urlconf used to be the only reason a request
+        was refused at all, so the refusal is worth attributing. Asserted on the
+        redirect target: the admin sends a non-staff user to its own login page,
+        and the label view sends them to LOGIN_URL.
+        """
+        self.user.is_staff = False
+        self.user.is_superuser = False
+        self.user.save()
+        test = utils.create_test(name="Output Constancy")
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            response.url.startswith(settings.LOGIN_URL),
+            "redirected to %s, so something other than the label view refused it"
+            % response.url,
+        )
+
+    def test_a_test_with_no_name_falls_back_to_its_id(self):
+        """A blank name must not render a blank label.
+
+        `Test.__str__` returns `self.name`, so dynamic_raw_id's generic label
+        template renders an empty link for a Test whose name is empty - which looks
+        exactly like the fault this branch fixes, so it falls back to the id.
+        """
+        test = utils.create_test(name="Temporary")
+        models.Test.objects.filter(pk=test.pk).update(name='')
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test %d (no name)' % test.pk)
+        self.assertContains(response, reverse('admin:qa_test_change', args=[test.pk]))
+
+    def test_a_named_test_is_unaffected_by_the_fallback(self):
+        test = utils.create_test(name="Output Constancy")
+        response = self.client.get(self.label_url('test'), {'id': test.pk})
+        self.assertContains(response, "Output Constancy")
+        self.assertNotContains(response, 'no name')
+
+
+class TestRawIdWrapperIconTest(TestCase):
+    """The view and change icons beside a raw id field in the admin.
+
+    `RelatedFieldWidgetWrapper` renders them with a `data-href-template` and no
+    `href`, and Django fills the href in from `updateRelatedObjectLinks`, which
+    it wires to `select` elements alone. A dynamic_raw_id field is a text input,
+    so the eye and the pencil appeared beside it and did nothing.
+    """
+
+    def setUp(self):
+        self.user = utils.create_user(is_superuser=True)
+        self.client.force_login(self.user)
+
+    def test_a_raw_id_field_still_renders_the_icons_without_an_href(self):
+        """The premise, asserted rather than assumed.
+
+        If Django ever starts filling these in itself, this fails and the script
+        below can go. That signal only works if the test looks for the finished
+        URL: asserting that the class and `data-href-template` are present
+        proves they exist, not that the href is missing, and would pass
+        unchanged on the day Django fixed this for us.
+        """
+        test_list = utils.create_test_list()
+        test = utils.create_test()
+        utils.create_test_list_membership(test_list, test)
+        response = self.client.get(
+            reverse('admin:qa_testlist_change', args=[test_list.pk])
+        )
+        self.assertContains(response, 'related-widget-wrapper-link view-related')
+        self.assertContains(response, 'data-href-template')
+        # the actual premise: the icon's href is not rendered for us
+        change_url = reverse('admin:qa_test_change', args=[test.pk])
+        self.assertNotContains(response, 'href="%s"' % change_url)
+
+    def test_the_change_form_asks_django_to_fill_the_icons_in(self):
+        test_list = utils.create_test_list()
+        utils.create_test_list_membership(test_list, utils.create_test())
+        response = self.client.get(
+            reverse('admin:qa_testlist_change', args=[test_list.pk])
+        )
+        self.assertContains(response, 'updateRelatedObjectLinks')
+        # The script's own selector, not the bare class name: Django renders the
+        # widget with `class="vForeignKeyRawIdAdminField"`, so asserting that
+        # alone stays green even if the script stops selecting anything.
+        self.assertContains(
+            response, '.related-widget-wrapper .vForeignKeyRawIdAdminField'
+        )
+
+    def test_the_change_form_prints_no_template_comment(self):
+        """Django's `{# #}` cannot span lines, and a multi-line one is printed.
+
+        A multi-line `{# ... #}` is not a comment: the engine renders it as
+        text, below the Save buttons of **every** admin add and change page,
+        because this template is the one they all extend. It is visible in a
+        browser and nothing in a test suite would have failed.
+
+        Asserted on the delimiter rather than on the wording, so it holds for
+        whatever the next comment says. `{% comment %}` leaves no trace, and the
+        `{# ... #}` one-liners elsewhere in this file are consumed normally.
+        """
+        test_list = utils.create_test_list()
+        utils.create_test_list_membership(test_list, utils.create_test())
+        for url in (
+            reverse('admin:qa_testlist_change', args=[test_list.pk]),
+            reverse('admin:qa_testlist_add'),
+            reverse('admin:auth_user_change', args=[self.user.pk]),
+        ):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200, url)
+            self.assertNotContains(
+                response,
+                '{#',
+                msg_prefix=(
+                    "%s renders a template comment as text - a multi-line "
+                    "{# #} is not a comment, use {%% comment %%}" % url
+                ),
+            )

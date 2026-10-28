@@ -4,6 +4,7 @@ Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes
 
 ## v4.0.2
 
+* **QA**: The Test List admin shows each member test's name again, and the view and change icons beside it work ([#897](https://github.com/qatrackplus/qatrackplus/issues/897)).
 * **Docker**: Docker hosting is supported on Linux only, with Docker Engine 23.0+ and Docker Compose 2.17+. Windows and Docker Desktop are not supported; on a Windows server, use the Windows Server installation, which doesn't use Docker. The Docker installation guide has been reorganised into setup, configuration, data and backups, day-to-day operation and development, and its out-of-date parts fixed (the Django shell command, removing a site safely, and the backup time, which is now 4 AM in QATrack+'s own time zone). It draws on Vincent Leduc's reorganisation of the Docker docs in [#866](https://github.com/qatrackplus/qatrackplus/pull/866).
 * **Docker**: Docker Compose 2.17 and Docker Engine 23.0 are now required. Check with `docker compose version` before your first `git pull` to 4.0.2: with an older Compose, the commands that build or create containers (`up`, `build`, `run` and others) stop with *Additional property additional_contexts is not allowed*. Running containers keep running, but 4.0.2 can't be built or started until Docker is updated, and until then other commands such as `logs` and `stop` need `-p qatrackplus` (`docker compose -p qatrackplus stop`).
 * **Docker**: `deploy/docker/.env` is no longer tracked by git, because it holds your database password. Before your first `git pull` to 4.0.2, copy your `.env` aside and back as described in the Docker upgrade guide; later pulls leave it alone.
@@ -38,3 +39,4 @@ Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes
 
 * **Service Log**: Service Event Templates can now be shared across different machines and modalities. When selecting a template, only the Return to Service tests that apply to the chosen unit will be added to the form ([#829](https://github.com/qatrackplus/qatrackplus/issues/829)).
 * **QA**: Fixed an issue where resuming an autosaved QC session could display the wrong start date and time.
+* **QA**: Composite calculations now accept any value passed to `UTILS.set_comment`. Dates and times use the site's display format, an empty or false value such as `None` gives no comment, and an exception object no longer breaks JSON responses.

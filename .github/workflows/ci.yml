@@ -669,11 +669,12 @@ jobs:
           echo "https://127.0.0.1: $code"
           [ "$code" = 200 ]
           # Other host names complete the handshake, then are closed without an
-          # answer: curl reports an empty reply (exit 52).
+          # answer. curl versions differ on the exit code for this (52 or 56), so
+          # check only that no HTTP response came back.
           rc=0
-          curl -sk --resolve other.test:443:127.0.0.1 -o /dev/null https://other.test/ || rc=$?
-          echo "other.test over HTTPS: curl exit $rc"
-          [ "$rc" = 52 ]
+          code=$(curl -sk --resolve other.test:443:127.0.0.1 -o /dev/null -w '%{http_code}' https://other.test/) || rc=$?
+          echo "other.test over HTTPS: HTTP $code, curl exit $rc"
+          [ "$code" = 000 ] && [ "$rc" != 0 ]
 
       - name: Verify backup and restore
         # Back up, then change the data and restore it the way the docs say,
