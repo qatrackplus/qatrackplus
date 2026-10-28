@@ -7,15 +7,20 @@ from qatrack.qatrack_core.hosts import LOOPBACK_HOSTS
 # The Site record Django creates when the sites app is first migrated.
 DJANGO_DEFAULT = 'example.com'
 
+# The IPv6 loopback address, as ALLOWED_HOSTS lists it and bare. Not part of
+# LOOPBACK_HOSTS, which are also always added to ALLOWED_HOSTS.
+IPV6_LOOPBACK_HOSTS = ('[::1]', '::1')
+
 
 def first_public_host(hosts):
     """The first of `hosts` that names a single real host, or None.
 
     '*' and Django's '.example.com' wildcard form match many hosts, so neither
-    can be a link target.
+    can be a link target. Loopback addresses would point each reader of an
+    email at their own computer.
     """
     for host in hosts:
-        if host and host != '*' and not host.startswith('.') and host not in LOOPBACK_HOSTS:
+        if host and host != '*' and not host.startswith('.') and host not in LOOPBACK_HOSTS + IPV6_LOOPBACK_HOSTS:
             return host
     return None
 

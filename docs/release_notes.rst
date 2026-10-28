@@ -173,8 +173,10 @@ Deployment and Upgrade Notes
   opens no new port. Listing the new ``compose.db-port.yaml`` in ``COMPOSE_FILE``
   in ``.env`` publishes it on ``127.0.0.1``, port 5434 (``POSTGRES_HOST_PORT``
   changes it), for a client or reporting tool on the server, or for one elsewhere
-  through an SSH tunnel. See :ref:`docker_postgres_access`. Thanks to Vincent
-  Leduc, whose pull request this is based on (:issues:`#866 <866>`).
+  through an SSH tunnel. With Docker Engine older than 28.0, computers on the
+  same network switch can reach that port too. See :ref:`docker_postgres_access`.
+  Thanks to Vincent Leduc, whose pull request this is based on
+  (:issues:`#866 <866>`).
 
 * **Docker: Active Directory sign-in over LDAPS works with your own CA.** A
   directory server whose certificate comes from your organization's own

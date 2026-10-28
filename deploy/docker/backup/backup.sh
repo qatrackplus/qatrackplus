@@ -91,7 +91,18 @@ echo "Database saved to $dump_file"
 echo "Archiving uploaded files..."
 # Entries are media/..., the same layout as backups made by QATrack+ 4.0.
 # .restore.* is restore-media's working folder, which a restore that was killed
-# outright can leave behind; it is not part of the uploaded files.
+# outright can leave behind. It is left out (restore-media would leave it out
+# too), but its previous folder can then hold the only copy of uploaded files
+# from before that restore, so say so on every backup until it is dealt with.
+for leftover in "$MEDIA_DIR"/.restore.*; do
+    if [ -e "$leftover" ]; then
+        echo "Warning: ${leftover#"$MEDIA_DIR"/} in the uploaded files is left over from a restore-media" >&2
+        echo "that was stopped part way, and is not in this backup. Its previous folder may hold" >&2
+        echo "uploaded files from before that restore that are in no backup at all. Move them back" >&2
+        echo "into the uploaded files, then delete the folder: see \"Backing up and restoring\" in" >&2
+        echo "docs/install/docker.rst." >&2
+    fi
+done
 tar --create --gzip --file="$media_file.tmp" --directory=/ \
     --anchored --exclude="${MEDIA_DIR#/}/.restore.*" "${MEDIA_DIR#/}"
 tar --list --gzip --file="$media_file.tmp" >/dev/null

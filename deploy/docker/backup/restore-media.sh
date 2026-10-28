@@ -157,6 +157,14 @@ mkdir "$staging/extracted" "$staging/previous"
 # so QATrack+ (uid 1000) can read and write them again.
 tar --extract --gzip --file="$backup_file" --directory="$staging/extracted" \
     --same-permissions --same-owner --anchored --exclude='media/.restore.*'
+# The checks above allow an archive whose media entry is a file or a symbolic
+# link. Nothing would be found in it to move in, so the current files would be
+# set aside and then deleted with the staging folder.
+if [ ! -d "$staging/extracted/media" ] || [ -L "$staging/extracted/media" ]; then
+    echo "$backup_name is not a QATrack+ uploaded-files backup: its media entry is not a folder." >&2
+    echo "Nothing was changed." >&2
+    exit 1
+fi
 
 echo
 echo "This permanently replaces every uploaded file in QATrack+ with:"

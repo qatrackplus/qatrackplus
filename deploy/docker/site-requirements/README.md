@@ -36,6 +36,9 @@ docker compose up -d
   pip download --only-binary=:all: --python-version 3.12 --implementation cp --platform manylinux2014_x86_64 --platform manylinux_2_28_x86_64 -d site-wheels pint==0.24.4
   ```
 
+  Then copy the files in `site-wheels` into this folder. The build only looks
+  for wheels here, not in folders inside it.
+
   The rest of the build still needs the internet unless the image was built
   once on this server while it was online, or you build it elsewhere and move
   it with `docker save` and `docker load`.

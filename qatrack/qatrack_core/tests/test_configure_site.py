@@ -28,8 +28,13 @@ class TestFirstPublicHost(SimpleTestCase):
         hosts = ['*', '.myclinic.ca', 'localhost', '127.0.0.1', 'qatrack.myclinic.ca', '10.0.0.5']
         self.assertEqual(first_public_host(hosts), 'qatrack.myclinic.ca')
 
+    def test_skips_ipv6_loopback(self):
+        # Django's own DEBUG default lists '[::1]', so sites may copy it.
+        hosts = ['localhost', '127.0.0.1', '[::1]', '::1', 'qatrack.myclinic.ca']
+        self.assertEqual(first_public_host(hosts), 'qatrack.myclinic.ca')
+
     def test_none_when_nothing_usable(self):
-        self.assertIsNone(first_public_host(['*', 'localhost', '127.0.0.1']))
+        self.assertIsNone(first_public_host(['*', 'localhost', '127.0.0.1', '[::1]']))
 
 
 class TestConfigureSite(TestCase):

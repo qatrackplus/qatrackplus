@@ -111,7 +111,7 @@ Windows
 Docker
 ......
 
-1. **Set QATrack+ up again:** On a Linux server, follow :ref:`docker_setup`, checking out the same version of QATrack+ that made the backup. When you reach the settings file, copy your backed-up ``.env`` into ``deploy/docker`` instead of making a new one, and put ``user-data/ssl`` back too if you use HTTPS.
+1. **Set QATrack+ up again:** On a Linux server, follow :ref:`docker_setup`, checking out the same version of QATrack+ that made the backup. When you reach the settings file, copy your backed-up ``.env`` into ``deploy/docker`` instead of making a new one, and put ``user-data/ssl`` back too if you use HTTPS. Put ``user-data/ldap`` back if you use LDAPS with your organization's own CA, and, if you added your own Python packages, put your copy of ``deploy/docker/site-requirements`` (``requirements.txt`` and any wheel files) back before you run ``docker compose build``. Backups contain none of these, and git does not keep ``site-requirements``, so keep copies of them yourself.
 2. **Restore the database and uploaded files:** Follow the restore steps in :ref:`docker_backups`, which use ``restore-db`` and ``docker compose run --rm restore-media``.
 
 

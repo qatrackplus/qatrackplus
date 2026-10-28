@@ -654,6 +654,16 @@ the warning below). These are not the same as ``POSTGRES_HOST`` and
 ``POSTGRES_PORT``, which tell QATrack+ how to reach the database inside Docker;
 leave those alone.
 
+.. note::
+
+    "The server itself only" needs **Docker Engine 28.0 or newer**. With older
+    releases, computers on the same network segment as the server (for example,
+    plugged into the same switch) can still reach a port published on
+    ``127.0.0.1``. ``docker version`` shows the Engine version under *Server*.
+    If you can't update Docker yet, ask your IT department to block port
+    ``5434`` (or your ``POSTGRES_HOST_PORT``) from the network at the server's
+    firewall, or leave this turned off.
+
 Turning it on or off restarts the whole site, not just the database. Every
 QATrack+ service reads its settings from ``.env``, so any change to ``.env``
 (this one included) makes ``docker compose up -d`` recreate the ``django``,
@@ -746,7 +756,9 @@ you have, newest first:
 
 A backup does not contain your ``.env`` file, which holds the database password
 and your settings, nor the certificates in ``user-data/ssl`` and
-``user-data/ldap``. Keep copies of those as well. If you have not set
+``user-data/ldap``, nor your own Python packages in
+``deploy/docker/site-requirements`` (see :ref:`docker_site_packages`). Keep
+copies of those as well. If you have not set
 ``SECRET_KEY`` in ``.env``, QATrack+ keeps a generated one in a Docker volume,
 which a backup does not contain: restoring on
 another server signs everyone out once and voids password-reset links.
@@ -798,10 +810,37 @@ backup has been fully unpacked beside them, so if a restore fails, or you stop i
 with Ctrl-C, they are left as they were, and the command tells you so. A restore
 replaces everything: anything entered since that backup is lost.
 
+A restore stopped outright (a power cut, or ``docker kill``) cannot tidy up
+after itself. ``restore-db`` then says what it finds the next time it runs.
+``restore-media`` leaves a ``.restore.XXXXXX`` folder in the uploaded files,
+whose ``previous`` folder may hold uploaded files from before that restore.
+Those files are in no new backup, so each backup warns about the folder until
+it is gone. To see what is in it:
+
+.. code-block:: console
+
+    docker compose run --rm --entrypoint ls restore-media -la /media /media/.restore.XXXXXX/previous
+
+If you still want the backup's files, run ``restore-media`` again to finish the
+restore. If you want the files from before it instead, move what is in
+``previous`` back to the top of the uploaded files, in place of what is there.
+Once nothing in the folder is needed, delete it:
+
+.. code-block:: console
+
+    docker compose run --rm --entrypoint rm restore-media -rf /media/.restore.XXXXXX
+
 Backups made by QATrack+ 4.0.0 and 4.0.1 can be restored. When you restore a
 backup from an older release, ``docker compose up -d`` applies the database
 changes the current release needs. Do not restore a backup from a newer release
 into an older one.
+
+If you gave another PostgreSQL user access to QATrack+'s database (a read-only
+user for a reporting tool, say; see :ref:`docker_postgres_access`), the backup
+holds that access but not the user itself. Restoring on a new server then
+stops with *role "..." does not exist*, and nothing is changed. Create each such
+user first (``docker compose exec postgres createuser -U POSTGRES_USER
+USERNAME``), then run ``restore-db`` again.
 
 **Check the free disk space before you restore.** ``restore-db`` builds the
 restored database beside your current one, so while it runs PostgreSQL needs
@@ -1073,9 +1112,11 @@ so the backup and restore commands above do not change (on an NFS share with
 the backup into a temporary ``.restore.*`` folder inside the media folder, then
 swaps the files in by renaming them, so the media folder needs room for a second
 copy of the uploaded files while it runs, and should not have another disk
-mounted inside it. If your own backup system also copies the media folder, it can
-leave out any ``.restore.*`` folder: it is not part of the uploaded files, and
-the web server does not show what is in it. Keep
+mounted inside it. The web server does not show what is in a ``.restore.*``
+folder. If your own backup system also copies the media folder, let it copy any
+``.restore.*`` folder too: one left by a restore that was stopped outright can
+hold the only copy of the uploaded files from before that restore (see
+:ref:`docker_backups`). Keep
 the database and the uploaded files from the same night together: a restore
 needs both. ``docker compose down -v`` removes QATrack+'s volumes, but never
 deletes a folder on the server.
