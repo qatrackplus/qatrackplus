@@ -43,6 +43,20 @@ have also been tested on Ubuntu 22.04 LTS, the same releases as the
 work too, as long as they can run the Docker versions below. Work through this
 section once, in order, on the server that will host QATrack+.
 
+Use a regular user account rather than ``root``, as the :ref:`Linux
+installation guide <linux_install_40>` does. A newly created server often gives
+you nothing but ``root``; if that is where you are, make an account now and use
+it for everything that follows. ``adduser`` asks for a password and then some
+optional details you can skip with ``Enter``:
+
+.. code-block:: console
+
+    adduser qatrack
+    usermod -aG sudo qatrack
+    su - qatrack
+
+Any user name works -- ``qatrack`` is only this guide's example.
+
 .. _docker_minimum_versions:
 
 Minimum Docker versions
@@ -71,7 +85,7 @@ QATrack+ needs:
 * **Docker Engine 23.0 or newer.** The image build relies on BuildKit features
   that Docker Engine 20.10 and earlier don't include.
 
-Check what you have with:
+If Docker is already installed on this server, check what you have with:
 
 .. code-block:: console
 
@@ -83,6 +97,10 @@ v2.27.0``) and the second the Engine version. If either is too old, update
 Docker by following Docker's own instructions linked below (on Ubuntu, Docker's
 ``apt`` repository updates both the Engine and the ``docker-compose-plugin``
 package). Docker's current releases are well above both minimums.
+
+If Docker is not installed yet, these commands do not exist yet either:
+carry on to the next section, which installs Docker and then checks both
+versions.
 
 .. Kept so links to an older section title still work.
 
@@ -143,6 +161,9 @@ following:
 
     sudo apt install git
 
+Many server images ship with git already, in which case ``apt`` says it is
+already the newest version and there is nothing to do.
+
 On other systems follow the instructions at
 https://www.atlassian.com/git/tutorials/install-git.
 
@@ -187,11 +208,24 @@ To run any ``docker compose`` commands you need to be within the
 
 All of QATrack+'s Docker settings live in a file called ``.env`` in this
 directory. It holds your passwords, so it is never part of the QATrack+
-repository: create it from the documented template, then edit it:
+repository: create it from the documented template, then open it in a text
+editor:
 
 .. code-block:: console
 
     cp .env.example .env
+    nano .env
+
+Any editor will do. ``nano`` is used here because Ubuntu installs it and its
+commands are listed along the bottom of the screen: ``Ctrl-o`` then ``Enter``
+writes the file, and ``Ctrl-x`` leaves it.
+
+.. warning::
+
+    The values in the template are placeholders, not defaults to leave alone.
+    As shipped it sets a database password of ``change_me_strong_password`` and
+    ``ALLOWED_HOSTS=*``, which accepts requests for any host name. Change both
+    before anyone else can reach this server.
 
 At minimum, set:
 
@@ -213,16 +247,33 @@ To build QATrack+ and start it in the background, run the following:
     docker compose build
     docker compose up -d
 
-On initial run this will take quite some time to load. To follow what the
-``django`` service is doing, run:
+On initial run this will take quite some time to load. ``docker compose build``
+builds the image, and ``docker compose up -d`` then waits for ``django`` to
+report itself healthy before it starts ``nginx`` and ``django-q`` and returns
+you to the prompt, so expect it to sit there for a while without printing
+anything.
+
+Once it returns, check that the services are actually up:
 
 .. code-block:: console
 
-    docker compose logs -f django
+    docker compose ps
 
-Wait until you see something like the following (the dates, numbers and
-version will differ), then press ``Ctrl + C`` to stop following the log.
-QATrack+ keeps running.
+``nginx``, ``django``, ``django-q`` and ``postgres`` should all be ``running``,
+with ``django`` ``running (healthy)``; ``init`` has done its work and exited. A
+service that is missing or restarting has its reason in its own log, and
+``up -d`` does not always report one -- if another program on the server is
+already using port 80 or 443, for example, ``nginx`` cannot start and ``up -d``
+still finishes without an error.
+
+To see what ``django`` did while it started, run:
+
+.. code-block:: console
+
+    docker compose logs django
+
+You are looking for something like the following at the end (the dates, numbers
+and version will differ):
 
 .. code-block:: text
 
