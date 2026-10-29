@@ -1,15 +1,24 @@
 .. _dev_schema:
 
-QATrack+ v0.3.0 Database Schema
-===============================
+QATrack+ Database Schema
+=========================
 
-Below you will find a database schema diagram for v0.3.0 of QATrack+.
+Below you will find the most recent database schema diagram generated for
+QATrack+ (v4.0). Older v3.1.0 and v0.3.0 diagrams are also kept for
+reference, further down this page.
 
-.. figure:: images/qatrack_schema_0.3.0.svg
-   :alt: QATrack+ v0.3.0 schema
+The diagram is named for the minor line rather than a specific patch release,
+because the models are the same across every 4.0.z.
 
-   The QATrack+ v0.3.0 schema (click to view full size or right click and view
+.. figure:: images/qatrack_schema_4.0.svg
+   :alt: QATrack+ v4.0 schema
+
+   The QATrack+ v4.0 schema (click to view full size or right click and view
    in new tab to view full size)
+
+This diagram is regenerated on demand (see *Generating the schema diagram*
+below) rather than on every release, so it may lag behind the current
+version - regenerate it if you need one that reflects the latest models.
 
 
 Generating the schema diagram
@@ -19,13 +28,13 @@ Generating the schema diagram
 Ubuntu
 ~~~~~~
 
-On Ubuntu (tested on 18.04) you need to install a few dependencies before
-generating the schema diagram:
+On Ubuntu 24.04 LTS you need to install a few dependencies before generating the
+schema diagram:
 
 .. code-block:: sh
 
-    sudo apt install python-dev graphviz libgraphviz-dev pkg-config 
-    uv pip install pygraphviz         
+    sudo apt install python3-dev graphviz libgraphviz-dev pkg-config
+    uv pip install pygraphviz
 
 and then you can generate your schema with:
 
@@ -33,7 +42,9 @@ and then you can generate your schema with:
 
     make schema
 
-which will output the schema to docs/developer/images/qatrack_schema_$(VERSION).svg
+which will output the schema to
+docs/developer/images/qatrack_schema_$(SCHEMA_VERSION).svg - the minor version,
+so every 4.0.z writes qatrack_schema_4.0.svg.
 
 
 Windows
@@ -48,6 +59,18 @@ making a diagram with SSMS.
 Schema for Older Versions
 =========================
 
-Database diagrams for older versions of QATrack+ are available on BitBucket:
-`Schema diagrams
+.. figure:: images/qatrack_schema_3.1.0.svg
+   :alt: QATrack+ v3.1.0 schema
+
+   The QATrack+ v3.1.0 schema (click to view full size or right click and view
+   in new tab to view full size)
+
+.. figure:: images/qatrack_schema_0.3.0.svg
+   :alt: QATrack+ v0.3.0 schema
+
+   The QATrack+ v0.3.0 schema (click to view full size or right click and view
+   in new tab to view full size)
+
+Database diagrams for even older versions of QATrack+ are available on
+BitBucket: `Schema diagrams
 <https://bitbucket.org/tohccmedphys/qatrackplus/wiki/v/0.2.9/developers/schema.md>`__.

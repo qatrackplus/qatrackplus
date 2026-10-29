@@ -12,6 +12,36 @@ Before you start
 Back up your database, your ``qatrack/media`` folder and your ``local_settings.py``,
 as you would for any upgrade.
 
+**Finish or discard any QC session you have part-way through, before you upgrade.**
+An autosaved session that straddles an upgrade is not guaranteed to come back exactly
+as you left it, and QATrack+ does not promise that it will.
+
+.. dropdown:: Why, and what it means for you
+    :color: warning
+    :icon: alert
+
+    An autosave holds the values a person had typed but not yet submitted. Dates among
+    them are stored as the text that was on screen, in whatever format the site
+    displayed at the time, so a release that changes how dates are displayed changes
+    how that text has to be read.
+
+    4.0.2 does convert them where it can: an autosave written in the format earlier
+    4.0.x releases displayed is re-read and converted on load. Where a value cannot be
+    read in any format the site now accepts, **the field comes up empty and has to be
+    typed again** - which is deliberate, because an empty field can be seen and
+    corrected while a plausible wrong date cannot.
+
+    **Nothing already submitted is affected.** Saved QC sessions, test list instances,
+    service events and faults are stored as dates, not as text, and no upgrade changes
+    them. This is only about sessions nobody has finished.
+
+    **This is not something the project plans to guarantee.** Making in-flight
+    autosaves survive every upgrade would mean versioning the autosave payload and
+    migrating it, for data that is transient by design - it is discarded after
+    ``AUTOSAVE_DAYS_TO_KEEP`` days, 30 by default. The effort is better spent
+    elsewhere, and the practical answer is the one at the top of this note: submit or
+    abandon what is in progress before upgrading.
+
 .. dropdown:: Check that your existing backups contain a database
     :color: warning
     :icon: alert
@@ -115,7 +145,7 @@ See :ref:`qatrack-config` for the full explanation.
 Two new settings, both optional
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**``LANGUAGE_COOKIE_AGE``** sets how long a user's language choice is remembered. It
+``LANGUAGE_COOKIE_AGE`` **sets how long a user's language choice is remembered.** It
 now defaults to one year; before this release the cookie had no explicit lifetime, so
 it expired with the browser session and the interface reverted to the default language
 on the next visit. To shorten it:
@@ -124,7 +154,7 @@ on the next visit. To shorten it:
 
     LANGUAGE_COOKIE_AGE = 30 * 24 * 60 * 60   # 30 days
 
-**``CSRF_TRUSTED_ORIGINS``** may now be set from the environment, which is mainly of
+``CSRF_TRUSTED_ORIGINS`` **may now be set from the environment**, which is mainly of
 interest to Docker deployments. When the ``CSRF_TRUSTED_ORIGINS`` environment variable
 is set it is read as a comma-separated list; when it is not, it is derived from
 ``ALLOWED_HOSTS``. You can still set it directly in ``local_settings.py`` if you prefer.

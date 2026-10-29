@@ -18,21 +18,87 @@ QATrack+ 4.0
 4.0.2
 ------
 
+**This release runs database migrations; 4.0.1 did not.** Nothing in them deletes
+data, but take a backup and confirm it opens before you upgrade - see
+:ref:`linux_upgrade_from_4_0_1`, :ref:`win_upgrade_from_4_0_1` or
+:ref:`docker_upgrade_from_4_0_1`.
+
+**Confirming it opens is not a formality in this release.** If you have been
+relying on ``manage.py backup_site`` for your database backup, you may not have
+one - see *Backups taken with ``backup_site`` may contain no database* below,
+and check before you upgrade rather than after.
+
 Bug Fixes
 ^^^^^^^^^
 
+Ordered by consequence, most serious first.
+
 * **Forms no longer record the wrong date and time.** Where a date field arrives
   already filled in - the fault form's *Date & Time fault occurred*, a QC session's
-  *Work Completed*, a service event's date - the server wrote that value in one format
-  and the date picker read it back in another. The picker then replaced it with an
-  unrelated date, usually months away and at midnight, before anyone had touched the
-  page.
+  *Work Completed*, a service event's date - the server wrote that value in one
+  format and the date picker read it back in another. The picker then replaced it
+  with an unrelated date, usually months away and at midnight, before anyone had
+  touched the page.
 
   Nothing indicated it had happened: the replacement was a well-formed date in the
-  expected format, sitting in a field the user had not edited. A record saved without
-  changing that field carried a time that was simply wrong. Date and time formats are
-  now derived from a single setting, so the value written to a form and the value read
-  back from it cannot disagree (:issues:`#826 <826>`).
+  expected format, sitting in a field the user had not edited. A record saved
+  without changing that field carried a time that was simply wrong. Date and time
+  formats are now derived from a single setting, so the value written to a form and
+  the value read back from it cannot disagree (:issues:`#826 <826>`).
+
+* **SQL Server installations have their lost unique constraints restored.** On
+  Microsoft SQL Server, ``mssql-django`` drops a unique index when an unrelated
+  field change retypes a table's primary key, and does not put it back - which the
+  4.0 migrations did to every table. The effect was silent: the database stopped
+  enforcing 16 of the uniqueness rules QATrack+ declares, so duplicates could be
+  created where the application intends one record, including
+  ``TestListInstance.user_key``, whose purpose is to keep API submissions unique.
+  This release puts them back.
+
+  No other database engine was ever affected, and on those engines this step does
+  nothing. If your database already contains duplicate rows, the affected index is
+  reported and skipped rather than failing the upgrade - run ``python manage.py
+  check_unique_constraints`` to list them, and the new ``qatrack.W014`` system check
+  reports any constraint still unenforced (:issues:`#899 <899>`).
+
+* **Users entitled to see every QC collection can see them again.** Seven querysets
+  narrowed ``UnitTestCollection`` by ``visible_to__in=user.groups.all()``, and
+  superuser status never entered the query - so a superuser belonging to no group
+  matched nothing and the QA/QC selection windows came up **empty**. Only some
+  windows went blank rather than all of them, which is what made it look like
+  configuration rather than a defect. A non-superuser holding
+  ``qa.can_review_non_visible_tli`` was in the same position, despite that
+  permission existing for exactly this purpose. The narrowing still narrows: a user
+  in the wrong group still sees nothing (:issues:`#883 <883>`).
+
+* **The QC trees show every collection again.** Both the "Due & Overdue" frequency
+  tree and the category tree collapsed repeated rows by the collection's *name*.
+  The query returns a collection once per test it contains, so some collapsing is
+  needed, but keying it on the name also removed a genuinely different collection
+  whose name happened to match. Two collections called the same thing on one unit
+  showed as one, with nothing to indicate the other existed. They are collapsed by
+  identity now. The fix above is what made this reachable - narrowed to one group,
+  two collections sharing a name rarely met (:issues:`#883 <883>`).
+
+* **A calculation procedure can no longer break a whole QC session by setting an
+  unusual comment.** ``UTILS.set_comment`` passed its value straight into the
+  composite response, so a value JSON cannot serialize - an exception object, say -
+  failed the response for **every** test in the list, not just the one whose
+  procedure did it. The result of a calculation was already checked for this and
+  reported against the single test; the comment was not. Values are now converted to
+  text, a value that is empty or zero sets no comment at all rather than the word
+  ``None``, and a date or time comment is formatted with the same setting as every
+  other date QATrack+ renders (:issues:`#656 <656>`).
+
+* **Test list memberships show the name of each test again.** The admin fetches
+  each name over AJAX from an endpoint mounted beneath ``admin/``, and the admin
+  site ends its own URLs with a catch-all that claimed the request first, so the
+  admin answered its own endpoint with a 404 - for every user, including a
+  superuser. A test list's memberships listed an id and a macro name and no test
+  name, and a group permission could not fix it. The view and change icons beside
+  the field now have a link as well; they were rendered without one and did nothing.
+  A test saved with no name shows its id rather than nothing at all
+  (:issues:`#897 <897>`).
 
 Other Changes
 ^^^^^^^^^^^^^
@@ -87,6 +153,27 @@ Other Changes
       typed by someone used to the other, and silently is the whole problem this release
       is fixing. Add it where you know which convention your users type in.
 
+* **The outstanding migrations have been recorded.** ``makemigrations`` reported 195
+  pending field-state changes across seven apps on a clean checkout - all metadata,
+  almost all of it ``verbose_name`` labels that the localisation work added to
+  fields which had none without recording the resulting state. They are now one
+  migration per app. Every one of those 195 operations is a no-op on SQLite,
+  PostgreSQL and SQL Server, so applying them writes a row to
+  ``django_migrations`` and changes no schema and no data. **That is a statement
+  about the field state, not about the whole release:** four of the same
+  migrations also carry the SQL Server constraint repair described above, which
+  does create indexes where the database has stopped enforcing them. The effect is that ``manage.py makemigrations --check`` is
+  meaningful again, having previously failed on every installation
+  (:issues:`#896 <896>`).
+
+* **The numpy names that numpy 2.0 removed are gone from the codebase**, and a test
+  fails if another is added. ``np.NaN`` in the control chart's Gaussian fit would
+  have raised ``AttributeError`` instead of returning a value, and ``np.float_`` in
+  the JSON encoder was a redundant alias of ``np.float64``. QATrack+ still pins
+  ``numpy<2.0``, so neither was reachable; clearing them now means a future move to
+  numpy 2 is a change of pin rather than a change of pin plus a search for
+  everything that accumulated behind it.
+
 Deployment and Upgrade Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -116,6 +203,18 @@ Deployment and Upgrade Notes
   can't be created again, until Docker is updated. Until then, other commands
   such as ``logs`` and ``stop`` need ``-p qatrackplus``. See
   :ref:`docker_upgrade_check_compose`.
+
+* **Finish or discard part-way QC sessions before upgrading.** An autosaved session
+  that straddles an upgrade is not guaranteed to return exactly as it was, and
+  QATrack+ does not promise that it will. Dates in an autosave are held as the text
+  that was on screen, so a release that changes how dates are displayed changes how
+  that text must be read. 4.0.2 converts them where it can, and where a value cannot
+  be read in any format the site now accepts the field comes up empty and must be
+  typed again - deliberately, because an empty field can be seen and corrected and a
+  plausible wrong date cannot. **Nothing already submitted is affected:** saved
+  records store dates as dates, not as text. Autosaves are discarded after
+  ``AUTOSAVE_DAYS_TO_KEEP`` days (30 by default), so this is a transient concern each
+  time you upgrade rather than a lasting one.
 
 * **Docker: ``deploy/docker/.env`` is no longer tracked by git. Set your copy aside
   before you pull.** It holds the database password, so it no longer belongs in the

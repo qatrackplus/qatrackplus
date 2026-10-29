@@ -389,7 +389,7 @@ class ServiceEvent(models.Model):
 
         permissions = (
             ('review_serviceevent', _l('Can review service event')),
-            ('view_serviceevent', _l('Can review service event')),
+            ('view_serviceevent', _l('Can view service event')),
         )
         default_permissions = (
             'add',

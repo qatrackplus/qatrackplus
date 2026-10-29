@@ -94,6 +94,40 @@ Next, activate your new virtual environment:
 
 Your command prompt should now be prefixed with ``(qatrackplus)`` or ``(.venv)``.
 
+.. dropdown:: Can't install ``uv``? Use ``pip`` instead
+
+   A small number of sites can't install ``uv`` -- for example, due to a
+   restricted PowerShell execution policy that blocks the installer script
+   above, or no outbound internet access to ``astral.sh``. If that's you,
+   QATrack+ and its Windows/SQL Server dependencies can be installed with
+   plain ``pip``, which reads the project and its extras straight from
+   ``pyproject.toml``:
+
+   .. code-block:: console
+
+      >>  python -m venv .venv
+      >>  .\.venv\Scripts\Activate.ps1
+      >>  pip install ".[win,mssql]"
+
+   Two differences from the ``uv`` instructions above are worth knowing
+   before you start:
+
+   * **You need Python 3.12 installed yourself, and on your ``PATH``.** The
+     ``uv`` path does not -- ``uv venv --python 3.12`` downloads and manages
+     an interpreter for you -- so this is an extra prerequisite rather than
+     a substitution. Check it with ``python --version`` before creating the
+     virtual environment.
+   * **If you use Active Directory**, the ``python_ldap`` wheel step in
+     :ref:`auth_backends` is written as ``uv pip install``. Use plain
+     ``pip install C:\path\to\python_ldap-...whl`` instead, with the
+     virtual environment activated.
+
+   This is a minimally-supported fallback path. It resolves dependency
+   versions at install time rather than from ``uv.lock``, so two sites
+   installing a week apart can end up with different versions of the same
+   dependency, and ``uv`` remains the recommended and tested method for
+   everyone else. If you can use ``uv``, use it.
+
 .. dropdown:: Side note: ```C:\deploy```
 
    This folder is a convenient convention for storing the QATrack+ source code, virtual environment, and any other files related to your QATrack+ installation.  You can use a different folder if you prefer, but you will need to adjust the instructions accordingly.
@@ -255,12 +289,25 @@ Now run the following commands to set up your database and load the default conf
 
    >>  python manage.py migrate
    >>  python manage.py createsuperuser
-   >>  python manage.py createcachetable
    >>  python manage.py collectstatic
    >>  Get-ChildItem .\fixtures\defaults\*\*json | foreach {python manage.py loaddata $_.FullName}
 
 If you want to enable internationalization, then you need to compile the
-messages catalogs for the languages you need:
+messages catalogs for the languages you need.
+
+.. note::
+
+    ``compilemessages`` runs GNU gettext's ``msgfmt``, which Windows does not
+    include and Python does not provide. Without it the command stops with
+    ``CommandError: Can't find msgfmt. Make sure you have GNU gettext tools
+    0.15 or newer installed.``, no catalogue is compiled, and QATrack+ then
+    serves every string in English with nothing else to say that anything
+    failed.
+
+    Install the GNU gettext binaries for Windows and make sure the folder
+    holding ``msgfmt.exe`` is on ``PATH`` for the session you run
+    ``compilemessages`` in. If you only need English, you can skip this step
+    and the command altogether.
 
 .. code-block:: powershell
 
@@ -479,6 +526,8 @@ If the line between `Host` and `ORM default` is blank then there is a problem
 with the Windows Task you created.
 
 .. _finally:
+
+.. include:: _site_record.rst
 
 What Next
 ---------

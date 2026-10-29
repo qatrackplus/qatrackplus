@@ -2,7 +2,7 @@ import datetime
 import io
 import json
 import time
-from unittest import mock
+from unittest import mock, skip
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.sites.models import Site
@@ -1017,6 +1017,12 @@ class TestReportInterface(BaseQATests):
         expected_notes = [{"heading": "heading new", "content": "content new"}]
         assert list(models.ReportNote.objects.values("heading", "content")) == expected_notes
 
+    # TODO: this proves nothing as written. It clicks the schedule button and
+    # types immediately, so it races #schedule-modal's fade-in and fails on a
+    # field that was never interactable - it never reaches the scheduling it is
+    # named for. qatrackplus#867 adds a wait_for_modal helper and applies it
+    # here; drop the skip once that lands.
+    @skip("races the schedule dialog's fade-in; fixed by qatrackplus#867")
     def test_schedule_report(self):
         """Ensure scheduling a savedreport works"""
 

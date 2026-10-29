@@ -54,14 +54,39 @@ jobs:
         run: uv pip check
 
   linux-tests:
-    name: Linux Tests
-    runs-on: ubuntu-latest
+    # The install guide promises specific Ubuntu releases, so test those and not
+    # only whatever ubuntu-latest happens to be. The difference is not academic:
+    # the media-permission checks reason about the invoking user, www-data and
+    # directory modes, and that is exactly the kind of behaviour that moves
+    # between releases.
+    #
+    # The engine matrix runs on ubuntu-24.04, named explicitly: it is the release
+    # the install guide recommends, and `ubuntu-latest` is an alias GitHub
+    # repoints to a newer release when one ships. Leaving the engines on the alias
+    # means the only run covering postgres and mysql changes operating system
+    # without anyone deciding to, while the version actually promised to
+    # administrators gets the thinnest coverage.
+    #
+    # The other rows run sqlite only, because what they are there to vary is the
+    # OS: 22.04 because the guide says it is tested, and `ubuntu-latest` as a
+    # look-ahead, so whatever GitHub repoints it to is exercised here before it
+    # becomes the release people install on.
+    name: Linux Tests (${{ matrix.os }}, ${{ matrix.db }})
+    runs-on: ${{ matrix.os }}
     needs: [lint, requirements]
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-24.04]
         python-version: ["3.12"]
         db: [sqlite, postgres, mysql]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.12"
+            db: sqlite
+          - os: ubuntu-22.04
+            python-version: "3.12"
+            db: sqlite
     
     services:
       postgres:
@@ -712,6 +737,26 @@ jobs:
             python manage.py createsuperuser --noinput --username ci-restored --email restored@example.com
           $dc exec -T django sh -c 'mkdir -p qatrack/media/uploads && echo "restore me" > qatrack/media/uploads/ci-restored.txt'
 
+          # A management command must work through `exec`, not only inside the
+          # server's own process tree. The image sets USE_DOCKER so it does even
+          # when .env omits it; without that, this stack serves happily while
+          # every documented `docker compose exec django python manage.py ...`
+          # fails with "No module named 'qatrack.local_settings'".
+          $dc exec -T django env | grep -q '^USE_DOCKER=' \
+            || { echo "FAIL: USE_DOCKER is not in the container's own environment"; exit 1; }
+          $dc exec -T django python manage.py check --database default
+
+          # Back up a site that has been used, not one with a single user in it.
+          # A restore that carries one row and a restore that carries a QC
+          # history exercise different amounts of this, and the second is what a
+          # site is actually trusting the backup with.
+          $dc exec -T django python manage.py generate_sample_data --days 30
+          $dc exec -T django python manage.py shell \
+            < "$GITHUB_WORKSPACE/.github/scripts/row-counts.py" > /tmp/ci-counts-before.txt
+          cat /tmp/ci-counts-before.txt
+          tis=$(sed -n 's/^testinstances=//p' /tmp/ci-counts-before.txt)
+          [ "${tis:-0}" -gt 100 ] || { echo "FAIL: only ${tis:-0} test instances generated"; exit 1; }
+
           # The command the nightly cron job runs, under the loosest umask docker
           # exec can start it with (000), beside backups left by an earlier
           # release that anyone on the server can read.
@@ -791,7 +836,13 @@ jobs:
             "import sys; from django.contrib.auth.models import User; sys.exit(not User.objects.filter(username='ci-restored').exists())"
           [ "$($dc exec -T django cat qatrack/media/uploads/ci-restored.txt)" = "restore me" ]
           [ "$($dc exec -T django stat -c %u qatrack/media/uploads/ci-restored.txt)" = 1000 ]
-          echo "PASS: backup restored the user and the uploaded file"
+          # Every generated row came back too, not just the user and the file.
+          $dc exec -T django python manage.py shell \
+            < "$GITHUB_WORKSPACE/.github/scripts/row-counts.py" > /tmp/ci-counts-after.txt
+          diff -u /tmp/ci-counts-before.txt /tmp/ci-counts-after.txt \
+            || { echo "FAIL: the restore did not reproduce the row counts above"; exit 1; }
+
+          echo "PASS: backup restored the user, the uploaded file and every generated row"
 
       - name: Verify backups follow TIME_ZONE
         # The nightly 4 AM and the backups' file names are in TIME_ZONE from .env,
@@ -1051,6 +1102,42 @@ jobs:
           # The running site is untouched.
           docker compose exec -T django python -c "import django, pint; print('still running Django', django.__version__, 'and pint', pint.__version__)"
 
+      - name: Summary
+        # What this job proved, on the run page rather than 2,000 lines down in a
+        # log. `always()` so a failed run still shows how far it got.
+        if: always()
+        working-directory: deploy/docker
+        run: |
+          {
+            echo "## Docker build and run check"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Engine / Compose | \`$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo unknown)\` / \`$(docker compose version --short 2>/dev/null || echo unknown)\` |"
+            echo "| Services | $(docker compose ps --services 2>/dev/null | tr '\n' ' ' || echo 'not running') |"
+            echo "| Unhealthy at the end | $(docker ps -q -f health=unhealthy 2>/dev/null | wc -l) |"
+            echo
+            if [ -f /tmp/ci-counts-before.txt ] && [ -f /tmp/ci-counts-after.txt ]; then
+              echo "### Backup and restore, on a site with a QC history"
+              echo
+              echo "| rows | before the backup | after the restore |"
+              echo "|---|---:|---:|"
+              paste -d' ' /tmp/ci-counts-before.txt /tmp/ci-counts-after.txt | while read -r b a; do
+                echo "| ${b%%=*} | ${b#*=} | ${a#*=} |"
+              done
+              echo
+            fi
+            echo "### Also checked"
+            echo
+            echo "- runs unprivileged, PostgreSQL published only on request and only on 127.0.0.1"
+            echo "- background tasks, site Python packages, and a conflicting package stopping the build"
+            echo "- nginx answers only \`ALLOWED_HOSTS\`, caps logs, follows django to a new address, serves HTTPS"
+            echo "- LDAP and LDAPS sign-in, and the secret key surviving a container recreation"
+            echo "- restores refused while the site runs, on a wrong confirmation, and on a truncated dump"
+            echo "- backups readable only by root, and named in the site's own time zone"
+            echo "- QATrack+'s data kept in folders on the server"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Tear Down
         if: always()
         working-directory: deploy/docker
@@ -1143,6 +1230,19 @@ jobs:
             python manage.py createsuperuser --noinput --username ci --email ci@example.com
           docker compose exec -T django sh -c \
             'mkdir -p qatrack/media/uploads && echo "written by 4.0.1" > qatrack/media/uploads/ci-upgrade.txt'
+          # A site that has been in use, not an empty one - and generated by
+          # 4.0.1's own code, so the rows the upgrade carries were written by the
+          # release being upgraded from. An empty database says nothing about
+          # migrations that touch QA data.
+          docker compose exec -T django python manage.py generate_sample_data --days 30
+          docker compose exec -T django python manage.py shell \
+            < "$GITHUB_WORKSPACE/.github/scripts/row-counts.py" \
+            > "$GITHUB_WORKSPACE/../counts-401.txt"
+          cat "$GITHUB_WORKSPACE/../counts-401.txt"
+          # Generation has to have produced something, or comparing counts after
+          # the upgrade would pass by comparing nothing to nothing.
+          tis=$(sed -n 's/^testinstances=//p' "$GITHUB_WORKSPACE/../counts-401.txt")
+          [ "${tis:-0}" -gt 100 ] || { echo "FAIL: 4.0.1 generated only ${tis:-0} test instances"; exit 1; }
           [ "$(docker compose exec -T django stat -c %u qatrack/static/admin)" = 0 ]
           [ "$(docker compose exec -T django stat -c %u qatrack/media/uploads/ci-upgrade.txt)" = 0 ]
           # 4.0.1 keeps its secret key in the checkout (compose.override.yaml
@@ -1184,6 +1284,16 @@ jobs:
           [ "$($dc exec -T django stat -c %u qatrack/static/admin)" = 1000 ]
           $dc exec -T django python manage.py shell -c \
             "import sys; from django.contrib.auth.models import User; sys.exit(not User.objects.filter(username='ci').exists())"
+
+          # Every row 4.0.1 generated is still there, and there are no new ones.
+          # The 4.0.2 migrations record field state and repair uniqueness, so they
+          # must not add, drop or merge a single record.
+          $dc exec -T django python manage.py shell \
+            < "$GITHUB_WORKSPACE/.github/scripts/row-counts.py" \
+            > "$GITHUB_WORKSPACE/../counts-402.txt"
+          cat "$GITHUB_WORKSPACE/../counts-402.txt"
+          diff -u "$GITHUB_WORKSPACE/../counts-401.txt" "$GITHUB_WORKSPACE/../counts-402.txt" \
+            || { echo "FAIL: the upgrade changed the row counts above"; exit 1; }
 
           # QATrack+ uses the key 4.0.1 generated, so nobody is signed out.
           old=$(sha256sum < "$GITHUB_WORKSPACE/../base/deploy/docker/user-data/secret_key.txt")
@@ -1235,6 +1345,35 @@ jobs:
             [ "$(stat -c %a:%u "$f")" = 600:0 ] || { echo "FAIL: $f is $(stat -c %a:%U "$f")"; exit 1; }
           done
           echo "PASS: backups from before the upgrade are now readable by root only"
+
+      - name: Summary
+        if: always()
+        working-directory: deploy/docker
+        run: |
+          {
+            echo "## Upgrade from 4.0.1, on a site with data in it"
+            echo
+            if [ -f "$GITHUB_WORKSPACE/../counts-401.txt" ] && [ -f "$GITHUB_WORKSPACE/../counts-402.txt" ]; then
+              echo "| rows | on 4.0.1 | after the upgrade |"
+              echo "|---|---:|---:|"
+              paste -d' ' "$GITHUB_WORKSPACE/../counts-401.txt" "$GITHUB_WORKSPACE/../counts-402.txt" \
+                | while read -r b a; do echo "| ${b%%=*} | ${b#*=} | ${a#*=} |"; done
+              echo
+              echo "A migration that records field state and repairs uniqueness must not add,"
+              echo "drop or merge a row, so these two columns have to match exactly."
+              echo
+            else
+              echo "_Row counts were not recorded - the run did not reach that point._"
+              echo
+            fi
+            echo "### Also checked"
+            echo
+            echo "- the documented \`git stash\` steps keep a site's \`.env\`, port change and nginx edits"
+            echo "- git refuses while \`.env\` has local edits, and the stash conflicts on the removed \`default.conf\`"
+            echo "- 4.0.1 wrote its files as root; after the upgrade they belong to the app user"
+            echo "- the secret key 4.0.1 generated is carried over, so nobody is signed out"
+            echo "- a backup made by 4.0.1's own tools restores with this release's \`restore-db\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Tear Down
         if: always()
@@ -1290,6 +1429,17 @@ jobs:
             exit 1
           fi
           echo "PASS: dev overlay runs as uid $(id -u) and writes into the checkout"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Development overlay"
+            echo
+            echo "Starts the stack from the checkout with \`compose.dev.yaml\`, as a developer does,"
+            echo "and checks the app runs as the runner's own user and writes into the working tree"
+            echo "rather than into a volume."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Tear Down
         if: always()

@@ -147,7 +147,6 @@ files from the deploy subdirectory and then create your database:
     cp deploy/dev/local_test_settings.dev.py qatrack/local_test_settings.py
     mkdir db
     python manage.py migrate
-    python manage.py createcachetable
 
 
 this will put a database called `default.db` in the `db` subdirectory.
@@ -649,14 +648,38 @@ Then also set `SELENIUM_VIRTUAL_DISPLAY` in `qatrack/test_settings.py`:
 
 .. note::
 
-    **The browser tests run with a visible browser in 4.0.** Headless running is not
-    supported here and is being done properly for 4.1.
+    **Headless running in 4.0 needs a system package, and cannot work on Windows.**
+    It is being replaced properly in 4.1.
 
-    ``SELENIUM_VIRTUAL_DISPLAY = True`` in 4.0 does not mean the browser's own
-    headless mode: it means a virtual X display through ``xvfb``, which exists on
-    Linux and not on Windows. So it cannot work on a Windows development machine at
-    all, and on Linux it needs ``xvfb`` installed and a ``pyvirtualdisplay`` that is
-    not in the default dependencies. Leave it ``False``.
+    ``SELENIUM_VIRTUAL_DISPLAY = True`` does not mean the browser's own headless
+    mode. It means a virtual X display driven through ``xvfb``, so the browser still
+    renders into a real X server - just one with no screen attached. The Python
+    wrapper, ``PyVirtualDisplay``, **is** a declared dependency and arrives with
+    ``uv sync``; ``xvfb`` itself is a **system** package and does not. Without it,
+    enabling the setting fails when the display is started, and nothing in the error
+    names the missing package.
+
+    **On Debian and Ubuntu:**
+
+    .. code-block:: bash
+
+        sudo apt install xvfb
+
+    On Fedora or RHEL the package is ``xorg-x11-server-Xvfb``.
+
+    **On Windows there is no xvfb at all, so headless cannot be made to work.**
+    Leave ``SELENIUM_VIRTUAL_DISPLAY = False`` and let the browser be visible.
+
+    With ``xvfb`` installed, headless does work on Linux - the full browser suite
+    passes - and it keeps the test browser off your desktop, which a visible run
+    cannot. If you are on a Wayland session, note that it is the *visible* path that
+    is the awkward one: Firefox with ``MOZ_ENABLE_WAYLAND=1`` ignores ``DISPLAY``
+    and renders through the compositor, so window-geometry behaviour differs from
+    X11.
+
+    **4.1 removes this whole question.** The browser's own headless mode is used
+    instead of a virtual display, so no display server is needed on any operating
+    system, and headless becomes the default rather than something to configure.
 
 Writing Documentation
 ---------------------

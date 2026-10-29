@@ -33,7 +33,7 @@ LOG_ROOT = os.path.join(PROJECT_ROOT, "..", "logs")
 LOCALE_PATHS = [
     os.path.join(PROJECT_ROOT, 'locale'),
 ]
-VERSION = "4.0.1"
+VERSION = "4.0.2"
 BUG_REPORT_URL = "https://github.com/qatrackplus/qatrackplus/issues/new"
 FEATURE_REQUEST_URL = BUG_REPORT_URL
 

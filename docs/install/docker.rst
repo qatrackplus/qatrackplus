@@ -123,14 +123,8 @@ Docker's instructions for your distribution:
 * `Install Docker Engine on Ubuntu <https://docs.docker.com/engine/install/ubuntu/>`__
 * `Other Linux distributions <https://docs.docker.com/engine/install/>`__
 
-Check that Compose is available, and that both meet
-:ref:`the minimum versions <docker_minimum_versions>` (Compose 2.17, Engine
-23.0), with:
-
-.. code-block:: console
-
-    docker compose version
-    docker version --format '{{.Server.Version}}'
+Both versions are checked once the next step lets your own user talk to the
+Docker daemon.
 
 .. Kept so links to an older section title still work.
 
@@ -151,6 +145,17 @@ only people you would trust with root.
 Before continuing please verify that you can run ``docker run hello-world`` in a
 terminal.
 
+Then check that Compose is available and that both meet :ref:`the minimum
+versions <docker_minimum_versions>` (Compose 2.17, Engine 23.0):
+
+.. code-block:: console
+
+    docker compose version
+    docker version --format '{{.Server.Version}}'
+
+The second command needs the ``docker`` group membership you just added, which
+is why it comes after this step rather than before it.
+
 Git
 ...
 
@@ -161,8 +166,9 @@ following:
 
     sudo apt install git
 
-Many server images ship with git already, in which case ``apt`` says it is
-already the newest version and there is nothing to do.
+Many server images have git already. ``apt`` then either reports it is already
+the newest version, or offers to upgrade it and waits for you to answer
+``[Y/n]``; either is fine.
 
 On other systems follow the instructions at
 https://www.atlassian.com/git/tutorials/install-git.

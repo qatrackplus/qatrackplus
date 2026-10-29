@@ -6,12 +6,49 @@ DEBUG = True
 TEMPLATE_DBG = True
 
 # SQLite example
+#
+# TEST['NAME'] is set explicitly, and should always be set explicitly.
+#
+# Django does not use NAME for the test database on SQLite. It uses
+# TEST['NAME'], and when that is unset it silently substitutes an in-memory
+# database - `TEST["NAME"] or ":memory:"` in
+# django/db/backends/sqlite3/creation.py::_get_test_db_name. So a SQLite test
+# run does not touch NAME at all, and a file named here is not the file the
+# tests use. Spelling TEST['NAME'] out means the test database is stated rather
+# than inferred.
+#
+# What the silence hides matters: when TEST['NAME'] *is* a real file,
+# _create_test_db() erases that file before the run. A test database must
+# therefore always have 'test' in its name, and must never be the development
+# database.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'db/default.db',
+        'TEST': {'NAME': ':memory:'},
     }
 }
+
+# To keep the test database on disk so it can be inspected after a run, give
+# TEST['NAME'] a test-named file instead:
+#
+#     'TEST': {'NAME': 'db/test_default.db'},
+#
+# Never point it at db/default.db: that is the development database, and the
+# test runner would delete it.
+#
+# Naming the file is not enough on its own, and this is the part that surprises
+# people: Django destroys the test database when the run finishes, so the file
+# named above is created, used and deleted, leaving nothing to inspect. Ask for
+# it to be kept:
+#
+#     pytest --reuse-db          # pytest-django, which is what this project uses
+#     python manage.py test --keepdb
+#
+# `--reuse-db` also skips rebuilding the schema on the next run, which is most of
+# why it is worth doing - and the reason to remember `--create-db` after a
+# migration, model or fixture change, or the next run will be against yesterday's
+# schema.
 
 # SQL Server example
 """
