@@ -4,7 +4,12 @@
 # so a target here can reach a production database. Nothing in it should be a
 # shorter way to do something irreversible than doing it by hand.
 
-VERSION=3.1.0
+VERSION=4.0.2
+
+# The schema diagram covers a minor line, not a patch: the models do not change
+# between 4.0.0 and 4.0.2, and only ever one diagram per x.y has been published
+# (0.3.0, 3.1.0). $(basename) drops the last component, so 4.0.2 gives 4.0.
+SCHEMA_VERSION=$(basename $(VERSION))
 DATETIME=$(shell date '+%Y-%m-%d_%H-%M-%S')
 
 
@@ -82,12 +87,10 @@ supervisor.conf:
 	sudo supervisorctl reread
 	sudo supervisorctl update
 
-# WARNING: VERSION is 3.1.0 while the project is 4.0.0, so this overwrites the
-# published 3.1.0 diagram. Check `git status` afterwards.
 schema:
 	uv run python ./manage.py graph_models -a -g \
 		-X Issue,IssueStatus,IssueType,IssuePriority,IssueTag \
-		-o docs/developer/images/qatrack_schema_$(VERSION).svg
+		-o docs/developer/images/qatrack_schema_$(SCHEMA_VERSION).svg
 
 run:
 	uv run python ./manage.py runserver

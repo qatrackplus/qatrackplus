@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from qatrack.qa.models import UnitTestCollection
 
@@ -10,19 +10,30 @@ class Command(BaseCommand):
 
     help = 'commands to enable/disable auto scheduling and set due dates'
 
-    def handle(self, *args, **kwargs):
-        handlers = {
-            "enable-all": self.enable_all,
-            "disable-all": self.disable_all,
-            "schedule-all": self.schedule_all,
-            "unschedule-all": self.unschedule_all,
-        }
+    # The action name a user types, mapped to the method that performs it.
+    #
+    # One mapping, used for both the parser's `choices` and the dispatch below,
+    # so the set of actions the command advertises cannot drift from the set it
+    # can actually run. `docs/admin/qa/auto_schedule.rst` documents these four.
+    ACTIONS = {
+        "enable-all": "enable_all",
+        "disable-all": "disable_all",
+        "schedule-all": "schedule_all",
+        "unschedule-all": "unschedule_all",
+    }
 
-        if not args or args[0] not in list(handlers.keys()):
-            valid = ', '.join(["'%s'" % x for x in list(handlers.keys())])
-            raise CommandError("Valid arguments are %s" % (valid))
+    def add_arguments(self, parser):
+        # Without this the command had no positional argument at all, so argparse
+        # rejected every documented action with "unrecognized arguments", while
+        # running it bare printed the four names it would not accept.
+        parser.add_argument(
+            'action',
+            choices=sorted(self.ACTIONS),
+            help='the scheduling action to perform',
+        )
 
-        handlers[args[0]]()
+    def handle(self, *args, **options):
+        getattr(self, self.ACTIONS[options['action']])()
 
     def enable_all(self):
         """Sets auto_schedule = True on all UnitTestCollections with assigned frequencies"""

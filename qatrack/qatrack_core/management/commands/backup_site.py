@@ -2,14 +2,17 @@ import datetime
 import glob
 import os
 import shutil
+import sqlite3
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 
 class Command(BaseCommand):
-    help = 'Backup QATrack+ database and media uploads'
+    help = (
+        'Back up QATrack+\'s uploaded media, and the database on SQLite. On other '
+        'engines the database is not backed up and the command says which tool to use.'
+    )
 
     def get_setting(self, name, default):
         return getattr(settings, name, default)
@@ -26,79 +29,146 @@ class Command(BaseCommand):
                     shutil.rmtree(path)
 
     def run_backup(self, backup_dir, backup_type, db_name):
+        """Write what this command can write, and say plainly what it cannot.
+
+        The rule here is that nothing is reported as backed up unless it is on
+        disk afterwards. Three measured failures are why:
+
+        - **SQL Server** ran ``BACKUP DATABASE ... TO DISK`` and printed
+          "Successfully backed up" even when the backup had failed. Measured on
+          SQL Server 2022, 2026-10-08: exit 0, the dated folder empty, no rows
+          in ``msdb.dbo.backupset``, and "Error: 3041 ... BACKUP failed to
+          complete the command" in the server error log at the same second. The
+          cursor was closed without draining BACKUP's result sets, and BACKUP
+          streams progress as messages, so closing it cancelled the batch. Until
+          that is fixed and checked against a real instance, this command does
+          not attempt it: declining is safer than claiming.
+
+        - **SQLite** copied the database to the wrong place. ``db_name`` is an
+          absolute path on SQLite, and ``os.path.join(backup_loc, f"{db_name}...")``
+          discards ``backup_loc`` when its second argument is absolute, so the
+          copy landed beside the live database - on the same disk, outside
+          ``BACKUP_DIR``, where ``remove_old`` never pruned it. It is kept, with
+          the path fixed, because the backup itself worked: measured 2026-10-28,
+          the copy restored into an empty location with every row count intact.
+          It is now taken through SQLite's own online backup API rather than
+          ``shutil.copy2``, so it is consistent even if QATrack+ is running.
+
+        - **PostgreSQL and MySQL** reported honestly but returned before the
+          media step, so a site on either engine got an empty dated folder and
+          no uploaded files at all. Media is now archived whatever the engine.
+        """
         today_str = datetime.date.today().strftime("%Y-%m-%d")
         backup_loc = os.path.join(backup_dir, f"{today_str}-{backup_type}")
-        
+
         if not os.path.exists(backup_loc):
             os.makedirs(backup_loc)
 
-        # 1. Database Backup
-        db_dir_override = self.get_setting('BACKUP_DB_DIR', None)
-        
-        if db_dir_override:
-            # Construct the path using forward slashes for Linux/Docker environments
-            sql_backup_loc = f"{db_dir_override}/{today_str}-{backup_type}"
-            sql_backup_file = f"{sql_backup_loc}/{db_name}-script.bak"
-        else:
-            sql_backup_file = os.path.join(backup_loc, f"{db_name}-script.bak")
-
-        local_backup_file = os.path.join(backup_loc, f"{db_name}-script.bak")
-        
-        if os.path.exists(local_backup_file):
-            os.remove(local_backup_file)
-            
         db_settings = settings.DATABASES['default']
         engine = db_settings['ENGINE']
-        
-        if 'mssql' in engine or 'sqlserver' in engine:
-            query = f"BACKUP DATABASE [{db_name}] TO DISK='{sql_backup_file}'"
-            connection.ensure_connection()
-            old_autocommit = connection.get_autocommit()
-            connection.set_autocommit(True)
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute(query)
-                self.stdout.write(self.style.SUCCESS(f"Successfully backed up SQL Server database to {sql_backup_file}"))
-            except Exception as e:
-                err_msg = str(e)
-                self.stdout.write(self.style.ERROR(f"Failed to backup database: {err_msg}"))
-                self.stdout.write(self.style.WARNING(
-                    "\n[TIP] Docker or Remote DB Detected?\n"
-                    "If SQL Server is running in Docker or on a remote server, it has a completely isolated filesystem "
-                    "and cannot write to your local Windows drive directly.\n"
-                    "To fix this:\n"
-                    "1. Map your backup folder as a network share or Docker volume (e.g. `-v C:\\deploy\\backups:/backups`)\n"
-                    "2. Add `BACKUP_DB_DIR = '/backups'` to your `local_settings.py` so the script uses the correct path format."
-                ))
-                return False
-            finally:
-                connection.set_autocommit(old_autocommit)
-        elif 'postgresql' in engine:
-            self.stdout.write(self.style.WARNING("PostgreSQL backup not natively implemented in this script yet. Please use pg_dump."))
-            return False
-        elif 'mysql' in engine:
-            self.stdout.write(self.style.WARNING("MySQL backup not natively implemented in this script yet. Please use mysqldump."))
-            return False
-        elif 'sqlite3' in engine:
-            db_path = db_settings['NAME']
-            shutil.copy2(db_path, local_backup_file)
-            self.stdout.write(self.style.SUCCESS(f"Copied SQLite database to {local_backup_file}"))
+        wrote_something = False
+
+        if 'sqlite3' in engine:
+            wrote_something = self.backup_sqlite(backup_loc, db_settings) or wrote_something
         else:
-            self.stdout.write(self.style.WARNING(f"Database backup not implemented in this script for engine '{engine}'."))
+            self.report_no_database_backup(engine)
+
+        if self.backup_uploads(backup_loc):
+            wrote_something = True
+
+        return wrote_something
+
+    def backup_sqlite(self, backup_loc, db_settings):
+        """Copy the SQLite database into the backup set, consistently."""
+        db_path = str(db_settings['NAME'])
+        if db_path == ':memory:' or not os.path.exists(db_path):
+            self.stdout.write(self.style.WARNING(
+                f"SQLite database {db_path} is not a file on disk; not backed up."
+            ))
             return False
 
-        # 2. Uploads Zip
+        # basename, not the full path: os.path.join discards backup_loc if the
+        # second argument is absolute, which is what sent this file next to the
+        # live database for every release before 4.0.2.
+        target = os.path.join(backup_loc, f"{os.path.basename(db_path)}-script.bak")
+        try:
+            source = sqlite3.connect(db_path)
+            try:
+                destination = sqlite3.connect(target)
+                try:
+                    with destination:
+                        source.backup(destination)
+                finally:
+                    destination.close()
+            finally:
+                source.close()
+        except Exception as e:  # noqa: BLE001 - reported, not raised
+            self.stdout.write(self.style.ERROR(f"Failed to back up the SQLite database: {e}"))
+            if os.path.exists(target):
+                os.remove(target)
+            return False
+
+        if not os.path.exists(target) or os.path.getsize(target) == 0:
+            self.stdout.write(self.style.ERROR(
+                f"SQLite backup {target} is missing or empty; treat this run as failed."
+            ))
+            return False
+
+        self.stdout.write(self.style.SUCCESS(
+            f"Backed up the SQLite database to {target} "
+            f"({os.path.getsize(target)} bytes)"
+        ))
+        return True
+
+    def report_no_database_backup(self, engine):
+        """Say which tool to use, without implying anything was written."""
+        if 'mssql' in engine or 'sqlserver' in engine:
+            tool = "SQL Server's own BACKUP DATABASE, or SQL Server Management Studio"
+        elif 'postgresql' in engine:
+            tool = "pg_dump"
+        elif 'mysql' in engine:
+            tool = "mysqldump"
+        else:
+            tool = "the backup tooling for that engine"
+
+        # Only a PostgreSQL deployment can be covered by the Docker `backup`
+        # service, which runs pg_dump; and this command cannot see whether that
+        # service is running, so the wording hedges rather than promises.
+        docker_note = (
+            "\nOn a Docker deployment the bundled `backup` service covers this - if it is "
+            "running. This command cannot tell whether it is, so check that it has written "
+            "a recent dump.\n"
+            if 'postgresql' in engine else "\n"
+        )
+        self.stdout.write(self.style.WARNING(
+            f"This command does not back up the database on this engine ({engine}).\n"
+            f"Use {tool}.{docker_note}"
+            "See the Backup and Restore section of the documentation. Uploaded media is "
+            "backed up below."
+        ))
+
+    def backup_uploads(self, backup_loc):
+        """Archive the uploaded files, on every engine."""
         uploads_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
         zip_file_path = os.path.join(backup_loc, 'uploads.zip')
         if os.path.exists(zip_file_path):
             os.remove(zip_file_path)
-            
-        if os.path.exists(uploads_dir):
-            shutil.make_archive(zip_file_path.replace('.zip', ''), 'zip', uploads_dir)
-            self.stdout.write(self.style.SUCCESS(f"Successfully backed up uploads to {zip_file_path}"))
-        else:
-            self.stdout.write(self.style.WARNING(f"Uploads directory {uploads_dir} does not exist. Skipping uploads backup."))
 
+        if not os.path.exists(uploads_dir):
+            self.stdout.write(self.style.WARNING(
+                f"Uploads directory {uploads_dir} does not exist. Skipping uploads backup."
+            ))
+            return False
+
+        shutil.make_archive(zip_file_path.replace('.zip', ''), 'zip', uploads_dir)
+        if not os.path.exists(zip_file_path):
+            self.stdout.write(self.style.ERROR(
+                f"Uploads archive {zip_file_path} was not written; treat this run as failed."
+            ))
+            return False
+        self.stdout.write(self.style.SUCCESS(
+            f"Successfully backed up uploads to {zip_file_path}"
+        ))
         return True
 
     def handle(self, *args, **options):

@@ -112,14 +112,16 @@ First we must check out the code for version 4.0.0 in a PowerShell window:
    >>  git checkout releases/4.0
 
 .. dropdown:: Side note: Alternate Tag
+   :color: warning
 
-   If you prefer to use a tag instead of a branch, you can check out the `4.0.0` tag instead. We are switching defaults away from tags to branches for ease of patch distribution. Future patches can be applied simply with a git pull command, whereas tags are immutable. To check out the tag, run the following commands in a PowerShell window:
+   The ``releases/4.0`` branch is the 4.0 series including its patch releases, so
+   upgrading later is ``git fetch`` and ``git pull`` - you never name a version.
 
-   .. code-block:: powershell
-
-      >>  cd C:\deploy\qatrackplus
-      >>  git fetch origin
-      >>  git checkout 4.0.0
+   Pinning an exact version with a tag is possible but **not recommended**: a tag is
+   immutable, so ``git pull`` will not bring you patches and each upgrade becomes a
+   fresh checkout. If you must, the available tags are listed on the
+   `releases page <https://github.com/qatrackplus/qatrackplus/releases>`__, and they
+   carry a leading ``v`` - the 4.0.0 tag is ``v4.0.0``, not ``4.0.0``.
 
 Updating our Python environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -169,7 +171,6 @@ We can now upgrade the database schema and static media files to be compatible w
 .. code-block:: powershell
 
    >>  python manage.py migrate
-   >>  python manage.py createcachetable
    >>  python manage.py collectstatic
 
 If you have issues with the migration, first check

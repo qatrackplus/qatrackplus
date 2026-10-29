@@ -77,8 +77,20 @@ RUN groupadd --gid 1000 qatrack \
     && useradd --uid 1000 --gid 1000 --create-home --home-dir /home/qatrack qatrack
 
 COPY --from=builder /opt/venv /opt/venv
+# USE_DOCKER is what settings.py keys off to read its configuration from the
+# environment instead of importing local_settings.py, which this image does not
+# contain. entrypoint.sh exports it, so the server has always had it - but a
+# `docker compose exec` starts from the image's own configuration and does not,
+# unless .env happens to set it. .env.example does, so the documented path works;
+# a site that writes or trims .env by hand gets a stack that boots, passes its
+# health check and serves requests, while every documented management command -
+# createsuperuser, shell, check_unique_constraints - stops with
+# "No module named 'qatrack.local_settings'", naming a file its admin has never
+# heard of. Setting it here makes it true of the image, which it is: this image
+# is only ever run under Docker.
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
+    USE_DOCKER=true \
     MPLCONFIGDIR=/home/qatrack/.config/matplotlib
 
 WORKDIR /usr/src/qatrackplus

@@ -145,9 +145,22 @@ set `AUTOCOMMIT = False` for your readonly configuration (see the
 Cache Settings
 ~~~~~~~~~~~~~~
 
-By default QATrack+ stores cached pages and values on disk in the directory
-`qatrack/cache/cache_data/` but this can be changed by copying the Python
-dictionary below into your `local_settings.py` file:
+By default QATrack+ caches in its own database, in a table called
+``qatrack_cache_table``:
+
+.. code-block:: python
+
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'qatrack_cache_table',
+        }
+    }
+
+``migrate`` creates that table, so a standard installation needs nothing here.
+
+You can use a different cache instead by copying a dictionary like one of these
+into your ``local_settings.py``. On disk:
 
 .. code-block:: python
 
@@ -155,12 +168,26 @@ dictionary below into your `local_settings.py` file:
         'default': {
             'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
             'LOCATION': '/path/to/your/desired/cache/data/location/',
-            'TIMEOUT': 24*60*60, # cache timeout of 24hours
+            'TIMEOUT': 24*60*60,  # cache timeout of 24 hours
         }
     }
 
-Generally you shouldn't need to change this unless you have concerns about disk
-usage.
+or in memory, with Redis or memcached, using any backend Django supports. The
+cache holds derived values - page fragments and counts - so moving it loses
+nothing permanent, and QATrack+ repopulates it as the site is used.
+
+Generally you shouldn't need to change this at all.
+
+.. note::
+
+    If you move **to** the database cache later, after your site is already
+    installed, run ``python manage.py createcachetable`` once afterwards.
+    ``migrate`` creates the table only for a database cache that is configured
+    when it runs, so a site that was on a file or memory cache at install time
+    does not have one yet. ``python manage.py check --database default`` reports
+    a missing cache table as ``qatrack.W015``; plain ``manage.py check`` will not,
+    because the check has to ask the database what tables it has and so runs only
+    when a connection is in play.
 
 Time Zone Settings
 ~~~~~~~~~~~~~~~~~~
