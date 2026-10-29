@@ -220,7 +220,14 @@ editor:
 .. code-block:: console
 
     cp .env.example .env
+    chmod 600 .env
     nano .env
+
+``chmod 600`` is not decoration: ``.env`` holds your database password and, later,
+your secret key, and ``cp`` gives it whatever your account's default permissions
+are - on Ubuntu that is readable by every account on the server. Docker Compose
+reads the file as you, before any container starts, so restricting it costs
+nothing. Measured on a fresh Ubuntu 24.04 server: the copy arrives as mode 664.
 
 Any editor will do. ``nano`` is used here because Ubuntu installs it and its
 commands are listed along the bottom of the screen: ``Ctrl-o`` then ``Enter``
@@ -229,9 +236,9 @@ writes the file, and ``Ctrl-x`` leaves it.
 .. warning::
 
     The values in the template are placeholders, not defaults to leave alone.
-    As shipped it sets a database password of ``change_me_strong_password`` and
-    ``ALLOWED_HOSTS=*``, which accepts requests for any host name. Change both
-    before anyone else can reach this server.
+    As shipped it sets a database user of ``change_me``, a database password of
+    ``change_me_strong_password``, and ``ALLOWED_HOSTS=*``, which accepts requests
+    for any host name. Change all three before anyone else can reach this server.
 
 At minimum, set:
 
@@ -263,10 +270,13 @@ Once it returns, check that the services are actually up:
 
 .. code-block:: console
 
-    docker compose ps
+    docker compose ps -a
 
-``nginx``, ``django``, ``django-q`` and ``postgres`` should all be ``running``,
-with ``django`` ``running (healthy)``; ``init`` has done its work and exited. A
+``nginx``, ``django``, ``django-q``, ``postgres`` and ``backup`` should all be
+``running``, with ``django`` ``running (healthy)``; ``init`` has done its work and
+exited. **The** ``-a`` **is what shows you** ``init``: without it, ``docker compose
+ps`` lists only running containers, so the one line this step tells you to look
+for is the one line missing from the output. A
 service that is missing or restarting has its reason in its own log, and
 ``up -d`` does not always report one -- if another program on the server is
 already using port 80 or 443, for example, ``nginx`` cannot start and ``up -d``
