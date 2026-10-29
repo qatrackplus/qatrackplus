@@ -112,7 +112,7 @@ Your command prompt should now be prefixed with ``(qatrackplus)`` or ``(.venv)``
    Two differences from the ``uv`` instructions above are worth knowing
    before you start:
 
-   * **You need Python 3.12 installed yourself, and on your ``PATH``.** The
+   * **You need Python 3.12 installed yourself, and on your** ``PATH``. The
      ``uv`` path does not -- ``uv venv --python 3.12`` downloads and manages
      an interpreter for you -- so this is an extra prerequisite rather than
      a substitution. Check it with ``python --version`` before creating the
