@@ -25,7 +25,7 @@ data, but take a backup and confirm it opens before you upgrade - see
 
 **Confirming it opens is not a formality in this release.** If you have been
 relying on ``manage.py backup_site`` for your database backup, you may not have
-one - see *Backups taken with ``backup_site`` may contain no database* below,
+one - see *Backups taken with backup_site may contain no database* below,
 and check before you upgrade rather than after.
 
 Bug Fixes
@@ -103,7 +103,7 @@ Ordered by consequence, most serious first.
 Other Changes
 ^^^^^^^^^^^^^
 
-* **Dates are now shown as ``YYYY-MM-DD`` by default, in every language.** Two things
+* **Dates are now shown as** ``YYYY-MM-DD`` **by default, in every language.** Two things
   changed, and an upgrading installation will see both.
 
   **What you will see:** 4.0 rendered ``31 May 2012 14:30`` into form fields; this
@@ -128,7 +128,7 @@ Other Changes
 
   .. warning::
 
-      **Breaking, for French and Spanish sites: ``03/05/2026`` is no longer accepted
+      **Breaking, for French and Spanish sites:** ``03/05/2026`` **is no longer accepted
       when typing a date.**
 
       4.0.1 gave each language its own list of formats it would *accept*, not just
@@ -216,7 +216,7 @@ Deployment and Upgrade Notes
   ``AUTOSAVE_DAYS_TO_KEEP`` days (30 by default), so this is a transient concern each
   time you upgrade rather than a lasting one.
 
-* **Docker: ``deploy/docker/.env`` is no longer tracked by git. Set your copy aside
+* **Docker:** ``deploy/docker/.env`` **is no longer tracked by git. Set your copy aside
   before you pull.** It holds the database password, so it no longer belongs in the
   repository. Every Docker site has edited it, so on the first pull to 4.0.2
   ``git pull`` stops with *Your local changes would be overwritten*. Follow
@@ -224,7 +224,7 @@ Deployment and Upgrade Notes
   ``.env`` aside, pull, and copy it back. Later pulls leave it alone. New
   installations create it with ``cp .env.example .env``.
 
-* **Docker sites can now set QATrack+'s settings in ``deploy/docker/.env``.**
+* **Docker sites can now set QATrack+'s settings in** ``deploy/docker/.env``.
   Previously only the database credentials, ``ALLOWED_HOSTS`` and
   ``CSRF_TRUSTED_ORIGINS`` could be set, and everything else needed a change inside
   the image. ``deploy/docker/.env.example`` now documents every setting available:
@@ -237,7 +237,7 @@ Deployment and Upgrade Notes
   check keeps working when ``ALLOWED_HOSTS`` names only the real host. They are
   never trusted CSRF origins.
 
-* **Docker: the secret key now lives in a volume, or in ``.env``.** When
+* **Docker: the secret key now lives in a volume, or in** ``.env``. When
   ``SECRET_KEY`` is not set, QATrack+ generates one and keeps it in the
   ``user-data-volume`` volume, so rebuilds never sign users out. 4.0.0 and 4.0.1
   kept the key in your QATrack+ folder (``deploy/docker/user-data/secret_key.txt``),
@@ -284,14 +284,14 @@ Deployment and Upgrade Notes
   set ``AD_CERT_FILE=/etc/qatrack/ldap/ca.pem`` in ``.env`` (see
   :ref:`docker_ldaps`). A certificate from a public CA still needs no file.
 
-* **QATrack+ warns at startup when it can't use ``AD_CERT_FILE``.** A file that is
+* **QATrack+ warns at startup when it can't use** ``AD_CERT_FILE``. A file that is
   missing, unreadable or not in PEM format made every LDAPS sign-in fail with
   *Unable to contact LDAP server*, which looks like a network problem. The
   ``qatrack.W011`` to ``qatrack.W013`` warnings now say what is wrong with the
   file. They are warnings only, so the site still starts. This applies to every
   installation, not only Docker.
 
-* **Docker: nginx answers only the hosts in ``ALLOWED_HOSTS``.** Requests for any
+* **Docker: nginx answers only the hosts in** ``ALLOWED_HOSTS``. Requests for any
   other host name are dropped before they reach QATrack+, so they no longer
   produce *Invalid HTTP_HOST header* errors (and error emails to ``ADMINS``).
   ``ALLOWED_HOSTS=*`` keeps passing every host on.
@@ -412,7 +412,7 @@ Deployment and Upgrade Notes
   A short-lived ``init`` container that does this appears as exited in
   ``docker compose ps -a``, which is expected.
 
-* **Docker: ``compose.override.yaml`` is now ``compose.dev.yaml`` and is no longer
+* **Docker:** ``compose.override.yaml`` **is now** ``compose.dev.yaml`` **and is no longer
   applied automatically.** The override mounted the whole checkout over the code in
   the image, so every plain ``docker compose`` command ran the checkout instead of
   the image, as root. Plain ``docker compose`` now runs the code built into the
@@ -427,7 +427,7 @@ Deployment and Upgrade Notes
   ``docker compose exec django tail -n 50 logs/debug.log``. With the development
   overlay they are still written to your checkout's ``logs`` folder.
 
-* **The Docker image installs exactly the dependency versions in ``uv.lock``**, the
+* **The Docker image installs exactly the dependency versions in** ``uv.lock``, the
   same versions the test suite runs against. Previously ``pip`` chose versions when
   the image was built, so two builds of the same release could differ.
 
@@ -439,7 +439,7 @@ Deployment and Upgrade Notes
   same folder can be installed without internet access. See
   :ref:`docker_site_packages`.
 
-* **Docker images no longer contain your ``.env`` file, local settings or site data.**
+* **Docker images no longer contain your** ``.env`` **file, local settings or site data.**
   The ``.dockerignore`` patterns only matched files at the top of the repository, so
   the image copied in ``deploy/docker/.env`` (which holds the database password), and
   anything else present in the checkout when it was built: a generated
@@ -455,7 +455,7 @@ Deployment and Upgrade Notes
   (``.env``, ``*.env``, ``.env.*``) are now ignored as well, except the
   ``.env.example`` templates, including ``deploy/docker/.env`` (see above).
 
-* **Files under ``deploy/docker`` always check out with LF line endings**, whatever
+* **Files under** ``deploy/docker`` **always check out with LF line endings**, whatever
   git's ``core.autocrlf`` setting. A Dockerfile or script with CRLF endings fails
   inside the container. A checkout made on Windows and copied to a Linux server
   keeps its current line endings until the files are checked out again; see
@@ -469,7 +469,7 @@ Bug Fixes
 
 Ordered by consequence, most serious first.
 
-* **``manage.py backup_site`` says when it has not backed up the database.** On MySQL,
+* ``manage.py backup_site`` **says when it has not backed up the database.** On MySQL,
   and on any engine it does not implement, it skipped the database without a word and
   finished as though it had written one, so a site could hold a set of backups
   containing no database at all. It now names the engine it cannot handle and skips
@@ -573,7 +573,7 @@ Ordered by consequence, most serious first.
 Other Changes
 ^^^^^^^^^^^^^
 
-* **Three ``Makefile`` targets that emptied application data have been removed:**
+* **Three** ``Makefile`` **targets that emptied application data have been removed:**
   ``clearct``, ``flushdb`` and ``__cleardb__``. Each acted on the database named by
   ``local_settings.py``, which in a clinical installation is the live one. Two were
   already broken and would have failed before doing damage; ``clearct`` worked. None
@@ -603,11 +603,11 @@ Deployment and Upgrade Notes
   one that does not will fail rather than dump the wrong database. Check your
   ``.env`` before relying on the next backup.
 
-* **``CSRF_TRUSTED_ORIGINS`` can be set from the environment** for Docker
+* ``CSRF_TRUSTED_ORIGINS`` **can be set from the environment** for Docker
   deployments, falling back to ``ALLOWED_HOSTS`` when it is not given. See the notes
   in ``deploy/docker/.env.example``.
 
-* **The ``installfixtures`` management command has been removed.** It loaded a
+* **The** ``installfixtures`` **management command has been removed.** It loaded a
   fixture set that no longer matched the schema. Use ``manage.py loaddata`` with the
   fixtures you want.
 
