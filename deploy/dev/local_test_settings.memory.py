@@ -11,6 +11,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': ':memory:',
+        # Stated, not inferred. Django ignores NAME for a SQLite test run and
+        # uses TEST['NAME'], substituting ':memory:' when it is unset - so this
+        # template worked by relying on that default, and a reader could not
+        # tell the in-memory database from an oversight.
+        'TEST': {'NAME': ':memory:'},
     }
 }
 DATABASES['readonly'] = DATABASES['default']
