@@ -15,7 +15,6 @@ except ImportError:
 NOTIFICATIONS_ON = False
 DEFAULT_NUMBER_FORMAT = None
 DEBUG = False
-SELENIUM_VIRTUAL_DISPLAY = False # Set to True to use headless browser for testing (requires xvfb)
 AD_CLEAN_USERNAME = None
 HTTP_OR_HTTPS = "http"
 REVIEW_BULK = True
@@ -128,3 +127,24 @@ CACHES = {
 # something else.
 if importlib.util.find_spec('qatrack.local_test_settings') is not None:
     from .local_test_settings import *  # noqa: F403,F401
+else:
+    # Say which database this run is using, rather than leaving a developer to
+    # infer it. The defaults above are disposable - in-memory SQLite, nothing
+    # persisted, no existing database touched - but somebody who meant to point
+    # the suite at PostgreSQL should find that out here and not from a run that
+    # passed against the wrong engine.
+    #
+    # Deliberately not copying a template into place: a file written as a side
+    # effect of a test run is one the developer owns without knowing it. The
+    # message says where the templates are instead.
+    import warnings
+
+    warnings.warn(
+        "qatrack/local_test_settings.py not found - this run uses a disposable "
+        "in-memory SQLite database. Nothing is persisted and no existing database "
+        "is touched. To choose your own test database, copy a template from "
+        "deploy/dev/ (for example local_test_settings.sqlite.py) to "
+        "qatrack/local_test_settings.py.",
+        RuntimeWarning,
+        stacklevel=2,
+    )

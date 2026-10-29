@@ -1,0 +1,90 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Development environment
+# ==========================================================================
+
+
+# dev-init refuses to touch an environment that already exists, rather than
+# copying what it can and failing partway through on `That username is already
+# taken`. Half a setup and a confusing error is the worst of the options. If
+# you want the old one gone, say so explicitly with dev-reset.
+[tasks.dev-init]
+help = "Create a fresh sqlite dev environment - refuses if one already exists"
+interpreter = "python"
+shell = """
+import os, pathlib, shutil, subprocess, sys
+
+TEMPLATES = [
+    ('deploy/dev/local_settings.dev.py', 'qatrack/local_settings.py'),
+    ('deploy/dev/local_test_settings.sqlite.py', 'qatrack/local_test_settings.py'),
+    ('deploy/dev/local_test_settings.memory.py', 'qatrack/local_test_settings.memory.py'),
+]
+DB = pathlib.Path('db/default.db')
+
+# Check everything before doing anything.
+existing = [dst for _, dst in TEMPLATES if pathlib.Path(dst).exists()]
+if DB.exists():
+    existing.append(str(DB))
+
+if existing:
+    print('This already looks like a set up dev environment:')
+    for path in existing:
+        print(f'  {path}')
+    print()
+    print('dev-init will not write over any of it. Either remove what you do not')
+    print('want and run this again, or use `poe dev-reset` to discard all of it')
+    print('and start over.')
+    sys.exit(1)
+
+for src, dst in TEMPLATES:
+    shutil.copyfile(src, dst)
+    print(f'created {dst} from {src}')
+
+pathlib.Path('db').mkdir(exist_ok=True)
+
+def run(*args, env=None):
+    result = subprocess.call([sys.executable, 'manage.py', *args],
+                             env={**os.environ, **(env or {})})
+    if result != 0:
+        sys.exit(result)
+
+run('migrate')
+run('createcachetable')
+run('createsuperuser', '--noinput', env={
+    'DJANGO_SUPERUSER_USERNAME': 'superuser',
+    'DJANGO_SUPERUSER_PASSWORD': 'superuser',
+    'DJANGO_SUPERUSER_EMAIL': 'superuser@example.com',
+})
+print('dev environment ready - log in as superuser / superuser')
+"""
+
+
+[tasks.dev-clean]
+help = "Remove the dev settings files and sqlite database, leaving nothing behind"
+interpreter = "python"
+shell = """
+import pathlib
+
+for path in [
+    'qatrack/local_settings.py',
+    'qatrack/local_test_settings.py',
+    'qatrack/local_test_settings.memory.py',
+    'db/default.db',
+]:
+    target = pathlib.Path(path)
+    if target.exists():
+        target.unlink()
+        print(f'removed {path}')
+"""
+
+
+[tasks.dev-reset]
+help = "DESTRUCTIVE: delete your dev settings and sqlite database, then set up a fresh one"
+sequence = ["dev-clean", "dev-init"]
+
+
+[tasks.run]
+help = "Run the dev server"
+cmd = "python ./manage.py runserver"

@@ -43,8 +43,17 @@ and then you can generate your schema with:
     make schema
 
 which will output the schema to
-docs/developer/images/qatrack_schema_$(SCHEMA_VERSION).svg - the minor version,
-so every 4.0.z writes qatrack_schema_4.0.svg.
+``docs/developer/images/qatrack_schema_<major>.<minor>.svg`` - for example
+``qatrack_schema_4.0.svg``. The version comes from the installed package, and the
+diagram is named for the minor line rather than the patch release because the
+schema is the same across every patch of a line: a change to it needs a
+migration, which makes it a minor release.
+
+``poe schema`` does the same thing without Make.
+
+The output is gitignored. Running either command to *look* at the schema will not
+stage an 838 KB SVG into an unrelated branch; adding the diagram for a new minor
+line is a deliberate ``git add -f``.
 
 
 Windows

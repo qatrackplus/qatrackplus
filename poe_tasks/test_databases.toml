@@ -1,0 +1,27 @@
+# ==========================================================================
+# Throwaway database servers for the per-engine test runs
+# ==========================================================================
+#
+# `poe test-engine postgres` needs a postgres to talk to. These bring the
+# servers up and down so that is one command rather than a docker invocation
+# nobody remembers.
+#
+# --wait is the point of `up`: SQL Server accepts connections roughly a
+# minute after the container starts, and without it the command returns
+# while the server is still initialising, so the first test run fails for
+# reasons that have nothing to do with the code.
+#
+# The servers keep nothing. Every service runs on tmpfs with no volume, so
+# `down` leaves nothing behind and a fresh `up` is a clean slate.
+
+[tasks.test-databases-up]
+help = "Start throwaway postgres/mysql/mssql servers and wait until they answer"
+cmd = "docker compose -f deploy/dev/compose.test-databases.yaml up -d --wait"
+
+[tasks.test-databases-down]
+help = "Stop the throwaway database servers and remove their containers"
+cmd = "docker compose -f deploy/dev/compose.test-databases.yaml down"
+
+[tasks.test-databases-status]
+help = "Show whether the throwaway database servers are up, and on which ports"
+cmd = "docker compose -f deploy/dev/compose.test-databases.yaml ps"

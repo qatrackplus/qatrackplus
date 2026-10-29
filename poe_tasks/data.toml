@@ -1,0 +1,48 @@
+# Included from pyproject.toml's [tool.poe] include list - see the header
+# comment there for the overall poe/Makefile migration context.
+
+# ==========================================================================
+# Data
+# ==========================================================================
+
+
+[tasks.dumpdata]
+help = "Dump the full DB to a timestamped JSON fixture"
+interpreter = "python"
+shell = """
+import datetime, subprocess, sys
+
+stamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+out = f'qatrack-dump-{stamp}.json'
+print(f'writing {out}')
+sys.exit(subprocess.call([
+    sys.executable, 'manage.py', 'dumpdata', '-v1', '--indent=2',
+    '--natural-foreign', '--natural-primary', '--output', out,
+]))
+"""
+
+
+[tasks.delete-all-data]
+help = "DESTRUCTIVE: empty every table (manage.py flush) - schema and migrations stay"
+# The only surviving task here that deletes anything, and it does not mirror a
+# Makefile target - `make flushdb`, which it would have mirrored, is removed on
+# develop as one of three destructive targets that should never have shipped in
+# a checkout that doubles as a deployment.
+#
+# It is kept because it is the one honest version of the job. `make flushdb`
+# ran
+#
+#     python manage.py sqlflush | python manage.py dbshell
+#
+# which is broken in practice: `dbshell` execs the database's own client
+# binary, so on sqlite it needs the `sqlite3` CLI on PATH. Without it the
+# pipeline dies, and - because the failure happens in the *consumer* - what
+# the developer sees is a BrokenPipeError traceback out of the producer,
+# not Django's actual "You appear not to have the 'sqlite3' program
+# installed" message. Confirmed on this machine, where sqlite3 is absent.
+#
+# `manage.py flush` is Django's own built-in for this and needs no external
+# binary, so it works on every backend and every platform, with no pipe and
+# therefore no shell. Behaviour differs slightly and for the better: flush
+# also resets sequences and re-runs post-migrate handlers.
+cmd = "python manage.py flush --noinput"
