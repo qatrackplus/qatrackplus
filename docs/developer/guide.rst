@@ -475,6 +475,119 @@ QATrack+ includes a Makefile with convenient shortcuts for common development ta
     make help
 
 For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
+Setting Up Selenium Browser Testing
+-----------------------------------
+
+QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
+
+**Browser Requirements**
+
+You need a browser installed - either Firefox or Chrome/Chromium, whichever
+you prefer. You do not normally need to install or configure a matching
+driver (geckodriver/chromedriver): Selenium Manager, built into Selenium
+4.6+, detects whichever browser you have and fetches a driver to match the
+first time a Selenium test runs. No display server is needed either, since
+tests run the browser in its own native headless mode by default - so this
+behaves the same on a workstation, a CI runner or a sandbox.
+
+There is one case that does need a path set. If a ``geckodriver`` or
+``chromedriver`` is already on ``PATH`` and does not match the installed
+browser, Selenium Manager prints an incompatibility warning and uses it
+anyway. Whether that matters depends on how far apart they are - measured
+against Chrome 153, one major version behind still starts a session with
+nothing worse than the warning, while three behind fails with
+``SessionNotCreatedException``. Rather than work out where your own line is,
+treat the warning itself as the signal: either take
+the stale driver off ``PATH``, or point
+``SELENIUM_FIREFOX_DRIVER_PATH`` / ``SELENIUM_CHROMIUM_DRIVER_PATH`` at one
+that matches.
+
+.. code-block:: shell
+
+    # Linux - install whichever browser you don't already have
+    sudo apt install firefox
+    # - or -
+    sudo apt install chromium
+
+On Windows and macOS, install the browser the usual way; Selenium Manager
+locates it just the same.
+
+**Configuring Selenium Tests**
+
+Set `SELENIUM_BROWSER` in `qatrack/local_test_settings.py` - or in
+`qatrack/local_settings.py`, either is honoured - to pick which browser
+drives the tests:
+
+.. code-block:: python
+
+    SELENIUM_BROWSER = 'firefox'   # the default
+    # SELENIUM_BROWSER = 'chromium'
+
+That's the only setting most people need. A couple of others (all defined
+in `qatrack/settings.py`, overridable the same way) are there if you need
+them:
+
+* `SELENIUM_HEADLESS` - `True` by default (native headless mode, no display
+  needed). Set to `False`, on a machine with a real display, to watch a
+  test execute in a visible browser window - useful when debugging a
+  failing Selenium test.
+* `SELENIUM_FIREFOX_DRIVER_PATH` / `SELENIUM_CHROMIUM_DRIVER_PATH` - only
+  needed if you want to pin a specific driver binary instead of letting
+  Selenium Manager resolve one automatically.
+
+Viewport size, and why headless is the reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The suite lays out at **1920x1080 CSS pixels**, and
+``TestPerformQC::test_perform_qc_viewport_sizes`` additionally checks the
+perform-QC page at three widths - 960x1080 (half of a 1080p display, for
+someone working side by side), 1366x768 (a common laptop) and 1920x1080. That
+is one ordinary test with three ``subTest`` cases; it is not opt-in and runs in
+every Selenium run, including CI's.
+
+Both browsers are launched pinned to a **1:1 device pixel ratio**
+(``layout.css.devPixelsPerPx`` for Firefox, ``--force-device-scale-factor``
+for Chromium). Without that, a *visible* browser inherits the desktop's
+display scaling: on a HiDPI desktop scaled to 187.5% a window that renders
+1920x1080 headless reports a CSS viewport of only 1536x997. The pages are laid
+out for the wider viewport, so at 1536 CSS pixels controls overlap and clicks
+land on whatever is covering them.
+
+**Headless is the reference configuration.** It has no window manager and no
+desktop scaling, so the viewport is exactly what was asked for, every time,
+on every machine. That is what CI runs and what a layout assertion should be
+trusted from.
+
+**Visible mode cannot always control the viewport.** Narrowing to a specific
+size needs a viewport override - WebDriver BiDi for Firefox, CDP for
+Chromium. The Firefox one is not guaranteed to succeed, and when it fails it
+fails by *hanging*: the BiDi command times out after about 30 seconds, once per
+test class. That was observed on a HiDPI desktop where the browser laid out in a
+mis-scaled coordinate space; pinning the device pixel ratio fixed it, and the
+override now applies on that same machine, Wayland included. The guard is kept
+because the failure mode costs a whole suite run, not because any platform is
+known to need it. When it does fail, ``set_viewport_size()`` returns ``False``
+after that one timeout rather than repeating it per class, and
+``test_perform_qc_viewport_sizes`` **skips the profiles it cannot honour**
+rather than measuring whatever size the window happened to be. A skip that
+names the profile is the honest result; silently testing one size three times
+and reporting three is not.
+
+So: use visible mode to *watch* a test, and headless to *believe* a layout
+result.
+
+Both `SELENIUM_BROWSER` and `SELENIUM_HEADLESS` can also be set from the
+command line for a single run, instead of edited into a settings file -
+useful for a one-off ("just this run, watch it in Chromium instead"):
+
+.. code-block:: shell
+
+    # bash/zsh
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False pytest --run-selenium
+
+    # PowerShell - the inline form above is a parse error here
+    $env:SELENIUM_BROWSER='chromium'; $env:SELENIUM_HEADLESS='False'; pytest --run-selenium
+
 
 Running The Test Suite
 ----------------------
@@ -531,155 +644,6 @@ measure coverage with:
     maintainer can help with the tests. A contribution held back because its tests
     were hard is worth less to everyone than one that arrives and gets finished
     together.
-
-Setting Up Selenium Browser Testing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-QATrack+ includes Selenium tests that simulate user interactions with the web interface and are marked with the `@pytest.mark.selenium` decorator.
-
-**This setup should be completed before running the test suite if you want to see the Selenium tests in action.**
-
-**Browser Requirements**
-
-You will need to have both a browser and its corresponding driver installed on your system:
-
-* Option 1. **Firefox + geckodriver**
-* Option 2. **Chromium + chromedriver**
-
-If you are unsure whether or not you have both a browser and its corresponding driver installed, you can run the following commands to check:
-
-**Finding Browser and Driver Paths:**
-
-.. code-block:: shell
-
-    # Check for Firefox browser
-    which firefox
-    
-    # Check for geckodriver
-    which geckodriver
-    
-    # Check for Chromium browser
-    which chromium
-    
-    # Check for chromedriver
-    which chromedriver
-
-**Example Output:**
-
-.. code-block::
-
-    /usr/bin/firefox
-    /snap/bin/geckodriver
-    /snap/bin/chromium
-    /usr/bin/chromedriver
-
-**Installing Missing Components**
-
-If you do not have both firefox and geckodriver or both chromium and chromedriver,
-you can install either pair using the following commands:
-
-.. code-block:: shell
-
-    # Option 1: Install Firefox and geckodriver
-    sudo apt install firefox geckodriver
-    
-    # Option 2: Install Chromium and chromedriver
-    sudo apt install chromium-browser chromium-chromedriver
-
-**Manual Downloads (Alternative Installation)**
-
-If the package manager installation doesn't work or you need a specific version, you can download the drivers manually:
-
-* **geckodriver**: Download from the `official Mozilla website <https://firefox-source-docs.mozilla.org/testing/geckodriver/>`_
-* **chromedriver**: Download from the `official Chrome releases <https://chromedriver.chromium.org/downloads>`_
-
-After downloading, make the driver executable and verify the path.
-
-
-**Configuring Selenium Tests**
-
-You'll need to configure your browser settings in two files. First, update the Selenium configuration in `qatrack/settings.py`:
-
-.. code-block::
-
-    # Selenium Browser Configuration
-    # Options: 'firefox', 'chromium'
-    SELENIUM_BROWSER = ''
-    
-    # Browser Driver Paths
-    SELENIUM_FIREFOX_DRIVER_PATH = ''  # Path to geckodriver as shown above
-    SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver as shown above
-    
-    # Leave this False in 4.0 - see the note below
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-Then also set `SELENIUM_VIRTUAL_DISPLAY` in `qatrack/test_settings.py`:
-
-.. code-block::
-    
-    # In qatrack/test_settings.py:
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-**Configuration Examples**
-
-**Firefox with visible browser:**
-
-.. code-block::
-
-    # In qatrack/settings.py:
-    SELENIUM_BROWSER = 'firefox'
-    SELENIUM_VIRTUAL_DISPLAY = False
-    SELENIUM_FIREFOX_DRIVER_PATH = '/snap/bin/geckodriver' 
-    
-    # In qatrack/test_settings.py:
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-**Chromium with visible browser:**
-
-.. code-block::
-
-    # In qatrack/settings.py:
-    SELENIUM_BROWSER = 'chromium'
-    SELENIUM_VIRTUAL_DISPLAY = False
-    SELENIUM_CHROMIUM_DRIVER_PATH = '/usr/bin/chromedriver'
-    
-    # In qatrack/test_settings.py:
-    SELENIUM_VIRTUAL_DISPLAY = False
-
-.. note::
-
-    **Headless running in 4.0 needs a system package, and cannot work on Windows.**
-    It is being replaced properly in 4.1.
-
-    ``SELENIUM_VIRTUAL_DISPLAY = True`` does not mean the browser's own headless
-    mode. It means a virtual X display driven through ``xvfb``, so the browser still
-    renders into a real X server - just one with no screen attached. The Python
-    wrapper, ``PyVirtualDisplay``, **is** a declared dependency and arrives with
-    ``uv sync``; ``xvfb`` itself is a **system** package and does not. Without it,
-    enabling the setting fails when the display is started, and nothing in the error
-    names the missing package.
-
-    **On Debian and Ubuntu:**
-
-    .. code-block:: bash
-
-        sudo apt install xvfb
-
-    On Fedora or RHEL the package is ``xorg-x11-server-Xvfb``.
-
-    **On Windows there is no xvfb at all, so headless cannot be made to work.**
-    Leave ``SELENIUM_VIRTUAL_DISPLAY = False`` and let the browser be visible.
-
-    With ``xvfb`` installed, headless does work on Linux - the full browser suite
-    passes - and it keeps the test browser off your desktop, which a visible run
-    cannot. If you are on a Wayland session, note that it is the *visible* path that
-    is the awkward one: Firefox with ``MOZ_ENABLE_WAYLAND=1`` ignores ``DISPLAY``
-    and renders through the compositor, so window-geometry behaviour differs from
-    X11.
-
-    **4.1 removes this whole question.** The browser's own headless mode is used
-    instead of a virtual display, so no display server is needed on any operating
-    system, and headless becomes the default rather than something to configure.
 
 Writing Documentation
 ---------------------
