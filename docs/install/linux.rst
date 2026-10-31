@@ -267,24 +267,6 @@ PostgreSQL locally. Run the following commands:
 After that completes, we can create a new database and Postgres user (db
 name/user/pwd = qatrackplus/qatrack/qatrackpass) as follows:
 
-.. warning::
-
-    ``qatrackpass`` **is an example in a published document, not a default to
-    keep.** The script below sets it, and so does the ``local_settings.py``
-    template further down, so a site that follows this guide literally ends up
-    with the password printed in our documentation. Change it on both the main
-    and the read-only role, and in ``local_settings.py``, before the server is
-    reachable by anyone else:
-
-    .. code-block:: bash
-
-        sudo -u postgres psql -c "ALTER ROLE qatrack WITH PASSWORD 'your-own-password'"
-        sudo -u postgres psql -c "ALTER ROLE qatrack_reports WITH PASSWORD 'another-one'"
-
-    The roles are only reachable from this server as it is configured here, which
-    is why this is a warning rather than a blocker - but a password anybody can
-    look up is one credential away from mattering.
-
 .. code-block:: bash
 
     cd ~/web/qatrackplus
@@ -295,6 +277,24 @@ And then create a readonly user for the SQL query tool:
 .. code-block:: bash
 
     sudo -u postgres psql < deploy/postgres/create_ro_role.sql
+
+.. warning::
+
+    **Both of those scripts set the password** ``qatrackpass``, **which is an
+    example in a published document, not a default to keep.** The
+    ``local_settings.py`` template further down sets the same one, so a site that
+    follows this guide literally ends up with the password printed in our
+    documentation. Change it on both roles now, and use the same values in
+    ``local_settings.py`` when you get there:
+
+    .. code-block:: bash
+
+        sudo -u postgres psql -c "ALTER ROLE qatrack WITH PASSWORD 'your-own-password'"
+        sudo -u postgres psql -c "ALTER ROLE qatrack_reports WITH PASSWORD 'another-one'"
+
+    The roles are only reachable from this server as it is configured here, which
+    is why this is a warning rather than a blocker - but a password anybody can
+    look up is one credential away from mattering.
 
 
 Now edit ``pg_hba.conf``. The path contains the major version of PostgreSQL you
@@ -778,8 +778,33 @@ reachable beyond a trusted network you want TLS, and `Let's Encrypt
             /etc/nginx/sites-available/qatrack.conf
         sudo nginx -t && sudo systemctl reload nginx
 
-Then obtain and install the certificate. The DNS name must already resolve to this
-server, and port 80 must be reachable from the internet:
+**Tell QATrack+ about the new name first.** Up to here the site has been reached by
+the server's IP address, which is what ``ALLOWED_HOSTS`` in
+``local_settings.py`` was set to. Django answers a request for any other name
+with **400 Bad Request**, so the HTTPS site you have just set up refuses its own
+hostname until you add it:
+
+.. code-block:: python
+
+    ALLOWED_HOSTS = ['qatrack.example.com', '10.0.0.5']
+    CSRF_TRUSTED_ORIGINS = ['https://qatrack.example.com']
+
+.. code-block:: bash
+
+    sudo supervisorctl restart gunicorn
+
+``CSRF_TRUSTED_ORIGINS`` is what lets a form submitted over HTTPS be accepted; a
+site that answers pages but rejects every login is usually missing it.
+
+**Where the reason appears**, if a page comes back 400 and nginx's own logs say
+nothing: ``~/web/qatrackplus/logs/gunicorn.log``, which carries
+*"Invalid HTTP_HOST header: '...'. You may need to add '...' to ALLOWED_HOSTS"*.
+That file holds the application's own errors for everything in this guide, and is
+the first place to look when the site is up but a page is not.
+
+
+With that done, obtain and install the certificate. The DNS name must already
+resolve to this server, and port 80 must be reachable from the internet:
 
 .. code-block:: bash
 
@@ -808,30 +833,6 @@ certificate with ``sudo certbot certificates``.
     not validate the certificate while doing so, so renewal still works - but if
     you replace the configuration with one that blocks the path outright, renewal
     will start failing silently.
-
-**Tell QATrack+ about the new name.** Up to here the site has been reached by
-the server's IP address, which is what ``ALLOWED_HOSTS`` in
-``local_settings.py`` was set to. Django answers a request for any other name
-with **400 Bad Request**, so the HTTPS site you have just set up refuses its own
-hostname until you add it:
-
-.. code-block:: python
-
-    ALLOWED_HOSTS = ['qatrack.example.com', '10.0.0.5']
-    CSRF_TRUSTED_ORIGINS = ['https://qatrack.example.com']
-
-.. code-block:: bash
-
-    sudo supervisorctl restart gunicorn
-
-``CSRF_TRUSTED_ORIGINS`` is what lets a form submitted over HTTPS be accepted; a
-site that answers pages but rejects every login is usually missing it.
-
-**Where the reason appears**, if a page comes back 400 and nginx's own logs say
-nothing: ``~/web/qatrackplus/logs/gunicorn.log``, which carries
-*"Invalid HTTP_HOST header: '...'. You may need to add '...' to ALLOWED_HOSTS"*.
-That file holds the application's own errors for everything in this guide, and is
-the first place to look when the site is up but a page is not.
 
 Tested on Ubuntu 24.04 with nginx 1.24.0 and certbot 2.9.0.
 
