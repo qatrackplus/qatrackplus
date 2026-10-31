@@ -395,6 +395,19 @@ Once you have Application Request Routing installed and proxies enabled, in
 the left panel of IIS under Sites, select the default Web Site and click Stop
 on the right hand side.
 
+.. warning::
+
+    **Stopping it is not enough: it starts itself again at the next reboot.**
+    The default site and QATrack+'s site are both bound to port 80, so whichever
+    is running owns it, and *Stop* does not change the setting IIS reads when
+    Windows boots. Measured on a fresh install, 2026-10-29: after one restart
+    the default site was running, QATrack+'s was stopped, and the address
+    answered with Windows' own *"IIS Windows Server"* page.
+
+    With the site still selected, click **Advanced Settings** in the right-hand
+    panel and set **Start Automatically** to **False**. Then it stays stopped.
+    (``deploy\win\iis_install.ps1`` does this for you if you used the script.)
+
 .. figure:: images/stop_default.png
    :alt: Stop default website
 
@@ -490,8 +503,28 @@ Group...` button and in the `Enter the object name to select` box put
    QCluster Task
 
 On the `Triggers` tab, click
-`New...` and in the `Begin the task:` dropdown select `At startup` and then
-click `OK`.
+`New...` and in the `Begin the task:` dropdown select `At startup`. Under
+`Advanced settings`, tick `Delay task for:` and choose `5 minutes`, then click
+`OK`.
+
+.. warning::
+
+    **Do not skip the delay when SQL Server runs on the same machine.** SQL
+    Server Express installs as *Automatic (Delayed Start)*, so it is still
+    starting for a minute or two after Windows has booted - and a Django Q
+    cluster that starts first never connects. The task stays *Running* and the
+    process stays alive, so nothing looks wrong, while ``manage.py qinfo``
+    reports **0 clusters and 0 workers** and scheduled notices and reports stop
+    silently until somebody restarts the task by hand.
+
+    Measured twice on Windows Server: 2026-10-18, and again on 2026-10-29 on a
+    fresh 4.0.2 install, where the cluster's process started at boot, SQL Server
+    reached *Running* two minutes later, and ``qinfo`` still read 0/0 ninety
+    seconds after that. Restarting the task gave 1 cluster and 2 workers within
+    thirty seconds.
+
+    The web service does not need this: Django connects per request, so
+    CherryPy recovers on its own once the database answers.
 
 .. figure:: images/win/qcluster_trigger.png
    :alt: QCluster Trigger
@@ -502,6 +535,13 @@ Now go to the `Actions` tab and click `New...`.  In the `Program/script:` box
 enter `C:\\deploy\\qatrackplus\\.venv\\Scripts\\python.exe`. In the `Add arguments
 (optional)`: field enter `manage.py qcluster`, and in the `Start in
 (optional):` field put `C:\\deploy\\qatrackplus`  (no trailing slash!).
+
+.. warning::
+
+    **On the `Settings` tab, untick `Stop the task if it runs longer than:`.**
+    Task Scheduler sets that to three days by default, so a cluster left alone
+    stops after three days and nothing restarts it - the same silent failure as
+    the one above, on a slower clock.
 
 .. figure:: images/win/django_q_action-cropped.png
    :alt: QCluster Action
@@ -528,6 +568,38 @@ with the Windows Task you created.
 .. _finally:
 
 .. include:: _site_record.rst
+
+Restart the server, and check it came back
+------------------------------------------
+
+**Do this before you hand the site over.** Everything on this page has been set
+up to survive a restart - a Windows service, a scheduled task, an IIS site - and
+until the server has restarted once, none of that is tested. Two of the three
+have failed this check on a correctly installed site, so it is worth ten minutes
+now rather than at the first Windows Update.
+
+Restart Windows, wait for it to settle - give SQL Server a few minutes, since it
+starts late - and then check all three:
+
+.. code-block:: console
+
+    >>  Get-Service "QATrack+ Web Service" | Select-Object Status, StartType
+    >>  Get-Website | Select-Object Name, State, @{n='AutoStart';e={ (Get-ItemProperty "IIS:\Sites\$($_.Name)" -Name serverAutoStart).Value }}
+    >>  cd C:\deploy\qatrackplus
+    >>  .\.venv\Scripts\python.exe manage.py qinfo
+
+What you are looking for:
+
+* the web service **Running**, with start type **Automatic**;
+* **QATrack Static** started, and *Default Web Site* both **Stopped** and
+  **AutoStart False** - if the default site is running, it has taken port 80 and
+  QATrack+ is unreachable;
+* ``qinfo`` reporting **1 cluster** with workers. If it reports 0 clusters while
+  the task shows as running, the cluster started before SQL Server did: restart
+  the task and add the startup delay described in `Setting up Django Q`_.
+
+Then open the site in a browser and sign in. A service that is running is not
+the same thing as a site that answers.
 
 What Next
 ---------
