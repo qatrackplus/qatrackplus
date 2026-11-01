@@ -485,9 +485,9 @@ This takes a couple of minutes and should end with a line like this:
 
 .. code-block:: bash
 
-    1354 passed, 3 skipped, 34 deselected, 219 warnings in 152.63s (0:02:32)
+    1653 passed, 4 skipped, 34 deselected, 237 warnings in 169.47s (0:02:49)
 
-Measured on a 1 vCPU / 1 GB server running Ubuntu 24.04 against 4.0.1. **Do not
+Measured on a 1 vCPU / 2 GB server running Ubuntu 24.04 against 4.0.2. **Do not
 treat the exact numbers as a target** - they move with every release, and the
 count differs by platform and by which optional dependencies you installed. What
 matters is that nothing *failed*.
@@ -639,7 +639,12 @@ Nginx to serve:
 
 .. code-block:: bash
 
-    python manage.py collectstatic
+    python manage.py collectstatic --noinput
+
+``--noinput`` answers the *"This will overwrite existing files! Are you sure you
+want to do this?"* prompt that ``collectstatic`` otherwise stops at and waits
+for. Nothing of yours is overwritten: the folder it writes to holds only copies
+of files from the source tree.
 
 If you want to enable internationalization, then you need to compile the
 messages catalogs for the languages you need. ``compilemessages`` is a wrapper
@@ -709,7 +714,8 @@ and then set up the Django Q configuration:
     make supervisor.conf
 
 
-Lastly, confirm django-q2 is now running:
+Lastly, confirm both processes are now running. ``make supervisor.conf`` starts
+gunicorn as well as django-q2, so you should see two:
 
 .. code-block:: bash
 
