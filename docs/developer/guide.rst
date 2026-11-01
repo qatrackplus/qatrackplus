@@ -732,15 +732,15 @@ A page that would otherwise be written out three times - once per platform, say 
 can be factored into a fragment and pulled into each page with ``.. include::``.
 ``docs/install/_upgrade_4_0_before.rst`` is one.
 
-**Name a fragment with a leading underscore, and add it to ``exclude_patterns`` in
-``docs/conf.py``.** Both, because they do different jobs:
+**Name a fragment with a leading underscore, and add it to** ``exclude_patterns`` **in**
+``docs/conf.py``. Both, because they do different jobs:
 
 - **The underscore is for people.** It says this file is not a page and is not meant
   to be read on its own. Sphinx attaches no meaning to it whatsoever - unlike Sass
   partials or Jekyll's ``_includes``, where the convention is enforced by the tool.
   The names ``_build``, ``_static`` and ``_templates`` are special only because
   ``conf.py`` points at them.
-- **``exclude_patterns`` is what gives it effect**, and it is worth knowing exactly
+- ``exclude_patterns`` **is what gives it effect**, and it is worth knowing exactly
   what it prevents. Without it Sphinx reads the fragment as a document *as well as*
   including it. With a fragment that defines no labels - which is what
   ``docs/install/_upgrade_4_0_*.rst`` are today - the build still passes, and the

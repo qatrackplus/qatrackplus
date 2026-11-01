@@ -140,11 +140,29 @@ if (-not $proxyOn) { Write-Bad 'ARR proxy did not enable'; throw 'ARR proxy enab
 Write-Ok 'ARR proxy enabled'
 
 # --- 2. Stop the Default Web Site ------------------------------------------
+#
+# `Stop-Website` alone does not survive a reboot, and that is the whole point of
+# this step: both sites are bound to *:80, so whichever is running owns the
+# port. `serverAutoStart` is what IIS reads at boot, and stopping a site leaves
+# it `True` - so after the next restart (a Windows Update will do) the default
+# site comes back, wins :80, and QATrack+ is unreachable while 'QATrack Static'
+# stays stopped. Measured on a fresh Windows Server 2022 install of 4.0.2,
+# 2026-10-29: http://localhost/ answered 200 with the title "IIS Windows
+# Server".
+#
+# So the stop is made permanent, and then verified, because a step whose only
+# job is to free a port has to be able to say whether it did.
 if ($StopDefaultSite) {
-    Write-Step 'Stopping Default Web Site'
+    Write-Step 'Stopping Default Web Site, permanently'
     if (Get-Website -Name 'Default Web Site' -ErrorAction SilentlyContinue) {
         Stop-Website -Name 'Default Web Site' -ErrorAction SilentlyContinue
-        Write-Ok 'Default Web Site stopped'
+        Set-ItemProperty 'IIS:\Sites\Default Web Site' -Name serverAutoStart -Value $false
+        $autoStart = (Get-ItemProperty 'IIS:\Sites\Default Web Site' -Name serverAutoStart).Value
+        if ($autoStart) {
+            Write-Bad 'Default Web Site still has serverAutoStart=True; it will take port 80 back at the next reboot'
+            throw 'Could not disable autostart on the Default Web Site.'
+        }
+        Write-Ok 'Default Web Site stopped and will not start itself again'
     }
     else { Write-Note 'Default Web Site not found - skipping' }
 }

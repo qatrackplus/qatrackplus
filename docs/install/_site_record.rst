@@ -29,8 +29,8 @@ software cannot know your host name.
 
 .. warning::
 
-    **There is a ``SITE_NAME`` setting, and on a native install changing it does
-    nothing.** It exists in
+    **There is a** ``SITE_NAME`` **setting, and on a native install changing it
+    does nothing.** It exists in
     ``qatrack/settings.py``, and on Docker it can be set in ``.env`` - but QATrack+
     reads the name from the database row, so the setting is ignored. Only the row
     matters. If you have already set ``SITE_NAME`` and seen no change, this is why.
@@ -90,5 +90,5 @@ Reload the login page afterwards; the tab should now read your display name.
 
 .. note::
 
-    **If you ever rebuild the database from the default fixtures, the row goes back to
-    ``example.com``.** Re-apply it after any rebuild. Upgrading does not touch it.
+    **If you ever rebuild the database from the default fixtures, the row goes
+    back to** ``example.com``. Re-apply it after any rebuild. Upgrading does not touch it.

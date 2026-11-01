@@ -25,6 +25,12 @@ patches is in the next section.
 Running the upgrade
 -------------------
 
+Every command below starts in your QATrack+ checkout, written here as
+``~/web/qatrackplus``. **That is a placeholder for wherever you cloned it** - the
+4.0.1 guide did not say where to put it, and a 4.0.1 site may have it anywhere.
+``docker compose`` has to run in ``deploy/docker`` inside that checkout, so if
+``docker compose ps`` answers from where you are, you are in the right place.
+
 Back up the database first and confirm the dump is readable. The deployment already
 has a ``backup`` service that does this nightly with ``pg_dump``; run it once now, and
 check the dump it wrote — :ref:`qatrack_backup` covers what a backup set must contain:
@@ -82,5 +88,13 @@ not happen. ``check --database default`` is the one worth reading: it reports
     ``manage.py check`` reports configuration problems, not data problems — it will not
     tell you whether your backup contains a database. Checking that is step one above,
     not something the command can do for you.
+
+.. note::
+
+    The ``django`` log prints a long notice about ``SECRET_KEY`` on its first 4.0.2
+    start, because 4.0.2 generates and keeps a key for you when ``.env`` does not set
+    one. It is a notice rather than a problem, and a 4.0.1 site meets it here for the
+    first time. :ref:`docker_secret_key` says what the generated key is, why the nightly
+    backup does not contain it, and how to copy it into your ``.env`` so that it does.
 
 .. include:: _upgrade_4_0_1_after.rst

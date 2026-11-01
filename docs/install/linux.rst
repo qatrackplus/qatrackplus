@@ -151,15 +151,26 @@ cloud images; ``sudo apt install tmux`` if yours does not have it.)
 
     **If you were not running under tmux,** the upgrade died with your shell,
     and the server is left with ``openssh-server`` half-configured and the twenty
-    or so packages behind it unconfigured. From the console, reboot, and then
-    finish the job:
+    or so packages behind it unconfigured. **You may not need the console for
+    this one.** Reboot the server - the control panel's own reboot button is
+    enough - and SSH answers again, because the configuration file still in place
+    is the one that was working before the upgrade started. Then finish the job
+    over SSH:
 
     .. code-block:: bash
 
-        sudo dpkg --configure -a
+        sudo dpkg --force-confold --configure -a
 
-    Answer the same question the same way, then check the result with
-    ``dpkg --audit``, which prints nothing at all when every package is configured.
+    ``--force-confold`` answers the dialog the same way pressing Enter would, by
+    keeping the configuration file already installed, so it runs without stopping
+    to ask. Check the result with ``dpkg --audit``, which prints nothing at all
+    when every package is configured. Measured on a Linode Ubuntu 24.04 server,
+    2026-10-29: reboot, then one command, 36 packages configured, SSH never lost
+    again.
+
+    If a reboot does not bring SSH back, the console is the way in, and
+    ``sudo dpkg --configure -a`` there will stop and ask the question for you to
+    answer.
 
     **Adding -y to the upgrade command does not help.** It answers ``apt``'s own
     *"Do you want to continue?"*, not this one, which comes from ``dpkg``: measured,
@@ -266,6 +277,24 @@ And then create a readonly user for the SQL query tool:
 .. code-block:: bash
 
     sudo -u postgres psql < deploy/postgres/create_ro_role.sql
+
+.. warning::
+
+    **Both of those scripts set the password** ``qatrackpass``, **which is an
+    example in a published document, not a default to keep.** The
+    ``local_settings.py`` template further down sets the same one, so a site that
+    follows this guide literally ends up with the password printed in our
+    documentation. Change it on both roles now, and use the same values in
+    ``local_settings.py`` when you get there:
+
+    .. code-block:: bash
+
+        sudo -u postgres psql -c "ALTER ROLE qatrack WITH PASSWORD 'your-own-password'"
+        sudo -u postgres psql -c "ALTER ROLE qatrack_reports WITH PASSWORD 'another-one'"
+
+    The roles are only reachable from this server as it is configured here, which
+    is why this is a warning rather than a blocker - but a password anybody can
+    look up is one credential away from mattering.
 
 
 Now edit ``pg_hba.conf``. The path contains the major version of PostgreSQL you
@@ -456,15 +485,17 @@ This takes a couple of minutes and should end with a line like this:
 
 .. code-block:: bash
 
-    1354 passed, 3 skipped, 34 deselected, 219 warnings in 152.63s (0:02:32)
+    1653 passed, 4 skipped, 34 deselected, 237 warnings in 169.47s (0:02:49)
 
-Measured on a 1 vCPU / 1 GB server running Ubuntu 24.04 against 4.0.1. **Do not
+Measured on a 1 vCPU / 2 GB server running Ubuntu 24.04 against 4.0.2. **Do not
 treat the exact numbers as a target** - they move with every release, and the
 count differs by platform and by which optional dependencies you installed. What
 matters is that nothing *failed*.
 
-The three skips are expected on a standard install: they are the Active Directory
-tests, which need the optional ``python-ldap`` package.
+The skips are expected on a standard install. Three of them are the Active Directory
+tests, which need the optional ``python-ldap`` package; a fourth says *this
+installation is not using a database cache*, which is true of a site that has not
+changed ``CACHES``, and is not a problem.
 
 
 Configuration of QATrack+
@@ -479,6 +510,16 @@ Create your `local_settings.py` file by copying the example from `deploy/{postgr
 
     # postgres
     cp deploy/postgres/local_settings.py qatrack/local_settings.py
+    chmod 600 qatrack/local_settings.py
+
+.. note::
+
+    **Three settings in that template are placeholders, and nothing later in this
+    guide comes back to them:** ``TIME_ZONE`` is ``America/Toronto``, ``ADMINS``
+    carries an example address, and the ``EMAIL_*`` block is unconfigured. A site
+    outside Eastern time will record and display every date an hour or more out
+    without anything looking wrong - which is the one to fix before you enter real
+    data. :ref:`qatrack-config` covers all three.
 
 .. dropdown:: For MySQL: Copy Settings File
     :color: warning
@@ -598,7 +639,12 @@ Nginx to serve:
 
 .. code-block:: bash
 
-    python manage.py collectstatic
+    python manage.py collectstatic --noinput
+
+``--noinput`` answers the *"This will overwrite existing files! Are you sure you
+want to do this?"* prompt that ``collectstatic`` otherwise stops at and waits
+for. Nothing of yours is overwritten: the folder it writes to holds only copies
+of files from the source tree.
 
 If you want to enable internationalization, then you need to compile the
 messages catalogs for the languages you need. ``compilemessages`` is a wrapper
@@ -668,7 +714,8 @@ and then set up the Django Q configuration:
     make supervisor.conf
 
 
-Lastly, confirm django-q2 is now running:
+Lastly, confirm both processes are now running. ``make supervisor.conf`` starts
+gunicorn as well as django-q2, so you should see two:
 
 .. code-block:: bash
 
@@ -748,13 +795,65 @@ reachable beyond a trusted network you want TLS, and `Let's Encrypt
             /etc/nginx/sites-available/qatrack.conf
         sudo nginx -t && sudo systemctl reload nginx
 
-Then obtain and install the certificate. The DNS name must already resolve to this
-server, and port 80 must be reachable from the internet:
+**Tell QATrack+ about the new name first.** Up to here the site has been reached by
+the server's IP address, which is what ``ALLOWED_HOSTS`` in
+``local_settings.py`` was set to. Django answers a request for any other name
+with **400 Bad Request**, so the HTTPS site you have just set up refuses its own
+hostname until you add it:
+
+.. code-block:: python
+
+    ALLOWED_HOSTS = ['qatrack.example.com', '10.0.0.5']
+    CSRF_TRUSTED_ORIGINS = ['https://qatrack.example.com']
+
+.. code-block:: bash
+
+    sudo supervisorctl restart gunicorn
+
+``CSRF_TRUSTED_ORIGINS`` is what lets a form submitted over HTTPS be accepted; a
+site that answers pages but rejects every login is usually missing it.
+
+**Now that the site is on HTTPS, tell Django not to send its cookies over plain
+HTTP.** Without these two, the session and CSRF cookies carry no ``Secure`` flag,
+so a browser will send them over ``http://`` - and your staff sign in through
+these:
+
+.. code-block:: python
+
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+Restart ``gunicorn`` again afterwards. **The Docker deployment sets both of these
+for you** when it is serving HTTPS (``qatrack/docker_settings.py``); a native
+install is the one that has to be told, which is why it is easy to miss.
+
+``SECURE_HSTS_SECONDS`` goes further - it tells browsers to refuse plain HTTP for
+this site for a given time - and is worth setting deliberately once your
+certificate has renewed at least once, rather than on the day you install.
+
+**Where the reason appears**, if a page comes back 400 and nginx's own logs say
+nothing: ``~/web/qatrackplus/logs/gunicorn.log``, which carries
+*"Invalid HTTP_HOST header: '...'. You may need to add '...' to ALLOWED_HOSTS"*.
+That file holds the application's own errors for everything in this guide, and is
+the first place to look when the site is up but a page is not.
+
+
+With that done, obtain and install the certificate. The DNS name must already
+resolve to this server, and port 80 must be reachable from the internet:
 
 .. code-block:: bash
 
     sudo apt install certbot python3-certbot-nginx
-    sudo certbot --nginx -d qatrack.example.com --agree-tos -m you@example.com --redirect
+    sudo certbot --nginx -d qatrack.example.com --agree-tos -m you@your-hospital.example --redirect
+
+**Use a real mailbox for the** ``-m`` **address.** Let's Encrypt refuses addresses at
+``example.com`` and ``example.org``, and certbot answers *"There seem to be
+problems with that address"* and then stops to ask for another one - so the
+address in this command is a placeholder you must replace, not one you can run.
+That mailbox is where expiry warnings go if renewal ever stops working, which is
+the one piece of post-installation mail worth receiving. If your department
+genuinely has no address for it, ``--register-unsafely-without-email`` registers
+without one and you give up those warnings.
 
 ``--redirect`` adds the HTTP-to-HTTPS redirect. certbot installs a renewal timer at
 the same time; confirm it with ``systemctl is-active certbot.timer`` and check the
