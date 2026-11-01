@@ -13,9 +13,22 @@ files would be overwritten*. Before the first pull to 4.0.2 or later, set your
     cp deploy/docker/.env ../qatrack.env.backup
     git checkout -- deploy/docker/.env
     git stash push -m qatrack-4.0.2-upgrade
+    git branch --show-current
+    git checkout releases/4.0        # only if the line above printed something else
     git pull
     git stash list | grep -q qatrack-4.0.2-upgrade && git stash pop
     cp ../qatrack.env.backup deploy/docker/.env
+
+**The branch check belongs here, in the middle of those commands, and not after
+them.** An installation made before 4.0.2 was told to clone without naming a
+branch, so it sits on ``master`` - where ``git pull`` answers *Already up to
+date* and moves nothing, because ``master`` is still at the release before this
+one. The switch to ``releases/4.0`` is what actually brings the new code, and it
+only works while your ``.env`` is set aside: with ``.env`` back in place it is a
+modified tracked file again, and ``git checkout releases/4.0`` stops with *Your
+local changes to the following files would be overwritten by checkout*. A site
+already on ``releases/4.0`` can leave the ``checkout`` line out; the ``git pull``
+then does the work, as it does for every later patch.
 
 ``git stash`` and ``git stash pop`` keep any other changes you have made to
 QATrack+'s files, such as a different port in ``deploy/docker/compose.yaml`` or
@@ -71,29 +84,23 @@ database password.
 If your server is a Windows machine, see :ref:`the note on line endings
 <docker_line_endings>` in the installation guide as well.
 
-Check you are on the release branch
------------------------------------
+Confirm you are on the release branch
+-------------------------------------
 
 Installations made before 4.0.2 were told to ``git clone`` without naming a branch, which
 leaves the checkout on ``master`` rather than on a release. ``git pull`` then follows
-``master``, so the site can pick up work that has not been released. The install guide now
-checks out ``releases/4.0``; move an existing installation onto it once:
+``master``, so the site can pick up work that has not been released, and a patch release
+never arrives at all. The switch above is what moves an existing installation onto the
+branch, once. Confirm it took:
 
 .. code-block:: bash
 
     cd ~/web/qatrackplus
     git branch --show-current
 
-If that prints anything other than ``releases/4.0``, switch to it. Do this **with the same
-care as the** ``.env`` **steps above** - it is the same hazard, because switching branches also
-replaces tracked files you may have edited:
-
-.. code-block:: bash
-
-    git checkout releases/4.0
-
-``git branch --show-current`` printing ``releases/4.0`` afterwards is the whole check. A
-site already on the branch needs none of this.
+``releases/4.0`` is the whole check. If it still prints ``master``, the ``checkout`` line
+above was skipped or stopped on a modified file: read what ``git status`` lists, set aside
+anything of yours it names as the ``.env`` steps do, and run the ``checkout`` again.
 
 .. note::
 
