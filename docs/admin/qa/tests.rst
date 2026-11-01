@@ -264,7 +264,7 @@ the value of this tests macro name. Two examples are shown below, first,
 a one liner to calculate a temperature-pressure correction factor:
 
 *Note that in QATrack+ versions prior to 0.2.7 the last line of code had
-to be a line that set a\ ``result`` variable to the final calculated
+to be a line that set a* ``result`` *variable to the final calculated
 result. This is no longer the recommended way to use composite tests
 although it is still supported for backwards compatability.*
 

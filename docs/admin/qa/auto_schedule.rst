@@ -13,7 +13,7 @@ want to "reset" all of them.
 All of these commands must be run from the git bash shell from the root
 of your QATrack+ directory (with your virtualenv activated).
 
-*The following command will disable the ``auto_schedule`` flag for all
+*The following command will disable the* ``auto_schedule`` *flag for all
 test list assignments:*
 
 ::
@@ -21,7 +21,7 @@ test list assignments:*
     #! bash
     python manage.py auto_schedule disable-all
 
-*The following command will enable the ``auto_schedule`` flag for all
+*The following command will enable the* ``auto_schedule`` *flag for all
 test list assignments:*
 
 ::
