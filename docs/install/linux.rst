@@ -492,8 +492,10 @@ treat the exact numbers as a target** - they move with every release, and the
 count differs by platform and by which optional dependencies you installed. What
 matters is that nothing *failed*.
 
-The three skips are expected on a standard install: they are the Active Directory
-tests, which need the optional ``python-ldap`` package.
+The skips are expected on a standard install. Three of them are the Active Directory
+tests, which need the optional ``python-ldap`` package; a fourth says *this
+installation is not using a database cache*, which is true of a site that has not
+changed ``CACHES``, and is not a problem.
 
 
 Configuration of QATrack+
@@ -509,6 +511,15 @@ Create your `local_settings.py` file by copying the example from `deploy/{postgr
     # postgres
     cp deploy/postgres/local_settings.py qatrack/local_settings.py
     chmod 600 qatrack/local_settings.py
+
+.. note::
+
+    **Three settings in that template are placeholders, and nothing later in this
+    guide comes back to them:** ``TIME_ZONE`` is ``America/Toronto``, ``ADMINS``
+    carries an example address, and the ``EMAIL_*`` block is unconfigured. A site
+    outside Eastern time will record and display every date an hour or more out
+    without anything looking wrong - which is the one to fix before you enter real
+    data. :ref:`qatrack-config` covers all three.
 
 .. dropdown:: For MySQL: Copy Settings File
     :color: warning
@@ -795,6 +806,24 @@ hostname until you add it:
 
 ``CSRF_TRUSTED_ORIGINS`` is what lets a form submitted over HTTPS be accepted; a
 site that answers pages but rejects every login is usually missing it.
+
+**Now that the site is on HTTPS, tell Django not to send its cookies over plain
+HTTP.** Without these two, the session and CSRF cookies carry no ``Secure`` flag,
+so a browser will send them over ``http://`` - and your staff sign in through
+these:
+
+.. code-block:: python
+
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+Restart ``gunicorn`` again afterwards. **The Docker deployment sets both of these
+for you** when it is serving HTTPS (``qatrack/docker_settings.py``); a native
+install is the one that has to be told, which is why it is easy to miss.
+
+``SECURE_HSTS_SECONDS`` goes further - it tells browsers to refuse plain HTTP for
+this site for a given time - and is worth setting deliberately once your
+certificate has renewed at least once, rather than on the day you install.
 
 **Where the reason appears**, if a page comes back 400 and nginx's own logs say
 nothing: ``~/web/qatrackplus/logs/gunicorn.log``, which carries
