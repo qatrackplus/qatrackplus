@@ -272,9 +272,9 @@ Once it returns, check that the services are actually up:
 
     docker compose ps -a
 
-``nginx``, ``django``, ``django-q``, ``postgres`` and ``backup`` should all be
-``running``, with ``django`` ``running (healthy)``; ``init`` has done its work and
-exited. **The** ``-a`` **is what shows you** ``init``: without it, ``docker compose
+``nginx``, ``django``, ``django-q``, ``postgres`` and ``backup`` should all read
+``Up`` and ``(healthy)`` - Compose writes ``Up 2 minutes``, not the word *running* -
+while ``init`` has done its work and shows ``Exited (0)``. **The** ``-a`` **is what shows you** ``init``: without it, ``docker compose
 ps`` lists only running containers, so the one line this step tells you to look
 for is the one line missing from the output. A
 service that is missing or restarting has its reason in its own log, and
