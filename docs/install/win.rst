@@ -538,7 +538,7 @@ enter `C:\\deploy\\qatrackplus\\.venv\\Scripts\\python.exe`. In the `Add argumen
 
 .. warning::
 
-    **On the `Settings` tab, untick `Stop the task if it runs longer than:`.**
+    On the `Settings` tab, **untick** `Stop the task if it runs longer than:`.
     Task Scheduler sets that to three days by default, so a cluster left alone
     stops after three days and nothing restarts it - the same silent failure as
     the one above, on a slower clock.
