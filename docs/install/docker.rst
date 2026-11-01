@@ -123,6 +123,10 @@ Docker's instructions for your distribution:
 * `Install Docker Engine on Ubuntu <https://docs.docker.com/engine/install/ubuntu/>`__
 * `Other Linux distributions <https://docs.docker.com/engine/install/>`__
 
+That page offers several methods: **use the apt repository**, the first one, which
+is the one that keeps Docker updated with the rest of the server. The convenience
+script and the manual ``.deb`` download both work, but neither gives you updates.
+
 Both versions are checked once the next step lets your own user talk to the
 Docker daemon.
 
@@ -136,8 +140,16 @@ Running Docker without sudo
 So that your own user can run ``docker`` commands without ``sudo``, follow
 Docker's `post-installation steps for Linux
 <https://docs.docker.com/engine/install/linux-postinstall/>`__, which add your
-user to the ``docker`` group. Log out and back in (or restart the server) for
-the change to take effect.
+user to the ``docker`` group. Only the first part of that page applies here: add
+the group and your user to it, then stop. **Its first command,**
+``sudo groupadd docker``\ **, will say** ``group 'docker' already exists`` - the
+Docker packages created it when you installed them, and that message means there
+is nothing to do, not that something went wrong.
+
+Log out and back in (or restart the server) for the change to take effect.
+Until you do, ``docker`` commands fail with ``permission denied while trying to
+connect to the Docker daemon socket``, in the same session where you have just
+added yourself to the group: group membership is read when you log in.
 
 Being in the ``docker`` group is as good as being root on the server, so add
 only people you would trust with root.
@@ -250,6 +262,14 @@ At minimum, set:
   also used for the links in QATrack+'s emails and reports, unless you set
   ``SITE_DOMAIN``.
 
+  **Put in every name and address people will actually type.** A request for a
+  host that is not in the list gets **no answer at all** - not an error page, not
+  a redirect; the connection simply returns nothing. So if you list only
+  ``qatrack.myclinic.ca`` and then try the server's bare IP address, the browser
+  reports that the site cannot be reached, which looks exactly like QATrack+
+  being down when it is in fact running normally. Add the IP address too if
+  anyone uses it.
+
 Starting QATrack+ for the first time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -274,7 +294,13 @@ Once it returns, check that the services are actually up:
 
 ``nginx``, ``django``, ``django-q``, ``postgres`` and ``backup`` should all read
 ``Up`` and ``(healthy)`` - Compose writes ``Up 2 minutes``, not the word *running* -
-while ``init`` has done its work and shows ``Exited (0)``. **The** ``-a`` **is what shows you** ``init``: without it, ``docker compose
+while ``init`` has done its work and shows ``Exited (0)``. **Run this a minute
+after** ``up -d`` **returns, not the moment it does.** ``up -d`` finishes as soon
+as the containers are started, which is before their health checks have passed:
+on a freshly built server ``django-q`` and ``nginx`` both read
+``Up Less than a second (health: starting)`` at that moment, and were
+``(healthy)`` about forty-five seconds later. ``(health: starting)`` is not a
+problem to solve, it is a check that has not finished yet. **The** ``-a`` **is what shows you** ``init``: without it, ``docker compose
 ps`` lists only running containers, so the one line this step tells you to look
 for is the one line missing from the output. A
 service that is missing or restarting has its reason in its own log, and
@@ -299,6 +325,14 @@ and version will differ):
     django-1  | [2026-05-04 15:31:44 +0000] [7] [INFO] Booting worker with pid: 7
     django-1  | [2026-05-04 15:31:44 +0000] [8] [INFO] Booting worker with pid: 8
 
+Before that line, the first start also prints a ``WARNINGS:`` block saying that
+the cache table ``qatrack_cache_table`` is missing. **On a first start that is
+expected and resolves itself**: system checks run before the migrations, and the
+migration that creates the table has not run yet. It does not appear again once
+the stack is up. Nothing needs to be done about it. If it is still reported after
+the stack has finished starting, run ``docker compose exec django python
+manage.py check`` and follow the hint it prints.
+
 Once the ``Listening at: http://0.0.0.0:8000`` line is visible, open one of the
 names you set in ``ALLOWED_HOSTS`` in a browser, for example
 ``http://qatrack.myclinic.ca``. On the server itself, ``http://localhost`` works
@@ -306,8 +340,11 @@ too.
 
 If you go to the website too early you will see the following error. This
 is not an issue, it just means that the QATrack+ server has not yet finished
-initialising. The first time QATrack+ starts up initialisation can take about
-10 minutes depending on your internet connection.
+initialising. How long that takes depends on the machine and the connection: on
+a 2 vCPU / 4 GB server the build took three and a half minutes and the start
+about a minute and a half, with no *502* at all, while a slower machine or a
+slower connection can take several minutes more. The ``django`` service is
+allowed up to ten minutes for its first start before Compose gives up on it.
 
 .. figure:: images/502_error.png
     :alt: Error visible while server is starting up
