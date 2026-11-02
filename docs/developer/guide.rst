@@ -95,12 +95,9 @@ them often.
 **Requirements:**
 
 - ``uv`` itself (already required above).
-- ``poe`` (`poethepoet <https://poethepoet.natn.io/>`__), only if you also
-  want to use ``poe <task>`` as a cross-platform alternative to the
-  project's ``Makefile`` targets - see ``poe_tasks/*.toml`` (pulled in via
-  ``[tool.poe] include`` in ``pyproject.toml``) for the available tasks.
-  It isn't a project dependency; install it once, globally, with
-  ``uv tool install poethepoet``.
+- ``poe`` (`poethepoet <https://poethepoet.natn.io/>`__), the project's task
+  runner. It is a project dependency, so ``uv sync`` installs it; see
+  *The task runner: poe* below for what it does.
 - A shell ``uv``/``poe`` recognize: bash, zsh, fish, PowerShell, elvish
   (``uv``) or nushell (``poe``, in addition to the previous four).
 
@@ -237,6 +234,67 @@ It is also one less thing to forget in a fresh shell.
 If you would rather activate the environment instead, the two are equivalent: run
 ``source .venv/bin/activate`` (``.venv\Scripts\activate`` on Windows) once per
 shell and drop the ``uv run`` prefix from everything below.
+
+The task runner: poe
+~~~~~~~~~~~~~~~~~~~~
+
+QATrack+ uses `poe <https://poethepoet.natn.io/>`__ (poethepoet) as its task
+runner. It is a normal project dependency, so the ``uv sync`` above installed
+it; there is nothing else to set up. It works the same way on Linux, macOS and
+Windows, which is why it is preferred over the ``Makefile`` (which stays, as a
+thin mirror, for anyone with Make muscle memory).
+
+``poe`` with no arguments lists every task with a one-line description; each
+task's own help is the source of truth. The ones you will use most:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Task
+     - What it does
+   * - ``poe ci``
+     - **Run before you push.** The CI checks that work on a dev machine, in
+       order: ``lint``, ``deps``, ``docs``, then the suite.
+   * - ``poe lint``
+     - The pre-commit suite over every file (ruff, yaml/toml, Django checks).
+   * - ``poe deps``
+     - Check that ``uv.lock`` is current and the installed packages agree with it.
+   * - ``poe docs`` / ``poe docs-autobuild``
+     - Build the documentation, failing on any warning; or serve it with
+       live reload on port 8008 (``--port`` to change).
+   * - ``poe test``
+     - The suite, with the GUI tests skipped (``poe test --run-selenium`` to
+       include them).
+   * - ``poe test-engine <engine>``
+     - The suite against one database engine (``sqlite``, ``memory``,
+       ``postgres``, ``mysql``, ``mssql``), restoring your settings afterwards.
+   * - ``poe test-integration``
+     - Provision a fresh sqlite database the way a deployment does, then run
+       the suite against it.
+   * - ``poe test-order``
+     - The suite in a shuffled order, to catch tests that depend on each other.
+   * - ``poe cover``
+     - The full suite with coverage.
+   * - ``poe test-gui-<browser>-<mode>``
+     - Only the GUI tests, for ``firefox`` or ``chromium``, ``headless``,
+       ``visible`` or ``watch`` - see *Setting Up Selenium Browser Testing*.
+   * - ``poe test-databases-up`` / ``-down`` / ``-status``
+     - Start, stop or inspect throwaway PostgreSQL, MySQL and SQL Server
+       containers for ``test-engine`` (needs Docker).
+   * - ``poe dev-init`` / ``dev-reset`` / ``run``
+     - Create a fresh sqlite development environment (``dev-reset`` deletes
+       the existing one first), and run the development server.
+   * - ``poe messages`` / ``i18n-status``
+     - Re-extract and recompile the translation catalogues; report how
+       complete each one is.
+
+Tasks whose help text begins **WIP** (the Ubuntu deployment helpers in
+``poe_tasks/deploy.toml``, which run ``sudo``, and three ``make-*`` shims) are
+unverified and not part of the ordinary workflow.
+
+This guide writes them as ``uv run poe <task>``, like every other command here.
+In an activated virtual environment the ``uv run`` prefix is optional.
 
 Understanding the Settings Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -846,7 +904,7 @@ QATrack+ includes a Makefile with convenient shortcuts for common development ta
 
 .. code-block:: shell
 
-    make help
+    poe
 
 For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
 
@@ -915,6 +973,9 @@ them:
 * `SELENIUM_FIREFOX_DRIVER_PATH` / `SELENIUM_CHROMIUM_DRIVER_PATH` - only
   needed if you want to pin a specific driver binary instead of letting
   Selenium Manager resolve one automatically.
+* `SELENIUM_SLOW_MO` - an environment variable, not a setting: a pause in
+  seconds between browser actions, so a visible run can be followed by eye.
+  The ``poe test-gui-*-watch`` tasks set it; leave it unset when measuring.
 
 ``SELENIUM_SLOW_MO`` is the one knob that is **not** a setting. It is seconds to
 pause after each browser interaction so a person can follow a run - ``0``, the
@@ -1022,6 +1083,16 @@ counted either way; it still works and now warns, and goes in 4.2.)
     uv run pytest --run-selenium         # those, and the GUI tests as well
     uv run pytest -m selenium --run-selenium   # only the GUI tests
 
+The ``poe`` tasks wrap the same commands with the browser and mode chosen for
+you, so nothing has to be edited into a settings file:
+
+.. code-block:: shell
+
+    poe test-gui                      # only the GUI tests, with your settings
+    poe test-gui-firefox-headless     # or -chromium-; no display needed
+    poe test-gui-firefox-visible      # a real window, on a machine with a display
+    poe test-gui-firefox-watch        # visible and slowed down, for watching only
+
 .. note::
 
     ``-m "not selenium"`` still works and is **deprecated**: it was how you
@@ -1038,7 +1109,7 @@ measure coverage with:
 
 .. code-block:: shell
 
-    make cover
+    poe cover
 
 .. tip::
 
@@ -1155,12 +1226,13 @@ browser (at http://127.0.0.1:8008) by running one of the following commands:
 
 .. code-block:: shell
 
-    make docs-autobuild
+    poe docs-autobuild
     # -or-
     sphinx-autobuild docs docs/_build/html --port 8008
 
 The documentation build treats warnings as errors, so a build that reports a
-warning fails. Run it the way CI does before you push:
+warning fails. ``poe docs`` is that build, and ``poe ci`` runs it; run one of
+them before you push. The command underneath is:
 
 .. code-block:: shell
 
