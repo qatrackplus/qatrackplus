@@ -311,52 +311,6 @@ Copy whichever one matches your target to ``qatrack/local_settings.py`` and
 edit it from there. For full deployment instructions see the
 :doc:`installation guides </install/install>`, not this page.
 
-
-.. _local_test_settings_templates:
-
-``local_test_settings.py`` templates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-These configure the database the *test suite* runs against, which is separate
-from the one the development server uses. There is one per supported engine:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 34 66
-
-   * - Template
-     - Use it for
-   * - ``deploy/dev/local_test_settings.sqlite.py``
-     - File-backed sqlite at ``db/default.db``. The default. Needs
-       nothing beyond Python.
-   * - ``deploy/dev/local_test_settings.memory.py``
-     - In-memory sqlite. The fastest option and leaves nothing on disk, so
-       it is the one to reach for when iterating. Copy it to
-       ``qatrack/local_test_settings.memory.py`` and ``make test-memory``
-       works against it.
-   * - ``deploy/dev/local_test_settings.postgres.py``
-     - PostgreSQL. Needs a reachable server and a ``qatrackplus_test``
-       database; edit the placeholder user, password and host first.
-   * - ``deploy/dev/local_test_settings.mysql.py``
-     - MySQL/MariaDB. Same again, against a ``qatrackplus_test`` database.
-   * - ``deploy/dev/local_test_settings.mssql.py``
-     - MS SQL Server. Needs the ODBC driver named in the template, and a
-       login with ``dbcreator`` rights so the suite can create its own test
-       database - which is why the template sets no database name. It also
-       shows the ``Trusted_Connection`` form if you would rather use
-       Windows-integrated authentication.
-
-Copy one to ``qatrack/local_test_settings.py`` to make it your everyday
-choice. To run against an engine *without* disturbing that file, copy it to
-``qatrack/local_test_settings.<engine>.py`` instead and use
-``make test-<engine>`` - see `Running The Test Suite`_.
-
-The two sqlite variants are not interchangeable for testing purposes: they
-exercise different code paths, and CI deliberately runs both.
-
-
-.. _test_databases:
-
 Getting a database to test against
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
