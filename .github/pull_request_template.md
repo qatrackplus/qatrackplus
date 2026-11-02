@@ -33,9 +33,10 @@ _Confirm which branch this targets (e.g. master)._
 ### Coder Tasks
 
 - [ ] Rebased / merged `develop` branch; no merge conflicts.
-- [ ] `uv run pre-commit run --all-files` passes (ruff lint, django-upgrade,
-  django check, plus the yaml/toml/large-file/merge-conflict/debug-statement
-  checks).
+- [ ] `uv run poe ci` passes: pre-commit over every file (ruff lint,
+  django-upgrade, django check, plus the yaml/toml/large-file/merge-conflict/
+  debug-statement checks), the lockfile check, the strict docs build and the
+  full test suite.
   - `uv run ruff check . --fix` to help resolve linting errors
   - `uv run ruff format <files you changed>` to auto-format just what you
     touched — don't run it repo-wide, formatting hasn't been applied across
