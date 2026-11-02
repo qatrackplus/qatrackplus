@@ -68,7 +68,13 @@ class TestServiceEventReviewModel(TestCase):
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = qa_utils.create_group()
-        user = models.User.objects.latest('pk')
+        # Created here, not borrowed. This was `User.objects.latest('pk')`, which
+        # takes whichever user some earlier test happened to leave behind - so in a
+        # shuffled run with nothing before it the queryset is empty and every test
+        # in this class dies in setUp. Measured 2026-11-02 at seed 1: seven of the
+        # suite's nine order-dependent failures were these two lines. Even when it
+        # found a user, which one it found was arbitrary.
+        user = models.User.objects.create_user('notified', 'example@example.com', 'password')
         user.is_active = True
         user.groups.add(self.group)
         user.email = "example@example.com"
@@ -151,7 +157,13 @@ class TestServiceEventReviewEmails(TestCase):
         self.unit_group.units.add(self.usa1.unit)
 
         self.group = qa_utils.create_group()
-        user = models.User.objects.latest('pk')
+        # Created here, not borrowed. This was `User.objects.latest('pk')`, which
+        # takes whichever user some earlier test happened to leave behind - so in a
+        # shuffled run with nothing before it the queryset is empty and every test
+        # in this class dies in setUp. Measured 2026-11-02 at seed 1: seven of the
+        # suite's nine order-dependent failures were these two lines. Even when it
+        # found a user, which one it found was arbitrary.
+        user = models.User.objects.create_user('notified', 'example@example.com', 'password')
         user.groups.add(self.group)
         user.is_active = True
         user.email = "example@example.com"
