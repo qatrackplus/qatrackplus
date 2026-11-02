@@ -144,69 +144,6 @@ profile:
     that declare a ``choices`` list in ``pyproject.toml`` - none of this
     project's task arguments do that yet.
 
-.. _adding-a-poe-task:
-
-Adding a new poe task
-~~~~~~~~~~~~~~~~~~~~~
-
-Task definitions live under ``poe_tasks/``, one file per theme, rather than
-directly in ``pyproject.toml``: ``dev.toml`` (dev environment setup),
-``tests.toml`` (running the suite, GUI/Selenium variants), ``coverage.toml``,
-``docs.toml`` (Sphinx, schema diagram, translation status), ``data.toml``
-(fixtures and destructive data commands), ``deploy.toml`` (Ubuntu/sudo
-deployment helpers), ``ci.toml`` (the ``poe ci`` pre-push check and its
-parts), ``test_databases.toml`` (throwaway database servers for
-``test-engine``) and ``translations.toml`` (the gettext catalogues).
-``pyproject.toml`` itself only lists them, via
-``[tool.poe] include``; it never grew a ``[tool.poe.tasks.*]`` table of its
-own. This split exists purely to stop ``pyproject.toml`` growing without
-bound as tasks are added - it changes nothing about how a task runs, or how
-``poe <task>``/``poe --help`` behave.
-
-``poe_tasks/make_compat.toml`` is different in kind, not just location: it
-holds the ``make-*`` tasks that deliberately mirror a ``Makefile`` target
-one-for-one (see the comment above ``[tool.poe] include`` in
-``pyproject.toml``), plus the shared ``_test-engine`` implementation they
-``ref``. Nothing new should be added there - a new task belongs in one of
-the theme files above, and only gets a ``make-*`` mirror if the ``Makefile``
-target it mirrors still exists.
-
-When adding a task:
-
-1. Pick the theme file that matches, or add a new ``poe_tasks/<theme>.toml``
-   and list it in ``pyproject.toml``'s ``[tool.poe] include`` if none fit.
-2. Included files use bare ``[tasks.<name>]`` headers, **not**
-   ``[tool.poe.tasks.<name>]`` - poe treats a non-``pyproject.toml`` file
-   with no ``tool.poe`` table of its own as if its entire contents sat under
-   ``tool.poe``. Copy the header style already used in that file.
-3. Make it work on Windows: prefer a plain ``cmd`` task, or
-   ``interpreter = "python"`` with stdlib (``pathlib``/``shutil``/
-   ``subprocess``) if it needs any logic at all. Avoid a bare ``shell``
-   task (defaults to bash/POSIX, which fails outright on a Windows host
-   with no Git Bash or WSL) unless the task is genuinely Ubuntu/sudo-only
-   by nature (see ``deploy.toml``) - in that case, say so in the task's
-   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do. Inside an
-   ``interpreter = "python"`` body poe does **not** substitute ``${arg}``;
-   a declared argument arrives as an environment variable, so read
-   ``os.environ['arg']`` (see ``test-engine`` in ``tests.toml``).
-4. If the task declares a named argument (``options = [...]``), poe will
-   silently drop any extra dash-prefixed tokens passed after it rather than
-   forwarding them - see the note on ``_test-engine`` in
-   ``poe_tasks/make_compat.toml`` for the reasoning. Prefer a positional
-   argument, or no argument at all, unless you specifically need the
-   ``--flag`` form.
-5. A task's argument can declare ``choices = [...]`` to get real tab
-   completion of its allowed values (see `Shell Autocomplete for uv and poe`_
-   above) - worth adding for anything with a small, fixed set of valid
-   values (an engine name, a browser name, and so on).
-6. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
-   prints the resolved command/script - it does not catch a task that
-   parses fine but fails or misbehaves once actually invoked).
-7. Give it a one-line ``help`` - that line is what ``poe`` prints in its task
-   list, and for most tasks it is the only documentation. If contributors
-   will reach for it, add a row to the table in *The task runner: poe* above;
-   if it is unverified, start the help text with ``WIP``.
-
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -245,6 +182,8 @@ If you would rather activate the environment instead, the two are equivalent: ru
 ``source .venv/bin/activate`` (``.venv\Scripts\activate`` on Windows) once per
 shell and drop the ``uv run`` prefix from everything below.
 
+.. _task-runner-poe:
+
 The task runner: poe
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -254,8 +193,8 @@ it; there is nothing else to set up. It works the same way on Linux, macOS and
 Windows, which is why it is preferred over the ``Makefile`` (which stays, as a
 thin mirror, for anyone with Make muscle memory).
 
-``poe`` with no arguments lists every task with a one-line description; each
-task's own help is the source of truth. The ones you will use most:
+These are the tasks you need; ``poe`` with no arguments lists the rest, each
+with a one-line description, and that help text is the source of truth:
 
 .. list-table::
    :header-rows: 1
@@ -265,11 +204,8 @@ task's own help is the source of truth. The ones you will use most:
      - What it does
    * - ``poe ci``
      - **Run before you push.** The CI checks that work on a dev machine, in
-       order: ``lint``, ``deps``, ``docs``, then the suite.
-   * - ``poe lint``
-     - The pre-commit suite over every file (ruff, yaml/toml, Django checks).
-   * - ``poe deps``
-     - Check that ``uv.lock`` is current and the installed packages agree with it.
+       order: the pre-commit suite over every file, the lockfile check, the
+       documentation build, then the test suite.
    * - ``poe docs`` / ``poe docs-autobuild``
      - Build the documentation, failing on any warning; or serve it with
        live reload on port 8008 (``--port`` to change).
@@ -282,25 +218,12 @@ task's own help is the source of truth. The ones you will use most:
        ``qatrack/local_test_settings.<engine>.py`` first from the matching
        ``deploy/dev/`` template; the task swaps it in for the run and restores
        your usual settings afterwards, however the run ends.
-   * - ``poe test-integration``
-     - Provision a fresh sqlite database the way a deployment does, then run
-       the suite against it.
-   * - ``poe test-order``
-     - The suite in a shuffled order, to catch tests that depend on each other.
-   * - ``poe cover``
-     - The full suite with coverage.
    * - ``poe test-gui-<browser>-<mode>``
      - Only the GUI tests, for ``firefox`` or ``chromium``, ``headless``,
        ``visible`` or ``watch`` - see *Setting Up Selenium Browser Testing*.
-   * - ``poe test-databases-up`` / ``-down`` / ``-status``
-     - Start, stop or inspect throwaway PostgreSQL, MySQL and SQL Server
-       containers for ``test-engine`` (needs Docker).
    * - ``poe dev-init`` / ``dev-reset`` / ``run``
      - Create a fresh sqlite development environment (``dev-reset`` deletes
        the existing one first), and run the development server.
-   * - ``poe messages`` / ``i18n-status``
-     - Re-extract and recompile the translation catalogues; report how
-       complete each one is.
 
 Tasks whose help text begins **WIP** (the Ubuntu deployment helpers in
 ``poe_tasks/deploy.toml``, which run ``sudo``, and three ``make-*`` shims) are
@@ -911,16 +834,84 @@ JavaScript files that are ours rather than vendored, 52 use 4 and 25 use 2. A pa
 that reindents a file to follow this page is a patch whose diff hides its own
 change.
 
-Using Make Commands
-~~~~~~~~~~~~~~~~~~~
+Using poe (and Make)
+~~~~~~~~~~~~~~~~~~~~
 
-QATrack+ includes a Makefile with convenient shortcuts for common development tasks like running tests, formatting code, and building documentation. You can see all available commands by running:
+Day-to-day commands - running the tests, building the documentation, setting up
+a development database - are ``poe`` tasks; see :ref:`the task runner
+<task-runner-poe>` for the ones you need. ``poe`` with no arguments lists them
+all:
 
 .. code-block:: shell
 
     poe
 
-For detailed information about using make and understanding Makefiles, refer to the `GNU Make Manual <https://www.gnu.org/software/make/manual/>`_.
+The ``Makefile`` remains as a thin mirror of the same commands for anyone who
+prefers Make (``make help`` lists its targets); new work goes into the ``poe``
+tasks, not the ``Makefile``.
+
+.. _adding-a-poe-task:
+
+Adding a new poe task
+~~~~~~~~~~~~~~~~~~~~~
+
+Task definitions live under ``poe_tasks/``, one file per theme, rather than
+directly in ``pyproject.toml``: ``dev.toml`` (dev environment setup),
+``tests.toml`` (running the suite, GUI/Selenium variants), ``coverage.toml``,
+``docs.toml`` (Sphinx, schema diagram, translation status), ``data.toml``
+(fixtures and destructive data commands), ``deploy.toml`` (Ubuntu/sudo
+deployment helpers), ``ci.toml`` (the ``poe ci`` pre-push check and its
+parts), ``test_databases.toml`` (throwaway database servers for
+``test-engine``) and ``translations.toml`` (the gettext catalogues).
+``pyproject.toml`` itself only lists them, via
+``[tool.poe] include``; it never grew a ``[tool.poe.tasks.*]`` table of its
+own. This split exists purely to stop ``pyproject.toml`` growing without
+bound as tasks are added - it changes nothing about how a task runs, or how
+``poe <task>``/``poe --help`` behave.
+
+``poe_tasks/make_compat.toml`` is different in kind, not just location: it
+holds the ``make-*`` tasks that deliberately mirror a ``Makefile`` target
+one-for-one (see the comment above ``[tool.poe] include`` in
+``pyproject.toml``), plus the shared ``_test-engine`` implementation they
+``ref``. Nothing new should be added there - a new task belongs in one of
+the theme files above, and only gets a ``make-*`` mirror if the ``Makefile``
+target it mirrors still exists.
+
+When adding a task:
+
+1. Pick the theme file that matches, or add a new ``poe_tasks/<theme>.toml``
+   and list it in ``pyproject.toml``'s ``[tool.poe] include`` if none fit.
+2. Included files use bare ``[tasks.<name>]`` headers, **not**
+   ``[tool.poe.tasks.<name>]`` - poe treats a non-``pyproject.toml`` file
+   with no ``tool.poe`` table of its own as if its entire contents sat under
+   ``tool.poe``. Copy the header style already used in that file.
+3. Make it work on Windows: prefer a plain ``cmd`` task, or
+   ``interpreter = "python"`` with stdlib (``pathlib``/``shutil``/
+   ``subprocess``) if it needs any logic at all. Avoid a bare ``shell``
+   task (defaults to bash/POSIX, which fails outright on a Windows host
+   with no Git Bash or WSL) unless the task is genuinely Ubuntu/sudo-only
+   by nature (see ``deploy.toml``) - in that case, say so in the task's
+   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do. Inside an
+   ``interpreter = "python"`` body poe does **not** substitute ``${arg}``;
+   a declared argument arrives as an environment variable, so read
+   ``os.environ['arg']`` (see ``test-engine`` in ``tests.toml``).
+4. If the task declares a named argument (``options = [...]``), poe will
+   silently drop any extra dash-prefixed tokens passed after it rather than
+   forwarding them - see the note on ``_test-engine`` in
+   ``poe_tasks/make_compat.toml`` for the reasoning. Prefer a positional
+   argument, or no argument at all, unless you specifically need the
+   ``--flag`` form.
+5. A task's argument can declare ``choices = [...]`` to get real tab
+   completion of its allowed values (see `Shell Autocomplete for uv and poe`_
+   above) - worth adding for anything with a small, fixed set of valid
+   values (an engine name, a browser name, and so on).
+6. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
+   prints the resolved command/script - it does not catch a task that
+   parses fine but fails or misbehaves once actually invoked).
+7. Give it a one-line ``help`` - that line is what ``poe`` prints in its task
+   list, and for most tasks it is the only documentation. If contributors
+   will reach for it, add a row to the table in *The task runner: poe* above;
+   if it is unverified, start the help text with ``WIP``.
 
 Setting Up Selenium Browser Testing
 -----------------------------------
