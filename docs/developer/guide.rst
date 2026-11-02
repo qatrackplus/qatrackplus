@@ -232,8 +232,9 @@ Tasks whose help text begins **WIP** (the Ubuntu deployment helpers in
 unverified and not part of the ordinary workflow.
 
 This guide writes them as ``uv run poe <task>``, like every other command here.
-In an activated virtual environment the ``uv run`` prefix is optional. To add a
-task of your own, see :ref:`adding-a-poe-task`.
+In an activated virtual environment the ``uv run`` prefix is optional - the one
+place it is left off below is the shell-completion snippets above, which the
+shell evaluates itself. To add a task of your own, see :ref:`adding-a-poe-task`.
 
 Understanding the Settings Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -321,7 +322,7 @@ server *and* a database driver, neither of which arrives with
 Throwaway servers for all three::
 
     cp deploy/dev/.env.test-databases.example deploy/dev/.env
-    poe test-databases-up
+    uv run poe test-databases-up
 
 They keep nothing - every service runs on tmpfs with no volume - so
 ``poe test-databases-down`` leaves no trace and the next ``up`` is a clean
@@ -333,7 +334,7 @@ Then install the driver for the engine you want and run it::
 
     uv sync --dev --extra postgres
     cp deploy/dev/local_test_settings.postgres.py qatrack/local_test_settings.postgres.py
-    poe test-engine postgres
+    uv run poe test-engine postgres
 
 The templates read their connection details from the same variables the
 compose file publishes, so the two cannot disagree - a hardcoded port in one
@@ -1050,10 +1051,10 @@ you, so nothing has to be edited into a settings file:
 
 .. code-block:: shell
 
-    poe test-gui                      # only the GUI tests, with your settings
-    poe test-gui-firefox-headless     # or -chromium-; no display needed
-    poe test-gui-firefox-visible      # a real window, on a machine with a display
-    poe test-gui-firefox-watch        # visible and slowed down, for watching only
+    uv run poe test-gui                      # only the GUI tests, with your settings
+    uv run poe test-gui-firefox-headless     # or -chromium-; no display needed
+    uv run poe test-gui-firefox-visible      # a real window, on a machine with a display
+    uv run poe test-gui-firefox-watch        # visible and slowed down, for watching only
 
 .. note::
 
@@ -1071,7 +1072,7 @@ measure coverage with:
 
 .. code-block:: shell
 
-    poe cover
+    uv run poe cover
 
 .. tip::
 
@@ -1188,7 +1189,7 @@ browser (at http://127.0.0.1:8008) by running one of the following commands:
 
 .. code-block:: shell
 
-    poe docs-autobuild
+    uv run poe docs-autobuild
     # -or-
     sphinx-autobuild docs docs/_build/html --port 8008
 
