@@ -1,4 +1,3 @@
-import getpass
 import os
 import re
 import shlex
@@ -7,6 +6,40 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.checks import Error, Tags, Warning, register
+
+
+def _running_user_name():
+    """The name of the user this process is running as, for a hint. Never raises.
+
+    `getpass.getuser()` is not a fallback for a failed `pwd` lookup: on Python 3.12
+    it *is* `pwd.getpwuid(os.getuid())[0]`, so it raises the same KeyError. Measured
+    2026-11-02 in the Docker development overlay, where the container runs as the
+    host user's uid and that uid has no passwd entry in the image:
+
+        KeyError: 'getpwuid(): uid not found: 1001'
+
+    which escaped the check, and `migrate` runs the checks, so the container never
+    started. A hint about ownership must not be able to stop a deployment.
+
+    So: the passwd database, then the environment, then the bare uid - which is
+    still useful in a `chown`, since `chown 1001:www-data` works.
+    """
+    try:
+        import pwd
+
+        return pwd.getpwuid(os.geteuid()).pw_name
+    except (ImportError, KeyError, AttributeError, OSError):
+        pass
+
+    for var in ('LOGNAME', 'USER', 'LNAME', 'USERNAME'):
+        name = os.environ.get(var)
+        if name:
+            return name
+
+    try:
+        return str(os.geteuid())
+    except AttributeError:  # no geteuid on Windows
+        return '<qatrack-os-user>'
 
 
 @register()
@@ -38,12 +71,7 @@ def check_media_folder_permissions(app_configs, **kwargs):
         return errors
     # End of redundant check
 
-    try:
-        import pwd
-
-        app_user = pwd.getpwuid(os.geteuid()).pw_name
-    except (ImportError, KeyError, AttributeError):
-        app_user = getpass.getuser()
+    app_user = _running_user_name()
 
     if app_user == 'root':
         # Deliberately not `$USER`: a root operator pasting the hint would expand it to
