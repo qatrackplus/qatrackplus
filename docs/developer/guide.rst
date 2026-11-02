@@ -425,7 +425,7 @@ Before running the development server, you need to collect all static files to t
 
 .. code-block:: shell
 
-    python manage.py collectstatic --noinput
+    uv run python manage.py collectstatic --noinput
 
 
 .. _local_test_settings_templates:
