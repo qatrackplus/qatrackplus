@@ -1,0 +1,109 @@
+# Does the suite still pass when the tests run in a different order?
+#
+# WHEN TO RUN IT - Cody, 2026-10-19:
+#
+#   * as preparation for any release;
+#   * when a maintainer brings in a new app, or makes a significant database
+#     change;
+#   * when a database driver or a maths library changes version significantly -
+#     psycopg, mysqlclient, mssql-django, numpy, scipy, pandas.
+#
+# The first two are judgement calls a person makes, which is why this is a
+# `workflow_dispatch` and not only a schedule: somebody decides the change is
+# significant and runs it. The path filters below catch the mechanical half of
+# the same policy, and are commented out for the reason given further down.
+#
+# Deliberately NOT part of ci.yml. A shuffled run can fail for a reason that has
+# nothing to do with the pull request in front of it, and a check that does that
+# teaches everybody to ignore it - the same way a `makemigrations` that always
+# reported 195 pending operations taught everybody to ignore `makemigrations`.
+# So it runs on a schedule and on demand, where a failure is its own signal and
+# somebody has to look at it.
+#
+# What it catches is tests that depend on each other: state left in a module, a
+# class attribute mutated, an id that happens to be 1 because nothing ran first.
+# It does NOT catch a test that depends on the order a *database* returns rows
+# in - that is a property of the query, not of the test order, and the fix is an
+# explicit `order_by` (see `unit_test_info_pairs` in qa/tests/test_models.py).
+name: Order independence
+
+# The schedule is deliberately commented out. Measured on 2026-10-19, before
+# this file was written: the suite does NOT pass shuffled. Seeds 1 and 2 each
+# give 15 failures - 14 in notifications/service_log_review/test_ser.py and one
+# in qatrack_core/tests/test_sample_data.py - and they need the *whole* suite's
+# order to appear, since those files pass when shuffled on their own. So
+# something earlier in a full run leaves state behind.
+#
+# Turning the schedule on before those are fixed would mean a nightly red that
+# nobody can act on, which is the failure mode this file's header warns about.
+# Fix them, run this by hand until it is green twice, then uncomment.
+#
+#  schedule:
+#    - cron: "30 4 * * *"
+#
+# And the mechanical half of the policy above - a pull request that adds an app,
+# changes the schema, or moves a driver or maths library. Same precondition:
+# enabling this before the suite can pass shuffled would put a red check on
+# every migration PR for a reason that has nothing to do with it.
+#
+#  pull_request:
+#    paths:
+#      - "qatrack/*/migrations/**"        # a schema change
+#      - "qatrack/*/models.py"            # ... and the models behind it
+#      - "qatrack/*/apps.py"              # a new app
+#      - "qatrack/settings.py"            # INSTALLED_APPS, DATABASES, CACHES
+#      - "pyproject.toml"                 # a driver or maths library pin
+#      - "uv.lock"
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Seed to reproduce a previous failure (blank for a new one)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  shuffled:
+    name: Shuffled test order (sqlite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Setup Database configuration
+        run: cp deploy/sqlite/local_settings.py qatrack/local_settings.py
+      - name: Install
+        run: uv sync
+      - name: Run the suite in a shuffled order
+        id: shuffled
+        run: |
+          set -o pipefail
+          seed="${{ inputs.seed }}"
+          if [ -n "$seed" ]; then
+            echo "Reproducing seed $seed"
+            uv run pytest -m "not selenium" -p randomly --randomly-seed="$seed" 2>&1 | tee run.log
+          else
+            uv run pytest -m "not selenium" -p randomly 2>&1 | tee run.log
+          fi
+      - name: Say how to reproduce it
+        if: failure()
+        run: |
+          used=$(grep -oE 'randomly-seed=[0-9]+' run.log | head -1 | cut -d= -f2)
+          {
+            echo "### The suite failed in a shuffled order"
+            echo
+            echo "Seed: \`${used:-unknown}\`"
+            echo
+            echo "Reproduce locally:"
+            echo
+            echo '```bash'
+            echo "uv run pytest -m \"not selenium\" -p randomly --randomly-seed=${used:-SEED}"
+            echo '```'
+            echo
+            echo "A failure here is a test depending on another test, not a flaky"
+            echo "machine. The order is reproducible from the seed."
+          } >> "$GITHUB_STEP_SUMMARY"
