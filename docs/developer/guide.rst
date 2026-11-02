@@ -14,7 +14,7 @@ Developers Guide
 
    self
    schema
-   poe_tasks
+   commands
 
 Installing QATrack+ For Development
 -----------------------------------

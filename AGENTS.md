@@ -428,7 +428,7 @@ likely to need a matching change in the others.
 | `CONTRIBUTING.md` | `AGENTS.md`, `docs/developer/`, `uv-setup.md` |
 | `uv-setup.md` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/` |
 | `Makefile` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/guide.rst` |
-| `poe_tasks/`, `pyproject.toml` (`[tool.poe]`) | `docs/developer/guide.rst` (the six-row task table and *Adding a new poe task*), `AGENTS.md` (*The task runner*), `CONTRIBUTING.md`, `.github/pull_request_template.md`. The full-list appendix (`docs/developer/poe_tasks.rst`) is generated from the tasks' `help` lines at build time and needs no edit; a task without a `help` line fails `poe docs` |
+| `poe_tasks/`, `pyproject.toml` (`[tool.poe]`) | `docs/developer/guide.rst` (the six-row task table and *Adding a new poe task*), `AGENTS.md` (*The task runner*), `CONTRIBUTING.md`, `.github/pull_request_template.md`. The command-reference appendix (`docs/developer/commands.rst`) is generated at build time from the tasks' `help` lines, the management commands' `help` attributes and the Makefile, and needs no edit; a poe task without a `help` line fails `poe docs` |
 | `conftest.py` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/guide.rst` |
 
 When reviewing or authoring a PR as an AI agent, look specifically for:

@@ -129,5 +129,7 @@ settings-report.md
 # the example is the file that belongs in git.
 deploy/dev/.env
 
-# generated at docs-build time by docs/_ext/poe_tasks.py
+# generated at docs-build time by docs/_ext/command_tables.py
 docs/developer/_poe_tasks.rst
+docs/developer/_manage_commands.rst
+docs/developer/_make_targets.rst
