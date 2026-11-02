@@ -294,7 +294,17 @@ Linux
 2. **Create the database users first.** A dump records the permissions it granted, and your new server has none of the accounts those grants name, so create them - with the same names - before restoring anything. The installation instructions create the one QATrack+ connects as; if you also made a read-only user for :ref:`SQL Reports <qatrack-config>`, create that one too. **Measured on PostgreSQL 16, restoring a dump from a site with a read-only reports user onto a server that did not have it:** ``pg_restore`` reported the missing role 120 times and restored the data anyway, leaving a database whose permissions are wrong; and with ``--single-transaction``, which is what the Docker ``restore-db`` script uses, the whole restore was rolled back and no tables existed afterwards.
 3. **Restore Database:** Consult your IT department to restore the database from your automated backups using the native database tools (e.g., ``pg_restore`` or ``mysql``).
 4. **Restore Settings and Media:** Copy your backed-up ``local_settings.py`` file to the ``qatrackplus/qatrack/`` directory. Extract your backed-up ``media`` folder into the ``qatrackplus/qatrack/media/`` directory.
-5. **Permissions and Restart:** Ensure the web server user (e.g., ``www-data``) has the correct ownership and permissions for the restored ``media`` folder. Finally, restart the web server and your background task runner.
+5. **Permissions and Restart:** Restore ownership of the ``media`` folder to the local OS
+   user for QATrack+ services, with ``www-data`` as the group so Nginx can read it:
+
+   .. code-block:: bash
+
+       cd ~/web/qatrackplus
+       sudo chown -R $USER:www-data qatrack/media
+       sudo find qatrack/media -type d -exec chmod 2775 {} +
+       sudo find qatrack/media -type f -exec chmod 664 {} +
+
+   Finally, restart the web server and your background task runner.
 
 Windows
 .......

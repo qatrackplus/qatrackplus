@@ -687,24 +687,11 @@ In order for Django Q to run properly and for Nginx to serve uploaded files, we 
 
 .. code-block:: bash
 
-    sudo usermod -a -G www-data $USER
-    exec sg www-data newgrp `id -gn` # this refreshes users group memberships without needing to log off/on
     mkdir -p logs qatrack/media
     touch logs/{migrate,debug,django-q2,auth}.log
-    sudo chown -R www-data:www-data logs qatrack/media
-    sudo chmod ug+rwxs logs qatrack/media
-
-.. note::
-
-    ``exec sg`` replaces your shell, which also clears the ``(qatrackplus)``
-    prefix from your prompt. The virtual environment is still in use -- ``which
-    python`` still answers ``.venv/bin/python`` -- so carry on. It works when you
-    are typing at a terminal
-    and **cannot work inside a script**: everything after it in the same file is
-    never reached. If you are automating this install, drop that line and either log
-    out and back in, or run the remaining commands with ``sg www-data -c '...'``. The
-    line is only a convenience to avoid logging out - nothing later depends on it
-    having run in the same shell.
+    sudo chown -R $USER:www-data logs qatrack/media
+    sudo find logs qatrack/media -type d -exec chmod 2775 {} +
+    sudo find logs qatrack/media -type f -exec chmod 664 {} +
 
 
 and then set up the Django Q configuration:
