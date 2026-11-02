@@ -1272,7 +1272,13 @@ class TestPerformQA(TestCase):
         self.unit_test_list.refresh_from_db()
         expected_due_date = self.unit_test_list.due_date
 
-        data['work_started'] = (timezone.now() - timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+        # The form parses this string as local wall-clock time, so format a local time
+        # rather than a UTC one, and pin the clock to midday. A DST transition leaves one
+        # local hour ambiguous and another nonexistent, and neither can be interpreted:
+        # on 2026-11-01 this read "2026-11-01 01:37", the hour America/Toronto repeated
+        # when EDT ended, and the field errored with the view answering 200, not 302.
+        yesterday = timezone.localtime(timezone.now()) - timezone.timedelta(days=1)
+        data['work_started'] = yesterday.replace(hour=12, minute=0).strftime("%Y-%m-%d %H:%M")
         data['include_for_scheduling'] = False
         self.set_form_data(data)
 

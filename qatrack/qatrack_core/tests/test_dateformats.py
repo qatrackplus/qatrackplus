@@ -644,6 +644,12 @@ class TestEveryLanguageAcceptsTheSameInput(TestCase):
 
     LANGUAGES = ("en", "fr", "es")
 
+    def tearDown(self):
+        # Every test here that overrides a format setting reloads the format
+        # modules; reloading again once the override is gone puts them back.
+        reload_formats()
+        super().tearDown()
+
     def accepted(self, lang):
         with override(lang):
             return list(get_format("DATE_INPUT_FORMATS"))
@@ -669,16 +675,19 @@ class TestEveryLanguageAcceptsTheSameInput(TestCase):
 
     def test_the_documented_remedy_restores_it(self):
         """The release note tells a French site to add the format back; it has to work."""
-        with override_settings(
-            QATRACK_EXTRA_DATE_INPUT_FORMATS=["%d %b %Y", "%d/%m/%Y"]
-        ):
-            reload_formats()
-            try:
+        # The reload that puts the formats back has to run *after* the override
+        # has been lifted; inside the ``with`` it re-derives them from the
+        # overridden setting, and every later test in the process then accepted
+        # %d/%m/%Y as well. That was the order-dependent failure jackdaw
+        # measured with pytest-randomly (aviary B135).
+        try:
+            with override_settings(QATRACK_EXTRA_DATE_INPUT_FORMATS=["%d %b %Y", "%d/%m/%Y"]):
+                reload_formats()
                 for lang in self.LANGUAGES:
                     with override(lang):
                         assert parse_date("03/05/2026") == datetime.date(2026, 5, 3), lang
-            finally:
-                reload_formats()
+        finally:
+            reload_formats()
 
     def test_the_shipped_default_does_not_include_it(self):
         """Deliberate: %d/%m/%Y and %m/%d/%Y are indistinguishable for twelve days a

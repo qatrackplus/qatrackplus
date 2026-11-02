@@ -170,6 +170,9 @@ dev = [
     "pytest-django>=4.5.0,<5.0",
     "pytest-cov>=4.0,<5.0",
     "pytest-sugar>=0.9.6,<1.0",
+    # Shuffles test order, for the nightly order-independence run. Prints the
+    # seed it used, so a failure is reproducible with --randomly-seed=<n>.
+    "pytest-randomly>=3.12,<4.0",
     "coverage>=6.0,<8.0",
     "django-coverage>=1.2.4,<2.0",
     "freezegun>=1.0.0,<3.0",
