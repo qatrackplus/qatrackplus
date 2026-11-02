@@ -263,11 +263,10 @@ quote-style = "single"
 # move off Make (every Makefile target here is .PHONY - there's no real
 # file-dependency graph, so Make's core feature isn't actually in use, and
 # it has no native Windows story despite this project supporting Windows
-# deployments). `poe` itself isn't a project dependency - install it once,
-# globally, via `uv tool install poethepoet`, then run any task below with
-# `poe <task>` from inside the repo. `poe` auto-detects this project's
-# `.venv` the same way `uv run` does, so tasks call `pytest`/`python`
-# directly rather than re-prefixing with `uv run`.
+# deployments). `poe` is a project dependency (see [project] dependencies),
+# so `uv sync` installs it and `poe <task>` works from inside the repo with the
+# environment active, or as `uv run poe <task>` without. Tasks call
+# `pytest`/`python` directly rather than re-prefixing with `uv run`.
 #
 # The task definitions themselves live under poe_tasks/, one file per
 # theme (dev.toml, tests.toml, coverage.toml, docs.toml, data.toml,
@@ -323,12 +322,10 @@ quote-style = "single"
 #    the minor line, [tool.poe.env] is gone, and the Makefile no longer defines
 #    VERSION at all. Nothing else in either file used it.
 #
-# 4. Make poe a real dependency. It is deliberately not one today (install
-#    once with `uv tool install poethepoet`), which is fine for an optional
-#    mirror of the Makefile. As the only runner it becomes required to build
-#    and test the project, so it belongs in the dev dependency group, where
-#    `uv sync --dev` provides it and uv.lock pins it - matching how every
-#    other tool in CI is now pinned.
+# 4. Done 2026-11-02: poe is a base dependency (`poethepoet>=0.49,<1.0`), so
+#    every `uv sync` provides it and uv.lock pins it. It is in the base set
+#    rather than the dev group because the deployment and translation tasks
+#    are meant for sites too, and because Windows has no Make.
 #
 # 5. Consider `[tool.poe.executor] locked = true`. poe runs tasks through
 #    `uv run` already, and its uv executor accepts locked/frozen/no-sync/

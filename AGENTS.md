@@ -67,7 +67,8 @@ accountability this whole policy is about.
 | **Frontend** | Server-rendered Django templates with HTMX and jQuery. No build step, no Node.js — a Vue/Vite bundle was retired and is expected back no earlier than 4.1 |
 | **Linter / formatter** | [ruff](https://docs.astral.sh/ruff/) |
 | **Test runner** | pytest (`uv run pytest` — GUI tests are skipped by default, see [Running the tests](#running-the-tests)) |
-| **Docs** | Sphinx — `uv run make docs` from repo root |
+| **Task runner** | [poe](https://poethepoet.natn.io/) (poethepoet), a project dependency — `uv run poe` lists the tasks; `uv run poe ci` is the pre-push check |
+| **Docs** | Sphinx — `uv run poe docs` from repo root (fails on any warning, as CI does) |
 | **Target branch** | `develop` (not `master`) |
 
 ---
@@ -206,10 +207,10 @@ Configuration lives in `pyproject.toml` under `[tool.ruff]`.
 Line length is **120 characters**. Quote style is **single quotes**.  
 Import ordering is enforced (`ruff` rule set `I`).
 
-Before opening a PR, also run the full pre-commit suite:
+Before opening a PR, run the checks CI will run, in one command:
 
 ```bash
-uv run pre-commit run --all-files
+uv run poe ci     # pre-commit over every file, lockfile check, strict docs build, full suite
 ```
 
 ---
@@ -343,7 +344,7 @@ quoting or paraphrasing them.
 Docs are built with Sphinx and live in `docs/`.
 
 ```bash
-uv run make docs    # from the repo root
+uv run poe docs    # from the repo root; fails on any warning, as CI does
 # open docs/_build/html/index.html
 ```
 

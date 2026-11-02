@@ -42,6 +42,7 @@ cd /path/to/qatrackplus
 uv sync --frozen
 
 # This should create a python 3.12 virtual environment in the .venv directory with all necessary dependencies installed.
+# It also installs poe, the project's task runner: `uv run poe` lists the tasks, and `uv run poe ci` runs the pre-push checks.
 
 # --frozen is used to prevent uv sync from attempting to update the lock file, only using it as the source of truth.
 ```

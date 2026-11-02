@@ -79,13 +79,13 @@ To build the docs locally:
 
 ```bash
 uv sync --dev          # Sphinx and its extensions are part of the dev group
-uv run make docs       # from the repository root
+uv run poe docs        # from the repository root; fails on any warning, as CI does
 # open docs/_build/html/index.html in your browser
 ```
 
-While writing, `uv run make docs-autobuild` serves the docs at
+While writing, `uv run poe docs-autobuild` serves the docs at
 <http://127.0.0.1:8008> and rebuilds them as you save (add
-`port=8010` to use a different port).
+`--port 8010` to use a different port).
 
 ## Contributing code
 
@@ -179,21 +179,23 @@ directly. See
 [AGENTS.md](AGENTS.md#running-the-tests) for more detail.
 
 To test against a specific database engine without touching your usual
-`qatrack/local_test_settings.py`, use `make test-sqlite`/`test-memory`/
-`test-postgres`/`test-mysql`/`test-mssql` (create
-`qatrack/local_test_settings.<engine>.py` first from the matching
-`deploy/dev/` template). `make test-integration` provisions a brand-new
-sqlite database the way a real deployment would - that provisioning is what the
-target verifies - and then runs the suite with `--reuse-db` against that same
-database. It is the only target that does: the shipped templates name a separate
-test database on purpose.
+`qatrack/local_test_settings.py`, use `uv run poe test-engine <engine>` with
+`sqlite`, `memory`, `postgres`, `mysql` or `mssql`; it copies the matching
+`deploy/dev/` template in for the run and restores your settings afterwards.
+`uv run poe test-integration` provisions a brand-new sqlite database the way a
+real deployment would - that provisioning is what the task verifies - and then
+runs the suite with `--reuse-db` against that same database. It is the only task
+that does: the shipped templates name a separate test database on purpose.
 
-Before opening a PR, it's also worth running the full pre-commit suite
-against the whole codebase, not just your changed files:
+Before opening a PR, run the checks CI will run, in one command:
 
 ```bash
-uv run pre-commit run --all-files
+uv run poe ci     # pre-commit over every file, lockfile check, strict docs build, full suite
 ```
+
+`poe` (poethepoet) is the project's task runner and a normal dependency, so
+`uv sync` already installed it; `uv run poe` on its own lists every task. The
+developer guide has the full table.
 
 ### Opening a pull request
 
