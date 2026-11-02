@@ -20,13 +20,16 @@ files would be overwritten*. Before the first pull to 4.0.2 or later, set your
     cp ../qatrack.env.backup deploy/docker/.env
 
 **The branch check belongs here, in the middle of those commands, and not after
-them.** An installation made before 4.0.2 was told to clone without naming a
-branch, so it sits on ``master`` - where ``git pull`` answers *Already up to
-date* and moves nothing, because ``master`` is still at the release before this
-one. The switch to ``releases/4.0`` is what actually brings the new code, and it
-only works while your ``.env`` is set aside: with ``.env`` back in place it is a
-modified tracked file again, and ``git checkout releases/4.0`` stops with *Your
-local changes to the following files would be overwritten by checkout*. A site
+them.** An installation made before 4.0.2 was told to clone without naming a branch,
+so it sits on ``master``, and pulling there is not the same as pulling the release
+line: ``master`` moves when a release is published, not when a patch is, so what a
+pull on it brings depends on when you look. When this page was written ``master``
+was still at 4.0.1, and the pull answered *Already up to date* and moved nothing;
+it is at 4.0.2 now, and the pull brings it. The switch to ``releases/4.0`` is what
+puts you on the branch the next patch release will arrive on, and it only works
+while your ``.env`` is set aside: with ``.env`` back in place it is a modified
+tracked file again, and ``git checkout releases/4.0`` stops with *Your local
+changes to the following files would be overwritten by checkout*. A site
 already on ``releases/4.0`` can leave the ``checkout`` line out; the ``git pull``
 then does the work, as it does for every later patch.
 
@@ -90,7 +93,9 @@ Confirm you are on the release branch
 Installations made before 4.0.2 were told to ``git clone`` without naming a branch, which
 leaves the checkout on ``master`` rather than on a release. ``git pull`` then follows
 ``master``, so the site can pick up work that has not been released, and a patch release
-never arrives at all. The switch above is what moves an existing installation onto the
+does not arrive until the next release is published - ``master`` is at 4.0.2 today, while
+the ``v4.0.1`` tag was never on it, so neither the timing nor the content is something to
+plan an upgrade around. The switch above is what moves an existing installation onto the
 branch, once. Confirm it took:
 
 .. code-block:: bash
