@@ -153,7 +153,18 @@ norecursedirs = [
 # test_collection.py below enforces that nothing else slips through the same
 # way.
 python_files = ["test_*.py", "*_test.py", "tests.py"]
-addopts = "-ra -q"
+# `-p no:randomly` makes the default order deterministic. pytest-randomly is a
+# dev dependency for the order-independence run, and it shuffles on *every*
+# invocation as soon as it is installed - so adding it silently turned a bare
+# `pytest`, and all eight CI test jobs, into a different order each time, with a
+# fresh seed and no record of it. Measured 2026-11-02: three bare runs of one
+# file gave three different orders, and CI failed on a unique-constraint
+# collision in parts/test_partsnotice.py that no local run reproduced.
+#
+# The shuffle is meant to be opt-in until the suite can pass it - the
+# order-independence workflow already asks for it explicitly with `-p randomly`,
+# which is the shape the plugin was added for. This restores that.
+addopts = "-ra -q -p no:randomly"
 django_find_project = true
 DJANGO_SETTINGS_MODULE = "qatrack.settings"
 markers = [
