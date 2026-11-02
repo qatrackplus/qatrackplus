@@ -1,0 +1,31 @@
+{% comment %}
+    The Export/Import Test Pack links, for the three changelists that offer them:
+    Test, Test List and Test List Cycle.
+
+    **Gated on `qa.change_testlist`, which is what the two views require** -
+    `ExportTestPack` and `ImportTestPack` are `PermissionRequiredMixin` with
+    `permission_required = 'qa.change_testlist'` (qa/views/admin.py). Reaching any of
+    those three changelists needs only that model's own view or change permission, so
+    a user with, say, `qa.view_test` and nothing else was shown both links and got a
+    403 on clicking either.
+
+    The gate is presentation only. **The views remain the enforcement boundary** and
+    still answer 403 if someone reaches them another way; hiding a link is not access
+    control and is not relied on as such here.
+
+    One file rather than three copies: the block was duplicated verbatim across the
+    three changelists, which is how two of them end up gated and the third does not.
+{% endcomment %}
+{% load i18n %}
+{% if perms.qa.change_testlist %}
+    <li>
+        <a href="{% url 'admin:qa_export_testpack' %}" class="addlink">
+            {% trans "Export Test Pack" %}
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'admin:qa_import_testpack' %}" class="addlink">
+            {% trans "Import Test Pack" %}
+        </a>
+    </li>
+{% endif %}
