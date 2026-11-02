@@ -190,6 +190,28 @@ with no further setup. See [Running the tests](#running-the-tests) for
 > the correct environment each time regardless. Human contributors are of
 > course welcome to `source .venv/bin/activate` once and drop the prefix.
 
+### The task runner
+
+[poe](https://poethepoet.natn.io/) (poethepoet) is a project dependency, so
+`uv sync` already installed it. `uv run poe` with no arguments lists every
+task with a one-line description; `uv run poe <task>` runs one. Tasks are
+defined in `poe_tasks/*.toml`, one file per theme, and `pyproject.toml` only
+lists those files under `[tool.poe] include`. The ones an agent needs:
+
+- `uv run poe ci` - the pre-push check: pre-commit over every file, the
+  lockfile check, the strict docs build, then the suite. Run it before saying
+  a change is ready.
+- `uv run poe test` - the suite with the GUI tests skipped; `uv run poe docs` -
+  the documentation build that fails on any warning.
+- `uv run poe test-engine <engine>` and `uv run poe test-gui-*` need a database
+  server or a real browser, which most agent sandboxes do not have; CI runs
+  them. `uv run poe test-databases-up` starts throwaway servers where Docker
+  is available.
+
+Tasks whose help begins `WIP` are unverified; do not rely on them. To add a
+task, follow *Adding a new poe task* in `docs/developer/guide.rst`, and keep
+the task table there and this file in step (see the impact table below).
+
 ---
 
 ## Linting and formatting
@@ -250,13 +272,13 @@ doesn't understand the `selenium` marker, `-m` filtering, or
 `--run-selenium`, and will attempt to run the GUI tests too. Prefer
 `pytest` directly.
 
-`make test-<engine>` (`sqlite`, `memory`, `postgres`, `mysql`, `mssql`) runs
-the suite against a specific database engine without disturbing whatever
+`uv run poe test-engine <engine>` (`sqlite`, `memory`, `postgres`, `mysql`,
+`mssql`) runs the suite against a specific database engine without disturbing whatever
 `qatrack/local_test_settings.py` you normally use day to day - it swaps in
 `qatrack/local_test_settings.<engine>.py` (create it first from the matching
 `deploy/dev/local_test_settings.<engine>.py` template) for the run, then
 restores your previous file afterward regardless of whether the tests
-passed. `make test-integration` goes a step further: provisions a brand-new
+passed. `uv run poe test-integration` goes a step further: provisions a brand-new
 sqlite database exactly the way a fresh deployment would (migrate,
 createcachetable, collectstatic, createsuperuser), which is what it verifies:
 that the provisioning sequence completes against a clean checkout. It then runs
@@ -264,7 +286,7 @@ the suite with `--reuse-db`. Which database the tests themselves touch is
 pytest-django's choice, driven by the `TEST` name in the settings file in use.
 **The sqlite template does not name the provisioned database** - it names a
 separate `test_sqlite.db`, deliberately, because Django deletes a file-based
-test database before creating it and again at teardown. `make test-integration`
+test database before creating it and again at teardown. `poe test-integration`
 is the only thing that points the two at each other, and it does so by appending
 a line to its own copy of the settings file, not to the shipped template.
 
@@ -406,6 +428,7 @@ likely to need a matching change in the others.
 | `CONTRIBUTING.md` | `AGENTS.md`, `docs/developer/`, `uv-setup.md` |
 | `uv-setup.md` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/` |
 | `Makefile` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/guide.rst` |
+| `poe_tasks/`, `pyproject.toml` (`[tool.poe]`) | `docs/developer/guide.rst` (the task table and *Adding a new poe task*), `AGENTS.md` (*The task runner*), `CONTRIBUTING.md`, `.github/pull_request_template.md` |
 | `conftest.py` | `AGENTS.md`, `CONTRIBUTING.md`, `docs/developer/guide.rst` |
 
 When reviewing or authoring a PR as an AI agent, look specifically for:
