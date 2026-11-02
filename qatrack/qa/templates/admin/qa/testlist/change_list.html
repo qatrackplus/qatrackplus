@@ -1,16 +1,6 @@
 {% extends "admin/change_list.html" %}
-{% load i18n %}
 
 {% block object-tools-items %}
-    <li>
-        <a href="{% url 'admin:qa_export_testpack' %}" class="addlink">
-            {% trans "Export Test Pack" %}
-        </a>
-    </li>
-    <li>
-        <a href="{% url 'admin:qa_import_testpack' %}" class="addlink">
-            {% trans "Import Test Pack" %}
-        </a>
-    </li>
+    {% include "admin/qa/_testpack_object_tools.html" %}
     {{ block.super }}
-{% endblock %} 
+{% endblock %}

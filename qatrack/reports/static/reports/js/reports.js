@@ -686,6 +686,11 @@ require(['jquery', 'lodash', 'moment', 'datatables.net-bs'], function ($, _, mom
         /* maintain preview & filter window size */
         $(window).resize(function(e){
 
+            if (_.isUndefined($previewContainer.position())) {
+                // the container is not laid out yet - upstream issue #607
+                return;
+            }
+
             var pt = $previewContainer.position().top;
             var ct = $configContainer.position().top;
             var st = $savedReportsContainer.position().top;
