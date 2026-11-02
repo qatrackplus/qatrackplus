@@ -13,7 +13,8 @@ migrations and a restart:
 4. ``uv sync`` with your database's extra
 5. ``python manage.py check --database default``
 6. ``python manage.py migrate`` and ``python manage.py collectstatic``
-7. Start the services again
+7. Fix the ownership of the ``logs`` and ``qatrack/media`` folders (once)
+8. Start the services again
 
 You never name a version. The installation guide checks out the ``releases/4.0``
 *branch* rather than a version tag, so the branch carries each patch as it is released
@@ -159,6 +160,26 @@ or two copied, which is normal and not a sign it did nothing:
 to do this?"* prompt that ``collectstatic`` otherwise stops at and waits for. Leave it
 off if you would rather answer it yourself - but a script that pipes the output will
 hide the question while still waiting for it.
+
+Next, fix the ownership of your ``logs`` and ``qatrack/media`` folders. The 4.0.0 and
+4.0.1 installation guides gave these folders to ``www-data``, but Gunicorn and
+Django-Q2 run as the local OS user for QATrack+ services. On an installation set up
+that way, uploading an attachment to a Service Event or Test List can fail with a
+permission error (`#836 <https://github.com/qatrackplus/qatrackplus/issues/836>`__).
+These commands give the folders to your user, keep ``www-data`` as the group so Nginx
+can still serve uploaded files, and make new folders inherit that group. You only need
+to do this once, and it is safe to run again on an installation that is already
+correct, including one that already did it when upgrading from 4.0.0:
+
+.. code-block:: bash
+
+    cd ~/web/qatrackplus
+    sudo chown -R $USER:www-data logs qatrack/media
+    sudo find logs qatrack/media -type d -exec chmod 2775 {} +
+    sudo find logs qatrack/media -type f -exec chmod 664 {} +
+
+Run these as the same user that runs QATrack+ (the one named in your Supervisor
+configuration), not from a ``root`` shell: ``$USER`` would then be ``root``.
 
 Restart — the application servers first, so nginx has something to proxy to the
 moment it comes back:
