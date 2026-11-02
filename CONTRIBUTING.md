@@ -180,8 +180,10 @@ directly. See
 
 To test against a specific database engine without touching your usual
 `qatrack/local_test_settings.py`, use `uv run poe test-engine <engine>` with
-`sqlite`, `memory`, `postgres`, `mysql` or `mssql`; it copies the matching
-`deploy/dev/` template in for the run and restores your settings afterwards.
+`sqlite`, `memory`, `postgres`, `mysql` or `mssql` (create
+`qatrack/local_test_settings.<engine>.py` first from the matching
+`deploy/dev/` template); it swaps that file in for the run and restores your
+usual settings afterwards, however the run ends.
 `uv run poe test-integration` provisions a brand-new sqlite database the way a
 real deployment would - that provisioning is what the task verifies - and then
 runs the suite with `--reuse-db` against that same database. It is the only task

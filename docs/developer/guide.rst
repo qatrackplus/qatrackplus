@@ -153,8 +153,11 @@ Task definitions live under ``poe_tasks/``, one file per theme, rather than
 directly in ``pyproject.toml``: ``dev.toml`` (dev environment setup),
 ``tests.toml`` (running the suite, GUI/Selenium variants), ``coverage.toml``,
 ``docs.toml`` (Sphinx, schema diagram, translation status), ``data.toml``
-(fixtures and destructive data commands) and ``deploy.toml`` (Ubuntu/sudo
-deployment helpers). ``pyproject.toml`` itself only lists them, via
+(fixtures and destructive data commands), ``deploy.toml`` (Ubuntu/sudo
+deployment helpers), ``ci.toml`` (the ``poe ci`` pre-push check and its
+parts), ``test_databases.toml`` (throwaway database servers for
+``test-engine``) and ``translations.toml`` (the gettext catalogues).
+``pyproject.toml`` itself only lists them, via
 ``[tool.poe] include``; it never grew a ``[tool.poe.tasks.*]`` table of its
 own. This split exists purely to stop ``pyproject.toml`` growing without
 bound as tasks are added - it changes nothing about how a task runs, or how
@@ -182,7 +185,10 @@ When adding a task:
    task (defaults to bash/POSIX, which fails outright on a Windows host
    with no Git Bash or WSL) unless the task is genuinely Ubuntu/sudo-only
    by nature (see ``deploy.toml``) - in that case, say so in the task's
-   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do.
+   ``help`` text the way ``nginx-conf`` and ``supervisor-conf`` do. Inside an
+   ``interpreter = "python"`` body poe does **not** substitute ``${arg}``;
+   a declared argument arrives as an environment variable, so read
+   ``os.environ['arg']`` (see ``test-engine`` in ``tests.toml``).
 4. If the task declares a named argument (``options = [...]``), poe will
    silently drop any extra dash-prefixed tokens passed after it rather than
    forwarding them - see the note on ``_test-engine`` in
@@ -196,6 +202,10 @@ When adding a task:
 6. Run ``poe <task>`` for real, not just ``poe -d <task>`` (dry-run only
    prints the resolved command/script - it does not catch a task that
    parses fine but fails or misbehaves once actually invoked).
+7. Give it a one-line ``help`` - that line is what ``poe`` prints in its task
+   list, and for most tasks it is the only documentation. If contributors
+   will reach for it, add a row to the table in *The task runner: poe* above;
+   if it is unverified, start the help text with ``WIP``.
 
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -268,7 +278,10 @@ task's own help is the source of truth. The ones you will use most:
        include them).
    * - ``poe test-engine <engine>``
      - The suite against one database engine (``sqlite``, ``memory``,
-       ``postgres``, ``mysql``, ``mssql``), restoring your settings afterwards.
+       ``postgres``, ``mysql``, ``mssql``). Create
+       ``qatrack/local_test_settings.<engine>.py`` first from the matching
+       ``deploy/dev/`` template; the task swaps it in for the run and restores
+       your usual settings afterwards, however the run ends.
    * - ``poe test-integration``
      - Provision a fresh sqlite database the way a deployment does, then run
        the suite against it.
@@ -294,7 +307,8 @@ Tasks whose help text begins **WIP** (the Ubuntu deployment helpers in
 unverified and not part of the ordinary workflow.
 
 This guide writes them as ``uv run poe <task>``, like every other command here.
-In an activated virtual environment the ``uv run`` prefix is optional.
+In an activated virtual environment the ``uv run`` prefix is optional. To add a
+task of your own, see :ref:`adding-a-poe-task`.
 
 Understanding the Settings Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
