@@ -37,6 +37,9 @@ _Confirm which branch this targets (e.g. master)._
   django check, plus the yaml/toml/large-file/merge-conflict/debug-statement
   checks).
   - `uv run ruff check . --fix` to help resolve linting errors
+  - `uv run ruff format <files you changed>` to auto-format just what you
+    touched — don't run it repo-wide, formatting hasn't been applied across
+    the whole codebase yet (see AGENTS.md).
 - [ ] `uv run python -Wd manage.py check` reviewed for new deprecation warnings.
 - [ ] `uv run pytest` full test suite passes.
 - [ ] `uv run python manage.py makemigrations --dry-run` — if it reports any
