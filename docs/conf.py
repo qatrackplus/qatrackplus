@@ -18,6 +18,8 @@ import re
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import sys  # noqa: E402
+sys.path.insert(0, os.path.abspath('_ext'))
 
 
 # -- Project information -----------------------------------------------------
@@ -45,6 +47,7 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'poe_tasks',  # docs/_ext/poe_tasks.py: generates developer/_poe_tasks.rst
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
     'sphinx.ext.todo',

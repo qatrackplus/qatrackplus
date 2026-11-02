@@ -14,6 +14,7 @@ Developers Guide
 
    self
    schema
+   poe_tasks
 
 Installing QATrack+ For Development
 -----------------------------------
@@ -194,7 +195,8 @@ Windows, which is why it is preferred over the ``Makefile`` (which stays, as a
 thin mirror, for anyone with Make muscle memory).
 
 These are the tasks you need; ``poe`` with no arguments lists the rest, each
-with a one-line description, and that help text is the source of truth:
+with a one-line description, and :ref:`the appendix <poe_tasks_appendix>` is
+generated from those same help lines at every docs build:
 
 .. list-table::
    :header-rows: 1
@@ -909,9 +911,10 @@ When adding a task:
    prints the resolved command/script - it does not catch a task that
    parses fine but fails or misbehaves once actually invoked).
 7. Give it a one-line ``help`` - that line is what ``poe`` prints in its task
-   list, and for most tasks it is the only documentation. If contributors
-   will reach for it, add a row to the table in *The task runner: poe* above;
-   if it is unverified, start the help text with ``WIP``.
+   list and what the generated :ref:`appendix <poe_tasks_appendix>` shows; a
+   task without one fails the docs build. If contributors will reach for it,
+   add a row to the table in :ref:`the task runner <task-runner-poe>`; if it
+   is unverified, start the help text with ``WIP``.
 
 Setting Up Selenium Browser Testing
 -----------------------------------

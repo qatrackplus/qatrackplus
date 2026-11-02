@@ -128,3 +128,6 @@ settings-report.md
 # deploy/dev/.env.test-databases.example. Throwaway, but still not committed -
 # the example is the file that belongs in git.
 deploy/dev/.env
+
+# generated at docs-build time by docs/_ext/poe_tasks.py
+docs/developer/_poe_tasks.rst
