@@ -483,6 +483,13 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             # developer's actual browser session (cookies, logins) instead
             # of a clean one.
             cls.chrome_profile_dir = tempfile.mkdtemp(prefix='qatrack-selenium-chrome-')
+            # Registered the moment it exists, not left to tearDownClass.
+            # Everything below this line can raise - the driver launch, the
+            # viewport call, the live server - and tearDownClass does not run
+            # when setUpClass does not finish. Class cleanups do, which is the
+            # difference between one leaked profile directory and one per test
+            # class for the rest of the run.
+            cls.addClassCleanup(shutil.rmtree, cls.chrome_profile_dir, ignore_errors=True)
             chrome_options.add_argument(f'--user-data-dir={cls.chrome_profile_dir}')
 
             # A fresh profile is also, genuinely, a first run - and unlike
@@ -519,6 +526,11 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 service=ChromeService(executable_path=driver_path, env=browser_env),
                 options=chrome_options,
             )
+            # As above, and more expensive to get wrong: a leaked driver is a
+            # browser process still running. Registered after the profile
+            # cleanup, so that it runs before it - class cleanups are LIFO, and
+            # the browser must be gone before its profile directory is.
+            cls.addClassCleanup(cls.driver.quit)
         else:
             from selenium.webdriver.firefox.options import Options as FirefoxOptions
             from selenium.webdriver.firefox.service import Service as FirefoxService
@@ -582,6 +594,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
                 service=FirefoxService(executable_path=driver_path, env=browser_env),
                 options=ff_options,
             )
+            cls.addClassCleanup(cls.driver.quit)
 
         # Chromium gets longer because it renders these JS-heavy pages less
         # predictably, not because it is slower overall - it finishes the
@@ -823,10 +836,15 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.quit()
-        profile_dir = getattr(cls, 'chrome_profile_dir', None)
-        if profile_dir:
-            shutil.rmtree(profile_dir, ignore_errors=True)
+        """Nothing of ours left to do - the driver and the profile directory
+        are class cleanups, registered where they are created.
+
+        They used to be here, which meant they only happened when setUpClass
+        had finished. One consequence of moving them: cleanups run *after*
+        tearDownClass, so the live server now stops before the browser quits
+        rather than after. The browser is idle by then, so the order does not
+        matter; the leak did.
+        """
         super().tearDownClass()
 
     def tearDown(self):
