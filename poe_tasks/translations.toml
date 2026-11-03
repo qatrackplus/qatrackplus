@@ -38,10 +38,21 @@ python manage.py makemessages
 help = "Re-extract translatable strings, then recompile the catalogues"
 sequence = ["extract-messages", "compile-messages"]
 
-# Answers "are the committed .mo files the ones these .po files produce?"
-# without writing anything - the same comparison `manage.py check` makes
-# through qatrack.W010, and the one CI enforces in
-# qatrack/qatrack_core/tests/test_translation_catalogues.py.
+# Answers "are the committed .mo files the ones these .po files produce, and
+# how much of each language actually reaches users?" - without writing
+# anything.
+#
+# `python manage.py check` was wrong for this, and wrong in the way that
+# matters: qatrack.W010 is a *Warning*, and `check` exits 0 for warnings. So
+# the task printed the problem and reported success, which is worse than not
+# having it - a green `poe ci` meant nothing about the catalogues. @nsmela
+# reproduced it on #868 by making fr/django.po stale.
+#
+# `check_translations` is the right command. It exits 1 when a .mo is out of
+# date or a configured language has no catalogue at all, and it computes
+# coverage in Python from the .po files, so it needs no msgfmt and does not
+# depend on the locale. W010 stays a system check for staleness - silent when
+# healthy - and this is the task that can fail.
 [tasks.check-messages]
-help = "Report any .mo that no longer matches its .po (writes nothing)"
-cmd = "python manage.py check"
+help = "Report stale .mo files and per-language coverage, and fail if anything is wrong"
+cmd = "python manage.py check_translations"

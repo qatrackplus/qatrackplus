@@ -21,7 +21,7 @@ help:
 	@echo
 	@echo "Docs"
 	@echo "  docs              build the Sphinx docs"
-	@echo "  docs-autobuild    serve the docs on :8009 and rebuild as you save"
+	@echo "  docs-autobuild    serve the docs on :8008 and rebuild as you save"
 	@echo
 	@echo "Running"
 	@echo "  run               the development server"
@@ -196,7 +196,7 @@ docs:
 	cd docs && uv run make html
 
 docs-autobuild:
-	uv run sphinx-autobuild docs docs/_build/html --port 8009
+	uv run sphinx-autobuild docs docs/_build/html --port 8008
 
 # The two targets below run sudo, write into /etc, and restart services. They
 # are Ubuntu-specific and have never been exercised by CI or by either
