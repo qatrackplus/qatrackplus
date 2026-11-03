@@ -8,13 +8,17 @@ and `VERSION = "4.0.0"` in `[tool.poe.env]`. So the two runners wrote *different
 files*, and the Makefile's wrote over the committed 3.1.0 diagram. The Makefile
 carried a WARNING about that rather than a fix.
 
-Both now derive the name from the installed package metadata and truncate it to
-the minor line, because the schema is identical across every patch of a line.
+The name now comes from the installed package metadata, truncated to the minor
+line because the schema is identical across every patch of a line. And there is
+one implementation to read it: `make schema` is a one-line delegation to
+`poe schema`, so the two cannot disagree about anything at all. That is a
+stronger guarantee than the one these tests originally made, which was that two
+copies happened to agree - and it is why the three tests that compared the
+copies are now one test that the delegation exists.
 
-These tests read the two files as text. That is deliberate: running either task
-needs pygraphviz and a database, and the defect was never in the rendering - it
-was in the two files disagreeing about the name, which is exactly what text can
-show.
+These tests read the files as text. That is deliberate: running the task needs
+pygraphviz and a database, and the defect was never in the rendering - it was in
+two files disagreeing about the name, which is exactly what text can show.
 """
 
 import importlib.metadata
@@ -75,25 +79,44 @@ class TestTheSchemaNameHasOneSource:
             "[tool.poe.env] is back; it held the third copy of the version"
         )
 
-    def test_both_runners_read_the_installed_package(self):
-        for path, text in ((MAKEFILE, schema_recipe()), (POE_DOCS, read(POE_DOCS))):
-            assert "importlib.metadata" in text, path
-            assert "qatrackplus" in text, path
+    def test_the_poe_task_reads_the_installed_package_and_truncates(self):
+        """The one implementation, so this is where the name is decided."""
 
-    def test_both_truncate_to_two_components(self):
+        task = read(POE_DOCS)
+        assert "importlib.metadata" in task
+        assert "qatrackplus" in task
+        # The truncation is the part that makes it the minor line.
+        assert "split('.')[:2]" in task, "the poe task does not truncate"
+        assert "docs/developer/images/qatrack_schema_" in task
+
+    def test_the_makefile_delegates_rather_than_carrying_a_copy(self):
+        """Stronger than the three tests this replaces.
+
+        Those checked that the Makefile's own copy of the logic matched the poe
+        task's - which only showed the two copies agreeing on the day the test
+        ran. The Makefile now has no copy: `schema:` is one line calling
+        `poe schema`, so there is nothing to drift.
+
+        Asserted as an absence as well as a presence. A future edit that
+        reintroduced the version-reading shell into this target would restore
+        exactly the arrangement that overwrote the committed 3.1.0 diagram, and
+        the delegation line could sit above it unnoticed.
         """
-        The truncation is the part that makes it the minor line. Written the same
-        way in both, so a reader comparing them sees one expression.
-        """
 
-        truncation = "split('.')[:2]"
-        assert truncation in schema_recipe(), "the Makefile target does not truncate"
-        assert truncation in read(POE_DOCS), "the poe task does not truncate"
-
-    def test_the_output_path_is_the_same_in_both(self):
-        path = "docs/developer/images/qatrack_schema_"
-        assert path in schema_recipe()
-        assert path in read(POE_DOCS)
+        recipe = schema_recipe()
+        # The target calls `$(POE) schema`, so the delegation is two facts: the
+        # recipe names the task, and POE is what it looks like.
+        assert "$(POE) schema" in recipe, recipe
+        assert re.search(r"^POE\s*=\s*uv run poe\s*$", read(MAKEFILE), re.M), (
+            "POE is no longer `uv run poe`, so the targets may not be calling poe"
+        )
+        assert "importlib.metadata" not in recipe, (
+            "the Makefile target reads the version itself again; that is the "
+            "second copy whose disagreement overwrote the committed diagram"
+        )
+        assert "graph_models" not in recipe, (
+            "the Makefile target renders the diagram itself again"
+        )
 
     def test_the_diagram_stays_gitignored(self):
         """

@@ -43,7 +43,6 @@ package-mode = false
 
 dependencies = [
     "Django>=4.2.30,<4.3",
-    "poethepoet>=0.49,<1.0",
     "django-q2>=1.8.0",
     "beautifulsoup4==4.9.3",
     "concurrent-log-handler==0.9.19",
@@ -177,6 +176,29 @@ python-ldap = { url = "https://github.com/cgohlke/python-ldap-build/releases/dow
 
 [dependency-groups]
 dev = [
+    # The task runner. `uv sync` installs the dev group by default, so
+    # `uv run poe <task>` works straight after a sync and nobody needs a global
+    # `uv tool install poethepoet` - which was the thing worth fixing, because a
+    # global install leaves everyone on a different version.
+    #
+    # In the dev group rather than the base set. It was in the base set on the
+    # grounds that the deployment and translation tasks are meant for sites too,
+    # and that Windows has no Make. Measured 2026-11-03, and neither holds:
+    # `docs/install/` contains **no** reference to poe, nor does `deploy/` or
+    # the Docker entrypoint, so nothing tells a site to run a poe task; the four
+    # deployment tasks that were the reason are all marked `WIP-`, are Ubuntu
+    # and sudo only, and have never been exercised; and `compile-messages` needs
+    # msgfmt, which the Docker runtime image does not carry. The Windows
+    # argument is about developers, who get the dev group by default.
+    #
+    # The consequence of getting it wrong was real: the production image runs
+    # `uv sync --no-dev` (deploy/docker/django/Dockerfile:30) and was shipping
+    # poethepoet to every site. @nsmela asked for this on 1 Oct and again on
+    # 3 Nov.
+    #
+    # Note it is pre-1.0, so the `<1.0` ceiling is doing real work.
+    "poethepoet>=0.49,<1.0",
+
     # Testing framework and utilities
     "pytest>=7.0,<8.0",
     "pytest-django>=4.5.0,<5.0",
@@ -328,10 +350,11 @@ quote-style = "single"
 #    the minor line, [tool.poe.env] is gone, and the Makefile no longer defines
 #    VERSION at all. Nothing else in either file used it.
 #
-# 4. Done 2026-11-02: poe is a base dependency (`poethepoet>=0.49,<1.0`), so
-#    every `uv sync` provides it and uv.lock pins it. It is in the base set
-#    rather than the dev group because the deployment and translation tasks
-#    are meant for sites too, and because Windows has no Make.
+# 4. Done 2026-11-03: poe is in the `dev` dependency group, so every
+#    `uv sync` provides it and uv.lock pins it, while `uv sync --no-dev` -
+#    which is what the production image runs - does not ship it to sites. The
+#    reasoning, and the measurements that moved it out of the base set, are on
+#    the declaration itself in [dependency-groups].
 #
 # 5. Consider `[tool.poe.executor] locked = true`. poe runs tasks through
 #    `uv run` already, and its uv executor accepts locked/frozen/no-sync/
