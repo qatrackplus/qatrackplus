@@ -38,16 +38,46 @@ if existing:
     print('and start over.')
     sys.exit(1)
 
+created = []
 for src, dst in TEMPLATES:
     shutil.copyfile(src, dst)
+    created.append(pathlib.Path(dst))
     print(f'created {dst} from {src}')
 
 pathlib.Path('db').mkdir(exist_ok=True)
+
+
+# Put the tree back, so a failed run can simply be run again. Without this, a
+# `migrate` that fails leaves the three settings files and the half-made
+# database behind, and the next `dev-init` refuses with 'This already looks
+# like a set up dev environment' - precisely the state this task exists to get
+# you out of. The developer is then deleting files by hand, or reaching for
+# `dev-reset`, to recover from a task that did nothing but fail.
+#
+# Only this run's files are removed. Every path here was checked as absent
+# above, before anything was written, so none of it can predate this
+# invocation. `db/` itself stays: mkdir(exist_ok=True) may have found it
+# already there, and an empty directory is not worth guessing about.
+#
+# Comments rather than a docstring, like every other body in poe_tasks/: a
+# triple-quoted string here would close the TOML string the body lives in.
+# That is the third instance of this class of trap in one sitting, after the
+# newline-escape one @nsmela found - an argument for his suggestion of
+# moving these bodies into a real module.
+def undo():
+    for path in created:
+        path.unlink(missing_ok=True)
+    DB.unlink(missing_ok=True)
+    print()
+    print('removed what this run created - fix the problem above and run')
+    print('`poe dev-init` again.')
+
 
 def run(*args, env=None):
     result = subprocess.call([sys.executable, 'manage.py', *args],
                              env={**os.environ, **(env or {})})
     if result != 0:
+        undo()
         sys.exit(result)
 
 run('migrate')
