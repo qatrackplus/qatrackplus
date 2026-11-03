@@ -829,8 +829,8 @@ bound as tasks are added - it changes nothing about how a task runs, or how
 ``poe_tasks/make_compat.toml`` is different in kind, not just location: it
 holds the ``make-*`` tasks that deliberately mirror a ``Makefile`` target
 one-for-one (see the comment above ``[tool.poe] include`` in
-``pyproject.toml``), plus the shared ``_test-engine`` implementation they
-``ref``. Nothing new should be added there - a new task belongs in one of
+``pyproject.toml``). Each is a ``ref`` to the real task and carries no logic
+of its own, so the two cannot drift. Nothing new should be added there - a new task belongs in one of
 the theme files above, and only gets a ``make-*`` mirror if the ``Makefile``
 target it mirrors still exists.
 
@@ -852,12 +852,15 @@ When adding a task:
    ``interpreter = "python"`` body poe does **not** substitute ``${arg}``;
    a declared argument arrives as an environment variable, so read
    ``os.environ['arg']`` (see ``test-engine`` in ``tests.toml``).
-4. If the task declares a named argument (``options = [...]``), poe will
-   silently drop any extra dash-prefixed tokens passed after it rather than
-   forwarding them - see the note on ``_test-engine`` in
-   ``poe_tasks/make_compat.toml`` for the reasoning. Prefer a positional
-   argument, or no argument at all, unless you specifically need the
-   ``--flag`` form.
+4. A ``cmd`` task forwards extra arguments; a ``shell`` body discards them.
+   ``poe test -- -k foo`` reaches pytest, because poe appends the extras to a
+   ``cmd``'s command line. A ``shell`` body assembles its own argument list,
+   so poe has nowhere to put them and they are silently gone - which is why
+   ``poe test-engine sqlite -- -k foo`` runs the whole suite. This has nothing
+   to do with declaring arguments, named or positional; see the note above
+   ``test-engine`` in ``poe_tasks/tests.toml`` for the measurements. If a task
+   with a body needs to pass flags onward, declare an argument for them and
+   split it in the body.
 5. A task's argument can declare ``choices = [...]`` to get real tab
    completion of its allowed values (see `Shell Autocomplete for uv and poe`_
    above) - worth adding for anything with a small, fixed set of valid

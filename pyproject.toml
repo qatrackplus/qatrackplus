@@ -281,9 +281,9 @@ quote-style = "single"
 # regardless of which included file a task's definition lives in - poe
 # merges all included tasks into one flat namespace before running
 # anything, so a `ref`/`sequence` in one file can still target a task
-# defined in another (e.g. poe_tasks/make_compat.toml's `make-test-sqlite`
-# referencing poe_tasks/make_compat.toml's own `_test-engine`, or a future
-# split that separates the two).
+# defined in another - which is what poe_tasks/make_compat.toml's
+# `make-test-sqlite` does: it is a `ref` to `test-engine` over in
+# poe_tasks/tests.toml.
 #
 # ---------------------------------------------------------------------------
 # If Make is retired and poe becomes the only task runner, these need doing
@@ -291,11 +291,16 @@ quote-style = "single"
 # and poe only mirrors it.
 #
 # 1. Windows. This is the sharp one, because Windows support is the main
-#    argument for replacing Make - and these tasks do not currently deliver
-#    it. Six of them (_test-engine, test-integration, dumpdata, docs,
-#    nginx-conf, supervisor-conf) use POSIX-only shell:
-#    `cp -n`, `mkdir -p`, `[ -f ... ]`, `mv -f`, `rm -f`, `$?`, `$(date ...)`,
-#    `sudo`. poe defaults `shell` tasks to bash/posix and, on Windows with no
+#    argument for replacing Make - and some of these tasks do not yet deliver
+#    it. Six do not: make-dumpdata and make-docs in
+#    poe_tasks/make_compat.toml, and nginx-conf, supervisor-conf and their
+#    two -remove counterparts in poe_tasks/deploy.toml. They use POSIX-only
+#    shell: `mkdir -p`,
+#    `[ -f ... ]`, `rm -f`, `$(date ...)`, `cd &&`, `sudo`. The tasks a
+#    developer actually reaches for - test-engine, test-integration, dev-init,
+#    schema, the i18n tasks - are Python bodies, and the make-* analogs of the
+#    first two are now `ref`s to them rather than shell copies.
+#    poe defaults `shell` tasks to bash/posix and, on Windows with no
 #    other interpreter configured, fails with "Installing Git Bash or using
 #    WSL should fix this" - which is the same "no native Windows story" the
 #    Makefile is criticised for above. Fix before relying on it: set
@@ -305,13 +310,14 @@ quote-style = "single"
 #    rewrite is preferred. nginx-conf/supervisor-conf are Ubuntu-and-sudo
 #    only by nature and should just be marked as such rather than ported.
 #
-# 2. Extra pytest args. `make test args="-k foo"` has no equivalent here for
-#    any task declaring a named arg - poe silently drops `--`-separated
-#    dash-prefixed tokens (see the note on _test-engine in
-#    poe_tasks/make_compat.toml). Retiring Make would make that a real
-#    regression rather than a documented gap. The way out is to drop the
-#    named `--engine` arg and define the five engine tasks independently,
-#    so nothing on the path declares a named arg.
+# 2. Extra pytest args, for the tasks with a `shell` body. `poe test -- -k foo`
+#    works, because `test` is a `cmd` and poe appends to its command line. A
+#    `shell` body builds its own argv, so the extras are discarded - which is
+#    why `make test-<engine> args="-k foo"` has no equivalent. Not about
+#    declaring arguments; measured either way, with the figures in the note
+#    above `test-engine` in poe_tasks/tests.toml. Retiring Make would make it
+#    a real regression rather than a documented gap. The way out is a declared
+#    argument on those tasks that the body splits into flags itself.
 #
 # 3. DONE, and it turned out to be a live bug rather than a tidiness item.
 #    VERSION was written in three places - `VERSION` in the Makefile (3.1.0),
@@ -393,15 +399,20 @@ include = [
 #
 # Current shell situation, so it stays honest as tasks are added:
 #
-#   * `cmd` tasks (no shell at all): test, cover*, run, schema.
-#   * `interpreter = "python"`: every other cross-platform task.
-#   * POSIX-shell-only, each with a cross-platform successor: the make-*
-#     tasks in poe_tasks/make_compat.toml (_test-engine,
-#     make-test-integration, make-dumpdata, make-docs).
-#   * POSIX-shell-only and deliberately so: nginx-conf, supervisor-conf
-#     (poe_tasks/deploy.toml). They shell out to sudo to install
-#     nginx/supervisor configs, so there is no meaningful Windows
-#     equivalent to write.
+#   * `cmd` tasks (no shell at all), which is most of them: test, the
+#     test-gui* family, cover*, lint, docs, docs-autobuild, run, the
+#     message tasks, the test-databases-* tasks.
+#   * `interpreter = "python"`: dev-init, dev-clean, dumpdata, i18n-status,
+#     schema, test-engine, test-integration, test-order. Note schema is one
+#     of these - a Python body, not a `cmd`.
+#   * `ref` only, so they inherit whatever they point at: every make-test-*
+#     analog in poe_tasks/make_compat.toml.
+#   * POSIX-shell-only, with a cross-platform successor: make-dumpdata and
+#     make-docs (poe_tasks/make_compat.toml).
+#   * POSIX-shell-only and deliberately so: nginx-conf, supervisor-conf and
+#     their -remove counterparts (poe_tasks/deploy.toml). They shell out to
+#     sudo to install nginx/supervisor configs, so there is no meaningful
+#     Windows equivalent to write.
 #
 # In other words, every task that cannot run on Windows today either has a
 # cross-platform successor or is Ubuntu-only by nature. If you add a task
