@@ -97,7 +97,7 @@ them often.
 
 - ``uv`` itself (already required above).
 - ``poe`` (`poethepoet <https://poethepoet.natn.io/>`__), the project's task
-  runner. It is a project dependency, so ``uv sync`` installs it; see
+  runner. It is in the ``dev`` dependency group, so ``uv sync`` installs it; see
   *The task runner: poe* below for what it does.
 - A shell ``uv``/``poe`` recognize: bash, zsh, fish, PowerShell, elvish
   (``uv``) or nushell (``poe``, in addition to the previous four).
@@ -189,7 +189,7 @@ The task runner: poe
 ~~~~~~~~~~~~~~~~~~~~
 
 QATrack+ uses `poe <https://poethepoet.natn.io/>`__ (poethepoet) as its task
-runner. It is a normal project dependency, so the ``uv sync`` above installed
+runner. It is in the ``dev`` dependency group, so the ``uv sync`` above installed
 it; there is nothing else to set up. It works the same way on Linux, macOS and
 Windows, which is why it is preferred over the ``Makefile`` (which stays, as a
 thin mirror, for anyone with Make muscle memory).
