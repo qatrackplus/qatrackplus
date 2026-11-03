@@ -105,46 +105,23 @@ finally:
 print('wrote %s (%d bytes)' % (OUT, OUT.stat().st_size))
 '''
 
+
+# This was a Python body that parsed msgfmt's --statistics output, and it had
+# two faults @nsmela found on #868: msgfmt translates that prose, so under
+# LANG=fr_FR.UTF-8 every catalogue reported 0.0%; and it ignored msgfmt's exit
+# code, so a .po that msgfmt could not read looked identical to a complete one.
+# It also needed gettext on PATH, which Windows does not have by default.
+#
+# `check_translations` computes the same coverage in Python from the .po files,
+# so all three problems go at once. Which leaves this task and `check-messages`
+# running the same command, hence the `ref` - a copy of the `cmd` would be the
+# duplication this branch is trying to remove.
+#
+# OPEN QUESTION for review: two names for one command is itself redundant, and
+# neither name has a Makefile target or any user outside this branch, so
+# collapsing them to one is the obvious tidy-up. Not done here, because both
+# names appear by name in the review of #868 and renaming mid-review costs the
+# reviewer more than the redundancy does.
 [tasks.i18n-status]
-help = "How complete each translation catalogue is"
-interpreter = "python"
-shell = """
-import os, pathlib, re, shutil, subprocess, sys
-
-# Verified on Windows: msgfmt is a gettext tool and is not on PATH by
-# default (install gettext - e.g. via MSYS2 or the gettext-tools installer -
-# and confirm `msgfmt --version` works, then re-run). Checking with
-# shutil.which() up front turns a raw FileNotFoundError traceback into an
-# actionable message; the hardcoded '/dev/null' below would also fail on
-# Windows even with msgfmt installed, so os.devnull replaces it.
-if shutil.which('msgfmt') is None:
-    sys.exit(
-        'error: msgfmt not found on PATH. It ships with gettext - install it '
-        '(e.g. via MSYS2 or the gettext-tools installer on Windows, or your '
-        'package manager on Linux/macOS) and try again.'
-    )
-
-rows = []
-for po in sorted(pathlib.Path('qatrack/locale').glob('*/LC_MESSAGES/django.po')):
-    locale = po.parent.parent.name
-    # msgfmt reports its statistics on stderr, in prose.
-    out = subprocess.run(['msgfmt', '--statistics', '-o', os.devnull, str(po)],
-                         capture_output=True, text=True).stderr
-    def count(word):
-        found = re.search(r'(\\d+) ' + word, out)
-        return int(found.group(1)) if found else 0
-    done, fuzzy, missing = count('translated'), count('fuzzy'), count('untranslated')
-    total = done + fuzzy + missing
-    pct = (100 * done / total) if total else 0
-    rows.append((locale, done, fuzzy, missing, pct))
-
-if not rows:
-    sys.exit('no catalogues found under qatrack/locale/')
-
-print('%-8s %10s %8s %14s %8s' % ('locale', 'translated', 'fuzzy', 'untranslated', 'done'))
-for locale, done, fuzzy, missing, pct in rows:
-    print('%-8s %10d %8d %14d %7.1f%%' % (locale, done, fuzzy, missing, pct))
-print()
-print('fuzzy entries have a translation that needs a human to confirm it;')
-print('untranslated ones have none at all.')
-"""
+help = "Alias of `check-messages`: per-language coverage, and any stale .mo"
+ref = "check-messages"
