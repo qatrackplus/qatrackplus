@@ -195,8 +195,9 @@ Before opening a PR, run the checks CI will run, in one command:
 uv run poe ci     # pre-commit over every file, lockfile check, strict docs build, full suite
 ```
 
-`poe` (poethepoet) is the project's task runner and a normal dependency, so
-`uv sync` already installed it; `uv run poe` on its own lists every task. The
+`poe` (poethepoet) is the project's task runner, in the `dev` dependency
+group, so the `uv sync` above already installed it; `uv run poe` on its own
+lists every task. The
 developer guide has the full table.
 
 ### Opening a pull request

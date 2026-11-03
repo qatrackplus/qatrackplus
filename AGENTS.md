@@ -67,7 +67,7 @@ accountability this whole policy is about.
 | **Frontend** | Server-rendered Django templates with HTMX and jQuery. No build step, no Node.js — a Vue/Vite bundle was retired and is expected back no earlier than 4.1 |
 | **Linter / formatter** | [ruff](https://docs.astral.sh/ruff/) |
 | **Test runner** | pytest (`uv run pytest` — GUI tests are skipped by default, see [Running the tests](#running-the-tests)) |
-| **Task runner** | [poe](https://poethepoet.natn.io/) (poethepoet), a project dependency — `uv run poe` lists the tasks; `uv run poe ci` is the pre-push check |
+| **Task runner** | [poe](https://poethepoet.natn.io/) (poethepoet), in the `dev` dependency group — `uv run poe` lists the tasks; `uv run poe ci` is the pre-push check |
 | **Docs** | Sphinx — `uv run poe docs` from repo root (fails on any warning, as CI does) |
 | **Target branch** | `develop` (not `master`) |
 
@@ -192,8 +192,8 @@ with no further setup. See [Running the tests](#running-the-tests) for
 
 ### The task runner
 
-[poe](https://poethepoet.natn.io/) (poethepoet) is a project dependency, so
-`uv sync` already installed it. `uv run poe` with no arguments lists every
+[poe](https://poethepoet.natn.io/) (poethepoet) is in the `dev` dependency
+group, so `uv sync` already installed it. `uv run poe` with no arguments lists every
 task with a one-line description; `uv run poe <task>` runs one. Tasks are
 defined in `poe_tasks/*.toml`, one file per theme, and `pyproject.toml` only
 lists those files under `[tool.poe] include`. The ones an agent needs:
