@@ -270,9 +270,68 @@ def test_i18n_status_delegates_rather_than_parsing_msgfmt():
 
 
 def test_the_autobuild_port_is_the_documented_one():
-    """poe said 8008 and the Makefile said 8009; the docs say 8008 four times."""
+    """poe said 8008 and the Makefile said 8009; the docs say 8008 four times.
+
+    The Makefile now names no port at all, which is the real fix: there is one
+    place for it to be wrong instead of two.
+    """
     default = TASKS['docs-autobuild']['args'][0]['default']
     assert default == '8008', default
     makefile = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
-    assert '--port 8008' in makefile, "the Makefile is back on a different port"
-    assert '8009' not in makefile, "8009 is still somewhere in the Makefile"
+    assert '--port' not in makefile, "the Makefile has a port of its own again"
+
+
+# --------------------------------------------------------------------------
+# The Makefile holds aliases and nothing else
+# --------------------------------------------------------------------------
+
+def makefile_recipe_lines():
+    """Every recipe line - the tab-indented ones - with its target."""
+    target = None
+    for line in (REPO_ROOT / 'Makefile').read_text(encoding='utf-8').splitlines():
+        if line and not line[0].isspace() and ':' in line and not line.startswith('#'):
+            target = line.split(':', 1)[0].strip()
+        elif line.startswith('\t') and target:
+            yield target, line.strip()
+
+
+def test_every_makefile_target_only_calls_poe():
+    """Two runners with two implementations drift, and this one did.
+
+    `make-test-integration` stopped matching `make test-integration`,
+    `docs-autobuild` served on a different port under each, and the two
+    engine-swap implementations disagreed about refusing a backup left by an
+    interrupted run - which is how one of them came to destroy a developer's
+    settings. Every recipe line now either prints help or calls poe, so there
+    is one implementation to be wrong.
+    """
+    offenders = [
+        (target, line) for target, line in makefile_recipe_lines()
+        if target not in ('help', '.PHONY')
+        and not line.startswith('$(POE)')
+        and not line.startswith('@echo')
+    ]
+    assert not offenders, offenders
+
+
+def test_the_makefile_has_a_target_for_every_habit_it_used_to_serve():
+    """A rewrite is the easy place to drop a target somebody's script calls."""
+    makefile = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
+    for target in ('test', 'test_simple', 'test-sqlite', 'test-memory',
+                   'test-postgres', 'test-mysql', 'test-mssql',
+                   'test-integration', 'cover', 'cover-mo', 'cover-module',
+                   'cover-qatrack', 'docs', 'docs-autobuild', 'dumpdata',
+                   'nginx.conf', 'supervisor.conf', 'schema', 'run', 'help'):
+        assert ('\n%s:' % target) in makefile, "no %s target" % target
+
+
+def test_every_poe_task_a_makefile_target_names_exists():
+    """An alias to a task that does not exist fails at run time, not at edit time."""
+    missing = []
+    for target, line in makefile_recipe_lines():
+        if not line.startswith('$(POE)'):
+            continue
+        task = line.split()[1]
+        if task not in TASKS:
+            missing.append((target, task))
+    assert not missing, missing
