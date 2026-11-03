@@ -82,6 +82,36 @@ sys.exit(subprocess.call(argv))
 """
 
 
+# NOTE: EXTRA ARGUMENTS, and where they do and do not arrive.
+#
+# `poe <task> -- --flag` appends the extra tokens to a `cmd` task's command
+# line, and silently discards them for a task with a `shell` body. A body
+# builds its own argv in Python, and poe has nowhere to put the extras, so
+# they are simply gone. So `poe test -- -k foo` filters the run and
+# `poe test-engine sqlite -- -k foo` runs the whole suite against sqlite.
+#
+# Measured with poe 0.49.0: `poe -d test -- -k foo` prints
+# `pytest -- -k foo`; `poe -d lint -- --fix` prints
+# `pre-commit run --all-files -- --fix`; `poe -d docs-autobuild --port 9000
+# -- -k foo` prints `sphinx-autobuild ... --port 9000 -k foo`; while
+# `poe test-order 1 -- -k nosuchtest` ran all 1745 tests.
+#
+# **An earlier version of this note, and of the matching text in
+# pyproject.toml and the developer guide, blamed declaring a named argument.
+# That is wrong.** `docs-autobuild` declares `--port` and forwards extras
+# anyway; `dumpdata` declares nothing and drops them. The dividing line is
+# `cmd` against `shell`, and nothing else. The mistake came from
+# `_test-engine`, which was a shell task that happened to declare
+# `--engine`; the argument was never what stopped the forwarding.
+#
+# For a filtered run against one engine, copy that engine's file to
+# qatrack/local_test_settings.py by hand and run `poe test -- -k foo`. The
+# alternative - a declared argument on `test-engine` that the body splits
+# into pytest flags - would work, and is not written here because nobody has
+# asked for it.
+#
+# This note used to live beside `_test-engine` in poe_tasks/make_compat.toml,
+# which is gone: the make-* analogs are now `ref`s to the tasks here.
 [[tasks.test-engine.args]]
 name = "engine"
 positional = true
@@ -109,10 +139,23 @@ if not src.exists():
           'for a starting template.')
     sys.exit(1)
 
+# Refuse, before touching anything, if a backup from an earlier run is still
+# here. try/finally below restores on any Python-level exit, Ctrl-C included,
+# but it cannot run at all if the process is killed outright - SIGHUP from a
+# closed terminal or a dropped SSH session, SIGKILL, a power cut - and that
+# leaves the real settings in the .bak. Copying over it then destroys them,
+# which is the one outcome worth refusing rather than reporting. Mirrors the
+# same guard in test-integration below, and in the Makefile.
+if backup.exists():
+    print('error: %s already exists - an earlier run was killed before it could'
+          ' put your settings back.' % backup)
+    print('Move it to %s, or delete it, then try again.' % live)
+    sys.exit(1)
+
 # try/finally rather than the shell version's fall-through restore. The
-# Makefile/`_test-engine` form only restores if the pytest line completes;
-# interrupt it (Ctrl-C) and your real local_test_settings.py is left
-# swapped out. This restores on any exit, including KeyboardInterrupt.
+# Makefile's own `_test-engine` target only restores if the pytest line
+# completes; interrupt it (Ctrl-C) and your real local_test_settings.py is
+# left swapped out. This restores on any exit, including KeyboardInterrupt.
 had_existing = live.exists()
 if had_existing:
     shutil.copyfile(live, backup)
@@ -257,10 +300,11 @@ sys.exit(status)
 # `test-gui` is not a fifth combination - it deliberately sets nothing, so it
 # runs whatever your own settings configure.
 #
-# Plain tasks rather than one with a --browser argument: poe stops forwarding
-# dash-prefixed tokens as soon as a task declares a named arg (see the note on
-# _test-engine in poe_tasks/make_compat.toml), and `-k`, `-x` and `--pdb` are
-# exactly what you reach for on a failing browser test.
+# Plain `cmd` tasks, one per combination, rather than one task with a
+# --browser argument: a `cmd` forwards `poe test-gui-firefox-headless -- -k
+# foo` straight to pytest, and `-k`, `-x` and `--pdb` are exactly what you
+# reach for on a failing browser test. A `shell` body would drop them - see
+# the note above `test-engine`.
 #
 # The env tables are the reason these exist - `SELENIUM_BROWSER=chromium
 # pytest ...` is not something you can type in cmd or PowerShell, and Windows
