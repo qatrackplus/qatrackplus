@@ -50,6 +50,14 @@ Windows, including with Docker Desktop, isn't supported. To get started, see
    docker
    docker_upgrade_from_4_0
    docker_upgrade_from_4_0_1
+   docker_env_reference
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference
+
+   checks
 
 
 Configuring your QATrack+ Instance
