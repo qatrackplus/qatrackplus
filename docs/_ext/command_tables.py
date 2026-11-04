@@ -11,9 +11,9 @@ hand, so none of them can drift from the code:
   gives one, otherwise by the comment directly above the target.
 
 The fragments land in ``docs/developer/_*.rst`` (gitignored) and are pulled in
-by ``docs/developer/commands.rst``. A poe task without a ``help`` line fails
-the build; the other two tables mark a missing description instead, because
-the commands already exist and the gap is theirs to close.
+by ``docs/developer/commands.rst``. A poe task without a ``help`` line, a
+management command without a ``help`` attribute, or a Makefile target with
+neither a ``make help`` entry nor a comment above it fails the build.
 """
 
 import ast
@@ -85,17 +85,18 @@ def _help_attr(path):
 
 
 def manage_commands():
-    rows, missing = [], 0
+    rows, missing = [], 0  # missing stays 0: a gap now raises
     for path in sorted((ROOT / 'qatrack').glob('*/management/commands/*.py')):
         if path.name.startswith('_'):
             continue
         app = path.parents[2].name
         help_text = _help_attr(path)
         if not help_text:
-            missing += 1
-            help_text = '*(no help line in the command; see the file)*'
-        else:
-            help_text = cell(help_text)
+            raise RuntimeError(
+                f'management command {path.stem!r} ({path.relative_to(ROOT)}) has no help attribute; '
+                'add one (docs/_ext/command_tables.py)'
+            )
+        help_text = cell(help_text)
         rows.append((f'``manage.py {path.stem}``', help_text, f'``{app}``'))
     out = table(
         ('Command', 'What it does', 'App'),
@@ -115,7 +116,7 @@ def make_targets():
     from_help = {}
     for m in re.finditer(r'@echo "  ([A-Za-z0-9_.-]+)\s{2,}(.+?)"', text):
         from_help[m.group(1)] = m.group(2)
-    rows, undocumented = [], 0
+    rows, undocumented = [], 0  # undocumented stays 0: a gap now raises
     for i, line in enumerate(lines):
         m = re.match(r'^([A-Za-z0-9_.-]+):(?:\s|$)(?!=)', line)
         if not m or m.group(1) in ('.PHONY', 'help') or m.group(1).startswith('_'):
@@ -131,10 +132,11 @@ def make_targets():
                 j -= 1
             desc = block[0] if block else None
         if not desc:
-            undocumented += 1
-            desc = '*(no description in the Makefile)*'
-        else:
-            desc = cell(desc)
+            raise RuntimeError(
+                f'Makefile target {name!r} has no `make help` entry and no comment above it; '
+                'add one (docs/_ext/command_tables.py)'
+            )
+        desc = cell(desc)
         rows.append((f'``make {name}``', desc))
     rows.sort()
     out = table(
