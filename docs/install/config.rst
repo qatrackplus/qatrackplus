@@ -206,6 +206,66 @@ where 'America/Toronto' is replaced with your local timezone (e.g. `TIME_ZONE =
 timezones on Wikipedia
 <http://en.wikipedia.org/wiki/List_of_tz_database_time_zones>`_.
 
+.. _time_zone_rules:
+
+Keeping the time zone rules current
+...................................
+
+The name in ``TIME_ZONE`` tells QATrack+ *where* you are. *When* your clocks
+change - or whether they still do - comes from a database of time zone rules,
+and governments change those rules more often than you might expect. In 2026
+British Columbia, Alberta, Manitoba and the Northwest Territories all stopped
+changing their clocks. The zone names stay the same (``America/Vancouver``,
+``America/Edmonton``, ``America/Winnipeg``); only the rules behind them change.
+
+A server with out-of-date rules shows times an hour off for part of the year
+and gives no warning, so it is worth knowing where your copy comes from:
+
+* **Linux:** from the operating system's ``tzdata`` package. Your normal
+  system updates keep it current - but refresh the package indexes first, or
+  ``apt`` upgrades from a list that may predate the new rules and leaves the
+  old ones installed:
+
+  .. code-block:: console
+
+      sudo apt update && sudo apt upgrade     # Debian/Ubuntu
+      sudo dnf upgrade                        # Fedora/RHEL, which refreshes its own
+
+  Restart QATrack+ afterwards, for the reason in the note below.
+* **Windows:** from the ``tzdata`` Python package in QATrack+'s virtual
+  environment, not from Windows itself. Each QATrack+ release pins the copy it
+  was tested with, and ``uv sync`` during an upgrade installs it.
+* **Docker:** from the ``tzdata`` **package** pinned in ``uv.lock``, the same
+  one Windows uses - not from the image's operating system copy. The image sets
+  ``PYTHONTZPATH=``, which empties the search path Python would otherwise
+  consult first, so the pinned and tested version is the one that decides.
+
+  This is why there is nothing to do during a Docker upgrade: the rules arrive
+  with the release, as any other dependency does. Before this, the rules came
+  from whatever the image happened to install when it was built, which made
+  Docker the one platform where they were neither pinned nor tested.
+
+  The image still installs the operating system's ``tzdata`` for its own
+  tooling - ``date``, the postgres client - but nothing in QATrack+ reads it.
+
+  Containers that are already running keep the image they started with, so
+  recreate them after an upgrade. This recreates both ``django`` and
+  ``django-q``, which matters because scheduled notices and reports come from
+  the second:
+
+  .. code-block:: console
+
+      docker compose up -d
+
+.. note::
+
+    **Whichever platform you are on, restart QATrack+ after updating the
+    rules.** Python caches time-zone data per process: asking for a zone twice
+    returns the same object, so a process that started before the update keeps
+    the rules it loaded and goes on being wrong. On Linux and Windows that
+    means restarting the web server and the Django Q cluster; on Docker,
+    ``docker compose up -d`` above does it.
+
 
 Organization Logo
 ~~~~~~~~~~~~~~~~~

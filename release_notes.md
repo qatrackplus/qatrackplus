@@ -2,6 +2,18 @@
 
 Release notes are located at http://docs.qatrackplus.com/en/latest/release_notes.html
 
+## v4.1.0
+
+* **Time zones**: QATrack+ now ships the IANA **2026f** time zone rules, so sites in jurisdictions that changed their clock behaviour during 2026 show the right times. Four Canadian jurisdictions stopped observing daylight saving: **British Columbia** (permanent UTC−07), **Alberta** (permanent UTC−06), the **Northwest Territories** (permanent UTC−06) and **Manitoba** (permanent UTC−05 from 31 October 2026). The rules QATrack+ previously bundled (IANA 2026b) knew only about British Columbia, so a site in the other three could show times an hour out — on dates after each jurisdiction's change, which for Manitoba means from 1 November 2026 ([#926](https://github.com/qatrackplus/qatrackplus/pull/926)).
+
+  **Whether your site was affected depended on the platform, which is why this went unnoticed.** On **Linux**, Python reads the operating system's time zone database before the bundled copy, so a maintained server has been correct all along. On **Windows** there is no such database for Python to read, so the bundled copy is the only one — those sites were affected. On **Docker** it used to depend on how old the base image was when it was built; as of this release it does not, because the image now reads the pinned `tzdata` package rather than the operating system's copy, so Docker gets the same tested rules as every other platform.
+
+  **The zone names did not change** — `America/Edmonton` and `America/Winnipeg` are still the right choices; only their rules changed. There is nothing to reconfigure, and no stored data is wrong: QATrack+ stores instants and applies the rules when it displays them, so correcting the rules corrects past and future displays together.
+
+  **On a Windows site installed with the `pip install` path**, that path does not upgrade a `tzdata` it already has, so run `pip install --upgrade tzdata` as part of the upgrade. Installations that follow the documented `uv` steps get the new rules from the lockfile.
+
+  **Restart QATrack+ after any of this.** Python caches time zone data for the life of a process, so a web server or Django Q cluster that started before the update keeps the rules it loaded. On Windows restart the `QATrack+ Web Service` and the `QATrack+ Django Q Cluster` task; on Linux restart the supervisor programs; on Docker, `docker compose up -d` after the build recreates both services. Leaving the Django Q cluster running is the easiest one to miss, and it is the process that sends scheduled notices and reports.
+
 ## v4.0.2
 
 * **QA**: The Test List admin shows each member test's name again, and the view and change icons beside it work ([#897](https://github.com/qatrackplus/qatrackplus/issues/897)).
