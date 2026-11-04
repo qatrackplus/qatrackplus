@@ -133,3 +133,5 @@ deploy/dev/.env
 docs/developer/_poe_tasks.rst
 docs/developer/_manage_commands.rst
 docs/developer/_make_targets.rst
+docs/install/_startup_checks.rst
+docs/install/_settings_defaults.rst
