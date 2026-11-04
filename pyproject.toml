@@ -197,6 +197,17 @@ dev = [
     # 3 Nov.
     #
     # Note it is pre-1.0, so the `<1.0` ceiling is doing real work.
+    #
+    # STILL AN OPEN QUESTION, and this placement is a deferral. Cody,
+    # 2026-11-04: *"leave poe in dev until those four are verified ... this will
+    # need to be validated and fixed in a later pr as 4.1 approaches release."*
+    # The four are nginx-conf, supervisor-conf and their -remove counterparts in
+    # poe_tasks/deploy.toml - the only tasks written for a site rather than a
+    # developer, and all four unverified. If they are made to work, poe belongs
+    # in the base dependencies and they belong in the install guide; if they are
+    # dropped, poe stays here for good. The full decision, and what has to be
+    # run first, is in the block above those tasks. Do not resolve it from this
+    # file alone.
     "poethepoet>=0.49,<1.0",
 
     # Testing framework and utilities
@@ -350,11 +361,19 @@ quote-style = "single"
 #    the minor line, [tool.poe.env] is gone, and the Makefile no longer defines
 #    VERSION at all. Nothing else in either file used it.
 #
-# 4. Done 2026-11-03: poe is in the `dev` dependency group, so every
-#    `uv sync` provides it and uv.lock pins it, while `uv sync --no-dev` -
-#    which is what the production image runs - does not ship it to sites. The
-#    reasoning, and the measurements that moved it out of the base set, are on
-#    the declaration itself in [dependency-groups].
+# 4. Done 2026-11-03, and **reopened 2026-11-04 as a deferral**: poe is in the
+#    `dev` dependency group, so every `uv sync` provides it and uv.lock pins
+#    it, while `uv sync --no-dev` - which is what the production image runs -
+#    does not ship it to sites. The measurements that moved it out of the base
+#    set are on the declaration in [dependency-groups].
+#
+#    **What reopened it:** the measurement was that no *documentation* sends a
+#    site to a poe task, which sidesteps the question of whether any task was
+#    *written* for one. Four were - nginx-conf, supervisor-conf and their
+#    -remove counterparts - and all four are unverified. So this is settled
+#    only until somebody runs them. The required next step is written above
+#    those tasks in poe_tasks/deploy.toml, and belongs in its own pull request
+#    as 4.1 approaches release.
 #
 # 5. Consider `[tool.poe.executor] locked = true`. poe runs tasks through
 #    `uv run` already, and its uv executor accepts locked/frozen/no-sync/
