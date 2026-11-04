@@ -16,6 +16,45 @@
 # placeholder (2, 3 and 4 occurrences), the substitution leaves none behind,
 # and the paths resolve to what the install docs prescribe. The sudo steps
 # themselves are unverified, which is what the WIP- marks.
+#
+# ==========================================================================
+# REQUIRED NEXT STEP, before 4.1 releases. Cody's decision, 2026-11-04.
+# ==========================================================================
+#
+# **These four are the only poe tasks written for a site rather than a
+# developer, and they are the reason poe's dependency group is still an open
+# question.** poe sits in the `dev` group (see [dependency-groups] in
+# pyproject.toml), which means a site installing with `uv sync --no-dev` - what
+# the production image does - does not get poe and so cannot run these at all.
+#
+# **That is a deferral, not a judgement that no task could serve an
+# installation.** The judgement cannot be made while the sudo steps are
+# unverified: documenting an unverified task that runs sudo and writes into
+# /etc would publish an instruction nobody has executed.
+#
+# **What has to happen, in this order:**
+#
+#   1. Run all four on a real Ubuntu host, as a deployment would - install,
+#      confirm nginx serves and supervisor starts gunicorn and django-q2, then
+#      run the two -remove tasks and confirm the host is back as it was.
+#   2. Then decide, and the two answers lead different ways:
+#      * **they work** -> move poe out of `dev` and into the base dependencies,
+#        and document these four in `docs/install/linux.rst` beside the manual
+#        steps they replace. Cody, 2026-11-04: *"those functions should be
+#        documented in the install guide."*
+#      * **they do not work, or are not wanted** -> drop the WIP- marks by
+#        deleting the tasks, and say in this file that deployment is a
+#        documented manual procedure. poe then stays in `dev` for good.
+#   3. Either way, remove this block. It exists to stop the question being
+#      lost, not to be carried.
+#
+# **Nothing is lost while this is open.** `docs/install/linux.rst` already
+# walks a site through nginx and supervisor by hand - `sites-available/
+# qatrack.conf`, `supervisorctl restart gunicorn` - so these tasks are a
+# convenience over a documented procedure that works, not the only route.
+#
+# **Validated and fixed in its own pull request as 4.1 approaches release**,
+# on Cody's instruction. It is not this branch's work.
 [tasks."nginx-conf"]
 help = "WIP- Ubuntu only: install the nginx site config (runs sudo); unverified here"
 shell = '''
