@@ -385,7 +385,8 @@ Configuring QATrack+
 QATrack+'s Docker settings all live in ``deploy/docker/.env``, which you created
 from ``.env.example`` when :ref:`setting up <docker_setup>`. Apart from the
 database user name and password and ``ALLOWED_HOSTS``, everything is optional
-and documented in ``.env.example``: email, time zone, HTTPS, Active Directory /
+and documented in ``.env.example`` (reproduced in full in
+:doc:`docker_env_reference`): email, time zone, HTTPS, Active Directory /
 LDAP sign-in (see :ref:`docker_ldaps` for an encrypted connection), and the QC
 display options. Leave a setting commented out to keep its default.
 ``SECRET_KEY`` is generated and kept for you if you do not set one, but it is
