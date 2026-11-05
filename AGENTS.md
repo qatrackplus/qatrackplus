@@ -226,6 +226,13 @@ whole codebase will surface a large, unrelated reformatting diff — scope
 repo-wide. `uv run poe format-changed` works that list out from git and prints
 it before formatting; `--check` reports what it would do without writing.
 
+**Naming a new poe task:** name it for the job, not the tool. `lint` runs
+pre-commit, `format-changed` runs ruff, `docs` runs Sphinx — a tool name in a
+public task has to be renamed when the tool is swapped, and takes every script
+and habit with it. Tool names belong on `_`-prefixed internal helpers only.
+This matches poe's own project and the wider ecosystem; the reasoning and the
+examples are in `docs/developer/guide.rst` under *Adding a new poe task*.
+
 Configuration lives in `pyproject.toml` under `[tool.ruff]`.  
 Line length is **120 characters**. Quote style is **single quotes**.  
 Import ordering is enforced (`ruff` rule set `I`).

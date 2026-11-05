@@ -33,11 +33,13 @@ _Confirm which branch this targets (e.g. master)._
 ### Coder Tasks
 
 - [ ] Rebased / merged `develop` branch; no merge conflicts.
-- [ ] `uv run poe ci` passes: pre-commit over every file (ruff lint,
-  django-upgrade, django check, plus the yaml/toml/large-file/merge-conflict/
-  debug-statement checks), the lockfile check, the strict docs build and the
-  full test suite.
-  - `uv run poe fix` to apply ruff's automatic lint fixes
+- [ ] `uv run poe ci` passes. It is four poe tasks in order, cheapest first, so
+  a failure can be re-run on its own: `poe lint` (the pre-commit suite over
+  every file — ruff, django-upgrade, django check, plus the yaml/toml/
+  large-file/merge-conflict/debug-statement checks), `poe deps` (the lockfile
+  check), `poe docs` (the strict documentation build) and `poe test` (the
+  suite).
+  - `uv run poe lint-fix` to apply ruff's automatic lint fixes
   - `uv run poe format-changed` to format just what you touched. It works the
     list out from git — this branch's commits plus anything uncommitted — and
     prints it before formatting, because formatting has never been applied
@@ -45,7 +47,15 @@ _Confirm which branch this targets (e.g. master)._
     AGENTS.md). `uv run poe format-changed --check` reports what it would
     reformat without writing anything.
 - [ ] `uv run python -Wd manage.py check` reviewed for new deprecation warnings.
-- [ ] `uv run pytest` full test suite passes.
+- [ ] `uv run poe test` passes — the suite without the GUI tests, which are
+  skipped by default.
+- [ ] `uv run poe test-gui` passes — only the GUI/Selenium tests. **Headless is
+  the default**, so this needs no display server. To watch a run instead, use
+  `poe test-gui-firefox-visible` or `poe test-gui-chromium-visible` (or the
+  `-watch` variants, which also pause between actions); `poe
+  test-gui-firefox-headless` and `-chromium-headless` pin the browser without
+  opening a window. These are `continue-on-error` in CI, so a red GUI run does
+  not block the build — check it here rather than trusting the tick.
 - [ ] `uv run python manage.py makemigrations --dry-run` — if it reports any
   migrations, they belong in this PR and the change should be marked Breaking.
   (Use the plain `--dry-run`, not `--check --dry-run`: with `--check` the command
