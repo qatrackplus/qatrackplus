@@ -33,33 +33,53 @@ _Confirm which branch this targets (e.g. master)._
 ### Coder Tasks
 
 - [ ] Rebased / merged `develop` branch; no merge conflicts.
-- [ ] `uv run poe ci` passes. It is four poe tasks in order, cheapest first, so
-  a failure can be re-run on its own: `poe lint` (the pre-commit suite over
-  every file — ruff, django-upgrade, django check, plus the yaml/toml/
-  large-file/merge-conflict/debug-statement checks), `poe deps` (the lockfile
-  check), `poe docs` (the strict documentation build) and `poe test` (the
-  suite).
-  - `uv run poe lint-fix` to apply ruff's automatic lint fixes
-  - `uv run poe format-changed` to format just what you touched. It works the
-    list out from git — this branch's commits plus anything uncommitted — and
-    prints it before formatting, because formatting has never been applied
-    repo-wide and running it that way produces a large unrelated diff (see
-    AGENTS.md). `uv run poe format-changed --check` reports what it would
-    reformat without writing anything.
-- [ ] `uv run python -Wd manage.py check` reviewed for new deprecation warnings.
-- [ ] `uv run poe test` passes — the suite without the GUI tests, which are
-  skipped by default.
-- [ ] `uv run poe test-gui` passes — only the GUI/Selenium tests. **Headless is
-  the default**, so this needs no display server. To watch a run instead, use
-  `poe test-gui-firefox-visible` or `poe test-gui-chromium-visible` (or the
-  `-watch` variants, which also pause between actions); `poe
-  test-gui-firefox-headless` and `-chromium-headless` pin the browser without
-  opening a window. These are `continue-on-error` in CI, so a red GUI run does
-  not block the build — check it here rather than trusting the tick.
-- [ ] `uv run python manage.py makemigrations --dry-run` — if it reports any
-  migrations, they belong in this PR and the change should be marked Breaking.
-  (Use the plain `--dry-run`, not `--check --dry-run`: with `--check` the command
-  exits 1 and prints *nothing*, which reads exactly like "no migrations needed".)
+> **Each item below gives the command twice — with poe, and without it.** That
+> is deliberate, and it is temporary. This PR adds poe alongside the
+> `Makefile`, so for one cycle either runner works and nobody's habit is
+> stranded. When the `Makefile` is removed during the 4.1 cycle, the plain
+> forms can come out of this template and poe becomes the only spelling. The
+> two are not alternatives that might diverge: each poe task *is* the command
+> beside it.
+
+- [ ] `uv run poe ci` passes — four tasks in order, cheapest first, so a
+  failure can be re-run on its own. Without poe, the same four by hand:
+  - `poe lint` — `uv run pre-commit run --all-files` (ruff, django-upgrade,
+    django check, plus the yaml/toml/large-file/merge-conflict/debug-statement
+    checks)
+  - `poe deps` — `uv lock --check`, then `uv pip check`
+  - `poe docs` — `uv run sphinx-build -W --keep-going -a --fresh-env -b html docs docs/_build/html`
+  - `poe test` — `uv run pytest`
+- [ ] Lint and formatting fixes, if `poe ci` reported any:
+  - `uv run poe lint-fix` — `uv run ruff check . --fix`
+  - `uv run poe format-changed` — `uv run ruff format <files you changed>`.
+    These two are **not** equivalent, and it is the one place poe does more
+    than the command beside it: the task works the file list out from git (this
+    branch's commits plus anything uncommitted) and prints it before
+    formatting, where by hand you type the list yourself. Either way, keep it
+    to what you changed — formatting has never been applied repo-wide, so
+    `ruff format .` produces a large unrelated diff (see AGENTS.md).
+    `uv run poe format-changed --check` reports what it would reformat without
+    writing anything.
+- [ ] `uv run poe check-deprecations` — or `uv run python -Wd manage.py check`.
+  Reviewed for new deprecation warnings; `-Wd` is what makes them visible.
+- [ ] `uv run poe test` — or `uv run pytest`. The suite without the GUI tests,
+  which are skipped by default.
+- [ ] `uv run poe test-gui` — or `uv run pytest -m selenium`. Only the
+  GUI/Selenium tests. **Headless is the default**, so neither needs a display
+  server. To watch a run instead, use `poe test-gui-firefox-visible` or
+  `poe test-gui-chromium-visible` (or the `-watch` variants, which also pause
+  between actions); `poe test-gui-firefox-headless` and `-chromium-headless`
+  pin the browser without opening a window. These are `continue-on-error` in
+  CI, so a red GUI run does not block the build — check it here rather than
+  trusting the tick.
+- [ ] `uv run poe check-migrations` — or `uv run python manage.py makemigrations
+  --dry-run`. If either reports migrations, they belong in this PR and the
+  change should be marked Breaking.
+  - These two differ, and in the author's favour. By hand you must use the
+    plain `--dry-run`: it prints the operations but **always exits 0**, while
+    `--check --dry-run` exits 1 and prints *nothing*, which reads exactly like
+    "no migrations needed". The poe task runs both forms — one for the listing,
+    one for the exit code — so it prints what is pending *and* fails.
 - [ ] Docker builds succeed if touched.
 - [ ] Docs updated under `docs/` if behaviour, settings, or APIs changed.
 - [ ] `release_notes.md` updated if user-facing.

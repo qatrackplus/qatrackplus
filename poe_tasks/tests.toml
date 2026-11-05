@@ -92,14 +92,14 @@ sys.exit(subprocess.call(argv))
 #
 # Measured with poe 0.49.0: `poe -d test -- -k foo` prints
 # `pytest -- -k foo`; `poe -d lint -- --fix` prints
-# `pre-commit run --all-files -- --fix`; `poe -d docs-autobuild --port 9000
+# `pre-commit run --all-files -- --fix`; `poe -d docs-serve --port 9000
 # -- -k foo` prints `sphinx-autobuild ... --port 9000 -k foo`; while
 # `poe test-order 1 -- -k nosuchtest` ran all 1745 tests.
 #
 # **An earlier version of this note, and of the matching text in
 # pyproject.toml and the developer guide, blamed declaring a named argument.
-# That is wrong.** `docs-autobuild` declares `--port` and forwards extras
-# anyway; `dumpdata` declares nothing and drops them. The dividing line is
+# That is wrong.** `docs-serve` declares `--port` and forwards extras
+# anyway; `dump-data` declares nothing and drops them. The dividing line is
 # `cmd` against `shell`, and nothing else. The mistake came from
 # `_test-engine`, which was a shell task that happened to declare
 # `--engine`; the argument was never what stopped the forwarding.

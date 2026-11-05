@@ -210,7 +210,7 @@ generated from those same help lines at every docs build:
      - **Run before you push.** The CI checks that work on a dev machine, in
        order: the pre-commit suite over every file, the lockfile check, the
        documentation build, then the test suite.
-   * - ``poe docs`` / ``poe docs-autobuild``
+   * - ``poe docs`` / ``poe docs-serve``
      - Build the documentation, failing on any warning; or serve it with
        live reload on port 8008 (``--port`` to change).
    * - ``poe test``
@@ -228,6 +228,15 @@ generated from those same help lines at every docs build:
    * - ``poe dev-init`` / ``dev-reset`` / ``run``
      - Create a fresh sqlite development environment (``dev-reset`` deletes
        the existing one first), and run the development server.
+   * - ``poe lint-fix`` / ``poe format-changed``
+     - Apply ruff's automatic lint fixes across the repo; or format only the
+       files this branch changed, which it works out from git and prints.
+       Never format repo-wide - see the note in ``AGENTS.md``.
+   * - ``poe check-deprecations`` / ``poe check-migrations``
+     - Django's system checks with deprecation warnings visible; and whether
+       any model change still needs a migration. The second prints what is
+       pending *and* fails, which neither form of ``makemigrations`` does on
+       its own.
 
 Tasks whose help text begins **WIP** (the Ubuntu deployment helpers in
 ``poe_tasks/deploy.toml``, which run ``sudo``, and three ``make-*`` shims) are
@@ -1288,7 +1297,7 @@ browser (at http://127.0.0.1:8008) by running one of the following commands:
 
 .. code-block:: shell
 
-    uv run poe docs-autobuild
+    uv run poe docs-serve
     # -or-
     sphinx-autobuild docs docs/_build/html --port 8008
 
