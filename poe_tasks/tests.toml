@@ -321,6 +321,26 @@ sys.exit(status)
 # or SELENIUM_HEADLESS there, your file wins and these tasks stop having any
 # effect - which looks exactly like the task being broken.
 
+# WHY THIS EXISTS, given that it is exactly `uv run pytest -m selenium` and
+# adds no behaviour whatsoever. Cody was asked and decided to keep it,
+# 2026-11-05, for two reasons:
+#
+# 1. **It is the only task here that overrides nothing.** The three
+#    `test-gui-<mode>` tasks below always impose the window mode; omitting
+#    their browser argument leaves SELENIUM_BROWSER alone but still forces
+#    headless or visible. This one honours *both* halves of your own settings,
+#    so it is not `test-gui-headless` with the argument left off.
+# 2. **`poe` with no arguments is how someone finds out this project has a GUI
+#    suite at all.** A task list where every GUI entry forces a window mode
+#    hides the plain case - and the plain case is what CI runs, so naming it
+#    makes the CI command reproducible by name instead of by reading
+#    .github/workflows/ci.yml.
+#
+# If it is ever removed, the developer guide needs one line pointing at
+# `uv run pytest -m selenium`, and the three mode tasks need help text saying
+# that plain pytest is the unmodified form - otherwise that knowledge leaves
+# with the task. The full decision is in aviary,
+# projects/qatrackplus/decisions/2026-11-05-poe-task-naming-and-test-gui.md.
 [tasks.test-gui]
 help = "Run ONLY the GUI/Selenium tests, using whatever your settings configure"
 cmd = "pytest -m selenium"
@@ -331,10 +351,23 @@ cmd = "pytest -m selenium"
 # parameter and not a purpose - the same reason a task is named for its job and
 # not for its tool (see *Adding a new poe task* in the developer guide).
 #
-#     poe test-gui-headless            # firefox, the default
-#     poe test-gui-headless chromium
-#     poe test-gui-visible chromium
-#     poe test-gui-watch               # firefox, slowed down
+#     poe test-gui-headless            # whichever browser your settings choose
+#     poe test-gui-headless chromium   # or name one
+#     poe test-gui-visible edge
+#     poe test-gui-watch               # your browser, slowed down
+#
+# OMITTING THE BROWSER USES YOURS. The argument has no default, so with none
+# given the tasks leave SELENIUM_BROWSER alone and whatever
+# local_test_settings.py (or your environment) says is what runs. Only the
+# window mode is imposed, which is the thing the task name is choosing.
+#
+# One asymmetry to know about, and it is the same precedence as ever:
+# settings.py reads SELENIUM_BROWSER from the environment, and
+# local_test_settings.py is imported afterwards, so a value pinned there beats
+# the environment. That is exactly what makes the no-argument case work - and
+# it means a developer who pins SELENIUM_BROWSER in that file will find the
+# ARGUMENT ignored too, with nothing said. If that bites, the fix is in
+# live.py, which would have to prefer the environment over the setting.
 #
 # `choices` on the argument does two things: it rejects a browser the harness
 # does not know (`poe test-gui-headless safari` fails with "invalid choice"
@@ -372,8 +405,15 @@ import sys
 
 # The wrapper task declares `browser` and poe hands a declared argument to the
 # body as an environment variable, not as a Python name or on argv.
-browser = os.environ.get('browser') or 'firefox'
-os.environ['SELENIUM_BROWSER'] = browser
+#
+# With no argument, SELENIUM_BROWSER is left alone entirely rather than being
+# set to a default. settings.py reads it from the environment and
+# local_test_settings.py may override it, so leaving it unset is what lets a
+# developer's own choice through - the mode is the only thing these tasks are
+# being asked to decide.
+browser = os.environ.get('browser')
+if browser:
+    os.environ['SELENIUM_BROWSER'] = browser
 
 # Say what is about to run. The mode comes from the wrapper's own `env`, so
 # without this line there is nothing to tell a headless run from a visible one
@@ -381,7 +421,7 @@ os.environ['SELENIUM_BROWSER'] = browser
 mode = 'visible' if os.environ.get('SELENIUM_HEADLESS') == 'False' else 'headless'
 if os.environ.get('SELENIUM_SLOW_MO'):
     mode += ', slowed to %ss between actions' % os.environ['SELENIUM_SLOW_MO']
-print('GUI tests: %s, %s' % (browser, mode))
+print('GUI tests: %s, %s' % (browser or 'browser from your settings', mode))
 sys.stdout.flush()
 
 sys.exit(subprocess.run([sys.executable, '-m', 'pytest', '-m', 'selenium']).returncode)
@@ -389,29 +429,27 @@ sys.exit(subprocess.run([sys.executable, '-m', 'pytest', '-m', 'selenium']).retu
 
 
 [tasks.test-gui-headless]
-help = "Run ONLY the GUI/Selenium tests with no window: poe test-gui-headless [firefox|chromium]"
+help = "Run ONLY the GUI/Selenium tests with no window: poe test-gui-headless [firefox|chromium|edge]"
 ref = "_test-gui-run"
 env = { SELENIUM_HEADLESS = "True" }
 
 [[tasks.test-gui-headless.args]]
 name = "browser"
 positional = true
-default = "firefox"
-choices = ["firefox", "chromium"]
-help = "Which browser to drive; chromium also drives Google Chrome"
+choices = ["firefox", "chromium", "edge"]
+help = "Which browser to drive; omit it to use the one your settings choose. chromium also drives Google Chrome"
 
 
 [tasks.test-gui-visible]
-help = "Run ONLY the GUI/Selenium tests in a real window, needs a display: poe test-gui-visible [firefox|chromium]"
+help = "Run ONLY the GUI/Selenium tests in a real window, needs a display: poe test-gui-visible [firefox|chromium|edge]"
 ref = "_test-gui-run"
 env = { SELENIUM_HEADLESS = "False" }
 
 [[tasks.test-gui-visible.args]]
 name = "browser"
 positional = true
-default = "firefox"
-choices = ["firefox", "chromium"]
-help = "Which browser to drive; chromium also drives Google Chrome"
+choices = ["firefox", "chromium", "edge"]
+help = "Which browser to drive; omit it to use the one your settings choose. chromium also drives Google Chrome"
 
 
 # The supported way to watch a GUI run, and the only advertised interface to
@@ -429,13 +467,12 @@ help = "Which browser to drive; chromium also drives Google Chrome"
 # that fails at full speed pass here, so its pass count is not evidence about
 # the suite. The harness prints that warning itself at the start of the run.
 [tasks.test-gui-watch]
-help = "Watch a GUI run, visible and paused between actions, not for measuring: poe test-gui-watch [firefox|chromium]"
+help = "Watch a GUI run, visible and paused between actions, not for measuring: poe test-gui-watch [firefox|chromium|edge]"
 ref = "_test-gui-run"
 env = { SELENIUM_HEADLESS = "False", SELENIUM_SLOW_MO = "0.4" }
 
 [[tasks.test-gui-watch.args]]
 name = "browser"
 positional = true
-default = "firefox"
-choices = ["firefox", "chromium"]
-help = "Which browser to drive; chromium also drives Google Chrome"
+choices = ["firefox", "chromium", "edge"]
+help = "Which browser to drive; omit it to use the one your settings choose. chromium also drives Google Chrome"

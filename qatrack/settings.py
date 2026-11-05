@@ -789,8 +789,9 @@ for path in chrome_paths:
 # anything a settings file set here was silently discarded.
 
 # Selenium Browser Configuration
-# Options: 'firefox' (default), 'chromium', or 'chrome' as an alias for
-# 'chromium'. Anything else raises ImproperlyConfigured when the GUI suite
+# Options: 'firefox' (default), 'chromium', 'edge', or 'chrome' as an alias for
+# 'chromium' - they share a driver, while Edge needs Microsoft's own and so is
+# its own value. Anything else raises ImproperlyConfigured when the GUI suite
 # starts - it used to run Firefox and pass, which hid chromium-only defects.
 # Override for a single run from the environment rather than editing a settings
 # file:
@@ -847,6 +848,27 @@ SELENIUM_CHROMIUM_DRIVER_PATH = ''   # Path to chromedriver
 # Otherwise Chrome fails to start with "session not created: DevToolsActivePort
 # file doesn't exist" - it's a sandboxing symptom, not a Selenium bug.
 SELENIUM_CHROMIUM_BINARY_PATH = ''
+
+# Microsoft Edge - its own pair of settings, because Edge needs Microsoft's
+# msedgedriver and the chromedriver that drives Chrome will not drive it.
+# Leave both empty to let Selenium Manager resolve a matching driver, which it
+# does by reading the installed Edge's version.
+#
+# For a FLATPAK Edge (`com.microsoft.Edge`), point this at the binary INSIDE
+# the install rather than at the `exports/bin` wrapper:
+#
+#     SELENIUM_EDGE_BINARY_PATH = os.path.expanduser(
+#         '~/.local/share/flatpak/app/com.microsoft.Edge/current/active/files/extra/msedge'
+#     )
+#
+# That is deliberately different from the Chrome advice above. The
+# `exports/bin/com.microsoft.Edge` wrapper starts the browser inside the
+# Flatpak sandbox, which is what makes the TMPDIR dance above necessary; the
+# inner `files/extra/msedge` runs as an ordinary executable, so the sandbox -
+# and the TMPDIR problem with it - does not arise. Verified on Edge
+# 156.0.4314.58 installed per-user with Flatpak.
+SELENIUM_EDGE_BINARY_PATH = ''
+SELENIUM_EDGE_DRIVER_PATH = ''  # Path to msedgedriver
 
 # Firefox Browser Binary Path - leave empty (the default) to let Selenium
 # find whatever Firefox is on the system as usual. Set this if another

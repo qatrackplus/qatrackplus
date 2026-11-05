@@ -1,4 +1,5 @@
 import pathlib
+import re
 import socket
 import threading
 import time
@@ -82,13 +83,33 @@ class TestBrowserSetting(SimpleTestCase):
         """Same driver, same handling, and the natural spelling on Windows."""
         assert live.resolve_browser_setting('chrome') == 'chromium'
 
+    def test_edge_is_its_own_value_in_the_chromium_family(self):
+        """Not an alias: Edge needs msedgedriver, and chromedriver will not drive it."""
+        assert live.resolve_browser_setting('edge') == 'edge'
+        assert 'edge' in live.CHROMIUM_FAMILY
+
     def test_case_and_surrounding_space_do_not_matter(self):
         """It usually arrives from the environment, where both are easy to add."""
         assert live.resolve_browser_setting('  Chromium \n') == 'chromium'
         assert live.resolve_browser_setting('FIREFOX') == 'firefox'
 
     def test_an_unrecognised_value_stops_the_run(self):
-        for value in ('safari', 'chrom', 'edge', '', None):
+        """The examples are derived, not listed, and that is the point.
+
+        This test used to try `('safari', 'chrom', 'edge', '', None)`. When Edge
+        was added to the harness, `'edge'` started resolving and the test failed
+        - correctly, but by then the list had become a second place where the
+        supported set was written down. Taking the candidates from
+        SELENIUM_BROWSERS means the next browser cannot quietly turn one of
+        these assertions into a no-op.
+        """
+
+        unsupported = [
+            value for value in ('msedge', 'safari', 'chrom', 'webkitgtk', 'ie', 'lynx')
+            if value not in live.SELENIUM_BROWSERS
+        ]
+        assert unsupported, 'every example is now supported - add an unsupported one'
+        for value in unsupported + ['', None]:
             with self.subTest(value=value):
                 with self.assertRaises(ImproperlyConfigured):
                     live.resolve_browser_setting(value)
@@ -99,7 +120,7 @@ class TestBrowserSetting(SimpleTestCase):
             live.resolve_browser_setting('safari')
         message = str(caught.exception)
         assert 'safari' in message
-        for allowed in ('firefox', 'chromium', 'chrome'):
+        for allowed in sorted(live.SELENIUM_BROWSERS):
             assert allowed in message, '%r is accepted but not offered: %s' % (allowed, message)
 
     def test_the_setting_is_read_in_exactly_one_place(self):
@@ -125,14 +146,28 @@ class TestBrowserSetting(SimpleTestCase):
         )
 
     def test_no_branch_compares_against_a_value_the_resolver_cannot_return(self):
-        """`== 'chrome'` would be dead code, since the resolver maps it to 'chromium'."""
+        """`== 'chrome'` would be dead code, since the resolver maps it to 'chromium'.
+
+        What counts as reachable is whatever `resolve_browser_setting` can
+        return - the *values* of the map, not its keys - so this reads them from
+        the map rather than naming them. It used to name `'chromium'` and
+        `'firefox'`, which made `== 'edge'` look like dead code the day Edge
+        became real.
+        """
+
+        returnable = set(live.SELENIUM_BROWSERS.values())
         source = pathlib.Path(live.__file__).read_text(encoding='utf-8').splitlines()
         dead = [
             (n, line.strip())
             for n, line in enumerate(source, 1)
-            if "browser_setting ==" in line and "'chromium'" not in line and "'firefox'" not in line
+            for value in re.findall(r"browser_setting == '([^']*)'", line)
+            if value not in returnable
         ]
         assert not dead, 'these comparisons can never be true: %r' % dead
+        unreachable = set(live.CHROMIUM_FAMILY) - returnable
+        assert not unreachable, (
+            'CHROMIUM_FAMILY names values the resolver never returns: %r' % unreachable
+        )
 
 
 @override_settings(ROOT_URLCONF=__name__, MIDDLEWARE=[])
