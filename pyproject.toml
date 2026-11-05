@@ -454,9 +454,9 @@ include = [
 # Current shell situation, so it stays honest as tasks are added:
 #
 #   * `cmd` tasks (no shell at all), which is most of them: test, the
-#     test-gui* family, cover*, lint, docs, docs-autobuild, run, the
+#     test-gui* family, cover*, lint, docs, docs-serve, run, the
 #     message tasks, the test-databases-* tasks.
-#   * `interpreter = "python"`: dev-init, dev-clean, dumpdata, i18n-status,
+#   * `interpreter = "python"`: dev-init, dev-clean, dump-data,
 #     schema, test-engine, test-integration, test-order. Note schema is one
 #     of these - a Python body, not a `cmd`.
 #   * `ref` only, so they inherit whatever they point at: every make-test-*
@@ -480,7 +480,7 @@ include = [
 # produced the expected result", and they had not been run at all:
 #
 #   * Windows, 2026-09-24: 21 tasks, all green bar two designed refusals
-#     (i18n-status with no msgfmt, dev-init on an existing environment). The
+#     (translation status with no msgfmt, dev-init on an existing environment). The
 #     five destructive tasks were deliberately skipped as too destructive for
 #     a working machine.
 #   * Linux, 2026-09-25: the five destructive ones, against a backed-up dev
@@ -491,7 +491,7 @@ include = [
 #     ContentType as a side effect; both are removed.
 #
 # Still not run anywhere: the sudo deploy tasks, the two blocking servers, and
-# docs-autobuild. Two bugs surfaced on Windows and were fixed:
+# docs-serve. Two bugs surfaced on Windows and were fixed:
 #
 #   * schema (poe_tasks/docs.toml) staged its render in the system temp
 #     directory (tempfile.TemporaryDirectory()), then moved it into docs/.
@@ -501,7 +501,7 @@ include = [
 #     a different disk drive`. Fixed by staging the temp file inside
 #     docs/developer/images/ itself, so the final rename is always
 #     same-filesystem.
-#   * i18n-status (poe_tasks/docs.toml) shelled out to `msgfmt -o
+#   * the translation-status task (then in poe_tasks/docs.toml) shelled out to `msgfmt -o
 #     /dev/null`. Neither piece is portable: msgfmt (from gettext) is not
 #     on PATH by default on Windows, and /dev/null does not exist there -
 #     it failed with a raw FileNotFoundError traceback rather than the

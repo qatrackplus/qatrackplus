@@ -18,7 +18,7 @@ file** - he measured 12 of 22 failing before the fixes, and a reconstruction
 cannot claim to be the same 22.
 
 Where a test could not be reconstructed it is said so in place, rather than
-left out quietly: the two `i18n-status` tests covered an msgfmt-parsing
+left out quietly: the two translation-status tests covered an msgfmt-parsing
 implementation that no longer exists.
 """
 import os
@@ -253,20 +253,25 @@ def test_check_messages_can_fail():
     assert cmd.split()[-1] != 'check', "back on `manage.py check`, which exits 0 for a Warning"
 
 
-def test_i18n_status_delegates_rather_than_parsing_msgfmt():
+def test_translation_status_does_not_parse_msgfmt_again():
     """Reconstructed differently from @nsmela's table, and this says why.
 
-    His two tests for this task - that the counts are the same in any locale,
-    and that a catalogue msgfmt cannot read makes it fail - covered a Python
-    body that parsed msgfmt's `--statistics` prose. That body is gone: the task
-    is now a `ref` to `check-messages`, which computes coverage in Python from
-    the .po files, so there is no msgfmt output to parse, no locale to depend
-    on and no exit code to ignore. The faults cannot recur in the same form,
-    so what is left to assert is that the implementation has not come back.
+    His two tests - that the counts are the same in any locale, and that a
+    catalogue msgfmt cannot read makes it fail - covered a Python body that
+    parsed msgfmt's `--statistics` prose. That body is gone: the work is done by
+    `manage.py check_translations`, which computes coverage in Python from the
+    .po files, so there is no msgfmt output to parse, no locale to depend on and
+    no exit code to ignore. The faults cannot recur in the same form, so what is
+    left to assert is that the implementation has not come back.
+
+    Asserted against `check-messages` rather than the `i18n-status` alias it
+    used to carry: that alias was removed on 2026-11-05, and this is the task
+    that remains.
     """
-    task = TASKS['i18n-status']
-    assert task.get('ref') == 'check-messages', task
-    assert 'shell' not in task, "i18n-status has a body again - see the docstring"
+    task = TASKS['check-messages']
+    assert 'check_translations' in task.get('cmd', ''), task
+    assert 'shell' not in task, "check-messages has a body again - see the docstring"
+    assert 'msgfmt' not in str(task), "msgfmt is back in the task; see the docstring"
 
 
 def test_the_autobuild_ports_are_each_what_their_runner_documents():
@@ -275,14 +280,14 @@ def test_the_autobuild_ports_are_each_what_their_runner_documents():
     The Makefile serves on 8009 and the docs say 8008 four times, so the
     successor task is the one that is right. The Makefile is frozen until it
     goes in the 4.1 cycle, so the disagreement cannot be fixed by editing it -
-    it is made visible instead: `docs-autobuild` keeps 8008, and the mirror
+    it is made visible instead: `docs-serve` keeps 8008, and the mirror
     keeps whatever `make docs-autobuild` actually does, which is 8009.
 
     An earlier commit on this branch took the port out of the Makefile
     altogether. That was part of reducing the Makefile to aliases, which Cody
     reversed on 2026-11-05.
     """
-    assert TASKS['docs-autobuild']['args'][0]['default'] == '8008'
+    assert TASKS['docs-serve']['args'][0]['default'] == '8008'
     makefile = (REPO_ROOT / 'Makefile').read_text(encoding='utf-8')
     assert '--port 8009' in makefile, "the Makefile's own autobuild port has moved"
     assert '--port 8009' in TASKS['make-docs-autobuild']['cmd'], (

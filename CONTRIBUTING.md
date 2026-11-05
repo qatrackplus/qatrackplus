@@ -83,7 +83,7 @@ uv run poe docs        # from the repository root; fails on any warning, as CI d
 # open docs/_build/html/index.html in your browser
 ```
 
-While writing, `uv run poe docs-autobuild` serves the docs at
+While writing, `uv run poe docs-serve` serves the docs at
 <http://127.0.0.1:8008> and rebuilds them as you save (add
 `--port 8010` to use a different port).
 

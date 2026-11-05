@@ -23,14 +23,18 @@ help = "Build the Sphinx docs, failing on any warning (output under docs/_build/
 cmd = "sphinx-build -W --keep-going -a --fresh-env -b html docs docs/_build/html"
 
 
-[[tasks.docs-autobuild.args]]
+[[tasks.docs-serve.args]]
 name = "port"
 options = ["--port"]
 default = "8008"
 
 
-[tasks.docs-autobuild]
-help = "Serve the docs locally with live-reload, default port 8008 (poe docs-autobuild --port 8010 to override)"
+# Named for what it does, not for the tool: this runs `sphinx-autobuild`, and
+# "autobuild" was that tool's name rather than the job's. poe's own project
+# calls the same task `docs-serve`. `make docs-autobuild` keeps its spelling,
+# through the `make-docs-autobuild` mirror.
+[tasks.docs-serve]
+help = "Serve the docs locally with live-reload, default port 8008 (poe docs-serve --port 8010 to override)"
 cmd = "sphinx-autobuild docs docs/_build/html --port ${port}"
 
 
@@ -106,22 +110,16 @@ print('wrote %s (%d bytes)' % (OUT, OUT.stat().st_size))
 '''
 
 
-# This was a Python body that parsed msgfmt's --statistics output, and it had
-# two faults @nsmela found on #868: msgfmt translates that prose, so under
-# LANG=fr_FR.UTF-8 every catalogue reported 0.0%; and it ignored msgfmt's exit
-# code, so a .po that msgfmt could not read looked identical to a complete one.
-# It also needed gettext on PATH, which Windows does not have by default.
+# `check-messages` in poe_tasks/translations.toml was once a Python body here
+# that parsed msgfmt's --statistics output, and it had two faults @nsmela found
+# on #868: msgfmt translates that prose, so under LANG=fr_FR.UTF-8 every
+# catalogue reported 0.0%; and it ignored msgfmt's exit code, so a .po that
+# msgfmt could not read looked identical to a complete one. It also needed
+# gettext on PATH, which Windows does not have by default. `check_translations`
+# computes the same coverage in Python from the .po files, so all three go at
+# once.
 #
-# `check_translations` computes the same coverage in Python from the .po files,
-# so all three problems go at once. Which leaves this task and `check-messages`
-# running the same command, hence the `ref` - a copy of the `cmd` would be the
-# duplication this branch is trying to remove.
-#
-# OPEN QUESTION for review: two names for one command is itself redundant, and
-# neither name has a Makefile target or any user outside this branch, so
-# collapsing them to one is the obvious tidy-up. Not done here, because both
-# names appear by name in the review of #868 and renaming mid-review costs the
-# reviewer more than the redundancy does.
-[tasks.i18n-status]
-help = "Alias of `check-messages`: per-language coverage, and any stale .mo"
-ref = "check-messages"
+# An `i18n-status` alias of it used to live here. Cody removed it on 2026-11-05:
+# two names for one command is redundant, and the two used different
+# vocabularies (`i18n-*` against `*-messages`) while sitting in different theme
+# files. `check-messages` is the one name.

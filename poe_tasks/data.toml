@@ -6,7 +6,10 @@
 # ==========================================================================
 
 
-[tasks.dumpdata]
+# `dump-data`, not `dumpdata`: the Django management command is called
+# `dumpdata`, and a task names the job rather than the command behind it - the
+# same reason `delete-all-data` below is not called `flushdb`.
+[tasks.dump-data]
 help = "Dump the full DB to a timestamped JSON fixture"
 interpreter = "python"
 shell = """
