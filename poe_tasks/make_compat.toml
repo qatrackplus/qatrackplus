@@ -49,6 +49,13 @@
 # irreversible than doing it by hand. Copying a trap into a second runner so
 # that the mirror is literal would be the wrong reading of "both ways work".
 #
+# **`make schema` is now retired in the Makefile itself**, by Cody's decision of
+# 2026-11-05: since make support is going away, a target that was broken prints
+# that it is retired and names the poe task instead of running. So for `schema`
+# the old *name* still works - here, through this mirror - while the old
+# *runner* refuses and explains itself. That is the shape every remaining
+# broken target should take if one is found before the file is deleted.
+#
 # **A dot cannot survive the move.** poe validates task names against
 # `^[^\W\d][\w:+-]*$` (`poethepoet/task/base.py`), which has no `.` in it;
 # `make-nginx.conf` is refused with `Error: Invalid task` - measured, not
@@ -212,5 +219,5 @@ ref = "supervisor-conf"
 # releaser here, which is what made it a live trap. The mirror delegates to
 # the task that renders to a staged file first.
 [tasks.make-schema]
-help = "RELEASE: regenerate the schema diagram - what `make schema` does, without the zero-byte trap"
+help = "RELEASE: regenerate the schema diagram - the working form of the retired `make schema`"
 ref = "schema"
