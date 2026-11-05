@@ -66,10 +66,11 @@ _Confirm which branch this targets (e.g. master)._
   which are skipped by default.
 - [ ] `uv run poe test-gui` — or `uv run pytest -m selenium`. Only the
   GUI/Selenium tests. **Headless is the default**, so neither needs a display
-  server. To watch a run instead, use `poe test-gui-firefox-visible` or
-  `poe test-gui-chromium-visible` (or the `-watch` variants, which also pause
-  between actions); `poe test-gui-firefox-headless` and `-chromium-headless`
-  pin the browser without opening a window. These are `continue-on-error` in
+  server. The browser is an argument: `poe test-gui-headless chromium`, and
+  `firefox` is the default. To watch a run instead, `poe test-gui-visible` or
+  `poe test-gui-watch`, which also pauses between actions. To run a single GUI
+  test, go through pytest — `uv run pytest -m selenium -k test_name` — since
+  the tasks take no pytest flags. These are `continue-on-error` in
   CI, so a red GUI run does not block the build — check it here rather than
   trusting the tick.
 - [ ] `uv run poe check-migrations` — or `uv run python manage.py makemigrations

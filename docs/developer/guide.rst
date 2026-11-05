@@ -222,7 +222,7 @@ generated from those same help lines at every docs build:
        ``qatrack/local_test_settings.<engine>.py`` first from the matching
        ``deploy/dev/`` template; the task swaps it in for the run and restores
        your usual settings afterwards, however the run ends.
-   * - ``poe test-gui-<browser>-<mode>``
+   * - ``poe test-gui-<mode> [browser]``
      - Only the GUI tests, for ``firefox`` or ``chromium``, ``headless``,
        ``visible`` or ``watch`` - see *Setting Up Selenium Browser Testing*.
    * - ``poe dev-init`` / ``dev-reset`` / ``run``
@@ -1046,7 +1046,7 @@ them:
   Selenium Manager resolve one automatically.
 * `SELENIUM_SLOW_MO` - an environment variable, not a setting: a pause in
   seconds between browser actions, so a visible run can be followed by eye.
-  The ``poe test-gui-*-watch`` tasks set it; leave it unset when measuring.
+  ``poe test-gui-watch`` sets it; leave it unset when measuring.
 
 ``SELENIUM_SLOW_MO`` is the one knob that is **not** a setting. It is seconds to
 pause after each browser interaction so a person can follow a run - ``0``, the
@@ -1159,10 +1159,11 @@ you, so nothing has to be edited into a settings file:
 
 .. code-block:: shell
 
-    uv run poe test-gui                      # only the GUI tests, with your settings
-    uv run poe test-gui-firefox-headless     # or -chromium-; no display needed
-    uv run poe test-gui-firefox-visible      # a real window, on a machine with a display
-    uv run poe test-gui-firefox-watch        # visible and slowed down, for watching only
+    uv run poe test-gui                   # only the GUI tests, with your settings
+    uv run poe test-gui-headless          # no display needed; firefox by default
+    uv run poe test-gui-headless chromium # the browser is an argument
+    uv run poe test-gui-visible           # a real window, on a machine with a display
+    uv run poe test-gui-watch             # visible and slowed down, for watching only
 
 .. note::
 
@@ -1174,6 +1175,102 @@ you, so nothing has to be edited into a settings file:
 
 For more on pytest itself, see the `pytest documentation
 <https://pytest.org>`__.
+
+Running one GUI test
+~~~~~~~~~~~~~~~~~~~~
+
+The ``poe test-gui-*`` tasks take **no pytest flags**. They set environment
+variables and then run the whole GUI suite, and poe discards extra arguments
+for a task with a body - ``poe test-gui-watch -- -k test_x`` filters nothing,
+and ``poe test-gui-watch chromium -k test_x`` is refused outright. So to run
+one test, go through pytest and set the same variables yourself. They are the
+only thing the tasks were doing:
+
+.. code-block:: shell
+
+    # one test, headless firefox - the defaults, so nothing to set
+    uv run pytest -m selenium -k test_schedule_report
+
+    # one test, chromium, in a real window
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False \
+        uv run pytest -m selenium -k test_schedule_report
+
+    # one test, chromium, visible and paused between actions
+    SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False SELENIUM_SLOW_MO=0.4 \
+        uv run pytest -m selenium -k test_schedule_report
+
+In PowerShell the variables are set first, on their own lines:
+
+.. code-block:: powershell
+
+    $env:SELENIUM_BROWSER = 'chromium'
+    $env:SELENIUM_HEADLESS = 'False'
+    $env:SELENIUM_SLOW_MO = '0.4'
+    uv run pytest -m selenium -k test_schedule_report
+
+This matters most for a watched run: every click and page load pauses, so a
+suite that takes about eight minutes takes appreciably longer, and watching one
+test is almost always what you want.
+
+.. _adding-a-selenium-browser:
+
+Adding another browser
+~~~~~~~~~~~~~~~~~~~~~~
+
+The harness drives **firefox** and **chromium**, and ``chrome`` is accepted as
+an alias of ``chromium``.
+
+**Google Chrome already works, with no change.** Chrome and Chromium are driven
+by the same driver, so ``SELENIUM_BROWSER=chrome`` - or
+``poe test-gui-headless chromium`` - drives whichever of the two is installed.
+Verified on a machine with Google Chrome 156 and no Chromium at all. If the
+binary is somewhere a driver will not find it, such as a Flatpak install, set
+``SELENIUM_CHROMIUM_BINARY_PATH`` in your settings rather than changing code.
+
+**Edge, Safari and the WebKit engines need a harness change, and are possible.**
+What is possible is decided by the Selenium package, not by this project.
+Selenium 4.45.0 ships WebDriver support for:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Browser
+     - Status here
+   * - ``firefox``, ``chromium``
+     - Driven today. ``chrome`` is an alias of ``chromium``.
+   * - ``edge``
+     - Not wired up. Chromium-based, but it needs Microsoft's own driver, so
+       the ``chromium`` branch will not drive it.
+   * - ``safari``
+     - Not wired up. macOS only, and neither development machine runs macOS.
+   * - ``webkitgtk``, ``wpewebkit``
+     - Not wired up. **The only way to get a third rendering engine**: the
+       suite currently covers Gecko (firefox) and Blink (chromium) only, and
+       WebKitGTK is what GNOME Web uses.
+   * - ``ie``
+     - Not wired up, and should stay that way.
+
+To add one - Edge as the example:
+
+1. Add it to ``SELENIUM_BROWSERS`` in ``qatrack/qatrack_core/tests/live.py``.
+   That map is also what makes an unrecognised value **raise** instead of
+   quietly running firefox, which is a defect this harness has had twice.
+2. Add a branch beside the ``firefox`` and ``chromium`` ones in the same file,
+   building ``selenium.webdriver.edge.options.Options`` and the matching
+   driver. Follow the chromium branch: it is the one with headless, the window
+   size and the password-manager settings already worked out.
+3. Add the name to ``choices`` on each ``test-gui-*`` task in
+   ``poe_tasks/tests.toml``. Without that the task refuses the value, which is
+   the point of ``choices``, and you also get tab completion of it.
+4. Run the suite on it before advertising it. A browser that starts is not the
+   same as a browser the 43 GUI tests pass on; expect to fix waits.
+
+**What cannot be added.** A browser needs a WebDriver implementation, and not
+every browser has one. KDE's Falkon, and anything else built on QtWebEngine,
+ships no WebDriver server and is not in Selenium's list above - so it is not a
+matter of configuration. If the goal is a third engine on Linux, ``webkitgtk``
+is the one that exists.
 
 New code should come with tests covering as much of it as you can manage. You can
 measure coverage with:

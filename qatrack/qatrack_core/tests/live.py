@@ -496,7 +496,7 @@ class SeleniumTests(StaticLiveServerSingleThreadedTestCase):
             # a long-lived developer profile (which cleared this the first
             # time it was ever opened, long before this suite existed),
             # every one of these now hits it. Headless doesn't render this
-            # either way, but test-gui-chromium-visible would otherwise
+            # either way, but `poe test-gui-visible chromium` would otherwise
             # show a real "make Chrome your default browser" infobar on
             # every single run, which is exactly the kind of thing that
             # steals focus or covers an element mid-test.

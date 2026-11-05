@@ -291,22 +291,28 @@ sys.exit(status)
 # ==========================================================================
 
 
-# GUI/Selenium only. Both axes - browser and window - are named in full on
-# every task, because neither has a "real" option and a deviation: Chromium
-# finds timing races Firefox does not, and a visible window is how you debug
-# them. Naming one combination shorter than the others would imply a pecking
-# order that does not exist.
+# GUI/Selenium only. There are two axes, browser and window, and neither has a
+# "real" option and a deviation: Chromium finds timing races Firefox does not,
+# and a visible window is how you debug them. So no mode or browser is treated
+# as the special case - but the browser is a *parameter*, and the window mode
+# is what you are choosing to do, which is why one is an argument and the other
+# is the task name.
 #
-# `test-gui` is not a fifth combination - it deliberately sets nothing, so it
-# runs whatever your own settings configure.
+# `test-gui` is not a fourth mode - it deliberately sets nothing, so it runs
+# whatever your own settings configure.
 #
-# Plain `cmd` tasks, one per combination, rather than one task with a
-# --browser argument: a `cmd` forwards `poe test-gui-firefox-headless -- -k
-# foo` straight to pytest, and `-k`, `-x` and `--pdb` are exactly what you
-# reach for on a failing browser test. A `shell` body would drop them - see
-# the note above `test-engine`.
+# THIS REVERSES AN EARLIER DECISION HERE, and the cost is real. It used to be
+# six plain `cmd` tasks, one per browser-and-mode pair, because a `cmd`
+# forwards `poe test-gui-firefox-headless -- -k foo` straight to pytest, and
+# `-k`, `-x` and `--pdb` are exactly what you reach for on a failing browser
+# test. These are `ref`s to a body, so they drop extras - see the note above
+# `test-engine`. Cody chose the argument form on 2026-11-05 and accepted that
+# cost: six names for two axes was the worse trade, and once you are filtering
+# to a single test you are better off calling pytest directly. The block below
+# the tasks gives those commands for bash and PowerShell, and so does the
+# developer guide under *Running one GUI test*.
 #
-# The env tables are the reason these exist - `SELENIUM_BROWSER=chromium
+# The env tables are the reason these exist at all - `SELENIUM_BROWSER=chromium
 # pytest ...` is not something you can type in cmd or PowerShell, and Windows
 # is a large share of real deployments.
 #
@@ -320,55 +326,116 @@ help = "Run ONLY the GUI/Selenium tests, using whatever your settings configure"
 cmd = "pytest -m selenium"
 
 
-[tasks.test-gui-firefox-headless]
-help = "Run ONLY the GUI/Selenium tests: firefox, no window (no display needed)"
-cmd = "pytest -m selenium"
-env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "True" }
+# Three modes, with the browser as an argument, rather than one task per
+# browser-and-mode pair. Six tasks became three because the browser is a
+# parameter and not a purpose - the same reason a task is named for its job and
+# not for its tool (see *Adding a new poe task* in the developer guide).
+#
+#     poe test-gui-headless            # firefox, the default
+#     poe test-gui-headless chromium
+#     poe test-gui-visible chromium
+#     poe test-gui-watch               # firefox, slowed down
+#
+# `choices` on the argument does two things: it rejects a browser the harness
+# does not know (`poe test-gui-headless safari` fails with "invalid choice"
+# rather than running firefox and reporting a pass), and it gives real tab
+# completion of the allowed values.
+#
+# WHAT THIS COSTS, and what to do instead. These are `shell` bodies, so they
+# discard extra arguments - `poe test-gui-watch -- -k test_x` does not filter
+# anything, and poe rejects `poe test-gui-watch chromium -k test_x` outright
+# (measured on poe 0.49.0: "unrecognized arguments"). The six `cmd` tasks these
+# replace did forward `-- -k`. That mattered most for watch mode, so run a
+# single test through pytest directly, which is all the task does anyway:
+#
+#     # bash/zsh - one test, headless firefox
+#     uv run pytest -m selenium -k test_schedule_report
+#
+#     # bash/zsh - one test, chromium, visible, paused between actions
+#     SELENIUM_BROWSER=chromium SELENIUM_HEADLESS=False SELENIUM_SLOW_MO=0.4 \
+#         uv run pytest -m selenium -k test_schedule_report
+#
+#     # PowerShell - the same
+#     $env:SELENIUM_BROWSER='chromium'; $env:SELENIUM_HEADLESS='False'
+#     $env:SELENIUM_SLOW_MO='0.4'; uv run pytest -m selenium -k test_schedule_report
+#
+# The tasks exist so nobody has to remember which variables there are; once you
+# are filtering to one test you are past that point.
+
+[tasks._test-gui-run]
+help = "(internal) the GUI suite, with SELENIUM_BROWSER taken from the browser argument"
+interpreter = "python"
+shell = """
+import os
+import subprocess
+import sys
+
+# The wrapper task declares `browser` and poe hands a declared argument to the
+# body as an environment variable, not as a Python name or on argv.
+browser = os.environ.get('browser') or 'firefox'
+os.environ['SELENIUM_BROWSER'] = browser
+
+# Say what is about to run. The mode comes from the wrapper's own `env`, so
+# without this line there is nothing to tell a headless run from a visible one
+# until a window either appears or does not.
+mode = 'visible' if os.environ.get('SELENIUM_HEADLESS') == 'False' else 'headless'
+if os.environ.get('SELENIUM_SLOW_MO'):
+    mode += ', slowed to %ss between actions' % os.environ['SELENIUM_SLOW_MO']
+print('GUI tests: %s, %s' % (browser, mode))
+sys.stdout.flush()
+
+sys.exit(subprocess.run([sys.executable, '-m', 'pytest', '-m', 'selenium']).returncode)
+"""
 
 
-[tasks.test-gui-firefox-visible]
-help = "Run ONLY the GUI/Selenium tests: firefox, visible window (needs a display)"
-cmd = "pytest -m selenium"
-env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "False" }
+[tasks.test-gui-headless]
+help = "Run ONLY the GUI/Selenium tests with no window: poe test-gui-headless [firefox|chromium]"
+ref = "_test-gui-run"
+env = { SELENIUM_HEADLESS = "True" }
+
+[[tasks.test-gui-headless.args]]
+name = "browser"
+positional = true
+default = "firefox"
+choices = ["firefox", "chromium"]
+help = "Which browser to drive; chromium also drives Google Chrome"
 
 
-[tasks.test-gui-chromium-headless]
-help = "Run ONLY the GUI/Selenium tests: chromium, no window (no display needed)"
-cmd = "pytest -m selenium"
-env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "True" }
+[tasks.test-gui-visible]
+help = "Run ONLY the GUI/Selenium tests in a real window, needs a display: poe test-gui-visible [firefox|chromium]"
+ref = "_test-gui-run"
+env = { SELENIUM_HEADLESS = "False" }
+
+[[tasks.test-gui-visible.args]]
+name = "browser"
+positional = true
+default = "firefox"
+choices = ["firefox", "chromium"]
+help = "Which browser to drive; chromium also drives Google Chrome"
 
 
-[tasks.test-gui-chromium-visible]
-help = "Run ONLY the GUI/Selenium tests: chromium, visible window (needs a display)"
-cmd = "pytest -m selenium"
-env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "False" }
-
-
-# The two tasks below are the supported way to watch a GUI run. They are the
-# only advertised interface to the pause: `SELENIUM_SLOW_MO` is read straight
-# from the environment in live.py rather than exposed as a setting beside
-# SELENIUM_BROWSER and SELENIUM_HEADLESS, so that it cannot be left switched on
-# in a settings file. One consequence worth knowing, and the opposite of the
-# warning above: because it does not come from settings, a local settings file
-# cannot override it either.
+# The supported way to watch a GUI run, and the only advertised interface to
+# the pause: SELENIUM_SLOW_MO is read straight from the environment in live.py
+# rather than exposed as a setting beside SELENIUM_BROWSER and
+# SELENIUM_HEADLESS, so it cannot be left switched on in a settings file. One
+# consequence worth knowing, and the opposite of the warning above: because it
+# does not come from settings, a local settings file cannot override it either.
 #
 # Watching costs time. Every click, keystroke and page load pauses, so a suite
-# that runs in about eight minutes takes appreciably longer. Run a single test
-# or a class while you are actually watching something:
-#
-#     poe test-gui-firefox-watch -k test_schedule_report
+# that runs in about eight minutes takes appreciably longer - which is why the
+# single-test recipe above matters more for this mode than the others.
 #
 # **A watched run is for looking at, not for measuring.** Pauses can let a race
 # that fails at full speed pass here, so its pass count is not evidence about
 # the suite. The harness prints that warning itself at the start of the run.
+[tasks.test-gui-watch]
+help = "Watch a GUI run, visible and paused between actions, not for measuring: poe test-gui-watch [firefox|chromium]"
+ref = "_test-gui-run"
+env = { SELENIUM_HEADLESS = "False", SELENIUM_SLOW_MO = "0.4" }
 
-[tasks.test-gui-firefox-watch]
-help = "Watch a GUI run: firefox, visible, paused between actions (not for measuring)"
-cmd = "pytest -m selenium"
-env = { SELENIUM_BROWSER = "firefox", SELENIUM_HEADLESS = "False", SELENIUM_SLOW_MO = "0.4" }
-
-
-[tasks.test-gui-chromium-watch]
-help = "Watch a GUI run: chromium, visible, paused between actions (not for measuring)"
-cmd = "pytest -m selenium"
-env = { SELENIUM_BROWSER = "chromium", SELENIUM_HEADLESS = "False", SELENIUM_SLOW_MO = "0.4" }
+[[tasks.test-gui-watch.args]]
+name = "browser"
+positional = true
+default = "firefox"
+choices = ["firefox", "chromium"]
+help = "Which browser to drive; chromium also drives Google Chrome"

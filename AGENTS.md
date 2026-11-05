@@ -203,7 +203,7 @@ lists those files under `[tool.poe] include`. The ones an agent needs:
   a change is ready.
 - `uv run poe test` - the suite with the GUI tests skipped; `uv run poe docs` -
   the documentation build that fails on any warning.
-- `uv run poe test-engine <engine>` and `uv run poe test-gui-*` need a database
+- `uv run poe test-engine <engine>` and the `uv run poe test-gui-*` tasks need a database
   server or a real browser, which most agent sandboxes do not have; CI runs
   them. `uv run poe test-databases-up` starts throwaway servers where Docker
   is available.
