@@ -1159,11 +1159,19 @@ you, so nothing has to be edited into a settings file:
 
 .. code-block:: shell
 
-    uv run poe test-gui                   # only the GUI tests, with your settings
-    uv run poe test-gui-headless          # no display needed; firefox by default
-    uv run poe test-gui-headless chromium # the browser is an argument
+    uv run poe test-gui                   # only the GUI tests, nothing overridden
+    uv run poe test-gui-headless          # no display needed; your settings' browser
+    uv run poe test-gui-headless edge     # or name one: firefox, chromium or edge
     uv run poe test-gui-visible           # a real window, on a machine with a display
     uv run poe test-gui-watch             # visible and slowed down, for watching only
+
+Omitting the browser uses **yours**: the argument has no default, so the task
+imposes only the window mode and leaves ``SELENIUM_BROWSER`` alone, which lets
+``local_test_settings.py`` or your environment decide. Naming one overrides
+that - unless you have pinned ``SELENIUM_BROWSER`` in
+``local_test_settings.py``, which is imported after ``settings.py`` has read
+the environment and therefore wins over both. That precedence is what makes
+the no-argument case work, and it is worth knowing in the other direction.
 
 .. note::
 
@@ -1217,8 +1225,8 @@ test is almost always what you want.
 Adding another browser
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The harness drives **firefox** and **chromium**, and ``chrome`` is accepted as
-an alias of ``chromium``.
+The harness drives **firefox**, **chromium** and **edge**; ``chrome`` is
+accepted as an alias of ``chromium``.
 
 **Google Chrome already works, with no change.** Chrome and Chromium are driven
 by the same driver, so ``SELENIUM_BROWSER=chrome`` - or
@@ -1227,7 +1235,40 @@ Verified on a machine with Google Chrome 156 and no Chromium at all. If the
 binary is somewhere a driver will not find it, such as a Flatpak install, set
 ``SELENIUM_CHROMIUM_BINARY_PATH`` in your settings rather than changing code.
 
-**Edge, Safari and the WebKit engines need a harness change, and are possible.**
+**Edge works on Linux and on Windows.** Selenium Manager resolves a matching
+``msedgedriver`` from the installed Edge's version, so nothing needs downloading
+by hand. Measured on Windows 11: the GUI suite passes on Edge in four runs of
+four, Selenium Manager finds both the driver and the browser unaided, and
+``SELENIUM_EDGE_BINARY_PATH`` can stay empty - Edge's install under
+``C:\Program Files (x86)`` is not on ``PATH``, and Selenium Manager locates it
+anyway.
+
+.. note::
+
+    **On Windows, a msedgedriver already on PATH is the one that runs.**
+    Measured with a winget-installed driver at 156.0.4314.50 against browser
+    156.0.4314.58: Selenium Manager used the one on ``PATH`` rather than
+    downloading an exact match, because the major versions agree. That is
+    usually fine and occasionally not - if a GUI failure looks like a driver
+    problem, check ``msedgedriver --version`` against the browser's before
+    anything else, or set ``SELENIUM_EDGE_DRIVER_PATH`` to pin it.
+
+For a Flatpak Edge, point ``SELENIUM_EDGE_BINARY_PATH`` at the binary *inside*
+the install rather than at the ``exports/bin`` wrapper:
+
+.. code-block:: python
+
+    SELENIUM_EDGE_BINARY_PATH = os.path.expanduser(
+        '~/.local/share/flatpak/app/com.microsoft.Edge/current/active/files/extra/msedge'
+    )
+
+That differs from the Chrome advice in ``settings.py`` on purpose. The
+``exports/bin`` wrapper starts the browser inside the Flatpak sandbox, which is
+what makes the ``TMPDIR`` redirection documented there necessary; the inner
+``files/extra/msedge`` runs as an ordinary executable, so the sandbox - and
+that problem with it - does not arise.
+
+**Safari and the WebKit engines still need a harness change, and are possible.**
 What is possible is decided by the Selenium package, not by this project.
 Selenium 4.45.0 ships WebDriver support for:
 
@@ -1238,10 +1279,12 @@ Selenium 4.45.0 ships WebDriver support for:
    * - Browser
      - Status here
    * - ``firefox``, ``chromium``
-     - Driven today. ``chrome`` is an alias of ``chromium``.
+     - Driven. ``chrome`` is an alias of ``chromium``.
    * - ``edge``
-     - Not wired up. Chromium-based, but it needs Microsoft's own driver, so
-       the ``chromium`` branch will not drive it.
+     - Driven. Chromium-based, so it shares every option and flag with
+       ``chromium``, but it needs Microsoft's ``msedgedriver`` - the
+       chromedriver that drives Chrome will not drive Edge, which is why it is
+       its own value rather than another alias.
    * - ``safari``
      - Not wired up. macOS only, and neither development machine runs macOS.
    * - ``webkitgtk``, ``wpewebkit``
@@ -1251,19 +1294,23 @@ Selenium 4.45.0 ships WebDriver support for:
    * - ``ie``
      - Not wired up, and should stay that way.
 
-To add one - Edge as the example:
+To add one - Safari, say, following how Edge was added:
 
 1. Add it to ``SELENIUM_BROWSERS`` in ``qatrack/qatrack_core/tests/live.py``.
    That map is also what makes an unrecognised value **raise** instead of
    quietly running firefox, which is a defect this harness has had twice.
-2. Add a branch beside the ``firefox`` and ``chromium`` ones in the same file,
-   building ``selenium.webdriver.edge.options.Options`` and the matching
-   driver. Follow the chromium branch: it is the one with headless, the window
-   size and the password-manager settings already worked out.
-3. Add the name to ``choices`` on each ``test-gui-*`` task in
+2. If it is Chromium-based, add it to ``CHROMIUM_FAMILY`` in the same file and
+   pick its ``Options``/``Service`` classes where Edge's are picked - that is
+   all Edge needed, because the family shares every flag, preference and the
+   headless and window-size handling. Anything not Chromium-based needs its own
+   branch beside ``firefox``.
+3. Give it its own binary and driver settings in ``qatrack/settings.py``,
+   beside ``SELENIUM_EDGE_*``. Sharing Chrome's would mean pointing one browser
+   at another's driver, which fails in ways that read like a broken test.
+4. Add the name to ``choices`` on each ``test-gui-*`` task in
    ``poe_tasks/tests.toml``. Without that the task refuses the value, which is
    the point of ``choices``, and you also get tab completion of it.
-4. Run the suite on it before advertising it. A browser that starts is not the
+5. Run the suite on it before advertising it. A browser that starts is not the
    same as a browser the 43 GUI tests pass on; expect to fix waits.
 
 **What cannot be added.** A browser needs a WebDriver implementation, and not
