@@ -7,8 +7,8 @@ hand, so none of them can drift from the code:
   ``[tool.poe] include`` in ``pyproject.toml``;
 * ``manage.py`` commands that QATrack+ adds, from the ``help`` attribute of
   each ``Command`` class under ``qatrack/*/management/commands/``;
-* Makefile targets, described by the ``help`` line of the target's ``make-*``
-  poe mirror, falling back to the ``make help`` text and then to the comment
+* Makefile targets, described by the target's own ``make help`` line, falling
+  back to the ``help`` line of its ``make-*`` poe mirror and then to the comment
   directly above the target.
 
 The fragments land in ``docs/developer/_*.rst`` (gitignored) and are pulled in
@@ -16,12 +16,21 @@ by ``docs/developer/commands.rst``. A poe task without a ``help`` line, a
 management command without a ``help`` attribute, or a Makefile target with no
 description from any of those three places fails the build.
 
-The mirror is asked first because the Makefile is frozen and its own text
-cannot be corrected: two of its ``make help`` lines are already stale, since
-``test`` claims to include the GUI tests that ``conftest.py`` now skips by
-default, and ``test_simple`` claims to be the one without them. The mirrors
-describe what the targets do today, so the published reference is right even
-though ``make help`` in a terminal is not.
+``make help`` is asked first because it is the Makefile's own account of its
+own target, and it is the only source that can say a target is **retired**. The
+mirror describes the poe task, which for a retired target is a different thing:
+asking the mirror first published "the working form of the retired ``make
+schema``" as the description of ``make schema`` itself, which reads as though
+that target still works.
+
+This order was reversed until 2026-11-05. The Makefile was frozen and could not
+be edited, so two stale ``help`` lines could not be fixed there - ``test``
+claimed to include the GUI tests ``conftest.py`` now skips by default, and
+``test_simple`` claimed to be the one without them. Since make support is being
+retired, a broken target is now edited to say so (Cody, 2026-11-05), both stale
+lines are corrected, and the Makefile is the better source again. The mirror
+stays as the fallback for the five engine targets ``make help`` has never
+listed.
 
 The Makefile table also fails the build when a target has no ``make-*`` poe
 mirror at all. The Makefile is frozen and goes in the 4.1 cycle; until then
@@ -164,13 +173,21 @@ def make_targets():
         mirror = tasks.get(mirror_name(name))
         if not mirror and name not in no_mirror_needed:
             missing_mirror.append(name)
-        # The mirror first: see the module docstring. The Makefile is frozen,
-        # so a stale line in its own `help` recipe cannot be fixed there.
-        desc = None
-        if mirror and isinstance(mirror[0], dict):
+        # The Makefile's own `help` line first: it is that file's description of
+        # that file's target, and it is the only source that can say a target is
+        # retired. The mirror describes the poe task, which for a retired target
+        # is a different thing entirely - taking the mirror's help first made the
+        # published table say "the working form of the retired `make schema`"
+        # against `make schema` itself, which reads as though it still works.
+        #
+        # This order was the other way round until 2026-11-05, because two
+        # `help` lines were stale and the frozen Makefile could not be edited to
+        # fix them. Both are now correct, and a broken target is edited to say
+        # so, so the Makefile is the better source again. The mirror remains the
+        # fallback for the five engine targets `help` has never listed.
+        desc = from_help.get(name)
+        if not desc and mirror and isinstance(mirror[0], dict):
             desc = mirror[0].get('help')
-        if not desc:
-            desc = from_help.get(name)
         if not desc:
             # the comment block directly above the target: take its first line
             j = i - 1

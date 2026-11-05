@@ -12,14 +12,17 @@ The poe task now reads the name from the installed package metadata, truncated
 to the minor line because the schema is identical across every patch of a line.
 That is the one correct implementation.
 
-The Makefile is NOT that implementation, and deliberately so. It is frozen for
-4.1 and removed during that cycle, so it still carries its own `VERSION=` and
-still renders the diagram itself. The two runners therefore *can* disagree, and
-these tests pin that rather than pretend otherwise: the Makefile's copy is
-asserted to be exactly where it is and nowhere else, so an edit to it has to
-come past a test, and the removal has something to delete against. `poe schema`
-is the spelling to use; `poe make-schema` delegates to it rather than mirroring
-the Makefile, precisely so the mirror does not carry a third copy.
+`make schema` is now RETIRED, by Cody's decision of 2026-11-05: since make
+support is going away, a target that was broken prints that it is retired and
+names the poe task instead of running. So there is once again exactly one
+implementation and one place the version comes from - and the Makefile's
+`VERSION=`, a fourth hand-written copy of the release version, went with the
+target that was its only consumer.
+
+That makes this file's original assertion true again, and it is asserted again
+below: neither runner hardcodes a version. The retirement message itself is
+covered in `test_poe_tasks.py`, which checks the target no longer renders, names
+`poe schema`, and fails rather than reporting success.
 
 These tests read the files as text. That is deliberate: running the task needs
 pygraphviz and a database, and the defect was never in the rendering - it was in
@@ -67,18 +70,26 @@ class TestTheSchemaNameHasOneSource:
         assert minor.count(".") == 1, minor
         assert version.startswith(minor)
 
-    def test_poe_does_not_hardcode_a_version(self):
-        """The copy that *was* removed, and must not come back.
+    def test_neither_runner_hardcodes_a_version(self):
+        """The copies that made the two runners disagree, all of them gone.
 
-        `[tool.poe.env]` held `VERSION = "4.0.0"`, the third of the three copies.
-        The poe task reads the installed metadata instead, so there is nothing
-        for this table to hold any more.
+        There were three: `[tool.poe.env]` said 4.0.0, `[project]` said 4.0.0,
+        and the Makefile said 3.1.0 - so `make schema` and `poe schema` wrote
+        *different files*, and the Makefile's wrote over the committed 3.1.0
+        diagram.
 
-        The Makefile's own copy is a separate matter, pinned by the test below:
-        that file is frozen, so its copy is a known defect with a date on it
-        rather than something to assert away.
+        `[tool.poe.env]` went when the poe task started reading the installed
+        package metadata. The Makefile's went on 2026-11-05 with the retirement
+        of the target that was its only consumer - which also removed a fourth
+        hand-written copy of the release version, after `settings.py`,
+        `pyproject.toml` and `uv.lock`, none of which anything cross-checks.
         """
 
+        assert not re.search(r"^VERSION\s*=", read(MAKEFILE), re.M), (
+            "the Makefile defines VERSION again; the schema target was the only "
+            "thing that ever used it, and a hardcoded copy is what made "
+            "`make schema` and `poe schema` write different files"
+        )
         # A table header at the start of a line, not the word anywhere - the
         # note in pyproject.toml explains why the table was removed and would
         # otherwise fail this.
@@ -96,58 +107,14 @@ class TestTheSchemaNameHasOneSource:
         assert "split('.')[:2]" in task, "the poe task does not truncate"
         assert "docs/developer/images/qatrack_schema_" in task
 
-    def test_the_frozen_makefile_carries_exactly_one_version_and_poe_carries_none(self):
-        """The Makefile's hardcoded version, pinned rather than removed.
-
-        The Makefile is frozen for 4.1 and deleted during that cycle, so
-        `VERSION=` stays where it is. This is not an endorsement of it. It is a
-        *fourth* place the release version is written down, after `settings.py`,
-        `pyproject.toml` and `uv.lock`, and nothing cross-checks the four - all
-        three of the others have already been found dozens of commits stale at
-        once. When this one goes stale, `make schema` writes a differently named
-        SVG from `poe schema`, which is the original defect returning.
-
-        It happens to be right today: `SCHEMA_VERSION=$(basename $(VERSION))`
-        relies on GNU make's `basename` stripping `.2` from `4.0.2` as if it
-        were a file extension, giving `4.0`, which is the committed diagram's
-        name. That it is correct by a coincidence of string handling is the
-        reason to pin it rather than trust it.
-
-        Asserted as one occurrence, not as an absence, so that an edit to the
-        frozen file has to come past a test, and so the removal in 4.1 has
-        something concrete to delete against.
-        """
-
-        makefile = read(MAKEFILE)
-        version_lines = re.findall(r"^VERSION\s*=.*$", makefile, re.M)
-        assert len(version_lines) == 1, (
-            "the frozen Makefile should carry its one historical VERSION line "
-            "and no more; found %r" % (version_lines,)
-        )
-        # Only the schema name derives from it. Anything else using it would
-        # widen what the 4.1 removal has to replace.
-        users = [
-            line for line in makefile.splitlines()
-            if "$(SCHEMA_VERSION)" in line or "$(VERSION)" in line
-        ]
-        assert len(users) == 2, (
-            "VERSION/SCHEMA_VERSION are used somewhere new in the Makefile; the "
-            "schema filename was the only consumer. Found: %r" % (users,)
-        )
-
-        recipe = schema_recipe()
-        assert "graph_models" in recipe, (
-            "the frozen Makefile's schema target no longer renders the diagram; "
-            "if it now delegates, this test and the freeze note are both stale"
-        )
-
     def test_the_make_schema_mirror_delegates_instead_of_copying_the_target(self):
         """`poe make-schema` is one of the three deliberate non-mirrors.
 
         Every other `make-*` task reproduces what its target does. This one
-        delegates to `poe schema`, because copying the target would copy the
-        hardcoded version with it and make a third runner that can disagree.
-        The mirror's help line says so; this asserts the delegation itself.
+        delegates to `poe schema`, which is now the only implementation there
+        is: the Makefile target it is named after no longer renders anything.
+        So the old *name* still works, through poe, while the old *runner*
+        refuses and explains itself.
         """
 
         compat = read(os.path.join(REPO_ROOT, "poe_tasks", "make_compat.toml"))
