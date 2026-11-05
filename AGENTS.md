@@ -223,7 +223,8 @@ uv run ruff check .          # lint
 Repo-wide `ruff format` hasn't been applied yet, so running it across the
 whole codebase will surface a large, unrelated reformatting diff — scope
 `ruff format` to just the files you actually changed instead of running it
-repo-wide.
+repo-wide. `uv run poe format-changed` works that list out from git and prints
+it before formatting; `--check` reports what it would do without writing.
 
 Configuration lives in `pyproject.toml` under `[tool.ruff]`.  
 Line length is **120 characters**. Quote style is **single quotes**.  
