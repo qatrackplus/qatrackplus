@@ -34,7 +34,10 @@ python manage.py makemessages
 
 # The .po is the source of truth and the .mo is derived from it, so extract
 # then compile. Run this after adding or changing a translatable string.
-[tasks.messages]
+# `update-messages`, not `messages`: every other composite says what it does
+# (`ci`, `dev-reset`, `test-order`), and a bare noun reads like a thing rather
+# than an action.
+[tasks.update-messages]
 help = "Re-extract translatable strings, then recompile the catalogues"
 sequence = ["extract-messages", "compile-messages"]
 

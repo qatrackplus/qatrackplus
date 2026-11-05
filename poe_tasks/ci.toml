@@ -150,3 +150,52 @@ print('  - the suite on Windows                     (no local equivalent)')
 print('  - the Selenium suite, firefox and chromium (poe test-gui-*)')
 print('  - the Docker build-and-run check           (deploy/docker)')
 """
+
+
+# The two checks the pull request template asks an author to run by hand. They
+# are deliberately NOT in the `ci` sequence: `ci` is the part of GitHub Actions
+# you can reproduce locally, and the workflow runs neither of these. Both are
+# named `check-<thing>` after `check-messages`, and both report rather than
+# merely exit.
+[tasks.check-deprecations]
+help = "Django's system checks with deprecation warnings visible (python -Wd)"
+cmd = "python -Wd manage.py check"
+
+
+# Two invocations of the same command, because neither form answers the whole
+# question on its own:
+#
+# - plain `--dry-run` prints the operations it would write, and **always exits
+#   0**, so it cannot gate anything;
+# - `--check --dry-run` exits 1 when a migration is missing and prints
+#   **nothing**, which reads exactly like "no migrations needed" - which is why
+#   the pull request template used to warn authors off it.
+#
+# Running one for the listing and the other for the status is what makes this
+# both readable and usable as a gate, and removes a trap that until now only a
+# comment protected anyone from.
+[tasks.check-migrations]
+help = "Report any model change that still needs a migration, and fail if there is one"
+interpreter = "python"
+shell = """
+import subprocess
+import sys
+
+MANAGE = [sys.executable, 'manage.py', 'makemigrations', '--dry-run']
+
+listing = subprocess.run(MANAGE, capture_output=True, text=True)
+sys.stdout.write(listing.stdout)
+sys.stderr.write(listing.stderr)
+if listing.returncode != 0:
+    # makemigrations itself failed - a bad model, an import error - and that is
+    # the answer, not a verdict about pending migrations.
+    sys.exit(listing.returncode)
+
+status = subprocess.run(MANAGE + ['--check'], capture_output=True, text=True)
+if status.returncode != 0:
+    print()
+    print('Pending migrations. They belong in this pull request, and the change')
+    print('should be marked Breaking.')
+sys.stdout.flush()
+sys.exit(status.returncode)
+"""

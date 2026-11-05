@@ -155,7 +155,7 @@ cd docs && make html
 
 
 # Not a ref either, and the difference is the port: the Makefile serves on
-# 8009 and the `docs-autobuild` task on 8008. That disagreement is the kind of
+# 8009 and the `docs-serve` task on 8008. That disagreement is the kind of
 # drift this file exists to make visible rather than to hide, and the
 # documentation says 8008, so the successor is the one that is right. The
 # mirror keeps 8009 because that is what `make docs-autobuild` does today.
@@ -169,7 +169,7 @@ cmd = "sphinx-autobuild docs docs/_build/html --port 8009"
 # --------------------------------------------------------------------------
 
 # Shell rather than a ref, because the two genuinely differ: the Makefile
-# builds the timestamp with `date`, and the `dumpdata` task builds it in
+# builds the timestamp with `date`, and the `dump-data` task builds it in
 # Python so that it also works where `date` is not a command.
 [tasks.make-dumpdata]
 help = "Dump the database to a timestamped JSON fixture, as `make dumpdata` does - shell based"
