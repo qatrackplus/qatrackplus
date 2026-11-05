@@ -906,6 +906,30 @@ and ``supervisor.conf`` mirror as ``make-nginx-conf`` and
 Nothing new should be added there - a new task belongs in one of the theme
 files above, and the ``Makefile`` will not grow a target to mirror.
 
+**Name it for what it does, not for what it runs.** ``lint`` runs pre-commit,
+``format-changed`` runs ruff, and ``docs`` runs Sphinx - none of them say so,
+and that is deliberate. The tool behind a task changes more often than the job
+does, and a task named after its tool has to be renamed when the tool is
+replaced, taking every script and habit with it.
+
+This is the convention in the wider poe ecosystem rather than a local
+preference. poe's own project names every task for its purpose - ``lint`` for
+ruff, ``types`` for mypy, ``format``, ``check`` - and projects that do reach for
+tool names keep them **private**, behind the ``_`` prefix that marks an internal
+helper: ``django-postgres-extra`` has public ``lint``, ``lint_fix`` and
+``format`` over private ``_autoflake``, ``_autopep8`` and ``_isort_*``, and
+``tianshou`` has public ``lint``, ``format`` and ``type-check`` over private
+``_mypy``, ``_ruff_fix`` and ``_ruff_format``. So:
+
+- **public task, purpose name:** ``lint``, ``lint-fix``, ``format-changed``,
+  ``test``, ``docs``, ``deps``;
+- **private helper, tool name if it helps:** ``_ci-reminder``, and anything
+  else a composite task calls but nobody runs directly.
+
+Two established exceptions, both because the name *is* the purpose: the
+``make-*`` mirrors, which exist to be spelled like the ``Makefile`` target they
+stand in for, and ``poe`` itself in projects that wrap their own runner.
+
 When adding a task:
 
 1. Pick the theme file that matches, or add a new ``poe_tasks/<theme>.toml``
